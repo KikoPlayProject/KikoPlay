@@ -1,0 +1,131 @@
+#include "toplayout.h"
+
+TopLayout::TopLayout(DanmuRender *render):DanmuLayout(render),life_time(5000)
+{
+
+}
+
+void TopLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *drawInfo)
+{
+    const QSize size=render->surfaceSize;
+    float currentY=margin_y;
+    float dm_height=drawInfo->height;
+    DanmuObject *dmobj=new DanmuObject;
+    dmobj->src=danmu;
+    dmobj->drawInfo=drawInfo;
+    dmobj->extraData=life_time;
+    dmobj->x=(size.width()-drawInfo->width)/2;
+    bool success=false;
+    float maxSpace(0.f),dsY(0.f),cY(0.f);
+    QLinkedList<DanmuObject *>::Iterator msPos;
+    for(auto iter=topdanmu.begin();iter!=topdanmu.end();iter++)
+    {
+        if((*iter)->y-currentY-margin_y>=dm_height)
+        {         
+            dmobj->y=currentY;
+            topdanmu.insert(iter,dmobj);
+            success=true;
+            break;
+        }
+        //for dense layout-----
+        float tmp((*iter)->y-cY);
+        if(tmp>maxSpace)
+        {
+            maxSpace=tmp;
+            dsY=cY+tmp/2;
+            msPos=iter;
+        }
+        //--------
+        cY=(*iter)->y+margin_y;
+        currentY=cY+(*iter)->drawInfo->height;
+        if(currentY+dm_height>=size.height())
+            break;
+    }
+    if(!success && currentY+dm_height<size.height())
+    {
+        dmobj->y=currentY;
+        topdanmu.append(dmobj);
+        success=true;
+    }
+    if(!success && render->dense)
+    {
+        dmobj->y=dsY;
+        topdanmu.insert(msPos,dmobj);
+        success=true;
+    }
+    if(!success)
+    {
+#ifdef QT_DEBUG
+        qDebug()<<"top lost: "<<danmu->text<<",send time:"<<danmu->date;
+#endif
+        delete dmobj;
+    }
+}
+
+void TopLayout::moveLayout(float step)
+{
+    for(auto iter=topdanmu.begin();iter!=topdanmu.end();)
+    {
+        DanmuObject *current=(*iter);
+        //float *lifetime=&static_cast<TopExtra *>(current->extra_data)->lifetime;
+        //*lifetime-=step;
+        current->extraData-=step;
+        if(current->extraData>0)
+        {
+            iter++;
+        }
+        else
+        {
+            delete current;
+            iter=topdanmu.erase(iter);
+        }
+    }
+}
+
+void TopLayout::drawLayout(QPainter &painter)
+{
+    for(auto current:topdanmu)
+    {
+        painter.drawImage(current->x,current->y,*current->drawInfo->img);
+    }
+}
+
+QSharedPointer<DanmuComment> TopLayout::danmuAt(QPointF point)
+{
+    for(auto iter=topdanmu.cbegin();iter!=topdanmu.cend();iter++)
+    {
+        DanmuObject *curDMObj=*iter;
+        if(curDMObj->x<point.x() && curDMObj->x+curDMObj->drawInfo->width>point.x() &&
+                curDMObj->y<point.y() && curDMObj->y+curDMObj->drawInfo->height>point.y())
+            return curDMObj->src;
+    }
+    return nullptr;
+}
+
+void TopLayout::cleanup()
+{
+    qDeleteAll(topdanmu);
+    topdanmu.clear();
+}
+
+void TopLayout::removeBlocked()
+{
+    for(auto iter=topdanmu.begin();iter!=topdanmu.end();)
+    {
+        if((*iter)->src->blockBy!=-1)
+        {
+            delete *iter;
+            iter=topdanmu.erase(iter);
+        }
+        else
+        {
+            iter++;
+        }
+    }
+}
+
+TopLayout::~TopLayout()
+{
+    qDeleteAll(topdanmu);
+}
+
