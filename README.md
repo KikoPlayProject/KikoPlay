@@ -21,7 +21,7 @@ KikoPlay基于以下项目：
 编译环境：
 MSVC2015 32bit
 
-运行时需要将mpv-1.dll和aria2c.exed放在可执行文件所在的目录中，这两个文件可在发布的Release中找到，也可以自行编译libmpv、aria2。
+运行时需要将mpv-1.dll和aria2c.exe放在可执行文件所在的目录中，这两个文件可在发布的Release中找到，也可以自行编译libmpv、aria2。
 
 ## 截图
 
@@ -32,6 +32,7 @@ MSVC2015 32bit
 ## 下载
 
 [Releases](https://github.com/Protostars/KikoPlay/releases)
+
 [百度网盘](https://pan.baidu.com/s/1gyT0FU9rioaa77znhAUx2w)
 
 ## 反馈
