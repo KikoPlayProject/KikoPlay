@@ -304,10 +304,10 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
 {
     contentWidget=new QWidget(this);
     contentWidget->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
-    blurEffect=new QGraphicsBlurEffect(this);
-    contentWidget->setGraphicsEffect(blurEffect);
-    blurEffect->setBlurRadius(30);
-    blurEffect->setEnabled(false);
+    //blurEffect=new QGraphicsBlurEffect(this);
+    //contentWidget->setGraphicsEffect(blurEffect);
+    //blurEffect->setBlurRadius(30);
+    //blurEffect->setEnabled(false);
     QHBoxLayout *contentHLayout=new QHBoxLayout(this);
     contentHLayout->addWidget(contentWidget);
 
@@ -424,7 +424,7 @@ void LibraryWindow::showDetailInfo(const QModelIndex &index)
     detailInfoPage->resize(width()/2,height());
     static_cast<DetailInfoPage *>(detailInfoPage)->setAnime(anime);
 
-    blurEffect->setEnabled(true);
+    //blurEffect->setEnabled(true);
 
     QPropertyAnimation *moveAnime = new QPropertyAnimation(detailInfoPage, "pos");
     QPoint startPos(width(),0), endPos(width()/2,0);
@@ -464,7 +464,7 @@ void LibraryWindow::mousePressEvent(QMouseEvent *event)
             moveAnime->start(QAbstractAnimation::DeleteWhenStopped);
             QObject::connect(moveAnime,&QPropertyAnimation::finished,[this](){
                 detailInfoPage->hide();
-                blurEffect->setEnabled(false);
+                //blurEffect->setEnabled(false);
                 contentWidget->setEnabled(true);
             });
         }

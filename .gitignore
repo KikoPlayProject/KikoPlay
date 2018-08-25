@@ -1,2 +1,13 @@
 .vs/
 KikoPlay.pro.user
+.qmake.stash
+GeneratedFiles/
+KikoPlay.VC.VC.opendb
+KikoPlay.VC.db
+KikoPlay.sln
+KikoPlay.vcxproj
+KikoPlay.vcxproj.filters
+KikoPlay.vcxproj.user
+Win32/
+kikoplay.aps
+release/

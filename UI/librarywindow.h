@@ -28,7 +28,7 @@ private:
     QToolButton *allAnime,*likedAnime,*threeMonth,*halfYear,*year;
     QListView *animeListView;
     QWidget *contentWidget;
-    QGraphicsBlurEffect *blurEffect;
+    //QGraphicsBlurEffect *blurEffect;
     QWidget *detailInfoPage;
     QButtonGroup *btnGroup;
     const QString btnText[4] = { tr("All"),tr("Recent Three Months"),tr("Recent Half Year"),tr("Recent Year") };

@@ -49,7 +49,8 @@ QString DownloadModel::addUriTask(const QString &uri, const QString &dir)
     options.insert("dir", dir);
     options.insert("bt-metadata-only","true");
     options.insert("bt-save-metadata","true");
-
+	options.insert("seed-time", QString::number(GlobalObjects::appSetting->value("Download/SeedTime", 5).toInt()));
+	options.insert("bt-tracker", GlobalObjects::appSetting->value("Download/Trackers", QStringList()).toStringList().join(','));
 
     try
     {
