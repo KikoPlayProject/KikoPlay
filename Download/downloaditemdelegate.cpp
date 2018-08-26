@@ -9,10 +9,16 @@ DownloadItemDelegate::DownloadItemDelegate(QObject *parent) : QStyledItemDelegat
 
 void DownloadItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
+	QStyleOptionViewItem viewOption(option);
+	initStyleOption(&viewOption, index);
+	if (option.state.testFlag(QStyle::State_HasFocus))
+		viewOption.state = viewOption.state ^ QStyle::State_HasFocus;
+
+	QStyledItemDelegate::paint(painter, viewOption, index);
     if(index.column()==2)
     {
         QStyleOptionProgressBar progressBarOption;
-        progressBarOption.rect = option.rect.adjusted(0,1,0,-1);
+		progressBarOption.rect = viewOption.rect.adjusted(0,1,0,-1);
         progressBarOption.fontMetrics = QApplication::fontMetrics();
         progressBarOption.minimum = 0;
         progressBarOption.maximum = 100;
@@ -28,10 +34,6 @@ void DownloadItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &
             progressBarOption.text =QString();
         QProgressBar progressBar;
         QApplication::style()->drawControl(QStyle::CE_ProgressBar, &progressBarOption, painter, &progressBar);
-    }
-    else
-    {
-        QStyledItemDelegate::paint(painter, option, index);
     }
 }
 

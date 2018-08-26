@@ -244,7 +244,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         globalOptions.insert("max-concurrent-downloads",QString::number(GlobalObjects::appSetting->value("Download/ConcurrentDownloads",5).toInt()));
         rpc->changeGlobalOption(globalOptions);
     });
-
+	//downloadView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     downloadView->setItemDelegate(new DownloadItemDelegate(this));
     downloadView->setContextMenuPolicy(Qt::ActionsContextMenu);
     TaskFilterProxyModel *proxyModel=new TaskFilterProxyModel(this);
@@ -272,7 +272,8 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     downloadView->addAction(act_separator2);
     downloadView->addAction(act_PauseAll);
     downloadView->addAction(act_StartAll);
-    downloadView->header()->resizeSection(1,350*logicalDpiX()/96);
+	downloadView->header()->resizeSection(1, 350 * logicalDpiX() / 96);
+	downloadView->header()->setStretchLastSection(false);
 
     QObject::connect(downloadView, &QTreeView::doubleClicked,[this,proxyModel](const QModelIndex &index){
         DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(proxyModel->mapToSource(index));
