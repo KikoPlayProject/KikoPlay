@@ -358,7 +358,24 @@ QVariant DownloadModel::data(const QModelIndex &index, int role) const
         break;
     case 5:
         if(role==Qt::DisplayRole)
-            return formatSize(true,downloadItem->uploadSpeed);
+        {
+            if(downloadItem->downloadSpeed==0)return "--";
+            qint64 leftLength(downloadItem->totalLength-downloadItem->completedLength);
+            int totalSecond(ceil((double)leftLength/downloadItem->downloadSpeed));
+            if(totalSecond>24*60*60)return ">24h";
+            int minuteLeft(totalSecond/60);
+            int secondLeft=totalSecond-minuteLeft*60;
+            if(minuteLeft>60)
+            {
+                int hourLeft=minuteLeft/60;
+                minuteLeft=minuteLeft-hourLeft*60;
+                return QString("%1:%2:%3").arg(hourLeft,2,10,QChar('0')).arg(minuteLeft,2,10,QChar('0')).arg(secondLeft,2,10,QChar('0'));
+            }
+            else
+            {
+                return QString("%1:%2").arg(minuteLeft,2,10,QChar('0')).arg(secondLeft,2,10,QChar('0'));
+            }
+        }
         break;
     default:
         break;
@@ -385,30 +402,24 @@ QVariant DownloadModel::headerData(int section, Qt::Orientation orientation, int
 void DownloadModel::fetchMore(const QModelIndex &)
 {
     QList<DownloadTask *> moreTasks;
+	QEventLoop eventLoop;
+	QObject::connect(downloadWorker, &DownloadWorker::loadDone, &eventLoop, &QEventLoop::quit);
+	hasMoreTasks = false;
     QMetaObject::invokeMethod(downloadWorker,[this,&moreTasks](){
-        downloadWorker->loadTasks(&moreTasks,currentOffset,limitCount);
+        downloadWorker->loadTasks(moreTasks,currentOffset,limitCount);
     },Qt::QueuedConnection);
-    QEventLoop eventLoop;
-    QObject::connect(downloadWorker,&DownloadWorker::loadDone, &eventLoop,&QEventLoop::quit);
     eventLoop.exec();
-    if(moreTasks.count()==0)
+    if(moreTasks.count()>0)
     {
-        hasMoreTasks=false;
-    }
-    else
-    {
+		hasMoreTasks = true;
         beginInsertRows(QModelIndex(),downloadTasks.count(),downloadTasks.count()+moreTasks.count()-1);
         downloadTasks.append(moreTasks);
         endInsertRows();
         currentOffset+=moreTasks.count();
-        //for(DownloadTask *task:moreTasks)
-        //{
-        //    tasksMap.insert(task->taskID,task);
-        //}
     }
 }
 
-void DownloadWorker::loadTasks(QList<DownloadTask *> *items, int offset, int limit)
+void DownloadWorker::loadTasks(QList<DownloadTask *> &items, int offset, int limit)
 {
     QSqlQuery query(QSqlDatabase::database("WT"));
     query.exec(QString("select * from download order by CTime desc limit %1 offset %2").arg(limit).arg(offset));
@@ -437,7 +448,7 @@ void DownloadWorker::loadTasks(QList<DownloadTask *> *items, int offset, int lim
         task->uri=query.value(uriNo).toString();
         task->selectedIndexes=query.value(sfIndexNo).toString();
         task->torrentContent=query.value(torrentNo).toByteArray();
-        items->append(task);
+        items.append(task);
         count++;
     }
     emit loadDone(count);

@@ -56,6 +56,6 @@ struct DownloadTask
     DownloadTask();
     ~DownloadTask();
 };
-
+Q_DECLARE_OPAQUE_POINTER(DownloadTask *)
 QString formatSize(bool isSpeed,float val);
 #endif // DOWNLOADITEM_H

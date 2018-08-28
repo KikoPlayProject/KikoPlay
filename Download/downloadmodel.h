@@ -12,7 +12,7 @@ public:
 private:
 
 public slots:
-    void loadTasks(QList<DownloadTask *> *items, int offset, int limit);
+    void loadTasks(QList<DownloadTask *> &items, int offset, int limit);
     void addTask(DownloadTask *task);
     void deleteTask(DownloadTask *task, bool deleteFile);
     void updateTaskInfo(const DownloadTask *task);
@@ -41,7 +41,7 @@ public:
 private:
     QList<DownloadTask *> downloadTasks;
     QMap<QString ,DownloadTask *> gidMap;
-    const QStringList headers={tr("Status"),tr("Title"),tr("Progress"),tr("Size"),tr("DownSpeed"),tr("UpSpeed")};
+    const QStringList headers={tr("Status"),tr("Title"),tr("Progress"),tr("Size"),tr("DownSpeed"),tr("Time Left")};
     const QStringList status={tr("Downloading"),tr("Seeding"),tr("Waiting"),tr("Paused"),tr("Complete"),tr("Error")};
     QIcon statusIcons[6]={QIcon(":/res/images/downloading.png"),
                                     QIcon(":/res/images/seeding.png"),

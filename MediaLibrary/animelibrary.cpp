@@ -275,18 +275,16 @@ QVariant AnimeLibrary::data(const QModelIndex &index, int role) const
 void AnimeLibrary::fetchMore(const QModelIndex &)
 {
     QList<Anime *> moreAnimes;
+    QEventLoop eventLoop;
+    QObject::connect(animeWorker,&AnimeWorker::loadDone, &eventLoop,&QEventLoop::quit);
+    hasMoreAnimes=false;
     QMetaObject::invokeMethod(animeWorker,[this,&moreAnimes](){
         animeWorker->loadAnimes(&moreAnimes,currentOffset,limitCount);
     },Qt::QueuedConnection);
-    QEventLoop eventLoop;
-    QObject::connect(animeWorker,&AnimeWorker::loadDone, &eventLoop,&QEventLoop::quit);
     eventLoop.exec();
-    if(moreAnimes.count()==0)
+    if(moreAnimes.count()>0)
     {
-        hasMoreAnimes=false;
-    }
-    else
-    {
+        hasMoreAnimes=true;
         beginInsertRows(QModelIndex(),animes.count(),animes.count()+moreAnimes.count()-1);
         animes.append(moreAnimes);
         endInsertRows();
