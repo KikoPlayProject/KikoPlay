@@ -368,19 +368,22 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     volume->setMaximum(100);
     volume->setSingleStep(1);
 
-    QSpacerItem *horizontalSpacer1 = new QSpacerItem(100, 20, QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
-    QSpacerItem *horizontalSpacer2 = new QSpacerItem(100, 20, QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
+    ctrlPressCount=0;
+    QObject::connect(&ctrlPressTimer,&QTimer::timeout,[this](){
+        ctrlPressCount=0;
+        ctrlPressTimer.stop();
+    });
 
     QHBoxLayout *buttonHLayout=new QHBoxLayout();
     buttonHLayout->addWidget(timeLabel);
-    buttonHLayout->addItem(horizontalSpacer1);
+    buttonHLayout->addStretch(1);
     buttonHLayout->addWidget(stop);
     buttonHLayout->addWidget(prev);
     buttonHLayout->addWidget(play_pause);
     buttonHLayout->addWidget(next);
     buttonHLayout->addWidget(mute);
     buttonHLayout->addWidget(volume);
-    buttonHLayout->addItem(horizontalSpacer2);
+    buttonHLayout->addStretch(1);
     buttonHLayout->addWidget(setting);
     buttonHLayout->addWidget(danmu);
     buttonHLayout->addWidget(fullscreen);
@@ -596,6 +599,7 @@ void PlayerWindow::setupDanmuSettingPage()
     danmuSettingPage->hide();
 
     danmuSwitch=new QCheckBox(tr("Hide Danmu"),danmuSettingPage);
+    danmuSwitch->setToolTip("Double Press Ctrl");
     QObject::connect(danmuSwitch,&QCheckBox::stateChanged,[this](int state){
         if(state==Qt::Checked)
         {
@@ -1275,6 +1279,21 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
 	int key = event->key();
 	switch (key)
 	{
+    case Qt::Key_Control:
+    {
+        if(!ctrlPressTimer.isActive())
+        {
+            ctrlPressTimer.start(500);
+        }
+        ctrlPressCount++;
+        if(ctrlPressCount==2)
+        {
+            danmuSwitch->click();
+            ctrlPressTimer.stop();
+            ctrlPressCount=0;
+        }
+        break;
+    }
 	case Qt::Key_Space:
 		actPlayPause->trigger();
 		break;

@@ -90,6 +90,8 @@ private:
      QLabel *timeLabel;
      QPushButton *play_pause,*prev,*next,*stop,*mute,*setting, *danmu,*fullscreen,*list;
      QAction *actPlayPause,*actPrev,*actNext,*actFullscreen;
+     QTimer ctrlPressTimer;
+     int ctrlPressCount;
 
      QLabel *titleLabel;
      QToolButton *mediaInfo, *windowSize,*screenshot,*stayOnTop;
