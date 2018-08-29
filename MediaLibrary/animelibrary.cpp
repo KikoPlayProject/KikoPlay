@@ -158,7 +158,7 @@ void AnimeLibrary::refreshEpPlayTime(const QString &title, const QString &path)
 
 void AnimeLibrary::addEp(Anime *anime, const QString &epName, const QString &path)
 {
-    for(auto iter=anime->eps.begin();iter!=anime->eps.end();iter++)
+    for(auto iter=anime->eps.begin();iter!=anime->eps.end();++iter)
     {
         if((*iter).localFile==path) return;
     }
@@ -302,7 +302,7 @@ void AnimeWorker::updateAnimeInfo(Anime *anime)
     query.bindValue(0,anime->summary);
     query.bindValue(1,anime->date);
     QStringList staffStrList;
-    for(auto iter=anime->staff.cbegin();iter!=anime->staff.cend();iter++)
+    for(auto iter=anime->staff.cbegin();iter!=anime->staff.cend();++iter)
         staffStrList.append((*iter).first+":"+(*iter).second);
         //staffStrList.append(iter.key()+":"+iter.value());
     query.bindValue(2,staffStrList.join(';'));
@@ -317,7 +317,7 @@ void AnimeWorker::updateAnimeInfo(Anime *anime)
     query.exec();
 
     query.prepare("insert into character(Anime,Name,NameCN,Actor,BangumiID,Image) values(?,?,?,?,?,?)");
-    for(auto iter=anime->characters.cbegin();iter!=anime->characters.cend();iter++)
+    for(auto iter=anime->characters.cbegin();iter!=anime->characters.cend();++iter)
     {
         query.bindValue(0,anime->title);
         query.bindValue(1,(*iter).name);
@@ -417,15 +417,15 @@ QString AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId)
 
         QJsonArray staffArray(obj.value("staff").toArray());
         anime->staff.clear();
-        for(auto staffIter=staffArray.begin();staffIter!=staffArray.end();staffIter++)
+        for(auto staffIter=staffArray.begin();staffIter!=staffArray.end();++staffIter)
         {
             QJsonObject staffObj=(*staffIter).toObject();
             QJsonArray jobArray(staffObj.value("jobs").toArray());
-            for(auto jobIter=jobArray.begin();jobIter!=jobArray.end();jobIter++)
+            for(auto jobIter=jobArray.begin();jobIter!=jobArray.end();++jobIter)
             {
                 bool contains=false;
                 QString job((*jobIter).toString());
-                for(auto iter=anime->staff.begin();iter!=anime->staff.end();iter++)
+                for(auto iter=anime->staff.begin();iter!=anime->staff.end();++iter)
                 {
                     if((*iter).first==job)
                     {
@@ -442,7 +442,7 @@ QString AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId)
         }
         anime->characters.clear();
         QJsonArray crtArray(obj.value("crt").toArray());
-        for(auto crtIter=crtArray.begin();crtIter!=crtArray.end();crtIter++)
+        for(auto crtIter=crtArray.begin();crtIter!=crtArray.end();++crtIter)
         {
             QJsonObject crtObj=(*crtIter).toObject();
             Character crt;
@@ -486,7 +486,7 @@ void AnimeWorker::loadAnimes(QList<Anime *> *animes,int offset,int limit)
         anime->addTime=query.value(timeNo).toLongLong();
         anime->epCount=query.value(epCountNo).toInt();
         QStringList staffs(query.value(staffNo).toString().split(';',QString::SkipEmptyParts));
-        for(int i=0;i<staffs.count();i++)
+        for(int i=0;i<staffs.count();++i)
         {
             int pos=staffs.at(i).indexOf(':');
             anime->staff.append(QPair<QString,QString>(staffs[i].left(pos),staffs[i].mid(pos+1)));
@@ -542,7 +542,7 @@ void AnimeWorker::updatePlayTime(const QString &title, const QString &path)
     if(animesMap.contains(title))
     {
         Anime *anime=animesMap[title];
-        for(auto iter=anime->eps.begin();iter!=anime->eps.end();iter++)
+        for(auto iter=anime->eps.begin();iter!=anime->eps.end();++iter)
         {
             if((*iter).localFile==path)
             {
@@ -579,7 +579,7 @@ bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &
          return anime->summary.contains(filterRegExp());
      case 2://staff
      {
-         for(auto iter=anime->staff.cbegin();iter!=anime->staff.cend();iter++)
+         for(auto iter=anime->staff.cbegin();iter!=anime->staff.cend();++iter)
          {
              if((*iter).second.contains(filterRegExp()))
                  return true;
@@ -588,7 +588,7 @@ bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &
      }
      case 3://crt
      {
-         for(auto iter=anime->characters.cbegin();iter!=anime->characters.cend();iter++)
+         for(auto iter=anime->characters.cbegin();iter!=anime->characters.cend();++iter)
          {
              if((*iter).name.contains(filterRegExp()) || (*iter).name_cn.contains(filterRegExp())
                      || (*iter).actor.contains(filterRegExp()))

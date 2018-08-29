@@ -54,7 +54,7 @@ DanmuAccessResult *TucaoProvider::getURLInfo(const QString &url)
 {
     int reCount=sizeof(supportedUrlRe)/sizeof(const char *);
     int matchIndex=0;
-    for(;matchIndex<reCount;matchIndex++)
+    for(;matchIndex<reCount;++matchIndex)
     {
         QRegExp re(supportedUrlRe[matchIndex]);
         re.indexIn(url);

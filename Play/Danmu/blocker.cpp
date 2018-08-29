@@ -141,7 +141,7 @@ void Blocker::removeBlockRule(const QModelIndexList &deleteIndexes)
     }
     db.commit();
     std::sort(rows.rbegin(),rows.rend());
-    for(auto iter=rows.begin();iter!=rows.end();iter++)
+    for(auto iter=rows.begin();iter!=rows.end();++iter)
     {
         BlockRule *rule=blockList.at(*iter);
         rule->enable=false;

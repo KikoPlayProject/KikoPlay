@@ -64,7 +64,7 @@ DanmuAccessResult *BahamutProvider::getURLInfo(const QString &url)
 {
     int reCount=sizeof(supportedUrlRe)/sizeof(const char *);
     int matchIndex=0;
-    for(;matchIndex<reCount;matchIndex++)
+    for(;matchIndex<reCount;++matchIndex)
     {
         QRegExp re(supportedUrlRe[matchIndex]);
         re.indexIn(url);
@@ -183,7 +183,7 @@ void BahamutProvider::handleDownloadReply(QJsonDocument &document, QList<DanmuCo
 {
     if(!document.isArray())return;
     QJsonArray dmArray(document.array());
-    for(auto dmIter=dmArray.begin();dmIter!=dmArray.end();dmIter++)
+    for(auto dmIter=dmArray.begin();dmIter!=dmArray.end();++dmIter)
     {
         if(!(*dmIter).isObject())continue;
         QJsonObject dmObj=(*dmIter).toObject();

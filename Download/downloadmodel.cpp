@@ -126,14 +126,6 @@ bool DownloadModel::containTask(const QString &taskId)
     query.exec();
     if(query.first()) return true;
     return false;
-//    QEventLoop eventLoop;
-//    bool contains=false;
-//    QMetaObject::invokeMethod(downloadWorker,[&contains,&eventLoop,&taskId](){
-//        contains=downloadWorker->containTask(taskId);
-//        eventLoop.quit();
-//    });
-//    eventLoop.exec();
-//    return contains;
 }
 
 void DownloadModel::removeItem(QModelIndexList &removeIndexes, bool deleteFile)
@@ -298,7 +290,7 @@ QString DownloadModel::restartDownloadTask(DownloadTask *task, bool allowOverwri
 
 void DownloadModel::queryItemStatus()
 {
-    for(auto iter=gidMap.cbegin();iter!=gidMap.cend();iter++)
+    for(auto iter=gidMap.cbegin();iter!=gidMap.cend();++iter)
     {
         rpc->tellStatus(iter.key());
     }
@@ -306,7 +298,7 @@ void DownloadModel::queryItemStatus()
 
 void DownloadModel::saveItemStatus()
 {
-    for(auto iter=gidMap.begin();iter!=gidMap.end();iter++)
+    for(auto iter=gidMap.begin();iter!=gidMap.end();++iter)
     {
         DownloadTask *task=iter.value();
         if(task->status!=DownloadTask::Complete)
@@ -402,9 +394,9 @@ QVariant DownloadModel::headerData(int section, Qt::Orientation orientation, int
 void DownloadModel::fetchMore(const QModelIndex &)
 {
     QList<DownloadTask *> moreTasks;
-	QEventLoop eventLoop;
-	QObject::connect(downloadWorker, &DownloadWorker::loadDone, &eventLoop, &QEventLoop::quit);
-	hasMoreTasks = false;
+    QEventLoop eventLoop;
+    QObject::connect(downloadWorker, &DownloadWorker::loadDone, &eventLoop, &QEventLoop::quit);
+    hasMoreTasks = false;
     QMetaObject::invokeMethod(downloadWorker,[this,&moreTasks](){
         downloadWorker->loadTasks(moreTasks,currentOffset,limitCount);
     },Qt::QueuedConnection);

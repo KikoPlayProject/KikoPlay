@@ -59,7 +59,7 @@ void BangumiSearch::search()
         QJsonDocument document(Network::toJson(Network::httpGet(baseUrl,query,QStringList()<<"Accept"<<"application/json")));
         QJsonArray results=document.object().value("list").toArray();
         bangumiList->clear();
-        for(auto iter=results.begin();iter!=results.end();iter++)
+        for(auto iter=results.begin();iter!=results.end();++iter)
         {
             QJsonObject searchObj=(*iter).toObject();
             QTreeWidgetItem *widgetItem=new QTreeWidgetItem(bangumiList,QStringList()<<searchObj.value("name").toString()<<searchObj.value("name_cn").toString()<<QString::number(searchObj.value("id").toInt()));

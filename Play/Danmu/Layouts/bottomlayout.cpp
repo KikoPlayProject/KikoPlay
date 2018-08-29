@@ -18,7 +18,7 @@ void BottomLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *d
     bool success=false;
     float maxSpace(0.f),dsY(0.f),cY(size.height());
     QLinkedList<DanmuObject *>::Iterator msPos;
-    for(auto iter=bottomdanmu.begin();iter!=bottomdanmu.end();iter++)
+    for(auto iter=bottomdanmu.begin();iter!=bottomdanmu.end();++iter)
     {
         if(currentY-(*iter)->y-(*iter)->drawInfo->height-margin_y>=dm_height)
         {
@@ -92,7 +92,7 @@ void BottomLayout::drawLayout(QPainter &painter)
 
 QSharedPointer<DanmuComment> BottomLayout::danmuAt(QPointF point)
 {
-    for(auto iter=bottomdanmu.cbegin();iter!=bottomdanmu.cend();iter++)
+    for(auto iter=bottomdanmu.cbegin();iter!=bottomdanmu.cend();++iter)
     {
         DanmuObject *curDMObj=*iter;
         if(curDMObj->x<point.x() && curDMObj->x+curDMObj->drawInfo->width>point.x() &&

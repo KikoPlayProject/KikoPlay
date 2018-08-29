@@ -35,7 +35,7 @@ void DanmuPool::addDanmu(DanmuSourceInfo &sourceInfo,QList<DanmuComment *> &danm
     DanmuSourceInfo *source(nullptr);
     bool containSource=false;
     int maxId=0;
-    for(auto iter=sourcesTable.begin();iter!=sourcesTable.end();iter++)
+    for(auto iter=sourcesTable.begin();iter!=sourcesTable.end();++iter)
     {
         if(iter.value().url==sourceInfo.url)
         {
@@ -308,7 +308,7 @@ void DanmuPool::setStatisInfo()
     statisInfo.maxCountOfMinute=0;
     int curMinuteCount=0;
     int startTime=0;
-    for(auto iter=danmuPool.cbegin();iter!=danmuPool.cend();iter++)
+    for(auto iter=danmuPool.cbegin();iter!=danmuPool.cend();++iter)
     {
         if(iter==danmuPool.cbegin())
         {
@@ -335,7 +335,7 @@ void DanmuPool::setStatisInfo()
 void DanmuPool::setDelay(DanmuSourceInfo *sourceInfo,int newDelay)
 {
     if(sourceInfo->delay==newDelay)return;
-    for(auto iter=danmuPool.begin();iter!=danmuPool.end();iter++)
+    for(auto iter=danmuPool.begin();iter!=danmuPool.end();++iter)
     {
         QSharedPointer<DanmuComment> cur = *iter;
 		if (cur->source == sourceInfo->id)
@@ -374,25 +374,10 @@ void DanmuPool::mediaTimeElapsed(int newTime)
 {
     if(currentTime>newTime)
     {
-#ifdef QT_DEBUG
-       // qDebug()<<"pool:media time elapsed,currentTime>newTime,newTime:"<<newTime<<",currentTime"<<currentTime<<",currentPos"<<currentPosition;
-#endif
         QCoreApplication::instance()->processEvents();
         currentTime=newTime;
         return;
     }
-#ifdef QT_DEBUG
-    //qDebug()<<"pool:media time elapsed,newTime:"<<newTime<<",currentTime:"<<currentTime<<",currentPos"<<currentPosition;
-#endif
-//    if(currentTime+1000<newTime)
-//    {
-//#ifdef QT_DEBUG
-//       // qDebug()<<"pool:media time elapsed,currentTime+1000<newTime,newTime:"<<newTime<<",currentTime"<<currentTime<<",currentPos"<<currentPosition;
-//#endif
-//        QCoreApplication::instance()->processEvents();
-//        currentTime=newTime;
-//        return;
-//    }
     currentTime=newTime;
     PrepareList *prepareList(nullptr);
     if(!prepareListPool.isEmpty())
@@ -404,7 +389,7 @@ void DanmuPool::mediaTimeElapsed(int newTime)
         prepareList=new PrepareList;
     }
     QList<QSharedPointer<DanmuComment> > *newDanmu=new QList<QSharedPointer<DanmuComment> >();//*cachedDanmu=new QList<DanmuComment *>();
-    for(;currentPosition<danmuPool.length();currentPosition++)
+    for(;currentPosition<danmuPool.length();++currentPosition)
     {
         int curTime=danmuPool.at(currentPosition)->time;
         if(curTime<0)continue;

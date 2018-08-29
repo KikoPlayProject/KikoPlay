@@ -43,7 +43,7 @@ DanmuRender::~DanmuRender()
     delete layout_table[2];
     cacheThread.quit();
     cacheThread.wait();
-    for(auto iter=danmuCache.cbegin();iter!=danmuCache.cend();iter++)
+    for(auto iter=danmuCache.cbegin();iter!=danmuCache.cend();++iter)
         delete iter.value();
     DanmuObject::DeleteObjPool();
 }

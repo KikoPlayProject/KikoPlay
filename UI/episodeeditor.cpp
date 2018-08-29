@@ -52,7 +52,7 @@ EpisodeEditor::EpisodeEditor(Anime *anime, QWidget *parent) : CFramelessDialog(t
             QJsonDocument document(Network::toJson(str));
             QJsonObject obj = document.object();
             QJsonArray epArray=obj.value("eps").toArray();
-            for(auto iter=epArray.begin();iter!=epArray.end();iter++)
+            for(auto iter=epArray.begin();iter!=epArray.end();++iter)
             {
                 QJsonObject epobj=(*iter).toObject();
                 epNames.append(QString("No.%0 %1(%2)").arg(epobj.value("sort").toInt()).arg(epobj.value("name").toString()).arg(epobj.value("name_cn").toString()));

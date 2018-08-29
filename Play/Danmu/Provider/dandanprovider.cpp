@@ -76,7 +76,7 @@ void DandanProvider::handleSearchReply(QJsonDocument &document, DanmuAccessResul
         QJsonValue animes=obj.value("animes");
         if(animes.type()!=QJsonValue::Array) break;
         QJsonArray animeArray=animes.toArray();
-        for(auto animeIter=animeArray.begin();animeIter!=animeArray.end();animeIter++)
+        for(auto animeIter=animeArray.begin();animeIter!=animeArray.end();++animeIter)
         {
             if(!(*animeIter).isObject())continue;
             QJsonObject animeObj=(*animeIter).toObject();
@@ -86,7 +86,7 @@ void DandanProvider::handleSearchReply(QJsonDocument &document, DanmuAccessResul
             QJsonValue episodes= animeObj.value("episodes");
             if(episodes.type()!=QJsonValue::Array) continue;
             QJsonArray episodeArray=episodes.toArray();
-            for(auto episodeIter=episodeArray.begin();episodeIter!=episodeArray.end();episodeIter++)
+            for(auto episodeIter=episodeArray.begin();episodeIter!=episodeArray.end();++episodeIter)
             {
                 if(!(*episodeIter).isObject())continue;
                 QJsonObject episodeObj=(*episodeIter).toObject();
@@ -121,7 +121,7 @@ void DandanProvider::handleDownloadReply(QJsonDocument &document, QList<DanmuCom
         QJsonValue comments=obj.value("comments");
         if(comments.type()!=QJsonValue::Array) break;
         QJsonArray comentArray=comments.toArray();
-        for(auto comentIter=comentArray.begin();comentIter!=comentArray.end();comentIter++)
+        for(auto comentIter=comentArray.begin();comentIter!=comentArray.end();++comentIter)
         {
             if(!(*comentIter).isObject())continue;
             QJsonObject comentObj=(*comentIter).toObject();

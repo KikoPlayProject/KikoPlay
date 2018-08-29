@@ -106,7 +106,7 @@ DanmuAccessResult *ProviderManager::getEpInfo(const QString &providerId, DanmuSo
 
 DanmuAccessResult *ProviderManager::getURLInfo(QString &url)
 {
-    for(auto iter=providers.cbegin();iter!=providers.cend();iter++)
+    for(auto iter=providers.cbegin();iter!=providers.cend();++iter)
     {
         DanmuAccessResult *result=iter.value()->getURLInfo(url);
         if(result)return result;
@@ -139,7 +139,7 @@ QString ProviderManager::downloadDanmu(QString &providerId, DanmuSourceItem *ite
 
 QString ProviderManager::downloadBySourceURL(const QString &url, QList<DanmuComment *> &danmuList)
 {
-    for(auto iter=providers.cbegin();iter!=providers.cend();iter++)
+    for(auto iter=providers.cbegin();iter!=providers.cend();++iter)
     {
         if(iter.value()->supportSourceURL(url))
             return iter.value()->downloadBySourceURL(url,danmuList);

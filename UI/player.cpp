@@ -134,7 +134,7 @@ public:
         QVBoxLayout *pcVLayout=new QVBoxLayout(this);
 		pcVLayout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::MinimumExpanding));
         pcVLayout->addWidget(logo);
-        for(int i=0;i<GlobalObjects::playlist->maxRecentItems;i++)
+        for(int i=0;i<GlobalObjects::playlist->maxRecentItems;++i)
         {
             RecentItem *recentItem=new RecentItem(this);
             pcVLayout->addWidget(recentItem);
@@ -150,7 +150,7 @@ public:
         int i=0;
         const int maxRecentCount=GlobalObjects::playlist->maxRecentItems;
         auto &recent=GlobalObjects::playlist->recent();
-        for(;i<maxRecentCount && i<recent.count();i++)
+        for(;i<maxRecentCount && i<recent.count();++i)
             items[i]->setData(recent[i],i);
         while(i<maxRecentCount)
             items[i++]->hide();
@@ -181,7 +181,7 @@ protected:
         float wRatio=(float)(bRect.width()-margin*2)/duration;
         float bHeight=bRect.height();
         QColor barColor(51,168,255,200);
-        for(auto iter=statisInfo.countOfMinute.cbegin();iter!=statisInfo.countOfMinute.cend();iter++)
+        for(auto iter=statisInfo.countOfMinute.cbegin();iter!=statisInfo.countOfMinute.cend();++iter)
         {
             float l((*iter).first*wRatio);
             float h(floor((*iter).second*hRatio));

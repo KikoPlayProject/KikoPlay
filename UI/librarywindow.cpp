@@ -169,7 +169,7 @@ public:
             {
                 QModelIndex collectIndex = GlobalObjects::playlist->addCollection(QModelIndex(),currentAnime->title);
                 QStringList items;
-                for(auto iter=currentAnime->eps.cbegin();iter!=currentAnime->eps.cend();iter++)
+                for(auto iter=currentAnime->eps.cbegin();iter!=currentAnime->eps.cend();++iter)
                 {
                     items<<(*iter).localFile;
                 }
@@ -225,7 +225,7 @@ public:
     void refreshEpList(Anime *anime)
     {
         int i=0;
-        for(auto iter=anime->eps.begin();iter!=anime->eps.end();iter++)
+        for(auto iter=anime->eps.begin();iter!=anime->eps.end();++iter)
         {
             if(episodes.count()>i)
             {
@@ -258,7 +258,7 @@ public:
         }
         titleLabel->setText(QString("<a href = \"http://bgm.tv/subject/%1\">%2</a>").arg(anime->bangumiID).arg(anime->title));
         QStringList stafflist;
-        for(auto iter=anime->staff.cbegin();iter!=anime->staff.cend();iter++)
+        for(auto iter=anime->staff.cbegin();iter!=anime->staff.cend();++iter)
         {
             stafflist.append((*iter).first+": "+(*iter).second);
         }
@@ -268,7 +268,7 @@ public:
         infoLabel->setText(anime->summary);
         refreshEpList(anime);
         int i=0;
-        for(auto iter=anime->characters.begin();iter!=anime->characters.end();iter++)
+        for(auto iter=anime->characters.begin();iter!=anime->characters.end();++iter)
         {
             if(crts.count()>i)
             {

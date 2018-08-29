@@ -73,7 +73,7 @@ DanmuAccessResult *BilibiliProvider::getURLInfo(const QString &url)
 {
     int reCount=sizeof(supportedUrlRe)/sizeof(const char *);
     int matchIndex=0;
-    for(;matchIndex<reCount;matchIndex++)
+    for(;matchIndex<reCount;++matchIndex)
     {
         QRegExp re(supportedUrlRe[matchIndex]);
         re.indexIn(url);
@@ -134,7 +134,7 @@ void BilibiliProvider::handleSearchReply(QJsonDocument &document, DanmuAccessRes
     if(bangumiResult.type()==QJsonValue::Array)
     {
         QJsonArray bangumiArray=bangumiResult.toArray();
-        for(auto bangumiIter=bangumiArray.begin();bangumiIter!=bangumiArray.end();bangumiIter++)
+        for(auto bangumiIter=bangumiArray.begin();bangumiIter!=bangumiArray.end();++bangumiIter)
         {
             if(!(*bangumiIter).isObject())continue;
             QJsonObject bangumiObj=(*bangumiIter).toObject();
@@ -158,7 +158,7 @@ void BilibiliProvider::handleSearchReply(QJsonDocument &document, DanmuAccessRes
     if(videoResult.type()==QJsonValue::Array)
     {
         QJsonArray videoArray=videoResult.toArray();
-        for(auto videoIter=videoArray.begin();videoIter!=videoArray.end();videoIter++)
+        for(auto videoIter=videoArray.begin();videoIter!=videoArray.end();++videoIter)
         {
             if(!(*videoIter).isObject())continue;
             QJsonObject bangumiObj=(*videoIter).toObject();
@@ -195,7 +195,7 @@ void BilibiliProvider::handleBangumiReply(QJsonDocument &document, DanmuAccessRe
     if(bangumiResult.type()==QJsonValue::Array)
     {
         QJsonArray bangumiArray=bangumiResult.toArray();
-        for(auto bangumiIter=bangumiArray.begin();bangumiIter!=bangumiArray.end();bangumiIter++)
+        for(auto bangumiIter=bangumiArray.begin();bangumiIter!=bangumiArray.end();++bangumiIter)
         {
             if(!(*bangumiIter).isObject())continue;
             QJsonObject bangumiObj=(*bangumiIter).toObject();
@@ -292,7 +292,7 @@ void BilibiliProvider::decodeVideoList(QByteArray &bytes, DanmuAccessResult *res
     if (obj.contains("pages") && obj["pages"].isArray())
     {
         QJsonArray pageArray = obj["pages"].toArray();
-        for (auto p = pageArray.begin(); p != pageArray.end(); p++)
+        for (auto p = pageArray.begin(); p != pageArray.end(); ++p)
         {
             if (!(*p).isObject())continue;
             QJsonObject pObj = (*p).toObject();
@@ -321,7 +321,7 @@ void BilibiliProvider::decodeEpList(QByteArray &bytes, DanmuAccessResult *result
     if (jsonError.error != QJsonParseError::NoError) return;
     if (!document.isArray()) return;
     QJsonArray epArray=document.array();
-    for(auto p=epArray.begin();p!=epArray.end();p++)
+    for(auto p=epArray.begin();p!=epArray.end();++p)
     {
         if(!(*p).isObject())continue;
         QJsonObject pObj=(*p).toObject();

@@ -5,7 +5,7 @@ QString formatSize(bool isSpeed, float val)
     static const QStringList sizeUnits={"B","KB","MB","GB","TB"};
     static const QStringList speedUnits={"B/s","KB/s","MB/s","GB/s","TB/s"};
     int i=0;
-    for(;i<5;i++)
+    for(;i<5;++i)
     {
         if(val<1024.0)
         {

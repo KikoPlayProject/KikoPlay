@@ -138,7 +138,7 @@ namespace
     void buildFileTree(BEncodeDict *infoDict,TorrentFile *root)
     {
         root->checkStatus=Qt::Checked;
-        for(auto iter=infoDict->itemDict.cbegin();iter!=infoDict->itemDict.cend();iter++)
+        for(auto iter=infoDict->itemDict.cbegin();iter!=infoDict->itemDict.cend();++iter)
         {
             if((*iter).first=="name")
             {
@@ -294,7 +294,7 @@ void TorrentDecoder::decodeTorrent()
     }
 
     BEncodeDict *rootDict=static_cast<BEncodeDict *>(rootBEItem);
-    for(auto iter=rootDict->itemDict.cbegin();iter!=rootDict->itemDict.cend();iter++)
+    for(auto iter=rootDict->itemDict.cbegin();iter!=rootDict->itemDict.cend();++iter)
     {
         if((*iter).first=="info")
         {
@@ -352,7 +352,7 @@ void TorrentFileModel::checkAll(bool on)
 {
     root->checkStatus=(on?Qt::Checked:Qt::Unchecked);
     root->setChildrenCheckStatus();
-    for(int i=0;i<root->children.count();i++)
+    for(int i=0;i<root->children.count();++i)
     {
         QModelIndex cIndex(index(i,0,QModelIndex()));
         emit dataChanged(cIndex,cIndex.sibling(cIndex.row(),2));
@@ -388,7 +388,7 @@ void TorrentFileModel::checkVideoFiles(bool on)
             }
         }
     }
-    for(int i=0;i<root->children.count();i++)
+    for(int i=0;i<root->children.count();++i)
     {
         QModelIndex cIndex(index(i,0,QModelIndex()));
         emit dataChanged(cIndex,cIndex.sibling(cIndex.row(),2));
@@ -424,7 +424,7 @@ void TorrentFileModel::refreshChildrenCheckStatus(const QModelIndex &index)
     {
         QModelIndex pIndex(pIndexes.takeFirst());
         TorrentFile *parentItem = static_cast<TorrentFile *>(pIndex.internalPointer());
-        for(int i=0;i<parentItem->children.count();i++)
+        for(int i=0;i<parentItem->children.count();++i)
         {
             emit dataChanged(pIndex.child(i,0),pIndex.child(i,2));
             pIndexes.append(pIndex.child(i,0));
@@ -575,7 +575,7 @@ void CTorrentFileModel::setContent(TorrentFileInfo *infoRoot)
 void CTorrentFileModel::updateFileProgress(const QJsonArray &fileArray)
 {
 	if (!info)return;
-    for(auto iter=fileArray.begin();iter!=fileArray.end();iter++)
+    for(auto iter=fileArray.begin();iter!=fileArray.end();++iter)
     {
         QJsonObject fileObj=(*iter).toObject();
         int i=fileObj.value("index").toString().toInt();

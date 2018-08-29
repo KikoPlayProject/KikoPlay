@@ -25,7 +25,7 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),paren
 
     QVBoxLayout *poolItemVLayout=new QVBoxLayout(contentWidget);
     QHash<int,DanmuSourceInfo> &sources=GlobalObjects::danmuPool->getSources();
-    for(auto iter=sources.begin();iter!=sources.end();iter++)
+    for(auto iter=sources.begin();iter!=sources.end();++iter)
     {
         PoolItem *poolItem=new PoolItem(&iter.value(),this);
         poolItemVLayout->addWidget(poolItem);

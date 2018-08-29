@@ -9,11 +9,11 @@ MediaInfo::MediaInfo(QWidget *parent) : CFramelessDialog(tr("Media Info"),parent
     QTextEdit *infoText=new QTextEdit(this);
     QMap<QString,QMap<QString,QString> > info=GlobalObjects::mpvplayer->getMediaInfo();
     QString displayText;
-    for(auto iter=info.begin();iter!=info.end();iter++)
+    for(auto iter=info.begin();iter!=info.end();++iter)
     {
         displayText+=QString("<font size=\"4\" face=\"Microsoft Yahei\" color=\"#18C0F1\">%0</font><br /><font size=\"3\" face=\"Microsoft Yahei\">%1</font>").arg(iter.key()).arg(iter.value().contains("General")?iter.value()["General"]+"<br />":"");
         QMap<QString,QString> &subInfo=iter.value();
-        for(auto iter=subInfo.begin();iter!=subInfo.end();iter++)
+        for(auto iter=subInfo.begin();iter!=subInfo.end();++iter)
         {
             if(iter.key()!="General")
             {

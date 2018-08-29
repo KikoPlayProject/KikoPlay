@@ -70,7 +70,7 @@ void EpisodesModel::removeEpisodes(const QModelIndexList &removeIndexes)
     }
     db.commit();
     std::sort(rows.rbegin(),rows.rend());
-    for(auto iter=rows.begin();iter!=rows.end();iter++)
+    for(auto iter=rows.begin();iter!=rows.end();++iter)
     {
         beginRemoveRows(QModelIndex(), *iter, *iter);
         currentAnime->eps.removeAt(*iter);

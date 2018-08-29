@@ -21,7 +21,7 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
     bool success=false;
     float minX(FLT_MAX),maxSpace(0.f),dsY(0.f),cY(0.f);
     QLinkedList<DanmuObject *>::Iterator msPos1,msPos2;
-    for(auto iter=lastcol.begin();iter!=lastcol.end();iter++)
+    for(auto iter=lastcol.begin();iter!=lastcol.end();++iter)
     {
         float cur_height=(*iter)->drawInfo->height;
         if((*iter)->y-currentY-margin_y>=dm_height)
@@ -132,11 +132,11 @@ void RollLayout::cleanup()
 void RollLayout::setSpeed(float speed)
 {
     base_speed=speed;
-    for(auto iter=rolldanmu.cbegin();iter!=rolldanmu.cend();iter++)
+    for(auto iter=rolldanmu.cbegin();iter!=rolldanmu.cend();++iter)
     {
         (*iter)->extraData=((*iter)->drawInfo->width/5+base_speed)/1000;
     }
-    for(auto iter=lastcol.cbegin();iter!=lastcol.cend();iter++)
+    for(auto iter=lastcol.cbegin();iter!=lastcol.cend();++iter)
     {
         (*iter)->extraData=((*iter)->drawInfo->width/5+base_speed)/1000;
     }
@@ -153,7 +153,7 @@ void RollLayout::removeBlocked()
         }
         else
         {
-            iter++;
+            ++iter;
         }
     }
     for(auto iter=lastcol.begin();iter!=lastcol.end();)
@@ -165,7 +165,7 @@ void RollLayout::removeBlocked()
         }
         else
         {
-            iter++;
+            ++iter;
         }
     }
 }
@@ -179,7 +179,7 @@ void RollLayout::moveLayoutList(QLinkedList<DanmuObject *> &list, float step)
         current->x-=step*current->extraData;
         if(current->x+current_drawInfo->width>0)
         {
-            iter++;
+            ++iter;
         }
         else
         {
@@ -191,7 +191,7 @@ void RollLayout::moveLayoutList(QLinkedList<DanmuObject *> &list, float step)
 
 QSharedPointer<DanmuComment> RollLayout::danmuAtList(QPointF point, QLinkedList<DanmuObject *> &list)
 {
-    for(auto iter=list.cbegin();iter!=list.cend();iter++)
+    for(auto iter=list.cbegin();iter!=list.cend();++iter)
     {
         DanmuObject *curDMObj=*iter;
         if(curDMObj->x<point.x() && curDMObj->x+curDMObj->drawInfo->width>point.x() &&

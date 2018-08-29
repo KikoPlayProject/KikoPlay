@@ -207,7 +207,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
             if(taskOptions.count()>0)
             {
                 auto &items=GlobalObjects::downloadModel->getItems();
-                for(auto iter=items.cbegin();iter!=items.cend();iter++)
+                for(auto iter=items.cbegin();iter!=items.cend();++iter)
                 {
                     if(iter.value()->status!=DownloadTask::Complete)
                         rpc->changeOption(iter.key(),taskOptions);
@@ -359,7 +359,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     refreshTimer=new QTimer(this);
     QObject::connect(refreshTimer,&QTimer::timeout,[this](){
         auto &items=GlobalObjects::downloadModel->getItems();
-        for(auto iter=items.cbegin();iter!=items.cend();iter++)
+        for(auto iter=items.cbegin();iter!=items.cend();++iter)
         {
             rpc->tellStatus(iter.key());
         }
@@ -757,7 +757,7 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
                     task->fileInfo->setIndexMap();
                     if(task->gid.isEmpty() && task->status==DownloadTask::Complete)
                     {
-                        for(auto iter=task->fileInfo->indexMap.begin();iter!=task->fileInfo->indexMap.end();iter++)
+                        for(auto iter=task->fileInfo->indexMap.begin();iter!=task->fileInfo->indexMap.end();++iter)
                         {
                             iter.value()->completedSize=iter.value()->size;
                         }

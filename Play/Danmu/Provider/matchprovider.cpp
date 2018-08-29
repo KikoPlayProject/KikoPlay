@@ -132,7 +132,7 @@ void MatchWorker::handleMatchReply(QJsonDocument &document, MatchInfo *matchInfo
         QJsonValue matches=obj.value("matches");
         if(matches.type()!=QJsonValue::Array) break;
         QJsonArray detailInfoArray=matches.toArray();
-        for(auto iter=detailInfoArray.begin();iter!=detailInfoArray.end();iter++)
+        for(auto iter=detailInfoArray.begin();iter!=detailInfoArray.end();++iter)
         {
             if(!(*iter).isObject())continue;
             QJsonObject detailObj=(*iter).toObject();
@@ -174,7 +174,7 @@ void MatchWorker::handleSearchReply(QJsonDocument &document, MatchInfo *searchIn
         QJsonValue animes=obj.value("animes");
         if(animes.type()!=QJsonValue::Array) break;
         QJsonArray animeArray=animes.toArray();
-        for(auto animeIter=animeArray.begin();animeIter!=animeArray.end();animeIter++)
+        for(auto animeIter=animeArray.begin();animeIter!=animeArray.end();++animeIter)
         {
             if(!(*animeIter).isObject())continue;
             QJsonObject animeObj=(*animeIter).toObject();
@@ -184,7 +184,7 @@ void MatchWorker::handleSearchReply(QJsonDocument &document, MatchInfo *searchIn
             QJsonValue episodes= animeObj.value("episodes");
             if(episodes.type()!=QJsonValue::Array) continue;
             QJsonArray episodeArray=episodes.toArray();
-            for(auto episodeIter=episodeArray.begin();episodeIter!=episodeArray.end();episodeIter++)
+            for(auto episodeIter=episodeArray.begin();episodeIter!=episodeArray.end();++episodeIter)
             {
                 if(!(*episodeIter).isObject())continue;
                 QJsonObject episodeObj=(*episodeIter).toObject();

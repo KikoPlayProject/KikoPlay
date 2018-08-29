@@ -18,7 +18,7 @@ void TopLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *draw
     bool success=false;
     float maxSpace(0.f),dsY(0.f),cY(0.f);
     QLinkedList<DanmuObject *>::Iterator msPos;
-    for(auto iter=topdanmu.begin();iter!=topdanmu.end();iter++)
+    for(auto iter=topdanmu.begin();iter!=topdanmu.end();++iter)
     {
         if((*iter)->y-currentY-margin_y>=dm_height)
         {         
@@ -72,7 +72,7 @@ void TopLayout::moveLayout(float step)
         current->extraData-=step;
         if(current->extraData>0)
         {
-            iter++;
+            ++iter;
         }
         else
         {
@@ -92,7 +92,7 @@ void TopLayout::drawLayout(QPainter &painter)
 
 QSharedPointer<DanmuComment> TopLayout::danmuAt(QPointF point)
 {
-    for(auto iter=topdanmu.cbegin();iter!=topdanmu.cend();iter++)
+    for(auto iter=topdanmu.cbegin();iter!=topdanmu.cend();++iter)
     {
         DanmuObject *curDMObj=*iter;
         if(curDMObj->x<point.x() && curDMObj->x+curDMObj->drawInfo->width>point.x() &&
@@ -119,7 +119,7 @@ void TopLayout::removeBlocked()
         }
         else
         {
-            iter++;
+            ++iter;
         }
     }
 }

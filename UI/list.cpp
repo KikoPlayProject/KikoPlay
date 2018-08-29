@@ -345,7 +345,7 @@ void ListWindow::initActions()
         AddDanmu addDanmuDialog(searchWords, this);
         if(QDialog::Accepted==addDanmuDialog.exec())
         {
-            for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();iter++)
+            for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
             {
                 GlobalObjects::danmuPool->addDanmu((*iter).first,(*iter).second);
             }

@@ -81,7 +81,7 @@ void PlayList::addItems(QStringList &items, QModelIndex parent)
     QSet<QString> paths;
     addMediaItemPath(paths);
 	QStringList tmpItems;
-    for(auto iter=items.cbegin();iter!=items.cend();iter++)
+    for(auto iter=items.cbegin();iter!=items.cend();++iter)
     {
 		if (!paths.contains(*iter))
 			tmpItems.append(*iter);
@@ -742,7 +742,7 @@ QString PlayList::setCollectionTitle(QList<PlayListItem *> &list)
             = [](const QString &suffix,const QString &str,int *next)
     {
         int maxMatchLen=0,i=0,j=0;
-        for (; i < str.length(); i++)
+        for (; i < str.length(); ++i)
         {
             while (j > -1 && str[i] != suffix[j])
                 j = next[j];
@@ -758,7 +758,7 @@ QString PlayList::setCollectionTitle(QList<PlayListItem *> &list)
     {
         int i = 0, j = -1;
         int *next = new int[suffix.length()];
-        for (; i < suffix.length(); i++) {
+        for (; i < suffix.length(); ++i) {
             next[i] = j;
             while (j > -1 && suffix[i] != suffix[j])
                 j = next[j];

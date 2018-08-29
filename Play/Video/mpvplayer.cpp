@@ -86,7 +86,7 @@ QMap<QString, QMap<QString, QString> > MPVPlayer::getMediaInfo()
     fileInfo.insert(tr("Title"),mpv::qt::get_property(mpv,"media-title").toString());
     float fileSize=fi.size();
     QStringList units={"B","KB","MB","GB","TB"};
-    for(int i=0;i<units.size();i++)
+    for(int i=0;i<units.size();++i)
     {
         if(fileSize<1024.0)
         {
@@ -123,7 +123,7 @@ QMap<QString, QMap<QString, QString> > MPVPlayer::getMediaInfo()
 
     QMap<QString,QString> metaInfo;
     QMap<QString,QVariant> metadata=mpv::qt::get_property(mpv,"metadata").toMap();
-    for(auto iter=metadata.begin();iter!=metadata.end();iter++)
+    for(auto iter=metadata.begin();iter!=metadata.end();++iter)
 		metaInfo.insert(iter.key(),iter.value().toString());
     mediaInfo.insert(tr("Meta Data"),metaInfo);
 

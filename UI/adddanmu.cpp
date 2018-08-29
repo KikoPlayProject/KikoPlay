@@ -324,7 +324,7 @@ void AddDanmu::onAccept()
 
 void AddDanmu::onClose()
 {
-    for(auto iter=selectedDanmuList.begin();iter!=selectedDanmuList.end();iter++)
+    for(auto iter=selectedDanmuList.begin();iter!=selectedDanmuList.end();++iter)
     {
         qDeleteAll((*iter).second);
     }
