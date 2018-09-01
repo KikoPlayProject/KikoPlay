@@ -22,7 +22,7 @@ Capture::Capture(QImage &captureImage, QWidget *parent) : CFramelessDialog("",pa
     QPushButton *copyToClipboard=new QPushButton(tr("Copy to Clipboard"),buttonContainer);
     QObject::connect(copyToClipboard,&QPushButton::clicked,[&captureImage,this](){
        QApplication::clipboard()->setImage(captureImage);
-       accept();
+       CFramelessDialog::onAccept();
     });
     QPushButton *saveToFile=new QPushButton(tr("Save"),buttonContainer);
     QObject::connect(saveToFile,&QPushButton::clicked,[this,&captureImage](){
@@ -31,7 +31,7 @@ Capture::Capture(QImage &captureImage, QWidget *parent) : CFramelessDialog("",pa
         if(!fileName.isEmpty())
         {
             captureImage.save(fileName);
-            accept();
+            CFramelessDialog::onAccept();
         }
     });
     QHBoxLayout *btnHLayout=new QHBoxLayout(buttonContainer);
