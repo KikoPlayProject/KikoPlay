@@ -104,7 +104,7 @@ PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):source(sourceIn
                 QSet<QString> danmuHashSet(GlobalObjects::danmuPool->getDanmuHash(sourceInfo->id));
                 for(auto iter=tmpList.begin();iter!=tmpList.end();)
                 {
-                    QByteArray hashData(QString("%0%1%2%3").arg((*iter)->text).arg((*iter)->date).arg((*iter)->sender).arg((*iter)->color).toUtf8());
+                    QByteArray hashData(QString("%0%1%2%3").arg((*iter)->text).arg((*iter)->time+sourceInfo->delay).arg((*iter)->sender).arg((*iter)->color).toUtf8());
                     QString danmuHash(QString(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex()));
                     if(danmuHashSet.contains(danmuHash))
                     {
@@ -112,7 +112,7 @@ PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):source(sourceIn
                         iter=tmpList.erase(iter);
                     }
                     else
-                        iter++;
+                        ++iter;
                 }
             }
             if(tmpList.count()>0)
@@ -121,7 +121,7 @@ PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):source(sourceIn
                 si.count = tmpList.count();
                 si.url = sourceInfo->url;
                 GlobalObjects::danmuPool->addDanmu(si,tmpList);
-                QMessageBox::information(this,tr("Update"),tr("Add %1 New Danmu").arg(tmpList.count()));
+                QMessageBox::information(this,tr("Update - %1").arg(sourceInfo->name),tr("Add %1 New Danmu").arg(tmpList.count()));
                 name->setText(QString("%1(%2)").arg(sourceInfo->name).arg(sourceInfo->count));
             }
         }

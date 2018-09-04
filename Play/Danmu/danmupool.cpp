@@ -229,7 +229,7 @@ QSet<QString> DanmuPool::getDanmuHash(int sourceId)
     {
         if(danmu->source==sourceId)
         {
-            QByteArray hashData(QString("%0%1%2%3").arg(danmu->text).arg(danmu->date).arg(danmu->sender).arg(danmu->color).toUtf8());
+            QByteArray hashData(QString("%0%1%2%3").arg(danmu->text).arg(danmu->time).arg(danmu->sender).arg(danmu->color).toUtf8());
             QString danmuHash(QString(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex()));
             hashSet.insert(danmuHash);
         }

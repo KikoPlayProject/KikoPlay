@@ -108,7 +108,7 @@ QString BahamutProvider::downloadBySourceURL(const QString &url, QList<DanmuComm
 {
     int sn=url.mid(url.lastIndexOf(':')+1).toInt();
     DanmuSourceItem item;
-    item.subId=sn;
+    item.id=sn;
     return downloadDanmu(&item,danmuList);
 }
 
