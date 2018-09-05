@@ -31,10 +31,8 @@ MSVC2015 32bit
 
 ## 下载
 
-[Releases](https://github.com/Protostars/KikoPlay/releases)
-
 [百度网盘](https://pan.baidu.com/s/1gyT0FU9rioaa77znhAUx2w)
 
 ## 反馈
 
-如果有问题，欢迎创建issue或者联系我: dx_8820832#yeah.net（#→@）
+如果有问题，欢迎创建issue或者联系我: dx_8820832#yeah.net（#→@），或者加QQ群874761809反馈

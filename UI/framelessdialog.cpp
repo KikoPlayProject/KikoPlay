@@ -28,7 +28,7 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
 	  restorePlayState(false)
 {
 
-    setWindowFlags(windowFlags() | Qt::Dialog | Qt::FramelessWindowHint);
+    setWindowFlags((windowFlags() | Qt::Dialog | Qt::FramelessWindowHint) & ~Qt::WindowSystemMenuHint);
     setObjectName(QStringLiteral("framelessDialog"));
     GlobalObjects::iconfont.setPointSize(10);
     titleBar=new QWidget(this);

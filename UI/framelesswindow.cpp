@@ -21,11 +21,6 @@ CFramelessWindow::CFramelessWindow(QWidget *parent)
       m_bJustMaximized(false),
       m_bResizeable(true)
 {
-//    setWindowFlag(Qt::Window,true);
-//    setWindowFlag(Qt::FramelessWindowHint, true);
-//    setWindowFlag(Qt::WindowSystemMenuHint, true);
-//    setWindowFlag() is not avaliable before Qt v5.9, so we should use setWindowFlags instead
-
     setWindowFlags(windowFlags() | Qt::Window | Qt::FramelessWindowHint | Qt::WindowSystemMenuHint);
 
     setResizeable(m_bResizeable);
