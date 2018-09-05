@@ -689,7 +689,7 @@ void PlayerWindow::setupDanmuSettingPage()
 
     QLabel *maxDanmuCountLabel=new QLabel(tr("Max Count"),danmuSettingPage);
     maxDanmuCount=new QSlider(Qt::Horizontal,danmuSettingPage);
-    maxDanmuCount->setRange(50,300);
+    maxDanmuCount->setRange(40,300);
     QObject::connect(maxDanmuCount,&QSlider::valueChanged,[this](int val){
         GlobalObjects::danmuRender->setMaxDanmuCount(val);
         maxDanmuCount->setToolTip(QString::number(val));

@@ -89,9 +89,12 @@ DanmuAccessResult *ProviderManager::getEpInfo(const QString &providerId, DanmuSo
     QMetaObject::invokeMethod(provider,"getEpInfo",Qt::QueuedConnection,Q_ARG(DanmuSourceItem *,item));
     QEventLoop eventLoop;
     DanmuAccessResult *curEpInfo=nullptr;
-    QObject::connect(provider,&ProviderBase::epInfoDone, &eventLoop, [&eventLoop,&curEpInfo](DanmuAccessResult *epInfo){
-        curEpInfo=epInfo;
-        eventLoop.quit();
+    QObject::connect(provider,&ProviderBase::epInfoDone, &eventLoop, [&eventLoop,&curEpInfo,item](DanmuAccessResult *epInfo,DanmuSourceItem *srcItem){
+		if (item == srcItem)
+		{
+			curEpInfo = epInfo;
+			eventLoop.quit();
+		}
     });
     eventLoop.exec();
     if(!curEpInfo)

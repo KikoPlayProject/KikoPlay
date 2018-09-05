@@ -369,7 +369,11 @@ SearchItemWidget::SearchItemWidget(DanmuSourceItem *item):searchItem(*item)
 	descLabel->setText(QString("<font size=\"3\" face=\"Microsoft Yahei\">%1</font>").arg(item->description.trimmed()));
 	descLabel->setToolTip(item->description);
     QPushButton *addItemButton=new QPushButton(tr("Add"),this);
-    QObject::connect(addItemButton,&QPushButton::clicked,[this](){emit addSearchItem(&searchItem);});
+    QObject::connect(addItemButton,&QPushButton::clicked,[this,addItemButton](){
+		addItemButton->setEnabled(false);
+		emit addSearchItem(&searchItem);
+		addItemButton->setEnabled(true);
+	});
     QHBoxLayout *itemHLayout=new QHBoxLayout(this);
 	QVBoxLayout *lbVLayout = new QVBoxLayout();
 	lbVLayout->addWidget(titleLabel);

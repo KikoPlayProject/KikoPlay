@@ -29,7 +29,7 @@ DanmuAccessResult *DandanProvider::getEpInfo(DanmuSourceItem *item)
     result->providerId=id();
     result->error=false;
     result->list.append(*item);
-    emit epInfoDone(result);
+    emit epInfoDone(result,item);
     return result;
 }
 

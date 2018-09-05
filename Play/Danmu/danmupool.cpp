@@ -74,7 +74,7 @@ void DanmuPool::addDanmu(DanmuSourceInfo &sourceInfo,QList<DanmuComment *> &danm
     beginResetModel();
     std::sort(danmuPool.begin(),danmuPool.end(),DanmuSPCompare);
     endResetModel();
-    mediaTimeJumped(currentTime);
+	currentPosition = std::lower_bound(danmuPool.begin(), danmuPool.end(), currentTime, DanmuComparer) - danmuPool.begin();
     setStatisInfo();
 }
 
