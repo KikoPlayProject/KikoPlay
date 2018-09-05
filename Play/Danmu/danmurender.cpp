@@ -153,18 +153,16 @@ void DanmuRender::setMaxDanmuCount(int count)
 
 void DanmuRender::addDanmu(PrepareList *newDanmu)
 {
-    int addCount(0);
     if(GlobalObjects::playlist->getCurrentItem()!=nullptr)
     {
         for(auto &danmuInfo:*newDanmu)
         {
             layout_table[danmuInfo.first->type]->addDanmu(danmuInfo.first,danmuInfo.second);
-            addCount++;
-            if(maxCount!=-1 && !dense)
+            if(maxCount!=-1)
             {
                 if(layout_table[DanmuComment::Rolling]->danmuCount()+
                    layout_table[DanmuComment::Top]->danmuCount()+
-                   layout_table[DanmuComment::Bottom]->danmuCount()+addCount>maxCount)
+                   layout_table[DanmuComment::Bottom]->danmuCount()>maxCount)
                     break;
             }
         }

@@ -22,7 +22,7 @@ public slots:
     virtual QString downloadBySourceURL(const QString &url,QList<DanmuComment *> &danmuList)=0;
 signals:
     void searchDone(DanmuAccessResult *searchInfo);
-    void epInfoDone(DanmuAccessResult *epInfo);
+    void epInfoDone(DanmuAccessResult *epInfo, DanmuSourceItem *srcItem);
     void downloadDone(QString errInfo);
 };
 #endif // PROVIDERBASE_H

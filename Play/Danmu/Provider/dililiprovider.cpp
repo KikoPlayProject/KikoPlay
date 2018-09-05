@@ -50,7 +50,7 @@ DanmuAccessResult *DililiProvider::getEpInfo(DanmuSourceItem *item)
         result->error=true;
         result->errorInfo=error.errorInfo;
     }
-    emit epInfoDone(result);
+    emit epInfoDone(result,item);
     return result;
 }
 

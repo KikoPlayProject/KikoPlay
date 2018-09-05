@@ -49,7 +49,7 @@ private:
                                     QIcon(":/res/images/paused.png"),
                                     QIcon(":/res/images/completed.png"),
                                     QIcon(":/res/images/error.png")};
-    const int limitCount=20;
+    const int limitCount=100;
     int currentOffset;
     bool hasMoreTasks;
     Aria2JsonRPC *rpc;
