@@ -388,7 +388,6 @@ void DanmuPool::mediaTimeElapsed(int newTime)
     {
         prepareList=new PrepareList;
     }
-    QList<QSharedPointer<DanmuComment> > *newDanmu=new QList<QSharedPointer<DanmuComment> >();//*cachedDanmu=new QList<DanmuComment *>();
     for(;currentPosition<danmuPool.length();++currentPosition)
     {
         int curTime=danmuPool.at(currentPosition)->time;
@@ -399,16 +398,19 @@ void DanmuPool::mediaTimeElapsed(int newTime)
 			if (dm->blockBy == -1 && sourcesTable[dm->source].open)
 			{
                 prepareList->append(QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*>(dm,nullptr));
-				newDanmu->append(dm);
 			}
         }
         else
             break;
     }
-    if(newDanmu->length()>0)
+    if(prepareList->length()>0)
     {
         GlobalObjects::danmuRender->prepareDanmu(prepareList);
     }
+	else
+	{
+		recyclePrepareList(prepareList);
+	}
 }
 
 void DanmuPool::mediaTimeJumped(int newTime)
