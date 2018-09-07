@@ -564,10 +564,27 @@ CTorrentFileModel::CTorrentFileModel(QObject *parent):TorrentFileModel(&emptyRoo
 
 }
 
-void CTorrentFileModel::setContent(TorrentFileInfo *infoRoot)
+void CTorrentFileModel::setContent(TorrentFileInfo *infoRoot, const QString &selectIndexes)
 {
     beginResetModel();
     root=infoRoot?infoRoot->root:&emptyRoot;
+	if (infoRoot)
+	{
+		root->checkStatus = (Qt::Unchecked);
+		root->setChildrenCheckStatus();
+		QStringList selIndexes(selectIndexes.split(','));
+		for (const QString & indexStr : selIndexes)
+		{
+			int index = indexStr.toInt();
+			TorrentFile *tf=infoRoot->indexMap.value(index,nullptr);
+			if (tf)
+			{
+				tf->checkStatus = Qt::Checked;
+				tf->setChildrenCheckStatus();
+				tf->setParentCheckStatus();
+			}
+		}
+	}
     endResetModel();
     info=infoRoot;
 }

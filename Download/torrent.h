@@ -52,7 +52,7 @@ class CTorrentFileModel : public TorrentFileModel
     Q_OBJECT
 public:
     explicit CTorrentFileModel(QObject *parent = nullptr);
-    void setContent(TorrentFileInfo *infoRoot);
+    void setContent(TorrentFileInfo *infoRoot, const QString &selectIndexes="");
     void updateFileProgress(const QJsonArray &fileArray);
 private:
     TorrentFile emptyRoot;

@@ -745,7 +745,7 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
         {
             if(task->fileInfo)
             {
-                selectedTFModel->setContent(task->fileInfo);
+                selectedTFModel->setContent(task->fileInfo,task->selectedIndexes);
             }
             else
             {
@@ -762,7 +762,7 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
                             iter.value()->completedSize=iter.value()->size;
                         }
                     }
-                    selectedTFModel->setContent(task->fileInfo);
+                    selectedTFModel->setContent(task->fileInfo, task->selectedIndexes);
                 }
                 catch(TorrentError)
                 {
