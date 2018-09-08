@@ -18,6 +18,7 @@ private:
     QStringList dirList;
     qint64 freeSpace;
     qint64 getAvailableBytes(const QString &dir);
+	bool dirChanged;
 };
 
 #endif // DIRSELECTWIDGET_H

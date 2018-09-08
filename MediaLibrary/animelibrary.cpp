@@ -294,7 +294,7 @@ void AnimeLibrary::fetchMore(const QModelIndex &)
 
 void AnimeWorker::updateAnimeInfo(Anime *anime)
 {
-    QSqlDatabase db=QSqlDatabase::database();
+    QSqlDatabase db=QSqlDatabase::database("WT");
     db.transaction();
 
     QSqlQuery query(QSqlDatabase::database("WT"));

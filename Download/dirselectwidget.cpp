@@ -8,7 +8,7 @@
 #include <QSettings>
 #include "util.h"
 #include "globalobjects.h"
-DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent)
+DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent), dirChanged(false)
 {
     dirList=GlobalObjects::appSetting->value("Download/PathList",QStringList()).toStringList();
     dirEdit=new QComboBox(this);
@@ -33,6 +33,7 @@ DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent)
     QObject::connect(dirEdit,&QComboBox::editTextChanged,[this,spaceTip](const QString &dir){
         freeSpace=getAvailableBytes(dir);
         spaceTip->setText(formatSize(false,freeSpace));
+		dirChanged = true;
     });
 
     QPushButton *selectDir=new QPushButton(this);
@@ -41,7 +42,7 @@ DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent)
     selectDir->setFont(GlobalObjects::iconfont);
     selectDir->setText(QChar(0xe616));
 
-    QObject::connect(selectDir,&QPushButton::clicked,[spaceTip,this](){
+    QObject::connect(selectDir,&QPushButton::clicked,[this](){
         QString directory = QFileDialog::getExistingDirectory(this,
                                     tr("Select folder"), "",
                                     QFileDialog::DontResolveSymlinks | QFileDialog::ShowDirsOnly);
@@ -66,8 +67,15 @@ DirSelectWidget::~DirSelectWidget()
         if(dirList.count()>4)
             dirList.pop_back();
         dirList.prepend(newDir);
-        GlobalObjects::appSetting->setValue("Download/PathList",dirList);
     }
+	else
+	{
+		dirList.move(dirList.indexOf(newDir), 0);
+	}
+	if (dirChanged)
+	{
+		GlobalObjects::appSetting->setValue("Download/PathList", dirList);
+	}
 }
 
 void DirSelectWidget::setDir(const QString &dir)
