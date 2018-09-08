@@ -27,7 +27,7 @@ protected:
     virtual void mousePressEvent(QMouseEvent *event)
     {
         QSlider::mousePressEvent(event);
-        if(!isSliderDown())
+        if(!isSliderDown() && event->button() == Qt::LeftButton)
         {
             int dur = maximum()-minimum();
             double x=event->x();

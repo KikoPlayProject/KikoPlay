@@ -11,7 +11,7 @@ About::About(QWidget *parent) : CFramelessDialog("",parent)
 							   "Exchange & BUG Report: 874761809(QQ Group)<br/>"
                                "KikoPlay is based on the following projects:<br/>"
                                "Qt 5.10.1<br/>"
-                               "libmpv 0.28<br/>"
+                               "libmpv 20180902<br/>"
                                "aria2 1.34<br/>"
                                "Qt-Nice-Frameless-Window"),this);
     info->setOpenExternalLinks(true);
