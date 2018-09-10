@@ -206,7 +206,6 @@ void MPVPlayer::setMute(bool mute)
 void MPVPlayer::setDanmuRender(DanmuRender *render)
 {
     this->danmuRender=render;
-    render->setSurface(this);
 }
 
 void MPVPlayer::hideDanmu(bool hide)

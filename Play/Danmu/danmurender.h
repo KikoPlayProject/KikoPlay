@@ -39,13 +39,12 @@ class DanmuRender : public QObject
 public:
     explicit DanmuRender();
     ~DanmuRender();
-    void setSurface(MPVPlayer *surface);
     void drawDanmu(QPainter &painter);
     void moveDanmu(float interval);
     void cleanup(DanmuComment::DanmuType cleanType);
     void cleanup();
     inline void hideDanmu(DanmuComment::DanmuType type,bool hide){hideLayout[type]=hide;}
-    QSize surfaceSize;
+    QRectF surfaceRect;
     bool dense;
     QSharedPointer<DanmuComment> danmuAt(QPointF point);
     void removeBlocked();
@@ -54,14 +53,17 @@ private:
     bool hideLayout[3];
     QHash<QString,DanmuDrawInfo *> danmuCache;
     float danmuOpacity;
-    bool subtitleProtect;
+    bool bottomSubtitleProtect;
+    bool topSubtitleProtect;
     int maxCount;
     int fontSizeTable[3];
     DanmuStyle danmuStyle;
     QThread cacheThread;
     CacheWorker *cacheWorker;
+    void refreshDMRect();
 public:
-    void setSubtitleProtect(bool on);
+    void setBottomSubtitleProtect(bool bottomOn);
+    void setTopSubtitleProtect(bool topOn);
     void setFontSize(int pt);
     void setBold(bool bold);
     void setOpacity(float opacity);

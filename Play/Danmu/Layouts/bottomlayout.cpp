@@ -7,16 +7,16 @@ BottomLayout::BottomLayout(DanmuRender *render):DanmuLayout(render),life_time(50
 
 void BottomLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *drawInfo)
 {
-    const QSize size=render->surfaceSize;
-    float currentY=size.height()-margin_y;
+    const QRectF rect=render->surfaceRect;
+    float currentY=rect.bottom()-margin_y;
     float dm_height=drawInfo->height;
     DanmuObject *dmobj=new DanmuObject;
     dmobj->src=danmu;
     dmobj->drawInfo=drawInfo;
     dmobj->extraData=life_time;
-    dmobj->x=(size.width()-drawInfo->width)/2;
+    dmobj->x=(rect.width()-drawInfo->width)/2;
     bool success=false;
-    float maxSpace(0.f),dsY(0.f),cY(size.height());
+    float maxSpace(0.f),dsY(0.f),cY(rect.height());
     QLinkedList<DanmuObject *>::Iterator msPos;
     for(auto iter=bottomdanmu.begin();iter!=bottomdanmu.end();++iter)
     {
@@ -38,10 +38,10 @@ void BottomLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *d
         //--------
         cY=(*iter)->y-margin_y;
         currentY=cY-dm_height;
-        if(currentY<=0)
+        if(currentY<=rect.top())
             break;
     }
-    if(!success && currentY>0)
+    if(!success && currentY>rect.top())
     {
         dmobj->y=currentY;
         bottomdanmu.append(dmobj);

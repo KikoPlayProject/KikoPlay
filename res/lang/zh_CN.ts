@@ -5,7 +5,7 @@
     <name>About</name>
     <message>
         <location filename="../../UI/about.cpp" line="9"/>
-        <source>KikoPlay - A Full-featured Danmu Player&lt;br/&gt;(C) 2018 Kikyou &lt;a href=&quot;https://github.com/Protostars/KikoPlay&quot;&gt;github&lt;/a&gt;&lt;br/&gt;KikoPlay is based on the following projects:&lt;br/&gt;Qt 5.10.1&lt;br/&gt;libmpv 0.28&lt;br/&gt;aria2 1.34&lt;br/&gt;Qt-Nice-Frameless-Window</source>
+        <source>KikoPlay - A Full-featured Danmu Player&lt;br/&gt;(C) 2018 Kikyou &lt;a href=&quot;https://github.com/Protostars/KikoPlay&quot;&gt;github&lt;/a&gt;&lt;br/&gt;Exchange &amp; BUG Report: 874761809(QQ Group)&lt;br/&gt;KikoPlay is based on the following projects:&lt;br/&gt;Qt 5.10.1&lt;br/&gt;libmpv 20180902&lt;br/&gt;aria2 1.34&lt;br/&gt;Qt-Nice-Frameless-Window</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -133,8 +133,8 @@
 <context>
     <name>AnimeWorker</name>
     <message>
+        <location filename="../../MediaLibrary/animelibrary.cpp" line="386"/>
         <location filename="../../MediaLibrary/animelibrary.cpp" line="388"/>
-        <location filename="../../MediaLibrary/animelibrary.cpp" line="390"/>
         <source>Json Format Error</source>
         <translation>Json格式错误</translation>
     </message>
@@ -289,7 +289,7 @@
 <context>
     <name>CTorrentFileModel</name>
     <message>
-        <location filename="../../Download/torrent.cpp" line="610"/>
+        <location filename="../../Download/torrent.cpp" line="627"/>
         <source>Progress</source>
         <translation>进度</translation>
     </message>
@@ -328,22 +328,22 @@
 <context>
     <name>DanmuPool</name>
     <message>
-        <location filename="../../Play/Danmu/danmupool.cpp" line="489"/>
+        <location filename="../../Play/Danmu/danmupool.cpp" line="476"/>
         <source>Roll</source>
         <translation>滚动弹幕</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/danmupool.cpp" line="489"/>
+        <location filename="../../Play/Danmu/danmupool.cpp" line="476"/>
         <source>Top</source>
         <translation>顶部弹幕</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/danmupool.cpp" line="489"/>
+        <location filename="../../Play/Danmu/danmupool.cpp" line="476"/>
         <source>Bottom</source>
         <translation>底部弹幕</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/danmupool.cpp" line="490"/>
+        <location filename="../../Play/Danmu/danmupool.cpp" line="477"/>
         <source>User: %1
 Time: %2
 Text: %3
@@ -354,19 +354,19 @@ Type: %4%5</source>
 类型：%4%5</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/danmupool.cpp" line="493"/>
+        <location filename="../../Play/Danmu/danmupool.cpp" line="480"/>
         <source>
 Block By Rule:%1</source>
         <translation>
 由规则 %1 屏蔽</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/danmupool.cpp" line="506"/>
+        <location filename="../../Play/Danmu/danmupool.cpp" line="493"/>
         <source>Time</source>
         <translation>时间</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/danmupool.cpp" line="506"/>
+        <location filename="../../Play/Danmu/danmupool.cpp" line="493"/>
         <source>Content</source>
         <translation>内容</translation>
     </message>
@@ -431,7 +431,7 @@ Date: %2
 <context>
     <name>DirSelectWidget</name>
     <message>
-        <location filename="../../Download/dirselectwidget.cpp" line="46"/>
+        <location filename="../../Download/dirselectwidget.cpp" line="47"/>
         <source>Select folder</source>
         <translation>选择文件夹</translation>
     </message>
@@ -1198,27 +1198,27 @@ Date: %2
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="67"/>
+        <location filename="../../UI/mainwindow.cpp" line="72"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="76"/>
+        <location filename="../../UI/mainwindow.cpp" line="81"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="85"/>
+        <location filename="../../UI/mainwindow.cpp" line="90"/>
         <source>Player</source>
         <translation>播放器</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="94"/>
+        <location filename="../../UI/mainwindow.cpp" line="99"/>
         <source>Library</source>
         <translation>媒体库</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="102"/>
+        <location filename="../../UI/mainwindow.cpp" line="107"/>
         <source>Download</source>
         <translation>下载</translation>
     </message>
@@ -1418,250 +1418,259 @@ Date: %2
         <translation>列表</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="598"/>
+        <location filename="../../UI/player.cpp" line="601"/>
         <source>Hide Danmu</source>
         <translation>隐藏弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="613"/>
+        <location filename="../../UI/player.cpp" line="617"/>
         <source>Hide Rolling</source>
         <translation>隐藏滚动弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="619"/>
+        <location filename="../../UI/player.cpp" line="623"/>
         <source>Hide Top</source>
         <translation>隐藏顶部弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="625"/>
+        <location filename="../../UI/player.cpp" line="629"/>
         <source>Hide Bottom</source>
         <translation>隐藏底部弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="631"/>
+        <location filename="../../UI/player.cpp" line="635"/>
         <source>Rolling Speed</source>
         <translation>滚动速度</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="640"/>
+        <location filename="../../UI/player.cpp" line="644"/>
         <source>Danmu Alpha</source>
         <translation>透明度</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="649"/>
+        <location filename="../../UI/player.cpp" line="653"/>
         <source>Stroke Width</source>
         <translation>描边宽度</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="658"/>
+        <location filename="../../UI/player.cpp" line="662"/>
         <source>Font Size</source>
         <translation>字体大小</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="667"/>
+        <location filename="../../UI/player.cpp" line="671"/>
         <source>Bold</source>
         <translation>加粗</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="673"/>
         <source>Protect Sub</source>
-        <translation>保护字幕</translation>
+        <translation type="vanished">保护字幕</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="680"/>
+        <location filename="../../UI/player.cpp" line="689"/>
         <source>Random Size</source>
         <translation>随机大小</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="686"/>
+        <location filename="../../UI/player.cpp" line="695"/>
         <source>Max Count</source>
         <translation>同屏上限</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="695"/>
+        <location filename="../../UI/player.cpp" line="704"/>
         <source>Dense Layout</source>
         <translation>密集布局</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="703"/>
+        <location filename="../../UI/player.cpp" line="712"/>
         <source>Font</source>
         <translation>字体</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="710"/>
+        <location filename="../../UI/player.cpp" line="719"/>
         <source>General</source>
         <translation>一般</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="718"/>
+        <location filename="../../UI/player.cpp" line="727"/>
         <source>Appearance</source>
         <translation>外观</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="787"/>
+        <location filename="../../UI/player.cpp" line="797"/>
         <source>Audio Track</source>
         <translation>音轨</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="794"/>
+        <location filename="../../UI/player.cpp" line="804"/>
         <source>Subtitle Track</source>
         <translation>字幕</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="808"/>
+        <location filename="../../UI/player.cpp" line="818"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="816"/>
+        <location filename="../../UI/player.cpp" line="826"/>
         <source>Select Sub File</source>
         <translation>选择字幕文件</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="816"/>
+        <location filename="../../UI/player.cpp" line="826"/>
         <source>Subtitle (%0)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="821"/>
+        <location filename="../../UI/player.cpp" line="831"/>
         <source>Subtitle Delay(s)</source>
         <translation>字幕延迟(s)</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="834"/>
+        <location filename="../../UI/player.cpp" line="844"/>
         <source>Hide</source>
         <translation>隐藏</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="847"/>
+        <location filename="../../UI/player.cpp" line="857"/>
         <source>Aspect &amp; Speed</source>
         <translation>比例 &amp; 速度</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="422"/>
+        <location filename="../../UI/player.cpp" line="425"/>
         <source>Fix</source>
         <translation>固定</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="435"/>
+        <location filename="../../UI/player.cpp" line="438"/>
         <source>Original Video</source>
         <translation>原始视频</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="449"/>
+        <location filename="../../UI/player.cpp" line="452"/>
         <source>Actual content</source>
         <translation>实际内容</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="462"/>
+        <location filename="../../UI/player.cpp" line="465"/>
         <source>While Playing</source>
         <translation>播放时</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="466"/>
+        <location filename="../../UI/player.cpp" line="469"/>
         <source>Always</source>
         <translation>总是</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="470"/>
+        <location filename="../../UI/player.cpp" line="473"/>
         <source>Never</source>
         <translation>从不</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="499"/>
+        <location filename="../../UI/player.cpp" line="502"/>
         <source>Play/Pause</source>
         <translation>播放/暂停</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="521"/>
+        <location filename="../../UI/player.cpp" line="524"/>
         <source>Fullscreen</source>
         <translation>全屏</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="528"/>
+        <location filename="../../UI/player.cpp" line="531"/>
         <source>Prev</source>
         <translation>上一个</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="1159"/>
+        <location filename="../../UI/player.cpp" line="1169"/>
         <source>File not exist: %0</source>
         <translation>文件不存在：%0</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="530"/>
+        <location filename="../../UI/player.cpp" line="533"/>
         <source>No prev item</source>
         <translation>已经是第一个了</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="532"/>
+        <location filename="../../UI/player.cpp" line="535"/>
         <source>Next</source>
         <translation>下一个</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="534"/>
+        <location filename="../../UI/player.cpp" line="537"/>
         <source>No next item</source>
         <translation>已经是最后一个了</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="541"/>
+        <location filename="../../UI/player.cpp" line="544"/>
         <source>Copy Text</source>
         <translation>复制内容</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="549"/>
+        <location filename="../../UI/player.cpp" line="552"/>
         <source>Block Text</source>
         <translation>屏蔽内容</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="560"/>
-        <location filename="../../UI/player.cpp" line="573"/>
-        <location filename="../../UI/player.cpp" line="586"/>
+        <location filename="../../UI/player.cpp" line="563"/>
+        <location filename="../../UI/player.cpp" line="576"/>
+        <location filename="../../UI/player.cpp" line="589"/>
         <source>Block Rule Added</source>
         <translation>已添加屏蔽规则</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="562"/>
+        <location filename="../../UI/player.cpp" line="565"/>
         <source>Block User</source>
         <translation>屏蔽用户</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="575"/>
+        <location filename="../../UI/player.cpp" line="578"/>
         <source>Block Color</source>
         <translation>屏蔽颜色</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="906"/>
+        <location filename="../../UI/player.cpp" line="677"/>
+        <source>Protect Bottom Sub</source>
+        <translation>保护底部字幕</translation>
+    </message>
+    <message>
+        <location filename="../../UI/player.cpp" line="683"/>
+        <source>Protect Top Sub</source>
+        <translation>保护顶部字幕</translation>
+    </message>
+    <message>
+        <location filename="../../UI/player.cpp" line="916"/>
         <source>File is not associated with Danmu Pool</source>
         <translation>文件没有关联到弹幕库</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="918"/>
+        <location filename="../../UI/player.cpp" line="928"/>
         <source>Jumped to the last play position</source>
         <translation>已跳转到上次播放位置</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="1288"/>
-        <location filename="../../UI/player.cpp" line="1434"/>
+        <location filename="../../UI/player.cpp" line="1313"/>
+        <location filename="../../UI/player.cpp" line="1460"/>
         <source>Volume: %0</source>
         <translation>音量：%0</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="1294"/>
+        <location filename="../../UI/player.cpp" line="1319"/>
         <source>Frame Step:Forward</source>
         <translation>逐帧播放：向前</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="1303"/>
+        <location filename="../../UI/player.cpp" line="1328"/>
         <source>Frame Step:Backward</source>
         <translation>逐帧播放：向后</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="1382"/>
+        <location filename="../../UI/player.cpp" line="1408"/>
         <source>Subtitle has been added</source>
         <translation>已添加字幕</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="1396"/>
+        <location filename="../../UI/player.cpp" line="1422"/>
         <source>Danmu has been added</source>
         <translation>已添加弹幕</translation>
     </message>
@@ -1688,7 +1697,6 @@ Date: %2
     </message>
     <message>
         <location filename="../../UI/pooleditor.cpp" line="90"/>
-        <location filename="../../UI/pooleditor.cpp" line="124"/>
         <source>Update</source>
         <translation>更新</translation>
     </message>
@@ -1696,6 +1704,11 @@ Date: %2
         <location filename="../../UI/pooleditor.cpp" line="124"/>
         <source>Add %1 New Danmu</source>
         <translation>添加了 %1 条新弹幕</translation>
+    </message>
+    <message>
+        <location filename="../../UI/pooleditor.cpp" line="124"/>
+        <source>Update - %1</source>
+        <translation>更新弹幕 - %1</translation>
     </message>
     <message>
         <location filename="../../UI/pooleditor.cpp" line="130"/>
@@ -1744,22 +1757,22 @@ Date: %2
     </message>
     <message>
         <location filename="../../Play/Danmu/providermanager.cpp" line="86"/>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="125"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="128"/>
         <source>Provider invaild</source>
         <translation>弹幕提供源失效</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="101"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="104"/>
         <source>Get EpInfo Failed</source>
         <translation>获取分集信息失败</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="116"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="119"/>
         <source>Unsupported URL</source>
         <translation>URL不支持</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="147"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="150"/>
         <source>Unsupported Source</source>
         <translation>不支持这个弹幕源</translation>
     </message>
@@ -1774,13 +1787,13 @@ Date: %2
         <translation>返回的JSON格式错误</translation>
     </message>
     <message>
-        <location filename="../../Common/network.cpp" line="65"/>
-        <location filename="../../Common/network.cpp" line="130"/>
+        <location filename="../../Common/network.cpp" line="66"/>
+        <location filename="../../Common/network.cpp" line="132"/>
         <source>Error,Status Code:%1</source>
         <translation>错误：%1</translation>
     </message>
     <message>
-        <location filename="../../Common/network.cpp" line="163"/>
+        <location filename="../../Common/network.cpp" line="165"/>
         <source>Decode JSON Failed</source>
         <translation>解析JSON失败</translation>
     </message>
@@ -1789,8 +1802,8 @@ Date: %2
         <translation type="vanished">解析JSON出现错误</translation>
     </message>
     <message>
-        <location filename="../../Common/network.cpp" line="79"/>
-        <location filename="../../Common/network.cpp" line="144"/>
+        <location filename="../../Common/network.cpp" line="80"/>
+        <location filename="../../Common/network.cpp" line="146"/>
         <source>Replay Timeout</source>
         <translation>超时</translation>
     </message>

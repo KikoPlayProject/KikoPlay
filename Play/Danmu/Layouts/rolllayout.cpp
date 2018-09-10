@@ -7,17 +7,17 @@ RollLayout::RollLayout(DanmuRender *render):DanmuLayout(render),base_speed(200)
 
 void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *drawInfo)
 {
-    const QSize size=render->surfaceSize;
+    const QRectF rect=render->surfaceRect;
 
     float speed=(drawInfo->width/5+base_speed)/1000;
-    float currentY=margin_y;
+    float currentY=margin_y+rect.top();
     float dm_height=drawInfo->height;
     DanmuObject *dmobj=new DanmuObject();
     dmobj->src=danmu;
     dmobj->drawInfo=drawInfo;
     dmobj->extraData=speed;
-    dmobj->x=size.width();
-    float xSpace=size.width()/2;
+    dmobj->x=rect.width();
+    float xSpace=rect.width()/2;
     bool success=false;
     float minX(FLT_MAX),maxSpace(0.f),dsY(0.f),cY(0.f);
     QLinkedList<DanmuObject *>::Iterator msPos1,msPos2;
@@ -56,10 +56,10 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
         //--------
         cY=(*iter)->y+margin_y;
         currentY=cY+cur_height;
-        if(currentY+dm_height>=size.height())
+        if(currentY+dm_height>=rect.bottom())
             break;
     }
-    if(!success && currentY+dm_height<size.height())
+    if(!success && currentY+dm_height<rect.bottom())
     {
         dmobj->y=currentY;
         lastcol.append(dmobj);

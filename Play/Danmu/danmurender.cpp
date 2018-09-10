@@ -13,7 +13,8 @@ DanmuRender::DanmuRender()
     layout_table[1]=new TopLayout(this);
     layout_table[2]=new BottomLayout(this);
     hideLayout[0]=hideLayout[1]=hideLayout[2]=false;
-    subtitleProtect=true;
+    bottomSubtitleProtect=true;
+    topSubtitleProtect=false;
     dense=false;
     maxCount=-1;
     danmuOpacity=1;
@@ -25,6 +26,7 @@ DanmuRender::DanmuRender()
     danmuStyle.fontFamily="Microsoft YaHei";
     danmuStyle.randomSize=false;
 	danmuStyle.bold = false;
+    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::resized,this,&DanmuRender::refreshDMRect);
 
     cacheWorker=new CacheWorker(&danmuCache,&danmuStyle);
     cacheWorker->moveToThread(&cacheThread);
@@ -46,17 +48,6 @@ DanmuRender::~DanmuRender()
     for(auto iter=danmuCache.cbegin();iter!=danmuCache.cend();++iter)
         delete iter.value();
     DanmuObject::DeleteObjPool();
-}
-
-void DanmuRender::setSurface(MPVPlayer *surface)
-{
-    QObject::connect(surface,&MPVPlayer::resized,[surface,this](){
-        this->surfaceSize=surface->size();
-        if(subtitleProtect)
-        {
-            this->surfaceSize.rheight()*=0.85;
-        }
-    });
 }
 
 void DanmuRender::drawDanmu(QPainter &painter)
@@ -88,9 +79,9 @@ void DanmuRender::cleanup()
 
 QSharedPointer<DanmuComment> DanmuRender::danmuAt(QPointF point)
 {
-    auto dm(layout_table[DanmuComment::Rolling]->danmuAt(point));
+    auto dm(layout_table[DanmuComment::Top]->danmuAt(point));
     if(!dm.isNull())return dm;
-    dm=layout_table[DanmuComment::Top]->danmuAt(point);
+    dm=layout_table[DanmuComment::Rolling]->danmuAt(point);
     if(!dm.isNull())return dm;
     return layout_table[DanmuComment::Bottom]->danmuAt(point);
 }
@@ -102,9 +93,31 @@ void DanmuRender::removeBlocked()
     layout_table[DanmuComment::Bottom]->removeBlocked();
 }
 
-void DanmuRender::setSubtitleProtect(bool on)
+void DanmuRender::refreshDMRect()
 {
-    subtitleProtect=on;
+    const QSize surfaceSize(GlobalObjects::mpvplayer->size());
+    this->surfaceRect.setRect(0,0,surfaceSize.width(),surfaceSize.height());
+    if(bottomSubtitleProtect)
+    {
+        this->surfaceRect.setBottom(surfaceSize.height()*0.85);
+    }
+    if(topSubtitleProtect)
+    {
+        this->surfaceRect.setTop(surfaceSize.height()*0.10);
+    }
+}
+
+void DanmuRender::setBottomSubtitleProtect(bool bottomOn)
+{
+    bottomSubtitleProtect=bottomOn;
+    refreshDMRect();
+}
+
+void DanmuRender::setTopSubtitleProtect(bool topOn)
+{
+    topSubtitleProtect=topOn;
+    refreshDMRect();
+
 }
 
 void DanmuRender::setFontSize(int pt)

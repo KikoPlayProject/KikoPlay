@@ -595,7 +595,7 @@ void PlayerWindow::setupDanmuSettingPage()
     danmuSettingPage=new QWidget(this);
     danmuSettingPage->setObjectName(QStringLiteral("PopupPage"));
     danmuSettingPage->installEventFilter(this);
-    danmuSettingPage->resize(360 *logicalDpiX()/96,200*logicalDpiY()/96);
+    danmuSettingPage->resize(360 *logicalDpiX()/96,220*logicalDpiY()/96);
     danmuSettingPage->hide();
 
     danmuSwitch=new QCheckBox(tr("Hide Danmu"),danmuSettingPage);
@@ -674,12 +674,17 @@ void PlayerWindow::setupDanmuSettingPage()
     });
     bold->setChecked(GlobalObjects::appSetting->value("Play/DanmuBold",false).toBool());
 
-    subtitleProtect=new QCheckBox(tr("Protect Sub"),danmuSettingPage);
-    subtitleProtect->setChecked(true);
-    QObject::connect(subtitleProtect,&QCheckBox::stateChanged,[this](int state){
-        GlobalObjects::danmuRender->setSubtitleProtect(state==Qt::Checked?true:false);
+    bottomSubtitleProtect=new QCheckBox(tr("Protect Bottom Sub"),danmuSettingPage);
+    QObject::connect(bottomSubtitleProtect,&QCheckBox::stateChanged,[this](int state){
+        GlobalObjects::danmuRender->setBottomSubtitleProtect(state==Qt::Checked?true:false);
     });
-    subtitleProtect->setChecked(GlobalObjects::appSetting->value("Play/SubProtect",true).toBool());
+    bottomSubtitleProtect->setChecked(GlobalObjects::appSetting->value("Play/BottomSubProtect",true).toBool());
+
+    topSubtitleProtect=new QCheckBox(tr("Protect Top Sub"),danmuSettingPage);
+    QObject::connect(topSubtitleProtect,&QCheckBox::stateChanged,[this](int state){
+        GlobalObjects::danmuRender->setTopSubtitleProtect(state==Qt::Checked?true:false);
+    });
+    topSubtitleProtect->setChecked(GlobalObjects::appSetting->value("Play/TopSubProtect",false).toBool());
 
     randomSize=new QCheckBox(tr("Random Size"),danmuSettingPage);
     QObject::connect(randomSize,&QCheckBox::stateChanged,[this](int state){
@@ -756,11 +761,12 @@ void PlayerWindow::setupDanmuSettingPage()
     generalGLayout->addWidget(hideTopDanmu,2,0);
     generalGLayout->addWidget(hideBottomDanmu,3,0);
     generalGLayout->addWidget(denseLayout,4,0);
-    generalGLayout->addWidget(subtitleProtect,0,1);
-    generalGLayout->addWidget(speedLabel,1,1);
-    generalGLayout->addWidget(speedSlider,2,1);
-    generalGLayout->addWidget(maxDanmuCountLabel,3,1);
-    generalGLayout->addWidget(maxDanmuCount,4,1);
+    generalGLayout->addWidget(bottomSubtitleProtect,0,1);
+    generalGLayout->addWidget(topSubtitleProtect,1,1);
+    generalGLayout->addWidget(speedLabel,2,1);
+    generalGLayout->addWidget(speedSlider,3,1);
+    generalGLayout->addWidget(maxDanmuCountLabel,4,1);
+    generalGLayout->addWidget(maxDanmuCount,5,1);
 
     QWidget *pageAppearance=new QWidget(danmuSettingPage);
     danmuSettingSLayout->addWidget(pageAppearance);
@@ -1356,7 +1362,8 @@ void PlayerWindow::closeEvent(QCloseEvent *)
     GlobalObjects::appSetting->setValue("DanmuStroke",strokeWidthSlider->value());
     GlobalObjects::appSetting->setValue("DanmuFontSize",fontSizeSlider->value());
     GlobalObjects::appSetting->setValue("DanmuBold",bold->isChecked());
-    GlobalObjects::appSetting->setValue("SubProtect",subtitleProtect->isChecked());
+    GlobalObjects::appSetting->setValue("BottomSubProtect",bottomSubtitleProtect->isChecked());
+    GlobalObjects::appSetting->setValue("TopSubProtect",topSubtitleProtect->isChecked());
     GlobalObjects::appSetting->setValue("RandomSize",randomSize->isChecked());
     GlobalObjects::appSetting->setValue("DanmuFont",fontFamilyCombo->currentFont().family());
     GlobalObjects::appSetting->setValue("VidoeAspectRatio",aspectRatioCombo->currentIndex());

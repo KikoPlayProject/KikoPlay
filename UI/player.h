@@ -104,8 +104,8 @@ private:
      QString totalTimeStr;
 
      QWidget *danmuSettingPage,*playSettingPage;
-     QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold,*subtitleProtect,
-                *randomSize,*denseLayout;
+     QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold,
+                *bottomSubtitleProtect,*topSubtitleProtect,*randomSize,*denseLayout;
      QFontComboBox *fontFamilyCombo;
      QComboBox *aspectRatioCombo,*playSpeedCombo;
      QSlider *speedSlider,*alphaSlider,*strokeWidthSlider,*fontSizeSlider,*maxDanmuCount;
