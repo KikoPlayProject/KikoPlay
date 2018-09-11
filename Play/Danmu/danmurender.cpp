@@ -208,9 +208,15 @@ DanmuDrawInfo *CacheWorker::createDanmuCache(const DanmuComment *comment)
     QSize size=metrics.size(0, comment->text)+QSize(strokeWidth*2+left,strokeWidth);
     QImage *img=new QImage(size, QImage::Format_ARGB32_Premultiplied);
     QPainterPath path;
-    int py = (size.height() - metrics.height()) / 2 + metrics.ascent();
-    if(py < 0) py = -py;
-    path.addText(left+strokeWidth,py,danmuFont,comment->text);
+    QStringList multilines(comment->text.split('\n'));
+	int py = (size.height() - metrics.height()*multilines.size()) / 2 + metrics.ascent();
+	if (py < 0) py = -py;
+    int i=0;
+    for(const QString &line:multilines)
+    {
+        path.addText(left+strokeWidth,py+i*metrics.height(),danmuFont,line);
+        ++i;
+    }
     img->fill(Qt::transparent);
     QPainter painter(img);
     painter.setRenderHint(QPainter::Antialiasing);
