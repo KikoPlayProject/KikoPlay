@@ -7,6 +7,7 @@
 #include "Play/Danmu/providermanager.h"
 #include "MediaLibrary/animelibrary.h"
 #include "Download/downloadmodel.h"
+#include "Play/Danmu/danmumanager.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -22,6 +23,7 @@ QSettings *GlobalObjects::appSetting=nullptr;
 ProviderManager *GlobalObjects::providerManager=nullptr;
 AnimeLibrary *GlobalObjects::library=nullptr;
 DownloadModel *GlobalObjects::downloadModel=nullptr;
+DanmuManager *GlobalObjects::danmuManager=nullptr;
 QFont GlobalObjects::iconfont;
 
 void GlobalObjects::init()
@@ -53,6 +55,7 @@ void GlobalObjects::init()
     providerManager=new ProviderManager();
     library=new AnimeLibrary();
     downloadModel=new DownloadModel();
+    danmuManager=new DanmuManager();
 
     int fontId = QFontDatabase::addApplicationFont(":/res/iconfont.ttf");
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
@@ -73,7 +76,7 @@ void GlobalObjects::clear()
     appSetting->deleteLater();
     library->deleteLater();
     downloadModel->deleteLater();
-
+    danmuManager->deleteLater();
 }
 
 void GlobalObjects::initDatabase()

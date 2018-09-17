@@ -12,6 +12,7 @@ class QSettings;
 class ProviderManager;
 class AnimeLibrary;
 class DownloadModel;
+class DanmuManager;
 class GlobalObjects
 {
 public:
@@ -28,6 +29,7 @@ public:
     static ProviderManager *providerManager;
     static AnimeLibrary *library;
     static DownloadModel *downloadModel;
+    static DanmuManager *danmuManager;
 private:
     static void initDatabase();
 };

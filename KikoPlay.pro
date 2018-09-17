@@ -79,7 +79,9 @@ SOURCES += \
     UI/downloadwindow.cpp \
     UI/adduritask.cpp \
     UI/selecttorrentfile.cpp \
-    UI/downloadsetting.cpp
+    UI/downloadsetting.cpp \
+    Play/Danmu/danmumanager.cpp \
+    UI/poolmanager.cpp
 
 HEADERS += \
     UI/mainwindow.h \
@@ -134,7 +136,9 @@ HEADERS += \
     UI/downloadwindow.h \
     UI/adduritask.h \
     UI/selecttorrentfile.h \
-    UI/downloadsetting.h
+    UI/downloadsetting.h \
+    Play/Danmu/danmumanager.h \
+    UI/poolmanager.h
 
 INCLUDEPATH += \
     Play/Video

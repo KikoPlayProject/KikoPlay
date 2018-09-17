@@ -8,6 +8,7 @@
 #include <QDesktopWidget>
 #include <QButtonGroup>
 #include "about.h"
+#include "poolmanager.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/danmupool.h"
@@ -69,6 +70,17 @@ void MainWindow::setupUI()
     buttonIcon->setIcon(QIcon(":/res/images/kikoplay-3.png"));
     buttonIcon->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     buttonIcon->setPopupMode(QToolButton::InstantPopup);
+
+    QAction *act_poolManager=new QAction(tr("Danmu Pool Manager"), this);
+    QObject::connect(act_poolManager,&QAction::triggered,[this](){
+        PoolManager poolManage(buttonIcon);
+        //QRect geo(0,0,400,400);
+       // geo.moveCenter(this->geometry().center());
+        //about.move(geo.topLeft());
+        poolManage.exec();
+    });
+    buttonIcon->addAction(act_poolManager);
+
     QAction *act_about=new QAction(tr("About"), this);
     QObject::connect(act_about,&QAction::triggered,[this](){
         About about(buttonIcon);

@@ -326,6 +326,24 @@
     </message>
 </context>
 <context>
+    <name>DanmuManager</name>
+    <message>
+        <location filename="../../Play/Danmu/danmumanager.cpp" line="104"/>
+        <source>Anime</source>
+        <translation>动画</translation>
+    </message>
+    <message>
+        <location filename="../../Play/Danmu/danmumanager.cpp" line="104"/>
+        <source>Episode</source>
+        <translation>剧集</translation>
+    </message>
+    <message>
+        <location filename="../../Play/Danmu/danmumanager.cpp" line="104"/>
+        <source>Danmu Count</source>
+        <translation>弹幕数量</translation>
+    </message>
+</context>
+<context>
     <name>DanmuPool</name>
     <message>
         <location filename="../../Play/Danmu/danmupool.cpp" line="476"/>
@@ -1198,27 +1216,32 @@ Date: %2
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="72"/>
+        <location filename="../../UI/mainwindow.cpp" line="74"/>
+        <source>Danmu Pool Manager</source>
+        <translation>管理弹幕池</translation>
+    </message>
+    <message>
+        <location filename="../../UI/mainwindow.cpp" line="84"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="81"/>
+        <location filename="../../UI/mainwindow.cpp" line="93"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="90"/>
+        <location filename="../../UI/mainwindow.cpp" line="102"/>
         <source>Player</source>
         <translation>播放器</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="99"/>
+        <location filename="../../UI/mainwindow.cpp" line="111"/>
         <source>Library</source>
         <translation>媒体库</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="107"/>
+        <location filename="../../UI/mainwindow.cpp" line="119"/>
         <source>Download</source>
         <translation>下载</translation>
     </message>
@@ -1734,6 +1757,67 @@ Date: %2
         <location filename="../../UI/pooleditor.cpp" line="139"/>
         <source>Xml File (*.xml)</source>
         <translation></translation>
+    </message>
+</context>
+<context>
+    <name>PoolManager</name>
+    <message>
+        <location filename="../../UI/poolmanager.cpp" line="13"/>
+        <source>Danmu Pool Manager</source>
+        <translation>弹幕池管理</translation>
+    </message>
+    <message>
+        <location filename="../../UI/poolmanager.cpp" line="29"/>
+        <location filename="../../UI/poolmanager.cpp" line="55"/>
+        <source>Export Pool(s)</source>
+        <translation>导出弹幕池</translation>
+    </message>
+    <message>
+        <location filename="../../UI/poolmanager.cpp" line="30"/>
+        <location filename="../../UI/poolmanager.cpp" line="81"/>
+        <source>Delete Pool(s)</source>
+        <translation>删除弹幕池</translation>
+    </message>
+    <message>
+        <location filename="../../UI/poolmanager.cpp" line="31"/>
+        <location filename="../../UI/poolmanager.cpp" line="94"/>
+        <source>Refresh</source>
+        <translation>刷新</translation>
+    </message>
+    <message>
+        <location filename="../../UI/poolmanager.cpp" line="37"/>
+        <source>Select folder</source>
+        <translation>选择文件夹</translation>
+    </message>
+    <message>
+        <location filename="../../UI/poolmanager.cpp" line="49"/>
+        <source>Exporting...</source>
+        <translation>导出中...</translation>
+    </message>
+    <message>
+        <location filename="../../UI/poolmanager.cpp" line="63"/>
+        <source>Delete</source>
+        <translation>删除</translation>
+    </message>
+    <message>
+        <location filename="../../UI/poolmanager.cpp" line="63"/>
+        <source>Are you sure you want to delete these Danmu Pool?</source>
+        <translation>你确定要删除选择的弹幕池吗？</translation>
+    </message>
+    <message>
+        <location filename="../../UI/poolmanager.cpp" line="75"/>
+        <source>Deleting...</source>
+        <translation>删除中...</translation>
+    </message>
+    <message>
+        <location filename="../../UI/poolmanager.cpp" line="88"/>
+        <source>Refreshing...</source>
+        <translation>刷新中...</translation>
+    </message>
+    <message>
+        <location filename="../../UI/poolmanager.cpp" line="101"/>
+        <source>Search</source>
+        <translation>搜索</translation>
     </message>
 </context>
 <context>
