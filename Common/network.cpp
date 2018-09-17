@@ -12,7 +12,7 @@ QByteArray Network::httpGet(const QString &url, QUrlQuery &query, QStringList &h
         for(int i=0;i<header.size();i+=2)
             request.setRawHeader(header[i].toUtf8(),header[i+1].toUtf8());
     }
-
+	request.setRawHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0");
     QTimer timer;
     timer.setInterval(timeout);
     timer.setSingleShot(true);
