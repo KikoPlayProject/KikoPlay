@@ -9,6 +9,7 @@
 #include <QButtonGroup>
 #include "about.h"
 #include "poolmanager.h"
+#include "checkupdate.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/danmupool.h"
@@ -74,12 +75,16 @@ void MainWindow::setupUI()
     QAction *act_poolManager=new QAction(tr("Danmu Pool Manager"), this);
     QObject::connect(act_poolManager,&QAction::triggered,[this](){
         PoolManager poolManage(buttonIcon);
-        //QRect geo(0,0,400,400);
-       // geo.moveCenter(this->geometry().center());
-        //about.move(geo.topLeft());
         poolManage.exec();
     });
     buttonIcon->addAction(act_poolManager);
+
+    QAction *act_checkUpdate=new QAction(tr("Check For Updates"), this);
+    QObject::connect(act_checkUpdate,&QAction::triggered,[this](){
+        CheckUpdate checkUpdate(buttonIcon);
+        checkUpdate.exec();
+    });
+    buttonIcon->addAction(act_checkUpdate);
 
     QAction *act_about=new QAction(tr("About"), this);
     QObject::connect(act_about,&QAction::triggered,[this](){

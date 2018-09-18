@@ -35,5 +35,6 @@
         <file>res/images/waiting.png</file>
         <file>res/images/check-hover.png</file>
         <file>res/images/check-normal.png</file>
+        <file>res/version.json</file>
     </qresource>
 </RCC>

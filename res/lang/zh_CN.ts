@@ -318,6 +318,34 @@
     </message>
 </context>
 <context>
+    <name>CheckUpdate</name>
+    <message>
+        <location filename="../../UI/checkupdate.cpp" line="7"/>
+        <source>Check For Updates</source>
+        <translation>检查更新</translation>
+    </message>
+    <message>
+        <location filename="../../UI/checkupdate.cpp" line="20"/>
+        <source>Current Version: %1</source>
+        <translation>当前版本：%1</translation>
+    </message>
+    <message>
+        <location filename="../../UI/checkupdate.cpp" line="22"/>
+        <source>Checking for updates...</source>
+        <translation>正在检查...</translation>
+    </message>
+    <message>
+        <location filename="../../UI/checkupdate.cpp" line="38"/>
+        <source>Find new Version: %1  &lt;a href=&quot;%2&quot;&gt;Click To Download&lt;/a&gt;</source>
+        <translation>发现新版本：%1  &lt;a href=\&quot;%2\&quot;&gt;点击下载&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <location filename="../../UI/checkupdate.cpp" line="42"/>
+        <source>Already Newast</source>
+        <translation>已是最新版本</translation>
+    </message>
+</context>
+<context>
     <name>DandanProvider</name>
     <message>
         <location filename="../../Play/Danmu/Provider/dandanprovider.cpp" line="112"/>
@@ -1216,32 +1244,37 @@ Date: %2
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="74"/>
+        <location filename="../../UI/mainwindow.cpp" line="75"/>
         <source>Danmu Pool Manager</source>
         <translation>管理弹幕池</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="84"/>
+        <location filename="../../UI/mainwindow.cpp" line="82"/>
+        <source>Check For Updates</source>
+        <translation>检查更新</translation>
+    </message>
+    <message>
+        <location filename="../../UI/mainwindow.cpp" line="89"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="93"/>
+        <location filename="../../UI/mainwindow.cpp" line="98"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="102"/>
+        <location filename="../../UI/mainwindow.cpp" line="107"/>
         <source>Player</source>
         <translation>播放器</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="111"/>
+        <location filename="../../UI/mainwindow.cpp" line="116"/>
         <source>Library</source>
         <translation>媒体库</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="119"/>
+        <location filename="../../UI/mainwindow.cpp" line="124"/>
         <source>Download</source>
         <translation>下载</translation>
     </message>
@@ -1255,8 +1288,8 @@ Date: %2
     </message>
     <message>
         <location filename="../../UI/matcheditor.cpp" line="26"/>
-        <location filename="../../UI/matcheditor.cpp" line="101"/>
-        <location filename="../../UI/matcheditor.cpp" line="183"/>
+        <location filename="../../UI/matcheditor.cpp" line="105"/>
+        <location filename="../../UI/matcheditor.cpp" line="194"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
@@ -1282,39 +1315,44 @@ Date: %2
     </message>
     <message>
         <location filename="../../UI/matcheditor.cpp" line="93"/>
+        <source>Bangumi</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../UI/matcheditor.cpp" line="97"/>
         <source>Local DB</source>
         <translation>本地数据库</translation>
     </message>
     <message>
-        <location filename="../../UI/matcheditor.cpp" line="109"/>
-        <location filename="../../UI/matcheditor.cpp" line="136"/>
+        <location filename="../../UI/matcheditor.cpp" line="113"/>
+        <location filename="../../UI/matcheditor.cpp" line="141"/>
         <source>Anime Title</source>
         <translation>动画标题</translation>
     </message>
     <message>
-        <location filename="../../UI/matcheditor.cpp" line="109"/>
-        <location filename="../../UI/matcheditor.cpp" line="138"/>
+        <location filename="../../UI/matcheditor.cpp" line="113"/>
+        <location filename="../../UI/matcheditor.cpp" line="143"/>
         <source>Subtitle</source>
         <translation>分集标题</translation>
     </message>
     <message>
-        <location filename="../../UI/matcheditor.cpp" line="157"/>
+        <location filename="../../UI/matcheditor.cpp" line="162"/>
         <source>Searching</source>
         <translation>搜索中</translation>
     </message>
     <message>
-        <location filename="../../UI/matcheditor.cpp" line="209"/>
-        <location filename="../../UI/matcheditor.cpp" line="222"/>
+        <location filename="../../UI/matcheditor.cpp" line="220"/>
+        <location filename="../../UI/matcheditor.cpp" line="233"/>
         <source>Tip</source>
         <translation>提示</translation>
     </message>
     <message>
-        <location filename="../../UI/matcheditor.cpp" line="209"/>
+        <location filename="../../UI/matcheditor.cpp" line="220"/>
         <source>You need to choose one</source>
         <translation>需要选择一个弹幕池</translation>
     </message>
     <message>
-        <location filename="../../UI/matcheditor.cpp" line="222"/>
+        <location filename="../../UI/matcheditor.cpp" line="233"/>
         <source>AnimeTitle and Subtitle can&apos;t be empty</source>
         <translation>动画标题和分集标题不能为空</translation>
     </message>
@@ -1865,8 +1903,8 @@ Date: %2
     <name>QObject</name>
     <message>
         <location filename="../../Play/Danmu/Provider/bilibiliprovider.cpp" line="282"/>
-        <location filename="../../Play/Danmu/Provider/matchprovider.cpp" line="157"/>
-        <location filename="../../Play/Danmu/Provider/matchprovider.cpp" line="203"/>
+        <location filename="../../Play/Danmu/Provider/matchprovider.cpp" line="175"/>
+        <location filename="../../Play/Danmu/Provider/matchprovider.cpp" line="221"/>
         <source>Reply JSON Format Error</source>
         <translation>返回的JSON格式错误</translation>
     </message>
