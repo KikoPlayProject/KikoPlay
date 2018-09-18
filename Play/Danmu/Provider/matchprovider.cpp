@@ -6,17 +6,17 @@
 
 MatchWorker *MatchProvider::matchWorker=nullptr;
 
-MatchInfo *MatchProvider::SearchFormDandan(QString keyword)
+MatchInfo *MatchProvider::SearchFormDandan(const QString &keyword)
 {
     if(!matchWorker)
     {
         matchWorker=new MatchWorker;
         matchWorker->moveToThread(GlobalObjects::workThread);
     }
-    QMetaObject::invokeMethod(matchWorker,"beginSearch",Qt::QueuedConnection,Q_ARG(QString,keyword));
+    QMetaObject::invokeMethod(matchWorker,"beginDDSearch",Qt::QueuedConnection,Q_ARG(QString,keyword));
     QEventLoop eventLoop;
     MatchInfo *curSearchInfo(nullptr);
-    QObject::connect(matchWorker,&MatchWorker::searchDone, &eventLoop, [&eventLoop,&curSearchInfo](MatchInfo *searchInfo){
+    QObject::connect(matchWorker,&MatchWorker::ddSearchDone, &eventLoop, [&eventLoop,&curSearchInfo](MatchInfo *searchInfo){
         curSearchInfo=searchInfo;
         eventLoop.quit();
     });
@@ -24,13 +24,31 @@ MatchInfo *MatchProvider::SearchFormDandan(QString keyword)
     return curSearchInfo;
 }
 
-MatchInfo *MatchProvider::SerchFromDB(QString keyword)
+MatchInfo *MatchProvider::SearchFormBangumi(const QString &keyword)
+{
+    if(!matchWorker)
+    {
+        matchWorker=new MatchWorker;
+        matchWorker->moveToThread(GlobalObjects::workThread);
+    }
+    QMetaObject::invokeMethod(matchWorker,"beginBGMSearch",Qt::QueuedConnection,Q_ARG(QString,keyword));
+    QEventLoop eventLoop;
+    MatchInfo *curSearchInfo(nullptr);
+    QObject::connect(matchWorker,&MatchWorker::bgmSearchDone, &eventLoop, [&eventLoop,&curSearchInfo](MatchInfo *searchInfo){
+        curSearchInfo=searchInfo;
+        eventLoop.quit();
+    });
+    eventLoop.exec();
+    return curSearchInfo;
+}
+
+MatchInfo *MatchProvider::SerchFromDB(const QString &keyword)
 {
     QSqlQuery query(QSqlDatabase::database("MT"));
     query.prepare("select AnimeTitle,Title from bangumi where AnimeTitle like ? or Title like ?");
-    keyword=QString("%%1%").arg(keyword);
-    query.bindValue(0,keyword);
-    query.bindValue(1,keyword);
+    QString skeyword=QString("%%1%").arg(keyword);
+    query.bindValue(0, skeyword);
+    query.bindValue(1, skeyword);
     query.exec();
     MatchInfo *searchInfo=new MatchInfo;
     searchInfo->error=false;
@@ -158,7 +176,7 @@ void MatchWorker::handleMatchReply(QJsonDocument &document, MatchInfo *matchInfo
     return;
 }
 
-void MatchWorker::handleSearchReply(QJsonDocument &document, MatchInfo *searchInfo)
+void MatchWorker::handleDDSearchReply(QJsonDocument &document, MatchInfo *searchInfo)
 {
     do
     {
@@ -271,7 +289,7 @@ void MatchWorker::beginMatch(QString fileName)
     emit matchDone(matchInfo);
 }
 
-void MatchWorker::beginSearch(QString keyword)
+void MatchWorker::beginDDSearch(QString keyword)
 {
     QString baseUrl = "https://api.acplay.net/api/v2/search/episodes";
     QUrl url(baseUrl);
@@ -283,12 +301,64 @@ void MatchWorker::beginSearch(QString keyword)
     {
         QString str(Network::httpGet(baseUrl,query));
         QJsonDocument document(Network::toJson(str));
-        handleSearchReply(document,searchInfo);
+        handleDDSearchReply(document,searchInfo);
     }
     catch(Network::NetworkError &error)
     {
         searchInfo->error=true;
         searchInfo->errorInfo=error.errorInfo;
     }
-    emit searchDone(searchInfo);
+    emit ddSearchDone(searchInfo);
+}
+
+void MatchWorker::beginBGMSearch(QString keyword)
+{
+    QString baseUrl("https://api.bgm.tv/search/subject/"+keyword);
+    QUrlQuery query;
+    query.addQueryItem("type","2");
+    query.addQueryItem("responseGroup","small");
+    query.addQueryItem("start","0");
+    query.addQueryItem("max_results","5");
+    MatchInfo *searchInfo=new MatchInfo;
+    try
+    {
+        QJsonDocument document(Network::toJson(Network::httpGet(baseUrl,query,QStringList()<<"Accept"<<"application/json")));
+        QJsonArray results=document.object().value("list").toArray();
+        for(auto iter=results.begin();iter!=results.end();++iter)
+        {
+            QJsonObject searchObj=(*iter).toObject();
+            int bgmID=searchObj.value("id").toInt();
+            QString animeTitle=searchObj.value("name_cn").toString();
+            if(animeTitle.isEmpty())animeTitle=searchObj.value("name").toString();
+            QString epUrl(QString("https://api.bgm.tv/subject/%1/ep").arg(bgmID));
+            try
+            {
+                QString str(Network::httpGet(epUrl,QUrlQuery(),QStringList()<<"Accept"<<"application/json"));
+                QJsonDocument document(Network::toJson(str));
+                QJsonObject obj = document.object();
+                QJsonArray epArray=obj.value("eps").toArray();
+                for(auto epIter=epArray.begin();epIter!=epArray.end();++epIter)
+                {
+                    QJsonObject epobj=(*epIter).toObject();
+                    QString epTitle(epobj.value("name_cn").toString());
+                    if(epTitle.isEmpty())epTitle=epobj.value("name").toString();
+                    MatchInfo::DetailInfo detailInfo;
+                    detailInfo.animeTitle=animeTitle;
+                    detailInfo.title=QString("No.%0 %1").arg(epobj.value("sort").toInt()).arg(epTitle);
+                    searchInfo->matches.append(detailInfo);
+                }
+            }
+            catch(Network::NetworkError &)
+            {
+                continue;
+            }
+            searchInfo->error = false;
+        }
+    }
+    catch(Network::NetworkError &error)
+    {
+        searchInfo->error=true;
+        searchInfo->errorInfo=error.errorInfo;
+    }
+    emit bgmSearchDone(searchInfo);
 }

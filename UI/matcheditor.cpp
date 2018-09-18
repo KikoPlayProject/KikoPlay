@@ -90,9 +90,13 @@ QWidget *MatchEditor::setupSearchPage(MatchInfo *matchInfo)
     QObject::connect(dandanSource,&QRadioButton::toggled,[this](bool checked){
        if(checked)searchLocation=0;
     });
+    QRadioButton *bgmSource=new QRadioButton(tr("Bangumi"),searchPage);
+    QObject::connect(bgmSource,&QRadioButton::toggled,[this](bool checked){
+       if(checked)searchLocation=1;
+    });
     QRadioButton *localSource=new QRadioButton(tr("Local DB"),searchPage);
     QObject::connect(localSource,&QRadioButton::toggled,[this](bool checked){
-       if(checked)searchLocation=1;
+       if(checked)searchLocation=2;
     });
     dandanSource->toggle();
     keywordEdit=new QLineEdit(searchPage);
@@ -118,10 +122,11 @@ QWidget *MatchEditor::setupSearchPage(MatchInfo *matchInfo)
     QGridLayout *searchPageGLayout=new QGridLayout(searchPage);
     searchPageGLayout->addWidget(sourceTip,0,0);
     searchPageGLayout->addWidget(dandanSource,0,1);
-    searchPageGLayout->addWidget(localSource,0,2);
-    searchPageGLayout->addWidget(keywordEdit,1,0,1,2);
-    searchPageGLayout->addWidget(searchButton,1,2);
-    searchPageGLayout->addWidget(searchResult,2,0,1,3);
+    searchPageGLayout->addWidget(bgmSource,0,2);
+    searchPageGLayout->addWidget(localSource,0,3);
+    searchPageGLayout->addWidget(keywordEdit,1,0,1,3);
+    searchPageGLayout->addWidget(searchButton,1,3);
+    searchPageGLayout->addWidget(searchResult,2,0,1,4);
     searchPageGLayout->setRowStretch(2,1);
     searchPageGLayout->setColumnStretch(0,1);
     return searchPage;
@@ -155,12 +160,17 @@ void MatchEditor::search()
     if(keyword.isEmpty())return;
     searchButton->setEnabled(false);
     searchButton->setText(tr("Searching"));
+    showBusyState(true);
     MatchInfo *sInfo=nullptr;
     if(searchLocation==0)//DanDan
     {
         sInfo = MatchProvider::SearchFormDandan(keyword);
     }
-    else if(searchLocation==1)//Local
+    else if(searchLocation==1)//Bangumi
+    {
+        sInfo=MatchProvider::SearchFormBangumi(keyword);
+    }
+    else if(searchLocation==2)//Local
     {
         sInfo=MatchProvider::SerchFromDB(keyword);
     }
@@ -179,6 +189,7 @@ void MatchEditor::search()
         }
         delete sInfo;
     }
+    showBusyState(false);
     searchButton->setEnabled(true);
     searchButton->setText(tr("Search"));
 }
