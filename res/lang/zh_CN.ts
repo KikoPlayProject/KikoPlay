@@ -337,7 +337,7 @@
     <message>
         <location filename="../../UI/checkupdate.cpp" line="38"/>
         <source>Find new Version: %1  &lt;a href=&quot;%2&quot;&gt;Click To Download&lt;/a&gt;</source>
-        <translation>发现新版本：%1  &lt;a href=\&quot;%2\&quot;&gt;点击下载&lt;/a&gt;</translation>
+        <translation>发现新版本：%1  &lt;a href=&quot;%2&quot;&gt;点击下载&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../../UI/checkupdate.cpp" line="42"/>

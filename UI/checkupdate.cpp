@@ -36,6 +36,7 @@ CheckUpdate::CheckUpdate(QWidget *parent) : CFramelessDialog(tr("Check For Updat
             if(i<3)
             {
                 newVersionLabel->setText(tr("Find new Version: %1  <a href=\"%2\">Click To Download</a>").arg(nVersionStr).arg(downloadURL));
+				newVersionLabel->setOpenExternalLinks(true);
             }
             else
             {
