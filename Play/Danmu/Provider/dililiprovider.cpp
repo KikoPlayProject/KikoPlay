@@ -16,15 +16,15 @@ QStringList DililiProvider::supportedURLs()
 
 DanmuAccessResult *DililiProvider::search(const QString &keyword)
 {
-    QString baseUrl = "https://www.5dm.tv/";
-    QUrlQuery query;
-    query.addQueryItem("s", keyword);
+    QString baseUrl = QString("https://www.5dm.tv/search/%1").arg(keyword);
+    //QUrlQuery query;
+    //query.addQueryItem("s", keyword);
 
     DanmuAccessResult *searchResult=new DanmuAccessResult;
     searchResult->providerId=id();
     try
     {
-        QString str(Network::httpGet(baseUrl,query));
+        QString str(Network::httpGet(baseUrl,QUrlQuery()));
         handleSearchReply(str,searchResult);
     }
     catch(Network::NetworkError &error)

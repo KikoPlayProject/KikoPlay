@@ -250,7 +250,8 @@ void BilibiliProvider::handleViewReply(QJsonDocument &document, DanmuAccessResul
         {
             try
             {
-                QString replyStr(Network::httpGet(QString("https://www.bilibili.com/video/av%1").arg(aid),QUrlQuery()));
+                QString replyStr(Network::httpGet(QString("https://www.bilibili.com/video/av%1").arg(aid),QUrlQuery(),
+					QStringList()<<"User-Agent"<<"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0"));
                 QRegExp re("(\"videoData\":)(.*)(,\"upData\")");
                 int pos=re.indexIn(replyStr);
                 if(pos!=-1)
