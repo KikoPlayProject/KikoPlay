@@ -11,6 +11,7 @@ class QToolButton;
 class QComboBox;
 class QListWidget;
 class QTreeWidget;
+class PlayListItem;
 class SearchItemWidget:public QWidget
 {
     Q_OBJECT
@@ -25,7 +26,7 @@ class AddDanmu : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit AddDanmu(QString searchWord = "", QWidget *parent = nullptr);
+    explicit AddDanmu(const PlayListItem *item, QWidget *parent = nullptr);
     QList<QPair<DanmuSourceInfo,QList<DanmuComment *> > > selectedDanmuList;
 private:
     QToolButton *onlineDanmuPage,*urlDanmuPage,*selectedDanmuPage;

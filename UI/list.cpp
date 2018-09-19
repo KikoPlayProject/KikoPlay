@@ -334,15 +334,7 @@ void ListWindow::initActions()
     act_addOnlineDanmu=new QAction(tr("Add Online Danmu"),this);
     QObject::connect(act_addOnlineDanmu,&QAction::triggered,[this](){
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
-        QString searchWords;
-        if (currentItem)
-        {
-            if (!currentItem->animeTitle.isEmpty())
-                searchWords = QString("%1 %2").arg(currentItem->animeTitle).arg(currentItem->title);
-            else
-                searchWords = currentItem->title;
-        }
-        AddDanmu addDanmuDialog(searchWords, this);
+        AddDanmu addDanmuDialog(currentItem, this);
         if(QDialog::Accepted==addDanmuDialog.exec())
         {
             for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)

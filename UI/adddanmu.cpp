@@ -15,10 +15,11 @@
 #include <QButtonGroup>
 
 #include "Play/Danmu/providermanager.h"
+#include "Play/Playlist/playlist.h"
 #include "selectepisode.h"
 #include "globalobjects.h"
 
-AddDanmu::AddDanmu(QString searchWord,QWidget *parent) : CFramelessDialog(tr("Add Danmu"),parent,true),processCounter(0)
+AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent) : CFramelessDialog(tr("Add Danmu"),parent,true),processCounter(0)
 {
     QVBoxLayout *danmuVLayout=new QVBoxLayout(this);
     danmuVLayout->setContentsMargins(0,0,0,0);
@@ -89,7 +90,12 @@ AddDanmu::AddDanmu(QString searchWord,QWidget *parent) : CFramelessDialog(tr("Ad
     contentStackLayout->addWidget(setupURLPage());
     contentStackLayout->addWidget(setupSelectedPage());
     danmuVLayout->addLayout(contentStackLayout);
-    keywordEdit->setText(searchWord);
+
+    QLabel *itemInfoLabel=new QLabel(item->animeTitle.isEmpty()?item->title:QString("%1-%2").arg(item->animeTitle).arg(item->title),this);
+    itemInfoLabel->setFont(QFont("Microsoft YaHei UI",10,QFont::Bold));
+    danmuVLayout->addWidget(itemInfoLabel);
+
+    keywordEdit->setText(item->animeTitle.isEmpty()?item->title:item->animeTitle);
     keywordEdit->installEventFilter(this);
     searchButton->setAutoDefault(false);
     searchButton->setDefault(false);
