@@ -20,7 +20,7 @@ DanmuAccessResult *BahamutProvider::search(const QString &keyword)
     QChar *buf=new QChar[keyword.length()];
     LCMapString(Locale,LCMAP_TRADITIONAL_CHINESE,reinterpret_cast<LPCWSTR>(keyword.constData()),keyword.length(),reinterpret_cast<LPWSTR>(buf),keyword.length());
     QString outstr(buf, keyword.length());
-	delete buf;
+	delete[] buf;
     query.addQueryItem("kw", outstr);
 
     DanmuAccessResult *searchResult=new DanmuAccessResult;

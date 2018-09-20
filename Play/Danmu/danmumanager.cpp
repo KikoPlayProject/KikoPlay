@@ -124,12 +124,18 @@ void PoolInfoWorker::loadPoolInfo(QList<DanmuPoolInfo> &poolInfoList)
         poolInfo.epTitle=query.value(epNo).toString();
         poolInfoList.append(poolInfo);
     }
-    query.prepare("select count(*) from danmu where PoolID=?");
+    query.exec("select PoolID,count(*) as DanmuCount from danmu group by PoolID");
+    int pidNo = query.record().indexOf("PoolID"),
+        countNo=query.record().indexOf("DanmuCount");
+    QMap<QString,int> danmuCount;
+    while (query.next())
+    {
+        danmuCount.insert(query.value(pidNo).toString(),query.value(countNo).toInt());
+    }
     for(DanmuPoolInfo &poolInfo:poolInfoList)
     {
-        query.bindValue(0,poolInfo.poolID);
-        query.exec();
-        poolInfo.danmuCount =query.first()?query.value(0).toInt():0;
+
+        poolInfo.danmuCount = danmuCount.value(poolInfo.poolID,0);
     }
     emit loadDone();
 }

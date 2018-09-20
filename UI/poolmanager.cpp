@@ -121,4 +121,5 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     poolHeader->resizeSection(0, 160*logicalDpiX()/96); //Anime
     poolHeader->resizeSection(1, 260*logicalDpiX()/96); //Ep
     poolHeader->resizeSection(2, 120*logicalDpiX()/96); //Count
+    refresh->click();
 }
