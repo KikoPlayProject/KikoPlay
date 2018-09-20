@@ -7,7 +7,7 @@ class PoolManager : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit PoolManager(QWidget *parent = nullptr);
+    explicit PoolManager(bool refreshPool, QWidget *parent = nullptr);
 
 signals:
 

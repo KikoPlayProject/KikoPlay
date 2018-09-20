@@ -10,7 +10,7 @@
 #include "Play/Danmu/danmumanager.h"
 #include "globalobjects.h"
 
-PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Manager"),parent)
+PoolManager::PoolManager(bool refreshPool, QWidget *parent) : CFramelessDialog(tr("Danmu Pool Manager"),parent)
 {
     setFont(QFont("Microsoft Yahei UI",10));
     QTreeView *poolView=new QTreeView(this);
@@ -121,5 +121,5 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     poolHeader->resizeSection(0, 160*logicalDpiX()/96); //Anime
     poolHeader->resizeSection(1, 260*logicalDpiX()/96); //Ep
     poolHeader->resizeSection(2, 120*logicalDpiX()/96); //Count
-    refresh->click();
+    if(refreshPool)refresh->click();
 }
