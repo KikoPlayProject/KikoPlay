@@ -9,7 +9,7 @@ namespace
 QStringList BilibiliProvider::supportedURLs()
 {
     return QStringList({"https://www.bilibili.com/video/av1728704",
-                        "av22622861"});
+                        "av24213033"});
 }
 
 DanmuAccessResult *BilibiliProvider::search(const QString &keyword)

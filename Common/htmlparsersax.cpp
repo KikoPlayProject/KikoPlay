@@ -7,6 +7,8 @@ void HTMLParserSax::parseNode()
     if(*begin=='!')
     {
         parseComment();
+		nodeName.clear();
+		propertyMap.clear();
         return;
     }
     QString::const_iterator iter=begin;

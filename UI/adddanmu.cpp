@@ -91,11 +91,11 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent) : CFramelessDialog(
     contentStackLayout->addWidget(setupSelectedPage());
     danmuVLayout->addLayout(contentStackLayout);
 
-    QLabel *itemInfoLabel=new QLabel(item->animeTitle.isEmpty()?item->title:QString("%1-%2").arg(item->animeTitle).arg(item->title),this);
+    QLabel *itemInfoLabel=new QLabel(item?(item->animeTitle.isEmpty()?item->title:QString("%1-%2").arg(item->animeTitle).arg(item->title)):"",this);
     itemInfoLabel->setFont(QFont("Microsoft YaHei UI",10,QFont::Bold));
     danmuVLayout->addWidget(itemInfoLabel);
 
-    keywordEdit->setText(item->animeTitle.isEmpty()?item->title:item->animeTitle);
+    keywordEdit->setText(item?(item->animeTitle.isEmpty()?item->title:item->animeTitle):"");
     keywordEdit->installEventFilter(this);
     searchButton->setAutoDefault(false);
     searchButton->setDefault(false);
