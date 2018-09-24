@@ -178,6 +178,7 @@ void DanmuPool::cleanUp()
 	beginResetModel();
 	danmuPool.clear();
 	endResetModel();
+    poolID=QString();
 	reset();
     setStatisInfo();
 }
@@ -354,7 +355,7 @@ void DanmuPool::setDelay(DanmuSourceInfo *sourceInfo,int newDelay)
     setStatisInfo();
 }
 
-void DanmuPool::setPoolID(QString pid)
+void DanmuPool::setPoolID(const QString &pid)
 {
     poolID=pid;
 }

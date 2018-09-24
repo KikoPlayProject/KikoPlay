@@ -46,7 +46,7 @@ private:
     void setStatisInfo();
 public:
     void setDelay(DanmuSourceInfo *sourceInfo,int newDelay);
-    void setPoolID(QString pid);
+    void setPoolID(const QString &pid);
 	void refreshCurrentPoolID();
 signals:
     void statisInfoChange();
