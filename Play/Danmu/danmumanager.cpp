@@ -195,7 +195,7 @@ void PoolInfoWorker::exportPool(const QList<DanmuPoolInfo> &exportList, const QS
             tmpComment.time=time+delay<0?time:time+delay;
 
             writer.writeStartElement("d");
-            writer.writeAttribute("p", QString("%0,%1,%2,%3,%4,%5,%6,%7").arg(QString::number(tmpComment.time/60000.f,'f',2))
+            writer.writeAttribute("p", QString("%0,%1,%2,%3,%4,%5,%6,%7").arg(QString::number(tmpComment.time/1000.f,'f',2))
                                   .arg(type[tmpComment.type]).arg(fontSize[tmpComment.fontSizeLevel]).arg(tmpComment.color)
                                   .arg(tmpComment.date).arg("0").arg(tmpComment.sender).arg("0"));
             writer.writeCharacters(tmpComment.text);

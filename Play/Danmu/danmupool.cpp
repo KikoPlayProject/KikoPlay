@@ -254,7 +254,7 @@ void DanmuPool::exportDanmu(int sourceId, QString &fileName)
         if(sourceId==-1 || danmu->source==sourceId)
         {
             writer.writeStartElement("d");
-            writer.writeAttribute("p", QString("%0,%1,%2,%3,%4,%5,%6,%7").arg(QString::number(danmu->time/60000.f,'f',2))
+            writer.writeAttribute("p", QString("%0,%1,%2,%3,%4,%5,%6,%7").arg(QString::number(danmu->time/1000.f,'f',2))
                                   .arg(type[danmu->type]).arg(fontSize[danmu->fontSizeLevel]).arg(danmu->color)
                                   .arg(danmu->date).arg("0").arg(danmu->sender).arg("0"));
             writer.writeCharacters(danmu->text);
