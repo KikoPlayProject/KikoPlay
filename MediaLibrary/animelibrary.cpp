@@ -108,21 +108,19 @@ Anime *AnimeLibrary::getAnime(const QModelIndex &index, bool fillInfo)
 
 Anime *AnimeLibrary::downloadDetailInfo(Anime *anime, int bangumiId, QString *errorInfo)
 {
-    QString errInfo;
-    QMetaObject::invokeMethod(animeWorker,[&errInfo,anime,bangumiId](){
-        errInfo=animeWorker->downloadDetailInfo(anime,bangumiId);
-    },Qt::QueuedConnection);
+    QString errInfo; 
     QEventLoop eventLoop;
     Anime *resultAnime =anime;
-    QObject::connect(animeWorker,&AnimeWorker::downloadDone, &eventLoop, [&eventLoop,&resultAnime](){
-        eventLoop.quit();
-    });
+    QObject::connect(animeWorker,&AnimeWorker::downloadDone, &eventLoop,&QEventLoop::quit);
     QObject::connect(animeWorker,&AnimeWorker::mergeAnime, &eventLoop, [this,&eventLoop,&resultAnime](Anime *oldAnime,Anime *newAnime){
         QModelIndex deleteIndex=createIndex(animes.indexOf(oldAnime),0);
         deleteAnime(QModelIndexList()<<deleteIndex);
         resultAnime=newAnime;
         eventLoop.quit();
     });
+    QMetaObject::invokeMethod(animeWorker,[&errInfo,anime,bangumiId](){
+        errInfo=animeWorker->downloadDetailInfo(anime,bangumiId);
+    },Qt::QueuedConnection);
     eventLoop.exec();
     *errorInfo=errInfo;
     return resultAnime;
@@ -387,7 +385,8 @@ QString AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId)
         QJsonObject obj = document.object();
         if(obj.value("type").toInt()!=2)return QString(tr("Json Format Error"));
         anime->bangumiID=bangumiId;
-        QString newTitle(obj.value("name_cn").toString().isEmpty()?obj.value("name").toString():obj.value("name_cn").toString());
+        QString newTitle(obj.value("name_cn").toString());
+        if(newTitle.isEmpty())newTitle=obj.value("name").toString();
         if(newTitle!=anime->title)
         {
             animesMap.remove(anime->title);
@@ -450,7 +449,9 @@ QString AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId)
             crt.name_cn=crtObj.value("name_cn").toString();
             crt.bangumiID=crtObj.value("id").toInt();
             crt.actor=crtObj.value("actors").toArray().first().toObject().value("name").toString();
-            crt.image=Network::httpGet(Network::getValue(crtObj,"images/grid").toString(),QUrlQuery());
+			QString imgUrl(Network::getValue(crtObj, "images/grid").toString());
+			if(!imgUrl.isEmpty())
+				crt.image=Network::httpGet(imgUrl,QUrlQuery());
             anime->characters.append(crt);
         }
 
@@ -461,6 +462,7 @@ QString AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId)
     {
         errInfo=error.errorInfo;
     }
+    emit downloadDone();
     return errInfo;
 }
 
