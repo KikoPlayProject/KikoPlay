@@ -176,6 +176,21 @@ void BahamutProvider::handleEpReply(QString &reply, DanmuAccessResult *result)
             parser.readNext();
         }
     }
+    else
+    {
+        QRegExp snTitleRe("animefun.videoSn.?=.?([0-9]+);.*animefun.title.?=.?'(.*)'");
+        int pos=snTitleRe.indexIn(reply);
+        if(pos!=-1)
+        {
+            QStringList list = snTitleRe.capturedTexts();
+            DanmuSourceItem item;
+            item.extra=0;
+            item.id=list[1].toInt();
+            item.title=list[2];
+            result->list.append(item);
+        }
+
+    }
     result->error=false;
 }
 
