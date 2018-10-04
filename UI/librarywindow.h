@@ -5,6 +5,7 @@
 #include <QLineEdit>
 class QListView;
 class QToolButton;
+class QPushButton;
 class QGraphicsBlurEffect;
 class QActionGroup;
 class QButtonGroup;
@@ -19,6 +20,20 @@ signals:
 private:
     QActionGroup *filterTypeGroup;
 };
+class LabelPanel : public QWidget
+{
+	Q_OBJECT
+public:
+    explicit LabelPanel(QWidget *parent = 0, bool allowDelete=false);
+    void addTag(const QString &tag);
+    void removeTag(const QString &tag);
+signals:
+    void tagStateChanged(const QString &tag, bool checked);
+    void deleteTag(const QString &tag);
+private:
+    QMap<QString,QPushButton *> tagList;
+    bool showDelete;
+};
 class LibraryWindow : public QWidget
 {
     Q_OBJECT
@@ -27,21 +42,18 @@ public:
 private:
     QToolButton *allAnime,*likedAnime,*threeMonth,*halfYear,*year;
     QListView *animeListView;
-    QWidget *contentWidget;
-    //QGraphicsBlurEffect *blurEffect;
     QWidget *detailInfoPage;
+    QPushButton *tagCollapseButton;
+    QWidget *filterPage;
+    LabelPanel *timePanel,*tagPanel;
     QButtonGroup *btnGroup;
-    const QString btnText[4] = { tr("All"),tr("Recent Three Months"),tr("Recent Half Year"),tr("Recent Year") };
-    void updateButtonText();
 signals:
     void playFile(const QString &file);
 public slots:
-    void showDetailInfo(const QModelIndex &index);
     // QWidget interface
 protected:
     virtual void showEvent(QShowEvent *event);
     virtual void hideEvent(QHideEvent *event);
-    virtual void mousePressEvent(QMouseEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
 };
 

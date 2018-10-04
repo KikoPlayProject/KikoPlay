@@ -30,7 +30,6 @@ public:
     QList<QPair<DanmuSourceInfo,QList<DanmuComment *> > > selectedDanmuList;
 private:
     QToolButton *onlineDanmuPage,*urlDanmuPage,*selectedDanmuPage;
-    QStackedLayout *contentStackLayout;
     QLineEdit *keywordEdit,*urlEdit;
     QPushButton *searchButton, *addUrlButton;
     QComboBox *sourceCombo;

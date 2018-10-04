@@ -66,7 +66,7 @@ bool PlayList::hasDanmuPool(const QModelIndex &index)
     return !static_cast<PlayListItem*>(index.internalPointer())->poolID.isEmpty();
 }
 
-void PlayList::addItems(QStringList &items, QModelIndex parent)
+int PlayList::addItems(QStringList &items, QModelIndex parent)
 {
     int insertPosition(0);
 	PlayListItem *parentItem = parent.isValid() ? static_cast<PlayListItem*>(parent.internalPointer()) : &root;
@@ -89,7 +89,7 @@ void PlayList::addItems(QStringList &items, QModelIndex parent)
     if(tmpItems.count()==0)
     {
         emit message(tr("File exist or Unsupported format"),LPM_HIDE|LPM_INFO);
-        return;
+        return 0;
     }
     beginInsertRows(parent, insertPosition, insertPosition+ tmpItems.count()-1);
 	for (const QString item : tmpItems)
@@ -103,6 +103,7 @@ void PlayList::addItems(QStringList &items, QModelIndex parent)
 	endInsertRows();
     playListChanged=true;
     emit message(tr("Add %1 item(s)").arg(tmpItems.size()),LPM_HIDE|LPM_OK);
+    return tmpItems.size();
 
 }
 
@@ -999,6 +1000,8 @@ void PlayList::loadPlaylist()
     if(!ret) return;
     QXmlStreamReader reader(&playlistFile);
     QList<PlayListItem *> parents;
+    QSqlQuery query(QSqlDatabase::database("MT"));
+    query.prepare("select PoolID from bangumi where PoolID=?");
     while(!reader.atEnd())
     {
         if(reader.isStartElement())
@@ -1029,8 +1032,8 @@ void PlayList::loadPlaylist()
                     if(!animeTitle.isEmpty())item->animeTitle=animeTitle;
 					if (!poolID.isEmpty())
 					{
-                        QSqlQuery query(QSqlDatabase::database("MT"));
-                        query.exec(QString("select * from bangumi where PoolID='%1'").arg(poolID));
+                        query.bindValue(0,poolID);
+                        query.exec();
 						if (query.first())item->poolID = poolID;
 						else playListChanged = true;
 					}

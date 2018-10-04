@@ -196,6 +196,7 @@ void TucaoProvider::handleDownloadReply(QString &reply, QList<DanmuComment *> &d
                 DanmuComment *danmu=new DanmuComment();
                 danmu->text=reader.readElementText();
                 danmu->time = attrList[0].toFloat() * 1000;
+                danmu->originTime=danmu->time;
                 danmu->setType(attrList[1].toInt());
                 danmu->color=attrList[3].toInt();
                 danmu->date=attrList[4].toLongLong();

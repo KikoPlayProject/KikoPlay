@@ -32,7 +32,7 @@ public:
     bool episodeChanged;
 private:
     Anime *currentAnime;
-    const QStringList headers={tr("Title"),tr("LocalFile")};
+    const QStringList headers={tr("Title"),tr("LocalFile"),tr("Last Play")};
     void updatePath(const QString &oldPath,const QString &newPath);
     void updateTitle(const QString &path,const QString &title);
 public slots:
@@ -43,11 +43,11 @@ public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
     inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:currentAnime->eps.count();}
-    inline virtual int columnCount(const QModelIndex &parent) const{return parent.isValid()?0:2;}
+    inline virtual int columnCount(const QModelIndex &parent) const{return parent.isValid()?0:3;}
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-    inline virtual Qt::ItemFlags flags(const QModelIndex &index) const{return index.isValid()?QAbstractItemModel::flags(index)|Qt::ItemIsEditable:QAbstractItemModel::flags(index);}
+    inline virtual Qt::ItemFlags flags(const QModelIndex &index) const{return (index.isValid()&&index.column()!=2)?QAbstractItemModel::flags(index)|Qt::ItemIsEditable:QAbstractItemModel::flags(index);}
 };
 
 #endif // EPISODESMODEL_H

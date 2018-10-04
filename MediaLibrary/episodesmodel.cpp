@@ -96,6 +96,11 @@ QVariant EpisodesModel::data(const QModelIndex &index, int role) const
         {
             return ep.localFile;
         }
+        else if(col==2)
+        {
+            return ep.lastPlayTime;
+        }
+        break;
     }
     }
     return QVariant();
@@ -130,7 +135,7 @@ QVariant EpisodesModel::headerData(int section, Qt::Orientation orientation, int
 {
     if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
     {
-        if(section<2)return headers.at(section);
+        if(section<3)return headers.at(section);
     }
     return QVariant();
 }

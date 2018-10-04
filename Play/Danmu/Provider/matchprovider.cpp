@@ -344,7 +344,7 @@ void MatchWorker::beginBGMSearch(QString keyword)
                     if(epTitle.isEmpty())epTitle=epobj.value("name").toString();
                     MatchInfo::DetailInfo detailInfo;
                     detailInfo.animeTitle=animeTitle;
-                    detailInfo.title=QString("No.%0 %1").arg(epobj.value("sort").toInt()).arg(epTitle);
+                    detailInfo.title=tr("No.%0 %1").arg(epobj.value("sort").toInt()).arg(epTitle);
                     searchInfo->matches.append(detailInfo);
                 }
             }

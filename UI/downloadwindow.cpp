@@ -17,6 +17,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QHeaderView>
+#include <QSplitter>
 #include <QDebug>
 #include "Download/aria2jsonrpc.h"
 #include "Download/downloadmodel.h"
@@ -177,6 +178,9 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     settings->setText(tr("Settings"));
     QObject::connect(settings,&FontIconToolButton::clicked,[this](){
         DownloadSetting settingDialog(this);
+        QRect geo(0,0,400,400);
+        geo.moveCenter(this->geometry().center());
+        settingDialog.move(geo.topLeft());
         if(QDialog::Accepted==settingDialog.exec())
         {
             QJsonObject globalOptions,taskOptions;
@@ -288,26 +292,24 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         proxyModel->setFilterRegExp(keyword);
     });
 
+    int pageBtnHeight=28*logicalDpiY()/96;
     QToolButton *generalInfoPage=new QToolButton(this);
     generalInfoPage->setObjectName(QStringLiteral("DownloadInfoPage"));
     generalInfoPage->setText(tr("General"));
+    generalInfoPage->setFixedHeight(pageBtnHeight);
     generalInfoPage->setCheckable(true);
-    generalInfoPage->setChecked(true);
 
     QToolButton *fileInfoPage=new QToolButton(this);
     fileInfoPage->setObjectName(QStringLiteral("DownloadInfoPage"));
     fileInfoPage->setText(tr("File"));
+    fileInfoPage->setFixedHeight(pageBtnHeight);
     fileInfoPage->setCheckable(true);
 
     QToolButton *logPage=new QToolButton(this);
     logPage->setObjectName(QStringLiteral("DownloadInfoPage"));
+    logPage->setFixedHeight(pageBtnHeight);
     logPage->setText(tr("Global Log"));
     logPage->setCheckable(true);
-
-    QPushButton *detailInfoSwitch=new QPushButton(this);
-    GlobalObjects::iconfont.setPointSize(12);
-    detailInfoSwitch->setFont(GlobalObjects::iconfont);
-    detailInfoSwitch->setText(QChar(0xe942));
 
     QHBoxLayout *pageBarHLayout=new QHBoxLayout();
     pageBarHLayout->setContentsMargins(0,0,0,2*logicalDpiY()/96);
@@ -315,17 +317,20 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     pageBarHLayout->addWidget(fileInfoPage);
     pageBarHLayout->addWidget(logPage);
     pageBarHLayout->addStretch(1);
-    pageBarHLayout->addWidget(detailInfoSwitch);
 
     QButtonGroup *pageButtonGroup=new QButtonGroup(this);
     pageButtonGroup->addButton(generalInfoPage,0);
     pageButtonGroup->addButton(fileInfoPage,1);
     pageButtonGroup->addButton(logPage,2);
 
+    generalInfoPage->setChecked(true);
+
+
     QWidget *detailInfoContent=new QWidget(this);
-    detailInfoContent->setContentsMargins(0,0,0,10*logicalDpiY()/96);
+    detailInfoContent->setContentsMargins(0,0,0,0);
     QStackedLayout *detailInfoSLayout=new QStackedLayout(detailInfoContent);
-    detailInfoContent->setMaximumHeight(100*logicalDpiY()/96);
+   // detailInfoContent->setMaximumHeight(100*logicalDpiY()/96);
+   // detailInfoContent->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     detailInfoSLayout->addWidget(setupGeneralInfoPage());
     detailInfoSLayout->addWidget(setupFileInfoPage());
     detailInfoSLayout->addWidget(setupGlobalLogPage());
@@ -333,25 +338,28 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     QObject::connect(pageButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[detailInfoSLayout](int id, bool checked){
         if(checked)detailInfoSLayout->setCurrentIndex(id);
     });
-    QObject::connect(detailInfoSwitch,&QToolButton::clicked,[detailInfoContent,detailInfoSwitch](){
-       if(detailInfoContent->isHidden())
-       {
-           detailInfoContent->show();
-           detailInfoSwitch->setText(QChar(0xe942));
-       }
-       else
-       {
-           detailInfoContent->hide();
-           detailInfoSwitch->setText(QChar(0xe60c));
-       }
-    });
+
+    QWidget *bottomContent=new QWidget(this);
+    QVBoxLayout *bvLayout=new QVBoxLayout(bottomContent);
+    bvLayout->setContentsMargins(0,0,0,0);
+    bvLayout->addLayout(pageBarHLayout);
+    bvLayout->addWidget(detailInfoContent);
+    QSplitter *viewBottomSplitter=new QSplitter(Qt::Vertical,this);
+    viewBottomSplitter->setObjectName(QStringLiteral("NormalSplitter"));
+    viewBottomSplitter->addWidget(downloadView);
+    viewBottomSplitter->addWidget(bottomContent);
+    viewBottomSplitter->setStretchFactor(0,4);
+    viewBottomSplitter->setStretchFactor(1,1);
+    viewBottomSplitter->setCollapsible(0,false);
+    viewBottomSplitter->setCollapsible(1,true);
 
     QGridLayout *contentGLayout=new QGridLayout(this);
     contentGLayout->addWidget(setupLeftPanel(),0,0,4,1);
     contentGLayout->addLayout(toolBarHLayout,0,1);
-    contentGLayout->addWidget(downloadView,1,1);
-    contentGLayout->addLayout(pageBarHLayout,2,1);
-    contentGLayout->addWidget(detailInfoContent,3,1);
+    //contentGLayout->addWidget(downloadView,1,1);
+    //contentGLayout->addLayout(pageBarHLayout,2,1);
+    //contentGLayout->addWidget(detailInfoContent,3,1);
+    contentGLayout->addWidget(viewBottomSplitter,1,1);
     contentGLayout->setColumnStretch(1,1);
     contentGLayout->setRowStretch(1,1);
     contentGLayout->setContentsMargins(0,0,10*logicalDpiX()/96,0);
@@ -524,7 +532,7 @@ QWidget *DownloadWindow::setupFileInfoPage()
     fileInfoView=new QTreeView(this);
     fileInfoView->setAlternatingRowColors(true);
     fileInfoView->setModel(selectedTFModel);
-    fileInfoView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
+    //fileInfoView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     fileInfoView->header()->resizeSection(0,300*logicalDpiX()/96);
 
     QObject::connect(fileInfoView,&QTreeView::doubleClicked,[this](const QModelIndex &index){
@@ -560,7 +568,7 @@ QWidget *DownloadWindow::setupGlobalLogPage()
     logView->setReadOnly(true);
     logView->setCenterOnScroll(true);
     logView->setMaximumBlockCount(50);
-    logView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
+    //logView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
     return logView;
 }
 

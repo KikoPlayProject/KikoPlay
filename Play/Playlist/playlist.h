@@ -63,7 +63,7 @@ signals:
     void currentMatchChanged();
     void message(QString msg,int flag);
 public slots :
-    void addItems(QStringList &items, QModelIndex parent);
+    int addItems(QStringList &items, QModelIndex parent);
 	void addFolder(QString folderStr, QModelIndex parent);
     void deleteItems(const QModelIndexList &deleteIndexes);
     void clear();

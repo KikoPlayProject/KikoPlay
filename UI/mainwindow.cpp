@@ -74,10 +74,8 @@ void MainWindow::setupUI()
 
     QAction *act_poolManager=new QAction(tr("Danmu Pool Manager"), this);
     QObject::connect(act_poolManager,&QAction::triggered,[this](){
-        static bool refreshPool=true;
-        PoolManager poolManage(refreshPool,buttonIcon);
+        PoolManager poolManage(buttonIcon);
         poolManage.exec();
-        if(refreshPool)refreshPool=false;
     });
     buttonIcon->addAction(act_poolManager);
 

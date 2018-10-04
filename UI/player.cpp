@@ -188,7 +188,7 @@ protected:
             painter.fillRect(l+margin,bHeight-h,wRatio<1.f?1.f:wRatio,h,barColor);
         }
         painter.setPen(QColor(255,255,255));
-        painter.drawText(bRect,Qt::AlignLeft|Qt::AlignTop,tr("Total:%1 Max:%2").arg(QString::number(GlobalObjects::danmuPool->totalCount())).arg(statisInfo.maxCountOfMinute));
+        painter.drawText(bRect,Qt::AlignLeft|Qt::AlignTop,QObject::tr("Total:%1 Max:%2").arg(QString::number(GlobalObjects::danmuPool->totalCount())).arg(statisInfo.maxCountOfMinute));
     }
 };
 }
@@ -1415,7 +1415,7 @@ void PlayerWindow::dropEvent(QDropEvent *event)
                     DanmuSourceInfo sourceInfo;
                     sourceInfo.delay=0;
                     sourceInfo.name=fi.fileName();
-                    sourceInfo.open=true;
+                    sourceInfo.show=true;
                     sourceInfo.url=fi.filePath();
                     sourceInfo.count=tmplist.count();
                     GlobalObjects::danmuPool->addDanmu(sourceInfo,tmplist);

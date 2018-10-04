@@ -1,6 +1,7 @@
 #include "providermanager.h"
 #include "Provider/providerbase.h"
 #include "Provider/bilibiliprovider.h"
+#include "Provider/acfunprovider.h"
 #include "Provider/tucaoprovider.h"
 #include "Provider/dililiprovider.h"
 #include "Provider/dandanprovider.h"
@@ -13,6 +14,7 @@ ProviderManager::ProviderManager(QObject *parent) : QObject(parent)
     qRegisterMetaType<DanmuSourceItem *>("DanmuSourceItem*");
 
 	registerProvider<BilibiliProvider>();
+    registerProvider<AcfunProvider>();
 	registerProvider<TucaoProvider>();
     registerProvider<DililiProvider>();
 	registerProvider<DandanProvider>();

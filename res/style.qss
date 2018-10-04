@@ -317,19 +317,6 @@ QPushButton#DialogButton:pressed{
     border-color:rgb(150,150,150);
     background-color:rgb(231,231,231);
 }
-QPushButton#DialogButtonBS{
-    border:1px solid;
-    border-color:rgb(200,200,200);
-    background-color:rgb(250,250,250);
-}
-QPushButton#DialogButtonBS:hover{
-    background-color:rgb(200,200,200);
-}
-QPushButton#DialogButtonBS:pressed{
-    border:1px solid;
-    border-color:rgb(150,150,150);
-    background-color:rgb(43,125,225);
-}
 QPushButton#DialogCloseButton{
     border:none;
     background-color:transparent;
@@ -435,6 +422,9 @@ QMenu::indicator:exclusive:checked:selected {
 }
 QSplitter::handle {
     background-color:rgb(100,100,100);
+}
+#NormalSplitter::handle {
+    background-color:transparent;
 }
 QCheckBox {
     spacing: 5px;
@@ -576,13 +566,49 @@ QPushButton:pressed{
 #AnimeDetailInfo{
     background-color:rgba(200,200,200);
 }
+#FilterPage{
+    background-color:rgba(100,100,100,200);
+}
+#AnimeLabelTip{
+    color:#ffffff;
+}
+#TagButton{
+    border:1px solid #ffffff;
+    background:transparent;
+    color:#dcdcdc;
+}
+#TagButton:hover{
+    background-color:#84b8f3;
+}
+#TagButton:checked{
+    background-color:#4595ef;
+    color:#ffffff;
+}
+#CrtIcon{
+    border:1px solid #a0a0a0;
+}
+#TagPanelCollapse{
+    border:1px solid;
+    border-color:rgb(221,221,221);
+    background-color:rgba(157,222,242,200);
+    color:rgb(255,255,255);
+    padding:4px 4px 4px 4px;
+}
+#TagPanelCollapse:hover{
+    border-color:rgb(180,180,180);
+    background-color:rgba(73,208,250,200);;
+}
+#TagPanelCollapse:pressed{
+    border-color:rgb(150,150,150);
+    background-color:rgba(13,189,244,200);
+}
 #DetailContentArea QScrollBar:vertical,
 #AnimesContent QScrollBar:vertical{
     background: transparent;
     width: 10px;
 }
 #DetailContentArea QScrollBar::handle:vertical,
-#AnimesContent QScrollBar::handle:vertical {
+#AnimesContent QScrollBar::handle:vertical{
     background: rgba(255,255,255,180);
     min-height: 70px;
     border-radius: 4px;
@@ -608,24 +634,6 @@ QPushButton:pressed{
 #AnimesContent QScrollBar::add-page:vertical,
 #AnimesContent QScrollBar::sub-page:vertical{
     background: none;
-}
-#EpItem{
-    padding:2px;
-}
-#EpItem:hover{
-    background:#84b8f3;
-}
-#LibraryRangeButton{
-    border-style:none;
-    background:transparent;
-    padding:2px;
-}
-#LibraryRangeButton:hover{
-    background-color:#84b8f3;
-}
-#LibraryRangeButton:checked{
-    background-color:#4595ef;
-    color:#ffffff;
 }
 #FilterOptionButton{
     border:none;

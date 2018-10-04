@@ -202,12 +202,12 @@ void BahamutProvider::handleDownloadReply(QJsonDocument &document, QList<DanmuCo
         DanmuComment *danmu=new DanmuComment();
         danmu->text=text.toString();
         danmu->time = time.toInt()*100;
+        danmu->originTime=danmu->time;
         danmu->type=DanmuComment::DanmuType(pos.toInt());
         QString colorStr(color.toString());
         danmu->color=colorStr.rightRef(colorStr.length()-1).toInt(nullptr,16);
         danmu->date=0;
         danmu->sender = "[Gamer]"+user.toString();
-        danmu->blockBy=-1;
         switch (size.toInt())
         {
         case 1:

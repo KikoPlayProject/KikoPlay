@@ -83,7 +83,11 @@ SOURCES += \
     Play/Danmu/danmumanager.cpp \
     UI/poolmanager.cpp \
     UI/checkupdate.cpp \
-    Play/Danmu/Provider/iqiyiprovider.cpp
+    Play/Danmu/Provider/iqiyiprovider.cpp \
+    Common/flowlayout.cpp \
+    UI/animedetailinfo.cpp \
+    UI/timelineedit.cpp \
+    Play/Danmu/Provider/acfunprovider.cpp
 
 HEADERS += \
     UI/mainwindow.h \
@@ -144,7 +148,11 @@ HEADERS += \
     UI/checkupdate.h \
     Play/Danmu/Provider/iqiyiprovider.h \
     Common/zconf.h \
-    Common/zlib.h
+    Common/zlib.h \
+    Common/flowlayout.h \
+    UI/animedetailinfo.h \
+    UI/timelineedit.h \
+    Play/Danmu/Provider/acfunprovider.h
 
 INCLUDEPATH += \
     Play/Video

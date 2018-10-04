@@ -5,6 +5,7 @@
 class DanmuComment
 {
 public:
+    DanmuComment():time(0),originTime(0),blockBy(-1){}
     enum DanmuType
     {
         Rolling,
@@ -45,6 +46,7 @@ public:
     FontSizeLevel fontSizeLevel;
     qint64 date;
     int time;
+    int originTime;
     int blockBy;
     int source;
 };
@@ -83,7 +85,8 @@ struct DanmuSourceInfo
     int count;
     QString name;
     QString url;
-    bool open;    
+    bool show;
+    QList<QPair<int,int> >timelineInfo;
 };
 struct BlockRule
 {

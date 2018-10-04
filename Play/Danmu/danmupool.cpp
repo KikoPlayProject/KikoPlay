@@ -54,17 +54,23 @@ void DanmuPool::addDanmu(DanmuSourceInfo &sourceInfo,QList<DanmuComment *> &danm
         newSource.count=sourceInfo.count;
         newSource.url=sourceInfo.url;
         newSource.name=sourceInfo.name;
-        newSource.open=true;
+        newSource.show=true;
         sourcesTable.insert(maxId,newSource);
 		source = &sourcesTable[maxId];
     }
 
     for(DanmuComment *danmu:danmuList)
     {
+        int delay=0;
         if(containSource)
-        {
-            int newTime = danmu->time + source->delay;
-            if (newTime > 0)danmu->time = newTime;
+        { 
+            for(auto &spaceItem: source->timelineInfo)
+            {
+                if(danmu->originTime>spaceItem.first)delay+=spaceItem.second;
+                else break;
+            }
+            int newTime = danmu->originTime + source->delay + delay;
+            danmu->time = newTime>0?newTime:danmu->originTime;
         }
         danmu->source=source->id;
         danmuPool.append(QSharedPointer<DanmuComment>(danmu));
@@ -93,15 +99,17 @@ void DanmuPool::deleteSource(int sourceIndex)
         }
         else
         {
-            iter++;
+            ++iter;
         }
     }
     endResetModel();
     mediaTimeJumped(currentTime);
-    if(poolID.isEmpty())return;
-    QSqlQuery query(QSqlDatabase::database("MT"));
-    query.exec(QString("delete from danmu where PoolID='%1' and Source=%2").arg(poolID).arg(sourceIndex));
-    query.exec(QString("delete from source where PoolID='%1' and ID=%2").arg(poolID).arg(sourceIndex));
+    if(!poolID.isEmpty())
+    {
+        QSqlQuery query(QSqlDatabase::database("MT"));
+        query.exec(QString("delete from danmu where PoolID='%1' and Source=%2").arg(poolID).arg(sourceIndex));
+        query.exec(QString("delete from source where PoolID='%1' and ID=%2").arg(poolID).arg(sourceIndex));
+    }
     setStatisInfo();
 }
 
@@ -113,7 +121,8 @@ void DanmuPool::loadDanmuFromDB()
     int idNo = query.record().indexOf("ID"),
         nameNo=query.record().indexOf("Name"),
         delayNo=query.record().indexOf("Delay"),
-        urlNo=query.record().indexOf("URL");
+        urlNo=query.record().indexOf("URL"),
+        timelineNo=query.record().indexOf("TimeLine");
     sourcesTable.clear();
     while (query.next())
     {
@@ -122,8 +131,20 @@ void DanmuPool::loadDanmuFromDB()
         sourceInfo.id=query.value(idNo).toInt();
         sourceInfo.name=query.value(nameNo).toString();
         sourceInfo.url=query.value(urlNo).toString();
-        sourceInfo.open=true;
+        sourceInfo.show=true;
         sourceInfo.count=0;
+        QStringList timelineList(query.value(timelineNo).toString().split(';',QString::SkipEmptyParts));
+        QTextStream ts;
+        for(QString &spaceInfo:timelineList)
+        {
+            ts.setString(&spaceInfo,QIODevice::ReadOnly);
+            int start,duration;
+            ts>>start>>duration;
+            sourceInfo.timelineInfo.append(QPair<int,int>(start,duration));
+        }
+        std::sort(sourceInfo.timelineInfo.begin(),sourceInfo.timelineInfo.end(),[](const QPair<int,int> &s1,const QPair<int,int> &s2){
+            return s1.first<s2.first;
+        });
         sourcesTable.insert(sourceInfo.id,sourceInfo);
     }
     query.exec(QString("select * from danmu where PoolID='%1'").arg(poolID));
@@ -141,8 +162,6 @@ void DanmuPool::loadDanmuFromDB()
     while (query.next())
     {
         DanmuComment *danmu=new DanmuComment();
-        //danmu->blocked=false;
-        danmu->blockBy=-1;
         danmu->color=query.value(colorNo).toInt();
         danmu->date=query.value(dateNo).toLongLong();
         danmu->fontSizeLevel=DanmuComment::FontSizeLevel(query.value(sizeNo).toInt());
@@ -150,26 +169,25 @@ void DanmuPool::loadDanmuFromDB()
         danmu->type=DanmuComment::DanmuType(query.value(modeNo).toInt());
         danmu->source=query.value(sourceNo).toInt();
         danmu->text=query.value(textNo).toString();
+        danmu->originTime=query.value(timeNo).toInt();
         int delay=0;
         if(sourcesTable.contains(danmu->source))
         {
-            delay=sourcesTable[danmu->source].delay;
+            for(auto &spaceItem:sourcesTable[danmu->source].timelineInfo)
+            {
+                if(danmu->originTime>spaceItem.first)delay+=spaceItem.second;
+                else break;
+            }
+            delay+=sourcesTable[danmu->source].delay;
             sourcesTable[danmu->source].count++;
         }
-		int time = query.value(timeNo).toInt();
-        danmu->time=time+delay<0?time:time+delay;
+        danmu->time=danmu->originTime+delay<0?danmu->originTime:danmu->originTime+delay;
         danmuPool.append(QSharedPointer<DanmuComment>(danmu));
     }
     std::sort(danmuPool.begin(),danmuPool.end(),DanmuSPCompare);
     endResetModel();
     GlobalObjects::blocker->checkDanmu(danmuPool);
     setStatisInfo();
-}
-
-void DanmuPool::reset()
-{
-    currentTime=0;
-    currentPosition=0;
 }
 
 void DanmuPool::cleanUp()
@@ -181,13 +199,6 @@ void DanmuPool::cleanUp()
     poolID=QString();
 	reset();
     setStatisInfo();
-}
-
-QModelIndex DanmuPool::getCurrentIndex()
-{
-	if (currentPosition >= 0 && currentPosition < danmuPool.count())
-		return createIndex(currentPosition, 0);
-    return QModelIndex();
 }
 
 void DanmuPool::testBlockRule(BlockRule *rule)
@@ -216,6 +227,7 @@ void DanmuPool::deleteDanmu(QSharedPointer<DanmuComment> &danmu)
         query.exec(QString("delete from danmu where PoolID='%1' and Date=%2 and User='%3' and Text='%4' and Source=%5")
                     .arg(poolID).arg(danmu->date).arg(danmu->sender).arg(danmu->text).arg(danmu->source));
     }
+    sourcesTable[danmu->source].count--;
 	int row = danmuPool.indexOf(danmu);
 	beginRemoveRows(QModelIndex(), row, row);
 	danmuPool.removeOne(danmu);
@@ -230,7 +242,7 @@ QSet<QString> DanmuPool::getDanmuHash(int sourceId)
     {
         if(danmu->source==sourceId)
         {
-            QByteArray hashData(QString("%0%1%2%3").arg(danmu->text).arg(danmu->time).arg(danmu->sender).arg(danmu->color).toUtf8());
+            QByteArray hashData(QString("%0%1%2%3").arg(danmu->text).arg(danmu->originTime).arg(danmu->sender).arg(danmu->color).toUtf8());
             QString danmuHash(QString(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex()));
             hashSet.insert(danmuHash);
         }
@@ -238,7 +250,24 @@ QSet<QString> DanmuPool::getDanmuHash(int sourceId)
     return hashSet;
 }
 
-void DanmuPool::exportDanmu(int sourceId, QString &fileName)
+QList<SimpleDanmuInfo> DanmuPool::getSimpleDanmuInfo(int sourceId)
+{
+    QList<SimpleDanmuInfo> simpleDanmuList;
+    for(QSharedPointer<DanmuComment> &danmu:danmuPool)
+    {
+        if(danmu->source==sourceId)
+        {
+            SimpleDanmuInfo sdi;
+            sdi.originTime=danmu->originTime;
+            sdi.time=sdi.originTime;
+            sdi.text=danmu->text;
+            simpleDanmuList.append(sdi);
+        }
+    }
+    return simpleDanmuList;
+}
+
+void DanmuPool::exportDanmu(int sourceId, const QString &fileName)
 {
     static int type[3]={1,5,4};
     static int fontSize[3]={25,28,36};
@@ -269,27 +298,38 @@ void DanmuPool::exportDanmu(int sourceId, QString &fileName)
 void DanmuPool::saveDanmu(const DanmuSourceInfo *sourceInfo, const QList<DanmuComment *> *danmuList)
 {
     if(poolID.isEmpty())return;
+    QSqlDatabase db=QSqlDatabase::database("MT");
+    db.transaction();
     if(sourceInfo)
     {
         QSqlQuery query(QSqlDatabase::database("MT"));
-        query.prepare("insert into source(PoolID,ID,Name,Delay,URL) values(?,?,?,?,?)");
+        query.prepare("insert into source(PoolID,ID,Name,Delay,URL,TimeLine) values(?,?,?,?,?,?)");
         query.bindValue(0,poolID);
         query.bindValue(1,sourceInfo->id);
         query.bindValue(2,sourceInfo->name);
         query.bindValue(3,sourceInfo->delay);
         query.bindValue(4,sourceInfo->url);
+
+        QString timelineInfo;
+        QTextStream ts(&timelineInfo);
+        for(auto &spaceItem:sourceInfo->timelineInfo)
+        {
+            ts<<spaceItem.first<<' '<<spaceItem.second<<';';
+        }
+        ts.flush();
+        query.bindValue(5,timelineInfo);
+
         query.exec();
     }
     if(danmuList)
     {
-        QSqlDatabase db=QSqlDatabase::database("MT");
+
         QSqlQuery query(QSqlDatabase::database("MT"));
         query.prepare("insert into danmu(PoolID,Time,Date,Color,Mode,Size,Source,User,Text) values(?,?,?,?,?,?,?,?,?)");
-        db.transaction();
         for(DanmuComment *danmu:*danmuList)
         {
             query.bindValue(0,poolID);
-            query.bindValue(1,danmu->time);
+            query.bindValue(1,danmu->originTime);
             query.bindValue(2,danmu->date);
             query.bindValue(3,danmu->color);
             query.bindValue(4,(int)danmu->type);
@@ -299,8 +339,8 @@ void DanmuPool::saveDanmu(const DanmuSourceInfo *sourceInfo, const QList<DanmuCo
             query.bindValue(8,danmu->text);
             query.exec();
         }
-        db.commit();
     }
+    db.commit();
 }
 
 void DanmuPool::setStatisInfo()
@@ -341,23 +381,67 @@ void DanmuPool::setDelay(DanmuSourceInfo *sourceInfo,int newDelay)
         QSharedPointer<DanmuComment> cur = *iter;
 		if (cur->source == sourceInfo->id)
 		{
-			int newTime = cur->time + newDelay - sourceInfo->delay;
-			if (newTime > 0)cur->time = newTime;
+            int delay=newDelay;
+            for(auto &spaceItem:sourceInfo->timelineInfo)
+            {
+                if(cur->originTime>spaceItem.first)delay+=spaceItem.second;
+                else break;
+            }
+            int newTime = cur->originTime + delay;
+            cur->time=newTime>0?newTime:cur->originTime;
 		}
     }
     sourceInfo->delay=newDelay;
     beginResetModel();
     std::sort(danmuPool.begin(),danmuPool.end(),DanmuSPCompare);
     endResetModel();
-    mediaTimeJumped(currentTime);
-    QSqlQuery query(QSqlDatabase::database("MT"));
-    query.exec(QString("update source set Delay= %1 where PoolID='%2' and ID=%3").arg(newDelay).arg(poolID).arg(sourceInfo->id));
+    currentPosition = std::lower_bound(danmuPool.begin(), danmuPool.end(), currentTime, DanmuComparer) - danmuPool.begin();
+    if(!poolID.isEmpty())
+    {
+        QSqlQuery query(QSqlDatabase::database("MT"));
+        query.exec(QString("update source set Delay= %1 where PoolID='%2' and ID=%3").arg(newDelay).arg(poolID).arg(sourceInfo->id));
+    }
     setStatisInfo();
 }
 
-void DanmuPool::setPoolID(const QString &pid)
+void DanmuPool::refreshTimeLineDelayInfo(DanmuSourceInfo *sourceInfo)
 {
-    poolID=pid;
+    for(auto iter=danmuPool.begin();iter!=danmuPool.end();++iter)
+    {
+        QSharedPointer<DanmuComment> cur = *iter;
+        if (cur->source == sourceInfo->id)
+        {
+            int delay=0;
+            for(auto &spaceItem:sourceInfo->timelineInfo)
+            {
+                if(cur->originTime>spaceItem.first)delay+=spaceItem.second;
+                else break;
+            }
+            int newTime = cur->originTime + delay + sourceInfo->delay;
+            cur->time=newTime>0?newTime:cur->originTime;
+        }
+    }
+    beginResetModel();
+    std::sort(danmuPool.begin(),danmuPool.end(),DanmuSPCompare);
+    endResetModel();
+    currentPosition = std::lower_bound(danmuPool.begin(), danmuPool.end(), currentTime, DanmuComparer) - danmuPool.begin();
+    if(!poolID.isEmpty())
+    {
+        QSqlQuery query(QSqlDatabase::database("MT"));
+        query.prepare("update source set TimeLine= ? where PoolID=? and ID=?");
+        QString timelineInfo;
+        QTextStream ts(&timelineInfo);
+        for(auto &spaceItem:sourceInfo->timelineInfo)
+        {
+            ts<<spaceItem.first<<' '<<spaceItem.second<<';';
+        }
+        ts.flush();
+        query.bindValue(0,timelineInfo);
+        query.bindValue(1,poolID);
+        query.bindValue(2,sourceInfo->id);
+        query.exec();
+    }
+    setStatisInfo();
 }
 
 void DanmuPool::refreshCurrentPoolID()
@@ -396,7 +480,7 @@ void DanmuPool::mediaTimeElapsed(int newTime)
         if(curTime<newTime)
         {
             auto dm=danmuPool.at(currentPosition);
-			if (dm->blockBy == -1 && sourcesTable[dm->source].open)
+            if (dm->blockBy == -1 && sourcesTable[dm->source].show)
 			{
                 prepareList->append(QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*>(dm,nullptr));
 			}
@@ -427,14 +511,6 @@ void DanmuPool::mediaTimeJumped(int newTime)
 #endif
 }
 
-QModelIndex DanmuPool::index(int row, int column, const QModelIndex &parent) const
-{
-    if (!parent.isValid()){
-        return createIndex(row, column);
-    }
-    return QModelIndex();
-}
-
 QVariant DanmuPool::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid()) return QVariant();
@@ -455,22 +531,13 @@ QVariant DanmuPool::data(const QModelIndex &index, int role) const
         {
             return comment->text;
         }
+        break;
     }
     case Qt::ForegroundRole:
     {
         if(comment->blockBy!=-1)
             return QBrush(QColor(150,150,150));
         return QBrush(QColor(comment->color>>16,(comment->color>>8)&0xff,comment->color&0xff,200));
-        /*switch (comment->type) {
-        case DanmuComment::Rolling:
-            return QBrush(QColor(200,200,200));
-        case DanmuComment::Top:
-            return QBrush(QColor(0,177,211));
-        case DanmuComment::Bottom:
-            return QBrush(QColor(84,195,23));
-        default:
-            break;
-        }*/
     }
     case Qt::ToolTipRole:
     {

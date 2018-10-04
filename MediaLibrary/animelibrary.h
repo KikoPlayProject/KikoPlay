@@ -10,18 +10,23 @@ public:
 private:
     QMap<QString,Anime *> animesMap;
     void updateAnimeInfo(Anime *anime);
+    QString downloadLabelInfo(Anime *anime, QMap<QString,QSet<QString> > &tagMap);
 
 public slots:
     void addAnimeInfo(const QString &animeName, const QString &epName, const QString &path);
-    QString downloadDetailInfo(Anime *anime,int bangumiId);
+    QString downloadDetailInfo(Anime *anime, int bangumiId, QMap<QString,QSet<QString> > &tagMap);
     void loadAnimes(QList<Anime *> *animes, int offset, int limit);
     void deleteAnime(Anime *anime);
     void updatePlayTime(const QString &title, const QString &path);
+    void loadLabelInfo(QMap<QString,QSet<QString> > &tagMap, QSet<QString> &timeSet);
+    void deleteTag(const QString &tag,const QString &animeTitle);
 signals:
     void addAnime(Anime *anime);
     void mergeAnime(Anime *oldAnime,Anime *newAnime);
     void downloadDone();
     void loadDone(int count);
+    void loadLabelInfoDone();
+    void newTagDownloaded(const QStringList &tags);
 };
 class AnimeLibrary : public QAbstractItemModel
 {
@@ -34,23 +39,33 @@ public:
     Anime *getAnime(const QModelIndex &index,bool fillInfo=true);
     Anime *downloadDetailInfo(Anime *anime, int bangumiId, QString *errorInfo);
     void deleteAnime(QModelIndexList &deleteIndexes);
+    void deleteAnime(const QModelIndex &index);
     void refreshEpPlayTime(const QString &title, const QString &path);
     void addEp(Anime *anime,const QString &epName,const QString &path);
     void modifyEpPath(Episode &ep,const QString &newPath);
     void removeEp(Anime *anime,const QString &path);
     int getCount(int type);
+    const QMap<QString,QSet<QString> > &animeTags() const{return tagsMap;}
+    const QSet<QString> &animeTime() const{return timeSet;}
+    void deleteTag(const QString &tag,const QString &animeTitle=QString());
+    void addTag(Anime *anime,const QString &tag);
 
 signals:
     void tryAddAnime(const QString &animeName,const QString &epName,const QString &path);
     void animeCountChanged();
+    void addTags(const QStringList &tagList);
+    void addTimeLabel(const QString &time);
+    void refreshLabelInfo();
 public slots:
     void addAnime(Anime *anime);
 private:
     QList<Anime *> animes;
     QList<Anime *> tmpAnimes;
+    QMap<QString,QSet<QString> > tagsMap,timeMap;
+    QSet<QString> timeSet;
     bool active;
     static AnimeWorker *animeWorker;
-    const int limitCount=20;
+    const int limitCount=50;
     int currentOffset;
     bool hasMoreAnimes;
     // QAbstractItemModel interface
@@ -71,11 +86,16 @@ class AnimeFilterProxyModel : public QSortFilterProxyModel
 public:
     explicit AnimeFilterProxyModel(QObject *parent = nullptr):QSortFilterProxyModel(parent),filterType(0){}
     void setFilterType(int type){filterType=type;}
-    void setTimeRange(int index);
+    //void setTimeRange(int index);
+    void addTime(const QString &time){timeFilterSet.insert(time);invalidateFilter();}
+    void addTag(const QString &tag){tagFilterSet.insert(tag);invalidateFilter();}
+    void removeTime(const QString &time){timeFilterSet.remove(time);invalidateFilter();}
+    void removeTag(const QString &tag){if(tagFilterSet.contains(tag)){tagFilterSet.remove(tag);invalidateFilter();}}
 
 private:
     int filterType;
     qint64 timeAfter;
+    QSet<QString> timeFilterSet,tagFilterSet;
     // QSortFilterProxyModel interface
 protected:
     virtual bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;

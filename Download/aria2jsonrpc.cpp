@@ -83,8 +83,9 @@ void Aria2JsonRPC::handleRPCReply(const QString &method, const QJsonObject &repl
     else if(method=="aria2.tellStatus")
     {
         QJsonObject statusObj(replyObj.value("result").toObject());
-        if(statusObj.contains("errorMessage"))
-            emit showLog(statusObj.value("errorMessage").toString());
+        QString errMsg(statusObj.value("errorMessage").toString());
+        if(!errMsg.isEmpty())
+            emit showLog(errMsg);
         emit refreshStatus(statusObj);
     }
     else if(method=="aria2.getGlobalStat")

@@ -10,6 +10,7 @@
 #include <QFileDialog>
 #include"globalobjects.h"
 #include "Play/Danmu/providermanager.h"
+#include "timelineedit.h"
 PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),parent)
 {
     QWidget *contentWidget=new QWidget(this);
@@ -50,21 +51,20 @@ PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):source(sourceIn
     name->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
     name->setFont(normalFont);
 
-    QCheckBox *itemSwitch=new QCheckBox("Open",this);
-    itemSwitch->setChecked(sourceInfo->open);
+    QCheckBox *itemSwitch=new QCheckBox(tr("Show"),this);
+    itemSwitch->setChecked(sourceInfo->show);
     QObject::connect(itemSwitch,&QCheckBox::stateChanged,[sourceInfo](int state){
        if(state==Qt::Unchecked)
-           sourceInfo->open=false;
+           sourceInfo->show=false;
        else
-           sourceInfo->open=true;
+           sourceInfo->show=true;
     });
     QHBoxLayout *itemControlHLayout1=new QHBoxLayout();
     itemControlHLayout1->addWidget(name);
-    QSpacerItem *listHSpacer1 = new QSpacerItem(0, 1, QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
-    itemControlHLayout1->addItem(listHSpacer1);
+    itemControlHLayout1->addStretch(1);
     itemControlHLayout1->addWidget(itemSwitch);
 
-    QLabel *url=new QLabel(QString("Source: <a href = %1>%1</a>").arg(source->url),this);
+    QLabel *url=new QLabel(tr("Source: <a href = %1>%1</a>").arg(source->url),this);
     url->setOpenExternalLinks(true);
     url->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
 
@@ -77,6 +77,15 @@ PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):source(sourceIn
     delaySpinBox->setFixedWidth(80*logicalDpiX()/96);
     QObject::connect(delaySpinBox,&QSpinBox::editingFinished,[delaySpinBox,sourceInfo](){
        GlobalObjects::danmuPool->setDelay(sourceInfo,delaySpinBox->value()*1000);
+    });
+    QPushButton *editTimeline=new QPushButton(tr("Edit Timeline"),this);
+    editTimeline->setFixedWidth(80*logicalDpiX()/96);
+    QObject::connect(editTimeline,&QPushButton::clicked,[this,sourceInfo](){
+        TimelineEdit timelineEdit(sourceInfo,this);
+        if(QDialog::Accepted==timelineEdit.exec())
+        {
+            GlobalObjects::danmuPool->refreshTimeLineDelayInfo(sourceInfo);
+        }
     });
 
     QPushButton *deleteButton=new QPushButton(tr("Delete"),this);
@@ -104,7 +113,7 @@ PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):source(sourceIn
                 QSet<QString> danmuHashSet(GlobalObjects::danmuPool->getDanmuHash(sourceInfo->id));
                 for(auto iter=tmpList.begin();iter!=tmpList.end();)
                 {
-                    QByteArray hashData(QString("%0%1%2%3").arg((*iter)->text).arg((*iter)->time+sourceInfo->delay).arg((*iter)->sender).arg((*iter)->color).toUtf8());
+                    QByteArray hashData(QString("%0%1%2%3").arg((*iter)->text).arg((*iter)->originTime).arg((*iter)->sender).arg((*iter)->color).toUtf8());
                     QString danmuHash(QString(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex()));
                     if(danmuHashSet.contains(danmuHash))
                     {
@@ -147,8 +156,9 @@ PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):source(sourceIn
     itemControlHLayout2->addWidget(delayLabel);
     itemControlHLayout2->addSpacing(8*logicalDpiX()/96);
     itemControlHLayout2->addWidget(delaySpinBox);
-    QSpacerItem *listHSpacer2 = new QSpacerItem(0, 1, QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
-    itemControlHLayout2->addItem(listHSpacer2);
+    itemControlHLayout2->addSpacing(4*logicalDpiX()/96);
+    itemControlHLayout2->addWidget(editTimeline);
+    itemControlHLayout2->addStretch(1);
     itemControlHLayout2->addWidget(updateButton);
     itemControlHLayout2->addWidget(exportButton);
     itemControlHLayout2->addWidget(deleteButton);

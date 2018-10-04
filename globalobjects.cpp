@@ -116,6 +116,7 @@ void GlobalObjects::initDatabase()
                            'Name'  TEXT,\
                            'Delay'  INTEGER,\
                            'URL'  TEXT,\
+                           'TimeLine'  TEXT,\
                            CONSTRAINT 'PoolID' FOREIGN KEY ('PoolID') REFERENCES 'bangumi' ('PoolID') ON DELETE CASCADE\
                            );");
         sqlQuery.exec("CREATE TABLE 'match' (\
@@ -173,5 +174,11 @@ void GlobalObjects::initDatabase()
                              'Torrent'  BLOB,\
                              PRIMARY KEY ('TaskID')\
                              );");
+        sqlQuery.exec("CREATE TABLE 'tag' (\
+                            'Anime'  TEXT NOT NULL,\
+                            'Tag'  TEXT NOT NULL,\
+                            PRIMARY KEY (\"Anime\", \"Tag\"),\
+                            CONSTRAINT 'Anime' FOREIGN KEY ('Anime') REFERENCES 'anime' ('Anime') ON DELETE CASCADE ON UPDATE CASCADE\
+                            );");
     }
 }

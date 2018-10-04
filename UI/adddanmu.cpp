@@ -54,17 +54,6 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent) : CFramelessDialog(
     selectedDanmuPage->setFixedHeight(pageButtonSize.height());
     selectedDanmuPage->setObjectName(QStringLiteral("DialogPageButton"));
 
-    QButtonGroup *btnGroup=new QButtonGroup(this);
-    btnGroup->addButton(onlineDanmuPage,0);
-    btnGroup->addButton(urlDanmuPage,1);
-    btnGroup->addButton(selectedDanmuPage,2);
-    QObject::connect(btnGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[this](int id, bool checked){
-        if(checked)
-        {
-            contentStackLayout->setCurrentIndex(id);
-        }
-    });
-
     QMovie *downloadingIcon=new QMovie(this);
     movieLabel=new QLabel(this);
     movieLabel->setMovie(downloadingIcon);
@@ -79,17 +68,27 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent) : CFramelessDialog(
     pageButtonHLayout->addWidget(onlineDanmuPage);
     pageButtonHLayout->addWidget(urlDanmuPage);
     pageButtonHLayout->addWidget(selectedDanmuPage);   
-    QSpacerItem *pageButtonHSpacer = new QSpacerItem(0, 10, QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
-    pageButtonHLayout->addItem(pageButtonHSpacer);
+    pageButtonHLayout->addStretch(1);
     pageButtonHLayout->addWidget(movieLabel);
     danmuVLayout->addLayout(pageButtonHLayout);
 
-    contentStackLayout=new QStackedLayout();
+    QStackedLayout *contentStackLayout=new QStackedLayout();
     contentStackLayout->setContentsMargins(0,0,0,0);
     contentStackLayout->addWidget(setupSearchPage());
     contentStackLayout->addWidget(setupURLPage());
     contentStackLayout->addWidget(setupSelectedPage());
     danmuVLayout->addLayout(contentStackLayout);
+
+	QButtonGroup *btnGroup = new QButtonGroup(this);
+	btnGroup->addButton(onlineDanmuPage, 0);
+	btnGroup->addButton(urlDanmuPage, 1);
+	btnGroup->addButton(selectedDanmuPage, 2);
+	QObject::connect(btnGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, [contentStackLayout](int id, bool checked) {
+		if (checked)
+		{
+			contentStackLayout->setCurrentIndex(id);
+		}
+	});
 
     QLabel *itemInfoLabel=new QLabel(item?(item->animeTitle.isEmpty()?item->title:QString("%1-%2").arg(item->animeTitle).arg(item->title)):"",this);
     itemInfoLabel->setFont(QFont("Microsoft YaHei UI",10,QFont::Bold));
@@ -169,7 +168,7 @@ void AddDanmu::addSearchItem(DanmuAccessResult *result)
             sourceInfo.name=sourceItem.title;
             sourceInfo.url=GlobalObjects::providerManager->getSourceURL(result->providerId,&sourceItem);
             sourceInfo.delay=0;
-            sourceInfo.open=true;
+            sourceInfo.show=true;
             selectedDanmuList.append(QPair<DanmuSourceInfo,QList<DanmuComment *> >(sourceInfo,tmplist));
             QTreeWidgetItem *widgetItem=new QTreeWidgetItem(selectedDanmuWidget,QStringList()<<sourceInfo.name<<QString::number(sourceInfo.count)<<result->providerId);
             widgetItem->setCheckState(0,Qt::Checked);
@@ -191,7 +190,7 @@ void AddDanmu::addSearchItem(DanmuAccessResult *result)
                     sourceInfo.name=sourceItem.title;
                     sourceInfo.url=GlobalObjects::providerManager->getSourceURL(result->providerId,&sourceItem);
                     sourceInfo.delay=sourceItem.delay*1000;
-                    sourceInfo.open=true;
+                    sourceInfo.show=true;
                     selectedDanmuList.append(QPair<DanmuSourceInfo,QList<DanmuComment *> >(sourceInfo,tmplist));
                     QTreeWidgetItem *widgetItem=new QTreeWidgetItem(selectedDanmuWidget,QStringList()<<sourceInfo.name<<QString::number(sourceInfo.count)<<result->providerId);
                     widgetItem->setCheckState(0,Qt::Checked);

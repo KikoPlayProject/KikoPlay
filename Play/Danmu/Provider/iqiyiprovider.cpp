@@ -183,7 +183,6 @@ void IqiyiProvider::downloadAllDanmu(const QString &id, QList<DanmuComment *> &d
             QXmlStreamReader reader(decompressResult);
             bool dmStart=false;
             DanmuComment tmpDanmu;
-            tmpDanmu.blockBy=-1;
             tmpDanmu.setType(1);
             tmpDanmu.fontSizeLevel=DanmuComment::Normal;
             while(!reader.atEnd())
@@ -206,6 +205,7 @@ void IqiyiProvider::downloadAllDanmu(const QString &id, QList<DanmuComment *> &d
                     else if(reader.name()=="showTime")
                     {
                         tmpDanmu.time = reader.readElementText().toFloat() * 1000;
+                        tmpDanmu.originTime= tmpDanmu.time;
                     }
                     else if(reader.name()=="color")
                     {

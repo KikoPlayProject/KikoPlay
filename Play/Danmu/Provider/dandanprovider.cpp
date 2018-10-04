@@ -135,11 +135,11 @@ void DandanProvider::handleDownloadReply(QJsonDocument &document, QList<DanmuCom
             DanmuComment *danmu=new DanmuComment();
             danmu->text=m.toString();
             danmu->time =ps[0].toFloat() * 1000;
+            danmu->originTime=danmu->time;
             danmu->setType(ps[1].toInt());
             danmu->color=ps[2].toInt();
             danmu->date=0;
             danmu->sender="[Dandan]"+ps[3];
-            danmu->blockBy=-1;
             danmu->fontSizeLevel=DanmuComment::Normal;
             if(danmu->type!=DanmuComment::UNKNOW)danmuList.append(danmu);
             else delete danmu;

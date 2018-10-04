@@ -160,13 +160,26 @@ void PoolInfoWorker::exportPool(const QList<DanmuPoolInfo> &exportList, const QS
         writer.writeStartDocument();
         writer.writeStartElement("i");
 
-        QHash<int,int> sourcesTable;
-        query.exec(QString("select ID,Delay from source where PoolID='%1'").arg(poolInfo.poolID));
+        QHash<int,DanmuSourceInfo> sourcesTable;
+        query.exec(QString("select ID,Delay,TimeLine from source where PoolID='%1'").arg(poolInfo.poolID));
         int idNo = query.record().indexOf("ID"),
-            delayNo=query.record().indexOf("Delay");
+            delayNo=query.record().indexOf("Delay"),
+            timelineNo=query.record().indexOf("TimeLine");
         while (query.next())
         {
-            sourcesTable.insert(query.value(idNo).toInt(),query.value(delayNo).toInt());
+            DanmuSourceInfo sourceInfo;
+            sourceInfo.delay=query.value(delayNo).toInt();
+            sourceInfo.id=query.value(idNo).toInt();
+            QStringList timelineList(query.value(timelineNo).toString().split(';',QString::SkipEmptyParts));
+            QTextStream ts;
+            for(QString &spaceInfo:timelineList)
+            {
+                ts.setString(&spaceInfo,QIODevice::ReadOnly);
+                int start,duration;
+                ts>>start>>duration;
+                sourceInfo.timelineInfo.append(QPair<int,int>(start,duration));
+            }
+            sourcesTable.insert(sourceInfo.id,sourceInfo);
         }
         query.exec(QString("select * from danmu where PoolID='%1'").arg(poolInfo.poolID));
         int timeNo = query.record().indexOf("Time"),
@@ -186,13 +199,18 @@ void PoolInfoWorker::exportPool(const QList<DanmuPoolInfo> &exportList, const QS
             tmpComment.type=DanmuComment::DanmuType(query.value(modeNo).toInt());
             tmpComment.source=query.value(sourceNo).toInt();
             tmpComment.text=query.value(textNo).toString();
+            tmpComment.originTime=query.value(timeNo).toInt();
             int delay=0;
             if(sourcesTable.contains(tmpComment.source))
             {
-                delay=sourcesTable[tmpComment.source];
+                for(auto &spaceItem:sourcesTable[tmpComment.source].timelineInfo)
+                {
+                    if(tmpComment.originTime>spaceItem.first)delay+=spaceItem.second;
+                    else break;
+                }
+                delay+=sourcesTable[tmpComment.source].delay;
             }
-            int time = query.value(timeNo).toInt();
-            tmpComment.time=time+delay<0?time:time+delay;
+            tmpComment.time=tmpComment.originTime+delay<0?tmpComment.originTime:tmpComment.originTime+delay;
 
             writer.writeStartElement("d");
             writer.writeAttribute("p", QString("%0,%1,%2,%3,%4,%5,%6,%7").arg(QString::number(tmpComment.time/1000.f,'f',2))

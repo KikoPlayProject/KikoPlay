@@ -17,6 +17,7 @@ KikoPlay基于以下项目：
  - [libmpv](https://github.com/mpv-player/mpv)
  - [aria2](https://github.com/aria2/aria2)
  - [Qt-Nice-Frameless-Window](https://github.com/Bringer-of-Light/Qt-Nice-Frameless-Window)
+ - zlib 1.2.11
 
 编译环境：
 MSVC2015 32bit

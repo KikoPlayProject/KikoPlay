@@ -359,7 +359,7 @@ void ListWindow::initActions()
             DanmuSourceInfo sourceInfo;
             sourceInfo.delay=0;
             sourceInfo.name=file.mid(file.lastIndexOf('/')+1);
-            sourceInfo.open=true;
+            sourceInfo.show=true;
             sourceInfo.url=file;
             sourceInfo.count=tmplist.count();
             GlobalObjects::danmuPool->addDanmu(sourceInfo,tmplist);
@@ -385,7 +385,8 @@ void ListWindow::initActions()
             restorePlayState = true;
             GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
         }
-        QString fileName = QFileDialog::getSaveFileName(this, tr("Save Danmu"),"",tr("Xml File (*.xml)"));
+        const PlayListItem *curItem = GlobalObjects::playlist->getCurrentItem();
+        QString fileName = QFileDialog::getSaveFileName(this, tr("Save Danmu"),curItem?curItem->title:"",tr("Xml File (*.xml)"));
         if(!fileName.isEmpty())
         {
             GlobalObjects::danmuPool->exportDanmu(-1,fileName);
@@ -815,7 +816,7 @@ void ListWindow::dropEvent(QDropEvent *event)
                         DanmuSourceInfo sourceInfo;
                         sourceInfo.delay=0;
                         sourceInfo.name=fi.fileName();
-                        sourceInfo.open=true;
+                        sourceInfo.show=true;
                         sourceInfo.url=fi.filePath();
                         sourceInfo.count=tmplist.count();
                         GlobalObjects::danmuPool->addDanmu(sourceInfo,tmplist);

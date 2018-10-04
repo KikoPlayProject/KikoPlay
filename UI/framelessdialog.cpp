@@ -69,6 +69,7 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
     title->setFont(QFont("Microsoft YaHei",10));
     title->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
     title->setGeometry(10,10,title->width(),title->height());
+    title->setOpenExternalLinks(true);
     addIgnoreWidget(title);
 
     QHBoxLayout *titleHBLayout=new QHBoxLayout(titleBar);

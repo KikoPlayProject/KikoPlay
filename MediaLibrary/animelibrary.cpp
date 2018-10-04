@@ -1,6 +1,7 @@
 #include "animelibrary.h"
 #include "globalobjects.h"
 #include "Common/network.h"
+#include "Common/htmlparsersax.h"
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QPixmap>
@@ -26,6 +27,8 @@ AnimeLibrary::AnimeLibrary(QObject *parent):QAbstractItemModel(parent),active(fa
     animeWorker->moveToThread(GlobalObjects::workThread);
     QObject::connect(animeWorker,&AnimeWorker::addAnime,this,&AnimeLibrary::addAnime);
     QObject::connect(this,&AnimeLibrary::tryAddAnime,animeWorker,&AnimeWorker::addAnimeInfo);
+    QObject::connect(animeWorker,&AnimeWorker::newTagDownloaded,this,&AnimeLibrary::addTags);
+    QObject::connect(animeWorker,&AnimeWorker::loadLabelInfoDone,this,&AnimeLibrary::refreshLabelInfo);
 }
 
 AnimeLibrary::~AnimeLibrary()
@@ -38,6 +41,15 @@ void AnimeLibrary::setActive(bool a)
     active=a;
     if(active)
     {
+        static bool initTags=false;
+        if(!initTags)
+        {
+            QMetaObject::invokeMethod(animeWorker,[this](){
+                animeWorker->loadLabelInfo(tagsMap,timeSet);
+            },Qt::QueuedConnection);
+            initTags=true;
+            emit animeCountChanged();
+        }
         if(!tmpAnimes.isEmpty())
         {
             beginInsertRows(QModelIndex(),0,tmpAnimes.count()-1);
@@ -118,10 +130,16 @@ Anime *AnimeLibrary::downloadDetailInfo(Anime *anime, int bangumiId, QString *er
         resultAnime=newAnime;
         eventLoop.quit();
     });
-    QMetaObject::invokeMethod(animeWorker,[&errInfo,anime,bangumiId](){
-        errInfo=animeWorker->downloadDetailInfo(anime,bangumiId);
+    QMetaObject::invokeMethod(animeWorker,[&errInfo,anime,bangumiId,this](){
+        errInfo=animeWorker->downloadDetailInfo(anime,bangumiId,tagsMap);
     },Qt::QueuedConnection);
     eventLoop.exec();
+    QString animeDate(anime->date.left(4));
+    if(!timeSet.contains(animeDate))
+    {
+        timeSet.insert(animeDate);
+        emit addTimeLabel(animeDate);
+    }
     *errorInfo=errInfo;
     return resultAnime;
 }
@@ -145,6 +163,20 @@ void AnimeLibrary::deleteAnime(QModelIndexList &deleteIndexes)
             if(last)emit animeCountChanged();
         },Qt::QueuedConnection);
     }
+}
+
+void AnimeLibrary::deleteAnime(const QModelIndex &index)
+{
+    if(!index.isValid())return;
+    Anime *anime=animes.at(index.row());
+    beginRemoveRows(QModelIndex(), index.row(), index.row());
+    animes.removeAt(index.row());
+    endRemoveRows();
+    currentOffset--;
+    QMetaObject::invokeMethod(animeWorker,[anime,this](){
+        animeWorker->deleteAnime(anime);
+        emit animeCountChanged();
+    },Qt::QueuedConnection);
 }
 
 void AnimeLibrary::refreshEpPlayTime(const QString &title, const QString &path)
@@ -234,6 +266,34 @@ int AnimeLibrary::getCount(int type)
         return query.value(0).toInt();
     }
     return 0;
+}
+
+void AnimeLibrary::deleteTag(const QString &tag, const QString &animeTitle)
+{
+    QMetaObject::invokeMethod(animeWorker,"deleteTag",Qt::QueuedConnection,Q_ARG(QString,tag),Q_ARG(QString,animeTitle));
+    if(animeTitle.isEmpty())
+    {
+        tagsMap.remove(tag);
+    }
+    else if(tagsMap.contains(tag))
+    {
+        tagsMap[tag].remove(animeTitle);
+    }
+}
+
+void AnimeLibrary::addTag(Anime *anime, const QString &tag)
+{
+    if(!tagsMap.contains(tag))
+    {
+        tagsMap.insert(tag,QSet<QString>());
+        emit addTags(QStringList()<<tag);
+    }
+    tagsMap[tag].insert(anime->title);
+    QSqlQuery query(QSqlDatabase::database("MT"));
+    query.prepare("insert into tag(Anime,Tag) values(?,?)");
+    query.bindValue(0,anime->title);
+    query.bindValue(1,tag);
+    query.exec();
 }
 
 void AnimeLibrary::addAnime(Anime *anime)
@@ -371,7 +431,7 @@ void AnimeWorker::addAnimeInfo(const QString &animeName,const QString &epName, c
 
 }
 
-QString AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId)
+QString AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId, QMap<QString, QSet<QString> > &tagMap)
 {
     QString animeUrl(QString("https://api.bgm.tv/subject/%1").arg(bangumiId));
     QUrlQuery animeQuery;
@@ -456,6 +516,8 @@ QString AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId)
         }
 
         updateAnimeInfo(anime);
+        if(GlobalObjects::appSetting->value("Library/DownloadTag",Qt::Checked).toInt()==Qt::Checked)
+            errInfo=downloadLabelInfo(anime,tagMap);
         emit downloadDone();
     }
     catch(Network::NetworkError &error)
@@ -556,23 +618,131 @@ void AnimeWorker::updatePlayTime(const QString &title, const QString &path)
     }
 }
 
-void AnimeFilterProxyModel::setTimeRange(int index)
+void AnimeWorker::loadLabelInfo(QMap<QString, QSet<QString> > &tagMap, QSet<QString> &timeSet)
 {
-    if(index==0)
+    QSqlQuery query(QSqlDatabase::database("WT"));
+    query.prepare("select * from tag");
+    query.exec();
+    int animeNo=query.record().indexOf("Anime"),tagNo=query.record().indexOf("Tag");
+    QString tagName;
+    while (query.next())
     {
-        timeAfter=0;
-        return;
+        tagName=query.value(tagNo).toString();
+        if(!tagMap.contains(tagName))
+            tagMap.insert(tagName,QSet<QString>());
+        tagMap[tagName].insert(query.value(animeNo).toString());
     }
-    int timeRange[]={0,-3,-6,-12};
-    timeAfter=QDateTime::currentDateTime().addMonths(timeRange[index]).toSecsSinceEpoch();
+
+    query.prepare("select Date from anime");
+    query.exec();
+    int dateNo=query.record().indexOf("Date");
+    QString dateStr;
+    while (query.next())
+    {
+        dateStr=query.value(dateNo).toString().left(4);
+        timeSet.insert(dateStr);
+    }
+    emit loadLabelInfoDone();
 }
+
+void AnimeWorker::deleteTag(const QString &tag, const QString &animeTitle)
+{
+    QSqlQuery query(QSqlDatabase::database("WT"));
+    if(animeTitle.isEmpty())
+    {
+        query.prepare("delete from tag where Tag=?");
+        query.bindValue(0,tag);
+    }
+    else
+    {
+        query.prepare("delete from tag where Anime=? and Tag=?");
+        query.bindValue(0,animeTitle);
+        query.bindValue(1,tag);
+    }
+    query.exec();
+}
+
+QString AnimeWorker::downloadLabelInfo(Anime *anime, QMap<QString, QSet<QString> > &tagMap)
+{
+    QString bgmPageUrl(QString("http://bgm.tv/subject/%1").arg(anime->bangumiID));
+    QString errInfo;
+    try
+    {
+        QString pageContent(Network::httpGet(bgmPageUrl,QUrlQuery()));
+        QRegExp re("<div class=\"subject_tag_section\">(.*)<div id=\"panelInterestWrapper\">");
+        int pos=re.indexIn(pageContent);
+        if(pos!=-1)
+        {
+            HTMLParserSax parser(re.capturedTexts().at(1));
+            QRegExp yearRe("(19|20)\\d{2}");
+            QStringList trivialTags={"TV","OVA","WEB"};
+            QStringList tagList;
+            while(!parser.atEnd())
+            {
+                if(parser.currentNode()=="a" && parser.isStartNode())
+                {
+                    parser.readNext();
+                    QString tagName(parser.readContentText());
+                    if(yearRe.indexIn(tagName)==-1 && !trivialTags.contains(tagName)
+                            && !anime->title.contains(tagName))
+                        tagList.append(tagName);
+                    if(tagList.count()>9)
+                        break;
+                }
+                parser.readNext();
+            }
+
+            QSqlDatabase db=QSqlDatabase::database("WT");
+            db.transaction();
+            QSqlQuery query(QSqlDatabase::database("WT"));
+            query.prepare("insert into tag(Anime,Tag) values(?,?)");
+            query.bindValue(0,anime->title);
+
+            QStringList newTags;
+            for(const QString &tag:tagList)
+            {
+                if(!tagMap.contains(tag))
+                {
+                    newTags.append(tag);
+                    tagMap.insert(tag,QSet<QString>());
+                }
+                if(tagMap[tag].contains(anime->title))continue;
+                tagMap[tag].insert(anime->title);
+                query.bindValue(1,tag);
+                query.exec();
+            }
+            db.commit();
+            emit newTagDownloaded(newTags);
+        }
+    }
+    catch(Network::NetworkError &error)
+    {
+        errInfo=error.errorInfo;
+    }
+    return errInfo;
+}
+
+//void AnimeFilterProxyModel::setTimeRange(int index)
+//{
+//    if(index==0)
+//    {
+//        timeAfter=0;
+//        return;
+//    }
+//    int timeRange[]={0,-3,-6,-12};
+//    timeAfter=QDateTime::currentDateTime().addMonths(timeRange[index]).toSecsSinceEpoch();
+//}
 
 bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
      QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
      Anime *anime=static_cast<AnimeLibrary *>(sourceModel())->getAnime(index,false);
-     bool timeIn=(anime->addTime>timeAfter);
-     if(!timeIn)return false;
+     if(!timeFilterSet.isEmpty() && !timeFilterSet.contains(anime->date.left(4)))return false;
+     for(const QString &tag:tagFilterSet)
+     {
+         if(!GlobalObjects::library->animeTags()[tag].contains(anime->title))
+             return false;
+     }
      switch (filterType)
      {
      case 0://title

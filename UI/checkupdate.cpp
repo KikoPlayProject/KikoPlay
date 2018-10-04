@@ -29,11 +29,22 @@ CheckUpdate::CheckUpdate(QWidget *parent) : CFramelessDialog(tr("Check For Updat
             QString downloadURL=newVersionObj.value("URL").toString();
             QStringList curVer(versionStr.split('.',QString::SkipEmptyParts)),newVer(nVersionStr.split('.',QString::SkipEmptyParts));
             int i=0;
-            for(;i<3;i++)
+            bool hasNewversion=false;
+            for(;i<3;++i)
             {
-                if(curVer.at(i).toInt()<newVer.at(i).toInt())break;
+                int cv=curVer.at(i).toInt(),nv=newVer.at(i).toInt();
+                if(cv<nv)
+                {
+                    hasNewversion=true;
+                    break;
+                }
+                else if(cv>nv)
+                {
+                    hasNewversion=false;
+                    break;
+                }
             }
-            if(i<3)
+            if(hasNewversion)
             {
                 newVersionLabel->setText(tr("Find new Version: %1  <a href=\"%2\">Click To Download</a>").arg(nVersionStr).arg(downloadURL));
 				newVersionLabel->setOpenExternalLinks(true);
