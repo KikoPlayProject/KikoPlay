@@ -56,7 +56,7 @@ DanmuAccessResult *ProviderManager::search(const QString &providerId, QString ke
     {
         DanmuAccessResult *result=new DanmuAccessResult;
         result->error=true;
-        result->errorInfo=tr("Provider invaild or Unsupport search");
+        result->errorInfo=tr("Provider invalid or Unsupport search");
         return result;
     }
     QMetaObject::invokeMethod(provider, [provider,&keyword]() {
@@ -86,7 +86,7 @@ DanmuAccessResult *ProviderManager::getEpInfo(const QString &providerId, DanmuSo
     {
         DanmuAccessResult *result=new DanmuAccessResult;
         result->error=true;
-        result->errorInfo=tr("Provider invaild");
+        result->errorInfo=tr("Provider invalid");
         return result;
     }
     QMetaObject::invokeMethod(provider,"getEpInfo",Qt::QueuedConnection,Q_ARG(DanmuSourceItem *,item));
@@ -128,7 +128,7 @@ QString ProviderManager::downloadDanmu(QString &providerId, DanmuSourceItem *ite
     ProviderBase *provider=providers.value(providerId,nullptr);
     if(!provider)
     {
-        return tr("Provider invaild");
+        return tr("Provider invalid");
     }
     QMetaObject::invokeMethod(provider,[provider,item,&danmuList](){
         provider->downloadDanmu(item,danmuList);
