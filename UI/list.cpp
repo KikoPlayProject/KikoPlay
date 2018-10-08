@@ -334,6 +334,12 @@ void ListWindow::initActions()
     act_addOnlineDanmu=new QAction(tr("Add Online Danmu"),this);
     QObject::connect(act_addOnlineDanmu,&QAction::triggered,[this](){
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
+        bool restorePlayState = false;
+        if (GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
+        {
+            restorePlayState = true;
+            GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
+        }
         AddDanmu addDanmuDialog(currentItem, this);
         if(QDialog::Accepted==addDanmuDialog.exec())
         {
@@ -342,6 +348,7 @@ void ListWindow::initActions()
                 GlobalObjects::danmuPool->addDanmu((*iter).first,(*iter).second);
             }
         }
+        if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
     act_addLocalDanmu=new QAction(tr("Add Local Danmu"),this);
     QObject::connect(act_addLocalDanmu,&QAction::triggered,[this](){

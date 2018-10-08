@@ -179,6 +179,7 @@ void BahamutProvider::handleEpReply(QString &reply, DanmuAccessResult *result)
     else
     {
         QRegExp snTitleRe("animefun.videoSn.?=.?([0-9]+);.*animefun.title.?=.?'(.*)'");
+        snTitleRe.setMinimal(true);
         int pos=snTitleRe.indexIn(reply);
         if(pos!=-1)
         {
