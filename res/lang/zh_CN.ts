@@ -460,12 +460,12 @@
         <translation>正在检查...</translation>
     </message>
     <message>
-        <location filename="../../UI/checkupdate.cpp" line="40"/>
+        <location filename="../../UI/checkupdate.cpp" line="49"/>
         <source>Find new Version: %1  &lt;a href=&quot;%2&quot;&gt;Click To Download&lt;/a&gt;</source>
         <translation>发现新版本：%1  &lt;a href=&quot;%2&quot;&gt;点击下载&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../../UI/checkupdate.cpp" line="45"/>
+        <location filename="../../UI/checkupdate.cpp" line="54"/>
         <source>Already Newast</source>
         <translation>已是最新版本</translation>
     </message>
@@ -2048,9 +2048,8 @@ Date: %2
 <context>
     <name>ProviderManager</name>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="59"/>
         <source>Provider invaild or Unsupport search</source>
-        <translation>弹幕提供源失效或不支持搜索</translation>
+        <translation type="vanished">弹幕提供源失效或不支持搜索</translation>
     </message>
     <message>
         <location filename="../../Play/Danmu/providermanager.cpp" line="76"/>
@@ -2058,9 +2057,18 @@ Date: %2
         <translation>搜索失败</translation>
     </message>
     <message>
+        <source>Provider invaild</source>
+        <translation type="vanished">弹幕提供源失效</translation>
+    </message>
+    <message>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="59"/>
+        <source>Provider invalid or Unsupport search</source>
+        <translation>弹幕提供源失效或不支持搜索</translation>
+    </message>
+    <message>
         <location filename="../../Play/Danmu/providermanager.cpp" line="89"/>
         <location filename="../../Play/Danmu/providermanager.cpp" line="131"/>
-        <source>Provider invaild</source>
+        <source>Provider invalid</source>
         <translation>弹幕提供源失效</translation>
     </message>
     <message>
@@ -2300,14 +2308,23 @@ Date: %2
 <context>
     <name>SimpleDanumPool</name>
     <message>
-        <location filename="../../UI/timelineedit.cpp" line="395"/>
         <source>Time</source>
-        <translation>时间</translation>
+        <translation type="vanished">时间</translation>
     </message>
     <message>
-        <location filename="../../UI/timelineedit.cpp" line="395"/>
+        <location filename="../../UI/timelineedit.cpp" line="400"/>
         <source>Content</source>
         <translation>内容</translation>
+    </message>
+    <message>
+        <location filename="../../UI/timelineedit.cpp" line="400"/>
+        <source>Original</source>
+        <translation>原始</translation>
+    </message>
+    <message>
+        <location filename="../../UI/timelineedit.cpp" line="400"/>
+        <source>Adjusted</source>
+        <translation>调整后</translation>
     </message>
 </context>
 <context>

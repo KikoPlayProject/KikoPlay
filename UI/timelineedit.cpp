@@ -41,7 +41,7 @@ TimelineEdit::TimelineEdit(DanmuSourceInfo *source, QWidget *parent):currentSour
     simpleDPView->setModel(simpleDanmuPool);
     simpleDPView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     simpleDPView->header()->setStretchLastSection(false);
-    simpleDPView->header()->resizeSection(1, 200*logicalDpiX()/96);
+    simpleDPView->header()->resizeSection(2, 200*logicalDpiX()/96);
 
     QLabel *tipLabel=new QLabel(tr("Double Click: Begin/End Insert Space  Right Click: Cancel"),this);
     tipLabel->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
@@ -115,6 +115,7 @@ TimeLineBar::TimeLineBar(const QList<SimpleDanmuInfo> *sDanmuList, TimeLineInfoM
     setMouseTracking(true);
     currentState=-1;
     this->timelineModel=timelineModel;
+    refreshStatisInfo();
     updateInfo();
     setMinimumSize(200*logicalDpiX()/96,60*logicalDpiY()/96);
     setFocusPolicy(Qt::StrongFocus);
@@ -125,8 +126,7 @@ void TimeLineBar::updateInfo()
     if(simpleDanmuList->count()==0)
         duration=24*60;
     else
-        duration=simpleDanmuList->last().time/1000+10;
-    refreshStatisInfo();
+        duration=simpleDanmuList->last().originTime/1000+10;
     update();
 }
 
@@ -140,9 +140,9 @@ void TimeLineBar::refreshStatisInfo()
     {
         if(iter==simpleDanmuList->cbegin())
         {
-            startTime=(*iter).time;
+            startTime=(*iter).originTime;
         }
-        if((*iter).time-startTime<1000)
+        if((*iter).originTime-startTime<1000)
             curMinuteCount++;
         else
         {
@@ -150,7 +150,7 @@ void TimeLineBar::refreshStatisInfo()
             if(curMinuteCount>statisInfo.maxCountOfMinute)
                 statisInfo.maxCountOfMinute=curMinuteCount;
             curMinuteCount=1;
-            startTime=(*iter).time;
+            startTime=(*iter).originTime;
         }
     }
     statisInfo.countOfMinute.append(QPair<int, int>(startTime / 1000, curMinuteCount));
@@ -183,7 +183,7 @@ void TimeLineBar::paintEvent(QPaintEvent *event)
     for(auto &spaceItem:timelineInfo)
     {
         float l(spaceItem.first/1000*wRatio);
-        painter.fillRect(l,0,spaceItem.second>0?spaceItem.second/1000*wRatio:1,bHeight,pSpaceColor);
+        painter.fillRect(l,0,1,bHeight,pSpaceColor);
     }
 
     if(currentState!=-1)
@@ -330,19 +330,20 @@ QVariant TimeLineInfoModel::headerData(int section, Qt::Orientation orientation,
 
 SimpleDanumPool::SimpleDanumPool(QList<SimpleDanmuInfo> sDanmuList, QObject *parent):QAbstractItemModel(parent),simpleDanmuList(sDanmuList)
 {
-
+    std::sort(simpleDanmuList.begin(),simpleDanmuList.end(),
+                 [](const SimpleDanmuInfo &danmu1,const SimpleDanmuInfo &danmu2){return danmu1.originTime<danmu2.originTime;});
 }
 
 QModelIndex SimpleDanumPool::getIndex(int time)
 {
     int pos=std::lower_bound(simpleDanmuList.begin(),simpleDanmuList.end(),time,
-                             [](const SimpleDanmuInfo &danmu,int time){return danmu.time<time;})-simpleDanmuList.begin();
+                             [](const SimpleDanmuInfo &danmu,int time){return danmu.originTime<time;})-simpleDanmuList.begin();
     return createIndex(pos,0);
 }
 
 void SimpleDanumPool::refreshTimeline(const QList<QPair<int, int> > &timelineInfo)
 {
-    emit layoutAboutToBeChanged();
+    beginResetModel();
     int timelinePos=0,currentDelay=0;
     for(auto iter=simpleDanmuList.begin();iter!=simpleDanmuList.end();++iter)
     {
@@ -359,11 +360,11 @@ void SimpleDanumPool::refreshTimeline(const QList<QPair<int, int> > &timelineInf
                 break;
             }
         }
-        sdi.time=sdi.originTime+currentDelay;
+        sdi.time=sdi.originTime+currentDelay<0?sdi.originTime:sdi.originTime+currentDelay;
     }
-    std::sort(simpleDanmuList.begin(),simpleDanmuList.end(),
-              [](const SimpleDanmuInfo &danmu1,const SimpleDanmuInfo &danmu2){return danmu1.time<danmu2.time;});
-    emit layoutChanged();
+    //std::sort(simpleDanmuList.begin(),simpleDanmuList.end(),
+    //          [](const SimpleDanmuInfo &danmu1,const SimpleDanmuInfo &danmu2){return danmu1.ori<danmu2.time;});
+    endResetModel();
 }
 
 QVariant SimpleDanumPool::data(const QModelIndex &index, int role) const
@@ -377,9 +378,13 @@ QVariant SimpleDanumPool::data(const QModelIndex &index, int role) const
     {
         if(col==0)
         {
-            return formatTime(danmu.time);
+            return formatTime(danmu.originTime);
         }
         else if(col==1)
+        {
+            return formatTime(danmu.time);
+        }
+        else if(col==2)
         {
             return danmu.text;
         }
@@ -392,10 +397,10 @@ QVariant SimpleDanumPool::data(const QModelIndex &index, int role) const
 
 QVariant SimpleDanumPool::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    static QString headers[]={tr("Time"),tr("Content")};
+    static QString headers[]={tr("Original"),tr("Adjusted"),tr("Content")};
     if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
     {
-        if(section<2)return headers[section];
+        if(section<3)return headers[section];
     }
     return QVariant();
 }

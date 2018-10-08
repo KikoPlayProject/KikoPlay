@@ -38,7 +38,7 @@ public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     inline virtual QModelIndex parent(const QModelIndex &child) const{return QModelIndex();}
     inline virtual int rowCount(const QModelIndex &parent) const{return parent.isValid()?0:simpleDanmuList.count();}
-    inline virtual int columnCount(const QModelIndex &parent) const {return parent.isValid()?0:2;}
+    inline virtual int columnCount(const QModelIndex &parent) const {return parent.isValid()?0:3;}
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 };
