@@ -374,6 +374,8 @@ QVariant DownloadModel::data(const QModelIndex &index, int role) const
     }
     switch (role)
     {
+    case DataRole::DownSpeedRole:
+        return downloadItem->downloadSpeed;
     case DataRole::TotalLengthRole:
         return downloadItem->totalLength;
     case DataRole::CompletedLengthRole:
@@ -529,4 +531,22 @@ bool TaskFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &s
     default:
         return true;
     }
+}
+
+bool TaskFilterProxyModel::lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const
+{
+    int col=source_left.column();
+    if(col==3)
+    {
+        qint64 ltotalLength=sourceModel()->data(source_left,DownloadModel::DataRole::TotalLengthRole).toLongLong(),
+               rtotalLength=sourceModel()->data(source_right,DownloadModel::DataRole::TotalLengthRole).toLongLong();
+        return ltotalLength<rtotalLength;
+    }
+    else if(col==4)
+    {
+        int lspeed=sourceModel()->data(source_left,DownloadModel::DataRole::DownSpeedRole).toLongLong(),
+               rspeed=sourceModel()->data(source_right,DownloadModel::DataRole::DownSpeedRole).toLongLong();
+        return lspeed<rspeed;
+    }
+    return QSortFilterProxyModel::lessThan(source_left,source_right);
 }
