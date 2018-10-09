@@ -90,7 +90,8 @@ private:
      QLabel *timeLabel;
      QPushButton *play_pause,*prev,*next,*stop,*mute,*setting, *danmu,*fullscreen,*list;
      QAction *actPlayPause,*actPrev,*actNext,*actFullscreen;
-     QTimer ctrlPressTimer;
+     QTimer ctrlPressTimer,hideCursorTimer;
+     const int hideCursorTimeout=3000;
      int ctrlPressCount;
 
      QLabel *titleLabel;

@@ -389,6 +389,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Enter:
     case Qt::Key_Return:
     case Qt::Key_Space:
+    case Qt::Key_Escape:
         //if(!QApplication::focusWidget())
             QApplication::sendEvent(playerWindow,event);
         break;
@@ -400,12 +401,12 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
 void MainWindow::moveEvent(QMoveEvent *)
 {
-    if(GlobalObjects::playlist->getCurrentItem()==nullptr)
+    if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
         originalGeo=geometry();
 }
 
 void MainWindow::resizeEvent(QResizeEvent *)
 {
-    if(GlobalObjects::playlist->getCurrentItem()==nullptr)
+    if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
         originalGeo=geometry();
 }

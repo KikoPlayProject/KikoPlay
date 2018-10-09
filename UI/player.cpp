@@ -373,6 +373,9 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
         ctrlPressCount=0;
         ctrlPressTimer.stop();
     });
+    QObject::connect(&hideCursorTimer,&QTimer::timeout,[this](){
+        if(isFullscreen)setCursor(Qt::BlankCursor);
+    });
 
     QHBoxLayout *buttonHLayout=new QHBoxLayout();
     buttonHLayout->addWidget(timeLabel);
@@ -526,7 +529,16 @@ void PlayerWindow::initActions()
         isFullscreen=!isFullscreen;
         emit showFullScreen(isFullscreen);
         if(isFullscreen) fullscreen->setText(QChar(0xe6ac));
-        else  fullscreen->setText(QChar(0xe621));
+        else fullscreen->setText(QChar(0xe621));
+        if(isFullscreen)
+        {
+            hideCursorTimer.start(hideCursorTimeout);
+        }
+        else
+        {
+            hideCursorTimer.stop();
+            setCursor(Qt::ArrowCursor);
+        }
     });
     actPrev=new QAction(tr("Prev"),this);
     QObject::connect(actPrev,&QAction::triggered,[this](){
@@ -1189,16 +1201,23 @@ void PlayerWindow::switchItem(bool prev, const QString &nullMsg)
 void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
 {
     if(!autoHideControlPanel)return;
+    if(isFullscreen)
+    {
+        setCursor(Qt::ArrowCursor);
+        hideCursorTimer.start(hideCursorTimeout);
+    }
     const QPoint pos=event->pos();
     if(this->height()-pos.y()<controlPanelHeight+40)
     {
         playControlPanel->show();
         playInfoPanel->show();
+        hideCursorTimer.stop();
     }
     else if(pos.y()<infoPanelHeight)
     {
          playInfoPanel->show();
          playControlPanel->hide();
+         hideCursorTimer.stop();
     }
     else
     {
@@ -1209,10 +1228,7 @@ void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
 
 void PlayerWindow::mouseDoubleClickEvent(QMouseEvent *)
 {
-    isFullscreen=!isFullscreen;
-    emit showFullScreen(isFullscreen);
-    if(isFullscreen) fullscreen->setText(QChar(0xe6ac));
-    else  fullscreen->setText(QChar(0xe621));
+    actFullscreen->trigger();
 }
 
 void PlayerWindow::mousePressEvent(QMouseEvent *event)
@@ -1306,7 +1322,11 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
 	case Qt::Key_Enter:
 	case Qt::Key_Return:
 		actFullscreen->trigger();
-		break;
+        break;
+    case Qt::Key_Escape:
+        if(isFullscreen)
+            actFullscreen->trigger();
+        break;
 	case Qt::Key_Down:
 	case Qt::Key_Up:
 		QApplication::sendEvent(volume, event);
