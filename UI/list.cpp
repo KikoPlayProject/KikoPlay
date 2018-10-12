@@ -172,13 +172,16 @@ void ListWindow::initActions()
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
         QModelIndexList indexes(selection.indexes());
+
         if(indexes.size()==1)
-        {
-            if(GlobalObjects::playlist->hasDanmuPool(indexes.first()))
+        {    
+            const PlayListItem *item=GlobalObjects::playlist->getItem(indexes.first());
+            if(!item->poolID.isEmpty())
             {
                 MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),nullptr,this);
                 if(QDialog::Accepted==matchEditor.exec())
                     GlobalObjects::playlist->matchIndex(indexes.first(),matchEditor.getMatchInfo());
+                return;
             }
         }
         actionDisable=true;
@@ -194,6 +197,16 @@ void ListWindow::initActions()
         act_addCollection->setEnabled(true);
         act_addFolder->setEnabled(true);
         act_addItem->setEnabled(true);
+        if(indexes.count()==1)
+        {
+            const PlayListItem *item=GlobalObjects::playlist->getItem(indexes.first());
+            if(!item->children && item->poolID.isEmpty())
+            {
+                MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),nullptr,this);
+                if(QDialog::Accepted==matchEditor.exec())
+                    GlobalObjects::playlist->matchIndex(indexes.first(),matchEditor.getMatchInfo());
+            }
+        }
     });
 
     act_addCollection=new QAction(tr("Add Collection"),this);
@@ -873,7 +886,9 @@ void ListWindow::sortSelection(bool allItem, bool ascending)
 void ListWindow::playItem(const QModelIndex &index, bool playChild)
 {
     int playTime=GlobalObjects::mpvplayer->getTime(),duration=GlobalObjects::mpvplayer->getDuration();
-    if(playTime>10 && playTime<duration-10)
+    if(playTime>duration-10)
+        GlobalObjects::playlist->setCurrentPlayTime(0);
+    else if(playTime>10)
         GlobalObjects::playlist->setCurrentPlayTime(playTime);
     QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
     const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(model->mapToSource(index),playChild);

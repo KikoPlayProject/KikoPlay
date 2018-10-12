@@ -60,12 +60,6 @@ QModelIndex PlayList::getCurrentIndex() const
     return QModelIndex();
 }
 
-bool PlayList::hasDanmuPool(const QModelIndex &index)
-{
-    if(!index.isValid())return false;
-    return !static_cast<PlayListItem*>(index.internalPointer())->poolID.isEmpty();
-}
-
 int PlayList::addItems(QStringList &items, QModelIndex parent)
 {
     int insertPosition(0);
@@ -895,6 +889,7 @@ void PlayList::matchItems(const QModelIndexList &matchIndexes)
         }
     }
     emit message(tr("Match Done"),ListPopMessageFlag::LPM_HIDE|ListPopMessageFlag::LPM_OK);
+    savePlaylist();
 }
 
 void PlayList::matchCurrentItem(MatchInfo *matchInfo)
@@ -910,6 +905,7 @@ void PlayList::matchCurrentItem(MatchInfo *matchInfo)
     emit dataChanged(nIndex, nIndex);
     emit currentMatchChanged();
     GlobalObjects::library->addToLibrary(currentItem->animeTitle,currentItem->title,currentItem->path);
+    savePlaylist();
 }
 
 void PlayList::matchIndex(QModelIndex &index, MatchInfo *matchInfo)
@@ -928,7 +924,7 @@ void PlayList::matchIndex(QModelIndex &index, MatchInfo *matchInfo)
         emit currentMatchChanged();
     }
     GlobalObjects::library->addToLibrary(item->animeTitle,item->title,item->path);
-
+    savePlaylist();
 
 }
 

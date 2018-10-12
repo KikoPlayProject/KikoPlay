@@ -61,7 +61,7 @@ public slots:
 private:
     QList<Anime *> animes;
     QList<Anime *> tmpAnimes;
-    QMap<QString,QSet<QString> > tagsMap,timeMap;
+    QMap<QString,QSet<QString> > tagsMap;
     QSet<QString> timeSet;
     bool active;
     static AnimeWorker *animeWorker;

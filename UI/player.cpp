@@ -1156,7 +1156,9 @@ void PlayerWindow::adjustPlayerSize(int percent)
 void PlayerWindow::setPlayTime()
 {
     int playTime=process->value()/1000,duration=process->maximum()/1000;
-    if(playTime>10 && playTime<duration-10)
+    if(playTime>duration-10)
+        GlobalObjects::playlist->setCurrentPlayTime(0);
+    else if(playTime>10)
         GlobalObjects::playlist->setCurrentPlayTime(playTime);
 }
 

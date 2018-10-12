@@ -540,7 +540,12 @@ QWidget *DownloadWindow::setupFileInfoPage()
         if(currentTask && item->index>0 && item->completedSize==item->size)
         {
             QFileInfo info(currentTask->dir,item->name);
-            if(!info.exists() || info.isDir())return;
+            if(!info.exists())
+            {
+                QMessageBox::information(this,"KikoPlay",tr("File Not Exist"));
+                return;
+            }
+            if(info.isDir())return;
             if(GlobalObjects::mpvplayer->videoFileFormats.contains("*."+info.suffix().toLower()))
             {
                 emit playFile(info.absoluteFilePath());

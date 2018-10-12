@@ -216,7 +216,9 @@ void MainWindow::setupUI()
 void MainWindow::switchToPlay(const QString &fileToPlay)
 {
     int playTime=GlobalObjects::mpvplayer->getTime(),duration=GlobalObjects::mpvplayer->getDuration();
-    if(playTime>10 && playTime<duration-10)
+    if(playTime>duration-10)
+        GlobalObjects::playlist->setCurrentPlayTime(0);
+    else if(playTime>10)
         GlobalObjects::playlist->setCurrentPlayTime(playTime);
     GlobalObjects::playlist->addItems(QStringList()<<fileToPlay,QModelIndex());
     const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(fileToPlay);

@@ -41,7 +41,6 @@ TimelineEdit::TimelineEdit(DanmuSourceInfo *source, QWidget *parent):currentSour
     simpleDPView->setModel(simpleDanmuPool);
     simpleDPView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     simpleDPView->header()->setStretchLastSection(false);
-    simpleDPView->header()->resizeSection(2, 200*logicalDpiX()/96);
 
     QLabel *tipLabel=new QLabel(tr("Double Click: Begin/End Insert Space  Right Click: Cancel"),this);
     tipLabel->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);

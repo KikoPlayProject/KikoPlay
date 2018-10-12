@@ -46,10 +46,9 @@ public:
     const int maxRecentItems=4;
     const PlayListItem *getCurrentItem() const{return currentItem;}
     QModelIndex getCurrentIndex() const;
-    bool hasDanmuPool(const QModelIndex &index);
     inline const PlayListItem *getItem(const QModelIndex &index){return index.isValid()?static_cast<PlayListItem*>(index.internalPointer()):nullptr; }
     inline LoopMode getLoopMode() const{return loopMode;}
-    bool canPaste() const {return itemsClipboard.count()>0;}
+    inline bool canPaste() const {return itemsClipboard.count()>0;}
     QList<QPair<QString,QString> > &recent(){return recentList;}
 private:
     PlayListItem root;   

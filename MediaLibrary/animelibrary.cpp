@@ -135,6 +135,7 @@ Anime *AnimeLibrary::downloadDetailInfo(Anime *anime, int bangumiId, QString *er
     },Qt::QueuedConnection);
     eventLoop.exec();
     QString animeDate(anime->date.left(4));
+    if(animeDate.isEmpty())animeDate=tr("Unknown");
     if(!timeSet.contains(animeDate))
     {
         timeSet.insert(animeDate);
@@ -640,6 +641,7 @@ void AnimeWorker::loadLabelInfo(QMap<QString, QSet<QString> > &tagMap, QSet<QStr
     while (query.next())
     {
         dateStr=query.value(dateNo).toString().left(4);
+        if(dateStr.isEmpty())dateStr=tr("Unknown");
         timeSet.insert(dateStr);
     }
     emit loadLabelInfoDone();
@@ -722,22 +724,12 @@ QString AnimeWorker::downloadLabelInfo(Anime *anime, QMap<QString, QSet<QString>
     return errInfo;
 }
 
-//void AnimeFilterProxyModel::setTimeRange(int index)
-//{
-//    if(index==0)
-//    {
-//        timeAfter=0;
-//        return;
-//    }
-//    int timeRange[]={0,-3,-6,-12};
-//    timeAfter=QDateTime::currentDateTime().addMonths(timeRange[index]).toSecsSinceEpoch();
-//}
-
 bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
      QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
      Anime *anime=static_cast<AnimeLibrary *>(sourceModel())->getAnime(index,false);
-     if(!timeFilterSet.isEmpty() && !timeFilterSet.contains(anime->date.left(4)))return false;
+     QString animeTime(anime->date.left(4));
+     if(!timeFilterSet.isEmpty() && !timeFilterSet.contains(animeTime.isEmpty()?tr("Unknown"):animeTime))return false;
      for(const QString &tag:tagFilterSet)
      {
          if(!GlobalObjects::library->animeTags()[tag].contains(anime->title))
