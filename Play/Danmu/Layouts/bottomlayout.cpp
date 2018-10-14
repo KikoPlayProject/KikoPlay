@@ -41,24 +41,27 @@ void BottomLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *d
         if(currentY<=rect.top())
             break;
     }
-    if(!success && currentY>rect.top())
-    {
-        dmobj->y=currentY;
-        bottomdanmu.append(dmobj);
-        success=true;
-    }
-    if(!success && render->dense)
-    {
-        dmobj->y=dsY;
-        bottomdanmu.insert(msPos,dmobj);
-        success=true;
-    }
     if(!success)
     {
+        do
+        {
+            if(currentY>rect.top())
+            {
+                dmobj->y=currentY;
+                bottomdanmu.append(dmobj);
+                break;
+            }
+            if(render->dense)
+            {
+                dmobj->y=dsY;
+                bottomdanmu.insert(msPos,dmobj);
+                break;
+            }
 #ifdef QT_DEBUG
-        qDebug()<<"bottom lost: "<<danmu->text<<",send time:"<<danmu->date;
+            qDebug()<<"bottom lost: "<<danmu->text<<",send time:"<<danmu->date;
 #endif
-        delete dmobj;
+            delete dmobj;
+        }while(false);
     }
 }
 

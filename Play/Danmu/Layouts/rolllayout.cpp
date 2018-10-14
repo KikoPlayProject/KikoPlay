@@ -19,7 +19,7 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
     dmobj->x=rect.width();
     float xSpace=rect.width()/2;
     bool success=false;
-    float minX(FLT_MAX),maxSpace(0.f),dsY(0.f),cY(0.f);
+    float maxCollidedSpace(0.f),maxSpace(0.f),dsY1(0.f),dsY2(0.f),cY(0.f);
     QLinkedList<DanmuObject *>::Iterator msPos1,msPos2;
     for(auto iter=lastcol.begin();iter!=lastcol.end();++iter)
     {
@@ -31,7 +31,8 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
             success=true;
             break;
         }
-        if(!isCollided((*iter),dmobj))// && cur_height>=dm_height)
+        float collidedSpace(0.f);
+        if(!isCollided((*iter),dmobj,&collidedSpace))
         {
             dmobj->y=currentY;
             rolldanmu.append(*iter);
@@ -40,17 +41,17 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
             break;
         }
         //for dense layout-----
-        if((*iter)->x<xSpace && (*iter)->x<minX)
+        if(collidedSpace>xSpace && collidedSpace>maxCollidedSpace)
         {
-            minX=(*iter)->x;
+            maxCollidedSpace=collidedSpace;//(*iter)->x;
             msPos1=iter;
-            dsY=currentY;
+            dsY1=currentY;
         }
         float tmp((*iter)->y-cY);
         if(tmp>maxSpace)
         {
             maxSpace=tmp;
-            dsY=cY+tmp/2;
+            dsY2=cY+tmp/2;
             msPos2=iter;
         }
         //--------
@@ -59,32 +60,36 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
         if(currentY+dm_height>=rect.bottom())
             break;
     }
-    if(!success && currentY+dm_height<rect.bottom())
-    {
-        dmobj->y=currentY;
-        lastcol.append(dmobj);
-        success=true;
-    }
-    if(!success && render->dense)
-    {
-        dmobj->y=dsY;
-        if(msPos1.i)
-        {
-            rolldanmu.append(*msPos1);
-            *msPos1=dmobj;
-        }
-        else
-        {
-            lastcol.insert(msPos2,dmobj);
-        }
-        success=true;
-    }
     if(!success)
     {
+        do
+        {
+            if(currentY+dm_height<rect.bottom())
+            {
+                dmobj->y=currentY;
+                lastcol.append(dmobj);
+                break;
+            }
+            if(render->dense)
+            {
+                if(msPos1.i)
+                {
+                    dmobj->y=dsY1;
+                    rolldanmu.append(*msPos1);
+                    *msPos1=dmobj;
+                }
+                else
+                {
+                    dmobj->y=dsY2;
+                    lastcol.insert(msPos2,dmobj);
+                }
+                break;
+            }
 #ifdef QT_DEBUG
-        qDebug()<<"roll lost: "<<danmu->text<<",send time:"<<danmu->date;
+            qDebug()<<"roll lost: "<<danmu->text<<",send time:"<<danmu->date;
 #endif
-        delete dmobj;
+            delete dmobj;
+        }while (false);
     }
 }
 
@@ -201,11 +206,13 @@ QSharedPointer<DanmuComment> RollLayout::danmuAtList(QPointF point, QLinkedList<
     return nullptr;
 }
 
-bool RollLayout::isCollided(const DanmuObject *d1, const DanmuObject *d2)
+bool RollLayout::isCollided(const DanmuObject *d1, const DanmuObject *d2, float *collidedSpace)
 {
     float s1=d1->extraData,s2=d2->extraData;
     float x1w=d1->x+d1->drawInfo->width,x2=d2->x;
     if(x1w>x2)return true;
-    float t1=x1w/s1;
-    return (x2-x1w)/(s2-s1)<t1;
+    if(s2<=s1)return false;
+    float t1=x1w/s1,t2=(x2-x1w)/(s2-s1);
+    *collidedSpace=t2*s1;
+    return t2<t1;
 }

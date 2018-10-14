@@ -136,7 +136,7 @@ void MPVPlayer::setMedia(QString file)
     {
         currentFile=file;
 		state = PlayState::Play;
-        refreshTimer.start(1000);
+        refreshTimer.start(timeRefreshInterval);
         QCoreApplication::processEvents();
 		emit stateChanged(state);
     }
@@ -358,7 +358,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
                 }
                 else
                 {
-                    refreshTimer.start(1000);
+                    refreshTimer.start(timeRefreshInterval);
                 }
                 emit stateChanged(state);
             }

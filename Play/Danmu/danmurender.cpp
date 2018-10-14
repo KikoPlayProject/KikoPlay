@@ -53,16 +53,16 @@ DanmuRender::~DanmuRender()
 void DanmuRender::drawDanmu(QPainter &painter)
 {
     painter.setOpacity(danmuOpacity);
-    if(!hideLayout[0])layout_table[0]->drawLayout(painter);
-    if(!hideLayout[1])layout_table[1]->drawLayout(painter);
-    if(!hideLayout[2])layout_table[2]->drawLayout(painter);
+    if(!hideLayout[DanmuComment::Rolling])layout_table[DanmuComment::Rolling]->drawLayout(painter);
+    if(!hideLayout[DanmuComment::Top])layout_table[DanmuComment::Top]->drawLayout(painter);
+    if(!hideLayout[DanmuComment::Bottom])layout_table[DanmuComment::Bottom]->drawLayout(painter);
 }
 
 void DanmuRender::moveDanmu(float interval)
 {
-    layout_table[0]->moveLayout(interval);
-    layout_table[1]->moveLayout(interval);
-    layout_table[2]->moveLayout(interval);
+    layout_table[DanmuComment::Rolling]->moveLayout(interval);
+    layout_table[DanmuComment::Top]->moveLayout(interval);
+    layout_table[DanmuComment::Bottom]->moveLayout(interval);
 }
 
 void DanmuRender::cleanup(DanmuComment::DanmuType cleanType)
@@ -203,14 +203,20 @@ DanmuDrawInfo *CacheWorker::createDanmuCache(const DanmuComment *comment)
     QFontMetrics metrics(danmuFont);
     danmuStrokePen.setWidthF(danmuStyle->strokeWidth);
     int strokeWidth=danmuStyle->strokeWidth;
-    int left=metrics.leftBearing(comment->text.front());
-    if(left<0)left=-left;
+    int left=qAbs(metrics.leftBearing(comment->text.front()));
+
     QSize size=metrics.size(0, comment->text)+QSize(strokeWidth*2+left,strokeWidth);
     QImage *img=new QImage(size, QImage::Format_ARGB32_Premultiplied);
+
+    DanmuDrawInfo *drawInfo=new DanmuDrawInfo;
+    drawInfo->useCount=0;
+    drawInfo->height=size.height();
+    drawInfo->width=size.width();
+    drawInfo->img=img;
+
     QPainterPath path;
     QStringList multilines(comment->text.split('\n'));
-	int py = (size.height() - metrics.height()*multilines.size()) / 2 + metrics.ascent();
-	if (py < 0) py = -py;
+    int py = qAbs((size.height() - metrics.height()*multilines.size()) / 2 + metrics.ascent());
     int i=0;
     for(const QString &line:multilines)
     {
@@ -223,20 +229,12 @@ DanmuDrawInfo *CacheWorker::createDanmuCache(const DanmuComment *comment)
     int r=comment->color>>16,g=(comment->color>>8)&0xff,b=comment->color&0xff;
     if(strokeWidth>0)
     {
-        if(comment->color==0x000000) danmuStrokePen.setColor(Qt::white);
-        else danmuStrokePen.setColor(Qt::black);
+        danmuStrokePen.setColor(comment->color==0x000000?Qt::white:Qt::black);
         painter.strokePath(path,danmuStrokePen);
         painter.drawPath(path);
     }
-    QColor color(r,g,b);//(comment->color>>16,(comment->color>>8)&0xff,comment->color&0xff);
-    painter.fillPath(path,QBrush(color));
+    painter.fillPath(path,QBrush(QColor(r,g,b)));
     painter.end();
-
-    DanmuDrawInfo *drawInfo=new DanmuDrawInfo;
-    drawInfo->useCount=0;
-    drawInfo->height=size.height();
-    drawInfo->width=size.width();
-    drawInfo->img=img;
 
     return drawInfo;
 }
@@ -257,7 +255,7 @@ void CacheWorker::cleanCache()
         }
         else
         {
-            iter++;
+            ++iter;
         }
     }
 #ifdef QT_DEBUG
@@ -275,21 +273,20 @@ void CacheWorker::beginCache(PrepareList *danmus)
 #endif
     for(QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*> &dm:*danmus)
     {
-         QString hash_str=QString("%1%2%3").arg(dm.first->text).arg(dm.first->color).arg(danmuStyle->fontSizeTable[dm.first->fontSizeLevel]);
-         bool dmContains=danmuCache->contains(hash_str);
+         QString hash_str(QString("%1%2%3").arg(dm.first->text).arg(dm.first->color).arg(danmuStyle->fontSizeTable[dm.first->fontSizeLevel]));
          DanmuDrawInfo *drawInfo(nullptr);
-         if(!dmContains)
-         {
-             drawInfo=createDanmuCache(dm.first.data());
-             drawInfo->useCount++;
-             danmuCache->insert(hash_str,drawInfo);
-         }
-         else
+         if(danmuCache->contains(hash_str))
          {
              drawInfo=danmuCache->value(hash_str);
              drawInfo->useCountLock.lock();
              drawInfo->useCount++;
              drawInfo->useCountLock.unlock();
+         }
+         else
+         {
+             drawInfo=createDanmuCache(dm.first.data());
+             drawInfo->useCount++;
+             danmuCache->insert(hash_str,drawInfo);
          }
          dm.second=drawInfo;
 #ifdef QT_DEBUG
@@ -299,7 +296,6 @@ void CacheWorker::beginCache(PrepareList *danmus)
     }
 	if (danmuCache->size()>max_cache)
 		cleanCache();
-
 #ifdef QT_DEBUG
     etime=timer.elapsed();
     qDebug()<<"cache end, time: "<<etime<<"ms";

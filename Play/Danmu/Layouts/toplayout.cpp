@@ -41,24 +41,27 @@ void TopLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *draw
         if(currentY+dm_height>=rect.bottom())
             break;
     }
-    if(!success && currentY+dm_height<rect.bottom())
-    {
-        dmobj->y=currentY;
-        topdanmu.append(dmobj);
-        success=true;
-    }
-    if(!success && render->dense)
-    {
-        dmobj->y=dsY;
-        topdanmu.insert(msPos,dmobj);
-        success=true;
-    }
     if(!success)
     {
+        do
+        {
+            if(currentY+dm_height<rect.bottom())
+            {
+                dmobj->y=currentY;
+                topdanmu.append(dmobj);
+                break;
+            }
+            if(render->dense)
+            {
+                dmobj->y=dsY;
+                topdanmu.insert(msPos,dmobj);
+                break;
+            }
 #ifdef QT_DEBUG
-        qDebug()<<"top lost: "<<danmu->text<<",send time:"<<danmu->date;
+            qDebug()<<"top lost: "<<danmu->text<<",send time:"<<danmu->date;
 #endif
-        delete dmobj;
+            delete dmobj;
+        }while(false);
     }
 }
 
