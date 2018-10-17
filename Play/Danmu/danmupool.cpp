@@ -286,7 +286,18 @@ void DanmuPool::exportDanmu(int sourceId, const QString &fileName)
             writer.writeAttribute("p", QString("%0,%1,%2,%3,%4,%5,%6,%7").arg(QString::number(danmu->time/1000.f,'f',2))
                                   .arg(type[danmu->type]).arg(fontSize[danmu->fontSizeLevel]).arg(danmu->color)
                                   .arg(danmu->date).arg("0").arg(danmu->sender).arg("0"));
-            writer.writeCharacters(danmu->text);
+            QString danmuText;
+            for(const QChar &ch:danmu->text)
+            {
+                if(ch == 0x9 //\t
+                        || ch == 0xA //\n
+                        || ch == 0xD //\r
+                        || (ch >= 0x20 && ch <= 0xD7FF)
+                        || (ch >= 0xE000 && ch <= 0xFFFD)
+                        )
+                    danmuText.append(ch);
+            }
+            writer.writeCharacters(danmuText);
             writer.writeEndElement();
         }
     }

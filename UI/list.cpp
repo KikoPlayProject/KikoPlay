@@ -894,7 +894,7 @@ void ListWindow::playItem(const QModelIndex &index, bool playChild)
     const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(model->mapToSource(index),playChild);
     if (curItem)
     {
-        GlobalObjects::danmuPool->reset();
+        GlobalObjects::danmuPool->cleanUp();
         GlobalObjects::danmuRender->cleanup();
         GlobalObjects::mpvplayer->setMedia(curItem->path);
     }
