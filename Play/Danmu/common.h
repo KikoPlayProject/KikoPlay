@@ -58,7 +58,7 @@ public:
     int height;
     int useCount;
     GLuint texture;
-    QMutex useCountLock;
+    //QMutex useCountLock;
     //QImage *img=nullptr;
     //~DanmuDrawInfo(){if(img)delete img;}
 };
