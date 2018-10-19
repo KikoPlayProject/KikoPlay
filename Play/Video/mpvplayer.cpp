@@ -8,7 +8,32 @@
 #include <QMap>
 
 #include "Play/Danmu/danmurender.h"
+namespace
+{
+const char *vShaderDanmu =
+        "attribute mediump vec4 a_VtxCoord;\n"
+        "attribute mediump vec2 a_TexCoord;\n"
+        "varying mediump vec2 v_vTexCoord;\n"
+        "void main(void)\n"
+        "{\n"
+        "    gl_Position = a_VtxCoord;\n"
+        "    v_vTexCoord = a_TexCoord;\n"
+        "}\n";
 
+const char *fShaderDanmu =
+        "#ifdef GL_ES\n"
+        "precision lowp float;\n"
+        "#endif\n"
+        "varying mediump vec2 v_vTexCoord;\n"
+        "uniform sampler2D u_SamplerD;\n"
+        "uniform float alpha;\n"
+        "void main(void)\n"
+        "{\n"
+        "    gl_FragColor.rgba = texture2D(u_SamplerD, v_vTexCoord).rgba;\n"
+        "	 if(gl_FragColor.a==1.0)\n"
+        "       gl_FragColor.a =alpha;\n"
+        "}\n";
+}
 MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::Stop),
     danmuRender(nullptr),danmuHide(false),mute(false)
 {
@@ -51,6 +76,7 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
        double curTime = mpv::qt::get_property(mpv,QStringLiteral("playback-time")).toDouble();
        emit positionChanged(curTime*1000);
     });
+
     //refreshTimer.start(1000);
 }
 
@@ -128,6 +154,32 @@ QMap<QString, QMap<QString, QString> > MPVPlayer::getMediaInfo()
     mediaInfo.insert(tr("Meta Data"),metaInfo);
 
     return mediaInfo;
+}
+
+void MPVPlayer::drawTexture(GLuint texture, float alpha, const QRectF &rect)
+{
+    static GLfloat vtx[8];
+    static GLfloat tex[8]={0,0,1,0,0,1,1,1};
+    GLfloat h = 2.f / width(), v = 2.f / height();
+    GLfloat l = rect.left()*h - 1, r = rect.right()*h - 1, t = 1 - rect.top()*v, b = 1 - rect.bottom()*v;
+    vtx[0] = l; vtx[1] = t;
+    vtx[2] = r; vtx[3] = t;
+    vtx[4] = l; vtx[5] = b;
+    vtx[6] = r; vtx[7] = b;
+
+	danmuShader.bind();
+	danmuShader.setUniformValue("alpha", alpha);
+    danmuShader.setAttributeArray(0, vtx, 2);
+    danmuShader.setAttributeArray(1, tex, 2);
+    danmuShader.enableAttributeArray(0);
+    danmuShader.enableAttributeArray(1);
+
+    QOpenGLFunctions *glFuns=context()->functions();
+    glFuns->glEnable(GL_BLEND);
+    glFuns->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glFuns->glActiveTexture(GL_TEXTURE0);
+    glFuns->glBindTexture(GL_TEXTURE_2D, texture);
+    glFuns->glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
 void MPVPlayer::setMedia(QString file)
@@ -261,6 +313,16 @@ void MPVPlayer::initializeGL()
     int r = mpv_opengl_cb_init_gl(mpv_gl, NULL, MPVPlayer::get_proc_address, NULL);
     if (r < 0)
         throw std::runtime_error("could not initialize OpenGL");
+
+    danmuShader.addShaderFromSourceCode(QOpenGLShader::Vertex, vShaderDanmu);
+    danmuShader.addShaderFromSourceCode(QOpenGLShader::Fragment, fShaderDanmu);
+    danmuShader.link();
+    danmuShader.bind();
+    danmuShader.bindAttributeLocation("a_VtxCoord", 0);
+    danmuShader.bindAttributeLocation("a_TexCoord", 1);
+    danmuShader.setUniformValue("u_SamplerD", 0);
+
+    emit initContext();
 }
 
 void MPVPlayer::paintGL()
@@ -271,8 +333,10 @@ void MPVPlayer::paintGL()
         QOpenGLFramebufferObject::bindDefault();
         QOpenGLPaintDevice fboPaintDevice(width(), height());
         QPainter painter(&fboPaintDevice);
-        painter.setRenderHints(QPainter::SmoothPixmapTransform);
-        danmuRender->drawDanmu(painter);
+        painter.beginNativePainting();
+        //painter.setRenderHints(QPainter::SmoothPixmapTransform);
+        danmuRender->drawDanmu();
+        painter.endNativePainting();
     }
 }
 

@@ -687,6 +687,7 @@ void PlayerWindow::setupDanmuSettingPage()
     bold->setChecked(GlobalObjects::appSetting->value("Play/DanmuBold",false).toBool());
 
     bottomSubtitleProtect=new QCheckBox(tr("Protect Bottom Sub"),danmuSettingPage);
+	bottomSubtitleProtect->setChecked(true);
     QObject::connect(bottomSubtitleProtect,&QCheckBox::stateChanged,[this](int state){
         GlobalObjects::danmuRender->setBottomSubtitleProtect(state==Qt::Checked?true:false);
     });

@@ -57,9 +57,10 @@ public:
     int width;
     int height;
     int useCount;
+    GLuint texture;
     QMutex useCountLock;
-    QImage *img=nullptr;
-    ~DanmuDrawInfo(){if(img)delete img;}
+    //QImage *img=nullptr;
+    //~DanmuDrawInfo(){if(img)delete img;}
 };
 class DanmuObject
 {
@@ -73,7 +74,7 @@ public:
     float x;
     float y;
     float extraData;
-     ~DanmuObject(){drawInfo->useCountLock.lock(); drawInfo->useCount--; drawInfo->useCountLock.unlock();}
+    // ~DanmuObject(){drawInfo->useCountLock.lock(); drawInfo->useCount--; drawInfo->useCountLock.unlock();}
     void *operator new(size_t sz);
     void  operator delete(void * p);
     static void DeleteObjPool();

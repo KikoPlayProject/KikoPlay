@@ -7,6 +7,11 @@
 #include "globalobjects.h"
 #include "Play/Danmu/danmupool.h"
 #include "Play/Playlist/playlist.h"
+namespace
+{
+    QOpenGLContext *danmuTextureContext=nullptr;
+    QSurface *surface=nullptr;
+}
 DanmuRender::DanmuRender()
 {
     layout_table[0]=new RollLayout(this);
@@ -32,10 +37,23 @@ DanmuRender::DanmuRender()
     cacheWorker->moveToThread(&cacheThread);
     QObject::connect(&cacheThread, &QThread::finished, cacheWorker, &QObject::deleteLater);
     QObject::connect(this,&DanmuRender::cacheDanmu,cacheWorker,&CacheWorker::beginCache);
+    QObject::connect(this,&DanmuRender::refCountChanged,cacheWorker,&CacheWorker::changeRefCount);
     QObject::connect(cacheWorker,&CacheWorker::cacheDone,this,&DanmuRender::addDanmu);
     QObject::connect(this,&DanmuRender::danmuStyleChanged,cacheWorker,&CacheWorker::changeDanmuStyle);
     cacheThread.setObjectName(QStringLiteral("cacheThread"));
     cacheThread.start(QThread::NormalPriority);
+
+    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::initContext,[this](){
+        QOpenGLContext *sharectx = GlobalObjects::mpvplayer->context();
+        surface = sharectx->surface();
+
+        danmuTextureContext = new QOpenGLContext();
+        danmuTextureContext->setFormat(sharectx->format());
+        danmuTextureContext->setShareContext(sharectx);
+        danmuTextureContext->create();
+        danmuTextureContext->moveToThread(&cacheThread);
+    });
+
 }
 
 DanmuRender::~DanmuRender()
@@ -50,19 +68,21 @@ DanmuRender::~DanmuRender()
     DanmuObject::DeleteObjPool();
 }
 
-void DanmuRender::drawDanmu(QPainter &painter)
+void DanmuRender::drawDanmu()
 {
-    painter.setOpacity(danmuOpacity);
-    if(!hideLayout[DanmuComment::Rolling])layout_table[DanmuComment::Rolling]->drawLayout(painter);
-    if(!hideLayout[DanmuComment::Top])layout_table[DanmuComment::Top]->drawLayout(painter);
-    if(!hideLayout[DanmuComment::Bottom])layout_table[DanmuComment::Bottom]->drawLayout(painter);
+    //painter.setOpacity(danmuOpacity);
+    if(!hideLayout[DanmuComment::Rolling])layout_table[DanmuComment::Rolling]->drawLayout();
+    if(!hideLayout[DanmuComment::Top])layout_table[DanmuComment::Top]->drawLayout();
+    if(!hideLayout[DanmuComment::Bottom])layout_table[DanmuComment::Bottom]->drawLayout();
 }
 
 void DanmuRender::moveDanmu(float interval)
 {
-    layout_table[DanmuComment::Rolling]->moveLayout(interval);
-    layout_table[DanmuComment::Top]->moveLayout(interval);
-    layout_table[DanmuComment::Bottom]->moveLayout(interval);
+    QList<DanmuDrawInfo *> descList;
+    layout_table[DanmuComment::Rolling]->moveLayout(interval,descList);
+    layout_table[DanmuComment::Top]->moveLayout(interval,descList);
+    layout_table[DanmuComment::Bottom]->moveLayout(interval,descList);
+    emit refCountChanged(descList);
 }
 
 void DanmuRender::cleanup(DanmuComment::DanmuType cleanType)
@@ -91,6 +111,13 @@ void DanmuRender::removeBlocked()
     layout_table[DanmuComment::Rolling]->removeBlocked();
     layout_table[DanmuComment::Top]->removeBlocked();
     layout_table[DanmuComment::Bottom]->removeBlocked();
+}
+
+void DanmuRender::drawDanmuTexture(const DanmuObject *danmuObj)
+{
+    static QRectF rect;
+    rect.setRect(danmuObj->x,danmuObj->y,danmuObj->drawInfo->width,danmuObj->drawInfo->height);
+    GlobalObjects::mpvplayer->drawTexture(danmuObj->drawInfo->texture,danmuOpacity,rect);
 }
 
 void DanmuRender::refreshDMRect()
@@ -206,13 +233,13 @@ DanmuDrawInfo *CacheWorker::createDanmuCache(const DanmuComment *comment)
     int left=qAbs(metrics.leftBearing(comment->text.front()));
 
     QSize size=metrics.size(0, comment->text)+QSize(strokeWidth*2+left,strokeWidth);
-    QImage *img=new QImage(size, QImage::Format_ARGB32_Premultiplied);
+    QImage img(size, QImage::Format_ARGB32_Premultiplied);
 
     DanmuDrawInfo *drawInfo=new DanmuDrawInfo;
     drawInfo->useCount=0;
     drawInfo->height=size.height();
     drawInfo->width=size.width();
-    drawInfo->img=img;
+    //drawInfo->img=img;
 
     QPainterPath path;
     QStringList multilines(comment->text.split('\n'));
@@ -223,8 +250,8 @@ DanmuDrawInfo *CacheWorker::createDanmuCache(const DanmuComment *comment)
         path.addText(left+strokeWidth,py+i*metrics.height(),danmuFont,line);
         ++i;
     }
-    img->fill(Qt::transparent);
-    QPainter painter(img);
+    img.fill(Qt::transparent);
+    QPainter painter(&img);
     painter.setRenderHint(QPainter::Antialiasing);
     int r=comment->color>>16,g=(comment->color>>8)&0xff,b=comment->color&0xff;
     if(strokeWidth>0)
@@ -236,6 +263,7 @@ DanmuDrawInfo *CacheWorker::createDanmuCache(const DanmuComment *comment)
     painter.fillPath(path,QBrush(QColor(r,g,b)));
     painter.end();
 
+    createDanmuTexture(drawInfo,img);
     return drawInfo;
 }
 
@@ -246,10 +274,13 @@ void CacheWorker::cleanCache()
     QElapsedTimer timer;
     timer.start();
 #endif
+    danmuTextureContext->makeCurrent(surface);
+    QOpenGLFunctions *glFuns=danmuTextureContext->functions();
     for(auto iter=danmuCache->begin();iter!=danmuCache->end();)
     {
         if(iter.value()->useCount==0)
         {
+            glFuns->glDeleteTextures(1,&iter.value()->texture);
             delete iter.value();
             iter=danmuCache->erase(iter);
         }
@@ -258,9 +289,27 @@ void CacheWorker::cleanCache()
             ++iter;
         }
     }
+    danmuTextureContext->doneCurrent();
 #ifdef QT_DEBUG
     qDebug()<<"clean done:"<<timer.elapsed()<<"ms, left item:"<<danmuCache->size();
 #endif
+}
+
+void CacheWorker::createDanmuTexture(DanmuDrawInfo *drawInfo, const QImage &img)
+{
+
+    danmuTextureContext->makeCurrent(surface);
+    QOpenGLFunctions *glFuns=danmuTextureContext->functions();
+    glFuns->glGenTextures(1, &drawInfo->texture);
+    glFuns->glBindTexture(GL_TEXTURE_2D, drawInfo->texture);
+    glFuns->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glFuns->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, drawInfo->width, drawInfo->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
+    glFuns->glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    glFuns->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glFuns->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFuns->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glFuns->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    danmuTextureContext->doneCurrent();
 }
 
 void CacheWorker::beginCache(PrepareList *danmus)
@@ -278,13 +327,14 @@ void CacheWorker::beginCache(PrepareList *danmus)
          if(danmuCache->contains(hash_str))
          {
              drawInfo=danmuCache->value(hash_str);
-             drawInfo->useCountLock.lock();
+             //drawInfo->useCountLock.lock();
              drawInfo->useCount++;
-             drawInfo->useCountLock.unlock();
+             //drawInfo->useCountLock.unlock();
          }
          else
          {
              drawInfo=createDanmuCache(dm.first.data());
+             //createDanmuTexture(drawInfo);
              drawInfo->useCount++;
              danmuCache->insert(hash_str,drawInfo);
          }
@@ -301,6 +351,12 @@ void CacheWorker::beginCache(PrepareList *danmus)
     qDebug()<<"cache end, time: "<<etime<<"ms";
 #endif
     emit cacheDone(danmus);
+}
+
+void CacheWorker::changeRefCount(QList<DanmuDrawInfo *> descList)
+{
+    for(DanmuDrawInfo *drawInfo:descList)
+        drawInfo->useCount--;
 }
 
 void CacheWorker::changeDanmuStyle()

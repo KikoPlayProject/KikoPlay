@@ -65,7 +65,7 @@ void BottomLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *d
     }
 }
 
-void BottomLayout::moveLayout(float step)
+void BottomLayout::moveLayout(float step, QList<DanmuDrawInfo *> &descList)
 {
     for(auto iter=bottomdanmu.begin();iter!=bottomdanmu.end();)
     {
@@ -79,17 +79,19 @@ void BottomLayout::moveLayout(float step)
         }
         else
         {
+            descList.append(current->drawInfo);
             delete current;
             iter=bottomdanmu.erase(iter);
         }
     }
 }
 
-void BottomLayout::drawLayout(QPainter &painter)
+void BottomLayout::drawLayout()
 {
     for(auto current:bottomdanmu)
     {
-        painter.drawImage(current->x,current->y,*current->drawInfo->img);
+        render->drawDanmuTexture(current);
+        //painter.drawImage(current->x,current->y,*current->drawInfo->img);
     }
 }
 

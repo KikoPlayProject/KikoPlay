@@ -19,7 +19,6 @@ class CacheWorker : public QObject
     Q_OBJECT
 public:
     explicit CacheWorker(QHash<QString,DanmuDrawInfo *> *cache, const DanmuStyle *style);
-    DanmuDrawInfo *createDanmuCache(const DanmuComment *comment);
 private:
     const int max_cache=300;
     QHash<QString,DanmuDrawInfo *> *danmuCache;
@@ -27,10 +26,13 @@ private:
     QFont danmuFont;
     QPen danmuStrokePen;
     void cleanCache();
+    DanmuDrawInfo *createDanmuCache(const DanmuComment *comment);
+    void createDanmuTexture(DanmuDrawInfo *drawInfo, const QImage &img);
 signals:
     void cacheDone(PrepareList *danmus);
 public slots:
     void beginCache(PrepareList *danmus);
+    void changeRefCount(QList<DanmuDrawInfo *> descList);
     void changeDanmuStyle();
 };
 class DanmuRender : public QObject
@@ -39,7 +41,7 @@ class DanmuRender : public QObject
 public:
     explicit DanmuRender();
     ~DanmuRender();
-    void drawDanmu(QPainter &painter);
+    void drawDanmu();
     void moveDanmu(float interval);
     void cleanup(DanmuComment::DanmuType cleanType);
     void cleanup();
@@ -48,6 +50,7 @@ public:
     bool dense;
     QSharedPointer<DanmuComment> danmuAt(QPointF point);
     void removeBlocked();
+    void drawDanmuTexture(const DanmuObject *danmuObj);
 private:
     DanmuLayout *layout_table[3];
     bool hideLayout[3];
@@ -75,6 +78,7 @@ public:
 signals:
     void cacheDanmu(PrepareList *newDanmu);
     void danmuStyleChanged();
+    void refCountChanged(QList<DanmuDrawInfo *> descList);
 public slots:
     inline void prepareDanmu(PrepareList *prepareList){emit cacheDanmu(prepareList);}
     void addDanmu(PrepareList *newDanmu);

@@ -44,12 +44,14 @@ public:
     QMap<QString,QMap<QString,QString> > getMediaInfo();
     inline int getTime() const{return mpv::qt::get_property(mpv,"playback-time").toDouble();}
     inline int getDuration() const{return mpv::qt::get_property(mpv,"duration").toDouble();}
+    void drawTexture(GLuint texture, float alpha, const QRectF &rect);
 signals:
     void durationChanged(int value);
     void positionChanged(int value);
     void positionJumped(int value);
     void stateChanged(PlayState state);
     void trackInfoChange(int type);
+    void initContext();
 public slots:   
     void setMedia(QString file);
     void setState(PlayState newState);
@@ -91,6 +93,7 @@ private:
     PlayState state;
     QString currentFile;
     DanmuRender *danmuRender;
+    QOpenGLShaderProgram danmuShader;
     QTimer refreshTimer;
     QElapsedTimer elapsedTimer;
     bool danmuHide;
