@@ -93,10 +93,10 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
     }
 }
 
-void RollLayout::moveLayout(float step,QList<DanmuDrawInfo *> &descList)
+void RollLayout::moveLayout(float step)
 {
-    moveLayoutList(rolldanmu,step,descList);
-    moveLayoutList(lastcol,step,descList);
+    moveLayoutList(rolldanmu,step);
+    moveLayoutList(lastcol,step);
 }
 
 void RollLayout::drawLayout()
@@ -177,7 +177,7 @@ void RollLayout::removeBlocked()
     }
 }
 
-void RollLayout::moveLayoutList(QLinkedList<DanmuObject *> &list, float step,QList<DanmuDrawInfo *> &descList)
+void RollLayout::moveLayoutList(QLinkedList<DanmuObject *> &list, float step)
 {
     for(auto iter=list.begin();iter!=list.end();)
     {
@@ -190,7 +190,6 @@ void RollLayout::moveLayoutList(QLinkedList<DanmuObject *> &list, float step,QLi
         }
         else
         {
-            descList.append(current->drawInfo);
             delete current;
             iter=list.erase(iter);
         }

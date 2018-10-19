@@ -1,4 +1,6 @@
 #include "common.h"
+#include "globalobjects.h"
+#include "danmurender.h"
 #define MAX_POOL_COUNT 100
 DanmuObject *DanmuObject::head=nullptr;
 int DanmuObject::poolCount=0;
@@ -58,6 +60,11 @@ bool BlockRule::blockTest(DanmuComment *comment)
     }
     if(blockField==DanmuColor)delete testStr;
     return testResult;
+}
+
+DanmuObject::~DanmuObject()
+{
+    GlobalObjects::danmuRender->refDesc(drawInfo);
 }
 
 void *DanmuObject::operator new(size_t sz)

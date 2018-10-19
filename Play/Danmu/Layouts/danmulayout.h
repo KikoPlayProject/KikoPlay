@@ -16,7 +16,7 @@ public:
         this->render=render;
     }
     virtual void addDanmu(QSharedPointer<DanmuComment> danmu,DanmuDrawInfo *drawInfo)=0;
-    virtual void moveLayout(float step, QList<DanmuDrawInfo *> &descList)=0;
+    virtual void moveLayout(float step)=0;
     virtual void drawLayout()=0;
     virtual ~DanmuLayout(){}
     virtual QSharedPointer<DanmuComment> danmuAt(QPointF point)=0;

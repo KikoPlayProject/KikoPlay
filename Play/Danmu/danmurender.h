@@ -30,9 +30,10 @@ private:
     void createDanmuTexture(DanmuDrawInfo *drawInfo, const QImage &img);
 signals:
     void cacheDone(PrepareList *danmus);
+    void recyleRefList(QList<DanmuDrawInfo *> *descList);
 public slots:
     void beginCache(PrepareList *danmus);
-    void changeRefCount(QList<DanmuDrawInfo *> descList);
+    void changeRefCount(QList<DanmuDrawInfo *> *descList);
     void changeDanmuStyle();
 };
 class DanmuRender : public QObject
@@ -51,6 +52,7 @@ public:
     QSharedPointer<DanmuComment> danmuAt(QPointF point);
     void removeBlocked();
     void drawDanmuTexture(const DanmuObject *danmuObj);
+    void refDesc(DanmuDrawInfo *drawInfo);
 private:
     DanmuLayout *layout_table[3];
     bool hideLayout[3];
@@ -63,6 +65,8 @@ private:
     DanmuStyle danmuStyle;
     QThread cacheThread;
     CacheWorker *cacheWorker;
+    QList<QList<DanmuDrawInfo *> *> drListPool;
+    QList<DanmuDrawInfo *>  *currentDrList;
     void refreshDMRect();
 public:
     void setBottomSubtitleProtect(bool bottomOn);
@@ -78,7 +82,7 @@ public:
 signals:
     void cacheDanmu(PrepareList *newDanmu);
     void danmuStyleChanged();
-    void refCountChanged(QList<DanmuDrawInfo *> descList);
+    void refCountChanged(QList<DanmuDrawInfo *> *descList);
 public slots:
     inline void prepareDanmu(PrepareList *prepareList){emit cacheDanmu(prepareList);}
     void addDanmu(PrepareList *newDanmu);

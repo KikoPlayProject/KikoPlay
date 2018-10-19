@@ -74,7 +74,7 @@ public:
     float x;
     float y;
     float extraData;
-    // ~DanmuObject(){drawInfo->useCountLock.lock(); drawInfo->useCount--; drawInfo->useCountLock.unlock();}
+     ~DanmuObject();
     void *operator new(size_t sz);
     void  operator delete(void * p);
     static void DeleteObjPool();

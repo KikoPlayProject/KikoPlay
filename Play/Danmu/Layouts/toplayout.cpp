@@ -65,7 +65,7 @@ void TopLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *draw
     }
 }
 
-void TopLayout::moveLayout(float step,QList<DanmuDrawInfo *> &descList)
+void TopLayout::moveLayout(float step)
 {
     for(auto iter=topdanmu.begin();iter!=topdanmu.end();)
     {
@@ -79,7 +79,6 @@ void TopLayout::moveLayout(float step,QList<DanmuDrawInfo *> &descList)
         }
         else
         {
-            descList.append(current->drawInfo);
             delete current;
             iter=topdanmu.erase(iter);
         }

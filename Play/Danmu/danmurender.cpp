@@ -38,6 +38,9 @@ DanmuRender::DanmuRender()
     QObject::connect(&cacheThread, &QThread::finished, cacheWorker, &QObject::deleteLater);
     QObject::connect(this,&DanmuRender::cacheDanmu,cacheWorker,&CacheWorker::beginCache);
     QObject::connect(this,&DanmuRender::refCountChanged,cacheWorker,&CacheWorker::changeRefCount);
+    QObject::connect(cacheWorker,&CacheWorker::recyleRefList,[this](QList<DanmuDrawInfo *> *drList){
+        drListPool.append(drList);
+    });
     QObject::connect(cacheWorker,&CacheWorker::cacheDone,this,&DanmuRender::addDanmu);
     QObject::connect(this,&DanmuRender::danmuStyleChanged,cacheWorker,&CacheWorker::changeDanmuStyle);
     cacheThread.setObjectName(QStringLiteral("cacheThread"));
@@ -53,7 +56,7 @@ DanmuRender::DanmuRender()
         danmuTextureContext->create();
         danmuTextureContext->moveToThread(&cacheThread);
     });
-
+    currentDrList=nullptr;
 }
 
 DanmuRender::~DanmuRender()
@@ -65,6 +68,7 @@ DanmuRender::~DanmuRender()
     cacheThread.wait();
     for(auto iter=danmuCache.cbegin();iter!=danmuCache.cend();++iter)
         delete iter.value();
+    qDeleteAll(drListPool);
     DanmuObject::DeleteObjPool();
 }
 
@@ -78,11 +82,9 @@ void DanmuRender::drawDanmu()
 
 void DanmuRender::moveDanmu(float interval)
 {
-    QList<DanmuDrawInfo *> descList;
-    layout_table[DanmuComment::Rolling]->moveLayout(interval,descList);
-    layout_table[DanmuComment::Top]->moveLayout(interval,descList);
-    layout_table[DanmuComment::Bottom]->moveLayout(interval,descList);
-    emit refCountChanged(descList);
+    layout_table[DanmuComment::Rolling]->moveLayout(interval);
+    layout_table[DanmuComment::Top]->moveLayout(interval);
+    layout_table[DanmuComment::Bottom]->moveLayout(interval);
 }
 
 void DanmuRender::cleanup(DanmuComment::DanmuType cleanType)
@@ -118,6 +120,29 @@ void DanmuRender::drawDanmuTexture(const DanmuObject *danmuObj)
     static QRectF rect;
     rect.setRect(danmuObj->x,danmuObj->y,danmuObj->drawInfo->width,danmuObj->drawInfo->height);
     GlobalObjects::mpvplayer->drawTexture(danmuObj->drawInfo->texture,danmuOpacity,rect);
+}
+
+void DanmuRender::refDesc(DanmuDrawInfo *drawInfo)
+{
+    if(!currentDrList)
+    {
+        if(drListPool.isEmpty())
+        {
+            currentDrList=new QList<DanmuDrawInfo *>();
+            currentDrList->reserve(50);
+        }
+        else
+        {
+            currentDrList=drListPool.takeFirst();
+        }
+    }
+    currentDrList->append(drawInfo);
+    if(currentDrList->size()>=50)
+    {
+        QList<DanmuDrawInfo *> *tmp=currentDrList;
+        currentDrList=nullptr;
+        emit refCountChanged(tmp);
+    }
 }
 
 void DanmuRender::refreshDMRect()
@@ -353,10 +378,12 @@ void CacheWorker::beginCache(PrepareList *danmus)
     emit cacheDone(danmus);
 }
 
-void CacheWorker::changeRefCount(QList<DanmuDrawInfo *> descList)
+void CacheWorker::changeRefCount(QList<DanmuDrawInfo *> *descList)
 {
-    for(DanmuDrawInfo *drawInfo:descList)
+    for(DanmuDrawInfo *drawInfo:*descList)
         drawInfo->useCount--;
+    descList->clear();
+    emit recyleRefList(descList);
 }
 
 void CacheWorker::changeDanmuStyle()
