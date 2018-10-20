@@ -33,7 +33,7 @@ DanmuRender::DanmuRender()
 	danmuStyle.bold = false;
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::resized,this,&DanmuRender::refreshDMRect);
 
-    cacheWorker=new CacheWorker(&danmuCache,&danmuStyle);
+    cacheWorker=new CacheWorker(&danmuStyle);
     cacheWorker->moveToThread(&cacheThread);
     QObject::connect(&cacheThread, &QThread::finished, cacheWorker, &QObject::deleteLater);
     QObject::connect(this,&DanmuRender::cacheDanmu,cacheWorker,&CacheWorker::beginCache);
@@ -66,8 +66,6 @@ DanmuRender::~DanmuRender()
     delete layout_table[2];
     cacheThread.quit();
     cacheThread.wait();
-    for(auto iter=danmuCache.cbegin();iter!=danmuCache.cend();++iter)
-        delete iter.value();
     qDeleteAll(drListPool);
     DanmuObject::DeleteObjPool();
 }
@@ -124,12 +122,13 @@ void DanmuRender::drawDanmuTexture(const DanmuObject *danmuObj)
 
 void DanmuRender::refDesc(DanmuDrawInfo *drawInfo)
 {
+    const int drSize=64;
     if(!currentDrList)
     {
         if(drListPool.isEmpty())
         {
             currentDrList=new QList<DanmuDrawInfo *>();
-            currentDrList->reserve(50);
+            currentDrList->reserve(drSize);
         }
         else
         {
@@ -137,7 +136,7 @@ void DanmuRender::refDesc(DanmuDrawInfo *drawInfo)
         }
     }
     currentDrList->append(drawInfo);
-    if(currentDrList->size()>=50)
+    if(currentDrList->size()>=drSize)
     {
         QList<DanmuDrawInfo *> *tmp=currentDrList;
         currentDrList=nullptr;
@@ -220,9 +219,11 @@ void DanmuRender::addDanmu(PrepareList *newDanmu)
 {
     if(GlobalObjects::playlist->getCurrentItem()!=nullptr)
     {
+        int i=0;
         for(auto &danmuInfo:*newDanmu)
         {
             layout_table[danmuInfo.first->type]->addDanmu(danmuInfo.first,danmuInfo.second);
+            ++i;
             if(maxCount!=-1)
             {
                 if(layout_table[DanmuComment::Rolling]->danmuCount()+
@@ -231,12 +232,15 @@ void DanmuRender::addDanmu(PrepareList *newDanmu)
                     break;
             }
         }
+        while(i<newDanmu->size())
+        {
+            refDesc(newDanmu->at(i++).second);
+        }
     }
     GlobalObjects::danmuPool->recyclePrepareList(newDanmu);
 }
 
-CacheWorker::CacheWorker(QHash<QString, DanmuDrawInfo *> *cache, const DanmuStyle *style):
-    danmuCache(cache),danmuStyle(style)
+CacheWorker::CacheWorker(const DanmuStyle *style):danmuStyle(style)
 {
     danmuFont.setFamily(danmuStyle->fontFamily);
     danmuStrokePen.setWidthF(danmuStyle->strokeWidth);
@@ -295,19 +299,20 @@ DanmuDrawInfo *CacheWorker::createDanmuCache(const DanmuComment *comment)
 void CacheWorker::cleanCache()
 {
 #ifdef QT_DEBUG
-    qDebug()<<"clean start, items:"<<danmuCache->size();
+    qDebug()<<"clean start, items:"<<danmuCache.size();
     QElapsedTimer timer;
     timer.start();
 #endif
     danmuTextureContext->makeCurrent(surface);
     QOpenGLFunctions *glFuns=danmuTextureContext->functions();
-    for(auto iter=danmuCache->begin();iter!=danmuCache->end();)
+    for(auto iter=danmuCache.begin();iter!=danmuCache.end();)
     {
+		Q_ASSERT(iter.value()->useCount >= 0);
         if(iter.value()->useCount==0)
         {
             glFuns->glDeleteTextures(1,&iter.value()->texture);
             delete iter.value();
-            iter=danmuCache->erase(iter);
+            iter=danmuCache.erase(iter);
         }
         else
         {
@@ -316,7 +321,7 @@ void CacheWorker::cleanCache()
     }
     danmuTextureContext->doneCurrent();
 #ifdef QT_DEBUG
-    qDebug()<<"clean done:"<<timer.elapsed()<<"ms, left item:"<<danmuCache->size();
+    qDebug()<<"clean done:"<<timer.elapsed()<<"ms, left item:"<<danmuCache.size();
 #endif
 }
 
@@ -348,29 +353,19 @@ void CacheWorker::beginCache(PrepareList *danmus)
     for(QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*> &dm:*danmus)
     {
          QString hash_str(QString("%1%2%3").arg(dm.first->text).arg(dm.first->color).arg(danmuStyle->fontSizeTable[dm.first->fontSizeLevel]));
-         DanmuDrawInfo *drawInfo(nullptr);
-         if(danmuCache->contains(hash_str))
-         {
-             drawInfo=danmuCache->value(hash_str);
-             //drawInfo->useCountLock.lock();
-             drawInfo->useCount++;
-             //drawInfo->useCountLock.unlock();
-         }
-         else
+         DanmuDrawInfo *drawInfo(danmuCache.value(hash_str,nullptr));
+         if(!drawInfo)
          {
              drawInfo=createDanmuCache(dm.first.data());
-             //createDanmuTexture(drawInfo);
-             drawInfo->useCount++;
-             danmuCache->insert(hash_str,drawInfo);
+             danmuCache.insert(hash_str,drawInfo);
          }
+         drawInfo->useCount++;
          dm.second=drawInfo;
 #ifdef QT_DEBUG
          qDebug()<<"Gen cache:"<<dm.first->text<<" time: "<<dm.first->date;
 #endif
 
     }
-	if (danmuCache->size()>max_cache)
-		cleanCache();
 #ifdef QT_DEBUG
     etime=timer.elapsed();
     qDebug()<<"cache end, time: "<<etime<<"ms";
@@ -384,6 +379,8 @@ void CacheWorker::changeRefCount(QList<DanmuDrawInfo *> *descList)
         drawInfo->useCount--;
     descList->clear();
     emit recyleRefList(descList);
+    if (danmuCache.size()>max_cache)
+        cleanCache();
 }
 
 void CacheWorker::changeDanmuStyle()
@@ -391,3 +388,4 @@ void CacheWorker::changeDanmuStyle()
     danmuFont.setFamily(danmuStyle->fontFamily);
     danmuFont.setBold(danmuStyle->bold);
 }
+

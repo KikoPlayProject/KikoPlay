@@ -18,10 +18,10 @@ class CacheWorker : public QObject
 {
     Q_OBJECT
 public:
-    explicit CacheWorker(QHash<QString,DanmuDrawInfo *> *cache, const DanmuStyle *style);
+    explicit CacheWorker(const DanmuStyle *style);
 private:
     const int max_cache=300;
-    QHash<QString,DanmuDrawInfo *> *danmuCache;
+    QHash<QString,DanmuDrawInfo *> danmuCache;
     const DanmuStyle *danmuStyle;
     QFont danmuFont;
     QPen danmuStrokePen;
@@ -56,7 +56,6 @@ public:
 private:
     DanmuLayout *layout_table[3];
     bool hideLayout[3];
-    QHash<QString,DanmuDrawInfo *> danmuCache;
     float danmuOpacity;
     bool bottomSubtitleProtect;
     bool topSubtitleProtect;
