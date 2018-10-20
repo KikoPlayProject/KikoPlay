@@ -16,7 +16,7 @@ About::About(QWidget *parent) : CFramelessDialog("",parent)
     QPlainTextEdit *libsInfo=new QPlainTextEdit(this);
     libsInfo->setReadOnly(true);
     libsInfo->appendPlainText("Qt 5.10.1\n"
-                              "libmpv 20180902\n"
+                              "libmpv 0.29.1\n"
                               "aria2 1.34\n"
                               "Qt-Nice-Frameless-Window\n"
                               "zlib 1.2.11");
