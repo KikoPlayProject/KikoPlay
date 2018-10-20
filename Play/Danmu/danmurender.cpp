@@ -262,7 +262,7 @@ DanmuDrawInfo *CacheWorker::createDanmuCache(const DanmuComment *comment)
     int left=qAbs(metrics.leftBearing(comment->text.front()));
 
     QSize size=metrics.size(0, comment->text)+QSize(strokeWidth*2+left,strokeWidth);
-    QImage img(size, QImage::Format_ARGB32_Premultiplied);
+    QImage img(size, QImage::Format_ARGB32);
 
     DanmuDrawInfo *drawInfo=new DanmuDrawInfo;
     drawInfo->useCount=0;

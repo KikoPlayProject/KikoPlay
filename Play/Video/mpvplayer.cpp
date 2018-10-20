@@ -29,7 +29,7 @@ const char *fShaderDanmu =
         "uniform float alpha;\n"
         "void main(void)\n"
         "{\n"
-        "    gl_FragColor.rgba = texture2D(u_SamplerD, v_vTexCoord).rgba;\n"
+        "    gl_FragColor.rgba = texture2D(u_SamplerD, v_vTexCoord).bgra;\n"
         "	 if(gl_FragColor.a==1.0)\n"
         "       gl_FragColor.a =alpha;\n"
         "}\n";
