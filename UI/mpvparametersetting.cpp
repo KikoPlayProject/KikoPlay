@@ -67,7 +67,7 @@ MPVParameterSetting::MPVParameterSetting(QWidget *parent) :
     QVBoxLayout *dialogVLayout=new QVBoxLayout(this);
     dialogVLayout->addWidget(tipLable);
     dialogVLayout->addWidget(parameterEdit);
-    resize(320*logicalDpiX()/96,360*logicalDpiY()/96);
+    resize(400*logicalDpiX()/96,300*logicalDpiY()/96);
 }
 
 void MPVParameterSetting::onAccept()
