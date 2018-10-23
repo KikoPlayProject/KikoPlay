@@ -87,7 +87,9 @@ SOURCES += \
     Common/flowlayout.cpp \
     UI/animedetailinfo.cpp \
     UI/timelineedit.cpp \
-    Play/Danmu/Provider/acfunprovider.cpp
+    Play/Danmu/Provider/acfunprovider.cpp \
+    UI/mpvparametersetting.cpp \
+    UI/mpvlog.cpp
 
 HEADERS += \
     UI/mainwindow.h \
@@ -152,14 +154,23 @@ HEADERS += \
     Common/flowlayout.h \
     UI/animedetailinfo.h \
     UI/timelineedit.h \
-    Play/Danmu/Provider/acfunprovider.h
+    Play/Danmu/Provider/acfunprovider.h \
+    UI/mpvparametersetting.h \
+    UI/mpvlog.h
 
 INCLUDEPATH += \
     Play/Video
 RESOURCES += \
     res.qrc
 
+contains(QT_ARCH, i386){
+    win32: LIBS += -L$$PWD/lib/ -llibmpv.dll
+    win32: LIBS += -L$$PWD/lib/ -lzlibstat
+}else{
+    win32: LIBS += -L$$PWD/lib/x64/ -llibmpv.dll
+    win32: LIBS += -L$$PWD/lib/x64/ -lzlibstat
+}
 
-win32: LIBS += -L$$PWD/lib/ -llibmpv.dll
 
-win32: LIBS += -L$$PWD/lib/ -lzlibstat
+
+
