@@ -29,10 +29,10 @@ bool BlockRule::blockTest(DanmuComment *comment)
     {
         if(isRegExp)
         {
-            QRegExp re(content);
-            if(re.indexIn(*testStr)!=-1)
+            if(re.isNull())re.reset(new QRegExp(content));
+            if(re->indexIn(*testStr)!=-1)
             {
-                testResult=re.matchedLength()==testStr->length()?true:false;
+                testResult=re->matchedLength()==testStr->length()?true:false;
             }
         }
         else
@@ -46,8 +46,8 @@ bool BlockRule::blockTest(DanmuComment *comment)
     {
         if(isRegExp)
         {
-            QRegExp re(content);
-            testResult=(re.indexIn(*testStr)!=-1)?true:false;
+            if(re.isNull())re.reset(new QRegExp(content));
+            testResult=(re->indexIn(*testStr)!=-1)?true:false;
         }
         else
         {

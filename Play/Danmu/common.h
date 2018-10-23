@@ -109,6 +109,7 @@ struct BlockRule
     bool isRegExp;
     bool enable;
     QString content;
+    QScopedPointer<QRegExp> re;
     bool blockTest(DanmuComment *comment);
 };
 typedef QList<QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo *> > PrepareList;

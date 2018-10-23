@@ -297,6 +297,7 @@ bool Blocker::setData(const QModelIndex &index, const QVariant &value, int)
     case 5:
         if(rule->content==value.toString())return false;
         rule->content=value.toString();
+        rule->re.reset();
         break;
     default:
         return false;
