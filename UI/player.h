@@ -12,6 +12,7 @@ class QCheckBox;
 class QFontComboBox;
 class QComboBox;
 class QActionGroup;
+class CFramelessDialog;
 class ClickSlider: public QSlider
 {
     Q_OBJECT
@@ -117,6 +118,8 @@ private:
 
      QMenu *contexMenu;
      QAction *ctx_Text,*ctx_Copy,*ctx_BlockUser,*ctx_BlockText,*ctx_BlockColor;
+
+     CFramelessDialog *logDialog;
 
      void setupDanmuSettingPage();
      void setupPlaySettingPage();

@@ -52,6 +52,7 @@ signals:
     void stateChanged(PlayState state);
     void trackInfoChange(int type);
     void initContext();
+    void showLog(const QString &log);
 public slots:   
     void setMedia(QString file);
     void setState(PlayState newState);

@@ -8,6 +8,7 @@
 #include <QMap>
 
 #include "Play/Danmu/danmurender.h"
+#include "globalobjects.h"
 namespace
 {
 const char *vShaderDanmu =
@@ -41,21 +42,43 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     if (!mpv)
         throw std::runtime_error("could not create mpv context");
 
-    mpv_set_option_string(mpv, "terminal", "yes");
-    mpv_set_option_string(mpv, "msg-level", "all=v");
+    //mpv_set_option_string(mpv, "terminal", "yes");
+    //mpv_set_option_string(mpv, "msg-level", "all=v");
     if (mpv_initialize(mpv) < 0)
         throw std::runtime_error("could not initialize mpv context");
 
+    mpv_request_log_messages(mpv, "v");
+    QStringList options=GlobalObjects::appSetting->value("Play/MPVParameters",
+                                                         "#Make sure the danmu is smooth\n"
+                                                         "vf=lavfi=\"fps=fps=60:round=down\"\n"
+                                                         "hwdec=auto").toString().split('\n');
+    for(const QString &option:options)
+    {
+        QString opt(option.trimmed());
+        if(opt.startsWith('#'))continue;
+        int eqPos=opt.indexOf('=');
+		mpv::qt::set_option_variant(mpv, opt.left(eqPos), opt.mid(eqPos+1));
+    }
+    mpv_set_option_string(mpv, "terminal", "yes");
+    mpv_set_option_string(mpv, "keep-open", "yes");  
     // Make use of the MPV_SUB_API_OPENGL_CB API.
-    mpv::qt::set_option_variant(mpv, "vo", "opengl-cb");
+    //mpv::qt::set_option_variant(mpv, "vo", "opengl-cb");
 
     // Request hw decoding, just for testing.
-    mpv::qt::set_option_variant(mpv, "hwdec", "auto");
+    //mpv::qt::set_option_variant(mpv, "hwdec", "auto");
 
     //mpv::qt::set_option_variant(mpv, "display-fps", "60");
     //mpv::qt::set_option_variant(mpv, "video-sync", "display-resample");
-    mpv::qt::set_option_variant(mpv, "vf", "lavfi=\"fps=fps=60:round=down\"");
-	mpv::qt::set_option_variant(mpv, "keep-open", "yes");
+    //mpv::qt::set_option_variant(mpv, "vf", "lavfi=\"fps=fps=60:round=down\"");
+
+
+    //for svp test-------------------
+
+    //mpv::qt::set_option_variant(mpv,"input-ipc-server","mpvpipe");
+    //mpv::qt::set_option_variant(mpv,"hwdec-codecs","all");
+    //mpv::qt::set_option_variant(mpv,"hr-seek-framedrop","no");
+    //mpv::qt::set_option_variant(mpv,"no-resume-playback","");
+    //-------------------------------
 
     mpv_gl = (mpv_opengl_cb_context *)mpv_get_sub_api(mpv, MPV_SUB_API_OPENGL_CB);
     if (!mpv_gl)
@@ -413,8 +436,6 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
             {
                 int flag = *(int *)prop->data;
                 state=flag?PlayState::Pause:PlayState::Play;
-                //if(!refreshTimer.isActive())
-               //     refreshTimer.start(1000);
                 if(state==PlayState::Pause)
                 {
                     elapsedTimer.invalidate();
@@ -463,6 +484,12 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     case MPV_EVENT_END_FILE:
         update();
         break;
+    case MPV_EVENT_LOG_MESSAGE:
+    {
+        struct mpv_event_log_message *msg = (struct mpv_event_log_message *)event->data;
+        emit showLog(QString("[%1]%2: %3").arg(msg->prefix).arg(msg->level).arg(msg->text));
+        break;
+    }
     default: ;
         // Ignore uninteresting or unknown events.
     }

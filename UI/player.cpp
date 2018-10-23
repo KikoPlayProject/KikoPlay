@@ -14,6 +14,8 @@
 
 #include "capture.h"
 #include "mediainfo.h"
+#include "mpvparametersetting.h"
+#include "mpvlog.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/danmurender.h"
 #include "Play/Danmu/Provider/localprovider.h"
@@ -200,6 +202,8 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     setCentralWidget(GlobalObjects::mpvplayer);
     GlobalObjects::mpvplayer->setMouseTracking(true);
     setContentsMargins(0,0,0,0);
+
+    logDialog=new MPVLog(this);
 
     playInfo=new InfoTip(this);
     playInfo->hide();
@@ -804,7 +808,7 @@ void PlayerWindow::setupPlaySettingPage()
     playSettingPage=new QWidget(this);
     playSettingPage->setObjectName(QStringLiteral("PopupPage"));
     playSettingPage->installEventFilter(this);
-    playSettingPage->resize(320 *logicalDpiX()/96,140*logicalDpiY()/96);
+    playSettingPage->resize(320 *logicalDpiX()/96,160*logicalDpiY()/96);
     playSettingPage->hide();
 
     QLabel *audioTrackLabel=new QLabel(tr("Audio Track"),playSettingPage);
@@ -882,6 +886,18 @@ void PlayerWindow::setupPlaySettingPage()
     });
     playSpeedCombo->setCurrentIndex(GlobalObjects::appSetting->value("Play/PlaySpeed",GlobalObjects::mpvplayer->speedLevel.indexOf("1")).toInt());
 
+    QPushButton *editMpvOptions=new QPushButton(tr("MPV Parameter Settings"), playSettingPage);
+    QObject::connect(editMpvOptions,&QPushButton::clicked,[this](){
+        MPVParameterSetting mpvParameterDialog(this);
+        mpvParameterDialog.exec();
+    });
+
+    QPushButton *showMpvLog=new QPushButton(tr("Show Mpv Log"), playSettingPage);
+    QObject::connect(showMpvLog,&QPushButton::clicked,[this](){
+        logDialog->show();
+    });
+
+
     QGridLayout *playSettingGLayout=new QGridLayout(playSettingPage);
     //playSettingGLayout->setColumnStretch(0, 2);
     playSettingGLayout->setColumnStretch(1, 1);
@@ -896,6 +912,10 @@ void PlayerWindow::setupPlaySettingPage()
     playSettingGLayout->addWidget(aspectSpeedLabel,3,0);
     playSettingGLayout->addWidget(aspectRatioCombo,3,1);
     playSettingGLayout->addWidget(playSpeedCombo,3,2);
+    QHBoxLayout *bottomBtnHLayout=new QHBoxLayout();
+    bottomBtnHLayout->addWidget(editMpvOptions);
+    bottomBtnHLayout->addWidget(showMpvLog);
+    playSettingGLayout->addLayout(bottomBtnHLayout,4,0,1,3);
 }
 
 void PlayerWindow::setupSignals()
