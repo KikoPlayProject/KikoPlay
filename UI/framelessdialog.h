@@ -11,7 +11,8 @@ class CFramelessDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit CFramelessDialog(QString titleStr="", QWidget *parent = 0, bool showAccept=false,bool showClose=true);
+    explicit CFramelessDialog(QString titleStr="", QWidget *parent = 0,
+                              bool showAccept=false,bool showClose=true,bool autoPauseVideo=true);
 public:
     void setResizeable(bool resizeable=true);
     bool isResizeable(){return m_bResizeable;}
@@ -51,6 +52,10 @@ protected:
     virtual void showEvent(QShowEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
     void showBusyState(bool busy);
+
+    // QDialog interface
+public slots:
+    virtual void reject();
 };
 
 #endif // CFRAMELESSDIALOG_H

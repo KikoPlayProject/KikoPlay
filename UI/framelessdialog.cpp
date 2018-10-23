@@ -19,7 +19,7 @@
 #pragma comment (lib,"Dwmapi.lib") // Adds missing library, fixes error LNK2019: unresolved external symbol __imp__DwmExtendFrameIntoClientArea
 #pragma comment (lib,"user32.lib")
 
-CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showAccept,bool showClose)
+CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showAccept, bool showClose, bool autoPauseVideo)
     : QDialog(parent),
       m_borderWidth(5),
       m_bJustMaximized(false),
@@ -79,7 +79,7 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
     titleHBLayout->addWidget(acceptButton);
     titleHBLayout->addWidget(closeButton);
     setContentsMargins(6*logicalDpiX()/96,38*logicalDpiY()/96,6*logicalDpiX()/96,6*logicalDpiY()/96);
-	if (GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
+    if (autoPauseVideo && GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
 	{
 		restorePlayState = true;
 		GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
@@ -282,7 +282,6 @@ void CFramelessDialog::showEvent(QShowEvent *)
         inited=true;
     }
     resize(width(),height());
-   // setGeometry(x(),y(),width(),height());
 }
 
 void CFramelessDialog::resizeEvent(QResizeEvent *)
@@ -304,6 +303,12 @@ void CFramelessDialog::showBusyState(bool busy)
         acceptButton->setEnabled(true);
         closeButton->setEnabled(true);
     }
+}
+
+void CFramelessDialog::reject()
+{
+    QDialog::reject();
+    if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
 }
 
 QRect CFramelessDialog::contentsRect() const

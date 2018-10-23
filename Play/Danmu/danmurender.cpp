@@ -366,6 +366,13 @@ void CacheWorker::beginCache(PrepareList *danmus)
 #endif
 
     }
+    /*std::sort(danmus->first(),danmus->last(),
+              [](const QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*> &item1,
+                 const QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*> &item2)
+    {
+        static int orderTable[]={0,2,1};
+        return orderTable[item1.first->type]>orderTable[item2.first->type];
+    });*/
 #ifdef QT_DEBUG
     etime=timer.elapsed();
     qDebug()<<"cache end, time: "<<etime<<"ms";

@@ -661,7 +661,7 @@ void DownloadWindow::initActions()
         auto &taskList=GlobalObjects::downloadModel->getAllTask();
         for(DownloadTask *task:taskList)
         {
-            if(task->gid.isEmpty())
+            if(task->status!=DownloadTask::Complete && task->gid.isEmpty())
             {
                 QFileInfo fi(task->dir,task->title+".aria2");
                 if(fi.exists())

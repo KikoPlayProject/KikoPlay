@@ -39,6 +39,10 @@ MainWindow::MainWindow(QWidget *parent)
 				widgetTitlebar->show();
 				showNormal();
 			}
+            if(isMaximized())
+            {
+                showNormal();
+            }
 			if (listShowState)listWindow->show();
 			else listWindow->hide();
             setGeometry(originalGeo);
