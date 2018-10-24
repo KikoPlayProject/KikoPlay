@@ -62,7 +62,7 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     mpv_set_option_string(mpv, "terminal", "yes");
     mpv_set_option_string(mpv, "keep-open", "yes");  
     // Make use of the MPV_SUB_API_OPENGL_CB API.
-    //mpv::qt::set_option_variant(mpv, "vo", "opengl-cb");
+    mpv::qt::set_option_variant(mpv, "vo", "opengl-cb");
 
     // Request hw decoding, just for testing.
     //mpv::qt::set_option_variant(mpv, "hwdec", "auto");
