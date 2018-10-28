@@ -31,8 +31,7 @@ const char *fShaderDanmu =
         "void main(void)\n"
         "{\n"
         "    gl_FragColor.rgba = texture2D(u_SamplerD, v_vTexCoord).bgra;\n"
-        "	 if(gl_FragColor.a==1.0)\n"
-        "       gl_FragColor.a =alpha;\n"
+        "    gl_FragColor.a *= alpha;\n"
         "}\n";
 }
 MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::Stop),
