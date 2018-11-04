@@ -885,11 +885,8 @@ void ListWindow::sortSelection(bool allItem, bool ascending)
 
 void ListWindow::playItem(const QModelIndex &index, bool playChild)
 {
-    int playTime=GlobalObjects::mpvplayer->getTime(),duration=GlobalObjects::mpvplayer->getDuration();
-    if(playTime>duration-10)
-        GlobalObjects::playlist->setCurrentPlayTime(0);
-    else if(playTime>10)
-        GlobalObjects::playlist->setCurrentPlayTime(playTime);
+    int playTime=GlobalObjects::mpvplayer->getTime();
+    GlobalObjects::playlist->setCurrentPlayTime(playTime);
     QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
     const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(model->mapToSource(index),playChild);
     if (curItem)

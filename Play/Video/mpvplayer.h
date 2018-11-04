@@ -43,7 +43,7 @@ public:
     VideoSizeInfo getVideoSizeInfo();
     QMap<QString,QMap<QString,QString> > getMediaInfo();
     inline int getTime() const{return mpv::qt::get_property(mpv,"playback-time").toDouble();}
-    inline int getDuration() const{return mpv::qt::get_property(mpv,"duration").toDouble();}
+    inline int getDuration() const{return currentDuration;}
     void drawTexture(GLuint texture, float alpha, const QRectF &rect);
 signals:
     void durationChanged(int value);
@@ -100,6 +100,7 @@ private:
     bool danmuHide;
     bool mute;
     int volume;
+    int currentDuration;
     TrackInfo audioTrack,subtitleTrack;
     void loadTracks();
 

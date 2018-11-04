@@ -12,7 +12,7 @@
 #include "globalobjects.h"
 #include "MediaLibrary/animelibrary.h"
 
-BangumiSearch::BangumiSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("Bangumi Search"),parent,true),currentAnime(anime)
+BangumiSearch::BangumiSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("Bangumi Search"),parent,true,true,false),currentAnime(anime)
 {
     searchWordEdit=new QLineEdit(anime->title,this);
     searchButton=new QPushButton(tr("Search"),this);

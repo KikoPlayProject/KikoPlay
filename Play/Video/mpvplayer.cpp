@@ -35,7 +35,7 @@ const char *fShaderDanmu =
         "}\n";
 }
 MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::Stop),
-    danmuRender(nullptr),danmuHide(false),mute(false)
+    danmuRender(nullptr),danmuHide(false),mute(false),currentDuration(0)
 {
     mpv = mpv::qt::Handle::FromRawHandle(mpv_create());
     if (!mpv)
@@ -426,6 +426,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
             if (prop->format == MPV_FORMAT_DOUBLE)
             {
                 double time = *(double *)prop->data;
+                currentDuration=time;
                 emit durationChanged(time*1000);
             }
         }

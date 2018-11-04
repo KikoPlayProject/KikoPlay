@@ -55,7 +55,7 @@ public:
 };
 }
 AnimeDetailInfo::AnimeDetailInfo(Anime *anime, QWidget *parent) :currentAnime(anime),
-    CFramelessDialog(tr("Anime Info"),parent)
+    CFramelessDialog(tr("Anime Info"),parent,false,true,false)
 {
     QVBoxLayout *dialogVLayout=new QVBoxLayout(this);
     dialogVLayout->setContentsMargins(0,0,0,0);

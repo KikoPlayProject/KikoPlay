@@ -25,6 +25,7 @@ public:
     QString path;
     QString poolID;
     int playTime;
+    int playTimeState;
     QList<PlayListItem *> *children;
     int level;
     static PlayList *playlist;

@@ -4,7 +4,7 @@
 #include <QDir>
 #include <QMessageBox>
 #include "Download/dirselectwidget.h"
-AddUriTask::AddUriTask(QWidget *parent) : CFramelessDialog(tr("Add URI"),parent,true)
+AddUriTask::AddUriTask(QWidget *parent) : CFramelessDialog(tr("Add URI"),parent,true,true,false)
 {
     uriEdit=new QPlainTextEdit(this);
     uriEdit->setObjectName(QStringLiteral("UriEdit"));

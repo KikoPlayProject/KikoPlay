@@ -411,15 +411,39 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
             return item->title;
         else
         {
+            QStringList tipContent;
+
             if(!item->animeTitle.isEmpty())
-                return QString("%1-%2\n%3").arg(item->animeTitle).arg(item->title).arg(item->path);
-            return QString("%1\n%2").arg(item->title).arg(item->path);
+                tipContent<<QString("%1-%2").arg(item->animeTitle).arg(item->title);
+            else
+                tipContent<<QString("%1").arg(item->title);
+            tipContent<<item->path;
+            if(item->playTimeState==0)
+                tipContent<<tr("Unplayed");
+            else if(item->playTimeState==2)
+                tipContent<<tr("Finished");
+            else
+            {
+                int cmin=item->playTime/60;
+                int cls=item->playTime-cmin*60;
+                tipContent<<(tr("PlayTo: %1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')));
+            }
+
+            return tipContent.join('\n');
         }
     case Qt::ForegroundRole:
         if(item==currentItem)
             return QBrush(QColor(255,255,0));
         else
-            return QBrush(QColor(200,200,200));
+        {
+            if(item->playTimeState==0)
+                return QBrush(QColor(220,220,220));
+            else if(item->playTimeState==1)
+                return QBrush(QColor(160,200,200));
+            else
+                return QBrush(QColor(140,140,140));
+        }
+
     case Qt::DecorationRole:
         if(item==currentItem)
             return QIcon(":/res/images/playing.png");
@@ -933,6 +957,16 @@ void PlayList::setCurrentPlayTime(int playTime)
     if(currentItem)
     {
         currentItem->playTime=playTime;
+        int duration = GlobalObjects::mpvplayer->getDuration();
+        if(playTime>duration-15)
+            currentItem->playTimeState=2;//finished
+        else if(playTime<15)//unplayed
+        {
+            if(currentItem->playTimeState!=2)
+                currentItem->playTimeState=0;
+        }
+        else
+            currentItem->playTimeState=1;//playing
         playListChanged=true;
     }
 }
@@ -1017,6 +1051,7 @@ void PlayList::loadPlaylist()
                 QString animeTitle= reader.attributes().value("animeTitle").toString();
                 QString poolID=reader.attributes().value("poolID").toString();
                 int playTime=reader.attributes().value("playTime").toInt();
+                int playTimeState=reader.attributes().value("playTimeState").toInt();
                 QString path = reader.readElementText().trimmed();
                 QFileInfo fileInfo(path);
                 if(fileInfo.exists())
@@ -1025,6 +1060,7 @@ void PlayList::loadPlaylist()
                     item->title=title;
                     item->path= path;
                     item->playTime=playTime;
+                    item->playTimeState=playTimeState;
                     if(!animeTitle.isEmpty())item->animeTitle=animeTitle;
 					if (!poolID.isEmpty())
 					{
@@ -1160,8 +1196,8 @@ void PlayList::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
                 writer.writeAttribute("animeTitle",child->animeTitle);
             if(!child->poolID.isEmpty())
                 writer.writeAttribute("poolID",child->poolID);
-            if(child->playTime>5)
-                writer.writeAttribute("playTime",QString::number(child->playTime));
+            writer.writeAttribute("playTime",QString::number(child->playTime));
+            writer.writeAttribute("playTimeState",QString::number(child->playTimeState));
             writer.writeCharacters(child->path);
             writer.writeEndElement();
         }
@@ -1169,7 +1205,7 @@ void PlayList::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
     writer.writeEndElement();
 }
 
-PlayListItem::PlayListItem(PlayListItem *parent, bool leaf, int insertPosition):children(nullptr),level(0)
+PlayListItem::PlayListItem(PlayListItem *parent, bool leaf, int insertPosition):children(nullptr),level(0),playTimeState(0)
 {
     this->parent=parent;
     if(!leaf)

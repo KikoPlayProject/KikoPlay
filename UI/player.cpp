@@ -955,7 +955,7 @@ void PlayerWindow::setupSignals()
         }
         if(resizePercent!=-1)
             adjustPlayerSize(resizePercent);
-        if(currentItem->playTime>10 && currentItem->playTime<ts-10)
+        if(currentItem->playTime>15 && currentItem->playTime<ts-15)
         {
             GlobalObjects::mpvplayer->seek(currentItem->playTime*1000);
             showMessage(tr("Jumped to the last play position"));
@@ -1002,7 +1002,8 @@ void PlayerWindow::setupSignals()
 			this->play_pause->setText(QChar(0xe606));
 			GlobalObjects::danmuPool->reset();
 			GlobalObjects::danmuRender->cleanup();
-            GlobalObjects::playlist->setCurrentPlayTime(0);
+            //GlobalObjects::playlist->setCurrentPlayTime(0);
+            setPlayTime();
 			PlayList::LoopMode loopMode = GlobalObjects::playlist->getLoopMode();
 			if (loopMode == PlayList::Loop_One)
 			{
@@ -1176,11 +1177,8 @@ void PlayerWindow::adjustPlayerSize(int percent)
 
 void PlayerWindow::setPlayTime()
 {
-    int playTime=process->value()/1000,duration=process->maximum()/1000;
-    if(playTime>duration-10)
-        GlobalObjects::playlist->setCurrentPlayTime(0);
-    else if(playTime>10)
-        GlobalObjects::playlist->setCurrentPlayTime(playTime);
+    int playTime=process->value()/1000;
+    GlobalObjects::playlist->setCurrentPlayTime(playTime);
 }
 
 void PlayerWindow::showMessage(const QString &msg)

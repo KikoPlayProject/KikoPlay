@@ -6,7 +6,7 @@
 #include <QGridLayout>
 #include <QIntValidator>
 #include "globalobjects.h"
-DownloadSetting::DownloadSetting(QWidget *parent) : CFramelessDialog(tr("Download Setting"),parent,true)
+DownloadSetting::DownloadSetting(QWidget *parent) : CFramelessDialog(tr("Download Setting"),parent,true,true,false)
 {
     QLabel *maxDownSpeedLabel=new QLabel(tr("Max Download Limit(KB): "),this);
     maxDownSpeedLimit=new QLineEdit(this);
