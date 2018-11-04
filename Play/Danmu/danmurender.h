@@ -83,7 +83,7 @@ signals:
     void danmuStyleChanged();
     void refCountChanged(QList<DanmuDrawInfo *> *descList);
 public slots:
-    inline void prepareDanmu(PrepareList *prepareList){emit cacheDanmu(prepareList);}
+    void prepareDanmu(PrepareList *prepareList);
     void addDanmu(PrepareList *newDanmu);
 };
 

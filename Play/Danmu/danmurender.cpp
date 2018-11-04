@@ -215,26 +215,28 @@ void DanmuRender::setMaxDanmuCount(int count)
     maxCount=count;
 }
 
+void DanmuRender::prepareDanmu(PrepareList *prepareList)
+{
+    if(maxCount!=-1)
+    {
+        if(layout_table[DanmuComment::Rolling]->danmuCount()+
+           layout_table[DanmuComment::Top]->danmuCount()+
+           layout_table[DanmuComment::Bottom]->danmuCount()>maxCount)
+        {
+            GlobalObjects::danmuPool->recyclePrepareList(prepareList);
+            return;
+        }
+    }
+    emit cacheDanmu(prepareList);
+}
+
 void DanmuRender::addDanmu(PrepareList *newDanmu)
 {
     if(GlobalObjects::playlist->getCurrentItem()!=nullptr)
     {
-        int i=0;
         for(auto &danmuInfo:*newDanmu)
         {
             layout_table[danmuInfo.first->type]->addDanmu(danmuInfo.first,danmuInfo.second);
-            ++i;
-            if(maxCount!=-1)
-            {
-                if(layout_table[DanmuComment::Rolling]->danmuCount()+
-                   layout_table[DanmuComment::Top]->danmuCount()+
-                   layout_table[DanmuComment::Bottom]->danmuCount()>maxCount)
-                    break;
-            }
-        }
-        while(i<newDanmu->size())
-        {
-            refDesc(newDanmu->at(i++).second);
         }
     }
     GlobalObjects::danmuPool->recyclePrepareList(newDanmu);
