@@ -88,7 +88,7 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
     beginInsertRows(parent, insertPosition, insertPosition+ tmpItems.count()-1);
 	for (const QString item : tmpItems)
 	{
-		int suffixPos = item.lastIndexOf('.'), pathPos = item.lastIndexOf('/') + 1;
+        int suffixPos = item.lastIndexOf('.'), pathPos = item.lastIndexOf('/') + 1;
 		QString title = item.mid(pathPos,suffixPos-pathPos);
         PlayListItem *newItem = new PlayListItem(parentItem, true, insertPosition++);
         newItem->title = title;
@@ -145,7 +145,7 @@ bool PlayList::addSubFolder(QString folderStr, PlayListItem *parent,QSet<QString
                 if(!paths.contains(fileInfo.filePath()))
                 {
                     PlayListItem *newItem = new PlayListItem(folderCollection, true);
-					int suffixPos = fileName.lastIndexOf('.'), pathPos = fileName.lastIndexOf('/') + 1;
+                    int suffixPos = fileName.lastIndexOf('.'), pathPos = fileName.lastIndexOf('/') + 1;
 					QString title = fileName.mid(pathPos, suffixPos - pathPos);
                     newItem->title = title;
                     newItem->path = fileInfo.filePath();

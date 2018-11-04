@@ -4,6 +4,8 @@
 #include <DbgHelp.h>
 #include <QMessageBox>
 #include "globalobjects.h"
+#include "Play/Playlist/playlist.h"
+#include "Play/Video/mpvplayer.h"
 #pragma comment (lib,"DbgHelp.lib")
 LONG AppCrashHandler(EXCEPTION_POINTERS *pException) 
 {			
@@ -20,6 +22,20 @@ LONG AppCrashHandler(EXCEPTION_POINTERS *pException)
 	QString errCode(QString::number(record->ExceptionCode, 16)), errAdr(QString::number((uint)record->ExceptionAddress, 16)), errMod;
 	QMessageBox::critical(nullptr, "Error", QString("Error Code: %1 Error Address: %2").arg(errCode).arg(errAdr),QMessageBox::Ok);
 	return EXCEPTION_EXECUTE_HANDLER;
+}
+void decodeParam()
+{
+    QStringList args=QCoreApplication::arguments();
+    if(args.count()<=1)return;
+    args.pop_front();
+    for(QString &path:args)
+        path=QDir::fromNativeSeparators(path);
+    GlobalObjects::playlist->addItems(args,QModelIndex());
+    const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(args.last());
+    if (curItem)
+    {
+        GlobalObjects::mpvplayer->setMedia(curItem->path);
+    }
 }
 int main(int argc, char *argv[])
 {
@@ -41,6 +57,7 @@ int main(int argc, char *argv[])
         a.installTranslator(&translator);
     GlobalObjects::init();
     MainWindow w;
+    decodeParam();
     w.show();
 
     return a.exec();

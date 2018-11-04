@@ -17,6 +17,7 @@ class MainWindow : public CFramelessWindow
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
 private:
     QWidget *widgetTitlebar;
     QToolButton *buttonIcon,*buttonPage_Play,*buttonPage_Library,*buttonPage_Downlaod;

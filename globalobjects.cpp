@@ -29,7 +29,7 @@ QFont GlobalObjects::iconfont;
 void GlobalObjects::init()
 {
 	initDatabase();
-    appSetting=new QSettings("./settings.ini",QSettings::IniFormat);
+    appSetting=new QSettings(QCoreApplication::applicationDirPath()+"/settings.ini",QSettings::IniFormat);
     mpvplayer=new MPVPlayer();
     danmuPool=new DanmuPool();
     danmuRender=new DanmuRender();
