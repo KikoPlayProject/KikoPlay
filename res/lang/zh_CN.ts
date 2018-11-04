@@ -929,45 +929,36 @@ Date: %2
 <context>
     <name>EpisodeEditor</name>
     <message>
-        <location filename="../../UI/episodeeditor.cpp" line="12"/>
         <source>Episodes</source>
-        <translation>剧集</translation>
+        <translation type="vanished">剧集</translation>
     </message>
     <message>
-        <location filename="../../UI/episodeeditor.cpp" line="22"/>
         <source>Add Episode(s)</source>
-        <translation>添加剧集</translation>
+        <translation type="vanished">添加剧集</translation>
     </message>
     <message>
-        <location filename="../../UI/episodeeditor.cpp" line="24"/>
         <source>Select media files</source>
-        <translation>选择媒体文件</translation>
+        <translation type="vanished">选择媒体文件</translation>
     </message>
     <message>
-        <location filename="../../UI/episodeeditor.cpp" line="36"/>
         <source>Remove Episode(s)</source>
-        <translation>移除剧集</translation>
+        <translation type="vanished">移除剧集</translation>
     </message>
     <message>
-        <location filename="../../UI/episodeeditor.cpp" line="42"/>
-        <location filename="../../UI/episodeeditor.cpp" line="67"/>
         <source>Get Epsoide Names</source>
-        <translation>获取剧集标题</translation>
+        <translation type="vanished">获取剧集标题</translation>
     </message>
     <message>
-        <location filename="../../UI/episodeeditor.cpp" line="48"/>
         <source>Getting...</source>
-        <translation>获取中...</translation>
+        <translation type="vanished">获取中...</translation>
     </message>
     <message>
-        <location filename="../../UI/episodeeditor.cpp" line="60"/>
         <source>Getting Done</source>
-        <translation>获取结束</translation>
+        <translation type="vanished">获取结束</translation>
     </message>
     <message>
-        <location filename="../../UI/episodeeditor.cpp" line="65"/>
         <source>Error</source>
-        <translation>错误</translation>
+        <translation type="vanished">错误</translation>
     </message>
 </context>
 <context>
@@ -991,22 +982,22 @@ Date: %2
 <context>
     <name>FilterBox</name>
     <message>
-        <location filename="../../UI/list.cpp" line="916"/>
+        <location filename="../../UI/list.cpp" line="941"/>
         <source>Case Sensitive</source>
         <translation>区分大小写</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="922"/>
+        <location filename="../../UI/list.cpp" line="947"/>
         <source>Fixed String</source>
         <translation>字符串</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="927"/>
+        <location filename="../../UI/list.cpp" line="952"/>
         <source>Regular Expression</source>
         <translation>正则表达式</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="931"/>
+        <location filename="../../UI/list.cpp" line="956"/>
         <source>Wildcard</source>
         <translation>通配符</translation>
     </message>
@@ -1074,167 +1065,178 @@ Date: %2
 <context>
     <name>ListWindow</name>
     <message>
-        <location filename="../../UI/list.cpp" line="169"/>
+        <location filename="../../UI/list.cpp" line="170"/>
         <source>Associate Danmu Pool</source>
         <translation>关联弹幕池</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="212"/>
+        <location filename="../../UI/list.cpp" line="213"/>
         <source>Add Collection</source>
         <translation>添加合集</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="219"/>
+        <location filename="../../UI/list.cpp" line="220"/>
         <source>Add Item</source>
         <translation>添加媒体文件</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="227"/>
+        <location filename="../../UI/list.cpp" line="228"/>
         <source>Select one or more media files</source>
         <translation>选择一个或多个媒体文件</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="235"/>
+        <location filename="../../UI/list.cpp" line="236"/>
         <source>Add Folder</source>
         <translation>添加文件夹</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="244"/>
+        <location filename="../../UI/list.cpp" line="245"/>
         <source>Select folder</source>
         <translation>选择文件夹</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="253"/>
+        <location filename="../../UI/list.cpp" line="254"/>
         <source>Cut</source>
         <translation>剪切</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="261"/>
+        <location filename="../../UI/list.cpp" line="262"/>
         <source>Paste</source>
         <translation>粘贴</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="266"/>
+        <location filename="../../UI/list.cpp" line="267"/>
         <source>Move Up</source>
         <translation>上移</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="274"/>
+        <location filename="../../UI/list.cpp" line="275"/>
         <source>Move Down</source>
         <translation>下移</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="282"/>
+        <location filename="../../UI/list.cpp" line="283"/>
         <source>Merge</source>
         <translation>合并</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="300"/>
+        <location filename="../../UI/list.cpp" line="301"/>
+        <location filename="../../UI/list.cpp" line="303"/>
         <source>Clear</source>
         <translation>清空列表</translation>
     </message>
     <message>
         <location filename="../../UI/list.cpp" line="303"/>
+        <source>Are you sure to clear the list ?</source>
+        <translation>确定要清空列表吗?</translation>
+    </message>
+    <message>
+        <location filename="../../UI/list.cpp" line="310"/>
+        <source>Browse File</source>
+        <translation>资源管理器中浏览</translation>
+    </message>
+    <message>
+        <location filename="../../UI/list.cpp" line="322"/>
         <source>Sort Ascending</source>
         <translation>升序</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="307"/>
+        <location filename="../../UI/list.cpp" line="326"/>
         <source>Sort Descending</source>
         <translation>降序</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="311"/>
+        <location filename="../../UI/list.cpp" line="330"/>
         <source>Sort All Ascending</source>
         <translation>全部升序</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="315"/>
+        <location filename="../../UI/list.cpp" line="334"/>
         <source>Sort All Descending</source>
         <translation>全部降序</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="321"/>
+        <location filename="../../UI/list.cpp" line="340"/>
         <source>No Loop One</source>
         <translation>单个播放</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="325"/>
+        <location filename="../../UI/list.cpp" line="344"/>
         <source>No Loop All</source>
         <translation>列表顺序</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="329"/>
+        <location filename="../../UI/list.cpp" line="348"/>
         <source>Loop One</source>
         <translation>单个循环</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="333"/>
+        <location filename="../../UI/list.cpp" line="352"/>
         <source>Loop All</source>
         <translation>列表循环</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="337"/>
+        <location filename="../../UI/list.cpp" line="356"/>
         <source>Random</source>
         <translation>随机</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="347"/>
+        <location filename="../../UI/list.cpp" line="366"/>
         <source>Add Online Danmu</source>
         <translation>添加网络弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="366"/>
+        <location filename="../../UI/list.cpp" line="385"/>
         <source>Add Local Danmu</source>
         <translation>添加本地弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="374"/>
+        <location filename="../../UI/list.cpp" line="393"/>
         <source>Select Xml File</source>
         <translation>选择Xml文件</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="389"/>
+        <location filename="../../UI/list.cpp" line="408"/>
         <source>Edit Block Rules</source>
         <translation>编辑屏蔽规则</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="394"/>
+        <location filename="../../UI/list.cpp" line="413"/>
         <source>Edit Danmu Pool</source>
         <translation>编辑弹幕池</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="399"/>
+        <location filename="../../UI/list.cpp" line="418"/>
         <source>Export to Xml</source>
         <translation>导出到Xml文件</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="409"/>
+        <location filename="../../UI/list.cpp" line="428"/>
         <source>Save Danmu</source>
         <translation>保存弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="409"/>
+        <location filename="../../UI/list.cpp" line="428"/>
         <source>Xml File (*.xml)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="416"/>
+        <location filename="../../UI/list.cpp" line="435"/>
         <source>Copy Danmu Text</source>
         <translation>复制弹幕内容</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="421"/>
+        <location filename="../../UI/list.cpp" line="440"/>
         <source>Copy Danmu Color</source>
         <translation>复制弹幕颜色</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="426"/>
+        <location filename="../../UI/list.cpp" line="445"/>
         <source>Copy Danmu Sender</source>
         <translation>复制弹幕发送者</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="431"/>
+        <location filename="../../UI/list.cpp" line="450"/>
         <source>Block Text</source>
         <translation>屏蔽内容</translation>
     </message>
@@ -1243,90 +1245,98 @@ Date: %2
         <translation type="obsolete">已添加</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="442"/>
+        <location filename="../../UI/list.cpp" line="461"/>
         <source>Block Color</source>
         <translation>屏蔽颜色</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="453"/>
+        <location filename="../../UI/list.cpp" line="472"/>
         <source>Block Sender</source>
         <translation>屏蔽用户</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="464"/>
+        <location filename="../../UI/list.cpp" line="483"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="468"/>
+        <location filename="../../UI/list.cpp" line="487"/>
         <source>Jump to</source>
         <translation>时间跳转</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="614"/>
+        <location filename="../../UI/list.cpp" line="598"/>
+        <location filename="../../UI/list.cpp" line="639"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="292"/>
-        <location filename="../../UI/list.cpp" line="624"/>
+        <location filename="../../UI/list.cpp" line="293"/>
+        <location filename="../../UI/list.cpp" line="649"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="109"/>
+        <location filename="../../UI/list.cpp" line="110"/>
         <source>MediaList</source>
         <translation>媒体</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="126"/>
+        <location filename="../../UI/list.cpp" line="127"/>
         <source>DanmuList</source>
         <translation>弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="163"/>
+        <location filename="../../UI/list.cpp" line="164"/>
         <source>Play</source>
         <translation>播放</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="440"/>
-        <location filename="../../UI/list.cpp" line="451"/>
-        <location filename="../../UI/list.cpp" line="462"/>
+        <location filename="../../UI/list.cpp" line="459"/>
+        <location filename="../../UI/list.cpp" line="470"/>
+        <location filename="../../UI/list.cpp" line="481"/>
         <source>Blocked</source>
         <translation>已屏蔽</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="636"/>
+        <location filename="../../UI/list.cpp" line="611"/>
+        <source>Move</source>
+        <translation>移动</translation>
+    </message>
+    <message>
+        <location filename="../../UI/list.cpp" line="615"/>
+        <location filename="../../UI/list.cpp" line="661"/>
         <source>Sort</source>
         <translation>排序</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="645"/>
+        <location filename="../../UI/list.cpp" line="670"/>
         <source>Loop Mode</source>
         <translation>循环模式</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="713"/>
+        <location filename="../../UI/list.cpp" line="738"/>
         <source>Edit Relation</source>
         <translation>编辑关联</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="723"/>
+        <location filename="../../UI/list.cpp" line="748"/>
         <source>No Item is Playing</source>
         <translation>当前没有播放项</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="734"/>
+        <location filename="../../UI/list.cpp" line="759"/>
         <source>Add Danmu</source>
         <translation>添加弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="745"/>
+        <location filename="../../UI/list.cpp" line="604"/>
+        <location filename="../../UI/list.cpp" line="770"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="752"/>
+        <location filename="../../UI/list.cpp" line="777"/>
         <source>Position</source>
         <translation>定位</translation>
     </message>
@@ -1611,39 +1621,39 @@ The changes will take effect when KikoPlay is restarted</source>
         <translation>已看完</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="430"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="429"/>
         <source>PlayTo: %1:%2</source>
         <translation>播放到：%1:%2</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="598"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="597"/>
         <source>File Not Exist</source>
         <translation>文件不存在</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="870"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="869"/>
         <source>Match Start</source>
         <translation>开始关联...</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="887"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="886"/>
         <source>Failed: %1</source>
         <translation>失败：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="895"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="928"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="945"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="894"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="927"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="944"/>
         <source>Success: %1</source>
         <translation>成功：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="910"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="909"/>
         <source>Need manually: %1</source>
         <translation>需要手动关联：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="916"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="915"/>
         <source>Match Done</source>
         <translation>关联结束</translation>
     </message>
@@ -2169,7 +2179,7 @@ The changes will take effect when KikoPlay is restarted</source>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../../Play/Danmu/Provider/bilibiliprovider.cpp" line="283"/>
+        <location filename="../../Play/Danmu/Provider/bilibiliprovider.cpp" line="286"/>
         <location filename="../../Play/Danmu/Provider/matchprovider.cpp" line="175"/>
         <location filename="../../Play/Danmu/Provider/matchprovider.cpp" line="221"/>
         <source>Reply JSON Format Error</source>
