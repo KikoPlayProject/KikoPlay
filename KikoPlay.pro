@@ -69,7 +69,6 @@ SOURCES += \
     UI/librarywindow.cpp \
     UI/bangumisearch.cpp \
     MediaLibrary/episodesmodel.cpp \
-    UI/episodeeditor.cpp \
     Download/util.cpp \
     Download/aria2jsonrpc.cpp \
     Download/dirselectwidget.cpp \
@@ -134,7 +133,6 @@ HEADERS += \
     UI/librarywindow.h \
     UI/bangumisearch.h \
     MediaLibrary/episodesmodel.h \
-    UI/episodeeditor.h \
     Download/util.h \
     Download/aria2jsonrpc.h \
     Download/dirselectwidget.h \
