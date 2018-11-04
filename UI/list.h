@@ -53,7 +53,7 @@ private:
             *act_remove,*act_clear,
             *act_sortSelectionAscending,*act_sortSelectionDescending,*act_sortAllAscending,*act_sortAllDescending,
             *act_noLoopOne,*act_noLoopAll,*act_loopOne,*act_loopAll,*act_random,
-            *act_manuallyAssociate,*act_autoAssociate;
+            *act_browseFile,*act_autoAssociate;
     bool actionDisable;
     QActionGroup *loopModeGroup;
     QWidget *setupPlaylistPage();

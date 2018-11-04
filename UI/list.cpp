@@ -5,6 +5,7 @@
 #include <QFileDialog>
 #include <QPushButton>
 #include <QApplication>
+#include <QMessageBox>
 
 #include "globalobjects.h"
 #include "pooleditor.h"
@@ -298,7 +299,25 @@ void ListWindow::initActions()
         GlobalObjects::playlist->deleteItems(selection.indexes());
     });
     act_clear=new QAction(tr("Clear"),this);
-    QObject::connect(act_clear,&QAction::triggered,GlobalObjects::playlist,&PlayList::clear);
+    QObject::connect(act_clear,&QAction::triggered,[this](){
+       QMessageBox::StandardButton btn =QMessageBox::question(this,tr("Clear"),tr("Are you sure to clear the list ?"),QMessageBox::Yes|QMessageBox::No);
+       if(btn==QMessageBox::Yes)
+       {
+           GlobalObjects::playlist->clear();
+       }
+    });
+
+    act_browseFile=new QAction(tr("Browse File"),this);
+    QObject::connect(act_browseFile,&QAction::triggered,[this](){
+        QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
+        QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
+        if (selection.size() == 0)return;
+        QModelIndexList indexes(selection.indexes());
+        const PlayListItem *item=GlobalObjects::playlist->getItem(indexes.last());
+        if(item->path.isEmpty())return;
+        QString command("Explorer /select," + QDir::toNativeSeparators(item->path));
+        QProcess::startDetached(command);
+    });
 
     act_sortSelectionAscending = new QAction(tr("Sort Ascending"),this);
     QObject::connect(act_sortSelectionAscending,&QAction::triggered,[this](){
@@ -513,6 +532,7 @@ void ListWindow::updatePlaylistActions()
     act_moveUp->setEnabled(hasPlaylistSelection);
     act_moveDown->setEnabled(hasPlaylistSelection);
     act_merge->setEnabled(hasPlaylistSelection);
+    act_browseFile->setEnabled(hasPlaylistSelection);
     act_paste->setEnabled(GlobalObjects::playlist->canPaste());  
 }
 
@@ -553,7 +573,7 @@ QWidget *ListWindow::setupPlaylistPage()
     playlistView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     playlistView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     playlistView->setFont(QFont("Microsoft YaHei UI",12));
-    playlistView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    playlistView->setContextMenuPolicy(Qt::CustomContextMenu);
     playlistView->setIndentation(12*logicalDpiX()/96);
     playlistView->setItemDelegate(new TextColorDelegate(this));
 
@@ -572,31 +592,36 @@ QWidget *ListWindow::setupPlaylistPage()
     });
     QObject::connect(playlistView->selectionModel(), &QItemSelectionModel::selectionChanged,this,&ListWindow::updatePlaylistActions);
 
-    playlistView->addAction(act_play);
-	playlistView->addAction(act_autoAssociate);
-    QAction *act_separator0=new QAction(this);
-    act_separator0->setSeparator(true);
-    playlistView->addAction(act_separator0);
-    playlistView->addAction(act_addCollection);
-    playlistView->addAction(act_addItem);
-    playlistView->addAction(act_addFolder);
-    QAction *act_separator1=new QAction(this);
-    act_separator1->setSeparator(true);
-    playlistView->addAction(act_separator1);
-    playlistView->addAction(act_merge);
-    playlistView->addAction(act_cut);
-    playlistView->addAction(act_paste);
-    playlistView->addAction(act_remove);
-    QAction *act_separator2=new QAction(this);
-    act_separator2->setSeparator(true);
-    playlistView->addAction(act_separator2);
-    playlistView->addAction(act_moveUp);
-    playlistView->addAction(act_moveDown);
-    QAction *act_separator3=new QAction(this);
-    act_separator3->setSeparator(true);
-    playlistView->addAction(act_separator3);
-    playlistView->addAction(act_sortSelectionAscending);
-    playlistView->addAction(act_sortSelectionDescending);
+    QMenu *playlistContextMenu=new QMenu(playlistView);
+    playlistContextMenu->addAction(act_play);
+    playlistContextMenu->addAction(act_autoAssociate);
+    QMenu *addSubMenu=new QMenu(tr("Add"),playlistContextMenu);
+    addSubMenu->addAction(act_addCollection);
+    addSubMenu->addAction(act_addItem);
+    addSubMenu->addAction(act_addFolder);
+    playlistContextMenu->addMenu(addSubMenu);
+    playlistContextMenu->addSeparator();
+    QMenu *editSubMenu=new QMenu(tr("Edit"),playlistContextMenu);
+    editSubMenu->addAction(act_merge);
+    editSubMenu->addAction(act_cut);
+    editSubMenu->addAction(act_paste);
+    playlistContextMenu->addMenu(editSubMenu);
+    playlistContextMenu->addAction(act_remove);
+    playlistContextMenu->addSeparator();
+    QMenu *moveSubMenu=new QMenu(tr("Move"),playlistContextMenu);
+    moveSubMenu->addAction(act_moveUp);
+    moveSubMenu->addAction(act_moveDown);
+    playlistContextMenu->addMenu(moveSubMenu);
+    QMenu *sortSubMenu=new QMenu(tr("Sort"),playlistContextMenu);
+    sortSubMenu->addAction(act_sortSelectionAscending);
+    sortSubMenu->addAction(act_sortSelectionDescending);
+    playlistContextMenu->addMenu(sortSubMenu);
+    playlistContextMenu->addAction(act_browseFile);
+
+    QObject::connect(playlistView,&QTreeView::customContextMenuRequested,[playlistContextMenu](){
+        playlistContextMenu->exec(QCursor::pos());
+    });
+
 
 
     playlistPageVLayout->addWidget(playlistView);
