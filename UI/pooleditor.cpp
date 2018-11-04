@@ -102,9 +102,13 @@ PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):source(sourceIn
 	QFileInfo fi(sourceInfo->url);
     if(fi.exists())
 		updateButton->setEnabled(false);
-    QObject::connect(updateButton,&QPushButton::clicked,[this,sourceInfo,updateButton, name](){
+    QObject::connect(updateButton,&QPushButton::clicked,[this,sourceInfo,updateButton,deleteButton,
+                     editTimeline,delaySpinBox,name](){
         QList<DanmuComment *> tmpList;
         updateButton->setEnabled(false);
+        deleteButton->setEnabled(false);
+        editTimeline->setEnabled(false);
+        delaySpinBox->setEnabled(false);
         QString errInfo = GlobalObjects::providerManager->downloadBySourceURL(sourceInfo->url,tmpList);
         if(errInfo.isEmpty())
         {
@@ -139,6 +143,9 @@ PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):source(sourceIn
             QMessageBox::information(this,tr("Error"),tr("Error:%1").arg(errInfo));
         }
         updateButton->setEnabled(true);
+        deleteButton->setEnabled(true);
+        editTimeline->setEnabled(true);
+        delaySpinBox->setEnabled(true);
     });
 
     QPushButton *exportButton=new QPushButton(tr("Export"),this);
