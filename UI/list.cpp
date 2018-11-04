@@ -605,6 +605,8 @@ QWidget *ListWindow::setupPlaylistPage()
     editSubMenu->addAction(act_merge);
     editSubMenu->addAction(act_cut);
     editSubMenu->addAction(act_paste);
+    playlistView->addAction(act_cut);
+    playlistView->addAction(act_paste);
     playlistContextMenu->addMenu(editSubMenu);
     playlistContextMenu->addAction(act_remove);
     playlistContextMenu->addSeparator();
