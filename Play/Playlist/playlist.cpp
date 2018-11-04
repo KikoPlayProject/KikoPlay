@@ -1205,7 +1205,7 @@ void PlayList::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
     writer.writeEndElement();
 }
 
-PlayListItem::PlayListItem(PlayListItem *parent, bool leaf, int insertPosition):children(nullptr),level(0),playTimeState(0)
+PlayListItem::PlayListItem(PlayListItem *parent, bool leaf, int insertPosition):children(nullptr),level(0),playTimeState(0),playTime(0)
 {
     this->parent=parent;
     if(!leaf)
