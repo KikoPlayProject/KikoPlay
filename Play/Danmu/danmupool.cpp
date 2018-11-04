@@ -69,9 +69,9 @@ void DanmuPool::addDanmu(DanmuSourceInfo &sourceInfo,QList<DanmuComment *> &danm
                 if(danmu->originTime>spaceItem.first)delay+=spaceItem.second;
                 else break;
             }
-            int newTime = danmu->originTime + source->delay + delay;
-            danmu->time = newTime>0?newTime:danmu->originTime;
         }
+        int newTime = danmu->originTime + source->delay + delay;
+        danmu->time = newTime>0?newTime:danmu->originTime;
         danmu->source=source->id;
         danmuPool.append(QSharedPointer<DanmuComment>(danmu));
     }

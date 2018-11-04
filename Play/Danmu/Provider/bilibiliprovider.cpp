@@ -207,13 +207,16 @@ void BilibiliProvider::handleBangumiReply(QJsonDocument &document, DanmuAccessRe
             if(cid.type()!=QJsonValue::Double)continue;
             QJsonValue aid=bangumiObj.value("aid");
             if(aid.type()!=QJsonValue::Double)continue;
+            QJsonValue duration = bangumiObj.value("duration");
+            if (duration.type() != QJsonValue::Double)continue;
+
             DanmuSourceItem item;
             item.danmuCount=-1;
             item.title=QString("%1-%2").arg(index.toString()).arg(title.toString());
             item.id=aid.toInt();
             item.subId=cid.toInt();
             //item.source=DanmuSource::Bilibili;
-            item.extra=0;
+            item.extra=duration.toInt()/1000;
             item.delay=0;
             result->list.append(item);
         }
