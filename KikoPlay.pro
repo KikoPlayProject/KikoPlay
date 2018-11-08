@@ -88,7 +88,10 @@ SOURCES += \
     UI/timelineedit.cpp \
     Play/Danmu/Provider/acfunprovider.cpp \
     UI/mpvparametersetting.cpp \
-    UI/mpvlog.cpp
+    UI/mpvlog.cpp \
+    LANServer/lanserver.cpp \
+    LANServer/httpserver.cpp \
+    UI/serversettting.cpp
 
 HEADERS += \
     UI/mainwindow.h \
@@ -154,21 +157,23 @@ HEADERS += \
     UI/timelineedit.h \
     Play/Danmu/Provider/acfunprovider.h \
     UI/mpvparametersetting.h \
-    UI/mpvlog.h
+    UI/mpvlog.h \
+    LANServer/lanserver.h \
+    LANServer/httpserver.h \
+    UI/serversettting.h
 
 INCLUDEPATH += \
-    Play/Video
+    Play/Video \
+    LANServer
 RESOURCES += \
     res.qrc
 
 contains(QT_ARCH, i386){
     win32: LIBS += -L$$PWD/lib/ -llibmpv.dll
     win32: LIBS += -L$$PWD/lib/ -lzlibstat
+    win32: LIBS += -L$$PWD/lib/ -lqhttpengine
 }else{
     win32: LIBS += -L$$PWD/lib/x64/ -llibmpv.dll
     win32: LIBS += -L$$PWD/lib/x64/ -lzlibstat
+    win32: LIBS += -L$$PWD/lib/x64/ -lqhttpengine
 }
-
-
-
-

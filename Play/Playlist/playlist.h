@@ -45,8 +45,8 @@ public:
         Random
     };
     const int maxRecentItems=4;
-    const PlayListItem *getCurrentItem() const{return currentItem;}
-    QModelIndex getCurrentIndex() const;
+    inline const PlayListItem *getCurrentItem() const{return currentItem;}
+    inline QModelIndex getCurrentIndex() const{return currentItem?createIndex(currentItem->parent->children->indexOf(currentItem),0,currentItem):QModelIndex();}
     inline const PlayListItem *getItem(const QModelIndex &index){return index.isValid()?static_cast<PlayListItem*>(index.internalPointer()):nullptr; }
     inline LoopMode getLoopMode() const{return loopMode;}
     inline bool canPaste() const {return itemsClipboard.count()>0;}
@@ -55,8 +55,9 @@ private:
     PlayListItem root;   
     QList<PlayListItem *> itemsClipboard;
     QList<QPair<QString,QString> > recentList;
+    QHash<QString,PlayListItem *> fileItems;
     PlayListItem *currentItem;
-    bool playListChanged;
+    bool playListChanged,needRefresh;
     LoopMode loopMode;
 signals:
     void currentInvaild();
@@ -64,15 +65,19 @@ signals:
     void message(QString msg,int flag);
 public slots :
     int addItems(QStringList &items, QModelIndex parent);
-	void addFolder(QString folderStr, QModelIndex parent);
+    int addFolder(QString folderStr, QModelIndex parent);
+    QModelIndex addCollection(QModelIndex parent,QString title);
+
     void deleteItems(const QModelIndexList &deleteIndexes);
     void clear();
+
     void sortItems(const QModelIndex &parent,bool ascendingOrder);
     void sortAllItems(bool ascendingOrder);
-    QModelIndex addCollection(QModelIndex parent,QString title);
+
     void cutItems(const QModelIndexList &cutIndexes);
     void pasteItems(QModelIndex parent);
     void moveUpDown(QModelIndex index,bool up);
+
     const PlayListItem *setCurrentItem(const QModelIndex &index,bool playChild=true);
     const PlayListItem *setCurrentItem(const QString &path);
 	void cleanCurrentItem();
@@ -84,6 +89,9 @@ public slots :
     void matchIndex(QModelIndex &index,MatchInfo *matchInfo);
     void setCurrentPlayTime(int playTime);
     QModelIndex mergeItems(const QModelIndexList &mergeIndexes);
+    
+    void dumpJsonPlaylist(QJsonDocument &jsonDoc,QHash<QString,QString> &mediaHash);
+    void updatePlayTime(const QString &path, int time, int state);
 
     // QAbstractItemModel interface
 public:
@@ -106,12 +114,12 @@ private:
     void savePlaylist();
     void updateRecentlist();
     void saveItem(QXmlStreamWriter &writer,PlayListItem *item);
-    bool addSubFolder(QString folderStr, PlayListItem *parent,QSet<QString> &paths,int &itemCount);
-    void addMediaItemPath(QSet<QString> &paths);
+    bool addSubFolder(QString folderStr, PlayListItem *parent, int &itemCount);
     PlayListItem *getPrevOrNextItem(LoopMode loopMode,bool prev);
     void updateItemInfo(PlayListItem *item);
     QString setCollectionTitle(QList<PlayListItem *> &list);
     void updateLibraryInfo(PlayListItem *item);
+    void dumpItem(QJsonArray &array,PlayListItem *item, QHash<QString, QString> &mediaHash);
 
 };
 #endif // PLAYLIST_H

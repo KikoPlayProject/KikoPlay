@@ -19,7 +19,8 @@ About::About(QWidget *parent) : CFramelessDialog("",parent)
                               "libmpv 0.29.1\n"
                               "aria2 1.34\n"
                               "Qt-Nice-Frameless-Window\n"
-                              "zlib 1.2.11");
+                              "zlib 1.2.11\n"
+                              "QHttpEngine 1.01");
     QVBoxLayout *abVLayout=new QVBoxLayout(this);
     abVLayout->addWidget(logo);
     abVLayout->addWidget(info);

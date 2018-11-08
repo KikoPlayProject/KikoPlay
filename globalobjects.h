@@ -13,6 +13,7 @@ class ProviderManager;
 class AnimeLibrary;
 class DownloadModel;
 class DanmuManager;
+class LANServer;
 class GlobalObjects
 {
 public:
@@ -30,6 +31,7 @@ public:
     static AnimeLibrary *library;
     static DownloadModel *downloadModel;
     static DanmuManager *danmuManager;
+    static LANServer *lanServer;
 private:
     static void initDatabase();
 };

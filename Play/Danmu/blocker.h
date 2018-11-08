@@ -41,6 +41,7 @@ public slots:
     void removeBlockRule(const QModelIndexList &deleteIndexes);
 	void checkDanmu(QList<DanmuComment *> &danmuList);
 	void checkDanmu(QList<QSharedPointer<DanmuComment> > &danmuList);
+    bool isBlocked(DanmuComment *danmu);
 private:
     QList<BlockRule *> blockList;
     int maxId;

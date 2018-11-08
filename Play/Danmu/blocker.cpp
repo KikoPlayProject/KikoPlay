@@ -183,6 +183,18 @@ void Blocker::checkDanmu(QList<QSharedPointer<DanmuComment> > &danmuList)
     }
 }
 
+bool Blocker::isBlocked(DanmuComment *danmu)
+{
+    for(BlockRule *rule:blockList)
+    {
+        if(rule->blockTest(danmu))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 void Blocker::updateDB(int row, int col)
 {
     BlockRule *rule=blockList.at(row);

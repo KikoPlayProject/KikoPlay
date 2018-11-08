@@ -84,7 +84,7 @@ private:
       QList<int> ids;
       //int current;
     };
-    const int timeRefreshInterval=500;
+    const int timeRefreshInterval=100;
     void handle_mpv_event(mpv_event *event);
     static void on_update(void *ctx);
     static void wakeup(void *ctx);

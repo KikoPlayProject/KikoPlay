@@ -9,6 +9,7 @@
 #include <QButtonGroup>
 #include "about.h"
 #include "poolmanager.h"
+#include "serversettting.h"
 #include "checkupdate.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
@@ -82,6 +83,13 @@ void MainWindow::setupUI()
         poolManage.exec();
     });
     buttonIcon->addAction(act_poolManager);
+
+    QAction *act_lanServer=new QAction(tr("LAN Server"), this);
+    QObject::connect(act_lanServer,&QAction::triggered,[this](){
+        ServerSettting serverSetting(buttonIcon);
+        serverSetting.exec();
+    });
+    buttonIcon->addAction(act_lanServer);
 
     QAction *act_checkUpdate=new QAction(tr("Check For Updates"), this);
     QObject::connect(act_checkUpdate,&QAction::triggered,[this](){

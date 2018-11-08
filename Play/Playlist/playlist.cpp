@@ -39,7 +39,7 @@ namespace
 PlayList* PlayListItem::playlist=nullptr;
 
 PlayList::PlayList(QObject *parent) : QAbstractItemModel(parent),currentItem(nullptr),playListChanged(false),
-    loopMode(NO_Loop_All)
+    loopMode(NO_Loop_All),needRefresh(true)
 {
     comparer.setNumericMode(true);
     PlayListItem::playlist=this;
@@ -51,13 +51,6 @@ PlayList::~PlayList()
 {
     savePlaylist();
     saveRecentlist();
-}
-
-QModelIndex PlayList::getCurrentIndex() const
-{
-    if(currentItem)
-        return createIndex(currentItem->parent->children->indexOf(currentItem),0,currentItem);
-    return QModelIndex();
 }
 
 int PlayList::addItems(QStringList &items, QModelIndex parent)
@@ -72,12 +65,10 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
 		parentItem = parentItem->parent;
 		parent = this->parent(parent);
 	}
-    QSet<QString> paths;
-    addMediaItemPath(paths);
 	QStringList tmpItems;
     for(auto iter=items.cbegin();iter!=items.cend();++iter)
     {
-		if (!paths.contains(*iter))
+        if (!fileItems.contains(*iter))
 			tmpItems.append(*iter);
     }
     if(tmpItems.count()==0)
@@ -93,15 +84,17 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
         PlayListItem *newItem = new PlayListItem(parentItem, true, insertPosition++);
         newItem->title = title;
 		newItem->path = item;
+        fileItems.insert(newItem->path,newItem);
 	}
 	endInsertRows();
     playListChanged=true;
+    needRefresh = true;
     emit message(tr("Add %1 item(s)").arg(tmpItems.size()),LPM_HIDE|LPM_OK);
     return tmpItems.size();
 
 }
 
-void PlayList::addFolder(QString folderStr, QModelIndex parent)
+int PlayList::addFolder(QString folderStr, QModelIndex parent)
 {
     int insertPosition(0);
 	PlayListItem *parentItem = parent.isValid() ? static_cast<PlayListItem*>(parent.internalPointer()) : &root;
@@ -115,10 +108,8 @@ void PlayList::addFolder(QString folderStr, QModelIndex parent)
 	}
 	
     PlayListItem folderRootCollection;
-    QSet<QString> paths;
-    addMediaItemPath(paths);
     int itemCount=0;
-    addSubFolder(folderStr, &folderRootCollection,paths,itemCount);
+    addSubFolder(folderStr, &folderRootCollection,itemCount);
     if (folderRootCollection.children->count())
 	{
         beginInsertRows(parent, insertPosition, insertPosition);
@@ -128,8 +119,9 @@ void PlayList::addFolder(QString folderStr, QModelIndex parent)
 	}
     folderRootCollection.children->clear();
     emit message(tr("Add %1 item(s)").arg(itemCount),ListPopMessageFlag::LPM_HIDE|ListPopMessageFlag::LPM_OK);
+    return itemCount;
 }
-bool PlayList::addSubFolder(QString folderStr, PlayListItem *parent,QSet<QString> &paths,int &itemCount)
+bool PlayList::addSubFolder(QString folderStr, PlayListItem *parent,int &itemCount)
 {
 	QDir folder(folderStr);
 	bool containsVideoFile = false;
@@ -142,7 +134,7 @@ bool PlayList::addSubFolder(QString folderStr, PlayListItem *parent,QSet<QString
 		{
             if (GlobalObjects::mpvplayer->videoFileFormats.contains("*."+fileInfo.suffix().toLower()))
 			{
-                if(!paths.contains(fileInfo.filePath()))
+                if(!fileItems.contains(fileInfo.filePath()))
                 {
                     PlayListItem *newItem = new PlayListItem(folderCollection, true);
                     int suffixPos = fileName.lastIndexOf('.'), pathPos = fileName.lastIndexOf('/') + 1;
@@ -151,13 +143,14 @@ bool PlayList::addSubFolder(QString folderStr, PlayListItem *parent,QSet<QString
                     newItem->path = fileInfo.filePath();
                     containsVideoFile = true;
                     itemCount++;
+                    fileItems.insert(newItem->path,newItem);
                 }
 			}
 		}
 		else
 		{
 			if (fileName == "." || fileName == "..")continue;
-            bool ret = addSubFolder(fileInfo.absoluteFilePath(), folderCollection,paths,itemCount);
+            bool ret = addSubFolder(fileInfo.absoluteFilePath(), folderCollection,itemCount);
 			if (ret) containsVideoFile = true;
 		}
 	}
@@ -166,22 +159,6 @@ bool PlayList::addSubFolder(QString folderStr, PlayListItem *parent,QSet<QString
 	else
 		delete folderCollection;
     return containsVideoFile;
-}
-
-void PlayList::addMediaItemPath(QSet<QString> &paths)
-{
-    QList<PlayListItem *> items;
-    items.push_back(&root);
-    while(!items.empty())
-    {
-        PlayListItem *currentItem=items.front();
-        items.pop_front();
-        for(PlayListItem *child:*currentItem->children)
-            if(child->children)
-                items.push_back(child);
-            else
-                paths.insert(child->path);
-    }
 }
 
 void PlayList::deleteItems(const QModelIndexList &deleteIndexes)
@@ -203,9 +180,11 @@ void PlayList::deleteItems(const QModelIndexList &deleteIndexes)
         beginRemoveRows(itemIndex.parent(), cr_row, cr_row);
         curItem->parent->children->removeAt(cr_row);
         endRemoveRows();
+        if(!curItem->path.isEmpty())fileItems.remove(curItem->path);
         delete curItem;
     }
     playListChanged=true;
+    needRefresh = true;
 }
 
 void PlayList::clear()
@@ -216,7 +195,9 @@ void PlayList::clear()
         delete child;
     root.children->clear();
     endRemoveRows();
+    fileItems.clear();
     playListChanged=true;
+    needRefresh = true;
 }
 
 void PlayList::sortItems(const QModelIndex &parent, bool ascendingOrder)
@@ -234,6 +215,7 @@ void PlayList::sortItems(const QModelIndex &parent, bool ascendingOrder)
         emit layoutChanged(persistentIndexList);
     }
     playListChanged=true;
+    needRefresh = true;
 }
 
 void PlayList::sortAllItems(bool ascendingOrder)
@@ -254,6 +236,7 @@ void PlayList::sortAllItems(bool ascendingOrder)
                 items.push_back(child);
     }
     playListChanged=true;
+    needRefresh = true;
     emit layoutChanged();
 }
 
@@ -277,6 +260,7 @@ QModelIndex PlayList::addCollection(QModelIndex parent, QString title)
 	newCollection->title = title;
 	endInsertRows();
     playListChanged=true;
+    needRefresh = true;
     return this->index(insertPosition,0,parent);
 }
 
@@ -328,6 +312,7 @@ void PlayList::pasteItems(QModelIndex parent)
     }
     endInsertRows();
     playListChanged=true;
+    needRefresh = true;
     itemsClipboard.clear();
 }
 
@@ -344,6 +329,7 @@ void PlayList::moveUpDown(QModelIndex index, bool up)
     parent->children->move(row,up?row-1:row+1);
     endMoveRows();
     playListChanged=true;
+    needRefresh = true;
 }
 
 QModelIndex PlayList::index(int row, int column, const QModelIndex &parent) const
@@ -545,6 +531,7 @@ bool PlayList::dropMimeData(const QMimeData *data, Qt::DropAction action, int ro
 
 	}
     playListChanged=true;
+    needRefresh = true;
     return true;
 }
 
@@ -557,6 +544,7 @@ bool PlayList::setData(const QModelIndex &index, const QVariant &value, int)
         item->title=val;
         emit dataChanged(index,index);
         playListChanged=true;
+        needRefresh = true;
         return true;
     }
     return false;
@@ -612,7 +600,24 @@ const PlayListItem *PlayList::setCurrentItem(const QModelIndex &index,bool playC
 
 const PlayListItem *PlayList::setCurrentItem(const QString &path)
 {
-    QList<PlayListItem *> items;
+    PlayListItem *curItem=fileItems.value(path,nullptr);
+    if(curItem && currentItem!=curItem)
+    {
+        updateItemInfo(curItem);
+        PlayListItem *tmp = currentItem;
+        currentItem = curItem;
+        if (tmp)
+        {
+            QModelIndex nIndex = createIndex(tmp->parent->children->indexOf(tmp), 0, tmp);
+            emit dataChanged(nIndex, nIndex);
+        }
+        QModelIndex cIndex = createIndex(curItem->parent->children->indexOf(curItem), 0, curItem);
+        emit dataChanged(cIndex, cIndex);
+        updateRecentlist();
+        updateLibraryInfo(curItem);
+    }
+    return curItem;
+   /* QList<PlayListItem *> items;
     items.push_back(&root);
     while(!items.empty())
     {
@@ -646,7 +651,7 @@ const PlayListItem *PlayList::setCurrentItem(const QString &path)
             }
         }
     }
-	return nullptr;
+    return nullptr;*/
 }
 
 void PlayList::cleanCurrentItem()
@@ -737,6 +742,7 @@ void PlayList::updateItemInfo(PlayListItem *item)
             item->title=matchInfo->matches.first().title;
             item->poolID=matchInfo->poolID;
             playListChanged=true;
+            needRefresh = true;
         }
     }
 }
@@ -941,6 +947,7 @@ void PlayList::matchIndex(QModelIndex &index, MatchInfo *matchInfo)
     item->title=bestMatch.title;
     item->poolID=MatchProvider::updateMatchInfo(item->path,matchInfo);
     playListChanged = true;
+    needRefresh = true;
     emit message(tr("Success: %1").arg(item->title),ListPopMessageFlag::LPM_HIDE|ListPopMessageFlag::LPM_OK);
     emit dataChanged(index, index);
     if (item == this->currentItem)
@@ -1020,7 +1027,61 @@ QModelIndex PlayList::mergeItems(const QModelIndexList &mergeIndexes)
     }
 	endInsertRows();
     playListChanged=true;
-	return collectionIndex;
+    return collectionIndex;
+}
+
+void PlayList::dumpJsonPlaylist(QJsonDocument &jsonDoc, QHash<QString, QString> &mediaHash)
+{
+    if(!needRefresh) return;
+    QJsonDocument newDoc;
+    QJsonArray rootArray;
+    QHash<QString, QString> newHash;
+    dumpItem(rootArray,&root,newHash);
+    newDoc.setArray(rootArray);
+    jsonDoc.swap(newDoc);
+    mediaHash.swap(newHash);
+    //qDebug()<<jsonDoc.toJson()<<newDoc.toJson();
+    needRefresh=false;
+}
+
+void PlayList::dumpItem(QJsonArray &array, PlayListItem *item, QHash<QString, QString> &mediaHash)
+{
+    for(PlayListItem *child:*item->children)
+    {
+        QJsonObject itemObj;
+        itemObj.insert("text",child->title);
+        if(child->children)
+        {
+            QJsonArray childArray;
+            dumpItem(childArray,child,mediaHash);
+            itemObj.insert("nodes",childArray);
+        }
+        else
+        {
+            QString pathHash(QCryptographicHash::hash(child->path.toUtf8(),QCryptographicHash::Md5).toHex());
+            itemObj.insert("mediaId",pathHash);
+            itemObj.insert("danmuPool",child->poolID);
+            itemObj.insert("playTime",child->playTime);
+            itemObj.insert("playTimeState",child->playTimeState);
+            static QString nodeColors[3]={"#333","#428bca","#a4a2a2"};
+            itemObj.insert("color",nodeColors[child->playTimeState]);
+            mediaHash.insert(pathHash,child->path);
+        }
+        array.append(itemObj);
+    }
+}
+
+void PlayList::updatePlayTime(const QString &path, int time, int state)
+{
+    PlayListItem *item=fileItems.value(path,nullptr);
+    if(item)
+    {
+        item->playTime=time;
+        item->playTimeState=state;
+        QModelIndex cIndex = createIndex(item->parent->children->indexOf(item), 0, item);
+        emit dataChanged(cIndex, cIndex);
+        playListChanged=true;
+    }
 }
 
 void PlayList::loadPlaylist()
@@ -1030,8 +1091,6 @@ void PlayList::loadPlaylist()
     if(!ret) return;
     QXmlStreamReader reader(&playlistFile);
     QList<PlayListItem *> parents;
-    QSqlQuery query(QSqlDatabase::database("MT"));
-    query.prepare("select PoolID from bangumi where PoolID=?");
     while(!reader.atEnd())
     {
         if(reader.isStartElement())
@@ -1060,15 +1119,10 @@ void PlayList::loadPlaylist()
                     item->title=title;
                     item->path= path;
                     item->playTime=playTime;
+                    item->poolID = poolID;
                     item->playTimeState=playTimeState;
+                    fileItems.insert(item->path,item);
                     if(!animeTitle.isEmpty())item->animeTitle=animeTitle;
-					if (!poolID.isEmpty())
-					{
-                        query.bindValue(0,poolID);
-                        query.exec();
-						if (query.first())item->poolID = poolID;
-						else playListChanged = true;
-					}
                     for(auto &pair :recentList)
                     {
                         if(pair.first==item->path)
@@ -1155,6 +1209,7 @@ void PlayList::savePlaylist()
     saveItem(writer,&root);
     writer.writeEndDocument();
     playlistFile.close();
+    playListChanged=false;
 }
 
 void PlayList::updateRecentlist()

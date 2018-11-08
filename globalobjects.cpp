@@ -6,6 +6,7 @@
 #include "Play/Danmu/blocker.h"
 #include "Play/Danmu/providermanager.h"
 #include "MediaLibrary/animelibrary.h"
+#include "LANServer/lanserver.h"
 #include "Download/downloadmodel.h"
 #include "Play/Danmu/danmumanager.h"
 
@@ -13,6 +14,8 @@
 #include <QSqlQuery>
 #include <QApplication>
 #include <QSqlError>
+
+
 MPVPlayer *GlobalObjects::mpvplayer=nullptr;
 DanmuPool *GlobalObjects::danmuPool=nullptr;
 DanmuRender *GlobalObjects::danmuRender=nullptr;
@@ -24,6 +27,7 @@ ProviderManager *GlobalObjects::providerManager=nullptr;
 AnimeLibrary *GlobalObjects::library=nullptr;
 DownloadModel *GlobalObjects::downloadModel=nullptr;
 DanmuManager *GlobalObjects::danmuManager=nullptr;
+LANServer *GlobalObjects::lanServer=nullptr;
 QFont GlobalObjects::iconfont;
 
 void GlobalObjects::init()
@@ -56,6 +60,7 @@ void GlobalObjects::init()
     library=new AnimeLibrary();
     downloadModel=new DownloadModel();
     danmuManager=new DanmuManager();
+    lanServer=new LANServer();
 
     int fontId = QFontDatabase::addApplicationFont(":/res/iconfont.ttf");
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
@@ -77,6 +82,7 @@ void GlobalObjects::clear()
     library->deleteLater();
     downloadModel->deleteLater();
     danmuManager->deleteLater();
+    lanServer->deleteLater();
 }
 
 void GlobalObjects::initDatabase()
