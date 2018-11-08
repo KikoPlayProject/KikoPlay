@@ -104,12 +104,15 @@ private:
 protected:
     virtual void mousePressEvent(QMouseEvent *event)
     {
-        const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(path);
-        if (curItem)
+        if(event->button()==Qt::LeftButton)
         {
-            GlobalObjects::danmuPool->reset();
-            GlobalObjects::danmuRender->cleanup();
-            GlobalObjects::mpvplayer->setMedia(curItem->path);
+            const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(path);
+            if (curItem)
+            {
+                GlobalObjects::danmuPool->reset();
+                GlobalObjects::danmuRender->cleanup();
+                GlobalObjects::mpvplayer->setMedia(curItem->path);
+            }
         }
         QWidget::mousePressEvent(event);
     }
@@ -808,7 +811,7 @@ void PlayerWindow::setupPlaySettingPage()
     playSettingPage=new QWidget(this);
     playSettingPage->setObjectName(QStringLiteral("PopupPage"));
     playSettingPage->installEventFilter(this);
-    playSettingPage->resize(320 *logicalDpiX()/96,160*logicalDpiY()/96);
+    playSettingPage->resize(320 *logicalDpiX()/96,200*logicalDpiY()/96);
     playSettingPage->hide();
 
     QLabel *audioTrackLabel=new QLabel(tr("Audio Track"),playSettingPage);
@@ -897,8 +900,66 @@ void PlayerWindow::setupPlaySettingPage()
         logDialog->show();
     });
 
+    QLabel *clickBehaivorLabel=new QLabel(tr("Click Behavior"),playSettingPage);
+    clickBehaviorCombo=new QComboBox(playSettingPage);
+    clickBehaviorCombo->addItem(tr("Play/Pause"));
+    clickBehaviorCombo->addItem(tr("Show/Hide PlayControl"));
+    QObject::connect(clickBehaviorCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[this](int index){
+        clickBehavior=index;
+        GlobalObjects::appSetting->setValue("Play/ClickBehavior",index);
+    });
+    clickBehaviorCombo->setCurrentIndex(GlobalObjects::appSetting->value("Play/ClickBehavior",0).toInt());
 
-    QGridLayout *playSettingGLayout=new QGridLayout(playSettingPage);
+    QLabel *dbClickBehaivorLabel=new QLabel(tr("Double Click Behavior"),playSettingPage);
+    dbClickBehaviorCombo=new QComboBox(playSettingPage);
+    dbClickBehaviorCombo->addItem(tr("FullScreen"));
+    dbClickBehaviorCombo->addItem(tr("Play/Pause"));
+    QObject::connect(dbClickBehaviorCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[this](int index){
+        dbClickBehaivior=index;
+        GlobalObjects::appSetting->setValue("Play/DBClickBehavior",index);
+    });
+    dbClickBehaviorCombo->setCurrentIndex(GlobalObjects::appSetting->value("Play/DBClickBehavior",0).toInt());
+
+    QToolButton *playPage=new QToolButton(playSettingPage);
+    playPage->setText(tr("Play"));
+    playPage->setCheckable(true);
+    playPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    playPage->setMaximumHeight(28 * logicalDpiY()/96);
+    playPage->setObjectName(QStringLiteral("DialogPageButton"));
+    playPage->setChecked(true);
+
+    QToolButton *behaviorPage=new QToolButton(danmuSettingPage);
+    behaviorPage->setText(tr("Behavior"));
+    behaviorPage->setCheckable(true);
+    behaviorPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    behaviorPage->setMaximumHeight(28 * logicalDpiY()/96);
+    behaviorPage->setObjectName(QStringLiteral("DialogPageButton"));
+
+    QStackedLayout *playSettingSLayout=new QStackedLayout();
+    QObject::connect(playPage,&QToolButton::clicked,[playSettingSLayout,playPage,behaviorPage](){
+        playSettingSLayout->setCurrentIndex(0);
+        playPage->setChecked(true);
+        behaviorPage->setChecked(false);
+    });
+    QObject::connect(behaviorPage,&QToolButton::clicked,[playSettingSLayout,playPage,behaviorPage](){
+        playSettingSLayout->setCurrentIndex(1);
+        playPage->setChecked(false);
+        behaviorPage->setChecked(true);
+    });
+
+    QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
+    pageButtonHLayout->addWidget(playPage);
+    pageButtonHLayout->addWidget(behaviorPage);
+
+    QVBoxLayout *playSettingVLayout=new QVBoxLayout(playSettingPage);
+    playSettingVLayout->addLayout(pageButtonHLayout);
+    playSettingVLayout->addLayout(playSettingSLayout);
+
+    QWidget *pagePlay=new QWidget(playSettingPage);
+    playSettingSLayout->addWidget(pagePlay);
+    playSettingSLayout->setContentsMargins(4,4,4,4);
+
+    QGridLayout *playSettingGLayout=new QGridLayout(pagePlay);
     //playSettingGLayout->setColumnStretch(0, 2);
     playSettingGLayout->setColumnStretch(1, 1);
     //playSettingGLayout->setColumnStretch(2, 1);
@@ -916,6 +977,17 @@ void PlayerWindow::setupPlaySettingPage()
     bottomBtnHLayout->addWidget(editMpvOptions);
     bottomBtnHLayout->addWidget(showMpvLog);
     playSettingGLayout->addLayout(bottomBtnHLayout,4,0,1,3);
+
+    QWidget *pageBehavior=new QWidget(playSettingPage);
+    playSettingSLayout->addWidget(pageBehavior);
+    QGridLayout *appearanceGLayout=new QGridLayout(pageBehavior);
+    appearanceGLayout->setContentsMargins(0,0,0,0);
+    appearanceGLayout->setColumnStretch(1, 1);
+    appearanceGLayout->setRowStretch(2,1);
+    appearanceGLayout->addWidget(clickBehaivorLabel,0,0);
+    appearanceGLayout->addWidget(clickBehaviorCombo,0,1);
+    appearanceGLayout->addWidget(dbClickBehaivorLabel,1,0);
+    appearanceGLayout->addWidget(dbClickBehaviorCombo,1,1);
 }
 
 void PlayerWindow::setupSignals()
@@ -1227,6 +1299,7 @@ void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
         setCursor(Qt::ArrowCursor);
         hideCursorTimer.start(hideCursorTimeout);
     }
+    if(clickBehavior==1)return;
     const QPoint pos=event->pos();
     if(this->height()-pos.y()<controlPanelHeight+40)
     {
@@ -1249,7 +1322,10 @@ void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
 
 void PlayerWindow::mouseDoubleClickEvent(QMouseEvent *)
 {
-    actFullscreen->trigger();
+    if(dbClickBehaivior==0)
+        actFullscreen->trigger();
+    else
+        actPlayPause->trigger();
 }
 
 void PlayerWindow::mousePressEvent(QMouseEvent *event)
@@ -1264,7 +1340,25 @@ void PlayerWindow::mousePressEvent(QMouseEvent *event)
                 playSettingPage->hide();
         }
         else
-			actPlayPause->trigger();
+        {
+            if(clickBehavior==1)
+            {
+                if(playControlPanel->isHidden())
+                {
+                    playControlPanel->show();
+                    playInfoPanel->show();
+                }
+                else
+                {
+                    playInfoPanel->hide();
+                    playControlPanel->hide();
+                }
+            }
+            else
+            {
+                actPlayPause->trigger();
+            }
+        }
     }
 }
 

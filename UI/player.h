@@ -109,11 +109,12 @@ private:
      QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold,
                 *bottomSubtitleProtect,*topSubtitleProtect,*randomSize,*denseLayout;
      QFontComboBox *fontFamilyCombo;
-     QComboBox *aspectRatioCombo,*playSpeedCombo;
+     QComboBox *aspectRatioCombo,*playSpeedCombo,*clickBehaviorCombo,*dbClickBehaviorCombo;
      QSlider *speedSlider,*alphaSlider,*strokeWidthSlider,*fontSizeSlider,*maxDanmuCount;
      bool updatingTrack;
      bool isFullscreen;
      int resizePercent;
+     int clickBehavior,dbClickBehaivior;
      QSharedPointer<DanmuComment> currentDanmu;
 
      QMenu *contexMenu;
