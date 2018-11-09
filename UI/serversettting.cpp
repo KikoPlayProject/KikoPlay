@@ -23,6 +23,7 @@ ServerSettting::ServerSettting(QWidget *parent) : CFramelessDialog(tr("LAN Serve
     portValidator->setBottom(1);
     portEdit->setValidator(portValidator);
     portEdit->setText(QString::number(GlobalObjects::appSetting->value("Server/Port",8000).toLongLong()));
+    portEdit->setEnabled(!GlobalObjects::lanServer->isStart());
 
     QPlainTextEdit *addressTip=new QPlainTextEdit(this);
     addressTip->setReadOnly(true);
