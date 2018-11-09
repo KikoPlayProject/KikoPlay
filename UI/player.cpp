@@ -1040,6 +1040,9 @@ void PlayerWindow::setupSignals()
         else
             titleLabel->setText(QString("%1-%2").arg(currentItem->animeTitle).arg(currentItem->title));
     });
+    QObject::connect(GlobalObjects::playlist,&PlayList::recentItemsUpdated,[this](){
+        static_cast<PlayerContent *>(playerContent)->refreshItems();
+    });
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::positionChanged,[this](int newtime){
         int cs=newtime/1000;
         int cmin=cs/60;
@@ -1101,7 +1104,6 @@ void PlayerWindow::setupSignals()
             GlobalObjects::danmuPool->cleanUp();
 			GlobalObjects::danmuRender->cleanup();			
             GlobalObjects::mpvplayer->update();
-			static_cast<PlayerContent *>(playerContent)->refreshItems();
             playerContent->raise();
             playerContent->show();
             break;

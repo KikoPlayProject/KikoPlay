@@ -593,7 +593,7 @@ const PlayListItem *PlayList::setCurrentItem(const QModelIndex &index,bool playC
 		QModelIndex nIndex = createIndex(tmp->parent->children->indexOf(tmp), 0, tmp);
 		emit dataChanged(nIndex, nIndex);
 	}
-    updateRecentlist();
+    updateRecentlist(currentItem);
     updateLibraryInfo(cur);
     return cur;
 }
@@ -613,7 +613,7 @@ const PlayListItem *PlayList::setCurrentItem(const QString &path)
         }
         QModelIndex cIndex = createIndex(curItem->parent->children->indexOf(curItem), 0, curItem);
         emit dataChanged(cIndex, cIndex);
-        updateRecentlist();
+        updateRecentlist(currentItem);
         updateLibraryInfo(curItem);
     }
     return curItem;
@@ -845,7 +845,7 @@ const PlayListItem *PlayList::playPrevOrNext(bool prev)
         }
         QModelIndex nIndex(createIndex(currentItem->parent->children->indexOf(currentItem),0,currentItem));
         emit dataChanged(nIndex,nIndex);
-        updateRecentlist();
+        updateRecentlist(currentItem);
         updateLibraryInfo(item);
         return item;
     }
@@ -1084,6 +1084,7 @@ void PlayList::updatePlayTime(const QString &path, int time, int state)
         playListChanged=true;
         needRefresh=true;
         updateLibraryInfo(item);
+        updateRecentlist(item);
     }
 }
 
@@ -1215,19 +1216,20 @@ void PlayList::savePlaylist()
     playListChanged=false;
 }
 
-void PlayList::updateRecentlist()
+void PlayList::updateRecentlist(PlayListItem *item)
 {
-    if(!currentItem)return;
+    if(!item)return;
     for(auto iter= recentList.begin();iter!=recentList.end();)
     {
-        if((*iter).first==currentItem->path)
+        if((*iter).first==item->path)
             iter=recentList.erase(iter);
         else
             iter++;
     }
-    recentList.push_front(QPair<QString,QString>(currentItem->path,currentItem->animeTitle.isEmpty()?currentItem->title:QString("%1 %2").arg(currentItem->animeTitle).arg(currentItem->title)));
+    recentList.push_front(QPair<QString,QString>(item->path,item->animeTitle.isEmpty()?item->title:QString("%1 %2").arg(item->animeTitle).arg(item->title)));
     if(recentList.count()>maxRecentItems)
         recentList.pop_back();
+    emit recentItemsUpdated();
 }
 
 void PlayList::saveItem(QXmlStreamWriter &writer, PlayListItem *item)

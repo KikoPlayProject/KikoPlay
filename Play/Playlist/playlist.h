@@ -63,6 +63,7 @@ signals:
     void currentInvaild();
     void currentMatchChanged();
     void message(QString msg,int flag);
+    void recentItemsUpdated();
 public slots :
     int addItems(QStringList &items, QModelIndex parent);
     int addFolder(QString folderStr, QModelIndex parent);
@@ -112,7 +113,7 @@ private:
     void loadRecentlist();
     void saveRecentlist();
     void savePlaylist();
-    void updateRecentlist();
+    void updateRecentlist(PlayListItem *item);
     void saveItem(QXmlStreamWriter &writer,PlayListItem *item);
     bool addSubFolder(QString folderStr, PlayListItem *parent, int &itemCount);
     PlayListItem *getPrevOrNextItem(LoopMode loopMode,bool prev);
