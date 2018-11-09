@@ -33,7 +33,7 @@ ServerSettting::ServerSettting(QWidget *parent) : CFramelessDialog(tr("LAN Serve
             addressTip->appendPlainText(address.toString());
     }
 
-    QPlainTextEdit *logInfo=new QPlainTextEdit(this);
+    logInfo=new QPlainTextEdit(this);
     logInfo->setReadOnly(true);
     logInfo->setMaximumBlockCount(256);
     for(const QString &log:GlobalObjects::lanServer->getLog())
@@ -74,15 +74,7 @@ ServerSettting::ServerSettting(QWidget *parent) : CFramelessDialog(tr("LAN Serve
     QObject::connect(portEdit,&QLineEdit::editingFinished,[portEdit](){
        GlobalObjects::appSetting->setValue("Server/Port",portEdit->text().toLongLong());
     });
-    QObject::connect(GlobalObjects::lanServer,&LANServer::showLog,[logInfo](const QString &log){
-        logInfo->appendPlainText(log.trimmed());
-        QTextCursor cursor = logInfo->textCursor();
-        cursor.movePosition(QTextCursor::End);
-        logInfo->setTextCursor(cursor);
-    });
-    QObject::connect(logInfo,&QPlainTextEdit::destroyed,[]{
-        GlobalObjects::lanServer->disconnect();
-    });
+    QObject::connect(GlobalObjects::lanServer,&LANServer::showLog,this,&ServerSettting::printLog);
 
     QGridLayout *dialogGLayout=new QGridLayout(this);
     dialogGLayout->addWidget(startServer,0,0);
@@ -94,4 +86,17 @@ ServerSettting::ServerSettting(QWidget *parent) : CFramelessDialog(tr("LAN Serve
     dialogGLayout->setRowStretch(3,1);
     dialogGLayout->setColumnStretch(1,1);
     resize(400*logicalDpiX()/96, 400*logicalDpiY()/96);
+}
+
+ServerSettting::~ServerSettting()
+{
+    GlobalObjects::lanServer->disconnect(this);
+}
+
+void ServerSettting::printLog(const QString &log)
+{
+    logInfo->appendPlainText(log.trimmed());
+    QTextCursor cursor = logInfo->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    logInfo->setTextCursor(cursor);
 }

@@ -975,6 +975,7 @@ void PlayList::setCurrentPlayTime(int playTime)
         else
             currentItem->playTimeState=1;//playing
         playListChanged=true;
+        needRefresh=true;
     }
 }
 
@@ -1081,6 +1082,8 @@ void PlayList::updatePlayTime(const QString &path, int time, int state)
         QModelIndex cIndex = createIndex(item->parent->children->indexOf(item), 0, item);
         emit dataChanged(cIndex, cIndex);
         playListChanged=true;
+        needRefresh=true;
+        updateLibraryInfo(item);
     }
 }
 

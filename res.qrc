@@ -22,7 +22,6 @@
         <file>res/images/slider-hover.png</file>
         <file>res/images/slider-normal.png</file>
         <file>res/images/slider-pressed.png</file>
-        <file>res/kikoplay.ico</file>
         <file>res/images/kikoplay-5.png</file>
         <file>res/style.qss</file>
         <file>res/lang/zh_CN.qm</file>
@@ -36,5 +35,6 @@
         <file>res/images/check-hover.png</file>
         <file>res/images/check-normal.png</file>
         <file>res/version.json</file>
+        <file>res/kikoplay.ico</file>
     </qresource>
 </RCC>
