@@ -19,8 +19,8 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
     dmobj->x=rect.width();
     float xSpace=rect.width()/2;
     bool success=false;
-    float maxCollidedSpace(0.f),maxSpace(0.f),dsY1(0.f),dsY2(0.f),cY(0.f);
-    QLinkedList<DanmuObject *>::Iterator msPos1,msPos2;
+    float maxCollidedSpace(0.f),maxSpace(0.f),dsY1(0.f),dsY2(0.f),cY(rect.top());
+    QLinkedList<DanmuObject *>::Iterator msPos1,msPos2= lastcol.begin();
     for(auto iter=lastcol.begin();iter!=lastcol.end();++iter)
     {
         float cur_height=(*iter)->drawInfo->height;

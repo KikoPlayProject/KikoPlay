@@ -16,8 +16,8 @@ void TopLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *draw
     dmobj->extraData=life_time;
     dmobj->x=(rect.width()-drawInfo->width)/2;
     bool success=false;
-    float maxSpace(0.f),dsY(0.f),cY(0.f);
-    QLinkedList<DanmuObject *>::Iterator msPos;
+    float maxSpace(0.f),dsY(0.f),cY(rect.top());
+    QLinkedList<DanmuObject *>::Iterator msPos = topdanmu.begin();
     for(auto iter=topdanmu.begin();iter!=topdanmu.end();++iter)
     {
         if((*iter)->y-currentY-margin_y>=dm_height)

@@ -515,6 +515,7 @@ QWidget *DownloadWindow::setupGeneralInfoPage()
     QGridLayout *gInfoGLayout=new QGridLayout(content);
     taskTitleLabel=new QLabel(content);
     taskTitleLabel->setFont(QFont("Microsoft Yahei",12));
+    taskTitleLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     taskTimeLabel=new QLabel(content);
     taskDirLabel=new QLabel(content);
     taskDirLabel->setOpenExternalLinks(true);
@@ -522,7 +523,7 @@ QWidget *DownloadWindow::setupGeneralInfoPage()
     gInfoGLayout->addWidget(taskTimeLabel,1,0);
     gInfoGLayout->addWidget(taskDirLabel,2,0);
     gInfoGLayout->setRowStretch(3,1);
-    gInfoGLayout->setColumnStretch(1,1);
+    gInfoGLayout->setColumnStretch(0,1);
     return content;
 }
 
