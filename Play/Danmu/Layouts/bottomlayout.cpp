@@ -47,7 +47,7 @@ void BottomLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *d
         {
             if(currentY>rect.top())
             {
-                dmobj->y=currentY;
+                dmobj->y=currentY-(bottomdanmu.isEmpty()?dm_height:0);
                 bottomdanmu.append(dmobj);
                 break;
             }
