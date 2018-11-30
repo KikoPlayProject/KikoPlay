@@ -38,7 +38,7 @@ DanmuAccessResult *TucaoProvider::getEpInfo(DanmuSourceItem *item)
     result->providerId=id();
     try
     {
-        QString str(Network::httpGet(QString("http://www.tucao.one/play/h%0").arg(item->id),QUrlQuery()));
+        QString str(Network::httpGet(QString("http://www.tucao.one/play/h%0/").arg(item->id),QUrlQuery()));
         handleEpReply(str,item,result);
     }
     catch(Network::NetworkError &error)
