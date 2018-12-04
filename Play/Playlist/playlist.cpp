@@ -180,7 +180,6 @@ void PlayList::deleteItems(const QModelIndexList &deleteIndexes)
         beginRemoveRows(itemIndex.parent(), cr_row, cr_row);
         curItem->parent->children->removeAt(cr_row);
         endRemoveRows();
-        if(!curItem->path.isEmpty())fileItems.remove(curItem->path);
         delete curItem;
     }
     playListChanged=true;
@@ -617,41 +616,6 @@ const PlayListItem *PlayList::setCurrentItem(const QString &path)
         updateLibraryInfo(curItem);
     }
     return curItem;
-   /* QList<PlayListItem *> items;
-    items.push_back(&root);
-    while(!items.empty())
-    {
-        PlayListItem *currentItem=items.takeFirst();
-        for(PlayListItem *child:*currentItem->children)
-        {
-            if(child->children)
-            {
-                items.push_back(child);
-            }
-            else
-            {
-                if(child->path==path)
-                {
-					if (this->currentItem && this->currentItem->path == child->path)
-						return nullptr;
-                    updateItemInfo(child);
-                    PlayListItem *tmp = this->currentItem;
-                    this->currentItem = child;
-                    if (tmp)
-                    {
-                        QModelIndex nIndex = createIndex(tmp->parent->children->indexOf(tmp), 0, tmp);
-                        emit dataChanged(nIndex, nIndex);
-                    }
-                    QModelIndex cIndex = createIndex(child->parent->children->indexOf(child), 0, child);
-                    emit dataChanged(cIndex, cIndex);
-                    updateRecentlist();
-                    updateLibraryInfo(child);
-                    return child;
-                }
-            }
-        }
-    }
-    return nullptr;*/
 }
 
 void PlayList::cleanCurrentItem()
@@ -854,6 +818,7 @@ const PlayListItem *PlayList::playPrevOrNext(bool prev)
 
 void PlayList::checkCurrentItem(PlayListItem *itemDeleted)
 {
+    if(!itemDeleted->path.isEmpty())fileItems.remove(itemDeleted->path);
     if(itemDeleted==currentItem)
     {
         currentItem=nullptr;

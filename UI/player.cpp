@@ -368,7 +368,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     list->setToolTip(tr("List"));
     list->setObjectName(QStringLiteral("widgetPlayControlButtons"));
 
-    volume=new ClickSlider(playControlPanel);
+    volume=new QSlider(Qt::Horizontal,playControlPanel);
     volume->setObjectName(QStringLiteral("widgetVolumeSlider"));
     volume->setFixedWidth(90*logicalDpiX()/96);
     volume->setMinimum(0);
@@ -1169,7 +1169,7 @@ void PlayerWindow::setupSignals()
         danmuStatisBar->hide();
         timeInfoTip->hide();
     });
-    QObject::connect(volume,&ClickSlider::valueChanged,[this](int val){
+    QObject::connect(volume,&QSlider::valueChanged,[this](int val){
         GlobalObjects::mpvplayer->setVolume(val);
         volume->setToolTip(QString::number(val));
     });

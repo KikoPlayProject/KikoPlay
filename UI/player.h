@@ -87,7 +87,8 @@ private:
      const int statisBarHeight=64*logicalDpiY()/96;
      const int infoPanelHeight=42*logicalDpiY()/96;
 
-     ClickSlider *process,*volume;
+     ClickSlider *process;
+     QSlider *volume;
      QLabel *timeLabel;
      QPushButton *play_pause,*prev,*next,*stop,*mute,*setting, *danmu,*fullscreen,*list;
      QAction *actPlayPause,*actPrev,*actNext,*actFullscreen;
