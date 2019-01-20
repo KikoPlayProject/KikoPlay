@@ -7,8 +7,8 @@
 namespace Network
 {
     const int timeout=10000;
-    QByteArray httpGet(const QString &url,QUrlQuery &query,QStringList &header=QStringList());
-    QByteArray httpPost(const QString &url,QByteArray &data,QStringList &header=QStringList());
+    QByteArray httpGet(const QString &url,QUrlQuery &query,const QStringList &header=QStringList());
+    QByteArray httpPost(const QString &url,QByteArray &data,const QStringList &header=QStringList());
     QJsonDocument toJson(const QString &str);
     QJsonValue getValue(QJsonObject &obj, const QString &path);
     class NetworkError
