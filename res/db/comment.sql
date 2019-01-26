@@ -1,7 +1,7 @@
 CREATE TABLE "pool" (
 "PoolID"  TEXT(32) NOT NULL,
+"AnimeTitle"  TEXT,
 "Title"  TEXT,
-"Subtitle"  TEXT,
 PRIMARY KEY ("PoolID") ON CONFLICT REPLACE
 );
 CREATE UNIQUE INDEX "PoolID"

@@ -17,7 +17,7 @@
 #include "mpvparametersetting.h"
 #include "mpvlog.h"
 #include "Play/Playlist/playlist.h"
-#include "Play/Danmu/danmurender.h"
+#include "Play/Danmu/Render/danmurender.h"
 #include "Play/Danmu/Provider/localprovider.h"
 #include "Play/Danmu/danmupool.h"
 #include "Play/Danmu/blocker.h"
@@ -1014,7 +1014,7 @@ void PlayerWindow::setupSignals()
         if(!currentItem->poolID.isEmpty())
         {
 			GlobalObjects::danmuPool->setPoolID(currentItem->poolID);
-            GlobalObjects::danmuPool->loadDanmuFromDB();
+            //GlobalObjects::danmuPool->loadDanmuFromDB();
         }
         else
         {
@@ -1022,7 +1022,7 @@ void PlayerWindow::setupSignals()
             if (!GlobalObjects::danmuPool->getPoolID().isEmpty())
             {
                 GlobalObjects::danmuPool->setPoolID("");
-                GlobalObjects::danmuPool->cleanUp();
+                //GlobalObjects::danmuPool->cleanUp();
             }
         }
         if(resizePercent!=-1)

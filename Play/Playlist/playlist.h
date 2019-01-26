@@ -1,35 +1,11 @@
 #ifndef PLAYLIST_H
 #define PLAYLIST_H
 
-#include <QObject>
 #include <QAbstractItemModel>
-#include <QModelIndex>
-#include <QVariant>
-#include <QDataStream>
 #include <QSortFilterProxyModel>
-#include <qDebug>
-
-class QXmlStreamWriter;
-class PlayList;
+#include "playlistitem.h"
 struct MatchInfo;
-class PlayListItem
-{
-public:
-    PlayListItem(PlayListItem *parent=nullptr,bool leaf=false,int insertPosition=-1);
-    ~PlayListItem();
-    void setLevel(int newLevel);
-    void moveTo(PlayListItem *newParent, int insertPosition = -1);
-    PlayListItem *parent;
-    QString title;
-    QString animeTitle;
-    QString path;
-    QString poolID;
-    int playTime;
-    int playTimeState;
-    QList<PlayListItem *> *children;
-    int level;
-    static PlayList *playlist;
-};
+class PlayListPrivate;
 class PlayList : public QAbstractItemModel
 {
     Q_OBJECT
@@ -45,20 +21,12 @@ public:
         Random
     };
     const int maxRecentItems=4;
-    inline const PlayListItem *getCurrentItem() const{return currentItem;}
-    inline QModelIndex getCurrentIndex() const{return currentItem?createIndex(currentItem->parent->children->indexOf(currentItem),0,currentItem):QModelIndex();}
+    const PlayListItem *getCurrentItem() const;
+    QModelIndex getCurrentIndex() const;
     inline const PlayListItem *getItem(const QModelIndex &index){return index.isValid()?static_cast<PlayListItem*>(index.internalPointer()):nullptr; }
-    inline LoopMode getLoopMode() const{return loopMode;}
-    inline bool canPaste() const {return itemsClipboard.count()>0;}
-    QList<QPair<QString,QString> > &recent(){return recentList;}
-private:
-    PlayListItem root;   
-    QList<PlayListItem *> itemsClipboard;
-    QList<QPair<QString,QString> > recentList;
-    QHash<QString,PlayListItem *> fileItems;
-    PlayListItem *currentItem;
-    bool playListChanged,needRefresh;
-    LoopMode loopMode;
+    LoopMode getLoopMode() const;
+    bool canPaste() const;
+    QList<QPair<QString,QString> > &recent();
 signals:
     void currentInvaild();
     void currentMatchChanged();
@@ -83,13 +51,13 @@ public slots :
     const PlayListItem *setCurrentItem(const QString &path);
 	void cleanCurrentItem();
     const PlayListItem *playPrevOrNext(bool prev);
-    void setLoopMode(LoopMode newMode){this->loopMode=newMode;}
+    void setLoopMode(LoopMode newMode);
     void checkCurrentItem(PlayListItem *itemDeleted);
     void matchItems(const QModelIndexList &matchIndexes);
-    void matchCurrentItem(MatchInfo *matchInfo);
     void matchIndex(QModelIndex &index,MatchInfo *matchInfo);
     void setCurrentPlayTime(int playTime);
     QModelIndex mergeItems(const QModelIndexList &mergeIndexes);
+    void exportDanmuItems(const QModelIndexList &exportIndexes);
     
     void dumpJsonPlaylist(QJsonDocument &jsonDoc,QHash<QString,QString> &mediaHash);
     void updatePlayTime(const QString &path, int time, int state);
@@ -103,24 +71,14 @@ public:
     virtual QVariant data(const QModelIndex &index, int role) const;
     inline virtual Qt::DropActions supportedDropActions() const{return Qt::MoveAction;}
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
-    virtual QStringList mimeTypes() const;
+    inline virtual QStringList mimeTypes() const { return QStringList()<<"application/x-kikoplaylistitem"; }
     virtual QMimeData *mimeData(const QModelIndexList &indexes) const;
     virtual bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent);
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
-
 private:
-    void loadPlaylist();
-    void loadRecentlist();
-    void saveRecentlist();
-    void savePlaylist();
-    void updateRecentlist(PlayListItem *item);
-    void saveItem(QXmlStreamWriter &writer,PlayListItem *item);
-    bool addSubFolder(QString folderStr, PlayListItem *parent, int &itemCount);
-    PlayListItem *getPrevOrNextItem(LoopMode loopMode,bool prev);
-    void updateItemInfo(PlayListItem *item);
-    QString setCollectionTitle(QList<PlayListItem *> &list);
-    void updateLibraryInfo(PlayListItem *item);
-    void dumpItem(QJsonArray &array,PlayListItem *item, QHash<QString, QString> &mediaHash);
+    PlayListPrivate * const d_ptr;
+    Q_DECLARE_PRIVATE(PlayList)
+    Q_DISABLE_COPY(PlayList)
 
 };
 #endif // PLAYLIST_H

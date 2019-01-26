@@ -120,7 +120,7 @@ void DownloadModel::removeItem(DownloadTask *task, bool deleteFile)
 
 bool DownloadModel::containTask(const QString &taskId)
 {
-    QSqlQuery query(QSqlDatabase::database("MT"));
+    QSqlQuery query(QSqlDatabase::database("Download_M"));
     query.prepare("select * from download where TaskID=?");
     query.bindValue(0,taskId);
     query.exec();
@@ -303,7 +303,7 @@ void DownloadModel::saveItemStatus()
         DownloadTask *task=iter.value();
         if(task->status!=DownloadTask::Complete)
         {
-            QSqlQuery query(QSqlDatabase::database("MT"));
+            QSqlQuery query(QSqlDatabase::database("Download_M"));
             query.prepare("update download set Title=?,FTime=?,TLength=?,CLength=?,SFIndexes=? where TaskID=?");
             query.bindValue(0,task->title);
             query.bindValue(1,task->finishTime);
@@ -415,7 +415,7 @@ void DownloadModel::fetchMore(const QModelIndex &)
 
 void DownloadWorker::loadTasks(QList<DownloadTask *> &items, int offset, int limit)
 {
-    QSqlQuery query(QSqlDatabase::database("WT"));
+    QSqlQuery query(QSqlDatabase::database("Download_W"));
     query.exec(QString("select * from download order by CTime desc limit %1 offset %2").arg(limit).arg(offset));
     int idNo=query.record().indexOf("TaskID"),
         titleNo=query.record().indexOf("Title"),
@@ -450,7 +450,7 @@ void DownloadWorker::loadTasks(QList<DownloadTask *> &items, int offset, int lim
 
 void DownloadWorker::addTask(DownloadTask *task)
 {
-    QSqlQuery query(QSqlDatabase::database("WT"));
+    QSqlQuery query(QSqlDatabase::database("Download_W"));
     query.prepare("insert into download(TaskID,Dir,CTime,URI,SFIndexes,Torrent) values(?,?,?,?,?,?)");
     query.bindValue(0,task->taskID);
     query.bindValue(1,task->dir);
@@ -463,7 +463,7 @@ void DownloadWorker::addTask(DownloadTask *task)
 
 void DownloadWorker::deleteTask(DownloadTask *task, bool deleteFile)
 {
-    QSqlQuery query(QSqlDatabase::database("WT"));
+    QSqlQuery query(QSqlDatabase::database("Download_W"));
     query.prepare("delete from download where TaskID=?");
     query.bindValue(0,task->taskID);
     query.exec();
@@ -493,7 +493,7 @@ void DownloadWorker::deleteTask(DownloadTask *task, bool deleteFile)
 
 void DownloadWorker::updateTaskInfo(const DownloadTask *task)
 {
-    QSqlQuery query(QSqlDatabase::database("WT"));
+    QSqlQuery query(QSqlDatabase::database("Download_W"));
     query.prepare("update download set Title=?,FTime=?,TLength=?,CLength=?,SFIndexes=? where TaskID=?");
     query.bindValue(0,task->title);
     query.bindValue(1,task->finishTime);
@@ -506,7 +506,7 @@ void DownloadWorker::updateTaskInfo(const DownloadTask *task)
 
 bool DownloadWorker::containTask(const QString &taskId)
 {
-    QSqlQuery query(QSqlDatabase::database("WT"));
+    QSqlQuery query(QSqlDatabase::database("Download_W"));
     query.prepare("select * from download where TaskID=?");
     query.bindValue(0,taskId);
     query.exec();

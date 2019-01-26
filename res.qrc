@@ -36,5 +36,8 @@
         <file>res/images/check-normal.png</file>
         <file>res/version.json</file>
         <file>res/kikoplay.ico</file>
+        <file>res/db/bangumi.sql</file>
+        <file>res/db/comment.sql</file>
+        <file>res/db/download.sql</file>
     </qresource>
 </RCC>

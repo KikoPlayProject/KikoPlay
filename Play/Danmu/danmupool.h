@@ -8,12 +8,6 @@ struct StatisInfo
     QList<QPair<int,int> > countOfMinute;
     int maxCountOfMinute;
 };
-struct SimpleDanmuInfo
-{
-    int time;
-    int originTime;
-    QString text;
-};
 class DanmuPool : public QAbstractItemModel
 {
     Q_OBJECT
@@ -31,11 +25,9 @@ public:
     inline const StatisInfo &getStatisInfo(){return statisInfo;}
     inline void reset(){currentTime=0;currentPosition=0;}
 
-    void addDanmu(DanmuSourceInfo &sourceInfo,QList<DanmuComment *> &danmuList);
+    int addDanmu(DanmuSourceInfo &sourceInfo,QList<DanmuComment *> &danmuList);
     void deleteDanmu(QSharedPointer<DanmuComment> &danmu);
     void deleteSource(int sourceIndex);
-    void loadDanmuFromDB();	
-    QSet<QString> getDanmuHash(int sourceId);
     QList<SimpleDanmuInfo> getSimpleDanmuInfo(int sourceId);
 private:
     QList<QSharedPointer<DanmuComment> > danmuPool;
@@ -45,12 +37,13 @@ private:
     int currentPosition;
     int currentTime;
     QString poolID;
-    void saveDanmu(const DanmuSourceInfo *sourceInfo,const QList<DanmuComment *> *danmuList);
+    void loadDanmuFromDB();
     void setStatisInfo();
+    QSet<QString> getDanmuHash(int sourceId);
 public:
     void setDelay(DanmuSourceInfo *sourceInfo,int newDelay);
     void refreshTimeLineDelayInfo(DanmuSourceInfo *sourceInfo);
-    inline void setPoolID(const QString &pid){poolID=pid;}
+    void setPoolID(const QString &pid);
 	void refreshCurrentPoolID();
     void testBlockRule(BlockRule *rule);
     void exportDanmu(int sourceId,const QString &fileName);

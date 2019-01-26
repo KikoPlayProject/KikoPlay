@@ -1,11 +1,10 @@
 #include "blocker.h"
-#include <QSqlQuery>
-#include <QSqlRecord>
 #include <QRegExp>
 #include <QComboBox>
 #include <QLineEdit>
 #include "globalobjects.h"
 #include "Play/Danmu/danmupool.h"
+#define BlockNameRole Qt::UserRole+1
 QWidget *ComboBoxDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     int col=index.column();
@@ -39,10 +38,11 @@ void ComboBoxDelegate::setEditorData(QWidget *editor, const QModelIndex &index) 
                                       GlobalObjects::blocker->relations.indexOf(index.data(Qt::DisplayRole).toString()));
         break;
     }
+    case 0:
     case 5:
     {
         QLineEdit *lineEdit=static_cast<QLineEdit *>(editor);
-        lineEdit->setText(index.data(Qt::DisplayRole).toString());
+        lineEdit->setText(index.data(col==0?BlockNameRole:Qt::DisplayRole).toString());
         break;
     }
     default:
@@ -67,26 +67,32 @@ void ComboBoxDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, 
 
 Blocker::Blocker(QObject *parent):QAbstractItemModel(parent),maxId(1)
 {
-    QSqlQuery query(QSqlDatabase::database("MT"));
-    query.exec(QString("select * from block"));
-    int idNo=query.record().indexOf("Id"),
-        fieldNo = query.record().indexOf("Field"),
-        relationNo=query.record().indexOf("Relation"),
-        isRegExpNo=query.record().indexOf("IsRegExp"),
-        onNo=query.record().indexOf("Enable"),
-        contentNo=query.record().indexOf("Content");
+    blockFileName=GlobalObjects::dataPath+"block.xml";
+    QFile blockFile(blockFileName);
+    bool ret=blockFile.open(QIODevice::ReadOnly|QIODevice::Text);
+    if(!ret) return;
     beginResetModel();
-    while (query.next())
+    QXmlStreamReader reader(&blockFile);
+    while(!reader.atEnd())
     {
-        BlockRule *rule=new BlockRule;
-        rule->id=query.value(idNo).toInt();
-        if(rule->id>=maxId)maxId=rule->id+1;
-        rule->blockField=BlockRule::Field(query.value(fieldNo).toInt());
-        rule->relation=BlockRule::Relation(query.value(relationNo).toInt());
-        rule->isRegExp=query.value(isRegExpNo).toBool();
-        rule->enable=query.value(onNo).toBool();
-        rule->content=query.value(contentNo).toString();
-        blockList.append(rule);
+        if(reader.isStartElement())
+        {
+            QStringRef name=reader.name();
+            if(name=="rule")
+            {
+                BlockRule *rule=new BlockRule;
+                rule->id=reader.attributes().value("id").toInt();
+                if(rule->id>=maxId)maxId=rule->id+1;
+                rule->name=reader.attributes().value("name").toString();
+                rule->blockField=BlockRule::Field(reader.attributes().value("field").toInt());
+                rule->relation=BlockRule::Relation(reader.attributes().value("relation").toInt());
+                rule->isRegExp=(reader.attributes().value("isRegExp")=="true");
+                rule->enable=(reader.attributes().value("enable")=="true");
+                rule->content=reader.readElementText().trimmed();
+                blockList.append(rule);
+            }
+        }
+        reader.readNext();
     }
     endResetModel();
 }
@@ -100,6 +106,7 @@ void Blocker::addBlockRule()
 {
     BlockRule *rule=new BlockRule;
     rule->id=maxId++;
+    rule->name=tr("New Rule");
     rule->blockField=BlockRule::Field::DanmuText;
     rule->relation=BlockRule::Relation::Contain;
     rule->isRegExp=true;
@@ -108,7 +115,6 @@ void Blocker::addBlockRule()
     beginInsertRows(QModelIndex(), insertPosition, insertPosition);
     blockList.append(rule);
     endInsertRows();
-    insertToDB(rule);
 }
 
 void Blocker::addBlockRule(BlockRule *rule)
@@ -118,16 +124,12 @@ void Blocker::addBlockRule(BlockRule *rule)
     beginInsertRows(QModelIndex(), insertPosition, insertPosition);
     blockList.append(rule);
     endInsertRows();
-    insertToDB(rule);
+    saveBlockRules();
     GlobalObjects::danmuPool->testBlockRule(rule);
 }
 
 void Blocker::removeBlockRule(const QModelIndexList &deleteIndexes)
 {
-    QSqlDatabase db=QSqlDatabase::database("MT");
-    QSqlQuery query(QSqlDatabase::database("MT"));
-    query.prepare("delete from block where Id=?");
-    db.transaction();
     QList<int> rows;
     foreach (const QModelIndex &index, deleteIndexes)
     {
@@ -135,11 +137,8 @@ void Blocker::removeBlockRule(const QModelIndexList &deleteIndexes)
         {
             int row=index.row();
             rows.append(row);
-            query.bindValue(0,blockList.at(row)->id);
-            query.exec();
         }
     }
-    db.commit();
     std::sort(rows.rbegin(),rows.rend());
     for(auto iter=rows.begin();iter!=rows.end();++iter)
     {
@@ -151,6 +150,7 @@ void Blocker::removeBlockRule(const QModelIndexList &deleteIndexes)
         endRemoveRows();
 		delete rule;
     }
+    saveBlockRules();
 }
 
 void Blocker::checkDanmu(QList<DanmuComment *> &danmuList)
@@ -195,44 +195,38 @@ bool Blocker::isBlocked(DanmuComment *danmu)
     return false;
 }
 
-void Blocker::updateDB(int row, int col)
+void Blocker::save()
 {
-    BlockRule *rule=blockList.at(row);
-    QSqlQuery query(QSqlDatabase::database("MT"));
-    query.prepare(QString("update block set %1=? where Id=?").arg(colToDBRecords.at(col)));
-    switch (col)
+    if(ruleChanged)
     {
-    case 1:
-        query.bindValue(0,rule->enable);
-        break;
-    case 2:
-        query.bindValue(0,(int)rule->blockField);
-        break;
-    case 3:
-        query.bindValue(0,(int)rule->relation);
-        break;
-    case 4:
-        query.bindValue(0,rule->isRegExp);
-        break;
-    case 5:
-        query.bindValue(0,rule->content);
-        break;
+        saveBlockRules();
+        ruleChanged=false;
     }
-    query.bindValue(1,rule->id);
-    query.exec();
 }
 
-void Blocker::insertToDB(BlockRule *rule)
+void Blocker::saveBlockRules()
 {
-    QSqlQuery query(QSqlDatabase::database("MT"));
-    query.prepare("insert into block values(?,?,?,?,?,?)");
-    query.bindValue(0,rule->id);
-    query.bindValue(1,(int)rule->blockField);
-    query.bindValue(2,(int)rule->relation);
-    query.bindValue(3,rule->isRegExp);
-    query.bindValue(4,rule->enable);
-    query.bindValue(5, rule->content);
-    query.exec();
+    QFile blockFile(blockFileName);
+    bool ret=blockFile.open(QIODevice::WriteOnly|QIODevice::Text);
+    if(!ret) return;
+    QXmlStreamWriter writer(&blockFile);
+    writer.setAutoFormatting(true);
+    writer.writeStartDocument();
+    writer.writeStartElement("rules");
+    for(BlockRule *rule:blockList)
+    {
+        writer.writeStartElement("rule");
+        writer.writeAttribute("id", QString::number(rule->id));
+        writer.writeAttribute("name", rule->name);
+        writer.writeAttribute("field", QString::number(rule->blockField));
+        writer.writeAttribute("relation", QString::number(rule->relation));
+        writer.writeAttribute("isRegExp", rule->isRegExp?"true":"false");
+        writer.writeAttribute("enable", rule->enable?"true":"false");
+        writer.writeCharacters(rule->content);
+        writer.writeEndElement();
+    }
+    writer.writeEndElement();
+    writer.writeEndDocument();
 }
 
 QVariant Blocker::data(const QModelIndex &index, int role) const
@@ -246,7 +240,7 @@ QVariant Blocker::data(const QModelIndex &index, int role) const
     {
         if(col==0)
         {
-            return rule->id;
+            return QString("%1 - %2").arg(rule->id).arg(rule->name);
         }
         else if(col==2)
         {
@@ -279,6 +273,8 @@ QVariant Blocker::data(const QModelIndex &index, int role) const
                 return QColor(color>>16,(color>>8)&0xff,color&0xff);
         }
         break;
+    case BlockNameRole:
+        return rule->name;
     }
 	
 	return QVariant();
@@ -290,6 +286,9 @@ bool Blocker::setData(const QModelIndex &index, const QVariant &value, int)
     BlockRule *rule=blockList.at(row);
     switch (col)
     {
+    case 0:
+        rule->name=value.toString();
+        break;
     case 1:
         if(rule->enable==(value==Qt::Checked))return false;
         rule->enable=(value==Qt::Checked);
@@ -314,9 +313,9 @@ bool Blocker::setData(const QModelIndex &index, const QVariant &value, int)
     default:
         return false;
     }
-    updateDB(row,col);
     emit dataChanged(index,index);
     GlobalObjects::danmuPool->testBlockRule(rule);
+    ruleChanged=true;
     return true;
 }
 
@@ -333,11 +332,11 @@ Qt::ItemFlags Blocker::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index);
 	int col = index.column();
-	if (index.isValid() && index.column() > 0)
+    if (index.isValid())
 	{
 		if(col==1||col==4)
 			return  Qt::ItemIsUserCheckable | defaultFlags;
-		else if(col>0)
+        else
 			return  Qt::ItemIsEditable | defaultFlags;
 	}  
 	return defaultFlags;

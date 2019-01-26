@@ -8,6 +8,7 @@
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/common.h"
 #include "Play/Danmu/blocker.h"
+#include "Play/Danmu/Manager/danmumanager.h"
 #include "globalobjects.h"
 
 #include <QSqlQuery>
@@ -190,65 +191,7 @@ void HttpServer::api_Danmu(QHttpEngine::Socket *socket)
 { 
     QString poolId=socket->queryString().value("id");
     genLog(QString("[%1]Request:Danmu").arg(socket->peerAddress().toString()));
-    QSqlQuery query(QSqlDatabase::database("WT"));
-    QHash<int,DanmuSourceInfo> sourcesTable;
-    query.exec(QString("select ID,Delay,TimeLine from source where PoolID='%1'").arg(poolId));
-    int idNo = query.record().indexOf("ID"),
-            delayNo=query.record().indexOf("Delay"),
-            timelineNo=query.record().indexOf("TimeLine");
-    while (query.next())
-    {
-        DanmuSourceInfo sourceInfo;
-        sourceInfo.delay=query.value(delayNo).toInt();
-        sourceInfo.id=query.value(idNo).toInt();
-        QStringList timelineList(query.value(timelineNo).toString().split(';',QString::SkipEmptyParts));
-        QTextStream ts;
-        for(QString &spaceInfo:timelineList)
-        {
-            ts.setString(&spaceInfo,QIODevice::ReadOnly);
-            int start,duration;
-            ts>>start>>duration;
-            sourceInfo.timelineInfo.append(QPair<int,int>(start,duration));
-        }
-        sourcesTable.insert(sourceInfo.id,sourceInfo);
-    }
-    DanmuComment tmpComment;
-    QJsonArray danmuArray;
-    query.exec(QString("select * from danmu where PoolID='%1'").arg(poolId));
-    int timeNo = query.record().indexOf("Time"),
-            colorNo=query.record().indexOf("Color"),
-            modeNo=query.record().indexOf("Mode"),
-            sourceNo=query.record().indexOf("Source"),
-            userNo=query.record().indexOf("User"),
-            textNo=query.record().indexOf("Text");
-    while (query.next())
-    {
-        tmpComment.color=query.value(colorNo).toInt();
-        tmpComment.sender=query.value(userNo).toString();
-        tmpComment.type=DanmuComment::DanmuType(query.value(modeNo).toInt());
-        tmpComment.source=query.value(sourceNo).toInt();
-        tmpComment.text=query.value(textNo).toString();
-        tmpComment.originTime=query.value(timeNo).toInt();
-        if(GlobalObjects::blocker->isBlocked(&tmpComment))continue;
-        int delay=0;
-        if(sourcesTable.contains(tmpComment.source))
-        {
-            for(auto &spaceItem:sourcesTable[tmpComment.source].timelineInfo)
-            {
-                if(tmpComment.originTime>spaceItem.first)delay+=spaceItem.second;
-                else break;
-            }
-            delay+=sourcesTable[tmpComment.source].delay;
-        }
-        tmpComment.time=tmpComment.originTime+delay<0?tmpComment.originTime:tmpComment.originTime+delay;
-        QJsonArray danmuObj={tmpComment.time/1000.f,tmpComment.type,tmpComment.color,tmpComment.sender,tmpComment.text};
-        danmuArray.append(danmuObj);
-    }
-    QJsonObject resposeObj
-    {
-        {"code", 0},
-        {"data", danmuArray}
-    };
+    QJsonObject resposeObj = GlobalObjects::danmuManager->exportJson(poolId);
     QByteArray data = QJsonDocument(resposeObj).toJson();
     socket->setHeader("Content-Length", QByteArray::number(data.length()));
     socket->setHeader("Content-Type", "application/json");

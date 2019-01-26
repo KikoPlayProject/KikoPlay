@@ -9,7 +9,7 @@
 #include "Play/Playlist/playlist.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Danmu/danmupool.h"
-#include "Play/Danmu/danmurender.h"
+#include "Play/Danmu/Render/danmurender.h"
 #pragma comment (lib,"DbgHelp.lib")
 LONG AppCrashHandler(EXCEPTION_POINTERS *pException) 
 {			

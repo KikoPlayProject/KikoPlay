@@ -21,7 +21,7 @@
 #include "MediaLibrary/animeitemdelegate.h"
 #include "MediaLibrary/animelibrary.h"
 #include "Play/Playlist/playlist.h"
-#include "Play/Danmu/danmurender.h"
+#include "Play/Danmu/Render/danmurender.h"
 #include "Play/Danmu/danmupool.h"
 #include "Play/Video/mpvplayer.h"
 #include "Common/flowlayout.h"
@@ -179,7 +179,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
 
     QLabel *totalCountLabel=new QLabel(this);
     totalCountLabel->setFont(QFont("Microsoft Yahei",12));
-    QObject::connect(GlobalObjects::library,&AnimeLibrary::animeCountChanged,[totalCountLabel](){
+    QObject::connect(GlobalObjects::library,&AnimeLibrary::animeCountChanged,this,[totalCountLabel](){
         totalCountLabel->setText(tr("Anime Count: %1").arg(GlobalObjects::library->getCount(0)));
     });
 

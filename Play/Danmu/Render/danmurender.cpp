@@ -1,17 +1,17 @@
 #include "danmurender.h"
-#include "Layouts/rolllayout.h"
-#include "Layouts/toplayout.h"
-#include "Layouts/bottomlayout.h"
+#include "../Layouts/rolllayout.h"
+#include "../Layouts/toplayout.h"
+#include "../Layouts/bottomlayout.h"
 #include <QPair>
 #include <QRandomGenerator>
 #include "globalobjects.h"
 #include "Play/Danmu/danmupool.h"
 #include "Play/Playlist/playlist.h"
-namespace
-{
-    QOpenGLContext *danmuTextureContext=nullptr;
-    QSurface *surface=nullptr;
-}
+
+
+QOpenGLContext *danmuTextureContext=nullptr;
+QSurface *surface=nullptr;
+
 DanmuRender::DanmuRender()
 {
     layout_table[0]=new RollLayout(this);
@@ -242,159 +242,4 @@ void DanmuRender::addDanmu(PrepareList *newDanmu)
     GlobalObjects::danmuPool->recyclePrepareList(newDanmu);
 }
 
-CacheWorker::CacheWorker(const DanmuStyle *style):danmuStyle(style)
-{
-    danmuFont.setFamily(danmuStyle->fontFamily);
-    danmuStrokePen.setWidthF(danmuStyle->strokeWidth);
-    danmuStrokePen.setJoinStyle(Qt::RoundJoin);
-    danmuStrokePen.setCapStyle(Qt::RoundCap);
-}
-
-DanmuDrawInfo *CacheWorker::createDanmuCache(const DanmuComment *comment)
-{
-    if(danmuStyle->randomSize)
-        danmuFont.setPointSize(QRandomGenerator::global()->
-                               bounded(danmuStyle->fontSizeTable[DanmuComment::FontSizeLevel::Small],
-                               danmuStyle->fontSizeTable[DanmuComment::FontSizeLevel::Large]));
-    else
-        danmuFont.setPointSize(danmuStyle->fontSizeTable[comment->fontSizeLevel]);
-    QFontMetrics metrics(danmuFont);
-    danmuStrokePen.setWidthF(danmuStyle->strokeWidth);
-    int strokeWidth=danmuStyle->strokeWidth;
-    int left=qAbs(metrics.leftBearing(comment->text.front()));
-
-    QSize size=metrics.size(0, comment->text)+QSize(strokeWidth*2+left,strokeWidth);
-    QImage img(size, QImage::Format_ARGB32);
-
-    DanmuDrawInfo *drawInfo=new DanmuDrawInfo;
-    drawInfo->useCount=0;
-    drawInfo->height=size.height();
-    drawInfo->width=size.width();
-    //drawInfo->img=img;
-
-    QPainterPath path;
-    QStringList multilines(comment->text.split('\n'));
-    int py = qAbs((size.height() - metrics.height()*multilines.size()) / 2 + metrics.ascent());
-    int i=0;
-    for(const QString &line:multilines)
-    {
-        path.addText(left+strokeWidth,py+i*metrics.height(),danmuFont,line);
-        ++i;
-    }
-    img.fill(Qt::transparent);
-    QPainter painter(&img);
-    painter.setRenderHint(QPainter::Antialiasing);
-    int r=comment->color>>16,g=(comment->color>>8)&0xff,b=comment->color&0xff;
-    if(strokeWidth>0)
-    {
-        danmuStrokePen.setColor(comment->color==0x000000?Qt::white:Qt::black);
-        painter.strokePath(path,danmuStrokePen);
-        painter.drawPath(path);
-    }
-    painter.fillPath(path,QBrush(QColor(r,g,b)));
-    painter.end();
-
-    createDanmuTexture(drawInfo,img);
-    return drawInfo;
-}
-
-void CacheWorker::cleanCache()
-{
-#ifdef QT_DEBUG
-    qDebug()<<"clean start, items:"<<danmuCache.size();
-    QElapsedTimer timer;
-    timer.start();
-#endif
-    danmuTextureContext->makeCurrent(surface);
-    QOpenGLFunctions *glFuns=danmuTextureContext->functions();
-    for(auto iter=danmuCache.begin();iter!=danmuCache.end();)
-    {
-		Q_ASSERT(iter.value()->useCount >= 0);
-        if(iter.value()->useCount==0)
-        {
-            glFuns->glDeleteTextures(1,&iter.value()->texture);
-            delete iter.value();
-            iter=danmuCache.erase(iter);
-        }
-        else
-        {
-            ++iter;
-        }
-    }
-    danmuTextureContext->doneCurrent();
-#ifdef QT_DEBUG
-    qDebug()<<"clean done:"<<timer.elapsed()<<"ms, left item:"<<danmuCache.size();
-#endif
-}
-
-void CacheWorker::createDanmuTexture(DanmuDrawInfo *drawInfo, const QImage &img)
-{
-
-    danmuTextureContext->makeCurrent(surface);
-    QOpenGLFunctions *glFuns=danmuTextureContext->functions();
-    glFuns->glGenTextures(1, &drawInfo->texture);
-    glFuns->glBindTexture(GL_TEXTURE_2D, drawInfo->texture);
-    glFuns->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glFuns->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, drawInfo->width, drawInfo->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
-    glFuns->glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    glFuns->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glFuns->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFuns->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glFuns->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    danmuTextureContext->doneCurrent();
-}
-
-void CacheWorker::beginCache(PrepareList *danmus)
-{
-#ifdef QT_DEBUG
-    qDebug()<<"cache start---";
-    QElapsedTimer timer;
-    timer.start();
-    qint64 etime=0;
-#endif
-    for(QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*> &dm:*danmus)
-    {
-         QString hash_str(QString("%1%2%3").arg(dm.first->text).arg(dm.first->color).arg(danmuStyle->fontSizeTable[dm.first->fontSizeLevel]));
-         DanmuDrawInfo *drawInfo(danmuCache.value(hash_str,nullptr));
-         if(!drawInfo)
-         {
-             drawInfo=createDanmuCache(dm.first.data());
-             danmuCache.insert(hash_str,drawInfo);
-         }
-         drawInfo->useCount++;
-         dm.second=drawInfo;
-#ifdef QT_DEBUG
-         qDebug()<<"Gen cache:"<<dm.first->text<<" time: "<<dm.first->date;
-#endif
-
-    }
-    /*std::sort(danmus->first(),danmus->last(),
-              [](const QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*> &item1,
-                 const QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*> &item2)
-    {
-        static int orderTable[]={0,2,1};
-        return orderTable[item1.first->type]>orderTable[item2.first->type];
-    });*/
-#ifdef QT_DEBUG
-    etime=timer.elapsed();
-    qDebug()<<"cache end, time: "<<etime<<"ms";
-#endif
-    emit cacheDone(danmus);
-}
-
-void CacheWorker::changeRefCount(QList<DanmuDrawInfo *> *descList)
-{
-    for(DanmuDrawInfo *drawInfo:*descList)
-        drawInfo->useCount--;
-    descList->clear();
-    emit recyleRefList(descList);
-    if (danmuCache.size()>max_cache)
-        cleanCache();
-}
-
-void CacheWorker::changeDanmuStyle()
-{
-    danmuFont.setFamily(danmuStyle->fontFamily);
-    danmuFont.setBold(danmuStyle->bold);
-}
 

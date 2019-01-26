@@ -2,49 +2,34 @@
 #define DANMUMANAGER_H
 
 #include <QAbstractItemModel>
-struct DanmuPoolInfo
-{
-    QString poolID;
-    QString animeTitle;
-    QString epTitle;
-    int danmuCount;
-};
-class PoolInfoWorker : public QObject
-{
-    Q_OBJECT
-public:
-    explicit PoolInfoWorker(QObject *parent=nullptr):QObject(parent){}
-public slots:
-    void loadPoolInfo(QList<DanmuPoolInfo> &poolInfoList);
-    void exportPool(const QList<DanmuPoolInfo> &exportList, const QString &dir);
-    void deletePool(const QList<DanmuPoolInfo> &deleteList);
-signals:
-    void loadDone();
-    void exportDone();
-    void deleteDone();
-};
-class DanmuManager : public QAbstractItemModel
+#include "poolworker.h"
+#include "../common.h"
+class DanmuManager : public QObject
 {
     Q_OBJECT
 public:
     explicit DanmuManager(QObject *parent = nullptr);
-private:
-    QList<DanmuPoolInfo> poolList;
-    static PoolInfoWorker *poolWorker;
-signals:
-
-public slots:
-    void refreshPoolInfo();
-    void exportPool(QModelIndexList &exportIndexes, const QString &dir);
-    void deletePool(QModelIndexList &deleteIndexes);
-    // QAbstractItemModel interface
+    virtual ~DanmuManager();
 public:
-    inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const {return parent.isValid()?QModelIndex():createIndex(row,column);}
-    inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
-    inline virtual int rowCount(const QModelIndex &parent) const{return parent.isValid()?0:poolList.count();}
-    inline virtual int columnCount(const QModelIndex &parent) const {return parent.isValid()?0:3;}
-    virtual QVariant data(const QModelIndex &index, int role) const;
-    virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+    void loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList);
+    void loadPool(const QString &pid, QList<QSharedPointer<DanmuComment> > &danmuList,QHash<int,DanmuSourceInfo> &sourcesTable);
+    void loadSimpleDanmuInfo(const QString &pid, int srcId, QList<SimpleDanmuInfo> &simpleDanmuList);
+    void exportPool(const QList<DanmuPoolNode *> &exportList, const QString &dir, bool useTimeline=true, bool applyBlockRule=false);
+    void exportPool(const QString &pid,const QString &fileName);
+    QJsonObject exportJson(const QString &pid);
+    void deletePool(const QList<DanmuPoolNode *> &deleteList);
+    void deleteSource(const QString &pid, int srcId);
+    void deleteDanmu(const QString &pid, const DanmuComment *danmu);
+    void updatePool(QList<DanmuPoolNode *> &updateList);
+    void saveSource(const QString &pid, const DanmuSourceInfo *sourceInfo, const QList<DanmuComment *> *danmuList);
+    void updateSourceDelay(const QString &pid, const DanmuSourceInfo *sourceInfo);
+    void updateSourceDelay(const DanmuPoolSourceNode *srcNode);
+    void updateSourceTimeline(const QString &pid, const DanmuSourceInfo *sourceInfo);
+    void updateSourceTimeline(const DanmuPoolSourceNode *srcNode);
+    void setDelay(DanmuComment *danmu, DanmuSourceInfo *srcInfo);
+signals:
+    void workerStateMessage(const QString &msg);
+private:
+    PoolWorker *poolWorker;
 };
-
 #endif // DANMUMANAGER_H

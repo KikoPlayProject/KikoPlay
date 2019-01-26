@@ -34,16 +34,18 @@ public:
     const QStringList speedLevel={"0.5","0.75","1","1.5","2"};
     const QStringList videoAspect={tr("Auto"),"4:3","16:9","2.35:1"};
 	const double videoAspcetVal[4] = { -1,4.0 / 3,16.0 / 9,2.35 / 1 };
+
     inline PlayState getState() const {return state;}
     inline bool getDanmuHide() const{return danmuHide;}
     inline bool getMute() const{return mute;}
-    const QStringList &getTrackList(int type){return type==0?audioTrack.desc_str:subtitleTrack.desc_str;}
-    int getCurrentAudioTrack() const {return audioTrack.ids.indexOf(mpv::qt::get_property(mpv,"aid").toInt());}
-    int getCurrentSubTrack() const{return subtitleTrack.ids.indexOf(mpv::qt::get_property(mpv,"sid").toInt());}
-    VideoSizeInfo getVideoSizeInfo();
-    QMap<QString,QMap<QString,QString> > getMediaInfo();
+    inline const QStringList &getTrackList(int type){return type==0?audioTrack.desc_str:subtitleTrack.desc_str;}
+    inline int getCurrentAudioTrack() const {return audioTrack.ids.indexOf(mpv::qt::get_property(mpv,"aid").toInt());}
+    inline int getCurrentSubTrack() const{return subtitleTrack.ids.indexOf(mpv::qt::get_property(mpv,"sid").toInt());}
     inline int getTime() const{return mpv::qt::get_property(mpv,"playback-time").toDouble();}
     inline int getDuration() const{return currentDuration;}
+
+    VideoSizeInfo getVideoSizeInfo();
+    QMap<QString,QMap<QString,QString> > getMediaInfo();
     void drawTexture(GLuint texture, float alpha, const QRectF &rect);
 signals:
     void durationChanged(int value);
@@ -60,7 +62,6 @@ public slots:
 	void frameStep(bool forward = true);
     void setVolume(int volume);
     void setMute(bool mute);
-    void setDanmuRender(DanmuRender *render);
     void hideDanmu(bool hide);
     void addSubtitle(QString path);
     void setTrackId(int type,int id);
@@ -82,30 +83,30 @@ private:
     {
       QStringList desc_str;
       QList<int> ids;
-      //int current;
     };
-    const int timeRefreshInterval=20;
+    mpv::qt::Handle mpv;
+    mpv_opengl_cb_context *mpv_gl;
     void handle_mpv_event(mpv_event *event);
     static void on_update(void *ctx);
     static void wakeup(void *ctx);
     static void *get_proc_address(void *ctx, const char *name);
-    mpv::qt::Handle mpv;
-    mpv_opengl_cb_context *mpv_gl;
+
+    const int timeRefreshInterval=20;
     PlayState state;
+    bool mute;
+    bool danmuHide;
+    int volume;
     QString currentFile;
-    DanmuRender *danmuRender;
     QOpenGLShaderProgram danmuShader;
     QTimer refreshTimer;
     QElapsedTimer elapsedTimer;
-    bool danmuHide;
-    bool mute;
-    int volume;
+
     int currentDuration;
     TrackInfo audioTrack,subtitleTrack;
     void loadTracks();
 
-    int setMPVCommand(const QVariant& params);
-    void setMPVProperty(const QString& name, const QVariant& value);
+    inline int setMPVCommand(const QVariant& params);
+    inline void setMPVProperty(const QString& name, const QVariant& value);
 };
 
 #endif // MPVPLAYER_H

@@ -76,7 +76,7 @@ Anime *AnimeLibrary::getAnime(const QModelIndex &index, bool fillInfo)
     if(!fillInfo)return anime;
     if(anime->eps.count()==0)
     {
-        QSqlQuery query(QSqlDatabase::database("MT"));
+        QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
         query.prepare("select * from eps where Anime=?");
         query.bindValue(0,anime->title);
         query.exec();
@@ -95,7 +95,7 @@ Anime *AnimeLibrary::getAnime(const QModelIndex &index, bool fillInfo)
     }
     if(anime->characters.count()==0)
     {
-        QSqlQuery query(QSqlDatabase::database("MT"));
+        QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
         query.prepare("select * from character where Anime=?");
         query.bindValue(0,anime->title);
         query.exec();
@@ -203,13 +203,13 @@ void AnimeLibrary::addEp(Anime *anime, const QString &epName, const QString &pat
     }
     else
     {
-        QSqlQuery query(QSqlDatabase::database("MT"));
+        QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
         query.prepare("select * from eps where LocalFile=?");
         query.bindValue(0,path);
         query.exec();
         if(query.first()) return;
     }
-    QSqlQuery query(QSqlDatabase::database("MT"));
+    QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
     query.prepare("insert into eps(Anime,Name,LocalFile) values(?,?,?,?)");
     query.bindValue(0,anime->title);
     query.bindValue(1,epName);
@@ -219,7 +219,7 @@ void AnimeLibrary::addEp(Anime *anime, const QString &epName, const QString &pat
 
 void AnimeLibrary::modifyEpPath(Episode &ep, const QString &newPath)
 {
-    QSqlQuery query(QSqlDatabase::database("MT"));
+    QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
     query.prepare("update eps set LocalFile=? where LocalFile=?");
     query.bindValue(0,newPath);
     query.bindValue(1,ep.localFile);
@@ -234,7 +234,7 @@ void AnimeLibrary::removeEp(Anime *anime,const QString &path)
         if((*iter).localFile==path) iter=anime->eps.erase(iter);
         else iter++;
     }
-    QSqlQuery query(QSqlDatabase::database("MT"));
+    QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
     query.prepare("delete from eps where LocalFile=?");
     query.bindValue(0,path);
     query.exec();
@@ -260,7 +260,7 @@ int AnimeLibrary::getCount(int type)
     default:
         return 0;
     }
-    QSqlQuery query(QSqlDatabase::database("MT"));
+    QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
     query.exec(sql);
     if(query.first())
     {
@@ -290,7 +290,7 @@ void AnimeLibrary::addTag(Anime *anime, const QString &tag)
         emit addTags(QStringList()<<tag);
     }
     tagsMap[tag].insert(anime->title);
-    QSqlQuery query(QSqlDatabase::database("MT"));
+    QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
     query.prepare("insert into tag(Anime,Tag) values(?,?)");
     query.bindValue(0,anime->title);
     query.bindValue(1,tag);
@@ -323,6 +323,8 @@ QVariant AnimeLibrary::data(const QModelIndex &index, int role) const
 		{
 			return anime->title;
 		}
+		case Qt::DecorationRole:
+			return anime->coverPixmap;
         case AnimeRole:
         {
             return QVariant::fromValue((void *)anime);
@@ -353,10 +355,10 @@ void AnimeLibrary::fetchMore(const QModelIndex &)
 
 void AnimeWorker::updateAnimeInfo(Anime *anime)
 {
-    QSqlDatabase db=QSqlDatabase::database("WT");
+    QSqlDatabase db=QSqlDatabase::database("Bangumi_W");
     db.transaction();
 
-    QSqlQuery query(QSqlDatabase::database("WT"));
+    QSqlQuery query(db);
     query.prepare("update anime set Summary=?,Date=?,Staff=?,BangumiID=?,Cover=?,EpCount=? where Anime=?");
     query.bindValue(0,anime->summary);
     query.bindValue(1,anime->date);
@@ -391,7 +393,7 @@ void AnimeWorker::updateAnimeInfo(Anime *anime)
 
 void AnimeWorker::addAnimeInfo(const QString &animeName,const QString &epName, const QString &path)
 {
-    QSqlQuery query(QSqlDatabase::database("WT"));
+    QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
     query.prepare("select * from eps where LocalFile=?");
     query.bindValue(0,path);
     query.exec();
@@ -399,7 +401,7 @@ void AnimeWorker::addAnimeInfo(const QString &animeName,const QString &epName, c
     std::function<void (const QString &,const QString &,const QString &)> insertEpInfo
             = [](const QString &animeName,const QString &epName,const QString &path)
     {
-        QSqlQuery query(QSqlDatabase::database("WT"));
+        QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
         query.prepare("insert into eps(Anime,Name,LocalFile) values(?,?,?)");
         query.bindValue(0,animeName);
         query.bindValue(1,epName);
@@ -419,7 +421,7 @@ void AnimeWorker::addAnimeInfo(const QString &animeName,const QString &epName, c
         anime->title=animeName;
         anime->epCount=0;
 		anime->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
-        QSqlQuery query(QSqlDatabase::database("WT"));
+        QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
         query.prepare("insert into anime(Anime,AddTime,BangumiID) values(?,?,?)");
         query.bindValue(0,anime->title);
         query.bindValue(1,anime->addTime);
@@ -451,7 +453,7 @@ QString AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId, QMap<QStrin
         if(newTitle!=anime->title)
         {
             animesMap.remove(anime->title);
-            QSqlQuery query(QSqlDatabase::database("WT"));
+            QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
             if(animesMap.contains(newTitle))
             {
                 query.prepare("update eps set Anime=? where Anime=?");
@@ -531,7 +533,7 @@ QString AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId, QMap<QStrin
 
 void AnimeWorker::loadAnimes(QList<Anime *> *animes,int offset,int limit)
 {
-    QSqlQuery query(QSqlDatabase::database("WT"));
+    QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
     query.exec(QString("select * from anime order by AddTime desc limit %1 offset %2").arg(limit).arg(offset));
     int animeNo=query.record().indexOf("Anime"),
         timeNo=query.record().indexOf("AddTime"),
@@ -560,7 +562,7 @@ void AnimeWorker::loadAnimes(QList<Anime *> *animes,int offset,int limit)
         anime->cover=query.value(coverNo).toByteArray();
         anime->coverPixmap.loadFromData(anime->cover);
 
-        QSqlQuery crtQuery(QSqlDatabase::database("WT"));
+        QSqlQuery crtQuery(QSqlDatabase::database("Bangumi_W"));
         crtQuery.prepare("select * from character where Anime=?");
         crtQuery.bindValue(0,anime->title);
         crtQuery.exec();
@@ -588,7 +590,7 @@ void AnimeWorker::loadAnimes(QList<Anime *> *animes,int offset,int limit)
 
 void AnimeWorker::deleteAnime(Anime *anime)
 {
-    QSqlQuery query(QSqlDatabase::database("WT"));
+    QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
     query.prepare("delete from anime where Anime=?");
     query.bindValue(0,anime->title);
     query.exec();
@@ -598,7 +600,7 @@ void AnimeWorker::deleteAnime(Anime *anime)
 
 void AnimeWorker::updatePlayTime(const QString &title, const QString &path)
 {
-    QSqlQuery query(QSqlDatabase::database("WT"));
+    QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
     query.prepare("update eps set LastPlayTime=? where LocalFile=?");
     QString timeStr(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
     query.bindValue(0,timeStr);
@@ -621,7 +623,7 @@ void AnimeWorker::updatePlayTime(const QString &title, const QString &path)
 
 void AnimeWorker::loadLabelInfo(QMap<QString, QSet<QString> > &tagMap, QSet<QString> &timeSet)
 {
-    QSqlQuery query(QSqlDatabase::database("WT"));
+    QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
     query.prepare("select * from tag");
     query.exec();
     int animeNo=query.record().indexOf("Anime"),tagNo=query.record().indexOf("Tag");
@@ -649,7 +651,7 @@ void AnimeWorker::loadLabelInfo(QMap<QString, QSet<QString> > &tagMap, QSet<QStr
 
 void AnimeWorker::deleteTag(const QString &tag, const QString &animeTitle)
 {
-    QSqlQuery query(QSqlDatabase::database("WT"));
+    QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
     if(animeTitle.isEmpty())
     {
         query.prepare("delete from tag where Tag=?");
@@ -694,9 +696,9 @@ QString AnimeWorker::downloadLabelInfo(Anime *anime, QMap<QString, QSet<QString>
                 parser.readNext();
             }
 
-            QSqlDatabase db=QSqlDatabase::database("WT");
+            QSqlDatabase db=QSqlDatabase::database("Bangumi_W");
             db.transaction();
-            QSqlQuery query(QSqlDatabase::database("WT"));
+            QSqlQuery query(db);
             query.prepare("insert into tag(Anime,Tag) values(?,?)");
             query.bindValue(0,anime->title);
 

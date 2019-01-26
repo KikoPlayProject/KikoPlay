@@ -369,8 +369,8 @@ SearchItemWidget::SearchItemWidget(DanmuSourceItem *item):searchItem(*item)
     titleLabel->setToolTip(item->title);
 	titleLabel->adjustSize();
 	titleLabel->setText(QString("<font size=\"5\" face=\"Microsoft Yahei\" color=\"#f33aa0\">%1</font>").arg(item->title));
-	titleLabel->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
-	descLabel->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
+    titleLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
+    descLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
 	descLabel->setText(QString("<font size=\"3\" face=\"Microsoft Yahei\">%1</font>").arg(item->description.trimmed()));
 	descLabel->setToolTip(item->description);
     QPushButton *addItemButton=new QPushButton(tr("Add"),this);
@@ -379,11 +379,11 @@ SearchItemWidget::SearchItemWidget(DanmuSourceItem *item):searchItem(*item)
 		emit addSearchItem(&searchItem);
 		addItemButton->setEnabled(true);
 	});
-    QHBoxLayout *itemHLayout=new QHBoxLayout(this);
-	QVBoxLayout *lbVLayout = new QVBoxLayout();
-	lbVLayout->addWidget(titleLabel);
-	lbVLayout->addWidget(descLabel);
-	lbVLayout->setContentsMargins(0, 0, 0, 0);
-	itemHLayout->addLayout(lbVLayout);
-    itemHLayout->addWidget(addItemButton);
+    QGridLayout *searchPageGLayout=new QGridLayout(this);
+    searchPageGLayout->addWidget(titleLabel,0,0);
+    searchPageGLayout->addWidget(descLabel,1,0);
+    searchPageGLayout->addWidget(addItemButton,0,1,2,1,Qt::AlignCenter);
+    searchPageGLayout->setColumnMinimumWidth(1,50*logicalDpiX()/96);
+    searchPageGLayout->setColumnStretch(0,6);
+    searchPageGLayout->setColumnStretch(1,1);
 }

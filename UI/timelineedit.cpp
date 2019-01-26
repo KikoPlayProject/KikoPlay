@@ -16,11 +16,11 @@ namespace
         return QString("%0%1:%2").arg(mSec<0?"-":"").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0'));
     }
 }
-TimelineEdit::TimelineEdit(DanmuSourceInfo *source, QWidget *parent):currentSource(source),
-    CFramelessDialog(tr("Timeline Edit"),parent,true)
+TimelineEdit::TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo> &simpleDanmuList, QWidget *parent):
+    CFramelessDialog(tr("Timeline Edit"),parent,true),currentSource(source)
 {
     timelineModel=new TimeLineInfoModel(source,this);
-    SimpleDanumPool *simpleDanmuPool=new SimpleDanumPool(GlobalObjects::danmuPool->getSimpleDanmuInfo(source->id),this);
+    SimpleDanumPool *simpleDanmuPool=new SimpleDanumPool(simpleDanmuList,this);
     simpleDanmuPool->refreshTimeline(timelineModel->getTimeLine());
     TimeLineBar *timelineBar=new TimeLineBar(simpleDanmuPool->getDanmuList(),timelineModel,this);
     timelineBar->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);

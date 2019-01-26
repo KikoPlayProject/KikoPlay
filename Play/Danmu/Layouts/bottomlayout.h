@@ -1,6 +1,6 @@
 #ifndef BOTTOMLAYOUT_H
 #define BOTTOMLAYOUT_H
-#include "Play/Danmu/danmurender.h"
+#include "Play/Danmu/Render/danmurender.h"
 
 class BottomLayout : public DanmuLayout
 {

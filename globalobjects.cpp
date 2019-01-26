@@ -1,6 +1,6 @@
 #include "globalobjects.h"
 #include "Play/Danmu/danmupool.h"
-#include "Play/Danmu/danmurender.h"
+#include "Play/Danmu/Render/danmurender.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Danmu/blocker.h"
@@ -8,7 +8,7 @@
 #include "MediaLibrary/animelibrary.h"
 #include "LANServer/lanserver.h"
 #include "Download/downloadmodel.h"
-#include "Play/Danmu/danmumanager.h"
+#include "Play/Danmu/Manager/danmumanager.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -29,15 +29,22 @@ DownloadModel *GlobalObjects::downloadModel=nullptr;
 DanmuManager *GlobalObjects::danmuManager=nullptr;
 LANServer *GlobalObjects::lanServer=nullptr;
 QFont GlobalObjects::iconfont;
+QString GlobalObjects::dataPath;
 
 void GlobalObjects::init()
 {
-	initDatabase();
-    appSetting=new QSettings(QCoreApplication::applicationDirPath()+"/settings.ini",QSettings::IniFormat);
+    dataPath=QCoreApplication::applicationDirPath()+"/data/";
+    QDir dir;
+    if(!dir.exists(dataPath))
+    {
+        dir.mkpath(dataPath);
+    }
+    const char *db_names[]={"Comment_M", "Bangumi_M","Download_M"};
+    initDatabase(db_names);
+    appSetting=new QSettings(dataPath+"settings.ini",QSettings::IniFormat);
     mpvplayer=new MPVPlayer();
     danmuPool=new DanmuPool();
     danmuRender=new DanmuRender();
-    mpvplayer->setDanmuRender(danmuRender);
     QObject::connect(mpvplayer,&MPVPlayer::positionChanged, danmuPool,&DanmuPool::mediaTimeElapsed);
     QObject::connect(mpvplayer,&MPVPlayer::positionJumped,danmuPool,&DanmuPool::mediaTimeJumped);
     playlist=new PlayList();
@@ -49,11 +56,8 @@ void GlobalObjects::init()
     QObject *workObj=new QObject();
     workObj->moveToThread(workThread);
     QMetaObject::invokeMethod(workObj,[workObj](){
-        QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE","WT");
-        database.setDatabaseName(QCoreApplication::applicationDirPath()+"\\kikoplay.db");
-        database.open();
-        QSqlQuery query(QSqlDatabase::database("WT"));
-        query.exec("PRAGMA foreign_keys = ON;");
+        const char *db_names[]={"Comment_W", "Bangumi_W","Download_W"};
+        initDatabase(db_names);
         workObj->deleteLater();
     },Qt::QueuedConnection);
     providerManager=new ProviderManager();
@@ -85,106 +89,36 @@ void GlobalObjects::clear()
     lanServer->deleteLater();
 }
 
-void GlobalObjects::initDatabase()
+void GlobalObjects::initDatabase(const char *db_names[])
 {
-    QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE","MT");
-    bool dbFileExist = QFile::exists(QCoreApplication::applicationDirPath()+"\\kikoplay.db");
-    database.setDatabaseName(QCoreApplication::applicationDirPath()+"\\kikoplay.db");
+    const int db_count=3;
+    const char *db_files[]={"comment","bangumi","download"};
+    for(int i=0;i<db_count;++i)
+    {
+        setDatabase(db_names[i],db_files[i]);
+    }
+}
+
+void GlobalObjects::setDatabase(const char *name, const char *file)
+{
+    QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE",name);
+    QString dbFile(dataPath+file+".db");
+    bool dbFileExist = QFile::exists(dbFile);
+    database.setDatabaseName(dbFile);
     database.open();
-    QSqlQuery query(QSqlDatabase::database("MT"));
+    QSqlQuery query(database);
     query.exec("PRAGMA foreign_keys = ON;");
     if(!dbFileExist)
     {
-        QSqlQuery sqlQuery(QSqlDatabase::database("MT"));
-        sqlQuery.exec("CREATE TABLE 'bangumi' (\
-                        'PoolID'  TEXT(32) NOT NULL,\
-                        'AnimeTitle'   TEXT,\
-                        'Title'  TEXT,\
-                        PRIMARY KEY ('PoolID') ON CONFLICT REPLACE\
-                        );");
-        sqlQuery.exec("CREATE UNIQUE INDEX 'PoolID'\
-                      ON 'bangumi' ('PoolID' ASC);");
-        sqlQuery.exec("CREATE TABLE 'danmu' ( \
-                          'PoolID'  TEXT(32) NOT NULL,\
-                          'Time'  INTEGER,\
-                          'Date'  INTEGER,\
-                          'Color'  INTEGER,\
-                          'Mode'  INTEGER,\
-                          'Size'  INTEGER,\
-                          'Source'  INTEGER,\
-                          'User'  TEXT,\
-                          'Text'  TEXT,\
-                          CONSTRAINT 'PoolID' FOREIGN KEY ('PoolID') REFERENCES 'bangumi' ('PoolID') ON DELETE CASCADE\
-                          );");
-        sqlQuery.exec("CREATE TABLE 'source' (\
-                           'PoolID'  TEXT(32),\
-                           'ID'  INTEGER,\
-                           'Name'  TEXT,\
-                           'Delay'  INTEGER,\
-                           'URL'  TEXT,\
-                           'TimeLine'  TEXT,\
-                           CONSTRAINT 'PoolID' FOREIGN KEY ('PoolID') REFERENCES 'bangumi' ('PoolID') ON DELETE CASCADE\
-                           );");
-        sqlQuery.exec("CREATE TABLE 'match' (\
-                          'MD5'  TEXT NOT NULL ON CONFLICT IGNORE,\
-                          'PoolID'  TEXT(32) NOT NULL ON CONFLICT IGNORE,\
-                          PRIMARY KEY ('MD5'),\
-                          CONSTRAINT 'PoolID' FOREIGN KEY ('PoolID') REFERENCES 'bangumi' ('PoolID') ON DELETE CASCADE\
-                          );");
-        sqlQuery.exec("CREATE TABLE 'block' (\
-                          'Id'  INTEGER NOT NULL,\
-                          'Field'  INTEGER,\
-                          'Relation'  INTEGER,\
-                          'IsRegExp'  INTEGER,\
-                          'Enable'  INTEGER,\
-                          'Content'  TEXT,\
-                          PRIMARY KEY ('Id' ASC)\
-                          );");
-        sqlQuery.exec("CREATE TABLE 'anime' (\
-                          'Anime'  TEXT NOT NULL,\
-                          'AddTime'  INTEGER,\
-                          'EpCount'  INTEGER,\
-                          'Summary'  TEXT,\
-                          'Date'  TEXT,\
-                          'Staff'  TEXT,\
-                          'BangumiID'  INTEGER,\
-                          'Cover'  BLOB,\
-                          PRIMARY KEY ('Anime')\
-                          );");
-        sqlQuery.exec("CREATE TABLE 'character' (\
-                          'Anime'  TEXT NOT NULL,\
-                          'Name'  TEXT NOT NULL,\
-                          'NameCN'  TEXT NOT NULL,\
-                          'Actor'  TEXT,\
-                          'BangumiID'  INTEGER,\
-                          'Image'  BLOB,\
-                          CONSTRAINT 'Anime' FOREIGN KEY ('Anime') REFERENCES 'anime' ('Anime') ON DELETE CASCADE ON UPDATE CASCADE\
-                          );");
-        sqlQuery.exec("CREATE TABLE 'eps' (\
-                            'Anime'  TEXT NOT NULL,\
-                            'Name'  TEXT,\
-                            'LocalFile'  TEXT,\
-                            'LastPlayTime'  TEXT,\
-                            CONSTRAINT 'Anime' FOREIGN KEY ('Anime') REFERENCES 'anime' ('Anime') ON DELETE CASCADE ON UPDATE CASCADE\
-                            );");
-        sqlQuery.exec("CREATE TABLE 'download' (\
-                             'TaskID'  TEXT NOT NULL,\
-                             'Title'  TEXT,\
-                             'Dir'  TEXT,\
-                             'CTime'  INTEGER,\
-                             'FTime'  INTEGER,\
-                             'TLength'  INTEGER,\
-                             'CLength'  INTEGER,\
-                             'URI'  TEXT,\
-                             'SFIndexes'  TEXT,\
-                             'Torrent'  BLOB,\
-                             PRIMARY KEY ('TaskID')\
-                             );");
-        sqlQuery.exec("CREATE TABLE 'tag' (\
-                            'Anime'  TEXT NOT NULL,\
-                            'Tag'  TEXT NOT NULL,\
-                            PRIMARY KEY (\"Anime\", \"Tag\"),\
-                            CONSTRAINT 'Anime' FOREIGN KEY ('Anime') REFERENCES 'anime' ('Anime') ON DELETE CASCADE ON UPDATE CASCADE\
-                            );");
+        QFile sqlFile(QString(":/res/db/%1.sql").arg(file));
+        sqlFile.open(QFile::ReadOnly);
+        if(sqlFile.isOpen())
+        {
+            QStringList sqls=QString(sqlFile.readAll()).split(';',QString::SkipEmptyParts);
+            for(const QString &sql:sqls)
+            {
+                query.exec(sql);
+            }
+        }
     }
 }

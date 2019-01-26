@@ -39,7 +39,6 @@ SOURCES += \
     Play/Danmu/Layouts/rolllayout.cpp \
     Play/Danmu/Layouts/toplayout.cpp \
     Play/Danmu/danmupool.cpp \
-    Play/Danmu/danmurender.cpp \
     globalobjects.cpp \
     Play/Playlist/playlist.cpp \
     Play/Video/mpvplayer.cpp \
@@ -81,7 +80,6 @@ SOURCES += \
     UI/adduritask.cpp \
     UI/selecttorrentfile.cpp \
     UI/downloadsetting.cpp \
-    Play/Danmu/danmumanager.cpp \
     UI/poolmanager.cpp \
     UI/checkupdate.cpp \
     Play/Danmu/Provider/iqiyiprovider.cpp \
@@ -93,7 +91,15 @@ SOURCES += \
     UI/mpvlog.cpp \
     LANServer/lanserver.cpp \
     LANServer/httpserver.cpp \
-    UI/serversettting.cpp
+    UI/serversettting.cpp \
+    Play/Playlist/playlistitem.cpp \
+    Play/Playlist/playlistprivate.cpp \
+    Play/Danmu/Render/cacheworker.cpp \
+    Play/Danmu/Render/danmurender.cpp \
+    Play/Danmu/Manager/danmumanager.cpp \
+    Play/Danmu/Manager/poolworker.cpp \
+    Play/Danmu/Manager/nodeinfo.cpp \
+    Play/Danmu/Manager/managermodel.cpp
 
 HEADERS += \
     UI/mainwindow.h \
@@ -103,7 +109,6 @@ HEADERS += \
     Play/Danmu/Layouts/rolllayout.h \
     Play/Danmu/Layouts/toplayout.h \
     Play/Danmu/danmupool.h \
-    Play/Danmu/danmurender.h \
     globalobjects.h \
     Play/Playlist/playlist.h \
     Play/Video/mpvplayer.h \
@@ -148,7 +153,6 @@ HEADERS += \
     UI/adduritask.h \
     UI/selecttorrentfile.h \
     UI/downloadsetting.h \
-    Play/Danmu/danmumanager.h \
     UI/poolmanager.h \
     UI/checkupdate.h \
     Play/Danmu/Provider/iqiyiprovider.h \
@@ -162,7 +166,15 @@ HEADERS += \
     UI/mpvlog.h \
     LANServer/lanserver.h \
     LANServer/httpserver.h \
-    UI/serversettting.h
+    UI/serversettting.h \
+    Play/Playlist/playlistitem.h \
+    Play/Playlist/playlistprivate.h \
+    Play/Danmu/Render/cacheworker.h \
+    Play/Danmu/Render/danmurender.h \
+    Play/Danmu/Manager/danmumanager.h \
+    Play/Danmu/Manager/poolworker.h \
+    Play/Danmu/Manager/nodeinfo.h \
+    Play/Danmu/Manager/managermodel.h
 
 INCLUDEPATH += \
     Play/Video \

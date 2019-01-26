@@ -3,7 +3,7 @@
 #include "Common/network.h"
 #include <QSqlQuery>
 #include <QSqlRecord>
-
+#include <QSqlError>
 MatchWorker *MatchProvider::matchWorker=nullptr;
 
 MatchInfo *MatchProvider::SearchFormDandan(const QString &keyword)
@@ -44,8 +44,8 @@ MatchInfo *MatchProvider::SearchFormBangumi(const QString &keyword)
 
 MatchInfo *MatchProvider::SerchFromDB(const QString &keyword)
 {
-    QSqlQuery query(QSqlDatabase::database("MT"));
-    query.prepare("select AnimeTitle,Title from bangumi where AnimeTitle like ? or Title like ?");
+    QSqlQuery query(QSqlDatabase::database("Comment_M"));
+    query.prepare("select AnimeTitle,Title from pool where AnimeTitle like ? or Title like ?");
     QString skeyword=QString("%%1%").arg(keyword);
     query.bindValue(0, skeyword);
     query.bindValue(1, skeyword);
@@ -92,10 +92,10 @@ MatchInfo *MatchProvider::MatchFromDB(QString fileName)
     return MatchWorker::retrieveInMatchTable(hashStr);
 }
 
-QString MatchProvider::updateMatchInfo(QString fileName, MatchInfo *newMatchInfo, const QString cName)
+QString MatchProvider::updateMatchInfo(const QString &fileName, const MatchInfo *newMatchInfo, const QString &cName)
 {
     MatchInfo::DetailInfo detailInfo=newMatchInfo->matches.first();
-    QString poolID=addToBangumiTable(detailInfo.animeTitle,detailInfo.title);
+    QString poolID=addToPoolTable(detailInfo.animeTitle,detailInfo.title);
     QFile mediaFile(fileName);
     bool ret=mediaFile.open(QIODevice::ReadOnly);
     if(!ret)return poolID;
@@ -106,7 +106,7 @@ QString MatchProvider::updateMatchInfo(QString fileName, MatchInfo *newMatchInfo
     return poolID;
 }
 
-void MatchProvider::addToMatchTable(QString fileHash, QString poolID, bool replace, const QString cName)
+void MatchProvider::addToMatchTable(const QString &fileHash, const QString &poolID, bool replace, const QString &cName)
 {
     QSqlQuery query(QSqlDatabase::database(cName));
     query.exec(QString("select * from match where MD5='%1'").arg(fileHash));
@@ -123,14 +123,14 @@ void MatchProvider::addToMatchTable(QString fileHash, QString poolID, bool repla
     query.exec();
 }
 
-QString MatchProvider::addToBangumiTable(QString animeTitle, QString title, const QString cName)
+QString MatchProvider::addToPoolTable(const QString &animeTitle, const QString &title, const QString &cName)
 {
     QByteArray hashData = QString("%1-%2").arg(animeTitle).arg(title).toUtf8();
     QString poolID = QString(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex());
     QSqlQuery query(QSqlDatabase::database(cName));
-    query.exec(QString("select * from bangumi where PoolID='%1'").arg(poolID));
+    query.exec(QString("select * from pool where PoolID='%1'").arg(poolID));
     if(query.first())return poolID;
-    query.prepare("insert into bangumi(PoolID,AnimeTitle,Title) values(?,?,?)");
+    query.prepare("insert into pool(PoolID,AnimeTitle,Title) values(?,?,?)");
     query.bindValue(0,poolID);
     query.bindValue(1,animeTitle);
     query.bindValue(2,title);
@@ -166,8 +166,8 @@ void MatchWorker::handleMatchReply(QJsonDocument &document, MatchInfo *matchInfo
         matchInfo->error = false;
         if(matchInfo->success && matchInfo->matches.count()>0)
         {
-            matchInfo->poolID=MatchProvider::addToBangumiTable(matchInfo->matches.first().animeTitle,matchInfo->matches.first().title,"WT");
-            MatchProvider::addToMatchTable(matchInfo->fileHash,matchInfo->poolID,"WT");
+            matchInfo->poolID=MatchProvider::addToPoolTable(matchInfo->matches.first().animeTitle,matchInfo->matches.first().title,"Comment_W");
+            MatchProvider::addToMatchTable(matchInfo->fileHash,matchInfo->poolID,false,"Comment_W");
         }
         return;
     }while(false);
@@ -256,7 +256,7 @@ void MatchWorker::beginMatch(QString fileName)
     QByteArray hashData = QCryptographicHash::hash(file16MB,QCryptographicHash::Md5);
     QString hashStr(hashData.toHex());
 
-    MatchInfo *localMatchInfo=retrieveInMatchTable(hashStr,"WT");
+    MatchInfo *localMatchInfo=retrieveInMatchTable(hashStr,"Comment_W");
     if(localMatchInfo)
     {
         emit matchDone(localMatchInfo);

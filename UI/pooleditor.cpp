@@ -44,7 +44,7 @@ void PoolEditor::onClose()
      CFramelessDialog::onClose();
 }
 
-PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):source(sourceInfo),QFrame(parent)
+PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(parent),source(sourceInfo)
 {
     QFont normalFont("Microsoft YaHei",16);
     QLabel *name=new QLabel(QString("%1(%2)").arg(source->name).arg(source->count),this);
@@ -53,11 +53,11 @@ PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):source(sourceIn
 
     QCheckBox *itemSwitch=new QCheckBox(tr("Show"),this);
     itemSwitch->setChecked(sourceInfo->show);
-    QObject::connect(itemSwitch,&QCheckBox::stateChanged,[sourceInfo](int state){
+    QObject::connect(itemSwitch,&QCheckBox::stateChanged,[this](int state){
        if(state==Qt::Unchecked)
-           sourceInfo->show=false;
+           source->show=false;
        else
-           sourceInfo->show=true;
+           source->show=true;
     });
     QHBoxLayout *itemControlHLayout1=new QHBoxLayout();
     itemControlHLayout1->addWidget(name);
@@ -80,11 +80,11 @@ PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):source(sourceIn
     });
     QPushButton *editTimeline=new QPushButton(tr("Edit Timeline"),this);
     editTimeline->setFixedWidth(80*logicalDpiX()/96);
-    QObject::connect(editTimeline,&QPushButton::clicked,[this,sourceInfo](){
-        TimelineEdit timelineEdit(sourceInfo,this);
+    QObject::connect(editTimeline,&QPushButton::clicked,[this](){
+        TimelineEdit timelineEdit(source,GlobalObjects::danmuPool->getSimpleDanmuInfo(source->id),this);
         if(QDialog::Accepted==timelineEdit.exec())
         {
-            GlobalObjects::danmuPool->refreshTimeLineDelayInfo(sourceInfo);
+            GlobalObjects::danmuPool->refreshTimeLineDelayInfo(source);
         }
     });
 
@@ -102,40 +102,27 @@ PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):source(sourceIn
 	QFileInfo fi(sourceInfo->url);
     if(fi.exists())
 		updateButton->setEnabled(false);
-    QObject::connect(updateButton,&QPushButton::clicked,[this,sourceInfo,updateButton,deleteButton,
+    QObject::connect(updateButton,&QPushButton::clicked,[this,updateButton,deleteButton,
                      editTimeline,delaySpinBox,name](){
         QList<DanmuComment *> tmpList;
         updateButton->setEnabled(false);
         deleteButton->setEnabled(false);
         editTimeline->setEnabled(false);
         delaySpinBox->setEnabled(false);
-        QString errInfo = GlobalObjects::providerManager->downloadBySourceURL(sourceInfo->url,tmpList);
+        QString errInfo = GlobalObjects::providerManager->downloadBySourceURL(source->url,tmpList);
         if(errInfo.isEmpty())
         {
             if(tmpList.count()>0)
             {
-                QSet<QString> danmuHashSet(GlobalObjects::danmuPool->getDanmuHash(sourceInfo->id));
-                for(auto iter=tmpList.begin();iter!=tmpList.end();)
-                {
-                    QByteArray hashData(QString("%0%1%2%3").arg((*iter)->text).arg((*iter)->originTime).arg((*iter)->sender).arg((*iter)->color).toUtf8());
-                    QString danmuHash(QString(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex()));
-                    if(danmuHashSet.contains(danmuHash))
-                    {
-                        delete *iter;
-                        iter=tmpList.erase(iter);
-                    }
-                    else
-                        ++iter;
-                }
-            }
-            if(tmpList.count()>0)
-            {
                 DanmuSourceInfo si;
                 si.count = tmpList.count();
-                si.url = sourceInfo->url;
-                GlobalObjects::danmuPool->addDanmu(si,tmpList);
-                QMessageBox::information(this,tr("Update - %1").arg(sourceInfo->name),tr("Add %1 New Danmu").arg(tmpList.count()));
-                name->setText(QString("%1(%2)").arg(sourceInfo->name).arg(sourceInfo->count));
+                si.url = source->url;
+                int addCount = GlobalObjects::danmuPool->addDanmu(si,tmpList);
+                if(addCount>0)
+                {
+                    QMessageBox::information(this,tr("Update - %1").arg(source->name),tr("Add %1 New Danmu").arg(addCount));
+                    name->setText(QString("%1(%2)").arg(source->name).arg(source->count));
+                }
             }
         }
         else
@@ -151,11 +138,11 @@ PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):source(sourceIn
     QPushButton *exportButton=new QPushButton(tr("Export"),this);
     exportButton->setFixedWidth(80*logicalDpiX()/96);
     exportButton->setObjectName(QStringLiteral("DialogButton"));
-    QObject::connect(exportButton,&QPushButton::clicked,[this,sourceInfo](){
-        QString fileName = QFileDialog::getSaveFileName(this, tr("Save Danmu"),sourceInfo->name,tr("Xml File (*.xml)"));
+    QObject::connect(exportButton,&QPushButton::clicked,[this](){
+        QString fileName = QFileDialog::getSaveFileName(this, tr("Save Danmu"),source->name,tr("Xml File (*.xml)"));
         if(!fileName.isEmpty())
         {
-            GlobalObjects::danmuPool->exportDanmu(sourceInfo->id,fileName);
+            GlobalObjects::danmuPool->exportDanmu(source->id,fileName);
         }
     });
 

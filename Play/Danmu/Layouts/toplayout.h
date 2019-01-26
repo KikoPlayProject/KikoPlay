@@ -1,6 +1,6 @@
 #ifndef TOPLAYOUT_H
 #define TOPLAYOUT_H
-#include "Play/Danmu/danmurender.h"
+#include "Play/Danmu/Render/danmurender.h"
 
 class TopLayout : public DanmuLayout
 {

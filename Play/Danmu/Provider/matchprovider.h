@@ -8,7 +8,7 @@ private:
     void handleMatchReply(QJsonDocument &document, MatchInfo *matchInfo);
     void handleDDSearchReply(QJsonDocument &document, MatchInfo *searchInfo);
 public:
-    static MatchInfo *retrieveInMatchTable(QString fileHash,const QString cName="MT");
+    static MatchInfo *retrieveInMatchTable(QString fileHash,const QString cName="Comment_M");
 signals:
     void matchDone(MatchInfo *MatchInfo);
     void ddSearchDone(MatchInfo *searchInfo);
@@ -26,9 +26,9 @@ public:
     static MatchInfo *SerchFromDB(const QString &keyword);
     static MatchInfo *MatchFromDandan(QString fileName);
     static MatchInfo *MatchFromDB(QString fileName);
-    static QString updateMatchInfo(QString fileName,MatchInfo *newMatchInfo,const QString cName="MT");
-    static void addToMatchTable(QString fileHash,QString poolID,bool replace=false,const QString cName="MT");
-    static QString addToBangumiTable(QString animeTitle,QString title,const QString cName="MT");
+    static QString updateMatchInfo(const QString &fileName,const MatchInfo *newMatchInfo,const QString &cName="Comment_M");
+    static void addToMatchTable(const QString &fileHash, const QString &poolID, bool replace=false, const QString &cName="Comment_M");
+    static QString addToPoolTable(const QString &animeTitle, const QString &title, const QString &cName="Comment_M");
 private:
     static MatchWorker *matchWorker;
 };

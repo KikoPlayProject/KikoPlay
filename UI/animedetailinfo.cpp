@@ -44,6 +44,7 @@ public:
 
         QLabel *infoLabel=new QLabel(this);
         infoLabel->setText(crt->actor);
+        infoLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
         QHBoxLayout *itemHLayout=new QHBoxLayout(this);
         itemHLayout->addWidget(iconLabel);
@@ -155,6 +156,7 @@ QWidget *AnimeDetailInfo::setupOverviewPage()
     dateStaffLabel->setFont(QFont("Microsoft Yahei",12));
     dateStaffLabel->setWordWrap(true);
     dateStaffLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
+    dateStaffLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
     QStringList stafflist;
     for(auto iter=currentAnime->staff.cbegin();iter!=currentAnime->staff.cend();++iter)
     {

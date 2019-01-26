@@ -30,7 +30,6 @@ SelectEpisode::SelectEpisode(DanmuAccessResult *episodeResult,QWidget *parent):C
             item->setFlags(item->flags()&~(Qt::ItemIsEditable));
     });
 	QCheckBox *selectAllCheck = new QCheckBox(tr("Select All"), this);
-    selectAllCheck->setChecked(true);
     QObject::connect(selectAllCheck, &QCheckBox::stateChanged, [this](int state) {
 		int count = episodeWidget->topLevelItemCount();
 		for (int i = count - 1; i >= 0; i--)
@@ -76,7 +75,7 @@ SelectEpisode::SelectEpisode(DanmuAccessResult *episodeResult,QWidget *parent):C
         int sec=item.extra-min*60;
         QString duration=QString("%1:%2").arg(min, 2, 10, QChar('0')).arg(sec, 2, 10, QChar('0'));
         QTreeWidgetItem *widgetItem=new QTreeWidgetItem(episodeWidget,QStringList()<<item.title<<duration<<"0");
-        widgetItem->setCheckState(0,Qt::Checked);
+        widgetItem->setCheckState(0,Qt::Unchecked);
 		item.delay = 0;
     }
 	resize(600, 500);

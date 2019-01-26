@@ -7,7 +7,7 @@
 #include <QDebug>
 #include <QMap>
 
-#include "Play/Danmu/danmurender.h"
+#include "Play/Danmu/Render/danmurender.h"
 #include "globalobjects.h"
 namespace
 {
@@ -35,7 +35,7 @@ const char *fShaderDanmu =
         "}\n";
 }
 MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::Stop),
-    danmuRender(nullptr),danmuHide(false),mute(false),currentDuration(0)
+    mute(false),danmuHide(false),currentDuration(0)
 {
     mpv = mpv::qt::Handle::FromRawHandle(mpv_create());
     if (!mpv)
@@ -62,26 +62,15 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     mpv_set_option_string(mpv, "keep-open", "yes");  
     // Make use of the MPV_SUB_API_OPENGL_CB API.
     mpv::qt::set_option_variant(mpv, "vo", "opengl-cb");
-
-    // Request hw decoding, just for testing.
-    //mpv::qt::set_option_variant(mpv, "hwdec", "auto");
-
-    //mpv::qt::set_option_variant(mpv, "display-fps", "60");
-    //mpv::qt::set_option_variant(mpv, "video-sync", "display-resample");
-    //mpv::qt::set_option_variant(mpv, "vf", "lavfi=\"fps=fps=60:round=down\"");
-
-
-    //for svp test-------------------
-
-    //mpv::qt::set_option_variant(mpv,"input-ipc-server","mpvpipe");
-    //mpv::qt::set_option_variant(mpv,"hwdec-codecs","all");
-    //mpv::qt::set_option_variant(mpv,"hr-seek-framedrop","no");
-    //mpv::qt::set_option_variant(mpv,"no-resume-playback","");
-    //-------------------------------
+    /* for svp test-------------------
+    mpv::qt::set_option_variant(mpv,"input-ipc-server","mpvpipe");
+    mpv::qt::set_option_variant(mpv,"hwdec-codecs","all");
+    mpv::qt::set_option_variant(mpv,"hr-seek-framedrop","no");
+    mpv::qt::set_option_variant(mpv,"no-resume-playback","");
+    */
 
     mpv_gl = (mpv_opengl_cb_context *)mpv_get_sub_api(mpv, MPV_SUB_API_OPENGL_CB);
-    if (!mpv_gl)
-        throw std::runtime_error("OpenGL not compiled in");
+    if (!mpv_gl) throw std::runtime_error("OpenGL not compiled in");
     mpv_opengl_cb_set_update_callback(mpv_gl, MPVPlayer::on_update, (void *)this);
     QObject::connect(this, &MPVPlayer::frameSwapped, this,&MPVPlayer::swapped);
 
@@ -89,24 +78,18 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     mpv_observe_property(mpv, 0, "playback-time", MPV_FORMAT_DOUBLE);
     mpv_observe_property(mpv, 0, "pause", MPV_FORMAT_FLAG);
     mpv_observe_property(mpv, 0, "eof-reached", MPV_FORMAT_FLAG);
-    //mpv_observe_property(mpv, 0, "sid", MPV_FORMAT_INT64);
-    //mpv_observe_property(mpv, 0, "aid", MPV_FORMAT_INT64);
 
     mpv_set_wakeup_callback(mpv, MPVPlayer::wakeup, this);
     QObject::connect(&refreshTimer,&QTimer::timeout,[this](){
-       //maybeUpdate();
        double curTime = mpv::qt::get_property(mpv,QStringLiteral("playback-time")).toDouble();
        emit positionChanged(curTime*1000);
     });
-
-    //refreshTimer.start(1000);
 }
 
 MPVPlayer::~MPVPlayer()
 {
     makeCurrent();
-    if (mpv_gl)
-        mpv_opengl_cb_set_update_callback(mpv_gl, NULL, NULL);
+    if (mpv_gl) mpv_opengl_cb_set_update_callback(mpv_gl, nullptr, nullptr);
     // Until this call is done, we need to make sure the player remains
     // alive. This is done implicitly with the mpv::qt::Handle instance
     // in this class.
@@ -136,14 +119,14 @@ QMap<QString, QMap<QString, QString> > MPVPlayer::getMediaInfo()
     QStringList units={"B","KB","MB","GB","TB"};
     for(int i=0;i<units.size();++i)
     {
-        if(fileSize<1024.0)
+        if(fileSize<1024.f)
         {
             fileInfo.insert(tr("File Size"),QString().setNum(fileSize,'f',2)+units[i]);
             break;
         }
-        fileSize/=1024.0;
+        fileSize/=1024.f;
     }
-    fileInfo.insert(tr("Date created"),fi.created().toString());
+    fileInfo.insert(tr("Date created"),fi.birthTime().toString());
     int duration=mpv::qt::get_property(mpv,"duration").toDouble() * 1000;
     QTime time = QTime::fromMSecsSinceStartOfDay(duration);
     fileInfo.insert(tr("Media length"),duration>=3600000?time.toString("h:mm:ss"):duration>=60000?time.toString("mm:ss"):time.toString("00:ss"));
@@ -191,6 +174,7 @@ void MPVPlayer::drawTexture(GLuint texture, float alpha, const QRectF &rect)
 
 	danmuShader.bind();
 	danmuShader.setUniformValue("alpha", alpha);
+    danmuShader.setUniformValue("u_SamplerD", 0);
     danmuShader.setAttributeArray(0, vtx, 2);
     danmuShader.setAttributeArray(1, tex, 2);
     danmuShader.enableAttributeArray(0);
@@ -277,11 +261,6 @@ void MPVPlayer::setMute(bool mute)
     this->mute=mute;
 }
 
-void MPVPlayer::setDanmuRender(DanmuRender *render)
-{
-    this->danmuRender=render;
-}
-
 void MPVPlayer::hideDanmu(bool hide)
 {
     danmuHide=hide;
@@ -332,7 +311,7 @@ void MPVPlayer::screenshot(QString filename)
 
 void MPVPlayer::initializeGL()
 {
-    int r = mpv_opengl_cb_init_gl(mpv_gl, NULL, MPVPlayer::get_proc_address, NULL);
+    int r = mpv_opengl_cb_init_gl(mpv_gl, nullptr, MPVPlayer::get_proc_address, nullptr);
     if (r < 0)
         throw std::runtime_error("could not initialize OpenGL");
 
@@ -342,7 +321,6 @@ void MPVPlayer::initializeGL()
     danmuShader.bind();
     danmuShader.bindAttributeLocation("a_VtxCoord", 0);
     danmuShader.bindAttributeLocation("a_TexCoord", 1);
-    danmuShader.setUniformValue("u_SamplerD", 0);
 
     emit initContext();
 }
@@ -350,14 +328,13 @@ void MPVPlayer::initializeGL()
 void MPVPlayer::paintGL()
 {
     mpv_opengl_cb_draw(mpv_gl, defaultFramebufferObject(), width(), -height());
-    if(danmuRender && !danmuHide)
+    if(!danmuHide)
     {
         QOpenGLFramebufferObject::bindDefault();
         QOpenGLPaintDevice fboPaintDevice(width(), height());
         QPainter painter(&fboPaintDevice);
         painter.beginNativePainting();
-        //painter.setRenderHints(QPainter::SmoothPixmapTransform);
-        danmuRender->drawDanmu();
+        GlobalObjects::danmuRender->drawDanmu();
         painter.endNativePainting();
     }
 }
@@ -365,17 +342,14 @@ void MPVPlayer::paintGL()
 void MPVPlayer::swapped()
 {
     mpv_opengl_cb_report_flip(mpv_gl, 0);
-    if(danmuRender && state==PlayState::Play)
+    if(state==PlayState::Play)
     {
         float step(0.f);
         if(elapsedTimer.isValid())
             step=elapsedTimer.restart();
         else
             elapsedTimer.start();
-        //qDebug()<<"FPS:"<<1000/step;
-        //if(step>17.f)step=16.f;
-
-            danmuRender->moveDanmu(step);
+        GlobalObjects::danmuRender->moveDanmu(step);
     }
 }
 
@@ -399,7 +373,8 @@ void MPVPlayer::maybeUpdate()
         context()->swapBuffers(context()->surface());
         swapped();
         doneCurrent();
-    } else
+    }
+    else
     {
         update();
     }
@@ -417,8 +392,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
             if (prop->format == MPV_FORMAT_DOUBLE)
             {
                 double time = *(double *)prop->data;
-                //qDebug()<<"new time:"<<time;
-                if(state==PlayState::Pause)emit positionChanged(time*1000);
+                if(state==PlayState::Pause) emit positionChanged(time*1000);
             }
         }
         else if (strcmp(prop->name, "duration") == 0)
@@ -461,19 +435,10 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
                 }
             }
         }
-        /*else if (strcmp(prop->name,"sid"))
-		{
-			if (prop->format == MPV_FORMAT_INT64)
-				subtitleTrack.current=subtitleTrack.ids.indexOf(*(int*)prop->data);
-		}
-		else if (strcmp(prop->name, "aid"))
-		{
-			if (prop->format == MPV_FORMAT_INT64)
-				audioTrack.current = audioTrack.ids.indexOf(*(int*)prop->data);
-        }*/
         break;
     }
     case MPV_EVENT_FILE_LOADED:
+    {
         setMPVProperty("pause", false);
         setMPVProperty("ao-volume",volume);
 		setMPVProperty("ao-mute", mute);
@@ -481,17 +446,20 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
 		emit trackInfoChange(0);
 		emit trackInfoChange(1);
         break;
+    }
     case MPV_EVENT_END_FILE:
+    {
         update();
         break;
+    }
     case MPV_EVENT_LOG_MESSAGE:
     {
         struct mpv_event_log_message *msg = (struct mpv_event_log_message *)event->data;
         emit showLog(QString("[%1]%2: %3").arg(msg->prefix).arg(msg->level).arg(msg->text));
         break;
     }
-    default: ;
-        // Ignore uninteresting or unknown events.
+    default:
+        break;
     }
 }
 
@@ -509,8 +477,7 @@ void *MPVPlayer::get_proc_address(void *ctx, const char *name)
 {
     Q_UNUSED(ctx);
     QOpenGLContext *glctx = QOpenGLContext::currentContext();
-    if (!glctx)
-        return NULL;
+    if (!glctx) return nullptr;
     return (void *)glctx->getProcAddress(QByteArray(name));
 }
 
@@ -547,6 +514,5 @@ int MPVPlayer::setMPVCommand(const QVariant &params)
 
 void MPVPlayer::setMPVProperty(const QString &name, const QVariant &value)
 {
-    int val(0);
-    val = mpv::qt::set_property(mpv,name,value);
+    mpv::qt::set_property(mpv,name,value);
 }

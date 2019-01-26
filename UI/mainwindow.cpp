@@ -14,7 +14,7 @@
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/danmupool.h"
-#include "Play/Danmu/danmurender.h"
+#include "Play/Danmu/Render/danmurender.h"
 MainWindow::MainWindow(QWidget *parent)
     : CFramelessWindow(parent),listWindowWidth(0)
 {

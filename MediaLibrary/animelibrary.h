@@ -65,7 +65,7 @@ private:
     QSet<QString> timeSet;
     bool active;
     static AnimeWorker *animeWorker;
-    const int limitCount=50;
+    const int limitCount=200;
     int currentOffset;
     bool hasMoreAnimes;
     // QAbstractItemModel interface

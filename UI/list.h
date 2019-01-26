@@ -16,7 +16,7 @@ class FilterBox : public QLineEdit
 {
     Q_OBJECT
 public:
-    explicit FilterBox(QWidget *parent = 0);
+    explicit FilterBox(QWidget *parent = nullptr);
     inline Qt::CaseSensitivity caseSensitivity() const
     {
         return m_caseSensitivityAction->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
@@ -53,14 +53,14 @@ private:
             *act_remove,*act_clear,
             *act_sortSelectionAscending,*act_sortSelectionDescending,*act_sortAllAscending,*act_sortAllDescending,
             *act_noLoopOne,*act_noLoopAll,*act_loopOne,*act_loopAll,*act_random,
-            *act_browseFile,*act_autoAssociate;
+            *act_browseFile,*act_autoAssociate,*act_exportDanmu;
     bool actionDisable;
     QActionGroup *loopModeGroup;
     QWidget *setupPlaylistPage();
 
     QTreeView *danmulistView;
     QWidget *setupDanmulistPage();
-    QAction *act_addOnlineDanmu,*act_addLocalDanmu,*act_editPool,*act_editBlock,*act_exportAll,
+    QAction *act_addOnlineDanmu,*act_addLocalDanmu,*act_editPool,*act_editBlock,
             *act_copyDanmuText,*act_copyDanmuColor,*act_copyDanmuSender,
             *act_blockText,*act_blockColor,*act_blockSender,
             *act_jumpToTime, *act_deleteDanmu;

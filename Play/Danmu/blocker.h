@@ -8,7 +8,7 @@ class ComboBoxDelegate : public QStyledItemDelegate
     Q_OBJECT
 
 public:
-    ComboBoxDelegate(QObject *parent = 0):QStyledItemDelegate(parent){}
+    ComboBoxDelegate(QObject *parent = nullptr):QStyledItemDelegate(parent){}
 
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option,
                           const QModelIndex &index) const override;
@@ -32,8 +32,7 @@ public:
 
     const QStringList fields={tr("Text"),tr("Color"),tr("User")};
     const QStringList relations={tr("Contain"),tr("Equal"),tr("NotEqual")};
-    const QStringList headers={tr("Id"),tr("Enable"),tr("Field"),tr("Relation"),tr("RegExp"),tr("Content")};
-    const QStringList colToDBRecords={"Id","Enable","Field","Relation","IsRegExp","Content"};
+    const QStringList headers={tr("Id&Title"),tr("Enable"),tr("Field"),tr("Relation"),tr("RegExp"),tr("Content")};
     
 public slots:
 	void addBlockRule();
@@ -42,12 +41,13 @@ public slots:
 	void checkDanmu(QList<DanmuComment *> &danmuList);
 	void checkDanmu(QList<QSharedPointer<DanmuComment> > &danmuList);
     bool isBlocked(DanmuComment *danmu);
+    void save();
 private:
     QList<BlockRule *> blockList;
     int maxId;
-    void updateDB(int row,int col);
-    void insertToDB(BlockRule *rule);
-
+    bool ruleChanged;
+    QString blockFileName;
+    void saveBlockRules();
     // QAbstractItemModel interface
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}

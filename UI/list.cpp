@@ -16,13 +16,14 @@
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/blocker.h"
-#include "Play/Danmu/danmurender.h"
+#include "Play/Danmu/Render/danmurender.h"
+#include "Play/Danmu/providermanager.h"
 namespace
 {
     class TextColorDelegate: public QStyledItemDelegate
     {
     public:
-        explicit TextColorDelegate(QObject* parent = 0) : QStyledItemDelegate(parent)
+        explicit TextColorDelegate(QObject* parent = nullptr) : QStyledItemDelegate(parent)
         { }
 
         void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
@@ -163,7 +164,7 @@ void ListWindow::initActions()
 {
     act_play = new QAction(tr("Play"),this);
     QObject::connect(act_play,&QAction::triggered,[this](){
-        QModelIndexList &selection = playlistView->selectionModel()->selectedIndexes();
+        QModelIndexList selection = playlistView->selectionModel()->selectedIndexes();
         QModelIndex index = selection.size() == 0 ? QModelIndex() : selection.last();
         playItem(index);
     });
@@ -208,6 +209,26 @@ void ListWindow::initActions()
                     GlobalObjects::playlist->matchIndex(indexes.first(),matchEditor.getMatchInfo());
             }
         }
+    });
+    act_exportDanmu=new QAction(tr("Export Danmu"),this);
+    QObject::connect(act_exportDanmu,&QAction::triggered,[this](){
+        QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
+        QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
+        if (selection.size() == 0)return;
+        QModelIndexList indexes(selection.indexes());
+        actionDisable=true;
+        updatePlaylistActions();
+        act_addCollection->setEnabled(false);
+        act_addFolder->setEnabled(false);
+        act_addItem->setEnabled(false);
+        playlistView->setDragEnabled(false);
+        GlobalObjects::playlist->exportDanmuItems(indexes);
+        actionDisable=false;
+        updatePlaylistActions();
+        playlistView->setDragEnabled(true);
+        act_addCollection->setEnabled(true);
+        act_addFolder->setEnabled(true);
+        act_addItem->setEnabled(true);
     });
 
     act_addCollection=new QAction(tr("Add Collection"),this);
@@ -266,7 +287,7 @@ void ListWindow::initActions()
     });
     act_moveUp=new QAction(tr("Move Up"),this);
     QObject::connect(act_moveUp,&QAction::triggered,[this](){
-        QModelIndexList &selection = playlistView->selectionModel()->selectedIndexes();
+        QModelIndexList selection = playlistView->selectionModel()->selectedIndexes();
         if(selection.size()==0)return;
         QModelIndex index(selection.last());
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
@@ -274,7 +295,7 @@ void ListWindow::initActions()
     });
     act_moveDown=new QAction(tr("Move Down"),this);
     QObject::connect(act_moveDown,&QAction::triggered,[this](){
-        QModelIndexList &selection = playlistView->selectionModel()->selectedIndexes();
+        QModelIndexList selection = playlistView->selectionModel()->selectedIndexes();
         if(selection.size()==0)return;
         QModelIndex index(selection.last());
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
@@ -415,23 +436,6 @@ void ListWindow::initActions()
         PoolEditor poolEditor(this);
         poolEditor.exec();
     });
-    act_exportAll=new QAction(tr("Export to Xml"),this);
-    QObject::connect(act_exportAll,&QAction::triggered,[this](){
-        if(GlobalObjects::danmuPool->isEmpty())return;
-        bool restorePlayState = false;
-        if (GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
-        {
-            restorePlayState = true;
-            GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
-        }
-        const PlayListItem *curItem = GlobalObjects::playlist->getCurrentItem();
-        QString fileName = QFileDialog::getSaveFileName(this, tr("Save Danmu"),curItem?curItem->title:"",tr("Xml File (*.xml)"));
-        if(!fileName.isEmpty())
-        {
-            GlobalObjects::danmuPool->exportDanmu(-1,fileName);
-        }
-        if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
-    });
     act_copyDanmuText=new QAction(tr("Copy Danmu Text"),this);
     QObject::connect(act_copyDanmuText,&QAction::triggered,[this](){
         QClipboard *cb = QApplication::clipboard();
@@ -499,7 +503,7 @@ void ListWindow::initActions()
 
 QModelIndex ListWindow::getPSParentIndex()
 {
-    QModelIndexList &selection = playlistView->selectionModel()->selectedIndexes();
+    QModelIndexList selection = playlistView->selectionModel()->selectedIndexes();
     QModelIndex parentIndex = selection.size() == 0 ? QModelIndex() : selection.last();
     QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
     return model->mapToSource(parentIndex);
@@ -507,7 +511,7 @@ QModelIndex ListWindow::getPSParentIndex()
 
 QSharedPointer<DanmuComment> &ListWindow::getSelectedDanmu()
 {
-    QModelIndexList &selection =danmulistView->selectionModel()->selectedRows();
+    QModelIndexList selection =danmulistView->selectionModel()->selectedRows();
     QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(danmulistView->model());
     return GlobalObjects::danmuPool->getDanmu(model->mapToSource(selection.last()).row());
 }
@@ -517,6 +521,7 @@ void ListWindow::updatePlaylistActions()
     if(actionDisable)
     {
         act_autoAssociate->setEnabled(false);
+        act_exportDanmu->setEnabled(false);
         act_cut->setEnabled(false);
         act_remove->setEnabled(false);
         act_moveUp->setEnabled(false);
@@ -533,6 +538,7 @@ void ListWindow::updatePlaylistActions()
     act_moveDown->setEnabled(hasPlaylistSelection);
     act_merge->setEnabled(hasPlaylistSelection);
     act_browseFile->setEnabled(hasPlaylistSelection);
+    act_exportDanmu->setEnabled(hasPlaylistSelection);
     act_paste->setEnabled(GlobalObjects::playlist->canPaste());  
 }
 
@@ -582,7 +588,7 @@ QWidget *ListWindow::setupPlaylistPage()
     proxyModel->setSourceModel(GlobalObjects::playlist);
     playlistView->setModel(proxyModel);
 
-    QObject::connect(filter,&FilterBox::filterChanged,[proxyModel,filter,this](){
+    QObject::connect(filter,&FilterBox::filterChanged,[proxyModel,filter](){
         QRegExp regExp(filter->text(),filter->caseSensitivity(),filter->patternSyntax());
         proxyModel->setFilterRegExp(regExp);
     });
@@ -595,6 +601,7 @@ QWidget *ListWindow::setupPlaylistPage()
     QMenu *playlistContextMenu=new QMenu(playlistView);
     playlistContextMenu->addAction(act_play);
     playlistContextMenu->addAction(act_autoAssociate);
+    playlistContextMenu->addAction(act_exportDanmu);
     QMenu *addSubMenu=new QMenu(tr("Add"),playlistContextMenu);
     addSubMenu->addAction(act_addCollection);
     addSubMenu->addAction(act_addItem);
@@ -732,22 +739,47 @@ QWidget *ListWindow::setupDanmulistPage()
     danmulistPageVLayout->addWidget(danmulistView);
 
     GlobalObjects::iconfont.setPointSize(14);
-    QToolButton *editRelation=new QToolButton(danmulistPage);
-    editRelation->setFont(GlobalObjects::iconfont);
-    editRelation->setText(QChar(0xe62a));
-    editRelation->setObjectName(QStringLiteral("ListEditButton"));
-    editRelation->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    editRelation->setToolTip(tr("Edit Relation"));
-    QObject::connect(editRelation,&QToolButton::clicked,[this](){
-        const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
-        if(currentItem)
+    QToolButton *updatePool=new QToolButton(danmulistPage);
+    updatePool->setFont(GlobalObjects::iconfont);
+    updatePool->setText(QChar(0xe636));
+    updatePool->setObjectName(QStringLiteral("ListEditButton"));
+    updatePool->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    updatePool->setToolTip(tr("Update Danmu Pool"));
+    QObject::connect(updatePool,&QToolButton::clicked,[this](){
+        QString poolId=GlobalObjects::danmuPool->getPoolID();
+        if(poolId.isEmpty()) return;
+        act_autoAssociate->setEnabled(false);
+        act_addOnlineDanmu->setEnabled(false);
+        act_addLocalDanmu->setEnabled(false);
+        act_editPool->setEnabled(false);
+        auto &sources =  GlobalObjects::danmuPool->getSources();
+        int count=0;
+        for(auto iter=sources.begin();iter!=sources.end();++iter)
         {
-            MatchEditor matchEditor(currentItem,nullptr,this);
-            if(QDialog::Accepted==matchEditor.exec())
-                GlobalObjects::playlist->matchCurrentItem(matchEditor.getMatchInfo());
+            QList<DanmuComment *> tmpList;
+            showMessage(tr("Updating: %1").arg(iter.value().url),ListPopMessageFlag::LPM_PROCESS);
+            QString errInfo = GlobalObjects::providerManager->downloadBySourceURL(iter.value().url,tmpList);
+            if(poolId!=GlobalObjects::danmuPool->getPoolID())
+            {
+                qDeleteAll(tmpList);
+                break;
+            }
+            if(errInfo.isEmpty())
+            {
+                if(tmpList.count()>0)
+                {
+                    DanmuSourceInfo si;
+                    si.count = tmpList.count();
+                    si.url = iter.value().url;
+                    count += GlobalObjects::danmuPool->addDanmu(si,tmpList);
+                }
+            }
         }
-        else
-            showMessage(tr("No Item is Playing"),ListPopMessageFlag::LPM_INFO|ListPopMessageFlag::LPM_HIDE);
+        showMessage(tr("Add %1 Danmu").arg(count),ListPopMessageFlag::LPM_INFO|ListPopMessageFlag::LPM_HIDE);
+        act_autoAssociate->setEnabled(true);
+        act_addOnlineDanmu->setEnabled(true);
+        act_addLocalDanmu->setEnabled(true);
+        act_editPool->setEnabled(true);
     });
 
     QToolButton *addDanmu=new QToolButton(danmulistPage);
@@ -767,7 +799,6 @@ QWidget *ListWindow::setupDanmulistPage()
     edit->setToolButtonStyle(Qt::ToolButtonTextOnly);
     edit->addAction(act_editPool);
     edit->addAction(act_editBlock);
-    edit->addAction(act_exportAll);
     edit->setPopupMode(QToolButton::InstantPopup);
     edit->setToolTip(tr("Edit"));
 
@@ -786,7 +817,7 @@ QWidget *ListWindow::setupDanmulistPage()
 
     QHBoxLayout *poolEditHLayout=new QHBoxLayout();
     //poolEditHLayout->setSpacing(2);
-    poolEditHLayout->addWidget(editRelation);
+    poolEditHLayout->addWidget(updatePool);
     poolEditHLayout->addWidget(addDanmu);
     poolEditHLayout->addWidget(edit);
     poolEditHLayout->addWidget(locatePosition);

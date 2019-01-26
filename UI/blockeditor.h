@@ -9,10 +9,7 @@ class BlockEditor : public CFramelessDialog
     Q_OBJECT
 public:
     explicit BlockEditor(QWidget *parent = nullptr);
-
-signals:
-
-public slots:
+    ~BlockEditor();
 };
 
 #endif // BLOCKEDITOR_H

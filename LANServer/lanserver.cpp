@@ -27,6 +27,11 @@ LANServer::LANServer(QObject *parent) : QObject(parent)
 
 }
 
+LANServer::~LANServer()
+{
+    server->deleteLater();
+}
+
 QString LANServer::startServer(qint64 port)
 {
     QString retVal;

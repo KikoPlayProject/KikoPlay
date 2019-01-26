@@ -19,7 +19,7 @@ BlockEditor::BlockEditor(QWidget *parent) : CFramelessDialog(tr("Block Rules"),p
     QPushButton *add=new QPushButton(tr("Add Rule"),this);
     QObject::connect(add,SIGNAL(clicked()),GlobalObjects::blocker,SLOT(addBlockRule()));
     QPushButton *remove=new QPushButton(tr("Remove Rule(s)"),this);
-    QObject::connect(remove,&QPushButton::clicked,[this,blockView](){
+    QObject::connect(remove,&QPushButton::clicked,[blockView](){
         auto selection = blockView->selectionModel()->selectedRows();
         if (selection.size() == 0)return;
         GlobalObjects::blocker->removeBlockRule(selection);
@@ -31,13 +31,18 @@ BlockEditor::BlockEditor(QWidget *parent) : CFramelessDialog(tr("Block Rules"),p
     blockGLayout->setRowStretch(1,1);
     blockGLayout->setColumnStretch(2,1);
 	blockGLayout->setContentsMargins(0, 0, 0, 0);
-    resize(620*logicalDpiX()/96, 320*logicalDpiY()/96);
+    resize(700*logicalDpiX()/96, 320*logicalDpiY()/96);
 	QHeaderView *blockHeader = blockView->header();
 	blockHeader->setFont(this->font());
-    blockHeader->resizeSection(0, 40*logicalDpiX()/96); //ID
+    blockHeader->resizeSection(0, 110*logicalDpiX()/96); //ID
     blockHeader->resizeSection(1, 60*logicalDpiX()/96); //Enable
     blockHeader->resizeSection(2, 80*logicalDpiX()/96); //Field
     blockHeader->resizeSection(3, 100*logicalDpiX()/96); //Relation
     blockHeader->resizeSection(4, 100*logicalDpiX()/96); //RegExp
-    blockHeader->resizeSection(5, 200*logicalDpiX()/96); //Content
+    blockHeader->resizeSection(5, 210*logicalDpiX()/96); //Content
+}
+
+BlockEditor::~BlockEditor()
+{
+    GlobalObjects::blocker->save();
 }

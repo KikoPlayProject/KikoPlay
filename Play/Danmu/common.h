@@ -51,6 +51,12 @@ public:
     int source;
 };
 Q_DECLARE_OPAQUE_POINTER(DanmuComment *)
+struct SimpleDanmuInfo
+{
+    int time;
+    int originTime;
+    QString text;
+};
 class DanmuDrawInfo
 {
 public:
@@ -108,6 +114,7 @@ struct BlockRule
     Relation relation;
     bool isRegExp;
     bool enable;
+    QString name;
     QString content;
     QScopedPointer<QRegExp> re;
     bool blockTest(DanmuComment *comment);

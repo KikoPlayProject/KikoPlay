@@ -1,5 +1,6 @@
 #ifndef GLOBALOBJECTS_H
 #define GLOBALOBJECTS_H
+#include <QString>
 class MPVPlayer;
 class DanmuPool;
 class DanmuRender;
@@ -31,9 +32,11 @@ public:
     static AnimeLibrary *library;
     static DownloadModel *downloadModel;
     static DanmuManager *danmuManager;
-    static LANServer *lanServer;
+    static LANServer *lanServer;    
+    static QString dataPath;
 private:
-    static void initDatabase();
+    static void initDatabase(const char *db_names[]);
+    static void setDatabase(const char *name, const char *file);
 };
 enum ListPopMessageFlag
 {
