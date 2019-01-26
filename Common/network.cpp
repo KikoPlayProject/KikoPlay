@@ -1,6 +1,6 @@
 #include "network.h"
 
-QByteArray Network::httpGet(const QString &url, QUrlQuery &query, const QStringList &header)
+QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QStringList &header)
 {
     QUrl queryUrl(url);
     if(!query.isEmpty())
