@@ -14,6 +14,7 @@ private:
     QTreeWidget *bangumiList;
     QLineEdit *searchWordEdit;
     QPushButton *searchButton;
+    QLabel *downloadInfoLabel;
     void search();
     // CFramelessDialog interface
 protected:

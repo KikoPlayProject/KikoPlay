@@ -1,9 +1,13 @@
 #include "librarywindow.h"
 #include <QListView>
+#include <QTreeView>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <QHeaderView>
 #include <QLabel>
+#include <QMovie>
 #include <QToolButton>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QGraphicsBlurEffect>
@@ -16,21 +20,21 @@
 
 #include "globalobjects.h"
 #include "bangumisearch.h"
+#include "bangumiupdate.h"
 #include "episodeeditor.h"
 #include "animedetailinfo.h"
 #include "MediaLibrary/animeitemdelegate.h"
 #include "MediaLibrary/animelibrary.h"
-#include "Play/Playlist/playlist.h"
-#include "Play/Danmu/Render/danmurender.h"
-#include "Play/Danmu/danmupool.h"
-#include "Play/Video/mpvplayer.h"
-#include "Common/flowlayout.h"
+#include "MediaLibrary/animemodel.h"
+#include "MediaLibrary/labelmodel.h"
+#include "MediaLibrary/labelitemdelegate.h"
+#include "MediaLibrary/animefilterproxymodel.h"
 
 LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
 {
     AnimeItemDelegate *itemDelegate=new AnimeItemDelegate(this);
     QObject::connect(itemDelegate,&AnimeItemDelegate::ItemClicked,[this](const QModelIndex &index){
-        Anime * anime = GlobalObjects::library->getAnime(static_cast<AnimeFilterProxyModel *>(animeListView->model())->mapToSource(index));
+        Anime * anime = GlobalObjects::library->animeModel->getAnime(static_cast<AnimeFilterProxyModel *>(animeListView->model())->mapToSource(index),true);
         AnimeDetailInfo infoDialog(anime,this);
         QObject::connect(&infoDialog,&AnimeDetailInfo::playFile,this,&LibraryWindow::playFile);
         QRect geo(0,0,400,400);
@@ -51,14 +55,14 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     animeListView->setMouseTracking(true);
     animeListView->setContextMenuPolicy(Qt::ActionsContextMenu);
     AnimeFilterProxyModel *proxyModel=new AnimeFilterProxyModel(this);
-    proxyModel->setSourceModel(GlobalObjects::library);
+    proxyModel->setSourceModel(GlobalObjects::library->animeModel);
     animeListView->setModel(proxyModel);
 
     QAction *act_delete=new QAction(tr("Delete"),this);
     QObject::connect(act_delete,&QAction::triggered,[this,proxyModel](){
         QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
         if(selection.size()==0)return;
-        GlobalObjects::library->deleteAnime(selection.indexes().first());
+        GlobalObjects::library->animeModel->deleteAnime(selection.indexes().first());
     });
     act_delete->setEnabled(false);
 
@@ -66,18 +70,35 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     QObject::connect(act_getDetailInfo,&QAction::triggered,[this,proxyModel](){
         QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
         if(selection.size()==0)return;
-        Anime * currentAnime = GlobalObjects::library->getAnime(selection.indexes().first());
+        Anime * currentAnime = GlobalObjects::library->animeModel->getAnime(selection.indexes().first(),true);
         BangumiSearch bgmSearch(currentAnime,this);
         bgmSearch.exec();
     });
     act_getDetailInfo->setEnabled(false);
 
+    QAction *act_updateDetailInfo=new QAction(tr("Update"),this);
+    QObject::connect(act_updateDetailInfo,&QAction::triggered,[this,proxyModel](){
+        QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
+        if(selection.size()==0)return;
+        Anime * currentAnime = GlobalObjects::library->animeModel->getAnime(selection.indexes().first(),true);
+        if(currentAnime->bangumiID==-1)
+        {
+            QMessageBox::information(this,tr("No Bangumi ID, Search For Detail First"),"KikoPlay");
+            return;
+        }
+        BangumiUpdate bgmUpdate(currentAnime,this);
+        bgmUpdate.exec();
+    });
+    act_updateDetailInfo->setEnabled(false);
+
     animeListView->addAction(act_getDetailInfo);
+    animeListView->addAction(act_updateDetailInfo);
     animeListView->addAction(act_delete);
 
-    QObject::connect(animeListView->selectionModel(), &QItemSelectionModel::selectionChanged,[act_delete,act_getDetailInfo,this](){
+    QObject::connect(animeListView->selectionModel(), &QItemSelectionModel::selectionChanged,[act_delete,act_getDetailInfo,act_updateDetailInfo,this](){
         bool hasSelection = !animeListView->selectionModel()->selection().isEmpty();
         act_delete->setEnabled(hasSelection);
+        act_updateDetailInfo->setEnabled(hasSelection);
         act_getDetailInfo->setEnabled(hasSelection);
     });
 
@@ -96,95 +117,97 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     tagCollapseButton->setObjectName(QStringLiteral("TagPanelCollapse"));
     tagCollapseButton->move(width()-tagCollapseButton->width(),(height()-tagCollapseButton->height())/2);
     QObject::connect(tagCollapseButton,&QPushButton::clicked,[this](){
-        bool panelOpen=!filterPage->isHidden();
-        filterPage->resize(width()/4,animeListView->height());
-        QPropertyAnimation *moveAnime = new QPropertyAnimation(filterPage, "pos");
+        bool panelOpen=!labelView->isHidden();
+        labelView->resize(width()/4,animeListView->height());
+        QPropertyAnimation *moveAnime = new QPropertyAnimation(labelView, "pos");
         QPoint endPos(panelOpen?width():width()/4*3-tagCollapseButton->width(),animeListView->y()),
-                startPos(panelOpen?filterPage->x():width(),animeListView->y());
+                startPos(panelOpen?labelView->x():width(),animeListView->y());
         moveAnime->setDuration(500);
         moveAnime->setEasingCurve(QEasingCurve::OutExpo);
         moveAnime->setStartValue(startPos);
         moveAnime->setEndValue(endPos);
-        filterPage->show();
+        labelView->show();
         moveAnime->start(QAbstractAnimation::DeleteWhenStopped);
         tagCollapseButton->setText(panelOpen?QChar(0xe6b1):QChar(0xe943));
         QObject::connect(moveAnime,&QPropertyAnimation::finished,[this,panelOpen](){
-            if(panelOpen)filterPage->hide();
+            if(panelOpen)labelView->hide();
         });
     });
 
-    filterPage=new QWidget(this);
-    filterPage->setObjectName(QStringLiteral("FilterPage"));
-    QWidget *filterPageContent=new QWidget(filterPage);
-    filterPageContent->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
-    QScrollArea *filterScrollArea=new QScrollArea(filterPage);
-    filterScrollArea->setObjectName(QStringLiteral("FilterContentArea"));
-    filterScrollArea->setWidget(filterPageContent);
-    filterScrollArea->setWidgetResizable(true);
-    filterScrollArea->setAlignment(Qt::AlignCenter);
-    filterScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    filterScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    QHBoxLayout *filterPageHLayout=new QHBoxLayout(filterPage);
-    filterPageHLayout->setContentsMargins(0,0,0,0);
-    filterPageHLayout->addWidget(filterScrollArea);
+    labelView=new QTreeView(this);
+    labelView->setObjectName(QStringLiteral("LabelView"));
+    labelView->resize(width()/4,animeListView->height());
+    labelView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
+    labelView->header()->hide();
+    labelView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    labelView->setFont(QFont("Microsoft YaHei UI",12));
+    labelView->setIndentation(16*logicalDpiX()/96);
+    labelView->setItemDelegate(new LabelItemDelegate(this));
+    labelView->hide();
+    labelView->setModel(GlobalObjects::library->labelModel);
+    labelView->setContextMenuPolicy(Qt::ActionsContextMenu);
 
-    QLabel *timeLabel=new QLabel(tr("Year"),filterPageContent);
-    timeLabel->setObjectName(QStringLiteral("AnimeLabelTip"));
-    QLabel *tagLabel=new QLabel(tr("Tag"),filterPageContent);
-    tagLabel->setObjectName(QStringLiteral("AnimeLabelTip"));
-    timePanel=new LabelPanel(filterPageContent);
-    tagPanel=new LabelPanel(filterPageContent,true);
+    QAction *act_deleteTag=new QAction(tr("Delete"),this);
+    QObject::connect(act_deleteTag,&QAction::triggered,[this](){
+        QItemSelection selection=labelView->selectionModel()->selection();
+        if(selection.size()==0)return;
+        GlobalObjects::library->labelModel->removeTag(selection.indexes().first());
+    });
+    labelView->addAction(act_deleteTag);
 
-    QVBoxLayout *filterContentVLayout=new QVBoxLayout(filterPageContent);
-    filterContentVLayout->addWidget(timeLabel);
-    filterContentVLayout->addWidget(timePanel);
-    filterContentVLayout->addWidget(tagLabel);
-    filterContentVLayout->addWidget(tagPanel);
-    filterContentVLayout->addStretch(1);
+    QObject::connect(labelView->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this,proxyModel](){
+        QStringList tags;
+        QSet<QString> times;
+        GlobalObjects::library->labelModel->selLabelList(labelView->selectionModel()->selectedIndexes(),tags,times);
+        proxyModel->setTags(tags);
+        proxyModel->setTime(times);
+    });
+    QTimer::singleShot(0,[](){
+        GlobalObjects::library->labelModel->refreshLabel();
+    });
 
-    filterPage->resize(width()/4,animeListView->height());
-    filterPage->hide();
-
-    QObject::connect(GlobalObjects::library,&AnimeLibrary::refreshLabelInfo,[this](){
-        auto &tagsMap=GlobalObjects::library->animeTags();
-        for(auto iter=tagsMap.begin();iter!=tagsMap.end();iter++)
-        {
-            tagPanel->addTag(iter.key());
-        }
-        auto &timeSet=GlobalObjects::library->animeTime();
-        for(const QString &time:timeSet)
-        {
-            timePanel->addTag(time);
-        }
-    });
-    QObject::connect(GlobalObjects::library,&AnimeLibrary::addTags,[this](const QStringList &tags){
-        for(const QString &tag:tags)
-        {
-            tagPanel->addTag(tag);
-        }
-    });
-    QObject::connect(GlobalObjects::library,&AnimeLibrary::addTimeLabel,timePanel,&LabelPanel::addTag);
-    QObject::connect(tagPanel,&LabelPanel::tagStateChanged,[proxyModel](const QString &tag, bool checked){
-        if(checked)proxyModel->addTag(tag);
-        else proxyModel->removeTag(tag);
-    });
-    QObject::connect(timePanel,&LabelPanel::tagStateChanged,[proxyModel](const QString &time, bool checked){
-        if(checked)proxyModel->addTime(time);
-        else proxyModel->removeTime(time);
-    });
-    QObject::connect(tagPanel,&LabelPanel::deleteTag,[proxyModel](const QString &tag){
-        proxyModel->removeTag(tag);
-        GlobalObjects::library->deleteTag(tag);
-    });
+    QMovie *loadingIcon=new QMovie(this);
+    QLabel *loadingLabel=new QLabel(this);
+    loadingLabel->setMovie(loadingIcon);
+    loadingLabel->setFixedSize(36,36);
+    loadingLabel->setScaledContents(true);
+    loadingIcon->setFileName(":/res/images/loading-blocks.gif");
+    loadingIcon->start();
+    loadingLabel->hide();
 
     QLabel *totalCountLabel=new QLabel(this);
     totalCountLabel->setFont(QFont("Microsoft Yahei",12));
-    QObject::connect(GlobalObjects::library,&AnimeLibrary::animeCountChanged,this,[totalCountLabel](){
-        totalCountLabel->setText(tr("Anime Count: %1").arg(GlobalObjects::library->getCount(0)));
+    QPushButton *loadMore=new QPushButton(tr("Continue to load"),this);
+    QObject::connect(loadMore,&QPushButton::clicked,[](){
+        GlobalObjects::library->animeModel->fetchMore(QModelIndex());
+    });
+    QObject::connect(GlobalObjects::library->animeModel,&AnimeModel::animeMessage,this,
+                     [totalCountLabel,loadMore,loadingLabel](const QString &msg, int flag,bool hasMore){
+        totalCountLabel->setText(msg);
+        if(hasMore)
+        {
+            loadMore->show();
+        }
+        else
+        {
+            loadMore->hide();
+        }
+        if(flag&PopMessageFlag::PM_PROCESS)
+        {
+            loadingLabel->show();
+        }
+        else
+        {
+            loadingLabel->hide();
+        }
+
     });
 
+
     QHBoxLayout *toolbuttonHLayout=new QHBoxLayout();
+    toolbuttonHLayout->addWidget(loadingLabel);
     toolbuttonHLayout->addWidget(totalCountLabel);
+    toolbuttonHLayout->addWidget(loadMore);
     toolbuttonHLayout->addStretch(1);
     toolbuttonHLayout->addWidget(filterBox);
 
@@ -197,20 +220,20 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
 
 void LibraryWindow::showEvent(QShowEvent *)
 {
-    GlobalObjects::library->setActive(true);
+    GlobalObjects::library->animeModel->setActive(true);
 }
 
 void LibraryWindow::hideEvent(QHideEvent *)
 {
-    GlobalObjects::library->setActive(false);
+    GlobalObjects::library->animeModel->setActive(false);
 }
 
 void LibraryWindow::resizeEvent(QResizeEvent *)
 {
     tagCollapseButton->move(width()-tagCollapseButton->width(),(height()-tagCollapseButton->height())/2);
-    if(!filterPage->isHidden())
+    if(!labelView->isHidden())
     {
-        filterPage->setGeometry(width()/4*3-tagCollapseButton->width(),animeListView->y(),width()/4,animeListView->height());
+        labelView->setGeometry(width()/4*3-tagCollapseButton->width(),animeListView->y(),width()/4,animeListView->height());
     }
 }
 
@@ -224,7 +247,7 @@ AnimeFilterBox::AnimeFilterBox(QWidget *parent)
     QMenu *menu = new QMenu(this);
 
     filterTypeGroup->setExclusive(true);
-    QAction *filterTitle = menu->addAction(tr("Anime Title"));
+    QAction *filterTitle = menu->addAction(tr("Title"));
     filterTitle->setData(QVariant(int(0)));
     filterTitle->setCheckable(true);
     filterTitle->setChecked(true);
@@ -270,42 +293,3 @@ AnimeFilterBox::AnimeFilterBox(QWidget *parent)
     addAction(optionsAction, QLineEdit::LeadingPosition);
 }
 
-LabelPanel::LabelPanel(QWidget *parent, bool allowDelete):QWidget(parent),showDelete(allowDelete)
-{
-    setLayout(new FlowLayout(this));
-    setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
-}
-
-void LabelPanel::addTag(const QString &tag)
-{
-    if(tagList.contains(tag))return;
-    QPushButton *tagButton=new QPushButton(tag,this);
-    tagButton->setObjectName(QStringLiteral("TagButton"));
-    tagButton->setCheckable(true);
-    QObject::connect(tagButton,&QPushButton::toggled,[this,tag](bool checked){
-        emit tagStateChanged(tag,checked);
-    });
-    if(showDelete)
-    {
-        tagButton->setContextMenuPolicy(Qt::ActionsContextMenu);
-        QAction *deleteAction=new QAction(tr("Delete"),tagButton);
-        QObject::connect(deleteAction,&QAction::triggered,[this,tag,tagButton](){
-            emit deleteTag(tag);
-            tagButton->deleteLater();
-            tagList.remove(tag);
-        });
-        tagButton->addAction(deleteAction);
-    }
-    layout()->addWidget(tagButton);
-    tagList.insert(tag,tagButton);
-}
-
-void LabelPanel::removeTag(const QString &tag)
-{
-    QPushButton *tagButton=tagList.value(tag,nullptr);
-    if(tagButton)
-    {
-        tagButton->deleteLater();
-        tagList.remove(tag);
-    }
-}

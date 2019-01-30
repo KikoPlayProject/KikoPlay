@@ -36,11 +36,20 @@ BangumiSearch::BangumiSearch(Anime *anime, QWidget *parent) : CFramelessDialog(t
     bgmHeader->resizeSection(2, 80*logicalDpiX()/96);
     bgmHeader->setFont(font());
 
+    downloadInfoLabel=new QLabel(this);
+    downloadInfoLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
+    downloadInfoLabel->hide();
+    QObject::connect(GlobalObjects::library,&AnimeLibrary::downloadDetailMessage,this,[this](const QString &msg){
+       downloadInfoLabel->setText(msg);
+       if(downloadInfoLabel->isHidden()) downloadInfoLabel->show();
+    });
+
     QGridLayout *bgmGLayout=new QGridLayout(this);
     bgmGLayout->addWidget(searchWordEdit,0,0);
     bgmGLayout->addWidget(searchButton,0,1);
     bgmGLayout->addWidget(downloadTag,0,2);
     bgmGLayout->addWidget(bangumiList,1,0,1,3);
+    bgmGLayout->addWidget(downloadInfoLabel,2,0,1,3);
     bgmGLayout->setRowStretch(1,1);
     bgmGLayout->setColumnStretch(0,1);
 
@@ -69,7 +78,7 @@ void BangumiSearch::search()
         for(auto iter=results.begin();iter!=results.end();++iter)
         {
             QJsonObject searchObj=(*iter).toObject();
-            QTreeWidgetItem *widgetItem=new QTreeWidgetItem(bangumiList,QStringList()<<searchObj.value("name").toString()<<searchObj.value("name_cn").toString()<<QString::number(searchObj.value("id").toInt()));
+            new QTreeWidgetItem(bangumiList,QStringList()<<searchObj.value("name").toString()<<searchObj.value("name_cn").toString()<<QString::number(searchObj.value("id").toInt()));
         }
     }
     catch(Network::NetworkError &error)
@@ -96,11 +105,14 @@ void BangumiSearch::onAccept()
         int bgmId=bangumiList->selectedItems().last()->text(2).toInt();
         QString errInfo;
         currentAnime= GlobalObjects::library->downloadDetailInfo(currentAnime,bgmId,&errInfo);
-        if(!errInfo.isEmpty())
-            QMessageBox::information(this,tr("Error"),errInfo);
         showBusyState(false);
         searchButton->setEnabled(true);
         searchWordEdit->setEnabled(true);
+        if(!errInfo.isEmpty())
+        {
+            QMessageBox::information(this,tr("Error"),errInfo);
+            return;
+        }
         CFramelessDialog::onAccept();
     }
 }

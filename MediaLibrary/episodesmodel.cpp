@@ -14,7 +14,7 @@ EpisodesModel::EpisodesModel(Anime *anime, QObject *parent) : QAbstractItemModel
 
 void EpisodesModel::updatePath(const QString &oldPath, const QString &newPath)
 {
-    QSqlQuery query(QSqlDatabase::database("MT"));
+    QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
     query.prepare("update eps set LocalFile=? where Anime=? and LocalFile=?");
     query.bindValue(0,newPath);
     query.bindValue(1,currentAnime->title);
@@ -24,7 +24,7 @@ void EpisodesModel::updatePath(const QString &oldPath, const QString &newPath)
 
 void EpisodesModel::updateTitle(const QString &path, const QString &title)
 {
-    QSqlQuery query(QSqlDatabase::database("MT"));
+    QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
     query.prepare("update eps set Name=? where Anime=? and LocalFile=?");
     query.bindValue(0,title);
     query.bindValue(1,currentAnime->title);
@@ -42,7 +42,7 @@ void EpisodesModel::addEpisode(const QString &title, const QString &path)
     currentAnime->eps.append(ep);
     endInsertRows();
     episodeChanged=true;
-    QSqlQuery query(QSqlDatabase::database("MT"));
+    QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
     query.prepare("insert into eps(Anime,Name,LocalFile) values(?,?,?)");
     query.bindValue(0,currentAnime->title);
     query.bindValue(1,title);
@@ -52,12 +52,12 @@ void EpisodesModel::addEpisode(const QString &title, const QString &path)
 
 void EpisodesModel::removeEpisodes(const QModelIndexList &removeIndexes)
 {
-    QSqlDatabase db=QSqlDatabase::database("MT");
-    QSqlQuery query(QSqlDatabase::database("MT"));
+    QSqlDatabase db=QSqlDatabase::database("Bangumi_M");
+    QSqlQuery query(db);
     query.prepare("delete from eps where Anime=? and LocalFile=?");
     db.transaction();
     QList<int> rows;
-    foreach (const QModelIndex &index, removeIndexes)
+    for (const QModelIndex &index : removeIndexes)
     {
         if (index.isValid())
         {

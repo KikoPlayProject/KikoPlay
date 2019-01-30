@@ -94,7 +94,11 @@ void DanmuManager::loadPool(const QString &pid, QList<QSharedPointer<DanmuCommen
         danmu->source=query.value(sourceNo).toInt();
         danmu->text=query.value(textNo).toString();
         danmu->originTime=query.value(timeNo).toInt();
-
+        if(danmu->text.isEmpty())
+        {
+            delete danmu;
+            continue;
+        }
         Q_ASSERT(sourcesTable.contains(danmu->source));
         setDelay(danmu,&sourcesTable[danmu->source]);
         sourcesTable[danmu->source].count++;
@@ -228,6 +232,7 @@ void DanmuManager::saveSource(const QString &pid, const DanmuSourceInfo *sourceI
         query.prepare(QString("insert into danmu_%1(PoolID,Time,Date,Color,Mode,Size,Source,User,Text) values(?,?,?,?,?,?,?,?,?)").arg(tableId));
         for(DanmuComment *danmu:*danmuList)
         {
+            if(danmu->text.isEmpty()) continue;
             query.bindValue(0,pid);
             query.bindValue(1,danmu->originTime);
             query.bindValue(2,danmu->date);

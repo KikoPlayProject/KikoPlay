@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QLineEdit>
 class QListView;
+class QTreeView;
 class QToolButton;
 class QPushButton;
 class QGraphicsBlurEffect;
@@ -13,26 +14,12 @@ class AnimeFilterBox : public QLineEdit
 {
     Q_OBJECT
 public:
-    explicit AnimeFilterBox(QWidget *parent = 0);
+    explicit AnimeFilterBox(QWidget *parent = nullptr);
 
 signals:
     void filterChanged(int type,const QString &filterStr);
 private:
     QActionGroup *filterTypeGroup;
-};
-class LabelPanel : public QWidget
-{
-	Q_OBJECT
-public:
-    explicit LabelPanel(QWidget *parent = 0, bool allowDelete=false);
-    void addTag(const QString &tag);
-    void removeTag(const QString &tag);
-signals:
-    void tagStateChanged(const QString &tag, bool checked);
-    void deleteTag(const QString &tag);
-private:
-    QMap<QString,QPushButton *> tagList;
-    bool showDelete;
 };
 class LibraryWindow : public QWidget
 {
@@ -40,13 +27,9 @@ class LibraryWindow : public QWidget
 public:
     explicit LibraryWindow(QWidget *parent = nullptr);
 private:
-    QToolButton *allAnime,*likedAnime,*threeMonth,*halfYear,*year;
     QListView *animeListView;
-    QWidget *detailInfoPage;
+    QTreeView *labelView;
     QPushButton *tagCollapseButton;
-    QWidget *filterPage;
-    LabelPanel *timePanel,*tagPanel;
-    QButtonGroup *btnGroup;
 signals:
     void playFile(const QString &file);
 public slots:

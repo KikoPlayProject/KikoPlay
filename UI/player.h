@@ -80,17 +80,21 @@ public:
 private:
      QWidget *playControlPanel,*playInfoPanel;
      QWidget *playInfo,*playerContent,*danmuStatisBar;
+     QPushButton *playListCollapseButton;
      QLabel *timeInfoTip;
      bool autoHideControlPanel;
 
      const int controlPanelHeight=80*logicalDpiY()/96;
      const int statisBarHeight=64*logicalDpiY()/96;
      const int infoPanelHeight=42*logicalDpiY()/96;
+     const int playlistCollapseWidth=25*logicalDpiX()/96;
+     const int playlistCollapseHeight=80*logicalDpiX()/96;
+
 
      ClickSlider *process;
      QSlider *volume;
      QLabel *timeLabel;
-     QPushButton *play_pause,*prev,*next,*stop,*mute,*setting, *danmu,*fullscreen,*list;
+     QPushButton *play_pause,*prev,*next,*stop,*mute,*setting, *danmu,*fullscreen;
      QAction *actPlayPause,*actPrev,*actNext,*actFullscreen;
      QTimer ctrlPressTimer,hideCursorTimer;
      const int hideCursorTimeout=3000;

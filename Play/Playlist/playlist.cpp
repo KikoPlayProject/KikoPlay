@@ -102,7 +102,7 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
     }
     if(tmpItems.count()==0)
     {
-        emit message(tr("File exist or Unsupported format"), LPM_HIDE|LPM_INFO);
+        emit message(tr("File exist or Unsupported format"), PM_HIDE|PM_INFO);
         return 0;
     }
     beginInsertRows(parent, insertPosition, insertPosition+ tmpItems.count()-1);
@@ -118,7 +118,7 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
 	endInsertRows();
     d->playListChanged=true;
     d->needRefresh = true;
-    emit message(tr("Add %1 item(s)").arg(tmpItems.size()),LPM_HIDE|LPM_OK);
+    emit message(tr("Add %1 item(s)").arg(tmpItems.size()),PM_HIDE|PM_OK);
     return tmpItems.size();
 }
 
@@ -149,7 +149,7 @@ int PlayList::addFolder(QString folderStr, QModelIndex parent)
         d->playListChanged=true;
 	}
     folderRootCollection.children->clear();
-    emit message(tr("Add %1 item(s)").arg(itemCount),ListPopMessageFlag::LPM_HIDE|ListPopMessageFlag::LPM_OK);
+    emit message(tr("Add %1 item(s)").arg(itemCount),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
     return itemCount;
 }
 
@@ -538,7 +538,7 @@ const PlayListItem *PlayList::setCurrentItem(const QModelIndex &index,bool playC
     QFileInfo fileInfo(cur->path);
     if(!fileInfo.exists())
     {
-        emit message(tr("File Not Exist"),LPM_INFO|LPM_HIDE);
+        emit message(tr("File Not Exist"),PM_INFO|PM_HIDE);
         return nullptr;
     }
     d->autoLocalMatch(cur);
@@ -640,7 +640,7 @@ void PlayList::matchItems(const QModelIndexList &matchIndexes)
             items.append(item);
         }
     }
-    emit message(tr("Match Start"),ListPopMessageFlag::LPM_PROCESS);
+    emit message(tr("Match Start"),PopMessageFlag::PM_PROCESS);
     while(!items.empty())
     {
         PlayListItem *currentItem=items.takeFirst();
@@ -658,7 +658,7 @@ void PlayList::matchItems(const QModelIndexList &matchIndexes)
             if(!matchInfo) break;
             if(matchInfo->error)
             {
-                emit message(tr("Failed: %1").arg(matchInfo->errorInfo),ListPopMessageFlag::LPM_PROCESS);
+                emit message(tr("Failed: %1").arg(matchInfo->errorInfo),PopMessageFlag::PM_PROCESS);
             }
             else
             {
@@ -666,7 +666,7 @@ void PlayList::matchItems(const QModelIndexList &matchIndexes)
                 if(matchInfo->success && matchList.count()>0)
                 {
                     MatchInfo::DetailInfo &bestMatch=matchList.first();
-                    emit message(tr("Success: %1").arg(currentItem->title),ListPopMessageFlag::LPM_PROCESS);
+                    emit message(tr("Success: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS);
                     currentItem->animeTitle=bestMatch.animeTitle;
                     currentItem->title=bestMatch.title;
                     currentItem->poolID=matchInfo->poolID;
@@ -681,13 +681,13 @@ void PlayList::matchItems(const QModelIndexList &matchIndexes)
                 }
                 else
                 {
-                    emit message(tr("Need manually: %1").arg(currentItem->title),ListPopMessageFlag::LPM_PROCESS);
+                    emit message(tr("Need manually: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS);
                 }
             }
             delete matchInfo;
         }
     }
-    emit message(tr("Match Done"),ListPopMessageFlag::LPM_HIDE|ListPopMessageFlag::LPM_OK);
+    emit message(tr("Match Done"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
     d->savePlaylist();
 }
 
@@ -702,7 +702,7 @@ void PlayList::matchIndex(QModelIndex &index, MatchInfo *matchInfo)
     item->poolID=MatchProvider::updateMatchInfo(item->path,matchInfo);
     d->playListChanged = true;
     d->needRefresh = true;
-    emit message(tr("Success: %1").arg(item->title),ListPopMessageFlag::LPM_HIDE|ListPopMessageFlag::LPM_OK);
+    emit message(tr("Success: %1").arg(item->title),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
     emit dataChanged(index, index);
     if (item == d->currentItem)
     {
@@ -816,14 +816,14 @@ void PlayList::exportDanmuItems(const QModelIndexList &exportIndexes)
         {
             if(!currentItem->path.isEmpty())
             {
-                emit message(tr("Exporting: %1").arg(currentItem->title),ListPopMessageFlag::LPM_PROCESS);
+                emit message(tr("Exporting: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS);
                 QFileInfo fi(currentItem->path);
                 QFileInfo dfi(fi.absolutePath(),fi.baseName()+".xml");
                 GlobalObjects::danmuManager->exportPool(currentItem->poolID,dfi.absoluteFilePath());
             }
         }
     }
-    emit message(tr("Export Down"),ListPopMessageFlag::LPM_HIDE|ListPopMessageFlag::LPM_OK);
+    emit message(tr("Export Down"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
 }
 
 void PlayList::dumpJsonPlaylist(QJsonDocument &jsonDoc, QHash<QString, QString> &mediaHash)

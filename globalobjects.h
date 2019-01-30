@@ -38,12 +38,12 @@ private:
     static void initDatabase(const char *db_names[]);
     static void setDatabase(const char *name, const char *file);
 };
-enum ListPopMessageFlag
+enum PopMessageFlag
 {
-    LPM_HIDE=1,
-    LPM_PROCESS=2,
-    LPM_INFO=4,
-    LPM_OK=8
+    PM_HIDE=1,
+    PM_PROCESS=2,
+    PM_INFO=4,
+    PM_OK=8
 
 };
 #endif // GLOBALOBJECTS_H

@@ -18,45 +18,16 @@
 #include "MediaLibrary/animeinfo.h"
 #include "MediaLibrary/animelibrary.h"
 #include "MediaLibrary/episodesmodel.h"
+#include "MediaLibrary/labelmodel.h"
 #include "globalobjects.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Common/network.h"
-namespace
-{
-class CharacterItem : public QWidget
-{
-public:
-    explicit CharacterItem(Character *crt, QWidget *parent=nullptr):QWidget(parent)
-    {
-        QLabel *iconLabel=new QLabel(this);
-        iconLabel->setScaledContents(true);
-        iconLabel->setObjectName(QStringLiteral("CrtIcon"));
-        iconLabel->setFixedSize(60*logicalDpiX()/96,60*logicalDpiY()/96);
-        iconLabel->setAlignment(Qt::AlignCenter);
-        QPixmap icon;
-        icon.loadFromData(crt->image);
-        iconLabel->setPixmap(icon);
+#include "Common/flowlayout.h"
 
-        QLabel *nameLabel=new QLabel(this);
-        nameLabel->setOpenExternalLinks(true);
-        nameLabel->setText(QString("<a href = \"http://bgm.tv/character/%1\">%2(%3)</a>").arg(crt->bangumiID).arg(crt->name).arg(crt->name_cn));
 
-        QLabel *infoLabel=new QLabel(this);
-        infoLabel->setText(crt->actor);
-        infoLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
-
-        QHBoxLayout *itemHLayout=new QHBoxLayout(this);
-        itemHLayout->addWidget(iconLabel);
-        QVBoxLayout *infoVLayout=new QVBoxLayout(this);
-        infoVLayout->addWidget(nameLabel);
-        infoVLayout->addWidget(infoLabel);
-        itemHLayout->addLayout(infoVLayout);
-    }
-};
-}
-AnimeDetailInfo::AnimeDetailInfo(Anime *anime, QWidget *parent) :currentAnime(anime),
-    CFramelessDialog(tr("Anime Info"),parent,false,true,false)
+AnimeDetailInfo::AnimeDetailInfo(Anime *anime, QWidget *parent) :
+    CFramelessDialog(tr("Anime Info"),parent,false,true,false),currentAnime(anime)
 {
     QVBoxLayout *dialogVLayout=new QVBoxLayout(this);
     dialogVLayout->setContentsMargins(0,0,0,0);
@@ -117,9 +88,7 @@ AnimeDetailInfo::AnimeDetailInfo(Anime *anime, QWidget *parent) :currentAnime(an
     btnGroup->addButton(tagPageButton, 3);
     QObject::connect(btnGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, [contentStackLayout](int id, bool checked) {
         if (checked)
-        {
             contentStackLayout->setCurrentIndex(id);
-        }
     });
     overviewPageButton->setChecked(true);
 }
@@ -136,7 +105,7 @@ QWidget *AnimeDetailInfo::setupOverviewPage()
     shadowEffect->setBlurRadius(14);
     coverLabel->setGraphicsEffect(shadowEffect);
     static QPixmap nullCover(":/res/images/cover.png");
-    if(currentAnime->cover.isEmpty())
+    if(currentAnime->coverPixmap.isNull())
     {
         coverLabel->setPixmap(nullCover);
     }
@@ -255,7 +224,7 @@ QWidget *AnimeDetailInfo::setupEpisodesPage()
         epModel->removeEpisodes(selection);
     });
     QAction *addAction=new QAction(tr("Add to Playlist"),pageWidget);
-    QObject::connect(addAction,&QAction::triggered,[epModel,episodeView,this](){
+    QObject::connect(addAction,&QAction::triggered,[episodeView,this](){
         auto selection = episodeView->selectionModel()->selectedRows();
         if (selection.size() == 0)return;
         QStringList items;
@@ -270,10 +239,16 @@ QWidget *AnimeDetailInfo::setupEpisodesPage()
         QMessageBox::information(this,"KikoPlay",tr("Add %1 items to Playlist").arg(GlobalObjects::playlist->addItems(items,QModelIndex())));
     });
     QAction *playAction=new QAction(tr("Play"),pageWidget);
-    QObject::connect(playAction,&QAction::triggered,[epModel,episodeView,this](){
+    QObject::connect(playAction,&QAction::triggered,[episodeView,this](){
         auto selection = episodeView->selectionModel()->selectedRows();
         if (selection.size() == 0)return;
-        emit playFile(currentAnime->eps.at(selection.last().row()).localFile);
+        QFileInfo info(currentAnime->eps.at(selection.last().row()).localFile);
+        if(!info.exists())
+        {
+            QMessageBox::information(this,"KikoPlay",tr("File Not Exist"));
+            return;
+        }
+        emit playFile(info.absoluteFilePath());
         CFramelessDialog::onAccept();
     });
     QAction *explorerViewAction=new QAction(tr("Browse File"),pageWidget);
@@ -314,6 +289,7 @@ QWidget *AnimeDetailInfo::setupEpisodesPage()
 QWidget *AnimeDetailInfo::setupCharacterPage()
 {
     QWidget *pageWidget=new QWidget(this);
+    QLabel *tipLabel=new QLabel(tr("Click the icon to download the avatar again"),pageWidget);
     QWidget *contentWidget=new QWidget(pageWidget);
     contentWidget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
     QScrollArea *contentScrollArea=new QScrollArea(pageWidget);
@@ -321,14 +297,23 @@ QWidget *AnimeDetailInfo::setupCharacterPage()
     contentScrollArea->setWidgetResizable(true);
     contentScrollArea->setAlignment(Qt::AlignCenter);
     contentScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    QHBoxLayout *cHLayout=new QHBoxLayout(pageWidget);
-    cHLayout->setContentsMargins(0,0,0,0);
-    cHLayout->addWidget(contentScrollArea);
+    QVBoxLayout *cVLayout=new QVBoxLayout(pageWidget);
+    cVLayout->setContentsMargins(0,0,0,0);
+    cVLayout->addWidget(tipLabel);
+    cVLayout->addWidget(contentScrollArea);
 
     QVBoxLayout *pageVLayout=new QVBoxLayout(contentWidget);
     for(auto iter=currentAnime->characters.begin();iter!=currentAnime->characters.end();++iter)
     {
         CharacterItem *crtItem=new CharacterItem(&(*iter),contentWidget);
+        QObject::connect(crtItem,&CharacterItem::updateCharacter,this,[this](CharacterItem *crtItem){
+           showBusyState(true);
+           crtItem->setEnabled(false);
+           GlobalObjects::library->updateCrtImage(currentAnime,crtItem->crt);
+           crtItem->refreshIcon();
+           crtItem->setEnabled(true);
+           showBusyState(false);
+        });
         pageVLayout->addWidget(crtItem);
     }
     return pageWidget;
@@ -337,40 +322,212 @@ QWidget *AnimeDetailInfo::setupCharacterPage()
 QWidget *AnimeDetailInfo::setupTagPage()
 {
     QWidget *pageWidget=new QWidget(this);
-    QListWidget *tagList=new QListWidget(pageWidget);
+    QStackedLayout *contentStackLayout=new QStackedLayout(pageWidget);
+    contentStackLayout->setContentsMargins(0,0,0,0);
+
+    QWidget *animeTagPage=new QWidget(pageWidget);
+    QListWidget *tagList=new QListWidget(animeTagPage);
     tagList->setSelectionMode(QAbstractItemView::SingleSelection);
     tagList->setContextMenuPolicy(Qt::ActionsContextMenu);
-    auto &tagMap=GlobalObjects::library->animeTags();
+    auto &tagMap=GlobalObjects::library->labelModel->getTags();
     for(auto iter=tagMap.begin();iter!=tagMap.end();++iter)
     {
         if(iter.value().contains(currentAnime->title))
             tagList->addItem(iter.key());
     }
-    QLineEdit *tagEdit=new QLineEdit(pageWidget);
-    QPushButton *addTagButton=new QPushButton(tr("Add Tag"), pageWidget);
+    QLineEdit *tagEdit=new QLineEdit(animeTagPage);
+    QPushButton *addTagButton=new QPushButton(tr("Add Tag"), animeTagPage);
     QObject::connect(tagEdit,&QLineEdit::returnPressed,addTagButton,&QPushButton::click);
     QObject::connect(addTagButton,&QPushButton::clicked,[tagEdit,tagList,this](){
         QString tag=tagEdit->text().trimmed();
         if(tag.isEmpty())return;
-        auto &tagMap=GlobalObjects::library->animeTags();
-        if(tagMap.contains(tag) && tagMap[tag].contains(currentAnime->title))return;
-        GlobalObjects::library->addTag(currentAnime,tag);
+        GlobalObjects::library->addTags(currentAnime,QStringList()<<tag);
         tagEdit->clear();
         tagList->insertItem(0,tag);
     });
-    QAction *deleteTagAction=new QAction(tr("Delete"),pageWidget);
-    QObject::connect(deleteTagAction,&QAction::triggered,[tagList,this](){
+    QAction *deleteTagAction=new QAction(tr("Delete"),animeTagPage);
+    QObject::connect(deleteTagAction,&QAction::triggered,this,[tagList,this](){
        auto selectedItems=tagList->selectedItems();
        if(selectedItems.count()==0)return;
        GlobalObjects::library->deleteTag(selectedItems.first()->text(),currentAnime->title);
        delete tagList->takeItem(tagList->row(selectedItems.first()));
     });
     tagList->addAction(deleteTagAction);
-    QGridLayout *pageGLayout=new QGridLayout(pageWidget);
-    pageGLayout->addWidget(tagEdit,0,0);
-    pageGLayout->addWidget(addTagButton,0,1);
-    pageGLayout->addWidget(tagList,1,0,1,2);
-    pageGLayout->setRowStretch(1,1);
-    pageGLayout->setColumnStretch(0,1);
+    QPushButton *tagOnBGMButton=new QPushButton(tr("Tags on Bangumi"), animeTagPage);
+    QGridLayout *animeTagGLayout=new QGridLayout(animeTagPage);
+    animeTagGLayout->addWidget(tagEdit,0,0);
+    animeTagGLayout->addWidget(addTagButton,0,1);
+    animeTagGLayout->addWidget(tagOnBGMButton,0,2);
+    animeTagGLayout->addWidget(tagList,1,0,1,3);
+    animeTagGLayout->setRowStretch(1,1);
+    animeTagGLayout->setColumnStretch(0,1);
+
+    QWidget *bgmTagPage=new QWidget(pageWidget);
+    LabelPanel *bgmLabelPanel=new LabelPanel(bgmTagPage);
+    QPushButton *bgmTagOK=new QPushButton(tr("Add Selected Tags"), animeTagPage);
+    QObject::connect(bgmTagOK,&QPushButton::clicked,this,[this,bgmLabelPanel,contentStackLayout,tagList](){
+        QStringList tags(bgmLabelPanel->getSelectedTags());
+        if(tags.count()==0) return;
+        GlobalObjects::library->addTags(currentAnime,tags);
+        tagList->clear();
+        auto &tagMap=GlobalObjects::library->labelModel->getTags();
+        for(auto iter=tagMap.begin();iter!=tagMap.end();++iter)
+        {
+            if(iter.value().contains(currentAnime->title))
+                tagList->addItem(iter.key());
+        }
+        contentStackLayout->setCurrentIndex(0);
+    });
+    QPushButton *bgmTagCancel=new QPushButton(tr("Cancel"), animeTagPage);
+    QObject::connect(bgmTagCancel,&QPushButton::clicked,this,[contentStackLayout](){
+       contentStackLayout->setCurrentIndex(0);
+    });
+
+    QObject::connect(tagOnBGMButton,&QPushButton::clicked,this,[contentStackLayout,tagOnBGMButton,bgmLabelPanel,this](){
+       showBusyState(true);
+       QStringList tags;
+       QString errorInfo;
+       tagOnBGMButton->setEnabled(false);
+       GlobalObjects::library->downloadTags(currentAnime,tags,&errorInfo);
+       if(!errorInfo.isEmpty())
+       {
+           QMessageBox::information(this,"KikoPlay",errorInfo);
+       }
+       else
+       {
+           bgmLabelPanel->removeTag();
+           bgmLabelPanel->addTag(tags);
+           contentStackLayout->setCurrentIndex(1);
+       }
+       tagOnBGMButton->setEnabled(true);
+       showBusyState(false);
+    });
+    QGridLayout *bgmTagGLayout=new QGridLayout(bgmTagPage);
+    bgmTagGLayout->addWidget(bgmTagOK,0,0);
+    bgmTagGLayout->addWidget(bgmTagCancel,0,1);
+    bgmTagGLayout->addWidget(bgmLabelPanel,1,0,1,3);
+    bgmTagGLayout->setRowStretch(1,1);
+    bgmTagGLayout->setColumnStretch(2,1);
+
+    contentStackLayout->addWidget(animeTagPage);
+    contentStackLayout->addWidget(bgmTagPage);
     return pageWidget;
 }
+
+LabelPanel::LabelPanel(QWidget *parent, bool allowDelete):QWidget(parent),showDelete(allowDelete)
+{
+    contentWidget=new QWidget(this);
+    contentWidget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
+   // filterPage->setObjectName(QStringLiteral("FilterPage"));
+    QScrollArea *contentScrollArea=new QScrollArea(this);
+    contentScrollArea->setObjectName(QStringLiteral("FilterContentArea"));
+    contentScrollArea->setWidget(contentWidget);
+    contentScrollArea->setWidgetResizable(true);
+    contentScrollArea->setAlignment(Qt::AlignCenter);
+    contentScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    contentScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    QHBoxLayout *filterPageHLayout=new QHBoxLayout(this);
+    filterPageHLayout->setContentsMargins(0,0,0,0);
+    filterPageHLayout->addWidget(contentScrollArea);
+    contentWidget->setLayout(new FlowLayout(contentWidget));
+    setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
+}
+
+void LabelPanel::addTag(const QStringList &tags)
+{
+    for(const QString &tag:tags)
+    {
+        if(tagList.contains(tag))continue;
+        QPushButton *tagButton=new QPushButton(tag,this);
+        tagButton->setObjectName(QStringLiteral("TagButton"));
+        tagButton->setCheckable(true);
+        if(showDelete)
+        {
+            tagButton->setContextMenuPolicy(Qt::ActionsContextMenu);
+            QAction *deleteAction=new QAction(tr("Delete"),tagButton);
+            QObject::connect(deleteAction,&QAction::triggered,[this,tag,tagButton](){
+                emit deleteTag(tag);
+                tagButton->deleteLater();
+                tagList.remove(tag);
+            });
+            tagButton->addAction(deleteAction);
+        }
+        contentWidget->layout()->addWidget(tagButton);
+        tagList.insert(tag,tagButton);
+    }
+}
+
+void LabelPanel::removeTag()
+{
+    for(auto iter:tagList)
+    {
+        iter->deleteLater();
+    }
+    tagList.clear();
+}
+
+QStringList LabelPanel::getSelectedTags()
+{
+    QStringList tags;
+    for(auto iter=tagList.begin();iter!=tagList.end();++iter)
+    {
+        if(iter.value()->isChecked()) tags<<iter.key();
+    }
+    return tags;
+}
+
+CharacterItem::CharacterItem(Character *character, QWidget *parent) : QWidget(parent), crt(character)
+{
+    iconLabel=new QLabel(this);
+    iconLabel->setScaledContents(true);
+    iconLabel->setObjectName(QStringLiteral("CrtIcon"));
+    iconLabel->setFixedSize(60*logicalDpiX()/96,60*logicalDpiY()/96);
+    iconLabel->setAlignment(Qt::AlignCenter);
+    refreshIcon();
+    QLabel *nameLabel=new QLabel(this);
+    nameLabel->setOpenExternalLinks(true);
+    nameLabel->setText(QString("<a href = \"http://bgm.tv/character/%1\">%2%3</a>")
+                       .arg(character->bangumiID).arg(character->name)
+                       .arg(character->name_cn.isEmpty()?"":QString("(%1)").arg(character->name_cn)));
+
+    QLabel *infoLabel=new QLabel(this);
+    infoLabel->setText(character->actor);
+    infoLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+
+    QHBoxLayout *itemHLayout=new QHBoxLayout(this);
+    itemHLayout->addWidget(iconLabel);
+    QVBoxLayout *infoVLayout=new QVBoxLayout();
+    infoVLayout->addWidget(nameLabel);
+    infoVLayout->addWidget(infoLabel);
+    itemHLayout->addLayout(infoVLayout);
+}
+
+void CharacterItem::refreshIcon()
+{
+    if(crt->image.isEmpty())
+    {
+        static QPixmap nullIcon(":/res/images/kikoplay-4.png");
+        iconLabel->setPixmap(nullIcon);
+    }
+    else
+    {
+        QPixmap icon;
+        icon.loadFromData(crt->image);
+        iconLabel->setPixmap(icon);
+    }
+}
+
+void CharacterItem::mousePressEvent(QMouseEvent *event)
+{
+    if(event->button()==Qt::LeftButton)
+    {
+        if(iconLabel->underMouse())
+        {
+            if(!crt->imgURL.isEmpty())
+            {
+                emit updateCharacter(this);
+            }
+        }
+    }
+}
+

@@ -417,7 +417,7 @@ void PoolWorker::updateSource(DanmuPoolSourceNode *sourceNode, const QSet<QStrin
     {
         QByteArray hashData(QString("%0%1%2%3").arg((*iter)->text).arg((*iter)->originTime).arg((*iter)->sender).arg((*iter)->color).toUtf8());
         QString danmuHash(QString(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex()));
-        if(danmuHashSet.contains(danmuHash))
+        if(danmuHashSet.contains(danmuHash) || (*iter)->text.isEmpty())
         {
             delete *iter;
             iter=tmpList.erase(iter);

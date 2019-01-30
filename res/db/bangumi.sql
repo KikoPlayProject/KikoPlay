@@ -9,7 +9,7 @@ CREATE TABLE "anime" (
 "Cover"  BLOB,
 PRIMARY KEY ("Anime" ASC)
 );
-CREATE INDEX "Anime"
+CREATE INDEX "Anime_I"
 ON "anime" ("Anime" ASC);
 
 CREATE TABLE "character" (
@@ -18,11 +18,20 @@ CREATE TABLE "character" (
 "NameCN"  TEXT NOT NULL,
 "Actor"  TEXT,
 "BangumiID"  INTEGER,
-"Image"  BLOB,
 CONSTRAINT "Anime" FOREIGN KEY ("Anime") REFERENCES "anime" ("Anime") ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE INDEX "Anime_C"
 ON "character" ("Anime" ASC);
+
+CREATE TABLE "character_image" (
+"Anime"  TEXT NOT NULL,
+"CBangumiID"  INTEGER NOT NULL,
+"ImageURL"  TEXT,
+"Image"  BLOB,
+CONSTRAINT "Anime" FOREIGN KEY ("Anime") REFERENCES "anime" ("Anime") ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE INDEX "Anime_CI"
+ON "character_image" ("Anime" ASC);
 
 CREATE TABLE "eps" (
 "Anime"  TEXT NOT NULL,

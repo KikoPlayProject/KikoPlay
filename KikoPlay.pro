@@ -99,7 +99,13 @@ SOURCES += \
     Play/Danmu/Manager/danmumanager.cpp \
     Play/Danmu/Manager/poolworker.cpp \
     Play/Danmu/Manager/nodeinfo.cpp \
-    Play/Danmu/Manager/managermodel.cpp
+    Play/Danmu/Manager/managermodel.cpp \
+    MediaLibrary/animeworker.cpp \
+    MediaLibrary/animemodel.cpp \
+    MediaLibrary/labelmodel.cpp \
+    MediaLibrary/animefilterproxymodel.cpp \
+    MediaLibrary/labelitemdelegate.cpp \
+    UI/bangumiupdate.cpp
 
 HEADERS += \
     UI/mainwindow.h \
@@ -174,7 +180,13 @@ HEADERS += \
     Play/Danmu/Manager/danmumanager.h \
     Play/Danmu/Manager/poolworker.h \
     Play/Danmu/Manager/nodeinfo.h \
-    Play/Danmu/Manager/managermodel.h
+    Play/Danmu/Manager/managermodel.h \
+    MediaLibrary/animeworker.h \
+    MediaLibrary/animemodel.h \
+    MediaLibrary/labelmodel.h \
+    MediaLibrary/animefilterproxymodel.h \
+    MediaLibrary/labelitemdelegate.h \
+    UI/bangumiupdate.h
 
 INCLUDEPATH += \
     Play/Video \

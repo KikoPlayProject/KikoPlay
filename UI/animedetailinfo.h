@@ -3,6 +3,37 @@
 
 #include "framelessdialog.h"
 struct Anime;
+struct Character;
+class CharacterItem : public QWidget
+{
+     Q_OBJECT
+public:
+    explicit CharacterItem(Character *character, QWidget *parent=nullptr);
+    void refreshIcon();
+    Character *crt;
+private:
+    QLabel *iconLabel;
+protected:
+    virtual void mousePressEvent(QMouseEvent *event);
+signals:
+    void updateCharacter(CharacterItem *crtItem);
+};
+class LabelPanel : public QWidget
+{
+    Q_OBJECT
+public:
+    explicit LabelPanel(QWidget *parent = nullptr, bool allowDelete=false);
+    void addTag(const QStringList &tags);
+    void removeTag();
+    QStringList getSelectedTags();
+signals:
+    void tagStateChanged(const QString &tag, bool checked);
+    void deleteTag(const QString &tag);
+private:
+    QMap<QString,QPushButton *> tagList;
+    bool showDelete;
+    QWidget *contentWidget;
+};
 class AnimeDetailInfo : public CFramelessDialog
 {
     Q_OBJECT

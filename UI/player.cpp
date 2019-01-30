@@ -198,7 +198,7 @@ protected:
 };
 }
 PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideControlPanel(true),
-    updatingTrack(false),isFullscreen(false),onTopWhilePlaying(false),resizePercent(-1)
+    onTopWhilePlaying(false),updatingTrack(false),isFullscreen(false),resizePercent(-1)
 {
     setWindowFlags(Qt::FramelessWindowHint);
     GlobalObjects::mpvplayer->setParent(this);
@@ -222,6 +222,13 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     playInfoPanel=new QWidget(this);
     playInfoPanel->setObjectName(QStringLiteral("widgetPlayInfo"));
     playInfoPanel->hide();
+
+    playListCollapseButton=new QPushButton(this);
+    playListCollapseButton->setObjectName(QStringLiteral("widgetPlayListCollapse"));
+    GlobalObjects::iconfont.setPointSize(12);
+    playListCollapseButton->setFont(GlobalObjects::iconfont);
+    playListCollapseButton->setText(QChar(GlobalObjects::appSetting->value("MainWindow/ListVisibility",true).toBool()?0xe945:0xe946));
+    playListCollapseButton->hide();
 
     danmuStatisBar=new DanmuStatisInfo(this);
     danmuStatisBar->hide();
@@ -361,13 +368,6 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     fullscreen->setToolTip(tr("FullScreen"));
     fullscreen->setObjectName(QStringLiteral("widgetPlayControlButtons"));
 
-    list=new QPushButton(playControlPanel);
-    list->setFont(GlobalObjects::iconfont);
-    list->setText(QChar(0xe716));
-    list->setFixedSize(buttonWidth,buttonHeight);
-    list->setToolTip(tr("List"));
-    list->setObjectName(QStringLiteral("widgetPlayControlButtons"));
-
     volume=new QSlider(Qt::Horizontal,playControlPanel);
     volume->setObjectName(QStringLiteral("widgetVolumeSlider"));
     volume->setFixedWidth(90*logicalDpiX()/96);
@@ -397,7 +397,6 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     buttonHLayout->addWidget(setting);
     buttonHLayout->addWidget(danmu);
     buttonHLayout->addWidget(fullscreen);
-    buttonHLayout->addWidget(list);
 
     controlVLayout->addLayout(buttonHLayout);
 
@@ -634,19 +633,19 @@ void PlayerWindow::setupDanmuSettingPage()
     danmuSwitch->setChecked(GlobalObjects::appSetting->value("Play/HideDanmu",false).toBool());
 
     hideRollingDanmu=new QCheckBox(tr("Hide Rolling"),danmuSettingPage);
-    QObject::connect(hideRollingDanmu,&QCheckBox::stateChanged,[this](int state){
+    QObject::connect(hideRollingDanmu,&QCheckBox::stateChanged,[](int state){
         GlobalObjects::danmuRender->hideDanmu(DanmuComment::Rolling,state==Qt::Checked?true:false);
     });
     hideRollingDanmu->setChecked(GlobalObjects::appSetting->value("Play/HideRolling",false).toBool());
 
     hideTopDanmu=new QCheckBox(tr("Hide Top"),danmuSettingPage);
-    QObject::connect(hideTopDanmu,&QCheckBox::stateChanged,[this](int state){
+    QObject::connect(hideTopDanmu,&QCheckBox::stateChanged,[](int state){
         GlobalObjects::danmuRender->hideDanmu(DanmuComment::Top,state==Qt::Checked?true:false);
     });
     hideTopDanmu->setChecked(GlobalObjects::appSetting->value("Play/HideTop",false).toBool());
 
     hideBottomDanmu=new QCheckBox(tr("Hide Bottom"),danmuSettingPage);
-    QObject::connect(hideBottomDanmu,&QCheckBox::stateChanged,[this](int state){
+    QObject::connect(hideBottomDanmu,&QCheckBox::stateChanged,[](int state){
         GlobalObjects::danmuRender->hideDanmu(DanmuComment::Bottom,state==Qt::Checked?true:false);
     });
     hideBottomDanmu->setChecked(GlobalObjects::appSetting->value("Play/HideBottom",false).toBool());
@@ -674,7 +673,7 @@ void PlayerWindow::setupDanmuSettingPage()
     strokeWidthSlider->setRange(0,80);
     QObject::connect(strokeWidthSlider,&QSlider::valueChanged,[this](int val){
         GlobalObjects::danmuRender->setStrokeWidth(val/10.f);
-        strokeWidthSlider->setToolTip(QString::number(val/10.f));
+        strokeWidthSlider->setToolTip(QString::number(val/10.));
     });
     strokeWidthSlider->setValue(GlobalObjects::appSetting->value("Play/DanmuStroke",35).toInt());
 
@@ -688,26 +687,26 @@ void PlayerWindow::setupDanmuSettingPage()
     fontSizeSlider->setValue(GlobalObjects::appSetting->value("Play/DanmuFontSize",20).toInt());
 
     bold=new QCheckBox(tr("Bold"),danmuSettingPage);
-    QObject::connect(bold,&QCheckBox::stateChanged,[this](int state){
+    QObject::connect(bold,&QCheckBox::stateChanged,[](int state){
         GlobalObjects::danmuRender->setBold(state==Qt::Checked?true:false);
     });
     bold->setChecked(GlobalObjects::appSetting->value("Play/DanmuBold",false).toBool());
 
     bottomSubtitleProtect=new QCheckBox(tr("Protect Bottom Sub"),danmuSettingPage);
 	bottomSubtitleProtect->setChecked(true);
-    QObject::connect(bottomSubtitleProtect,&QCheckBox::stateChanged,[this](int state){
+    QObject::connect(bottomSubtitleProtect,&QCheckBox::stateChanged,[](int state){
         GlobalObjects::danmuRender->setBottomSubtitleProtect(state==Qt::Checked?true:false);
     });
     bottomSubtitleProtect->setChecked(GlobalObjects::appSetting->value("Play/BottomSubProtect",true).toBool());
 
     topSubtitleProtect=new QCheckBox(tr("Protect Top Sub"),danmuSettingPage);
-    QObject::connect(topSubtitleProtect,&QCheckBox::stateChanged,[this](int state){
+    QObject::connect(topSubtitleProtect,&QCheckBox::stateChanged,[](int state){
         GlobalObjects::danmuRender->setTopSubtitleProtect(state==Qt::Checked?true:false);
     });
     topSubtitleProtect->setChecked(GlobalObjects::appSetting->value("Play/TopSubProtect",false).toBool());
 
     randomSize=new QCheckBox(tr("Random Size"),danmuSettingPage);
-    QObject::connect(randomSize,&QCheckBox::stateChanged,[this](int state){
+    QObject::connect(randomSize,&QCheckBox::stateChanged,[](int state){
         GlobalObjects::danmuRender->setRandomSize(state==Qt::Checked?true:false);
     });
     randomSize->setChecked(GlobalObjects::appSetting->value("Play/RandomSize",false).toBool());
@@ -722,7 +721,7 @@ void PlayerWindow::setupDanmuSettingPage()
     maxDanmuCount->setValue(GlobalObjects::appSetting->value("Play/MaxCount",100).toInt());
 
     denseLayout=new QCheckBox(tr("Dense Layout"),danmuSettingPage);
-    QObject::connect(denseLayout,&QCheckBox::stateChanged,[this](int state){
+    QObject::connect(denseLayout,&QCheckBox::stateChanged,[](int state){
         GlobalObjects::danmuRender->dense=(state==Qt::Checked?true:false);
     });
     denseLayout->setChecked(GlobalObjects::appSetting->value("Play/Dense",false).toBool());
@@ -1108,17 +1107,15 @@ void PlayerWindow::setupSignals()
             playerContent->show();
             break;
         }
-        default:
-            break;
         }
     });
     QObject::connect(play_pause,&QPushButton::clicked,actPlayPause,&QAction::trigger);
 
-    QObject::connect(stop,&QPushButton::clicked,[this](){
+    QObject::connect(stop,&QPushButton::clicked,[](){
         QCoreApplication::processEvents();
         GlobalObjects::mpvplayer->setState(MPVPlayer::Stop);
     });
-    QObject::connect(process,&ClickSlider::sliderClick,[this](int pos){
+    QObject::connect(process,&ClickSlider::sliderClick,[](int pos){
         MPVPlayer::PlayState state=GlobalObjects::mpvplayer->getState();
         switch(state)
         {
@@ -1149,7 +1146,7 @@ void PlayerWindow::setupSignals()
     QObject::connect(process,&ClickSlider::sliderReleased,[this](){
         this->processPressed=false;
     });
-    QObject::connect(process,&ClickSlider::mouseMove,[this](int x,int y,int pos){
+    QObject::connect(process,&ClickSlider::mouseMove,[this](int x,int ,int pos){
         int cs=pos/1000;
         int cmin=cs/60;
         int cls=cs-cmin*60;
@@ -1199,13 +1196,8 @@ void PlayerWindow::setupSignals()
 		}
         danmuSettingPage->show();
 		danmuSettingPage->raise();
-        QPropertyAnimation *animation = new QPropertyAnimation(danmuSettingPage, "pos");
-		QPoint leftTop(width() - danmuSettingPage->width() - 10, height() - controlPanelHeight - danmuSettingPage->height()+40);
-        animation->setDuration(500);
-		animation->setEasingCurve(QEasingCurve::OutExpo);
-        animation->setStartValue(leftTop);
-        animation->setEndValue(leftTop-QPoint(0,20));
-        animation->start(QPropertyAnimation::DeleteWhenStopped);
+        QPoint leftTop(width() - danmuSettingPage->width() - 10, height() - controlPanelHeight - danmuSettingPage->height()+40);
+        danmuSettingPage->move(leftTop-QPoint(0,20));
     });
     QObject::connect(setting,&QPushButton::clicked,[this](){
         if (!playSettingPage->isHidden() || !danmuSettingPage->isHidden())
@@ -1216,18 +1208,20 @@ void PlayerWindow::setupSignals()
 		}
         playSettingPage->show();
 		playSettingPage->raise();
-        QPropertyAnimation *animation = new QPropertyAnimation(playSettingPage, "pos");
-		QPoint leftTop(width() - playSettingPage->width() - 10, height() - controlPanelHeight - playSettingPage->height() + 40);
-        animation->setDuration(500);
-        animation->setEasingCurve(QEasingCurve::OutExpo);
-        animation->setStartValue(leftTop);
-        animation->setEndValue(leftTop-QPoint(0,20));
-        animation->start(QPropertyAnimation::DeleteWhenStopped);
+        QPoint leftTop(width() - playSettingPage->width() - 10, height() - controlPanelHeight - playSettingPage->height() + 40);
+        playSettingPage->move(leftTop-QPoint(0,20));
     });
     QObject::connect(next,&QPushButton::clicked,actNext,&QAction::trigger);
     QObject::connect(prev,&QPushButton::clicked,actPrev,&QAction::trigger);
-    QObject::connect(list,&QPushButton::clicked,this,&PlayerWindow::toggleListVisibility);
     QObject::connect(fullscreen,&QPushButton::clicked,actFullscreen,&QAction::trigger);
+
+    QObject::connect(playListCollapseButton,&QPushButton::clicked,this,[this](){
+        if(playListCollapseButton->text()==QChar(0xe946))
+            playListCollapseButton->setText(QChar(0xe945));
+        else
+            playListCollapseButton->setText(QChar(0xe946));
+        emit toggleListVisibility();
+    });
 
     QObject::connect(mediaInfo,&QToolButton::clicked,[this](){
 		if (GlobalObjects::playlist->getCurrentItem() == nullptr)return;
@@ -1314,11 +1308,19 @@ void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
          playInfoPanel->show();
          playControlPanel->hide();
          hideCursorTimer.stop();
-    }
+    } 
     else
     {
         playInfoPanel->hide();
         playControlPanel->hide();
+    }
+    if(this->width()-pos.x()<playlistCollapseWidth+20)
+    {
+        playListCollapseButton->show();
+    }
+    else
+    {
+        playListCollapseButton->hide();
     }
 }
 
@@ -1349,11 +1351,13 @@ void PlayerWindow::mousePressEvent(QMouseEvent *event)
                 {
                     playControlPanel->show();
                     playInfoPanel->show();
+                    playListCollapseButton->show();
                 }
                 else
                 {
                     playInfoPanel->hide();
                     playControlPanel->hide();
+                    playListCollapseButton->hide();
                 }
             }
             else
@@ -1368,6 +1372,7 @@ void PlayerWindow::resizeEvent(QResizeEvent *)
 {
     playControlPanel->setGeometry(0,height()-controlPanelHeight,width(),controlPanelHeight);
     playInfoPanel->setGeometry(0,0,width(),infoPanelHeight);
+    playListCollapseButton->setGeometry(width()-playlistCollapseWidth,(height()-playlistCollapseHeight)/2,playlistCollapseWidth,playlistCollapseHeight);
     danmuStatisBar->setGeometry(0,height()-controlPanelHeight-statisBarHeight,width(),statisBarHeight);
     if(!playSettingPage->isHidden())
     {
@@ -1390,6 +1395,7 @@ void PlayerWindow::leaveEvent(QEvent *)
         QTimer::singleShot(500, [this](){
             this->playControlPanel->hide();
             this->playInfoPanel->hide();
+            this->playListCollapseButton->hide();
         });
     }
 }

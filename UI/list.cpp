@@ -66,7 +66,7 @@ namespace
         }
         void showMessage(QString msg,int flag)
         {
-            if(flag&ListPopMessageFlag::LPM_HIDE)
+            if(flag&PopMessageFlag::PM_HIDE)
             {
                 if(hideTimer.isActive())
                     hideTimer.stop();
@@ -74,11 +74,11 @@ namespace
                 hideTimer.start(3000);
             }
             QString icon;
-            if(flag&ListPopMessageFlag::LPM_INFO)
+            if(flag&PopMessageFlag::PM_INFO)
                 icon=":/res/images/info.png";
-            else if(flag&ListPopMessageFlag::LPM_OK)
+            else if(flag&PopMessageFlag::PM_OK)
                 icon=":/res/images/ok.png";
-            else if(flag&ListPopMessageFlag::LPM_PROCESS)
+            else if(flag&PopMessageFlag::PM_PROCESS)
                 icon=":/res/images/loading-rolling.gif";
             if(icon!=infoIcon->fileName())
             {
@@ -460,7 +460,7 @@ void ListWindow::initActions()
         rule->isRegExp=false;
         rule->content=getSelectedDanmu()->text;
         GlobalObjects::blocker->addBlockRule(rule);
-        showMessage(tr("Blocked"),ListPopMessageFlag::LPM_OK|ListPopMessageFlag::LPM_HIDE);
+        showMessage(tr("Blocked"),PopMessageFlag::PM_OK|PopMessageFlag::PM_HIDE);
     });
     act_blockColor=new QAction(tr("Block Color"),this);
     QObject::connect(act_blockColor,&QAction::triggered,[this](){
@@ -471,7 +471,7 @@ void ListWindow::initActions()
         rule->isRegExp=false;
         rule->content=QString::number(getSelectedDanmu()->color,16);
         GlobalObjects::blocker->addBlockRule(rule);
-        showMessage(tr("Blocked"),ListPopMessageFlag::LPM_OK|ListPopMessageFlag::LPM_HIDE);
+        showMessage(tr("Blocked"),PopMessageFlag::PM_OK|PopMessageFlag::PM_HIDE);
     });
     act_blockSender=new QAction(tr("Block Sender"),this);
     QObject::connect(act_blockSender,&QAction::triggered,[this](){
@@ -482,7 +482,7 @@ void ListWindow::initActions()
         rule->isRegExp=false;
         rule->content=getSelectedDanmu()->sender;
         GlobalObjects::blocker->addBlockRule(rule);
-        showMessage(tr("Blocked"),ListPopMessageFlag::LPM_OK|ListPopMessageFlag::LPM_HIDE);
+        showMessage(tr("Blocked"),PopMessageFlag::PM_OK|PopMessageFlag::PM_HIDE);
     });
     act_deleteDanmu=new QAction(tr("Delete"),this);
     QObject::connect(act_deleteDanmu,&QAction::triggered,[this](){
@@ -757,7 +757,7 @@ QWidget *ListWindow::setupDanmulistPage()
         for(auto iter=sources.begin();iter!=sources.end();++iter)
         {
             QList<DanmuComment *> tmpList;
-            showMessage(tr("Updating: %1").arg(iter.value().url),ListPopMessageFlag::LPM_PROCESS);
+            showMessage(tr("Updating: %1").arg(iter.value().url),PopMessageFlag::PM_PROCESS);
             QString errInfo = GlobalObjects::providerManager->downloadBySourceURL(iter.value().url,tmpList);
             if(poolId!=GlobalObjects::danmuPool->getPoolID())
             {
@@ -775,7 +775,7 @@ QWidget *ListWindow::setupDanmulistPage()
                 }
             }
         }
-        showMessage(tr("Add %1 Danmu").arg(count),ListPopMessageFlag::LPM_INFO|ListPopMessageFlag::LPM_HIDE);
+        showMessage(tr("Add %1 Danmu").arg(count),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
         act_autoAssociate->setEnabled(true);
         act_addOnlineDanmu->setEnabled(true);
         act_addLocalDanmu->setEnabled(true);

@@ -39,5 +39,10 @@
         <file>res/db/bangumi.sql</file>
         <file>res/db/comment.sql</file>
         <file>res/db/download.sql</file>
+        <file>res/images/loading-blocks.gif</file>
+        <file>res/images/branch-closed-2.png</file>
+        <file>res/images/branch-open-2.png</file>
+        <file>res/images/down-light.png</file>
+        <file>res/images/check-box-uncheck-light.png</file>
     </qresource>
 </RCC>
