@@ -16,7 +16,6 @@ public slots:
     void addTask(DownloadTask *task);
     void deleteTask(DownloadTask *task, bool deleteFile);
     void updateTaskInfo(const DownloadTask *task);
-    bool containTask(const QString &taskId);
 signals:
     void loadDone(int count);
 };
@@ -61,11 +60,12 @@ signals:
     void magnetDone(const QString &path, const QString &magnet);
     void removeTask(const QString &gid);
 public slots: 
-    QString addUriTask(const QString &uri, const QString &dir);
+    QString addUriTask(const QString &uri, const QString &dir, bool directDownload=false);
     QString addTorrentTask(const QByteArray &torrentContent,const QString &infoHash,const QString &dir,
                            const QString &selIndexes, const QString &magnet);
     void removeItem(QModelIndexList &removeIndexes, bool deleteFile);
     DownloadTask *getDownloadTask(const QModelIndex &index);
+    void tryLoadTorrentContent(DownloadTask *task);
     QString restartDownloadTask(DownloadTask *task, bool allowOverwrite=false);
     void updateItemStatus(const QJsonObject &statusObj);
     void queryItemStatus();

@@ -329,8 +329,6 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     QWidget *detailInfoContent=new QWidget(this);
     detailInfoContent->setContentsMargins(0,0,0,0);
     QStackedLayout *detailInfoSLayout=new QStackedLayout(detailInfoContent);
-   // detailInfoContent->setMaximumHeight(100*logicalDpiY()/96);
-   // detailInfoContent->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     detailInfoSLayout->addWidget(setupGeneralInfoPage());
     detailInfoSLayout->addWidget(setupFileInfoPage());
     detailInfoSLayout->addWidget(setupGlobalLogPage());
@@ -356,9 +354,6 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     QGridLayout *contentGLayout=new QGridLayout(this);
     contentGLayout->addWidget(setupLeftPanel(),0,0,4,1);
     contentGLayout->addLayout(toolBarHLayout,0,1);
-    //contentGLayout->addWidget(downloadView,1,1);
-    //contentGLayout->addLayout(pageBarHLayout,2,1);
-    //contentGLayout->addWidget(detailInfoContent,3,1);
     contentGLayout->addWidget(viewBottomSplitter,1,1);
     contentGLayout->setColumnStretch(1,1);
     contentGLayout->setRowStretch(1,1);
@@ -716,7 +711,12 @@ void DownloadWindow::initActions()
         QModelIndexList selectedRows= downloadView->selectionModel()->selectedRows();
         if (selectedRows.size() == 0)return;
         DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(model->mapToSource(selectedRows.last()));
-        if(task->torrentContent.isEmpty())return;
+        if(task->torrentContent.isEmpty())
+        {
+            GlobalObjects::downloadModel->tryLoadTorrentContent(task);
+            if(task->torrentContent.isEmpty())
+                return;
+        }
         QString fileName = QFileDialog::getSaveFileName(this, tr("Save Torrent"),task->title,"Torrent File (*.torrent)");
         if(!fileName.isEmpty())
         {

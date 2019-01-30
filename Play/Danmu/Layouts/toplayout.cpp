@@ -51,7 +51,7 @@ void TopLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *draw
                 topdanmu.append(dmobj);
                 break;
             }
-            if(render->dense)
+            if((render->dense==1 && maxSpace>dm_height/2) || render->dense==2)
             {
                 dmobj->y=dsY;
                 topdanmu.insert(msPos,dmobj);

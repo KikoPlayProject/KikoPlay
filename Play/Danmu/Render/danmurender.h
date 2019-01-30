@@ -19,7 +19,7 @@ public:
     void cleanup();
     inline void hideDanmu(DanmuComment::DanmuType type,bool hide){hideLayout[type]=hide;}
     QRectF surfaceRect;
-    bool dense;
+    int dense;
     QSharedPointer<DanmuComment> danmuAt(QPointF point);
     void removeBlocked();
     void drawDanmuTexture(const DanmuObject *danmuObj);

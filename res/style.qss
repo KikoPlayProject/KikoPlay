@@ -517,18 +517,19 @@ QPushButton:pressed{
     image: url(:/res/images/check-box-uncheck-light.png);
 }
 #PopupPage QPushButton {
-    background-color: #505F69 ;
+    background-color: #2b3849 ;
     border: 1px solid #9e9e9e;
     color: #FaFaFa;
     padding: 4px;
     outline: none;
 }
 #PopupPage QPushButton:pressed {
-    background-color: #2e3e53 ;
+    background-color: #223144 ;
     border: 1px solid #19232D;
 }
 #PopupPage QPushButton:hover{
-    border: 1px solid #6195db ;
+    background-color: #38485e;
+    border: 1px solid #6195db;
     color: #eeeeee;
 }
 #PopupPage QSlider::groove:horizontal {

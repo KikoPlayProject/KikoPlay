@@ -720,11 +720,19 @@ void PlayerWindow::setupDanmuSettingPage()
     });
     maxDanmuCount->setValue(GlobalObjects::appSetting->value("Play/MaxCount",100).toInt());
 
-    denseLayout=new QCheckBox(tr("Dense Layout"),danmuSettingPage);
-    QObject::connect(denseLayout,&QCheckBox::stateChanged,[](int state){
-        GlobalObjects::danmuRender->dense=(state==Qt::Checked?true:false);
+    QLabel *denseLabel=new QLabel(tr("Dense Level"),danmuSettingPage);
+    denseLevel=new QComboBox(danmuSettingPage);
+    denseLevel->addItems(QStringList()<<tr("Uncovered")<<tr("General")<<tr("Dense"));
+    QObject::connect(denseLevel,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[](int index){
+         GlobalObjects::danmuRender->dense=index;
     });
-    denseLayout->setChecked(GlobalObjects::appSetting->value("Play/Dense",false).toBool());
+    denseLevel->setCurrentIndex(GlobalObjects::appSetting->value("Play/Dense",1).toInt());
+
+    //denseLayout=new QCheckBox(tr("Dense Layout"),danmuSettingPage);
+//    QObject::connect(denseLayout,&QCheckBox::stateChanged,[](int state){
+//        GlobalObjects::danmuRender->dense=(state==Qt::Checked?true:false);
+//    });
+//    denseLayout->setChecked(GlobalObjects::appSetting->value("Play/Dense",false).toBool());
 
     fontFamilyCombo=new QFontComboBox(danmuSettingPage);
     fontFamilyCombo->setMaximumWidth(160 *logicalDpiX()/96);
@@ -779,9 +787,10 @@ void PlayerWindow::setupDanmuSettingPage()
     generalGLayout->addWidget(hideRollingDanmu,1,0);
     generalGLayout->addWidget(hideTopDanmu,2,0);
     generalGLayout->addWidget(hideBottomDanmu,3,0);
-    generalGLayout->addWidget(denseLayout,4,0);
-    generalGLayout->addWidget(bottomSubtitleProtect,0,1);
-    generalGLayout->addWidget(topSubtitleProtect,1,1);
+    generalGLayout->addWidget(bottomSubtitleProtect,4,0);
+    generalGLayout->addWidget(topSubtitleProtect,5,0);
+    generalGLayout->addWidget(denseLabel,0,1);
+    generalGLayout->addWidget(denseLevel,1,1);
     generalGLayout->addWidget(speedLabel,2,1);
     generalGLayout->addWidget(speedSlider,3,1);
     generalGLayout->addWidget(maxDanmuCountLabel,4,1);
@@ -908,6 +917,7 @@ void PlayerWindow::setupPlaySettingPage()
         GlobalObjects::appSetting->setValue("Play/ClickBehavior",index);
     });
     clickBehaviorCombo->setCurrentIndex(GlobalObjects::appSetting->value("Play/ClickBehavior",0).toInt());
+    clickBehavior=clickBehaviorCombo->currentIndex();
 
     QLabel *dbClickBehaivorLabel=new QLabel(tr("Double Click Behavior"),playSettingPage);
     dbClickBehaviorCombo=new QComboBox(playSettingPage);
@@ -918,6 +928,7 @@ void PlayerWindow::setupPlaySettingPage()
         GlobalObjects::appSetting->setValue("Play/DBClickBehavior",index);
     });
     dbClickBehaviorCombo->setCurrentIndex(GlobalObjects::appSetting->value("Play/DBClickBehavior",0).toInt());
+    dbClickBehaivior=dbClickBehaviorCombo->currentIndex();
 
     QToolButton *playPage=new QToolButton(playSettingPage);
     playPage->setText(tr("Play"));
@@ -1516,7 +1527,7 @@ void PlayerWindow::closeEvent(QCloseEvent *)
     GlobalObjects::appSetting->setValue("Volume",volume->value());
     GlobalObjects::appSetting->setValue("Mute",GlobalObjects::mpvplayer->getMute());
     GlobalObjects::appSetting->setValue("MaxCount",maxDanmuCount->value());
-    GlobalObjects::appSetting->setValue("Dense",denseLayout->isChecked());
+    GlobalObjects::appSetting->setValue("Dense",denseLevel->currentIndex());
     GlobalObjects::appSetting->endGroup();
 }
 

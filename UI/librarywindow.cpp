@@ -83,7 +83,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         Anime * currentAnime = GlobalObjects::library->animeModel->getAnime(selection.indexes().first(),true);
         if(currentAnime->bangumiID==-1)
         {
-            QMessageBox::information(this,tr("No Bangumi ID, Search For Detail First"),"KikoPlay");
+            QMessageBox::information(this,"KikoPlay",tr("No Bangumi ID, Search For Detail First"));
             return;
         }
         BangumiUpdate bgmUpdate(currentAnime,this);

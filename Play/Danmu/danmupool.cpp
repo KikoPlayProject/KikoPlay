@@ -382,7 +382,7 @@ void DanmuPool::mediaTimeElapsed(int newTime)
         else
             break;
     }
-    if(prepareList->length()>0)
+    if(prepareList->size()>0)
     {
         GlobalObjects::danmuRender->prepareDanmu(prepareList);
     }

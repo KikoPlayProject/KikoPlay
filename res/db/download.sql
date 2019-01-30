@@ -8,6 +8,15 @@ CREATE TABLE "task" (
 "CLength"  INTEGER,
 "URI"  TEXT,
 "SFIndexes"  TEXT,
-"Torrent"  BLOB,
 PRIMARY KEY ("TaskID")
 );
+CREATE INDEX "TaskID"
+ON "task" ("TaskID" ASC);
+
+CREATE TABLE "torrent" (
+"TaskID"  TEXT NOT NULL,
+"Torrent"  BLOB,
+CONSTRAINT "TaskID" FOREIGN KEY ("TaskID") REFERENCES "task" ("TaskID") ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE INDEX "TaskID_T"
+ON "torrent" ("TaskID" ASC);

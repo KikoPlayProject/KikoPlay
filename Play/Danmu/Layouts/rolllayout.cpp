@@ -41,12 +41,14 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
             break;
         }
         //for dense layout-----
+        //Although overlays occur, they do not occur until some time later
         if(collidedSpace>xSpace && collidedSpace>maxCollidedSpace)
         {
             maxCollidedSpace=collidedSpace;//(*iter)->x;
             msPos1=iter;
             dsY1=currentY;
         }
+        //Insert between two adjacent danmu, find the largest spacing
         float tmp((*iter)->y-cY);
         if(tmp>maxSpace)
         {
@@ -70,20 +72,24 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
                 lastcol.append(dmobj);
                 break;
             }
-            if(render->dense)
+            if(render->dense>0)
             {
                 if(msPos1.i)
                 {
                     dmobj->y=dsY1;
                     rolldanmu.append(*msPos1);
                     *msPos1=dmobj;
+                    break;
                 }
                 else
                 {
-                    dmobj->y=dsY2;
-                    lastcol.insert(msPos2,dmobj);
-                }
-                break;
+                    if((render->dense==1 && maxSpace>dm_height/2) || render->dense==2)
+                    {
+                        dmobj->y=dsY2;
+                        lastcol.insert(msPos2,dmobj);
+                        break;
+                    }
+                }   
             }
 #ifdef QT_DEBUG
             qDebug()<<"roll lost: "<<danmu->text<<",send time:"<<danmu->date;

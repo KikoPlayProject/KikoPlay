@@ -10,6 +10,7 @@ void BottomLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *d
     const QRectF rect=render->surfaceRect;
     float currentY=rect.bottom()-margin_y;
     float dm_height=drawInfo->height;
+    float top=rect.top();
     DanmuObject *dmobj=new DanmuObject;
     dmobj->src=danmu;
     dmobj->drawInfo=drawInfo;
@@ -38,20 +39,20 @@ void BottomLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *d
         //--------
         cY=(*iter)->y-margin_y;
         currentY=cY-dm_height;
-        if(currentY<=rect.top())
+        if(currentY<=top)
             break;
     }
     if(!success)
     {
         do
         {
-            if(currentY>rect.top())
+            if(currentY>top)
             {
                 dmobj->y=currentY-(bottomdanmu.isEmpty()?dm_height:0);
                 bottomdanmu.append(dmobj);
                 break;
             }
-            if(render->dense)
+            if((render->dense==1 && maxSpace>dm_height/2) || render->dense==2)
             {
                 dmobj->y=dsY;
                 bottomdanmu.insert(msPos,dmobj);

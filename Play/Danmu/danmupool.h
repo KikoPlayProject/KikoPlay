@@ -32,7 +32,7 @@ public:
 private:
     QList<QSharedPointer<DanmuComment> > danmuPool;
     QHash<int,DanmuSourceInfo> sourcesTable;
-    QList<PrepareList *> prepareListPool;
+    QLinkedList<PrepareList *> prepareListPool;
     StatisInfo statisInfo;
     int currentPosition;
     int currentTime;

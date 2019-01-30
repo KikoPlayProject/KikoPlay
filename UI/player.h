@@ -114,7 +114,8 @@ private:
      QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold,
                 *bottomSubtitleProtect,*topSubtitleProtect,*randomSize,*denseLayout;
      QFontComboBox *fontFamilyCombo;
-     QComboBox *aspectRatioCombo,*playSpeedCombo,*clickBehaviorCombo,*dbClickBehaviorCombo;
+     QComboBox *aspectRatioCombo,*playSpeedCombo,*clickBehaviorCombo,*dbClickBehaviorCombo,
+                *denseLevel;
      QSlider *speedSlider,*alphaSlider,*strokeWidthSlider,*fontSizeSlider,*maxDanmuCount;
      bool updatingTrack;
      bool isFullscreen;
