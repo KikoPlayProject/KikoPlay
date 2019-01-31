@@ -431,7 +431,7 @@ QVariant DanmuPool::data(const QModelIndex &index, int role) const
     {
         if(comment->blockBy!=-1)
             return QBrush(QColor(150,150,150));
-        return QBrush(QColor(comment->color>>16,(comment->color>>8)&0xff,comment->color&0xff,200));
+        return QBrush(QColor((comment->color>>16)&0xff,(comment->color>>8)&0xff,comment->color&0xff,200));
     }
     case Qt::ToolTipRole:
     {

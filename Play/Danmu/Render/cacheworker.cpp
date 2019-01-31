@@ -45,7 +45,7 @@ DanmuDrawInfo *CacheWorker::createDanmuCache(const DanmuComment *comment)
     img.fill(Qt::transparent);
     QPainter painter(&img);
     painter.setRenderHint(QPainter::Antialiasing);
-    int r=comment->color>>16,g=(comment->color>>8)&0xff,b=comment->color&0xff;
+    int r=(comment->color>>16)&0xff,g=(comment->color>>8)&0xff,b=comment->color&0xff;
     if(strokeWidth>0)
     {
         danmuStrokePen.setColor(comment->color==0x000000?Qt::white:Qt::black);

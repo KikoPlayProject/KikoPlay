@@ -7,6 +7,7 @@
 #include "Provider/dandanprovider.h"
 #include "Provider/bahamutprovider.h"
 #include "Provider/iqiyiprovider.h"
+#include "Provider/youkuprovider.h"
 #include "globalobjects.h"
 
 ProviderManager::ProviderManager(QObject *parent) : QObject(parent)
@@ -20,6 +21,7 @@ ProviderManager::ProviderManager(QObject *parent) : QObject(parent)
 	registerProvider<DandanProvider>();
 	registerProvider<BahamutProvider>();
     registerProvider<IqiyiProvider>();
+    registerProvider<YoukuProvider>();
 }
 
 QStringList ProviderManager::getSearchProviders()
@@ -59,15 +61,15 @@ DanmuAccessResult *ProviderManager::search(const QString &providerId, QString ke
         result->errorInfo=tr("Provider invalid or Unsupport search");
         return result;
     }
-    QMetaObject::invokeMethod(provider, [provider,&keyword]() {
-		provider->search(keyword);
-	}, Qt::QueuedConnection);
     QEventLoop eventLoop;
     DanmuAccessResult *curSearchInfo=nullptr;
     QObject::connect(provider,&ProviderBase::searchDone, &eventLoop, [&eventLoop,&curSearchInfo](DanmuAccessResult *searchInfo){
         curSearchInfo=searchInfo;
         eventLoop.quit();
     });
+    QMetaObject::invokeMethod(provider, [provider,&keyword]() {
+        provider->search(keyword);
+    }, Qt::QueuedConnection);
     eventLoop.exec();
     if(!curSearchInfo)
     {
@@ -89,7 +91,6 @@ DanmuAccessResult *ProviderManager::getEpInfo(const QString &providerId, DanmuSo
         result->errorInfo=tr("Provider invalid");
         return result;
     }
-    QMetaObject::invokeMethod(provider,"getEpInfo",Qt::QueuedConnection,Q_ARG(DanmuSourceItem *,item));
     QEventLoop eventLoop;
     DanmuAccessResult *curEpInfo=nullptr;
     QObject::connect(provider,&ProviderBase::epInfoDone, &eventLoop, [&eventLoop,&curEpInfo,item](DanmuAccessResult *epInfo,DanmuSourceItem *srcItem){
@@ -99,6 +100,7 @@ DanmuAccessResult *ProviderManager::getEpInfo(const QString &providerId, DanmuSo
 			eventLoop.quit();
 		}
     });
+    QMetaObject::invokeMethod(provider,"getEpInfo",Qt::QueuedConnection,Q_ARG(DanmuSourceItem *,item));
     eventLoop.exec();
     if(!curEpInfo)
     {
@@ -130,15 +132,15 @@ QString ProviderManager::downloadDanmu(QString &providerId, DanmuSourceItem *ite
     {
         return tr("Provider invalid");
     }
-    QMetaObject::invokeMethod(provider,[provider,item,&danmuList](){
-        provider->downloadDanmu(item,danmuList);
-    },Qt::QueuedConnection);
     QEventLoop eventLoop;
     QString errorInfo;
     QObject::connect(provider,&ProviderBase::downloadDone, &eventLoop, [&eventLoop,&errorInfo](QString errInfo){
         errorInfo=errInfo;
         eventLoop.quit();
     });
+    QMetaObject::invokeMethod(provider,[provider,item,&danmuList](){
+        provider->downloadDanmu(item,danmuList);
+    },Qt::QueuedConnection);
     eventLoop.exec();
     return errorInfo;
 }

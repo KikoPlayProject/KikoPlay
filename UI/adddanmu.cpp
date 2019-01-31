@@ -54,13 +54,6 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent) : CFramelessDialog(
     selectedDanmuPage->setFixedHeight(pageButtonSize.height());
     selectedDanmuPage->setObjectName(QStringLiteral("DialogPageButton"));
 
-    QMovie *downloadingIcon=new QMovie(this);
-    movieLabel=new QLabel(this);
-    movieLabel->setMovie(downloadingIcon);
-    downloadingIcon->setFileName(":/res/images/loading-spinner.gif");
-    movieLabel->setFixedSize(32,32);
-    movieLabel->setScaledContents(true);
-    downloadingIcon->start();
 
     QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
     pageButtonHLayout->setContentsMargins(0,0,0,0);
@@ -69,7 +62,6 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent) : CFramelessDialog(
     pageButtonHLayout->addWidget(urlDanmuPage);
     pageButtonHLayout->addWidget(selectedDanmuPage);   
     pageButtonHLayout->addStretch(1);
-    pageButtonHLayout->addWidget(movieLabel);
     danmuVLayout->addLayout(pageButtonHLayout);
 
     QStackedLayout *contentStackLayout=new QStackedLayout();
@@ -98,7 +90,6 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent) : CFramelessDialog(
     keywordEdit->installEventFilter(this);
     searchButton->setAutoDefault(false);
     searchButton->setDefault(false);
-    movieLabel->hide();
     resize(GlobalObjects::appSetting->value("DialogSize/AddDanmu",QSize(600*logicalDpiX()/96,500*logicalDpiY()/96)).toSize());
 }
 
@@ -127,11 +118,13 @@ void AddDanmu::search()
                 beginProcrss();
                 searchButton->setEnabled(false);
                 keywordEdit->setEnabled(false);
+                searchResultWidget->setEnabled(false);
                 DanmuAccessResult *result=GlobalObjects::providerManager->getEpInfo(providerId,item);
                 addSearchItem(result);
                 delete result;
                 searchButton->setEnabled(true);
                 keywordEdit->setEnabled(true);
+                searchResultWidget->setEnabled(true);
                 endProcess();
             });
             QListWidgetItem *listItem=new QListWidgetItem(searchResultWidget);
@@ -303,13 +296,13 @@ QWidget *AddDanmu::setupSelectedPage()
 void AddDanmu::beginProcrss()
 {
     processCounter++;
-    movieLabel->show();
+    showBusyState(true);
 }
 
 void AddDanmu::endProcess()
 {
     processCounter--;
-    if(processCounter==0)movieLabel->hide();
+    if(processCounter==0)showBusyState(false);
 }
 
 void AddDanmu::onAccept()

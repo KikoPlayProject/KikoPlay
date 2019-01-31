@@ -221,6 +221,6 @@ bool RollLayout::isCollided(const DanmuObject *d1, const DanmuObject *d2, float 
     if(x1w>x2)return true;
     if(s2<=s1)return false;
     float t1=x1w/s1,t2=(x2-x1w)/(s2-s1);
-    *collidedSpace=t2*s1;
+    *collidedSpace=t2*s2;
     return t2<t1;
 }

@@ -36,7 +36,6 @@ private:
     QListWidget *searchResultWidget;
     const QStringList sourceList=QString("Bilibili;Dandan;Tucao;5dm").split(';');
     QTreeWidget *selectedDanmuWidget;
-    QLabel *movieLabel;
     QString providerId;
 
     void search();
