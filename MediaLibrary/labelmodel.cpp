@@ -174,6 +174,7 @@ LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
         std::sort(tagList.begin(),tagList.end(),[](auto &tagPair1,auto &tagPair2){return tagPair1.second>tagPair2.second;});
         emit layoutChanged(persistentIndexList);
 
+		if (time.isEmpty()) return;
         int insPos = std::lower_bound(timeList.begin(),timeList.end(),time,[](const QPair<QString,int> &pair, const QString &insTime){
             return pair.first>insTime;
         })-timeList.begin();
