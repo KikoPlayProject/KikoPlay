@@ -2,7 +2,7 @@
 ---
 全功能弹幕播放器
 
-##特性
+## 特性
  - 基于libmpv，支持多种格式，支持mpv灵活的参数设置
  - 树形播放列表，可以随意组织你的番剧
  - 搜索下载多个网站的弹幕：AcFun,Bilibili,Tucao,5dm,巴哈姆特,爱奇艺,优酷
@@ -12,7 +12,7 @@
  - 集成aria2下载功能
  - .........
 
-##编译
+## 编译
 
 KikoPlay基于以下项目：
 
@@ -27,19 +27,19 @@ KikoPlay基于以下项目：
 
 自从0.2.3版本后只提供64位版本，需要32位版本可自行尝试编译
 
-##截图
+## 截图
 
 ![](screenshot/KikoPlay1.jpg)
 ![](screenshot/KikoPlay2.jpg)
 ![](screenshot/KikoPlay3.jpg)
-![](screenshot/KikoPlay_web.jpg
+![](screenshot/KikoPlay_web.jpg)
 
-##下载
+## 下载
 
 最新版本均在百度网盘发布
 [百度网盘](https://pan.baidu.com/s/1gyT0FU9rioaa77znhAUx2w)
 
-##反馈
+## 反馈
 
 如果有问题，欢迎创建issue或者联系我:
 dx_8820832#yeah.net（#→@），或者加QQ群874761809反馈
