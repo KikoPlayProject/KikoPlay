@@ -17,9 +17,8 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
     dmobj->drawInfo=drawInfo;
     dmobj->extraData=speed;
     dmobj->x=rect.width();
-    float xSpace=rect.width()/2;
     bool success=false;
-    float maxCollidedSpace(0.f),maxSpace(0.f),dsY1(0.f),dsY2(0.f),cY(rect.top());
+    float maxChaseSpace(rect.width()/2),maxSpace(0.f),dsY1(0.f),dsY2(0.f),cY(rect.top());
     QLinkedList<DanmuObject *>::Iterator msPos1,msPos2= lastcol.begin();
     for(auto iter=lastcol.begin();iter!=lastcol.end();++iter)
     {
@@ -31,8 +30,7 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
             success=true;
             break;
         }
-        float collidedSpace(0.f);
-        if(!isCollided((*iter),dmobj,&collidedSpace))
+        if(!isCollided((*iter),dmobj))
         {
             dmobj->y=currentY;
             rolldanmu.append(*iter);
@@ -42,9 +40,10 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
         }
         //for dense layout-----
         //Although overlays occur, they do not occur until some time later
-        if(collidedSpace>xSpace && collidedSpace>maxCollidedSpace)
+        float chaseSpace(dmobj->x-(*iter)->x-(*iter)->drawInfo->width);
+        if(chaseSpace>maxChaseSpace)
         {
-            maxCollidedSpace=collidedSpace;//(*iter)->x;
+            maxChaseSpace=chaseSpace;//(*iter)->x;
             msPos1=iter;
             dsY1=currentY;
         }
@@ -214,13 +213,12 @@ QSharedPointer<DanmuComment> RollLayout::danmuAtList(QPointF point, QLinkedList<
     return nullptr;
 }
 
-bool RollLayout::isCollided(const DanmuObject *d1, const DanmuObject *d2, float *collidedSpace)
+bool RollLayout::isCollided(const DanmuObject *d1, const DanmuObject *d2)
 {
     float s1=d1->extraData,s2=d2->extraData;
     float x1w=d1->x+d1->drawInfo->width,x2=d2->x;
     if(x1w>x2)return true;
     if(s2<=s1)return false;
     float t1=x1w/s1,t2=(x2-x1w)/(s2-s1);
-    *collidedSpace=t2*s2;
     return t2<t1;
 }

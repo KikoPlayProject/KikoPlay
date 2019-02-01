@@ -53,7 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-	delete playerWindow;
+    delete playerWindow;
 }
 
 void MainWindow::setupUI()

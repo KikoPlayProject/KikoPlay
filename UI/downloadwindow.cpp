@@ -114,7 +114,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 {
     initActions();
 
-    const QSize tbSize(100*logicalDpiX()/96,36*logicalDpiY()/96);
+    const QSize tbSize(100*logicalDpiX()/96,42*logicalDpiY()/96);
     FontIconToolButtonOptions btnOptions;
     btnOptions.iconSize=12;
     btnOptions.fontSize=10;
@@ -425,7 +425,7 @@ QWidget *DownloadWindow::setupLeftPanel()
     const int panelWidth=220*logicalDpiX()/96;
     leftPanel->setFixedWidth(panelWidth);
 
-    const int tbHeight=40*logicalDpiY()/96;
+    const int tbHeight=45*logicalDpiY()/96;
     FontIconToolButtonOptions btnOptions;
     btnOptions.fontSize=12;
     btnOptions.iconSize=12;

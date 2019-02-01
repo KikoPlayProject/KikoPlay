@@ -22,7 +22,7 @@ private:
 
     inline void moveLayoutList(QLinkedList<DanmuObject *> &list, float step);
     QSharedPointer<DanmuComment> danmuAtList(QPointF point,QLinkedList<DanmuObject *> &list);
-    inline bool isCollided(const DanmuObject *d1, const DanmuObject *d2, float *collidedSpace);
+    inline bool isCollided(const DanmuObject *d1, const DanmuObject *d2);
 };
 
 #endif // ROLLLAYOUT_H

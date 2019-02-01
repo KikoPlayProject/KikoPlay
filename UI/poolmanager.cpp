@@ -63,7 +63,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         }
     });
 
-    QPushButton *cancel=new QPushButton(tr("Cancel "),this);
+    QPushButton *cancel=new QPushButton(tr("Cancel"),this);
     cancel->hide();
 
     QLabel *stateLabel=new QLabel(this);

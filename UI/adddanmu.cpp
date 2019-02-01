@@ -114,7 +114,7 @@ void AddDanmu::search()
         for(DanmuSourceItem &item:searchResult->list)
         {
             SearchItemWidget *itemWidget=new SearchItemWidget(&item);
-            QObject::connect(itemWidget, &SearchItemWidget::addSearchItem, [this](DanmuSourceItem *item){
+            QObject::connect(itemWidget, &SearchItemWidget::addSearchItem, itemWidget, [this](DanmuSourceItem *item){
                 beginProcrss();
                 searchButton->setEnabled(false);
                 keywordEdit->setEnabled(false);
@@ -367,7 +367,7 @@ SearchItemWidget::SearchItemWidget(DanmuSourceItem *item):searchItem(*item)
 	descLabel->setText(QString("<font size=\"3\" face=\"Microsoft Yahei\">%1</font>").arg(item->description.trimmed()));
 	descLabel->setToolTip(item->description);
     QPushButton *addItemButton=new QPushButton(tr("Add"),this);
-    QObject::connect(addItemButton,&QPushButton::clicked,[this,addItemButton](){
+    QObject::connect(addItemButton,&QPushButton::clicked,this,[this,addItemButton](){
 		addItemButton->setEnabled(false);
 		emit addSearchItem(&searchItem);
 		addItemButton->setEnabled(true);

@@ -40,18 +40,15 @@ void DownloadModel::addTask(DownloadTask *task)
     },Qt::QueuedConnection);
 }
 
-QString DownloadModel::addUriTask(const QString &uri, const QString &dir, bool directDownload)
+QString DownloadModel::addUriTask(const QString &uri, const QString &dir)
 {
     QString taskID(QCryptographicHash::hash(uri.toUtf8(),QCryptographicHash::Sha1).toHex());
     if(containTask(taskID))
         return QString(tr("The task already exists: \n%1").arg(uri));
     QJsonObject options;
     options.insert("dir", dir);
-    if(!directDownload)
-    {
-        options.insert("bt-metadata-only","true");
-        options.insert("bt-save-metadata","true");
-    }
+    options.insert("bt-metadata-only","true");
+    options.insert("bt-save-metadata","true");
 	options.insert("seed-time", QString::number(GlobalObjects::appSetting->value("Download/SeedTime", 5).toInt()));
 	options.insert("bt-tracker", GlobalObjects::appSetting->value("Download/Trackers", QStringList()).toStringList().join(','));
 
@@ -62,6 +59,7 @@ QString DownloadModel::addUriTask(const QString &uri, const QString &dir, bool d
        newTask->gid=gid;
        newTask->uri=uri;
        newTask->createTime=QDateTime::currentSecsSinceEpoch();
+       newTask->finishTime=0;
        newTask->taskID = taskID;
        newTask->dir=dir;
        newTask->title=uri;
@@ -472,7 +470,7 @@ void DownloadWorker::addTask(DownloadTask *task)
     QSqlDatabase db=QSqlDatabase::database("Download_W");
     QSqlQuery query(db);
     db.transaction();
-    query.prepare("insert into task(TaskID,Dir,CTime,URI,SFIndexes,Torrent) values(?,?,?,?,?,?)");
+    query.prepare("insert into task(TaskID,Dir,CTime,URI,SFIndexes) values(?,?,?,?,?)");
     query.bindValue(0,task->taskID);
     query.bindValue(1,task->dir);
     query.bindValue(2,task->createTime);

@@ -60,7 +60,7 @@ signals:
     void magnetDone(const QString &path, const QString &magnet);
     void removeTask(const QString &gid);
 public slots: 
-    QString addUriTask(const QString &uri, const QString &dir, bool directDownload=false);
+    QString addUriTask(const QString &uri, const QString &dir);
     QString addTorrentTask(const QByteArray &torrentContent,const QString &infoHash,const QString &dir,
                            const QString &selIndexes, const QString &magnet);
     void removeItem(QModelIndexList &removeIndexes, bool deleteFile);

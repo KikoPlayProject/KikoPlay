@@ -6,7 +6,7 @@
 #include "list.h"
 #include "librarywindow.h"
 #include "downloadwindow.h"
-#include<QToolButton>
+#include <QToolButton>
 #include <QHBoxLayout>
 #include <QStackedLayout>
 class QSplitter;
