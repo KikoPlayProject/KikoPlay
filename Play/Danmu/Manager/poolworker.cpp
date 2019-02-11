@@ -195,24 +195,7 @@ void PoolWorker::updatePool(QList<DanmuPoolNode *> &updateList)
         for(DanmuPoolNode *epNode:*animeNode->children)
         {
             if(epNode->checkStatus==Qt::Unchecked)continue;
-            QSqlQuery query(QSqlDatabase::database("Comment_W"));
-            int tableId=DanmuPoolNode::idHash(epNode->idInfo);
-            query.exec(QString("select Time,Color,User,Text from danmu_%1 where PoolID='%2'").arg(tableId).arg(epNode->idInfo));
-            int timeNo = query.record().indexOf("Time"),
-                colorNo=query.record().indexOf("Color"),
-                userNo=query.record().indexOf("User"),
-                textNo=query.record().indexOf("Text");
-            QSet<QString> danmuHashSet;
-            while (query.next())
-            {
-                QByteArray hashData(QString("%0%1%2%3")
-                                    .arg(query.value(textNo).toString())
-                                    .arg(query.value(timeNo).toInt())
-                                    .arg(query.value(userNo).toString())
-                                    .arg(query.value(colorNo).toInt()).toUtf8());
-                QString danmuHash(QString(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex()));
-                danmuHashSet.insert(danmuHash);
-            }
+            QSet<QString> danmuHashSet(genDanmuHash(epNode->idInfo));
             for(DanmuPoolNode *sourceNode:*epNode->children)
             {
                 if(sourceNode->checkStatus==Qt::Unchecked)continue;
@@ -262,7 +245,7 @@ void PoolWorker::saveSource(const QString &pid, const DanmuSourceInfo *sourceInf
             query.bindValue(3,danmu->color);
             query.bindValue(4,(int)danmu->type);
             query.bindValue(5,(int)danmu->fontSizeLevel);
-            query.bindValue(6,danmu->source);
+            query.bindValue(6,sourceInfo?sourceInfo->id:danmu->source);
             query.bindValue(7,danmu->sender);
             query.bindValue(8,danmu->text);
             query.exec();
@@ -325,6 +308,55 @@ void PoolWorker::exportJson(const QString &pid)
         {"data", danmuArray}
     };
     emit exportJsonDown(resposeObj);
+}
+
+void PoolWorker::addSource(DanmuPoolNode *epNode, const DanmuSourceInfo *sourceInfo, const QList<DanmuComment *> *danmuList)
+{
+    DanmuPoolSourceNode *sourceNode(nullptr);
+    int maxId=0;
+    for(auto n:*epNode->children)
+    {
+        DanmuPoolSourceNode *srcNode=static_cast<DanmuPoolSourceNode *>(n);
+        if(srcNode->idInfo==sourceInfo->url)
+        {
+            sourceNode=srcNode;
+            break;
+        }
+        if (srcNode->srcId >= maxId)maxId = srcNode->srcId + 1;
+    }
+    if(sourceNode)
+    {
+        QSet<QString> danmuHashSet(genDanmuHash(epNode->idInfo));
+        QList<DanmuComment *> tmpList;
+        for(auto comment:*danmuList)
+        {
+            QByteArray hashData(QString("%0%1%2%3").arg(comment->text).arg(comment->originTime).arg(comment->sender).arg(comment->color).toUtf8());
+            QString danmuHash(QString(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex()));
+            if(!(danmuHashSet.contains(danmuHash) || comment->text.isEmpty()))
+            {
+                comment->source=sourceNode->srcId;
+                tmpList.append(comment);
+            }
+        }
+        if(tmpList.count()>0)
+        {
+            sourceNode->danmuCount+=tmpList.count();
+            saveSource(sourceNode->parent->idInfo,nullptr,&tmpList);
+        }
+        emit addDone(nullptr);
+    }
+    else
+    {
+        sourceNode=new DanmuPoolSourceNode();
+        sourceNode->title=sourceInfo->name;
+        sourceNode->srcId=maxId;
+        sourceNode->delay=sourceInfo->delay;
+        sourceNode->idInfo=sourceInfo->url;
+        sourceNode->danmuCount=sourceInfo->count;
+        DanmuSourceInfo srcInfo(sourceNode->toSourceInfo());
+        saveSource(epNode->idInfo,&srcInfo,danmuList);
+        emit addDone(sourceNode);
+    }
 }
 
 void PoolWorker::exportEp(const DanmuPoolNode *epNode, const QString &fileName, bool useTimeline, bool applyBlockRule)
@@ -435,5 +467,28 @@ void PoolWorker::updateSource(DanmuPoolSourceNode *sourceNode, const QSet<QStrin
         qDeleteAll(tmpList);
     }
 
+}
+
+QSet<QString> PoolWorker::genDanmuHash(const QString &pid)
+{
+    QSqlQuery query(QSqlDatabase::database("Comment_W"));
+    int tableId=DanmuPoolNode::idHash(pid);
+    query.exec(QString("select Time,Color,User,Text from danmu_%1 where PoolID='%2'").arg(tableId).arg(pid));
+    int timeNo = query.record().indexOf("Time"),
+        colorNo=query.record().indexOf("Color"),
+        userNo=query.record().indexOf("User"),
+        textNo=query.record().indexOf("Text");
+    QSet<QString> danmuHashSet;
+    while (query.next())
+    {
+        QByteArray hashData(QString("%0%1%2%3")
+                            .arg(query.value(textNo).toString())
+                            .arg(query.value(timeNo).toInt())
+                            .arg(query.value(userNo).toString())
+                            .arg(query.value(colorNo).toInt()).toUtf8());
+        QString danmuHash(QString(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex()));
+        danmuHashSet.insert(danmuHash);
+    }
+    return danmuHashSet;
 }
 

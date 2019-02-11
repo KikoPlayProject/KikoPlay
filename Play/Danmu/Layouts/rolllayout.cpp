@@ -82,7 +82,7 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
                 }
                 else
                 {
-                    if((render->dense==1 && maxSpace>dm_height/2) || render->dense==2)
+                    if((render->dense==1 && maxSpace>=dm_height) || render->dense==2)
                     {
                         dmobj->y=dsY2;
                         lastcol.insert(msPos2,dmobj);

@@ -5,7 +5,9 @@
 class DanmuComment
 {
 public:
-    DanmuComment():time(0),originTime(0),blockBy(-1){}
+    DanmuComment():time(0),originTime(0),blockBy(-1),mergedList(nullptr),m_parent(nullptr){}
+    ~DanmuComment(){if(mergedList)delete mergedList;}
+
     enum DanmuType
     {
         Rolling,
@@ -49,6 +51,9 @@ public:
     int originTime;
     int blockBy;
     int source;
+
+    QList<QSharedPointer<DanmuComment> > *mergedList;
+    DanmuComment *m_parent;
 };
 Q_DECLARE_OPAQUE_POINTER(DanmuComment *)
 struct SimpleDanmuInfo

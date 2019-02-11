@@ -31,6 +31,8 @@ DanmuRender::DanmuRender()
     danmuStyle.fontFamily="Microsoft YaHei";
     danmuStyle.randomSize=false;
 	danmuStyle.bold = false;
+    danmuStyle.enlargeMerged=true;
+    danmuStyle.mergeCountPos=1;
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::resized,this,&DanmuRender::refreshDMRect);
 
     cacheWorker=new CacheWorker(&danmuStyle);
@@ -213,6 +215,16 @@ void DanmuRender::setRandomSize(bool randomSize)
 void DanmuRender::setMaxDanmuCount(int count)
 {
     maxCount=count;
+}
+
+void DanmuRender::setMergeCountPos(int pos)
+{
+    danmuStyle.mergeCountPos=pos;
+}
+
+void DanmuRender::setEnlargeMerged(bool enlarge)
+{
+    danmuStyle.enlargeMerged=enlarge;
 }
 
 void DanmuRender::prepareDanmu(PrepareList *prepareList)

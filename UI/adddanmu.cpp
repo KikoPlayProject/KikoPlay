@@ -19,7 +19,7 @@
 #include "selectepisode.h"
 #include "globalobjects.h"
 
-AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent) : CFramelessDialog(tr("Add Danmu"),parent,true),processCounter(0)
+AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo) : CFramelessDialog(tr("Add Danmu"),parent,true,true,autoPauseVideo),processCounter(0)
 {
     QVBoxLayout *danmuVLayout=new QVBoxLayout(this);
     danmuVLayout->setContentsMargins(0,0,0,0);
@@ -129,7 +129,7 @@ void AddDanmu::search()
             });
             QListWidgetItem *listItem=new QListWidgetItem(searchResultWidget);
             searchResultWidget->setItemWidget(listItem,itemWidget);
-            listItem->setSizeHint(QSize(0, 80*logicalDpiY()/96));
+            listItem->setSizeHint(itemWidget->sizeHint());
             QCoreApplication::processEvents();
         }
         //searchResultWidget->update();
@@ -379,4 +379,9 @@ SearchItemWidget::SearchItemWidget(DanmuSourceItem *item):searchItem(*item)
     searchPageGLayout->setColumnMinimumWidth(1,50*logicalDpiX()/96);
     searchPageGLayout->setColumnStretch(0,6);
     searchPageGLayout->setColumnStretch(1,1);
+}
+
+QSize SearchItemWidget::sizeHint() const
+{
+    return layout()->sizeHint();
 }

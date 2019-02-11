@@ -306,3 +306,18 @@ void DanmuManager::setDelay(DanmuComment *danmu, DanmuSourceInfo *srcInfo)
     delay+=srcInfo->delay;
     danmu->time=danmu->originTime+delay<0?danmu->originTime:danmu->originTime+delay;
 }
+
+DanmuPoolSourceNode *DanmuManager::addSource(DanmuPoolNode *epNode, const DanmuSourceInfo *sourceInfo, const QList<DanmuComment *> *danmuList)
+{
+    QEventLoop eventLoop;
+    DanmuPoolSourceNode *srcNode(nullptr);
+    QObject::connect(poolWorker,&PoolWorker::addDone, &eventLoop,[&eventLoop,&srcNode](DanmuPoolSourceNode *newSrcNode){
+        srcNode=newSrcNode;
+        eventLoop.quit();
+    });
+    QMetaObject::invokeMethod(poolWorker,[this,epNode,sourceInfo,danmuList](){
+        poolWorker->addSource(epNode,sourceInfo,danmuList);
+    },Qt::QueuedConnection);
+    eventLoop.exec();
+    return srcNode;
+}

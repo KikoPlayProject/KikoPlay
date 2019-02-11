@@ -24,6 +24,7 @@ LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
             }
             else
             {
+                if(tagMap[tag].contains(title)) continue;
                 tagMap[tag].insert(title);
                 for(int i=0;i<tagList.size();++i)
                 {
@@ -77,10 +78,10 @@ LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
        }
     });
     QObject::connect(library,&AnimeLibrary::removeTagFrom,this,[this](const QString &title, const QString &tag){
-        if(tagMap.contains(tag))
-        {
-            tagMap[tag].remove(title);
-        }
+        if(!tagMap.contains(tag)) return;
+        if(!tagMap[tag].contains(title)) return;
+        tagMap[tag].remove(title);
+        if(tagMap[tag].size()==0)tagMap.remove(tag);
         int i=0;
         for(auto &pair:tagList)
         {

@@ -14,32 +14,70 @@ CacheWorker::CacheWorker(const DanmuStyle *style):danmuStyle(style)
 DanmuDrawInfo *CacheWorker::createDanmuCache(const DanmuComment *comment)
 {
     if(danmuStyle->randomSize)
+    {
         danmuFont.setPointSize(QRandomGenerator::global()->
                                bounded(danmuStyle->fontSizeTable[DanmuComment::FontSizeLevel::Small],
                                danmuStyle->fontSizeTable[DanmuComment::FontSizeLevel::Large]));
+    }
+    else if(comment->mergedList && danmuStyle->enlargeMerged)
+    {
+        float enlargeRate(qBound(1.f,log2f(comment->mergedList->count()+1)/2,2.5f));
+        danmuFont.setPointSize(danmuStyle->fontSizeTable[DanmuComment::FontSizeLevel::Normal]*enlargeRate);
+    }
     else
+    {
         danmuFont.setPointSize(danmuStyle->fontSizeTable[comment->fontSizeLevel]);
+    }
     QFontMetrics metrics(danmuFont);
     danmuStrokePen.setWidthF(danmuStyle->strokeWidth);
     int strokeWidth=danmuStyle->strokeWidth;
     int left=qAbs(metrics.leftBearing(comment->text.front()));
 
-    QSize size=metrics.size(0, comment->text)+QSize(strokeWidth*2+left,strokeWidth);
-    QImage img(size, QImage::Format_ARGB32);
+    QSize textSize(metrics.size(0, comment->text));
+    QSize imgSize=textSize+QSize(strokeWidth*2+left,strokeWidth);
+    int mergeCountWidth=0;
+    if(comment->mergedList && danmuStyle->mergeCountPos>0)
+    {
+        QFont tmpFont(danmuFont);
+        tmpFont.setPointSize(tmpFont.pointSize()/2);
+        QFontMetrics metrics(tmpFont);
+        mergeCountWidth=metrics.size(0,QString("[%1]").arg(comment->mergedList->count())).width();
+        imgSize.rwidth()+=mergeCountWidth;
+    }
+    QImage img(imgSize, QImage::Format_ARGB32);
 
     DanmuDrawInfo *drawInfo=new DanmuDrawInfo;
     drawInfo->useCount=0;
-    drawInfo->height=size.height();
-    drawInfo->width=size.width();
+    drawInfo->height=imgSize.height();
+    drawInfo->width=imgSize.width();
     //drawInfo->img=img;
 
     QPainterPath path;
     QStringList multilines(comment->text.split('\n'));
-    int py = qAbs((size.height() - metrics.height()*multilines.size()) / 2 + metrics.ascent());
+    int py = qAbs((imgSize.height() - metrics.height()*multilines.size()) / 2 + metrics.ascent());
     int i=0;
     for(const QString &line:multilines)
     {
-        path.addText(left+strokeWidth,py+i*metrics.height(),danmuFont,line);
+        if(i==0 && danmuStyle->mergeCountPos==1 && comment->mergedList)
+        {
+            int sz=danmuFont.pointSize();
+            danmuFont.setPointSize(sz/2);
+            path.addText(left+strokeWidth,py,danmuFont,QString("[%1]").arg(comment->mergedList->count()));
+            danmuFont.setPointSize(sz);
+            path.addText(left+strokeWidth+mergeCountWidth,py,danmuFont,line);
+        }
+        else if(i==multilines.count()-1 && danmuStyle->mergeCountPos==2 && comment->mergedList)
+        {
+            path.addText(left+strokeWidth,py+i*metrics.height(),danmuFont,line);
+            int sz=danmuFont.pointSize();
+            danmuFont.setPointSize(sz/2);
+            path.addText(left+strokeWidth+textSize.width(),py+i*metrics.height(),danmuFont,QString("[%1]").arg(comment->mergedList->count()));
+            danmuFont.setPointSize(sz);
+        }
+        else
+        {
+            path.addText(left+strokeWidth,py+i*metrics.height(),danmuFont,line);
+        }
         ++i;
     }
     img.fill(Qt::transparent);
@@ -115,7 +153,11 @@ void CacheWorker::beginCache(PrepareList *danmus)
 #endif
     for(QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*> &dm:*danmus)
     {
-         QString hash_str(QString("%1%2%3").arg(dm.first->text).arg(dm.first->color).arg(danmuStyle->fontSizeTable[dm.first->fontSizeLevel]));
+         QString hash_str(QString("%1%2%3%4")
+                          .arg(dm.first->text)
+                          .arg(dm.first->color)
+                          .arg(danmuStyle->fontSizeTable[dm.first->fontSizeLevel])
+                          .arg(dm.first->mergedList?dm.first->mergedList->count():0));
          DanmuDrawInfo *drawInfo(danmuCache.value(hash_str,nullptr));
          if(!drawInfo)
          {

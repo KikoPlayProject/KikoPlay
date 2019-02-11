@@ -398,8 +398,9 @@ void ListWindow::initActions()
         {
             for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
             {
-                GlobalObjects::danmuPool->addDanmu((*iter).first,(*iter).second);
+                GlobalObjects::danmuPool->addDanmu((*iter).first,(*iter).second,false);
             }
+            GlobalObjects::danmuPool->resetModel();
         }
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
@@ -512,8 +513,8 @@ QModelIndex ListWindow::getPSParentIndex()
 QSharedPointer<DanmuComment> &ListWindow::getSelectedDanmu()
 {
     QModelIndexList selection =danmulistView->selectionModel()->selectedRows();
-    QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(danmulistView->model());
-    return GlobalObjects::danmuPool->getDanmu(model->mapToSource(selection.last()).row());
+    //QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(danmulistView->model());
+    return GlobalObjects::danmuPool->getDanmu(selection.last());
 }
 
 void ListWindow::updatePlaylistActions()
@@ -727,10 +728,12 @@ QWidget *ListWindow::setupDanmulistPage()
     danmulistView->addAction(act_deleteDanmu);
     danmulistView->addAction(act_jumpToTime);
 
-    QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
-    proxyModel->setSourceModel(GlobalObjects::danmuPool);
-    danmulistView->setModel(proxyModel);
+    //QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
+    //proxyModel->setSourceModel(GlobalObjects::danmuPool);
+    danmulistView->setModel(GlobalObjects::danmuPool);
 	QObject::connect(danmulistView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ListWindow::updateDanmuActions);
+    QObject::connect(GlobalObjects::danmuPool, &DanmuPool::modelReset, this, &ListWindow::updateDanmuActions);
+
 
     QHeaderView *danmulistHeader=danmulistView->header();
     danmulistHeader->setFont(normalFont);
@@ -771,10 +774,11 @@ QWidget *ListWindow::setupDanmulistPage()
                     DanmuSourceInfo si;
                     si.count = tmpList.count();
                     si.url = iter.value().url;
-                    count += GlobalObjects::danmuPool->addDanmu(si,tmpList);
+                    count += GlobalObjects::danmuPool->addDanmu(si,tmpList,false);
                 }
             }
         }
+        if(count>0) GlobalObjects::danmuPool->resetModel();
         showMessage(tr("Add %1 Danmu").arg(count),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
         act_autoAssociate->setEnabled(true);
         act_addOnlineDanmu->setEnabled(true);
@@ -809,9 +813,7 @@ QWidget *ListWindow::setupDanmulistPage()
     locatePosition->setToolButtonStyle(Qt::ToolButtonTextOnly);
     locatePosition->setToolTip(tr("Position"));
 	QObject::connect(locatePosition, &QToolButton::clicked, [this]() {
-		QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(danmulistView->model());
-		QModelIndex curIndex = model->mapFromSource(GlobalObjects::danmuPool->getCurrentIndex());
-		danmulistView->scrollTo(curIndex, QAbstractItemView::PositionAtTop);
+        danmulistView->scrollTo(GlobalObjects::danmuPool->getCurrentIndex(), QAbstractItemView::PositionAtTop);
 	});
 
 

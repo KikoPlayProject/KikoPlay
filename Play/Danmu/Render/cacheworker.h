@@ -9,6 +9,8 @@ struct DanmuStyle
     bool bold;
     QString fontFamily;
     bool randomSize;
+    int mergeCountPos;
+    bool enlargeMerged;
 };
 class CacheWorker : public QObject
 {
@@ -16,7 +18,7 @@ class CacheWorker : public QObject
 public:
     explicit CacheWorker(const DanmuStyle *style);
 private:
-    const int max_cache=300;
+    const int max_cache=512;
     QHash<QString,DanmuDrawInfo *> danmuCache;
     const DanmuStyle *danmuStyle;
     QFont danmuFont;

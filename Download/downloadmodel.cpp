@@ -238,6 +238,7 @@ void DownloadModel::updateItemStatus(const QJsonObject &statusObj)
                 QMetaObject::invokeMethod(downloadWorker, [item]() {
                     downloadWorker->updateTaskInfo(item);
                 }, Qt::QueuedConnection);
+                emit taskFinish(item);
             }
         }
         case DownloadTask::Seeding:

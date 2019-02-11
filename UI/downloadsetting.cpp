@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QSettings>
 #include <QGridLayout>
+#include <QCheckBox>
 #include <QIntValidator>
 #include "globalobjects.h"
 DownloadSetting::DownloadSetting(QWidget *parent) : CFramelessDialog(tr("Download Setting"),parent,true,true,false)
@@ -36,6 +37,12 @@ DownloadSetting::DownloadSetting(QWidget *parent) : CFramelessDialog(tr("Downloa
        concurrentChange=true;
     });
 
+    autoAddtoPlaylist=new QCheckBox(tr("Automatically add to playlist after download"),this);
+    autoAddtoPlaylist->setChecked(GlobalObjects::appSetting->value("Download/AutoAddToList",false).toBool());
+    QObject::connect(autoAddtoPlaylist,&QCheckBox::stateChanged,[](int state){
+        GlobalObjects::appSetting->setValue("Download/AutoAddToList",state==Qt::Checked);
+    });
+
     QLabel *btTrackerLabel=new QLabel(tr("Extra BT Trackers: "),this);
     btTrackers=new QPlainTextEdit(this);
     btTrackers->appendPlainText(GlobalObjects::appSetting->value("Download/Trackers",QStringList()).toStringList().join('\n'));
@@ -60,10 +67,12 @@ DownloadSetting::DownloadSetting(QWidget *parent) : CFramelessDialog(tr("Downloa
     settingGLayout->addWidget(seedTime,2,1);
     settingGLayout->addWidget(maxConcurrentLabel,3,0);
     settingGLayout->addWidget(maxConcurrent,3,1);
-    settingGLayout->addWidget(btTrackerLabel,4,0);
-    settingGLayout->addWidget(btTrackers,5,0,1,2);
-    settingGLayout->setRowStretch(5,1);
+    settingGLayout->addWidget(autoAddtoPlaylist,4,0,1,2);
+    settingGLayout->addWidget(btTrackerLabel,5,0);
+    settingGLayout->addWidget(btTrackers,6,0,1,2);
+    settingGLayout->setRowStretch(6,1);
     settingGLayout->setColumnStretch(1,1);
+    resize(GlobalObjects::appSetting->value("DialogSize/DownloadSetting",QSize(300*logicalDpiX()/96,350*logicalDpiY()/96)).toSize());
 }
 
 void DownloadSetting::onAccept()
@@ -73,5 +82,12 @@ void DownloadSetting::onAccept()
     if(seedTimeChange)GlobalObjects::appSetting->setValue("Download/SeedTime",seedTime->text().toInt());
     if(concurrentChange)GlobalObjects::appSetting->setValue("Download/ConcurrentDownloads",maxConcurrent->text().toInt());
     if(btTrackerChange)GlobalObjects::appSetting->setValue("Download/Trackers",btTrackers->toPlainText().split('\n',QString::SkipEmptyParts));
+    GlobalObjects::appSetting->setValue("DialogSize/DownloadSetting",size());
     CFramelessDialog::onAccept();
+}
+
+void DownloadSetting::onClose()
+{
+    GlobalObjects::appSetting->setValue("DialogSize/DownloadSetting",size());
+    CFramelessDialog::onClose();
 }

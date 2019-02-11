@@ -27,6 +27,7 @@ public:
     void updateSourceTimeline(const QString &pid, const DanmuSourceInfo *sourceInfo);
     void updateSourceTimeline(const DanmuPoolSourceNode *srcNode);
     void setDelay(DanmuComment *danmu, DanmuSourceInfo *srcInfo);
+    DanmuPoolSourceNode *addSource(DanmuPoolNode *epNode, const DanmuSourceInfo *sourceInfo, const QList<DanmuComment *> *danmuList);
 signals:
     void workerStateMessage(const QString &msg);
 private:

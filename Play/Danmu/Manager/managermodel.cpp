@@ -148,6 +148,29 @@ DanmuPoolSourceNode *DanmuManagerModel::getSourceNode(const QModelIndex &index)
      return static_cast<DanmuPoolSourceNode *>(item);
 }
 
+DanmuPoolNode *DanmuManagerModel::getPoolNode(const QModelIndex &index)
+{
+    DanmuPoolNode *item = static_cast<DanmuPoolNode*>(index.internalPointer());
+    if(item->type==DanmuPoolNode::AnimeNode) return nullptr;
+    else if(item->type==DanmuPoolNode::EpNode) return item;
+    else return item->parent;
+}
+
+void DanmuManagerModel::addSrcNode(DanmuPoolNode *epNode, DanmuPoolSourceNode *srcNode)
+{
+    QModelIndex epIndex(createIndex(epNode->parent->children->indexOf(epNode),0,epNode));
+    if(srcNode)
+    {
+        beginInsertRows(epIndex,epNode->children->count(),epNode->children->count());
+        epNode->children->append(srcNode);
+        srcNode->parent=epNode;
+        endInsertRows();
+    }
+    epNode->parent->setCount();
+    emit dataChanged(epIndex.siblingAtColumn(3),epIndex.siblingAtColumn(3));
+    emit dataChanged(epIndex.parent().siblingAtColumn(3),epIndex.parent().siblingAtColumn(3));
+}
+
 void DanmuManagerModel::refreshChildrenCheckStatus(const QModelIndex &index)
 {
     QList<QModelIndex> pIndexes;

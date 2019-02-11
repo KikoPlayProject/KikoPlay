@@ -13,6 +13,7 @@ class QFontComboBox;
 class QComboBox;
 class QActionGroup;
 class CFramelessDialog;
+class QSpinBox;
 class ClickSlider: public QSlider
 {
     Q_OBJECT
@@ -112,10 +113,12 @@ private:
 
      QWidget *danmuSettingPage,*playSettingPage;
      QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold,
-                *bottomSubtitleProtect,*topSubtitleProtect,*randomSize,*denseLayout;
+                *bottomSubtitleProtect,*topSubtitleProtect,*randomSize,
+                *enableMerge,*enlargeMerged;
+     QSpinBox *mergeInterval,*contentSimCount,*minMergeCount;
      QFontComboBox *fontFamilyCombo;
      QComboBox *aspectRatioCombo,*playSpeedCombo,*clickBehaviorCombo,*dbClickBehaviorCombo,
-                *denseLevel;
+                *denseLevel,*mergeCountTipPos;
      QSlider *speedSlider,*alphaSlider,*strokeWidthSlider,*fontSizeSlider,*maxDanmuCount;
      bool updatingTrack;
      bool isFullscreen;

@@ -16,7 +16,8 @@ public:
     int totalPoolCount();
     bool hasSelected();
     DanmuPoolSourceNode *getSourceNode(const QModelIndex &index);
-
+    DanmuPoolNode *getPoolNode(const QModelIndex &index);
+    void addSrcNode(DanmuPoolNode *epNode, DanmuPoolSourceNode *srcNode);
 private:
     QList<DanmuPoolNode *> animeNodeList;
     const QStringList headers={tr("Title"),tr("Source"),tr("Delay"),tr("Danmu Count")};

@@ -4,6 +4,7 @@
 #include "framelessdialog.h"
 class QLineEdit;
 class QPlainTextEdit;
+class QCheckBox;
 class DownloadSetting : public CFramelessDialog
 {
     Q_OBJECT
@@ -17,9 +18,11 @@ public:
     bool seedTimeChange;
 private:
     QLineEdit *maxDownSpeedLimit,*maxUpSpeedLimit,*seedTime,*maxConcurrent;
+    QCheckBox *autoAddtoPlaylist;
     QPlainTextEdit *btTrackers;
 protected:
     virtual void onAccept();
+    virtual void onClose();
 };
 
 #endif // DOWNLOADSETTING_H

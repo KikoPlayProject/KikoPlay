@@ -52,13 +52,15 @@ Anime *AnimeLibrary::downloadDetailInfo(Anime *anime, int bangumiId, QString *er
     QString errInfo; 
     QEventLoop eventLoop;
     Anime *resultAnime =anime;
+	bool merged = false;
     QObject::connect(animeWorker,&AnimeWorker::downloadDone, &eventLoop,[&errInfo,&eventLoop](const QString &err){
         errInfo=err;
         eventLoop.quit();
     });
-    QObject::connect(animeWorker,&AnimeWorker::mergeAnime, &eventLoop, [this,&eventLoop,&resultAnime](Anime *oldAnime,Anime *newAnime){
+    QObject::connect(animeWorker,&AnimeWorker::mergeAnime, &eventLoop, [this,&eventLoop,&resultAnime,&merged](Anime *oldAnime,Anime *newAnime){
         resultAnime=newAnime;
         emit removeOldAnime(oldAnime);
+		merged = true;
         eventLoop.quit();
     });
     QMetaObject::invokeMethod(animeWorker,[anime,bangumiId,this](){
@@ -66,7 +68,7 @@ Anime *AnimeLibrary::downloadDetailInfo(Anime *anime, int bangumiId, QString *er
     },Qt::QueuedConnection);
     eventLoop.exec();
     QString animeDate(resultAnime->date.left(7));
-    if(!animeDate.isEmpty())
+    if(!merged && !animeDate.isEmpty())
     {
         emit addTimeLabel(animeDate);
     }

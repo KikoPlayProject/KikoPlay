@@ -21,12 +21,14 @@ signals:
     void addSearchItem(DanmuSourceItem *item);
 private:
     DanmuSourceItem searchItem;
+public:
+    virtual QSize sizeHint() const;
 };
 class AddDanmu : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit AddDanmu(const PlayListItem *item, QWidget *parent = nullptr);
+    explicit AddDanmu(const PlayListItem *item, QWidget *parent = nullptr, bool autoPauseVideo=true);
     QList<QPair<DanmuSourceInfo,QList<DanmuComment *> > > selectedDanmuList;
 private:
     QToolButton *onlineDanmuPage,*urlDanmuPage,*selectedDanmuPage;

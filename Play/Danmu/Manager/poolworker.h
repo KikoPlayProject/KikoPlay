@@ -17,8 +17,10 @@ public slots:
     void updatePool(QList<DanmuPoolNode *> &updateList);
     void saveSource(const QString &pid, const DanmuSourceInfo *sourceInfo, const QList<DanmuComment *> *danmuList);
     void exportJson(const QString &pid);
+    void addSource(DanmuPoolNode *epNode, const DanmuSourceInfo *sourceInfo, const QList<DanmuComment *> *danmuList);
 signals:
     void loadDone();
+    void addDone(DanmuPoolSourceNode *newSrcNode);
     void exportDone();
     void deleteDone();
     void updateDone();
@@ -30,5 +32,6 @@ private:
     const int DanmuTableCount=5;
     void exportEp(const DanmuPoolNode *epNode, const QString &fileName, bool useTimeline=true, bool applyBlockRule=false);
     void updateSource(DanmuPoolSourceNode *sourceNode, const QSet<QString> &danmuHashSet);
+    QSet<QString> genDanmuHash(const QString &pid);
 };
 #endif // POOLWORKER_H

@@ -13,7 +13,9 @@
 #include <QSortFilterProxyModel>
 #include "Play/Danmu/Manager/managermodel.h"
 #include "Play/Danmu/Manager/danmumanager.h"
+#include "Play/Playlist/playlistitem.h"
 #include "timelineedit.h"
+#include "adddanmu.h"
 #include "globalobjects.h"
 
 PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Manager"),parent)
@@ -62,7 +64,42 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
             }
         }
     });
-
+    QAction *act_addWebSource=new QAction(tr("Add Web Source"),this);
+    poolView->addAction(act_addWebSource);
+    QObject::connect(act_addWebSource,&QAction::triggered,this,[this,managerModel,poolView,proxyModel](){
+        QModelIndexList indexList = poolView->selectionModel()->selectedRows();
+        if(indexList.size()==0)return;
+        DanmuPoolNode *poolNode=managerModel->getPoolNode(proxyModel->mapToSource(indexList.first()));
+        if(!poolNode)return;
+        PlayListItem item;
+        item.title=poolNode->title;
+        item.animeTitle=poolNode->parent->title;
+        AddDanmu addDanmuDialog(&item, this,false);
+        if(QDialog::Accepted==addDanmuDialog.exec())
+        {
+            poolView->setEnabled(false);
+            this->showBusyState(true);
+            if(GlobalObjects::danmuPool->getPoolID()==poolNode->idInfo)
+            {
+                for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
+                {
+                    GlobalObjects::danmuPool->addDanmu((*iter).first,(*iter).second,false);
+                }
+                GlobalObjects::danmuPool->resetModel();
+            }
+            else
+            {
+                for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
+                {
+                    DanmuPoolSourceNode *srcNode = GlobalObjects::danmuManager->addSource(poolNode,&(*iter).first,&(*iter).second);
+                    qDeleteAll((*iter).second);
+                    managerModel->addSrcNode(poolNode,srcNode);
+                }
+            }
+            poolView->setEnabled(true);
+            this->showBusyState(false);
+        }
+    });
     QPushButton *cancel=new QPushButton(tr("Cancel"),this);
     cancel->hide();
 

@@ -257,23 +257,24 @@ QTreeView#danmulist {
     selection-background-color: rgba(255, 255, 255,0);
     selection-color: rgb(0, 160, 230);
     outline:0px;
-    /*show-decoration-selected: 1;*/
+    show-decoration-selected: 1;
 }
 QTreeView#danmulist::item {
     /*color: rgb(200,200,200);*/
     border: none;
     background-color: transparent;
 }
-QTreeView#danmulist::item:hover, QTreeView#danmulist::branch:hover { /** ???? **/
+QTreeView#danmulist::item:hover, QTreeView#danmulist::branch:hover {
     background-color: rgba(255, 255, 255, 40);
-    /*color:rgb(255,255,255);*/
 }
-QTreeView#danmulist::item:selected{ /** ???? **/
+QTreeView#danmulist::item:selected,QTreeView#danmulist::branch:selected{
     background-color: rgba(255, 255, 255, 40);
-    /*color: rgb(240, 240, 240);*/
+}
+QTreeView#danmulist::branch {
+    background-color: transparent;
 }
 QHeaderView{
-	background-color: rgb(100,100,100);
+    background-color: rgb(100,100,100);
 }
 QHeaderView::section {
     background-color: rgb(100,100,100);/*qlineargradient(x1:0, y1:0, x2:0, y2:1,

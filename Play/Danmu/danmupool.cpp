@@ -3,7 +3,7 @@
 #include <QXmlStreamReader>
 #include <QSqlQuery>
 #include <QSqlRecord>
-
+#include <QMessageBox>
 #include "Render/danmurender.h"
 #include "globalobjects.h"
 #include "blocker.h"
@@ -26,12 +26,27 @@ namespace
         }
     } DanmuSPCompare;
 }
-DanmuPool::DanmuPool(QObject *parent) : QAbstractItemModel(parent),currentPosition(0),currentTime(0)
+DanmuPool::DanmuPool(QObject *parent) : QAbstractItemModel(parent),currentPosition(0),currentTime(0),
+    enableMerged(true),mergeInterval(15*1000),maxContentUnsimCount(4),minMergeCount(3)
 {
 
 }
 
-int DanmuPool::addDanmu(DanmuSourceInfo &sourceInfo,QList<DanmuComment *> &danmuList)
+QSharedPointer<DanmuComment> &DanmuPool::getDanmu(const QModelIndex &index)
+{
+    if(index.parent().isValid())
+    {
+        DanmuComment *p = static_cast<DanmuComment *>(index.parent().internalPointer());
+        Q_ASSERT(p->mergedList && index.row()<p->mergedList->length());
+        return (*p->mergedList)[index.row()];
+    }
+    else
+    {
+        return finalPool[index.row()];
+    }
+}
+
+int DanmuPool::addDanmu(DanmuSourceInfo &sourceInfo,QList<DanmuComment *> &danmuList, bool resetModel)
 {
     DanmuSourceInfo *source(nullptr);
     bool containSource=false;
@@ -90,12 +105,18 @@ int DanmuPool::addDanmu(DanmuSourceInfo &sourceInfo,QList<DanmuComment *> &danmu
     {
         GlobalObjects::danmuManager->saveSource(poolID,containSource?nullptr:source,&danmuList);
     }
-    beginResetModel();
-    std::sort(danmuPool.begin(),danmuPool.end(),DanmuSPCompare);
-    endResetModel();
-	currentPosition = std::lower_bound(danmuPool.begin(), danmuPool.end(), currentTime, DanmuComparer) - danmuPool.begin();
-    setStatisInfo();
+    if(resetModel)
+    {
+        this->resetModel();
+    }
     return danmuList.count();
+}
+
+void DanmuPool::resetModel()
+{
+    std::sort(danmuPool.begin(),danmuPool.end(),DanmuSPCompare);
+    setMerged();
+    setStatisInfo();
 }
 
 void DanmuPool::deleteSource(int sourceIndex)
@@ -103,7 +124,6 @@ void DanmuPool::deleteSource(int sourceIndex)
     if(!sourcesTable.contains(sourceIndex))return;
     sourcesTable.remove(sourceIndex);
     QCoreApplication::processEvents();
-    beginResetModel();
     for(auto iter=danmuPool.begin();iter!=danmuPool.end();)
     {
         if((*iter)->source==sourceIndex)
@@ -115,8 +135,7 @@ void DanmuPool::deleteSource(int sourceIndex)
             ++iter;
         }
     }
-    endResetModel();
-    mediaTimeJumped(currentTime);
+    setMerged();
     if(!poolID.isEmpty())
     {
         GlobalObjects::danmuManager->deleteSource(poolID,sourceIndex);
@@ -127,10 +146,9 @@ void DanmuPool::deleteSource(int sourceIndex)
 void DanmuPool::loadDanmuFromDB()
 {
     if(poolID.isEmpty())return;
-    beginResetModel();
     GlobalObjects::danmuManager->loadPool(poolID,danmuPool,sourcesTable);
     std::sort(danmuPool.begin(),danmuPool.end(),DanmuSPCompare);
-    endResetModel();
+    setMerged();
     GlobalObjects::blocker->checkDanmu(danmuPool);
     setStatisInfo();
 }
@@ -139,8 +157,9 @@ void DanmuPool::cleanUp()
 {
 	sourcesTable.clear();
 	beginResetModel();
-	danmuPool.clear();
+    finalPool.clear();
 	endResetModel();
+    danmuPool.clear();
     poolID=QString();
 	reset();
     setStatisInfo();
@@ -148,6 +167,7 @@ void DanmuPool::cleanUp()
 
 void DanmuPool::testBlockRule(BlockRule *rule)
 {
+    statisInfo.blockCount=0;
     for(QSharedPointer<DanmuComment> &danmu:danmuPool)
     {
         if(danmu->blockBy==-1)
@@ -160,6 +180,7 @@ void DanmuPool::testBlockRule(BlockRule *rule)
             if(!rule->blockTest(danmu.data()))
                 danmu->blockBy=-1;
         }
+        statisInfo.blockCount+=(danmu->blockBy==-1?0:1);
     }
     GlobalObjects::danmuRender->removeBlocked();
 }
@@ -171,6 +192,30 @@ void DanmuPool::deleteDanmu(QSharedPointer<DanmuComment> &danmu)
         GlobalObjects::danmuManager->deleteDanmu(poolID,danmu.data());
     }
     sourcesTable[danmu->source].count--;
+    if(!danmu->m_parent)
+    {
+        int row = finalPool.indexOf(danmu);
+        beginRemoveRows(QModelIndex(), row, row);
+        finalPool.removeOne(danmu);
+        endRemoveRows();
+        if(danmu->mergedList)
+        {
+           for(auto &c:*danmu->mergedList)
+           {
+               c->m_parent=nullptr;
+           }
+        }
+    }
+    else
+    {
+        int f_pos = std::lower_bound(finalPool.begin(), finalPool.end(), danmu->m_parent->time, DanmuComparer) - finalPool.begin();
+        while(finalPool.at(f_pos)!=danmu->m_parent) f_pos++;
+        Q_ASSERT(f_pos<finalPool.length());
+        int c_pos=danmu->m_parent->mergedList->indexOf(danmu);
+        beginRemoveRows(createIndex(f_pos,0,danmu->m_parent), c_pos, c_pos);
+        danmu->m_parent->mergedList->removeAt(c_pos);
+        endRemoveRows();
+    }
 	int row = danmuPool.indexOf(danmu);
 	beginRemoveRows(QModelIndex(), row, row);
 	danmuPool.removeOne(danmu);
@@ -208,6 +253,107 @@ QList<SimpleDanmuInfo> DanmuPool::getSimpleDanmuInfo(int sourceId)
         }
     }
     return simpleDanmuList;
+}
+
+void DanmuPool::setMerged()
+{
+#ifdef QT_DEBUG
+    qDebug()<<"merge start";
+    QElapsedTimer timer;
+    timer.start();
+#endif
+    beginResetModel();
+    for(auto iter=danmuPool.cbegin();iter!=danmuPool.cend();++iter)
+    {
+        if((*iter)->mergedList)
+        {
+            delete (*iter)->mergedList;
+            (*iter)->mergedList=nullptr;
+        }
+        if((*iter)->m_parent) (*iter)->m_parent=nullptr;
+    }
+    statisInfo.mergeCount=0;
+    if(enableMerged)
+    {
+        finalPool.clear();
+        QList<QSharedPointer<DanmuComment> > slideWindow;
+        for(auto iter=danmuPool.cbegin();iter!=danmuPool.cend();++iter)
+        {
+            DanmuComment *cc((*iter).data());
+            while(!slideWindow.isEmpty() && cc->time-slideWindow.first()->time>mergeInterval)
+            {
+                auto c(slideWindow.takeFirst());
+                if(c->mergedList)
+                {
+                    if(c->mergedList->count()<minMergeCount)
+                    {
+                        finalPool.append(*c->mergedList);
+                        for(auto &cc:*c->mergedList)
+                            cc->m_parent=nullptr;
+                        delete c->mergedList;
+                        c->mergedList=nullptr;
+                    }
+                    else
+                    {
+                        statisInfo.mergeCount+=c->mergedList->count();
+                    }
+                }
+                finalPool.append(c);
+            }
+            bool merged=false;
+            for(int i=0;i<slideWindow.length();++i)
+            {
+                DanmuComment *sw(slideWindow.at(i).data());
+                if(sw->type!=cc->type || qAbs(cc->text.length()-sw->text.length())>maxContentUnsimCount) continue;
+                if((cc->text==sw->text) || contentSimilar(cc,sw))
+                {
+                    Q_ASSERT(!(*iter)->mergedList);
+                    cc->m_parent=sw;
+                    if(!sw->mergedList) sw->mergedList=new QList<QSharedPointer<DanmuComment> >();
+                    sw->mergedList->append((*iter));
+                    merged=true;
+                    break;
+                }
+            }
+            if(!merged)
+            {
+                slideWindow.append((*iter));
+            }
+        }
+        finalPool.append(slideWindow);
+        std::sort(finalPool.begin(),finalPool.end(),DanmuSPCompare);
+    }
+    else
+    {
+        finalPool=danmuPool;
+    }
+    currentPosition = std::lower_bound(finalPool.begin(), finalPool.end(), currentTime, DanmuComparer) - finalPool.begin();
+    endResetModel();
+#ifdef QT_DEBUG
+    qDebug()<<"merge done:"<<timer.elapsed()<<"ms";
+#endif
+   // QMessageBox::information(nullptr,"",QString("%1 ms").arg(timer.elapsed()));
+}
+
+bool DanmuPool::contentSimilar(const DanmuComment *dm1, const DanmuComment *dm2)
+{
+    static QVector<int> charSpace(1<<16);
+    int sz1=dm1->text.length(),sz2=dm2->text.length();
+    for(int i=0;i<sz1;++i) charSpace[dm1->text.at(i).unicode()]++;
+    for(int i=0;i<sz2;++i) charSpace[dm2->text.at(i).unicode()]--;
+    int diff=0;
+    for(int i=0;i<sz1;++i)
+    {
+        diff+=qAbs(charSpace[dm1->text.at(i).unicode()]);
+        charSpace[dm1->text.at(i).unicode()]=0;
+    }
+    for(int i=0;i<sz2;++i)
+    {
+        diff+=qAbs(charSpace[dm2->text.at(i).unicode()]);
+        charSpace[dm2->text.at(i).unicode()]=0;
+    }
+    return  diff<=maxContentUnsimCount;
+
 }
 
 void DanmuPool::exportDanmu(int sourceId, const QString &fileName)
@@ -253,6 +399,9 @@ void DanmuPool::setStatisInfo()
 {
     statisInfo.countOfMinute.clear();
     statisInfo.maxCountOfMinute=0;
+    statisInfo.blockCount=0;
+    statisInfo.mergeCount=0;
+    statisInfo.totalCount=danmuPool.count();
     int curMinuteCount=0;
     int startTime=0;
     for(auto iter=danmuPool.cbegin();iter!=danmuPool.cend();++iter)
@@ -271,6 +420,10 @@ void DanmuPool::setStatisInfo()
             curMinuteCount=1;
             startTime=(*iter)->time;
         }
+        if((*iter)->blockBy!=-1)
+            statisInfo.blockCount++;
+        if((*iter)->mergedList)
+            statisInfo.mergeCount+=(*iter)->mergedList->count();
     }
 	statisInfo.countOfMinute.append(QPair<int, int>(startTime / 1000, curMinuteCount));
 	if (curMinuteCount>statisInfo.maxCountOfMinute)
@@ -291,15 +444,49 @@ void DanmuPool::setDelay(DanmuSourceInfo *sourceInfo,int newDelay)
             GlobalObjects::danmuManager->setDelay(cur.data(),sourceInfo);
 		}
     }
-    beginResetModel();
     std::sort(danmuPool.begin(),danmuPool.end(),DanmuSPCompare);
-    endResetModel();
-    currentPosition = std::lower_bound(danmuPool.begin(), danmuPool.end(), currentTime, DanmuComparer) - danmuPool.begin();
+    setMerged();
     if(!poolID.isEmpty())
     {
         GlobalObjects::danmuManager->updateSourceDelay(poolID,sourceInfo);
     }
     setStatisInfo();
+}
+
+void DanmuPool::setMergeEnable(bool enable)
+{
+    if(enable!=enableMerged)
+    {
+        enableMerged=enable;
+        setMerged();
+    }
+}
+
+void DanmuPool::setMergeInterval(int val)
+{
+    if(val!=mergeInterval)
+    {
+        mergeInterval=val;
+        setMerged();
+    }
+}
+
+void DanmuPool::setMaxUnSimCount(int val)
+{
+    if(val!=maxContentUnsimCount)
+    {
+        maxContentUnsimCount=val;
+        setMerged();
+    }
+}
+
+void DanmuPool::setMinMergeCount(int val)
+{
+    if(val!=minMergeCount)
+    {
+        minMergeCount=val;
+        setMerged();
+    }
 }
 
 void DanmuPool::refreshTimeLineDelayInfo(DanmuSourceInfo *sourceInfo)
@@ -312,10 +499,8 @@ void DanmuPool::refreshTimeLineDelayInfo(DanmuSourceInfo *sourceInfo)
             GlobalObjects::danmuManager->setDelay(cur.data(),sourceInfo);
         }
     }
-    beginResetModel();
     std::sort(danmuPool.begin(),danmuPool.end(),DanmuSPCompare);
-    endResetModel();
-    currentPosition = std::lower_bound(danmuPool.begin(), danmuPool.end(), currentTime, DanmuComparer) - danmuPool.begin();
+    setMerged();
     if(!poolID.isEmpty())
     {
         GlobalObjects::danmuManager->updateSourceTimeline(poolID,sourceInfo);
@@ -362,13 +547,13 @@ void DanmuPool::mediaTimeElapsed(int newTime)
     PrepareList *prepareList(nullptr);
     prepareList=prepareListPool.isEmpty()?new PrepareList:prepareListPool.takeFirst();
     const int bundleSize=20;
-    for(;currentPosition<danmuPool.length();++currentPosition)
+    for(;currentPosition<finalPool.length();++currentPosition)
     {
-        int curTime=danmuPool.at(currentPosition)->time;
+        int curTime=finalPool.at(currentPosition)->time;
         if(curTime<0)continue;
         if(curTime<newTime)
         {
-            auto dm=danmuPool.at(currentPosition);
+            auto dm=finalPool.at(currentPosition);
             if (dm->blockBy == -1 && sourcesTable[dm->source].show)
 			{
                 prepareList->append(QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*>(dm,nullptr));
@@ -398,17 +583,55 @@ void DanmuPool::mediaTimeJumped(int newTime)
     qDebug()<<"pool:media time jumped,newTime:"<<newTime<<",currentTime:"<<currentTime<<",currentPos"<<currentPosition;
 #endif
     currentTime=newTime;
-    currentPosition=std::lower_bound(danmuPool.begin(),danmuPool.end(),newTime,DanmuComparer)-danmuPool.begin();
+    currentPosition=std::lower_bound(finalPool.begin(),finalPool.end(),newTime,DanmuComparer)-finalPool.begin();
     GlobalObjects::danmuRender->cleanup();
 #ifdef QT_DEBUG
     qDebug()<<"pool:media time jumped,currentPos"<<currentPosition;
 #endif
 }
 
+QModelIndex DanmuPool::index(int row, int column, const QModelIndex &parent) const
+{
+    if (!hasIndex(row, column, parent)) return QModelIndex();
+    DanmuComment *childItem=nullptr;
+    if(parent.isValid())
+    {
+        const DanmuComment *parentItem = static_cast<DanmuComment *>(parent.internalPointer());
+        if(!parentItem->mergedList) return QModelIndex();
+        childItem = parentItem->mergedList->value(row).data();
+    }
+    else
+    {
+        childItem = finalPool.value(row).data();
+    }
+    return childItem?createIndex(row,column,childItem):QModelIndex();
+}
+
+QModelIndex DanmuPool::parent(const QModelIndex &child) const
+{
+    if (!child.isValid()) return QModelIndex();
+    DanmuComment *cc = static_cast<DanmuComment*>(child.internalPointer());
+    if(!cc->m_parent) return QModelIndex();
+    int p_pos = std::lower_bound(finalPool.begin(), finalPool.end(), cc->m_parent->time, DanmuComparer) - finalPool.begin();
+    while(finalPool.at(p_pos)!=cc->m_parent)p_pos++;
+    Q_ASSERT(p_pos<finalPool.count());
+    return createIndex(p_pos, 0,cc->m_parent);
+}
+
+int DanmuPool::rowCount(const QModelIndex &parent) const
+{
+    if(!parent.isValid())
+        return finalPool.count();
+    int c=0;
+    if(finalPool.at(parent.row())->mergedList)
+        c=finalPool.at(parent.row())->mergedList->count();
+    return c;
+}
+
 QVariant DanmuPool::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid()) return QVariant();
-    auto comment=danmuPool[index.row()];
+    auto comment=static_cast<DanmuComment*>(index.internalPointer());
     int col=index.column();
     switch (role)
     {
@@ -423,6 +646,8 @@ QVariant DanmuPool::data(const QModelIndex &index, int role) const
         }
         else if(col==1)
         {
+            if(comment->mergedList)
+                return QString("[%1]%2").arg(comment->mergedList->count()).arg(comment->text);
             return comment->text;
         }
         break;
@@ -436,15 +661,18 @@ QVariant DanmuPool::data(const QModelIndex &index, int role) const
     case Qt::ToolTipRole:
     {
         static QString types[3]={tr("Roll"),tr("Top"),tr("Bottom")};
-        return tr("User: %1\nTime: %2\nText: %3\nType: %4%5").arg(comment->sender).
+        return tr("User: %1\nTime: %2\nText: %3\nType: %4%5%6").arg(comment->sender).
                 arg(QDateTime::fromSecsSinceEpoch(comment->date).toString("yyyy-MM-dd hh:mm:ss"))
                 .arg(comment->text).arg(types[comment->type])
-                .arg(comment->blockBy==-1?"":tr("\nBlock By Rule:%1").arg(comment->blockBy));
+                .arg(comment->blockBy==-1?"":tr("\nBlock By Rule:%1").arg(comment->blockBy))
+                .arg(comment->mergedList?tr("\nMerged Count: %1").arg(comment->mergedList->count()):"");
     }
 	case Qt::FontRole:
     {
 		if (comment->blockBy != -1 && col==1)
 			return QFont("Microsoft YaHei UI", 11, -1, true);
+        if(comment->mergedList && comment->mergedList->count()>0)
+            return QFont("Microsoft YaHei UI", 11, QFont::DemiBold);
         break;
     }
     default:

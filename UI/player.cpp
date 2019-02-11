@@ -11,6 +11,7 @@
 #include <QToolTip>
 #include <QMenu>
 #include <QGraphicsOpacityEffect>
+#include <QButtonGroup>
 
 #include "capture.h"
 #include "mediainfo.h"
@@ -193,7 +194,11 @@ protected:
             painter.fillRect(l+margin,bHeight-h,wRatio<1.f?1.f:wRatio,h,barColor);
         }
         painter.setPen(QColor(255,255,255));
-        painter.drawText(bRect,Qt::AlignLeft|Qt::AlignTop,QObject::tr("Total:%1 Max:%2").arg(QString::number(GlobalObjects::danmuPool->totalCount())).arg(statisInfo.maxCountOfMinute));
+        painter.drawText(bRect,Qt::AlignLeft|Qt::AlignTop,QObject::tr("Total:%1 Max:%2 Block:%3 Merge:%4")
+                         .arg(QString::number(statisInfo.totalCount))
+                         .arg(statisInfo.maxCountOfMinute)
+                         .arg(statisInfo.blockCount)
+                         .arg(statisInfo.mergeCount));
     }
 };
 }
@@ -509,7 +514,7 @@ void PlayerWindow::initActions()
     stayOnTop->addActions(stayOnTopGroup->actions());
 
     actPlayPause=new QAction(tr("Play/Pause"),this);
-    QObject::connect(actPlayPause,&QAction::triggered,[this](){
+    QObject::connect(actPlayPause,&QAction::triggered,[](){
         MPVPlayer::PlayState state=GlobalObjects::mpvplayer->getState();
         switch(state)
         {
@@ -526,7 +531,6 @@ void PlayerWindow::initActions()
             GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
             break;
         case MPVPlayer::Stop:
-        default:
             break;
         }
     });
@@ -728,19 +732,67 @@ void PlayerWindow::setupDanmuSettingPage()
     });
     denseLevel->setCurrentIndex(GlobalObjects::appSetting->value("Play/Dense",1).toInt());
 
-    //denseLayout=new QCheckBox(tr("Dense Layout"),danmuSettingPage);
-//    QObject::connect(denseLayout,&QCheckBox::stateChanged,[](int state){
-//        GlobalObjects::danmuRender->dense=(state==Qt::Checked?true:false);
-//    });
-//    denseLayout->setChecked(GlobalObjects::appSetting->value("Play/Dense",false).toBool());
-
     fontFamilyCombo=new QFontComboBox(danmuSettingPage);
     fontFamilyCombo->setMaximumWidth(160 *logicalDpiX()/96);
     QLabel *fontLabel=new QLabel(tr("Font"),danmuSettingPage);
-    QObject::connect(fontFamilyCombo,&QFontComboBox::currentFontChanged,[this](const QFont &newFont){
+    QObject::connect(fontFamilyCombo,&QFontComboBox::currentFontChanged,[](const QFont &newFont){
         GlobalObjects::danmuRender->setFontFamily(newFont.family());
     });
     fontFamilyCombo->setCurrentFont(QFont(GlobalObjects::appSetting->value("Play/DanmuFont","Microsoft Yahei").toString()));
+
+
+    enableMerge=new QCheckBox(tr("Enable Danmu Merge"),danmuSettingPage);
+    enableMerge->setChecked(true);
+    QObject::connect(enableMerge,&QCheckBox::stateChanged,[](int state){
+        GlobalObjects::danmuPool->setMergeEnable(state==Qt::Checked?true:false);
+    });
+    enableMerge->setChecked(GlobalObjects::appSetting->value("Play/EnableMerge",true).toBool());
+
+    enlargeMerged=new QCheckBox(tr("Enlarge Merged Danmu"),danmuSettingPage);
+    enlargeMerged->setChecked(true);
+    QObject::connect(enlargeMerged,&QCheckBox::stateChanged,[](int state){
+        GlobalObjects::danmuRender->setEnlargeMerged(state==Qt::Checked?true:false);
+    });
+    enlargeMerged->setChecked(GlobalObjects::appSetting->value("Play/EnlargeMerged",true).toBool());
+
+    QLabel *mergeIntervalLabel=new QLabel(tr("Merge Interval(s)"),danmuSettingPage);
+    mergeInterval=new QSpinBox(danmuSettingPage);
+    mergeInterval->setRange(1,60);
+    mergeInterval->setAlignment(Qt::AlignCenter);
+    mergeInterval->setObjectName(QStringLiteral("Delay"));
+    QObject::connect(mergeInterval,&QSpinBox::editingFinished,this,[this](){
+        GlobalObjects::danmuPool->setMergeInterval(mergeInterval->value()*1000);
+    });
+    mergeInterval->setValue(GlobalObjects::appSetting->value("Play/MergeInterval",15).toInt());
+
+    QLabel *contentSimLabel=new QLabel(tr("MaxDiff Char Count"),danmuSettingPage);
+    contentSimCount=new QSpinBox(danmuSettingPage);
+    contentSimCount->setRange(1,11);
+    contentSimCount->setAlignment(Qt::AlignCenter);
+    contentSimCount->setObjectName(QStringLiteral("Delay"));
+    QObject::connect(contentSimCount,&QSpinBox::editingFinished,this,[this](){
+        GlobalObjects::danmuPool->setMaxUnSimCount(contentSimCount->value());
+    });
+    contentSimCount->setValue(GlobalObjects::appSetting->value("Play/MaxDiffCount",4).toInt());
+
+    QLabel *minMergeCountLabel=new QLabel(tr("Min Similar Danmu Count"),danmuSettingPage);
+    minMergeCount=new QSpinBox(danmuSettingPage);
+    minMergeCount->setAlignment(Qt::AlignCenter);
+    minMergeCount->setRange(1,11);
+    minMergeCount->setObjectName(QStringLiteral("Delay"));
+    QObject::connect(minMergeCount,&QSpinBox::editingFinished,this,[this](){
+        GlobalObjects::danmuPool->setMinMergeCount(minMergeCount->value());
+    });
+    minMergeCount->setValue(GlobalObjects::appSetting->value("Play/MinSimCount",3).toInt());
+
+    QLabel *mergeCountTipLabel=new QLabel(tr("Merge Count Tip Position"),danmuSettingPage);
+    mergeCountTipPos=new QComboBox(danmuSettingPage);
+    mergeCountTipPos->addItems(QStringList()<<tr("Hidden")<<tr("Forward")<<tr("Backward"));
+    QObject::connect(mergeCountTipPos,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[](int index){
+        GlobalObjects::danmuRender->setMergeCountPos(index);
+    });
+    mergeCountTipPos->setCurrentIndex(GlobalObjects::appSetting->value("Play/MergeCountTip",1).toInt());
+
 
     QToolButton *generalPage=new QToolButton(danmuSettingPage);
     generalPage->setText(tr("General"));
@@ -757,20 +809,30 @@ void PlayerWindow::setupDanmuSettingPage()
     appearancePage->setMaximumHeight(28 * logicalDpiY()/96);
     appearancePage->setObjectName(QStringLiteral("DialogPageButton"));
 
+    QToolButton *mergePage=new QToolButton(danmuSettingPage);
+    mergePage->setText(tr("Merge"));
+    mergePage->setCheckable(true);
+    mergePage->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    mergePage->setMaximumHeight(28 * logicalDpiY()/96);
+    mergePage->setObjectName(QStringLiteral("DialogPageButton"));
+
+
     QStackedLayout *danmuSettingSLayout=new QStackedLayout();
-    QObject::connect(generalPage,&QToolButton::clicked,[danmuSettingSLayout,generalPage,appearancePage](){
-        danmuSettingSLayout->setCurrentIndex(0);
-        generalPage->setChecked(true);
-        appearancePage->setChecked(false);
+    QButtonGroup *btnGroup=new QButtonGroup(this);
+    btnGroup->addButton(generalPage,0);
+    btnGroup->addButton(appearancePage,1);
+    btnGroup->addButton(mergePage,2);
+    QObject::connect(btnGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[danmuSettingSLayout](int id, bool checked){
+        if(checked)
+        {
+            danmuSettingSLayout->setCurrentIndex(id);
+        }
     });
-    QObject::connect(appearancePage,&QToolButton::clicked,[danmuSettingSLayout,generalPage,appearancePage](){
-        danmuSettingSLayout->setCurrentIndex(1);
-        generalPage->setChecked(false);
-        appearancePage->setChecked(true);
-    });
+
     QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
     pageButtonHLayout->addWidget(generalPage);
     pageButtonHLayout->addWidget(appearancePage);
+    pageButtonHLayout->addWidget(mergePage);
 
     QVBoxLayout *danmuSettingVLayout=new QVBoxLayout(danmuSettingPage);
     danmuSettingVLayout->addLayout(pageButtonHLayout);
@@ -812,6 +874,23 @@ void PlayerWindow::setupDanmuSettingPage()
     appearanceGLayout->addWidget(alphaSlider,1,1);
     appearanceGLayout->addWidget(bold,2,1);
     appearanceGLayout->addWidget(randomSize,3,1);
+
+    QWidget *pageMerge=new QWidget(danmuSettingPage);
+    danmuSettingSLayout->addWidget(pageMerge);
+    QGridLayout *mergeGLayout=new QGridLayout(pageMerge);
+    mergeGLayout->setContentsMargins(0,0,0,0);
+    mergeGLayout->setColumnStretch(0,1);
+    mergeGLayout->setColumnStretch(1,1);
+    mergeGLayout->addWidget(enableMerge,0,0);
+    mergeGLayout->addWidget(enlargeMerged,1,0);
+    mergeGLayout->addWidget(mergeIntervalLabel,2,0);
+    mergeGLayout->addWidget(mergeInterval,3,0);
+    mergeGLayout->addWidget(contentSimLabel,4,0);
+    mergeGLayout->addWidget(contentSimCount,5,0);
+    mergeGLayout->addWidget(minMergeCountLabel,0,1);
+    mergeGLayout->addWidget(minMergeCount,1,1);
+    mergeGLayout->addWidget(mergeCountTipLabel,2,1);
+    mergeGLayout->addWidget(mergeCountTipPos,3,1);
 }
 
 void PlayerWindow::setupPlaySettingPage()
@@ -1528,6 +1607,12 @@ void PlayerWindow::closeEvent(QCloseEvent *)
     GlobalObjects::appSetting->setValue("Mute",GlobalObjects::mpvplayer->getMute());
     GlobalObjects::appSetting->setValue("MaxCount",maxDanmuCount->value());
     GlobalObjects::appSetting->setValue("Dense",denseLevel->currentIndex());
+    GlobalObjects::appSetting->setValue("EnableMerge",enableMerge->isChecked());
+    GlobalObjects::appSetting->setValue("EnlargeMerged",enlargeMerged->isChecked());
+    GlobalObjects::appSetting->setValue("MergeInterval",mergeInterval->value());
+    GlobalObjects::appSetting->setValue("MaxDiffCount",contentSimCount->value());
+    GlobalObjects::appSetting->setValue("MinSimCount",minMergeCount->value());
+    GlobalObjects::appSetting->setValue("MergeCountTip",mergeCountTipPos->currentIndex());
     GlobalObjects::appSetting->endGroup();
 }
 

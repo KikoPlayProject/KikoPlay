@@ -49,6 +49,8 @@ public:
     void setStrokeWidth(float width);
     void setRandomSize(bool randomSize);
     void setMaxDanmuCount(int count);
+    void setMergeCountPos(int pos);
+    void setEnlargeMerged(bool enlarge);
 signals:
     void cacheDanmu(PrepareList *newDanmu);
     void danmuStyleChanged();
