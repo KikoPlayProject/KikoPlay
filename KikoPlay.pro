@@ -106,7 +106,8 @@ SOURCES += \
     MediaLibrary/animefilterproxymodel.cpp \
     MediaLibrary/labelitemdelegate.cpp \
     UI/bangumiupdate.cpp \
-    Play/Danmu/Provider/youkuprovider.cpp
+    Play/Danmu/Provider/youkuprovider.cpp \
+    Play/Danmu/Provider/tencentprovider.cpp
 
 HEADERS += \
     UI/mainwindow.h \
@@ -188,7 +189,8 @@ HEADERS += \
     MediaLibrary/animefilterproxymodel.h \
     MediaLibrary/labelitemdelegate.h \
     UI/bangumiupdate.h \
-    Play/Danmu/Provider/youkuprovider.h
+    Play/Danmu/Provider/youkuprovider.h \
+    Play/Danmu/Provider/tencentprovider.h
 
 INCLUDEPATH += \
     Play/Video \

@@ -8,6 +8,7 @@
 #include "Provider/bahamutprovider.h"
 #include "Provider/iqiyiprovider.h"
 #include "Provider/youkuprovider.h"
+#include "Provider/tencentprovider.h"
 #include "globalobjects.h"
 
 ProviderManager::ProviderManager(QObject *parent) : QObject(parent)
@@ -22,6 +23,7 @@ ProviderManager::ProviderManager(QObject *parent) : QObject(parent)
 	registerProvider<BahamutProvider>();
     registerProvider<IqiyiProvider>();
     registerProvider<YoukuProvider>();
+    registerProvider<TencentProvider>();
 }
 
 QStringList ProviderManager::getSearchProviders()
