@@ -20,7 +20,7 @@ QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QS
     QNetworkReply *reply = manager.get(request);
     QEventLoop eventLoop;
 	QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
-    QObject::connect(&manager, &QNetworkAccessManager::finished, &eventLoop, &QEventLoop::quit);
+    QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
     timer.start();
     eventLoop.exec();
     bool hasError=false;
@@ -112,7 +112,7 @@ QByteArray Network::httpPost(const QString &url, QByteArray &data, const QString
     QNetworkReply *reply = manager.post(request, data);
     QEventLoop eventLoop;
 	QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
-    QObject::connect(&manager, &QNetworkAccessManager::finished, &eventLoop, &QEventLoop::quit);
+    QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
     timer.start();
     eventLoop.exec();
 
@@ -172,7 +172,7 @@ QJsonValue Network::getValue(QJsonObject &obj, const QString &path)
     QStringList pathList(path.split('/'));
     QJsonValue value;
     QJsonValue cur(obj);
-    for(QString key:pathList)
+    for(const QString &key:pathList)
     {
         if(cur.isObject())
         {

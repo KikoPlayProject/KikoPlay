@@ -101,7 +101,7 @@ QString DililiProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment 
             if(pos==-1)
             {
                 errInfo=tr("Get video Info Failed");
-                emit downloadDone(errInfo);
+                emit downloadDone(errInfo,item);
                 return errInfo;
             }
             item->strId=videoId;
@@ -109,7 +109,7 @@ QString DililiProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment 
         catch(Network::NetworkError &error)
         {
             errInfo=error.errorInfo;
-            emit downloadDone(errInfo);
+            emit downloadDone(errInfo,item);
             return errInfo;
         }
     }
@@ -125,7 +125,7 @@ QString DililiProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment 
     {
         errInfo=error.errorInfo;
     }
-    emit downloadDone(errInfo);
+    emit downloadDone(errInfo,item);
     return errInfo;
 }
 

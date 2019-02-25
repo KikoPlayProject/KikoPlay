@@ -104,7 +104,7 @@ QString AcfunProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
         break;
     default:
         errInfo = tr("Decode Failed");
-        emit downloadDone(errInfo);
+        emit downloadDone(errInfo,item);
         return errInfo;
     }
     QString replyStr(Network::httpGet(baseUrl,QUrlQuery()));
@@ -120,7 +120,7 @@ QString AcfunProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
         item->id=captured[1].toInt();
         downloadAllDanmu(danmuList,item->id);
     }
-    emit downloadDone(errInfo);
+    emit downloadDone(errInfo,item);
     return errInfo;
 }
 

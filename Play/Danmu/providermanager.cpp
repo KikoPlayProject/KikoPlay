@@ -136,9 +136,12 @@ QString ProviderManager::downloadDanmu(QString &providerId, DanmuSourceItem *ite
     }
     QEventLoop eventLoop;
     QString errorInfo;
-    QObject::connect(provider,&ProviderBase::downloadDone, &eventLoop, [&eventLoop,&errorInfo](QString errInfo){
-        errorInfo=errInfo;
-        eventLoop.quit();
+    QObject::connect(provider,&ProviderBase::downloadDone, &eventLoop, [&eventLoop,&errorInfo,item](QString errInfo,DanmuSourceItem *srcItem){
+        if (item == srcItem)
+        {
+            errorInfo=errInfo;
+            eventLoop.quit();
+        }
     });
     QMetaObject::invokeMethod(provider,[provider,item,&danmuList](){
         provider->downloadDanmu(item,danmuList);

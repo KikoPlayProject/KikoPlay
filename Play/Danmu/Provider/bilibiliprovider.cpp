@@ -108,7 +108,7 @@ QString BilibiliProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuCommen
     {
         errInfo = error.errorInfo;
     }
-    emit downloadDone(errInfo);
+    emit downloadDone(errInfo,item);
     return errInfo;
 }
 

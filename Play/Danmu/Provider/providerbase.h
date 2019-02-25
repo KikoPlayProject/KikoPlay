@@ -23,6 +23,6 @@ public slots:
 signals:
     void searchDone(DanmuAccessResult *searchInfo);
     void epInfoDone(DanmuAccessResult *epInfo, DanmuSourceItem *srcItem);
-    void downloadDone(QString errInfo);
+    void downloadDone(QString errInfo, DanmuSourceItem *srcItem);
 };
 #endif // PROVIDERBASE_H

@@ -98,8 +98,6 @@ void AddDanmu::search()
     QString keyword=keywordEdit->text().trimmed();
     if(keyword.isEmpty())return;
     beginProcrss();
-    searchButton->setEnabled(false);
-    keywordEdit->setEnabled(false);
     if(searchResultWidget->count()>0)
         searchResultWidget->setEnabled(false);
     QString tmpProviderId=sourceCombo->currentText();
@@ -116,15 +114,9 @@ void AddDanmu::search()
             SearchItemWidget *itemWidget=new SearchItemWidget(&item);
             QObject::connect(itemWidget, &SearchItemWidget::addSearchItem, itemWidget, [this](DanmuSourceItem *item){
                 beginProcrss();
-                searchButton->setEnabled(false);
-                keywordEdit->setEnabled(false);
-                searchResultWidget->setEnabled(false);
                 DanmuAccessResult *result=GlobalObjects::providerManager->getEpInfo(providerId,item);
                 addSearchItem(result);
                 delete result;
-                searchButton->setEnabled(true);
-                keywordEdit->setEnabled(true);
-                searchResultWidget->setEnabled(true);
                 endProcess();
             });
             QListWidgetItem *listItem=new QListWidgetItem(searchResultWidget);
@@ -135,8 +127,6 @@ void AddDanmu::search()
         //searchResultWidget->update();
     }
     delete searchResult;
-    searchButton->setEnabled(true);
-    keywordEdit->setEnabled(true);
     searchResultWidget->setEnabled(true);
     endProcess();
 }
@@ -144,7 +134,6 @@ void AddDanmu::search()
 void AddDanmu::addSearchItem(DanmuAccessResult *result)
 {
     QString errorInfo;
-    beginProcrss();
     if(result->error)
     {
         errorInfo=result->errorInfo;
@@ -195,7 +184,6 @@ void AddDanmu::addSearchItem(DanmuAccessResult *result)
     if(!errorInfo.isEmpty())
         QMessageBox::information(this,"Error",errorInfo);
     selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuWidget->topLevelItemCount()));
-    endProcess();
 }
 
 void AddDanmu::addURL()
@@ -297,12 +285,19 @@ void AddDanmu::beginProcrss()
 {
     processCounter++;
     showBusyState(true);
+    searchButton->setEnabled(false);
+    keywordEdit->setEnabled(false);
 }
 
 void AddDanmu::endProcess()
 {
     processCounter--;
-    if(processCounter==0)showBusyState(false);
+    if(processCounter==0)
+    {
+        searchButton->setEnabled(true);
+        keywordEdit->setEnabled(true);
+        showBusyState(false);
+    }
 }
 
 void AddDanmu::onAccept()

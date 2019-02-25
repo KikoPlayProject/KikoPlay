@@ -48,7 +48,7 @@ QString DandanProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment 
     {
         errorInfo=error.errorInfo;
     }
-    emit downloadDone(errorInfo);
+    emit downloadDone(errorInfo,item);
     return errorInfo;
 }
 

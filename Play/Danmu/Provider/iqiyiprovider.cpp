@@ -97,7 +97,7 @@ QString IqiyiProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
     {
         errInfo=error.errorInfo;
     }
-    emit downloadDone(errInfo);
+    emit downloadDone(errInfo,item);
     return errInfo;
 }
 
