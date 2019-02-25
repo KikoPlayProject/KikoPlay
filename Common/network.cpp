@@ -16,7 +16,7 @@ QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QS
     QTimer timer;
     timer.setInterval(timeout);
     timer.setSingleShot(true);
-    QNetworkAccessManager manager;
+    static QNetworkAccessManager manager;
     QNetworkReply *reply = manager.get(request);
     QEventLoop eventLoop;
 	QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
@@ -108,7 +108,7 @@ QByteArray Network::httpPost(const QString &url, QByteArray &data, const QString
     QTimer timer;
     timer.setInterval(timeout);
     timer.setSingleShot(true);
-    QNetworkAccessManager manager;
+    static QNetworkAccessManager manager;
     QNetworkReply *reply = manager.post(request, data);
     QEventLoop eventLoop;
 	QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
