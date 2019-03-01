@@ -18,6 +18,7 @@ BgmList::BgmList(QObject *parent) : QAbstractItemModel (parent),inited(false),ne
     }
     bgmWorker=new BgmWorker;
     bgmWorker->moveToThread(GlobalObjects::workThread);
+    loadLocal();
 }
 
 BgmList::~BgmList()
@@ -28,7 +29,6 @@ BgmList::~BgmList()
 void BgmList::init()
 {
     if(inited) return;
-    loadLocal();
     refreshData();
     inited=true;
 }

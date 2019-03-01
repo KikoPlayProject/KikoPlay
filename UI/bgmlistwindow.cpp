@@ -82,7 +82,9 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
 
 void BgmListWindow::showEvent(QShowEvent *)
 {
-    bgmList->init();
+    QTimer::singleShot(0,[this](){
+        bgmList->init();
+    });
 }
 
 void BgmListWindow::resizeEvent(QResizeEvent *)
