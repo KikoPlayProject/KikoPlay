@@ -36,7 +36,7 @@ DanmuAccessResult *BilibiliProvider::search(const QString &keyword)
 
 DanmuAccessResult *BilibiliProvider::getEpInfo(DanmuSourceItem *item)
 {
-    bool fromBangumi=(item->extra==1);
+    bool fromBangumi=(item->extra==-1);
     QString baseUrl = fromBangumi?"https://bangumi.bilibili.com/view/web_api/season":
                                     "https://api.bilibili.com/view";
     QUrlQuery query;
@@ -58,7 +58,7 @@ DanmuAccessResult *BilibiliProvider::getEpInfo(DanmuSourceItem *item)
         if(fromBangumi)
             handleBangumiReply(document,result);
         else
-            handleViewReply(document,result,item->id);
+            handleViewReply(document,result,item);
     }
     catch(Network::NetworkError &error)
     {
@@ -150,7 +150,7 @@ void BilibiliProvider::handleSearchReply(QJsonDocument &document, DanmuAccessRes
             item.description=desc.toString();
             item.id=media_id.toInt();
             //item.source=DanmuSource::Bilibili;
-            item.extra=1;//from bangumi
+            item.extra=-1;//from bangumi
             item.delay=0;
             searchResult->list.append(item);
         }
@@ -168,13 +168,18 @@ void BilibiliProvider::handleSearchReply(QJsonDocument &document, DanmuAccessRes
             if(desc.type()!=QJsonValue::String)continue;
             QJsonValue aid=bangumiObj.value("id");
             if(aid.type()!=QJsonValue::Double)continue;
+            QJsonValue duration=bangumiObj.value("duration");
+            if(duration.type()!=QJsonValue::String)continue;
             DanmuSourceItem item;
             item.danmuCount=-1;
             item.title=title.toString().replace(QRegExp("<([^<>]*)em([^<>]*)>"),"");
             item.description=desc.toString();
             item.id=aid.toInt();
             //item.source=DanmuSource::Bilibili;
-            item.extra=0;//from video
+            QStringList durationTimeList=duration.toString().split(':');
+            item.extra=durationTimeList.count()==2? //from video
+                        durationTimeList.value(0).toInt()*60+durationTimeList.value(1).toInt():
+                        durationTimeList.value(0).toInt();
             item.delay=0;
             searchResult->list.append(item);
         }
@@ -224,7 +229,7 @@ void BilibiliProvider::handleBangumiReply(QJsonDocument &document, DanmuAccessRe
     result->error = false;
 }
 
-void BilibiliProvider::handleViewReply(QJsonDocument &document, DanmuAccessResult *result, int aid)
+void BilibiliProvider::handleViewReply(QJsonDocument &document, DanmuAccessResult *result, DanmuSourceItem *sItem)
 {
     do
     {
@@ -242,10 +247,10 @@ void BilibiliProvider::handleViewReply(QJsonDocument &document, DanmuAccessResul
             DanmuSourceItem item;
             item.danmuCount=-1;
             item.title=title.toString();
-            item.id=aid;
+            item.id=sItem->id;
+            item.extra=sItem->extra;
             item.subId=cid.toInt();
             //item.source=DanmuSource::Bilibili;
-            item.extra=0;
             item.delay=0;
             result->list.append(item);
         }
@@ -253,14 +258,14 @@ void BilibiliProvider::handleViewReply(QJsonDocument &document, DanmuAccessResul
         {
             try
             {
-                QString replyStr(Network::httpGet(QString("https://www.bilibili.com/video/av%1").arg(aid),QUrlQuery(),
+                QString replyStr(Network::httpGet(QString("https://www.bilibili.com/video/av%1").arg(sItem->id),QUrlQuery(),
 					QStringList()<<"User-Agent"<<"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0"));
                 QRegExp re("(\"videoData\":)(.*)(,\"upData\")");
                 int pos=re.indexIn(replyStr);
                 if(pos!=-1)
                 {
                     QStringList list = re.capturedTexts();
-                    decodeVideoList(list.at(2).toUtf8(),result,aid);
+                    decodeVideoList(list.at(2).toUtf8(),result,sItem->id);
                 }
                 else
                 {
@@ -269,7 +274,7 @@ void BilibiliProvider::handleViewReply(QJsonDocument &document, DanmuAccessResul
                     if(pos!=-1)
                     {
                         QStringList list = re.capturedTexts();
-                        decodeEpList(list.at(2).toUtf8(),result,aid);
+                        decodeEpList(list.at(2).toUtf8(),result,sItem->id);
                     }
                 }
             }
@@ -286,7 +291,7 @@ void BilibiliProvider::handleViewReply(QJsonDocument &document, DanmuAccessResul
     result->errorInfo=QObject::tr("Reply JSON Format Error");
 }
 
-void BilibiliProvider::decodeVideoList(QByteArray &bytes, DanmuAccessResult *result, int aid)
+void BilibiliProvider::decodeVideoList(const QByteArray &bytes, DanmuAccessResult *result, int aid)
 {
     QJsonParseError jsonError;
     QJsonDocument document = QJsonDocument::fromJson(bytes, &jsonError);
@@ -318,7 +323,7 @@ void BilibiliProvider::decodeVideoList(QByteArray &bytes, DanmuAccessResult *res
     }
 }
 
-void BilibiliProvider::decodeEpList(QByteArray &bytes, DanmuAccessResult *result, int aid)
+void BilibiliProvider::decodeEpList(const QByteArray &bytes, DanmuAccessResult *result, int aid)
 {
     QJsonParseError jsonError;
     QJsonDocument document = QJsonDocument::fromJson(bytes, &jsonError);

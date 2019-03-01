@@ -28,7 +28,10 @@ AnimeLibrary::AnimeLibrary(QObject *parent):QObject(parent)
     animeWorker=new AnimeWorker();
     animeWorker->moveToThread(GlobalObjects::workThread);
     QObject::connect(animeWorker,&AnimeWorker::addAnime,this,&AnimeLibrary::addAnime);
-    QObject::connect(this,&AnimeLibrary::tryAddAnime,animeWorker,&AnimeWorker::addAnimeInfo);
+    QObject::connect(this,(void (AnimeLibrary:: *)(const QString &, const QString &,const QString &))&AnimeLibrary::tryAddAnime,
+                     animeWorker,(void (AnimeWorker:: *)(const QString &, const QString &,const QString &))&AnimeWorker::addAnimeInfo);
+    QObject::connect(this,(void (AnimeLibrary:: *)(const QString &, int))&AnimeLibrary::tryAddAnime,
+                     animeWorker,(void (AnimeWorker:: *)(const QString &, int))&AnimeWorker::addAnimeInfo);
     QObject::connect(animeWorker,&AnimeWorker::newTagDownloaded,this,&AnimeLibrary::addTagsTo);
     QObject::connect(animeWorker,&AnimeWorker::downloadDetailMessage,this,&AnimeLibrary::downloadDetailMessage);
     animeModel=new AnimeModel(this);
@@ -47,11 +50,17 @@ void AnimeLibrary::addToLibrary(const QString &animeName, const QString &epName,
     emit tryAddAnime(animeName,epName,path);
 }
 
+void AnimeLibrary::addToLibrary(const QString &animeName, int bgmId)
+{
+    emit tryAddAnime(animeName,bgmId);
+}
+
 Anime *AnimeLibrary::downloadDetailInfo(Anime *anime, int bangumiId, QString *errorInfo)
 {
     QString errInfo; 
     QEventLoop eventLoop;
     Anime *resultAnime =anime;
+    QString oldDate(anime->date.left(7));
 	bool merged = false;
     QObject::connect(animeWorker,&AnimeWorker::downloadDone, &eventLoop,[&errInfo,&eventLoop](const QString &err){
         errInfo=err;
@@ -70,7 +79,7 @@ Anime *AnimeLibrary::downloadDetailInfo(Anime *anime, int bangumiId, QString *er
     QString animeDate(resultAnime->date.left(7));
     if(!merged && !animeDate.isEmpty())
     {
-        emit addTimeLabel(animeDate);
+        emit addTimeLabel(animeDate,oldDate);
     }
     *errorInfo=errInfo;
     return resultAnime;

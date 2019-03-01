@@ -799,6 +799,28 @@ QPushButton:pressed{
 #DownloadToolButton:pressed{
     margin:1px;
 }
+#BgmFilterBtn{
+    border-style:none;
+    padding:5px;
+    background:transparent;
+}
+#BgmFilterBtn:hover{
+    border-style:solid;
+    border-width:1px;
+    border-color:#b9b9b9;
+    color:#679bcc;
+}
+#BgmFilterBtn:checked{
+    border-style:none;
+    color:#679bcc;
+    background:#c5c7c9;
+}
+#BgmItem{
+    border:1px solid #e7f0ee;
+    background:#f2faf8;
+    padding-top:10px;
+    padding-bottom:10px;
+}
 QToolButton#DownloadInfoPage{
     border-style:none;
     border-radius:0px;
@@ -870,4 +892,36 @@ QTreeView#LabelView::branch:open:has-children {
 }
 QTreeView#LabelView::branch:closed:has-children {
     image: url(:/res/images/branch-closed-2.png);
+}
+QTreeView#BgmListView {
+    border: 1px solid #1abc9c;
+    background-color: transparent;
+    selection-background-color: rgba(255, 255, 255,0);
+    selection-color: rgb(0, 160, 230);
+    show-decoration-selected: 1;
+    outline:0px;
+}
+QTreeView#BgmListView::item {
+    border: none;
+    background-color: #f2faf8;
+    padding-top:8px;
+    padding-bottom:8px;
+}
+QTreeView#BgmListView::item:hover, QTreeView#BgmListView::branch:hover {
+    background-color: #cbfdf1;
+}
+QTreeView#BgmListView::item:selected, QTreeView#BgmListView::branch:selected{
+    background-color: #cbfdf1;
+}
+QTreeView#BgmListView::branch {
+    background-color: #f2faf8;
+}
+QHeaderView#BgmListHeader{
+    background-color: #1abc9c;
+}
+QHeaderView#BgmListHeader::section {
+    background-color: #1abc9c;
+    color: white;
+    padding-left: 4px;
+    border: none;
 }

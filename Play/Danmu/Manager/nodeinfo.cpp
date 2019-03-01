@@ -51,7 +51,8 @@ void DanmuPoolNode::setParentCheckStatus()
         {
             checkStatusStatis[child->checkStatus]++;
         }
-        if(checkStatusStatis[2]==parent->children->size())
+        //when there is only one source in the epNode, avoid removing the epNode
+        if(checkStatusStatis[2]==parent->children->size() && parent->type!=NodeType::EpNode)
             parent->checkStatus=Qt::Checked;
         else if(checkStatusStatis[0]==parent->children->size())
             parent->checkStatus=Qt::Unchecked;

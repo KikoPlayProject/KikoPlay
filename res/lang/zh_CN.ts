@@ -32,7 +32,7 @@
     </message>
     <message>
         <location filename="../../UI/adddanmu.cpp" line="34"/>
-        <location filename="../../UI/adddanmu.cpp" line="230"/>
+        <location filename="../../UI/adddanmu.cpp" line="227"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
@@ -51,45 +51,50 @@
         <translation type="obsolete">不支持这种URL</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="190"/>
-        <location filename="../../UI/adddanmu.cpp" line="197"/>
+        <location filename="../../UI/adddanmu.cpp" line="188"/>
+        <location filename="../../UI/adddanmu.cpp" line="195"/>
         <source>Selected(%1)</source>
         <translation>已选弹幕(%1)</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="249"/>
+        <location filename="../../UI/adddanmu.cpp" line="246"/>
         <source>Input URL:</source>
         <translation>输入URL：</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="254"/>
+        <location filename="../../UI/adddanmu.cpp" line="251"/>
         <source>Add URL</source>
         <translation>添加URL</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="259"/>
+        <location filename="../../UI/adddanmu.cpp" line="256"/>
         <source>Supported URL:</source>
         <translation>支持的URL类型：</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="281"/>
+        <location filename="../../UI/adddanmu.cpp" line="278"/>
         <source>Select danmu you want to add:</source>
         <translation>选择你想添加的弹幕：</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="285"/>
+        <location filename="../../UI/adddanmu.cpp" line="282"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="285"/>
+        <location filename="../../UI/adddanmu.cpp" line="282"/>
         <source>DanmuCount</source>
         <translation>弹幕数量</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="285"/>
+        <location filename="../../UI/adddanmu.cpp" line="282"/>
         <source>Source</source>
         <translation>来源</translation>
+    </message>
+    <message>
+        <location filename="../../UI/adddanmu.cpp" line="282"/>
+        <source>Duration</source>
+        <translation>时长</translation>
     </message>
 </context>
 <context>
@@ -315,33 +320,33 @@
 <context>
     <name>AnimeWorker</name>
     <message>
-        <location filename="../../MediaLibrary/animeworker.cpp" line="59"/>
+        <location filename="../../MediaLibrary/animeworker.cpp" line="81"/>
         <source>Downloading General Info...</source>
         <translation>下载基本信息...</translation>
     </message>
     <message>
-        <location filename="../../MediaLibrary/animeworker.cpp" line="64"/>
-        <location filename="../../MediaLibrary/animeworker.cpp" line="69"/>
+        <location filename="../../MediaLibrary/animeworker.cpp" line="86"/>
+        <location filename="../../MediaLibrary/animeworker.cpp" line="91"/>
         <source>Json Format Error</source>
         <translation>Json格式错误</translation>
     </message>
     <message>
-        <location filename="../../MediaLibrary/animeworker.cpp" line="128"/>
+        <location filename="../../MediaLibrary/animeworker.cpp" line="150"/>
         <source>Downloading Character Info...</source>
         <translation>下载人物信息...</translation>
     </message>
     <message>
-        <location filename="../../MediaLibrary/animeworker.cpp" line="147"/>
+        <location filename="../../MediaLibrary/animeworker.cpp" line="169"/>
         <source>Downloading Character Info...%1 Failed: %2</source>
         <translation>下载人物信息...%1 失败：%2</translation>
     </message>
     <message>
-        <location filename="../../MediaLibrary/animeworker.cpp" line="155"/>
+        <location filename="../../MediaLibrary/animeworker.cpp" line="177"/>
         <source>Downloading Label Info...</source>
         <translation>下载标签信息...</translation>
     </message>
     <message>
-        <location filename="../../MediaLibrary/animeworker.cpp" line="162"/>
+        <location filename="../../MediaLibrary/animeworker.cpp" line="184"/>
         <source>Downloading General Info Failed: %1</source>
         <translation>下载基本信息失败：%1</translation>
     </message>
@@ -426,10 +431,111 @@
     </message>
 </context>
 <context>
+    <name>BgmList</name>
+    <message>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="38"/>
+        <source>Fetching Info...</source>
+        <translation>获取信息...</translation>
+    </message>
+    <message>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="43"/>
+        <source>Fetch Failed: %1</source>
+        <translation>获取失败：%1</translation>
+    </message>
+    <message>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="86"/>
+        <source>%1-%2 Total: %3</source>
+        <translation>%1-%2 数量：%3</translation>
+    </message>
+    <message>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="162"/>
+        <source>Title</source>
+        <translation>标题</translation>
+    </message>
+    <message>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="162"/>
+        <source>ShowDate/Time</source>
+        <translation>放送开始/时间</translation>
+    </message>
+    <message>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="162"/>
+        <source>AirSites</source>
+        <translation>放送站点</translation>
+    </message>
+    <message>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="162"/>
+        <source>Focus</source>
+        <translation>关注</translation>
+    </message>
+</context>
+<context>
+    <name>BgmListWindow</name>
+    <message>
+        <location filename="../../UI/bgmlistwindow.cpp" line="19"/>
+        <source>Sun</source>
+        <translation>周日</translation>
+    </message>
+    <message>
+        <location filename="../../UI/bgmlistwindow.cpp" line="19"/>
+        <source>Mon</source>
+        <translation>周一</translation>
+    </message>
+    <message>
+        <location filename="../../UI/bgmlistwindow.cpp" line="19"/>
+        <source>Tue</source>
+        <translation>周二</translation>
+    </message>
+    <message>
+        <location filename="../../UI/bgmlistwindow.cpp" line="19"/>
+        <source>Wed</source>
+        <translation>周三</translation>
+    </message>
+    <message>
+        <location filename="../../UI/bgmlistwindow.cpp" line="19"/>
+        <source>Thu</source>
+        <translation>周四</translation>
+    </message>
+    <message>
+        <location filename="../../UI/bgmlistwindow.cpp" line="19"/>
+        <source>Fri</source>
+        <translation>周五</translation>
+    </message>
+    <message>
+        <location filename="../../UI/bgmlistwindow.cpp" line="19"/>
+        <source>Sat</source>
+        <translation>周六</translation>
+    </message>
+    <message>
+        <location filename="../../UI/bgmlistwindow.cpp" line="19"/>
+        <source>All</source>
+        <translation>全部</translation>
+    </message>
+    <message>
+        <location filename="../../UI/bgmlistwindow.cpp" line="23"/>
+        <source>(Today)</source>
+        <translation>（今天）</translation>
+    </message>
+    <message>
+        <location filename="../../UI/bgmlistwindow.cpp" line="29"/>
+        <source>Focus</source>
+        <translation>关注</translation>
+    </message>
+    <message>
+        <location filename="../../UI/bgmlistwindow.cpp" line="43"/>
+        <source>Refresh</source>
+        <translation>刷新</translation>
+    </message>
+    <message>
+        <location filename="../../UI/bgmlistwindow.cpp" line="69"/>
+        <source>Add To Library</source>
+        <translation>添加到资料库</translation>
+    </message>
+</context>
+<context>
     <name>BilibiliProvider</name>
     <message>
         <location filename="../../Play/Danmu/Provider/bilibiliprovider.cpp" line="128"/>
-        <location filename="../../Play/Danmu/Provider/bilibiliprovider.cpp" line="190"/>
+        <location filename="../../Play/Danmu/Provider/bilibiliprovider.cpp" line="195"/>
         <source>Reply JSON Format Error</source>
         <translation>返回的JSON格式错误</translation>
     </message>
@@ -868,21 +974,21 @@ Date: %2
 <context>
     <name>DownloadWindow</name>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="137"/>
+        <location filename="../../UI/downloadwindow.cpp" line="138"/>
         <source>Add URI</source>
         <translation>添加URI</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="146"/>
-        <location filename="../../UI/downloadwindow.cpp" line="169"/>
-        <location filename="../../UI/downloadwindow.cpp" line="175"/>
-        <location filename="../../UI/downloadwindow.cpp" line="402"/>
-        <location filename="../../UI/downloadwindow.cpp" line="408"/>
+        <location filename="../../UI/downloadwindow.cpp" line="147"/>
+        <location filename="../../UI/downloadwindow.cpp" line="170"/>
+        <location filename="../../UI/downloadwindow.cpp" line="176"/>
+        <location filename="../../UI/downloadwindow.cpp" line="414"/>
+        <location filename="../../UI/downloadwindow.cpp" line="420"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="146"/>
+        <location filename="../../UI/downloadwindow.cpp" line="147"/>
         <source>An error occurred while adding : URI:
  %1 
  %2</source>
@@ -891,18 +997,18 @@ Date: %2
 出错：%2</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="154"/>
+        <location filename="../../UI/downloadwindow.cpp" line="155"/>
         <source>Add Torrent</source>
         <translation>添加种子</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="156"/>
+        <location filename="../../UI/downloadwindow.cpp" line="157"/>
         <source>Select Torrent File</source>
         <translation>选择种子文件</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="169"/>
-        <location filename="../../UI/downloadwindow.cpp" line="402"/>
+        <location filename="../../UI/downloadwindow.cpp" line="170"/>
+        <location filename="../../UI/downloadwindow.cpp" line="414"/>
         <source>An error occurred while adding Torrent : 
  %1 </source>
         <translation>添加种子时出错：
@@ -913,67 +1019,72 @@ Date: %2
         <translation type="vanished">解析种子失败</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="183"/>
+        <location filename="../../UI/downloadwindow.cpp" line="184"/>
         <source>Settings</source>
         <translation>下载设置</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="229"/>
+        <location filename="../../UI/downloadwindow.cpp" line="230"/>
         <source>Search Task</source>
         <translation>搜索任务</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="303"/>
+        <location filename="../../UI/downloadwindow.cpp" line="304"/>
         <source>General</source>
         <translation>一般</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="309"/>
+        <location filename="../../UI/downloadwindow.cpp" line="310"/>
         <source>File</source>
         <translation>文件</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="316"/>
+        <location filename="../../UI/downloadwindow.cpp" line="317"/>
         <source>Global Log</source>
         <translation>全局日志</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="448"/>
+        <location filename="../../UI/downloadwindow.cpp" line="460"/>
         <source>Downloading</source>
         <translation>正在下载</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="455"/>
+        <location filename="../../UI/downloadwindow.cpp" line="467"/>
         <source>Completed</source>
         <translation>下载完成</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="462"/>
+        <location filename="../../UI/downloadwindow.cpp" line="474"/>
         <source>All</source>
         <translation>全部任务</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="546"/>
+        <location filename="../../UI/downloadwindow.cpp" line="481"/>
+        <source>BgmList</source>
+        <translation>每日放送</translation>
+    </message>
+    <message>
+        <location filename="../../UI/downloadwindow.cpp" line="573"/>
         <source>File Not Exist</source>
         <translation>文件不存在</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="583"/>
+        <location filename="../../UI/downloadwindow.cpp" line="610"/>
         <source>Pause</source>
         <translation>暂停</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="602"/>
+        <location filename="../../UI/downloadwindow.cpp" line="629"/>
         <source>Start</source>
         <translation>开始</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="619"/>
+        <location filename="../../UI/downloadwindow.cpp" line="646"/>
         <source>Resume</source>
         <translation>继续下载</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="619"/>
+        <location filename="../../UI/downloadwindow.cpp" line="646"/>
         <source>Control file(*.aria2) does not exist, download the file all over again ?
 %1</source>
         <translation>控制文件(*.aria2)丢失，重新下载任务？
@@ -984,59 +1095,59 @@ Date: %2
         <translation type="vanished">控制文件(*.aria2)丢失，重新下载任务？</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="636"/>
-        <location filename="../../UI/downloadwindow.cpp" line="641"/>
+        <location filename="../../UI/downloadwindow.cpp" line="663"/>
+        <location filename="../../UI/downloadwindow.cpp" line="668"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="641"/>
+        <location filename="../../UI/downloadwindow.cpp" line="668"/>
         <source>Delete the Downloaded Files?</source>
         <translation>同时删除下载文件？</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="656"/>
+        <location filename="../../UI/downloadwindow.cpp" line="683"/>
         <source>Pause All</source>
         <translation>全部暂停</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="660"/>
+        <location filename="../../UI/downloadwindow.cpp" line="687"/>
         <source>Start All</source>
         <translation>全部开始</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="676"/>
+        <location filename="../../UI/downloadwindow.cpp" line="703"/>
         <source>Browse File</source>
         <translation>资源管理器中浏览</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="687"/>
+        <location filename="../../UI/downloadwindow.cpp" line="714"/>
         <source>Add To PlayList</source>
         <translation>添加到播放列表</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="715"/>
+        <location filename="../../UI/downloadwindow.cpp" line="742"/>
         <source>Copy URI</source>
         <translation>复制下载链接</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="724"/>
-        <location filename="../../UI/downloadwindow.cpp" line="736"/>
+        <location filename="../../UI/downloadwindow.cpp" line="751"/>
+        <location filename="../../UI/downloadwindow.cpp" line="763"/>
         <source>Save Torrent</source>
         <translation>保存种子文件</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="769"/>
+        <location filename="../../UI/downloadwindow.cpp" line="796"/>
         <source>Create Time: %1 	 Finish Time: %2</source>
         <translation>创建时间：%1 	 完成时间：%2</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="811"/>
+        <location filename="../../UI/downloadwindow.cpp" line="838"/>
         <source>&lt;No Item has been Selected&gt;</source>
         <translation>&lt;没有选择项目&gt;</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="812"/>
+        <location filename="../../UI/downloadwindow.cpp" line="839"/>
         <source>Create Time: ---- 	 Finish Time: ----</source>
         <translation>创建时间：---- 	 完成时间：----</translation>
     </message>
@@ -1143,12 +1254,12 @@ Date: %2
 <context>
     <name>LabelModel</name>
     <message>
-        <location filename="../../MediaLibrary/labelmodel.cpp" line="305"/>
+        <location filename="../../MediaLibrary/labelmodel.cpp" line="326"/>
         <source>Air Date</source>
         <translation>放送时间</translation>
     </message>
     <message>
-        <location filename="../../MediaLibrary/labelmodel.cpp" line="307"/>
+        <location filename="../../MediaLibrary/labelmodel.cpp" line="328"/>
         <source>Tag</source>
         <translation>标签</translation>
     </message>
@@ -2503,7 +2614,7 @@ The changes will take effect when KikoPlay is restarted</source>
         <translation type="vanished">弹幕提供源失效或不支持搜索</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="78"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="80"/>
         <source>Search Failed</source>
         <translation>搜索失败</translation>
     </message>
@@ -2512,28 +2623,28 @@ The changes will take effect when KikoPlay is restarted</source>
         <translation type="vanished">弹幕提供源失效</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="61"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="63"/>
         <source>Provider invalid or Unsupport search</source>
         <translation>弹幕提供源失效或不支持搜索</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="91"/>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="133"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="93"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="135"/>
         <source>Provider invalid</source>
         <translation>弹幕提供源失效</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="109"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="111"/>
         <source>Get EpInfo Failed</source>
         <translation>获取分集信息失败</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="124"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="126"/>
         <source>Unsupported URL</source>
         <translation>URL不支持</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="155"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="160"/>
         <source>Unsupported Source</source>
         <translation>不支持这个弹幕源</translation>
     </message>
@@ -2541,20 +2652,20 @@ The changes will take effect when KikoPlay is restarted</source>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../../Play/Danmu/Provider/bilibiliprovider.cpp" line="286"/>
+        <location filename="../../Play/Danmu/Provider/bilibiliprovider.cpp" line="291"/>
         <location filename="../../Play/Danmu/Provider/matchprovider.cpp" line="175"/>
         <location filename="../../Play/Danmu/Provider/matchprovider.cpp" line="221"/>
         <source>Reply JSON Format Error</source>
         <translation>返回的JSON格式错误</translation>
     </message>
     <message>
-        <location filename="../../Common/network.cpp" line="66"/>
-        <location filename="../../Common/network.cpp" line="132"/>
+        <location filename="../../Common/network.cpp" line="68"/>
+        <location filename="../../Common/network.cpp" line="133"/>
         <source>Error,Status Code:%1</source>
         <translation>错误：%1</translation>
     </message>
     <message>
-        <location filename="../../Common/network.cpp" line="165"/>
+        <location filename="../../Common/network.cpp" line="166"/>
         <location filename="../../Play/Danmu/Provider/acfunprovider.cpp" line="277"/>
         <source>Decode JSON Failed</source>
         <translation>解析JSON失败</translation>
@@ -2564,8 +2675,8 @@ The changes will take effect when KikoPlay is restarted</source>
         <translation type="vanished">解析JSON出现错误</translation>
     </message>
     <message>
-        <location filename="../../Common/network.cpp" line="80"/>
-        <location filename="../../Common/network.cpp" line="146"/>
+        <location filename="../../Common/network.cpp" line="82"/>
+        <location filename="../../Common/network.cpp" line="147"/>
         <source>Replay Timeout</source>
         <translation>超时</translation>
     </message>
@@ -2676,7 +2787,7 @@ Date: %2
 <context>
     <name>SearchItemWidget</name>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="369"/>
+        <location filename="../../UI/adddanmu.cpp" line="373"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
@@ -2816,6 +2927,14 @@ Date: %2
     </message>
 </context>
 <context>
+    <name>TencentProvider</name>
+    <message>
+        <location filename="../../Play/Danmu/Provider/tencentprovider.cpp" line="102"/>
+        <source>Decode Failed</source>
+        <translation>解析失败</translation>
+    </message>
+</context>
+<context>
     <name>TimeLineBar</name>
     <message>
         <location filename="../../UI/timelineedit.cpp" line="198"/>
@@ -2885,7 +3004,7 @@ Date: %2
 <context>
     <name>YoukuProvider</name>
     <message>
-        <location filename="../../Play/Danmu/Provider/youkuprovider.cpp" line="96"/>
+        <location filename="../../Play/Danmu/Provider/youkuprovider.cpp" line="97"/>
         <source>Decode Failed</source>
         <translation>解析失败</translation>
     </message>

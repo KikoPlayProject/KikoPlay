@@ -48,6 +48,28 @@ void AnimeWorker::addAnimeInfo(const QString &animeName,const QString &epName, c
 
 }
 
+void AnimeWorker::addAnimeInfo(const QString &animeName, int bgmId)
+{
+    QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
+    query.prepare("select * from anime where Anime=?");
+    query.bindValue(0,animeName);
+    query.exec();
+    if(query.first()) return;
+    Q_ASSERT(!animesMap.contains(animeName));
+    Anime *anime=new Anime;
+    anime->bangumiID=bgmId;
+    anime->title=animeName;
+    anime->epCount=0;
+    anime->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
+    query.prepare("insert into anime(Anime,AddTime,BangumiID) values(?,?,?)");
+    query.bindValue(0,anime->title);
+    query.bindValue(1,anime->addTime);
+    query.bindValue(2,anime->bangumiID);
+    query.exec();
+    animesMap.insert(animeName,anime);
+    emit addAnime(anime);
+}
+
 void AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId)
 {
     QString animeUrl(QString("https://api.bgm.tv/subject/%1").arg(bangumiId));

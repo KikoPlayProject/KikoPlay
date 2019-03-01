@@ -60,7 +60,7 @@ LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
         }
         GlobalObjects::library->saveTags(title,tags);
     });
-    QObject::connect(library,&AnimeLibrary::addTimeLabel,this,[this](const QString &time){
+    QObject::connect(library,&AnimeLibrary::addTimeLabel,this,[this](const QString &time, const QString &oldTime){
        int insPos = std::lower_bound(timeList.begin(),timeList.end(),time,[](const QPair<QString,int> &pair, const QString &insTime){
            return pair.first>insTime;
        })-timeList.begin();
@@ -75,6 +75,27 @@ LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
            beginInsertRows(createIndex(0,0,TYPELEVEL),insPos,insPos);
            timeList.insert(insPos,QPair<QString,int>(time,1));
            endInsertRows();
+       }
+       if(!oldTime.isEmpty())
+       {
+           int oldPos = std::lower_bound(timeList.begin(),timeList.end(),oldTime,[](const QPair<QString,int> &pair, const QString &oldTime){
+               return pair.first>oldTime;
+           })-timeList.begin();
+           if(timeList.value(oldPos).first==oldTime)
+           {
+               --timeList[oldPos].second;
+               QModelIndex index(createIndex(oldPos,0,LABEL_TIME));
+               if(timeList[oldPos].second==0)
+               {
+                   beginRemoveRows(index.parent(),index.row(),index.row());
+                   timeList.removeAt(index.row());
+                   endRemoveRows();
+               }
+               else
+               {
+                   emit dataChanged(index,index);
+               }
+           }
        }
     });
     QObject::connect(library,&AnimeLibrary::removeTagFrom,this,[this](const QString &title, const QString &tag){

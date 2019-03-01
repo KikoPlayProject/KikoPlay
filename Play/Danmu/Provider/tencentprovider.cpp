@@ -79,6 +79,7 @@ QString TencentProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment
             QJsonObject videoInfo(Network::toJson(captured[1]).object());
             item->title=videoInfo.value("title").toString();
             item->subId=videoInfo.value("duration").toString().toFloat()/30;
+            item->extra=videoInfo.value("duration").toString().toInt();
             QString vid(item->strId=videoInfo.value("vid").toString());
             QUrlQuery query;
             query.addQueryItem("vid",vid);
@@ -215,7 +216,9 @@ void TencentProvider::handleSearchReply(QString &reply, DanmuAccessResult *resul
             do
             {
                 parser.readNext();
-            }while(parser.currentNodeProperty("class")!="item");
+            }while(parser.currentNodeProperty("class")!="item" && 
+				parser.currentNodeProperty("class")!="result_btn_line" &&
+				parser.currentNodeProperty("class")!="result_video_fragment");
             while(parser.currentNodeProperty("class")=="item")
             {
                 parser.readNext();

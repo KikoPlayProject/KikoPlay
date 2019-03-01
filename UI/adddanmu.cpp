@@ -84,6 +84,7 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo)
 
     QLabel *itemInfoLabel=new QLabel(item?(item->animeTitle.isEmpty()?item->title:QString("%1-%2").arg(item->animeTitle).arg(item->title)):"",this);
     itemInfoLabel->setFont(QFont("Microsoft YaHei UI",10,QFont::Bold));
+    itemInfoLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     danmuVLayout->addWidget(itemInfoLabel);
 
     keywordEdit->setText(item?(item->animeTitle.isEmpty()?item->title:item->animeTitle):"");
@@ -151,8 +152,12 @@ void AddDanmu::addSearchItem(DanmuAccessResult *result)
             sourceInfo.url=GlobalObjects::providerManager->getSourceURL(result->providerId,&sourceItem);
             sourceInfo.delay=0;
             sourceInfo.show=true;
+            int min=sourceItem.extra/60;
+            int sec=sourceItem.extra-min*60;
+            QString duration=QString("%1:%2").arg(min, 2, 10, QChar('0')).arg(sec, 2, 10, QChar('0'));
             selectedDanmuList.append(QPair<DanmuSourceInfo,QList<DanmuComment *> >(sourceInfo,tmplist));
-            QTreeWidgetItem *widgetItem=new QTreeWidgetItem(selectedDanmuWidget,QStringList()<<sourceInfo.name<<QString::number(sourceInfo.count)<<result->providerId);
+            QTreeWidgetItem *widgetItem=new QTreeWidgetItem(selectedDanmuWidget,
+                                                            QStringList()<<sourceInfo.name<<QString::number(sourceInfo.count)<<result->providerId<<duration);
             widgetItem->setCheckState(0,Qt::Checked);
         }
     }
@@ -174,7 +179,11 @@ void AddDanmu::addSearchItem(DanmuAccessResult *result)
                     sourceInfo.delay=sourceItem.delay*1000;
                     sourceInfo.show=true;
                     selectedDanmuList.append(QPair<DanmuSourceInfo,QList<DanmuComment *> >(sourceInfo,tmplist));
-                    QTreeWidgetItem *widgetItem=new QTreeWidgetItem(selectedDanmuWidget,QStringList()<<sourceInfo.name<<QString::number(sourceInfo.count)<<result->providerId);
+                    int min=sourceItem.extra/60;
+                    int sec=sourceItem.extra-min*60;
+                    QString duration=QString("%1:%2").arg(min, 2, 10, QChar('0')).arg(sec, 2, 10, QChar('0'));
+                    QTreeWidgetItem *widgetItem=new QTreeWidgetItem(selectedDanmuWidget,
+                                                                    QStringList()<<sourceInfo.name<<QString::number(sourceInfo.count)<<result->providerId<<duration);
                     widgetItem->setCheckState(0,Qt::Checked);
                     selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuWidget->topLevelItemCount()));
                 }
@@ -270,7 +279,7 @@ QWidget *AddDanmu::setupSelectedPage()
     selectedDanmuWidget =new QTreeWidget(selectedPage);
     selectedDanmuWidget->setRootIsDecorated(false);
     selectedDanmuWidget->setFont(selectedPage->font());
-    selectedDanmuWidget->setHeaderLabels(QStringList()<<tr("Title")<<tr("DanmuCount")<<tr("Source"));
+    selectedDanmuWidget->setHeaderLabels(QStringList()<<tr("Title")<<tr("DanmuCount")<<tr("Source")<<tr("Duration"));
     selectedDanmuWidget->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     QHeaderView *selectedHeader = selectedDanmuWidget->header();
     selectedHeader->setFont(this->font());

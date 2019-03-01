@@ -29,6 +29,7 @@
 #include "downloadsetting.h"
 #include "selecttorrentfile.h"
 #include "globalobjects.h"
+#include "bgmlistwindow.h"
 namespace
 {
     struct FontIconToolButtonOptions
@@ -356,15 +357,26 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     viewBottomSplitter->setCollapsible(0,false);
     viewBottomSplitter->setCollapsible(1,true);
 
-    QGridLayout *contentGLayout=new QGridLayout(this);
-    contentGLayout->addWidget(setupLeftPanel(),0,0,4,1);
-    contentGLayout->addLayout(toolBarHLayout,0,1);
-    contentGLayout->addWidget(viewBottomSplitter,1,1);
-    contentGLayout->setColumnStretch(1,1);
-    contentGLayout->setRowStretch(1,1);
-    contentGLayout->setContentsMargins(0,0,10*logicalDpiX()/96,0);
+    QWidget *downloadContainer=new QWidget(this);
+    QGridLayout *downContainerGLayout=new QGridLayout(downloadContainer);
+    downContainerGLayout->addLayout(toolBarHLayout,0,1);
+    downContainerGLayout->addWidget(viewBottomSplitter,1,1);
+    downContainerGLayout->setRowStretch(1,1);
+    downContainerGLayout->setContentsMargins(0,0,0,0);
 
-    refreshTimer=new QTimer(this);
+    BgmListWindow *bgmListWindow=new BgmListWindow(this);
+    rightPanelSLayout=new QStackedLayout();
+    rightPanelSLayout->addWidget(downloadContainer);
+    rightPanelSLayout->addWidget(bgmListWindow);
+
+    QGridLayout *contentGLayout=new QGridLayout(this);
+    contentGLayout->addWidget(setupLeftPanel(),0,0);
+    contentGLayout->addLayout(rightPanelSLayout,0,1);
+    contentGLayout->setColumnStretch(1,1);
+    contentGLayout->setRowStretch(0,1);
+    contentGLayout->setContentsMargins(0,0,10*logicalDpiX()/96,0);
+    refreshTimer=new QTimer();
+
     QObject::connect(refreshTimer,&QTimer::timeout,[this](){
         auto &items=GlobalObjects::downloadModel->getItems();
         for(auto iter=items.cbegin();iter!=items.cend();++iter)
@@ -461,16 +473,31 @@ QWidget *DownloadWindow::setupLeftPanel()
     allTask->setCheckable(true);
     allTask->setText(tr("All"));
 
+    btnOptions.iconChar=QChar(0xe63a);
+    FontIconToolButton *bgmList=new FontIconToolButton(btnOptions,leftPanel);
+    bgmList->setObjectName(QStringLiteral("TaskTypeToolButton"));
+    bgmList->setFixedWidth(panelWidth);
+    bgmList->setCheckable(true);
+    bgmList->setText(tr("BgmList"));
     QButtonGroup *taskTypeButtonGroup=new QButtonGroup(this);
     taskTypeButtonGroup->addButton(downloadingTask,1);
     taskTypeButtonGroup->addButton(completedTask,2);
     taskTypeButtonGroup->addButton(allTask,0);
+    taskTypeButtonGroup->addButton(bgmList,3);
     QObject::connect(taskTypeButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[this](int id, bool checked){
         if(checked)
         {
-            TaskFilterProxyModel *model = static_cast<TaskFilterProxyModel *>(downloadView->model());
-            model->setTaskStatus(id);
-            model->setFilterKeyColumn(1);
+            if(id<3)
+            {
+                rightPanelSLayout->setCurrentIndex(0);
+                TaskFilterProxyModel *model = static_cast<TaskFilterProxyModel *>(downloadView->model());
+                model->setTaskStatus(id);
+                model->setFilterKeyColumn(1);
+            }
+            else if(id==3)
+            {
+                rightPanelSLayout->setCurrentIndex(1);
+            }
         }
     });
 
@@ -480,13 +507,11 @@ QWidget *DownloadWindow::setupLeftPanel()
     downSpeedIconLabel->setFont(GlobalObjects::iconfont);
     downSpeedIconLabel->setText(QChar(0xe910));
     downSpeedIconLabel->setMaximumWidth(downSpeedIconLabel->height()+4*logicalDpiX()/96);
-
     QLabel *upSpeedIconLabel=new QLabel(this);
     upSpeedIconLabel->setObjectName(QStringLiteral("UpSpeedIcon"));
     upSpeedIconLabel->setFont(GlobalObjects::iconfont);
     upSpeedIconLabel->setText(QChar(0xe941));
     upSpeedIconLabel->setMaximumWidth(upSpeedIconLabel->height()+4*logicalDpiX()/96);
-
     downSpeedLabel=new QLabel(this);
     downSpeedLabel->setObjectName(QStringLiteral("DownSpeedLabel"));
     upSpeedLabel=new QLabel(this);
@@ -498,6 +523,7 @@ QWidget *DownloadWindow::setupLeftPanel()
     leftVLayout->addWidget(downloadingTask);
     leftVLayout->addWidget(completedTask);
     leftVLayout->addWidget(allTask);
+    leftVLayout->addWidget(bgmList);
     leftVLayout->addStretch(1);
     QGridLayout *speedInfoGLayout=new QGridLayout();
     speedInfoGLayout->addWidget(downSpeedIconLabel,0,0);
@@ -506,6 +532,7 @@ QWidget *DownloadWindow::setupLeftPanel()
     speedInfoGLayout->addWidget(upSpeedLabel,1,1);
     speedInfoGLayout->setContentsMargins(30*logicalDpiX()/96,0,20*logicalDpiX()/96,20*logicalDpiY()/96);
     leftVLayout->addLayout(speedInfoGLayout);
+	_ASSERTE(_CrtCheckMemory());
     return leftPanel;
 }
 

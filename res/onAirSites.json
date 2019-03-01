@@ -1,0 +1,58 @@
+{
+  "acfun": {
+    "title": "AcFun",
+    "urlTemplate": "http://www.acfun.cn/"
+  },
+  "bilibili": {
+    "title": "哔哩哔哩",
+    "urlTemplate": "https://bangumi.bilibili.com/"
+  },
+  "tucao": {
+    "title": "TUCAO",
+    "urlTemplate": "http://www.tucao.tv/"
+  },
+  "sohu": {
+    "title": "搜狐视频",
+    "urlTemplate": "https://tv.sohu.com/"
+  },
+  "youku": {
+    "title": "优酷",
+    "urlTemplate": "https://list.youku.com/"
+  },
+  "tudou": {
+    "title": "土豆",
+    "urlTemplate": "https://www.tudou.com/"
+  },
+  "qq": {
+    "title": "腾讯视频",
+    "urlTemplate": "https://v.qq.com/"
+  },
+  "iqiyi": {
+    "title": "爱奇艺",
+    "urlTemplate": "https://www.iqiyi.com/"
+  },
+  "letv": {
+    "title": "乐视",
+    "urlTemplate": "https://www.le.com/"
+  },
+  "pptv": {
+    "title": "PPTV",
+    "urlTemplate": "http://v.pptv.com/"
+  },
+  "kankan": {
+    "title": "响巢看看",
+    "urlTemplate": "http://movie.kankan.com/"
+  },
+  "mgtv": {
+    "title": "芒果tv",
+    "urlTemplate": "https://www.mgtv.com/"
+  },
+  "nicovideo": {
+    "title": "Niconico",
+    "urlTemplate": "https://ch.nicovideo.jp/"
+  },
+  "netflix": {
+    "title": "Netflix",
+    "urlTemplate": "https://www.netflix.com/"
+  }
+}

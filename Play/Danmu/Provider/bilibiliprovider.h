@@ -22,9 +22,9 @@ public slots:
 private:
     void handleSearchReply(QJsonDocument &document, DanmuAccessResult *searchResult);
     void handleBangumiReply(QJsonDocument &document,DanmuAccessResult *result);
-    void handleViewReply(QJsonDocument &document,DanmuAccessResult *result,int aid);
-    void decodeVideoList(QByteArray &bytes,DanmuAccessResult *result,int aid);
-    void decodeEpList(QByteArray &bytes,DanmuAccessResult *result,int aid);
+    void handleViewReply(QJsonDocument &document, DanmuAccessResult *result, DanmuSourceItem *sItem);
+    void decodeVideoList(const QByteArray &bytes, DanmuAccessResult *result, int aid);
+    void decodeEpList(const QByteArray &bytes, DanmuAccessResult *result, int aid);
     void handleDownloadReply(QString &reply,QList<DanmuComment *> &danmuList);
 };
 

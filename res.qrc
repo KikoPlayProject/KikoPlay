@@ -44,5 +44,6 @@
         <file>res/images/branch-open-2.png</file>
         <file>res/images/down-light.png</file>
         <file>res/images/check-box-uncheck-light.png</file>
+        <file>res/onAirSites.json</file>
     </qresource>
 </RCC>

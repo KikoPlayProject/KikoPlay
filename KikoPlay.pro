@@ -107,7 +107,9 @@ SOURCES += \
     MediaLibrary/labelitemdelegate.cpp \
     UI/bangumiupdate.cpp \
     Play/Danmu/Provider/youkuprovider.cpp \
-    Play/Danmu/Provider/tencentprovider.cpp
+    Play/Danmu/Provider/tencentprovider.cpp \
+    Download/BgmList/bgmlist.cpp \
+    UI/bgmlistwindow.cpp
 
 HEADERS += \
     UI/mainwindow.h \
@@ -190,7 +192,9 @@ HEADERS += \
     MediaLibrary/labelitemdelegate.h \
     UI/bangumiupdate.h \
     Play/Danmu/Provider/youkuprovider.h \
-    Play/Danmu/Provider/tencentprovider.h
+    Play/Danmu/Provider/tencentprovider.h \
+    Download/BgmList/bgmlist.h \
+    UI/bgmlistwindow.h
 
 INCLUDEPATH += \
     Play/Video \

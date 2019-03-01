@@ -117,6 +117,7 @@ void IqiyiProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
         QStringList list = re.capturedTexts();
         HTMLParserSax parser(list.at(2));
         DanmuSourceItem item;
+        item.extra=0;
         bool itemStart=false;
         bool epStart=false;
         while(!parser.atEnd())
@@ -156,6 +157,7 @@ void IqiyiProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
                     DanmuSourceItem epItem;
                     epItem.title=item.title + " " + parser.currentNodeProperty("title");
                     epItem.strId=parser.currentNodeProperty("href");
+                    epItem.extra=0;
                     result->list.append(epItem);
                 }
             }

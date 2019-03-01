@@ -81,6 +81,7 @@ QString YoukuProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
             if(pos==-1) break;
 			captured = re.capturedTexts();
             item->subId=captured[1].toFloat()/60;
+            item->extra=captured[1].toFloat();
             if(item->title.isEmpty())
             {
                 re.setPattern("<meta name=\"title\" content=\"(.*)\" />");

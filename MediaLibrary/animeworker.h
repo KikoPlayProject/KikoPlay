@@ -19,6 +19,7 @@ public slots:
     void updateCrtImage(const QString &title, const Character *crt);
 
     void addAnimeInfo(const QString &animeName, const QString &epName, const QString &path);
+    void addAnimeInfo(const QString &animeName,int bgmId);
     void downloadDetailInfo(Anime *anime, int bangumiId);
     void downloadTags(int bangumiID, QStringList &tags);
     void saveTags(const QString &title, const QStringList &tags);
