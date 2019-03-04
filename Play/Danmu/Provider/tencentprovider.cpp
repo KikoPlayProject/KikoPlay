@@ -78,7 +78,7 @@ QString TencentProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment
             QStringList captured=re.capturedTexts();
             QJsonObject videoInfo(Network::toJson(captured[1]).object());
             item->title=videoInfo.value("title").toString();
-            item->subId=videoInfo.value("duration").toString().toFloat()/30;
+            item->subId=videoInfo.value("duration").toString().toInt()/30;
             item->extra=videoInfo.value("duration").toString().toInt();
             QString vid(item->strId=videoInfo.value("vid").toString());
             QUrlQuery query;
@@ -179,8 +179,7 @@ void TencentProvider::downloadAllDanmu(const QString &id, int length, QList<Danm
                 else danmu->setType(1);
 
                 danmu->sender="[Tencent]"+opername.toString();
-                if(danmu->type!=DanmuComment::UNKNOW)danmuList.append(danmu);
-                else delete danmu;
+                danmuList.append(danmu);
             }
         } catch (const Network::NetworkError &) {
 

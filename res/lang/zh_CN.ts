@@ -448,33 +448,33 @@
     </message>
     <message>
         <location filename="../../Download/BgmList/bgmlist.cpp" line="86"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="155"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="162"/>
         <source>%1-%2 Total: %3%4</source>
         <translation>%1-%2 数量：%3%4</translation>
     </message>
     <message>
         <location filename="../../Download/BgmList/bgmlist.cpp" line="86"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="155"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="162"/>
         <source> Focus: %1</source>
         <translation> 关注：%1</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="163"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="170"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="163"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="170"/>
         <source>ShowDate/Time</source>
         <translation>放送开始/时间</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="163"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="170"/>
         <source>AirSites</source>
         <translation>放送站点</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="163"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="170"/>
         <source>Focus</source>
         <translation>关注</translation>
     </message>
@@ -522,28 +522,33 @@
         <translation>全部</translation>
     </message>
     <message>
-        <location filename="../../UI/bgmlistwindow.cpp" line="24"/>
-        <location filename="../../UI/bgmlistwindow.cpp" line="129"/>
+        <location filename="../../UI/bgmlistwindow.cpp" line="47"/>
+        <location filename="../../UI/bgmlistwindow.cpp" line="161"/>
         <source>(Today)</source>
         <translation>（今天）</translation>
     </message>
     <message>
-        <location filename="../../UI/bgmlistwindow.cpp" line="31"/>
+        <location filename="../../UI/bgmlistwindow.cpp" line="54"/>
         <source>Focus</source>
         <translation>关注</translation>
     </message>
     <message>
-        <location filename="../../UI/bgmlistwindow.cpp" line="45"/>
+        <location filename="../../UI/bgmlistwindow.cpp" line="61"/>
+        <source>New</source>
+        <translation>新番</translation>
+    </message>
+    <message>
+        <location filename="../../UI/bgmlistwindow.cpp" line="76"/>
         <source>Refresh</source>
         <translation>刷新</translation>
     </message>
     <message>
-        <location filename="../../UI/bgmlistwindow.cpp" line="75"/>
+        <location filename="../../UI/bgmlistwindow.cpp" line="107"/>
         <source>Add To Library</source>
         <translation>添加到资料库</translation>
     </message>
     <message>
-        <location filename="../../UI/bgmlistwindow.cpp" line="82"/>
+        <location filename="../../UI/bgmlistwindow.cpp" line="114"/>
         <source>Bangumi Info</source>
         <translation>Bangumi信息</translation>
     </message>
@@ -1934,6 +1939,14 @@ The changes will take effect when KikoPlay is restarted</source>
     </message>
 </context>
 <context>
+    <name>PPTVProvider</name>
+    <message>
+        <location filename="../../Play/Danmu/Provider/pptvprovider.cpp" line="86"/>
+        <source>Decode Failed</source>
+        <translation>解析失败</translation>
+    </message>
+</context>
+<context>
     <name>PlayList</name>
     <message>
         <location filename="../../Play/Playlist/playlist.cpp" line="105"/>
@@ -2668,7 +2681,7 @@ The changes will take effect when KikoPlay is restarted</source>
         <translation type="vanished">弹幕提供源失效或不支持搜索</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="80"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="82"/>
         <source>Search Failed</source>
         <translation>搜索失败</translation>
     </message>
@@ -2677,28 +2690,28 @@ The changes will take effect when KikoPlay is restarted</source>
         <translation type="vanished">弹幕提供源失效</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="63"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="65"/>
         <source>Provider invalid or Unsupport search</source>
         <translation>弹幕提供源失效或不支持搜索</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="93"/>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="135"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="95"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="137"/>
         <source>Provider invalid</source>
         <translation>弹幕提供源失效</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="111"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="113"/>
         <source>Get EpInfo Failed</source>
         <translation>获取分集信息失败</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="126"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="128"/>
         <source>Unsupported URL</source>
         <translation>URL不支持</translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/providermanager.cpp" line="160"/>
+        <location filename="../../Play/Danmu/providermanager.cpp" line="162"/>
         <source>Unsupported Source</source>
         <translation>不支持这个弹幕源</translation>
     </message>
@@ -2892,37 +2905,37 @@ Date: %2
         <translation>无可用脚本</translation>
     </message>
     <message>
-        <location filename="../../Download/Script/scriptmanager.cpp" line="167"/>
+        <location filename="../../Download/Script/scriptmanager.cpp" line="171"/>
         <source>Script File Not Exist</source>
         <translation>脚本文件不存在</translation>
     </message>
     <message>
-        <location filename="../../Download/Script/scriptmanager.cpp" line="181"/>
+        <location filename="../../Download/Script/scriptmanager.cpp" line="185"/>
         <source>Open Script File Failed</source>
         <translation>打开脚本文件失败</translation>
     </message>
     <message>
-        <location filename="../../Download/Script/scriptmanager.cpp" line="306"/>
+        <location filename="../../Download/Script/scriptmanager.cpp" line="310"/>
         <source>Id</source>
         <translation>Id</translation>
     </message>
     <message>
-        <location filename="../../Download/Script/scriptmanager.cpp" line="306"/>
+        <location filename="../../Download/Script/scriptmanager.cpp" line="310"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../Download/Script/scriptmanager.cpp" line="306"/>
+        <location filename="../../Download/Script/scriptmanager.cpp" line="310"/>
         <source>Version</source>
         <translation>版本</translation>
     </message>
     <message>
-        <location filename="../../Download/Script/scriptmanager.cpp" line="306"/>
+        <location filename="../../Download/Script/scriptmanager.cpp" line="310"/>
         <source>Description</source>
         <translation>描述</translation>
     </message>
     <message>
-        <location filename="../../Download/Script/scriptmanager.cpp" line="306"/>
+        <location filename="../../Download/Script/scriptmanager.cpp" line="310"/>
         <source>File</source>
         <translation>文件</translation>
     </message>
@@ -2938,17 +2951,17 @@ Date: %2
 <context>
     <name>SearchListModel</name>
     <message>
-        <location filename="../../Download/Script/scriptmanager.cpp" line="391"/>
+        <location filename="../../Download/Script/scriptmanager.cpp" line="395"/>
         <source>Time</source>
         <translation>时间</translation>
     </message>
     <message>
-        <location filename="../../Download/Script/scriptmanager.cpp" line="391"/>
+        <location filename="../../Download/Script/scriptmanager.cpp" line="395"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../Download/Script/scriptmanager.cpp" line="391"/>
+        <location filename="../../Download/Script/scriptmanager.cpp" line="395"/>
         <source>Size</source>
         <translation>大小</translation>
     </message>

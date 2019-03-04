@@ -176,8 +176,7 @@ void YoukuProvider::downloadAllDanmu(const QString &id, int length, QList<DanmuC
 
                 danmu->sender="[Youku]"+QString::number((long long)uid.toDouble());
                 danmu->date=static_cast<long long>(date.toDouble()/1000);
-                if(danmu->type!=DanmuComment::UNKNOW)danmuList.append(danmu);
-                else delete danmu;
+                danmuList.append(danmu);
             }
         } catch (const Network::NetworkError &) {
 

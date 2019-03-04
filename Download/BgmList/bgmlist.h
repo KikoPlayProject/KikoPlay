@@ -12,6 +12,7 @@ struct BgmItem
     QStringList onAirURL;
     QString sitesName;
     bool focus;
+    bool isNew;
 };
 class BgmWorker : public QObject
 {
@@ -64,12 +65,14 @@ class BgmListFilterProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 public:
-    explicit BgmListFilterProxyModel(QObject *parent = nullptr):QSortFilterProxyModel(parent),week(8),onlyFocus(false){}
+    explicit BgmListFilterProxyModel(QObject *parent = nullptr):QSortFilterProxyModel(parent),week(8),onlyFocus(false),onlyNew(false){}
     void setWeekFilter(int week);
     void setFocusFilter(bool onlyFocus);
+    void setNewBgmFilter(bool onlyNew);
 private:
     int week;
     bool onlyFocus;
+    bool onlyNew;
     // QSortFilterProxyModel interface
 protected:
     virtual bool filterAcceptsRow(int source_row, const QModelIndex &) const;

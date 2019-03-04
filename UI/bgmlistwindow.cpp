@@ -9,8 +9,31 @@
 #include <QHeaderView>
 #include <QMenu>
 #include <QDesktopServices>
+#include <QStyledItemDelegate>
 #include "globalobjects.h"
 #include "MediaLibrary/animelibrary.h"
+namespace
+{
+    class TextColorDelegate: public QStyledItemDelegate
+    {
+    public:
+        explicit TextColorDelegate(QObject* parent = nullptr) : QStyledItemDelegate(parent)
+        { }
+
+        void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+        {
+            QStyleOptionViewItem ViewOption(option);
+            QColor itemForegroundColor = index.data(Qt::ForegroundRole).value<QColor>();
+            if (itemForegroundColor.isValid())
+            {
+                if (itemForegroundColor != option.palette.color(QPalette::WindowText))
+                    ViewOption.palette.setColor(QPalette::HighlightedText, itemForegroundColor);
+
+            }
+            QStyledItemDelegate::paint(painter, ViewOption, index);
+        }
+    };
+}
 BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
 {
     bgmList=new BgmList(this);
@@ -35,6 +58,14 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     QObject::connect(focusBtn,&QPushButton::clicked,this,[bgmListProxyModel](bool checked){
        bgmListProxyModel->setFocusFilter(checked);
     });
+    QPushButton *newBtn=new QPushButton(tr("New"),this);
+    newBtn->setCheckable(true);
+    newBtn->setObjectName(QStringLiteral("BgmFilterBtn"));
+    btnHLayout->addWidget(newBtn);
+    QObject::connect(newBtn,&QPushButton::clicked,this,[bgmListProxyModel](bool checked){
+       bgmListProxyModel->setNewBgmFilter(checked);
+    });
+
     QObject::connect(filterButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[bgmListProxyModel,focusBtn](int id, bool checked){
         if(checked) bgmListProxyModel->setWeekFilter(id);
     });
@@ -59,6 +90,7 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
 
     bgmListView=new QTreeView(this);
     bgmListView->setModel(bgmListProxyModel);
+    bgmListView->setItemDelegate(new TextColorDelegate(this));
     bgmListView->setObjectName(QStringLiteral("BgmListView"));
     bgmListView->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
     bgmListView->header()->setObjectName(QStringLiteral("BgmListHeader"));

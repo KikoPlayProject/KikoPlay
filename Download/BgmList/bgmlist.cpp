@@ -1,7 +1,7 @@
 #include "bgmlist.h"
 #include "globalobjects.h"
 #include "Common/network.h"
-
+#include <QBrush>
 BgmList::BgmList(QObject *parent) : QAbstractItemModel (parent),inited(false),needSave(false),showOnlyFocus(false),
     curWeek(-1),localYear(0),localMonth(0)
 {
@@ -52,8 +52,8 @@ void BgmList::refreshData(bool forceRefresh)
                 for(auto iter=bgmListObj.constBegin();iter!=bgmListObj.constEnd();++iter)
                 {
                     QJsonObject bgmObj(iter->toObject());
-                    if(!bgmObj.value("newBgm").toBool()) continue;
                     BgmItem item;
+                    item.isNew=bgmObj.value("newBgm").toBool();
                     item.title=bgmObj.value("titleCN").toString();
                     titleSet<<item.title;
                     item.week=bgmObj.value("weekDayCN").toInt();
@@ -120,6 +120,11 @@ QVariant BgmList::data(const QModelIndex &index, int role) const
     {
         return Qt::AlignCenter;
     }
+    case Qt::ForegroundRole:
+    {
+        if(item.isNew) return QBrush(QColor(0,155,255));
+        else return QBrush(QColor(100,100,100));
+    }
     case Qt::CheckStateRole:
     {
         if(col==3)
@@ -130,6 +135,8 @@ QVariant BgmList::data(const QModelIndex &index, int role) const
     {
         if(col==0)
             return item.title;
+        else if(col==2)
+            return item.sitesName;
         break;
     }
     }
@@ -222,6 +229,7 @@ bool BgmList::loadLocal()
                 item.week=reader.attributes().value("week").toInt();
                 item.bgmId=reader.attributes().value("bgmId").toInt();
                 item.showDate=reader.attributes().value("showDate").toString();
+                item.isNew=reader.attributes().value("isNew").toInt();
                 item.onAirURL=reader.attributes().value("onAirURL").toString().split(';');
                 item.focus=focusSet.contains(item.title);
                 QStringList onAirURL(reader.attributes().value("onAirURL").toString().split(';'));
@@ -279,6 +287,7 @@ void BgmList::saveLocal()
         writer.writeAttribute("week", QString::number(item.week));
         writer.writeAttribute("bgmId", QString::number(item.bgmId));
         writer.writeAttribute("showDate", item.showDate);
+        writer.writeAttribute("isNew", QString::number(item.isNew?1:0));
         writer.writeAttribute("onAirURL", item.onAirURL.join(';'));
         writer.writeEndElement();
     }
@@ -320,12 +329,18 @@ void BgmListFilterProxyModel::setFocusFilter(bool onlyFocus)
     invalidateFilter();
 }
 
+void BgmListFilterProxyModel::setNewBgmFilter(bool onlyNew)
+{
+    this->onlyNew=onlyNew;
+    invalidateFilter();
+}
+
 bool BgmListFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &) const
 {
     const BgmItem &item=static_cast<BgmList *>(sourceModel())->bgmList().at(source_row);
     if(week>6 || item.week==week)
     {
-        return onlyFocus?item.focus:true;
+        return (onlyFocus?item.focus:true) && (onlyNew?item.isNew:true);
     }
     else
     {

@@ -112,7 +112,8 @@ SOURCES += \
     UI/bgmlistwindow.cpp \
     Download/Script/scriptmanager.cpp \
     UI/ressearchwindow.cpp \
-    UI/managescript.cpp
+    UI/managescript.cpp \
+    Play/Danmu/Provider/pptvprovider.cpp
 
 HEADERS += \
     UI/mainwindow.h \
@@ -200,7 +201,8 @@ HEADERS += \
     UI/bgmlistwindow.h \
     Download/Script/scriptmanager.h \
     UI/ressearchwindow.h \
-    UI/managescript.h
+    UI/managescript.h \
+    Play/Danmu/Provider/pptvprovider.h
 
 INCLUDEPATH += \
     Play/Video \
