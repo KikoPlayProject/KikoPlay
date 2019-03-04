@@ -34,10 +34,14 @@ ManageScript::ManageScript(ScriptManager *manager, QWidget *parent):CFramelessDi
         remove->setEnabled(true);
         scriptView->setEnabled(true);
     });
+    QLabel *tip=new QLabel(QString("<a href = \"https://bgmlist.com/\">%1</a>").arg(tr("More")),this);
+    tip->setOpenExternalLinks(true);
+
     QGridLayout *scriptGLayout=new QGridLayout(this);
     scriptGLayout->addWidget(refresh,0,0);
     scriptGLayout->addWidget(remove,0,1);
-    scriptGLayout->addWidget(scriptView,1,0,1,3);
+    scriptGLayout->addWidget(tip,0,3);
+    scriptGLayout->addWidget(scriptView,1,0,1,4);
     scriptGLayout->setRowStretch(1,1);
     scriptGLayout->setColumnStretch(2,1);
     scriptGLayout->setContentsMargins(0, 0, 0, 0);

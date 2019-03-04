@@ -70,7 +70,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
         searchProxyModel->setFilterRegExp(text);
     });
 
-    prevPage=new QPushButton(tr("Prev"),this);
+    prevPage=new QPushButton(this);
     GlobalObjects::iconfont.setPointSize(11);
     prevPage->setFont(GlobalObjects::iconfont);
     prevPage->setText(QChar(0xe617));
@@ -78,7 +78,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
         if(currentPage<=1) return;
         pageTurning(currentPage-1);
     });
-    nextPage=new QPushButton(tr("Next"),this);
+    nextPage=new QPushButton(this);
     nextPage->setFont(GlobalObjects::iconfont);
     nextPage->setText(QChar(0xe623));
     QObject::connect(nextPage,&QPushButton::clicked,this,[this](){
