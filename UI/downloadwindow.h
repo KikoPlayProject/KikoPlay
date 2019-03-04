@@ -7,6 +7,7 @@ class QLabel;
 class QPlainTextEdit;
 class QTreeView;
 class QStackedLayout;
+class QButtonGroup;
 struct DownloadTask;
 class CTorrentFileModel;
 class DownloadWindow : public QWidget
@@ -35,6 +36,7 @@ private:
 
     QLabel *downSpeedLabel,*upSpeedLabel;
     QStackedLayout *rightPanelSLayout;
+    QButtonGroup *taskTypeButtonGroup;
     QTimer *refreshTimer;
 
     QWidget *setupLeftPanel();

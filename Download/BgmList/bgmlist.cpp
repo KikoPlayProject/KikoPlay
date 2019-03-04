@@ -83,7 +83,7 @@ void BgmList::refreshData(bool forceRefresh)
                 dataVersion=nDataVersion;
                 saveLocal();
             }
-            emit bgmStatusUpdated(1,tr("%1-%2 Total: %3").arg(localYear).arg(localMonth).arg(bgms.count()));
+            emit bgmStatusUpdated(1,tr("%1-%2 Total: %3%4").arg(localYear).arg(localMonth).arg(bgms.count()).arg(focusSet.isEmpty()?"":tr(" Focus: %1").arg(focusSet.count())));
         }
         eventLoop.quit();
     });
@@ -152,6 +152,7 @@ bool BgmList::setData(const QModelIndex &index, const QVariant &value, int )
             item.focus=false;
         }
         needSave=true;
+        emit bgmStatusUpdated(1,tr("%1-%2 Total: %3%4").arg(localYear).arg(localMonth).arg(bgms.count()).arg(focusSet.isEmpty()?"":tr(" Focus: %1").arg(focusSet.count())));
         return true;
     }
     return false;

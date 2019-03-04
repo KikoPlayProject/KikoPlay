@@ -443,9 +443,18 @@
         <translation>获取失败：%1</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="86"/>
         <source>%1-%2 Total: %3</source>
-        <translation>%1-%2 数量：%3</translation>
+        <translation type="vanished">%1-%2 数量：%3</translation>
+    </message>
+    <message>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="86"/>
+        <source>%1-%2 Total: %3%4</source>
+        <translation>%1-%2 数量：%3%4</translation>
+    </message>
+    <message>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="86"/>
+        <source> Focus: %1</source>
+        <translation> 关注：%1</translation>
     </message>
     <message>
         <location filename="../../Download/BgmList/bgmlist.cpp" line="162"/>

@@ -109,7 +109,10 @@ SOURCES += \
     Play/Danmu/Provider/youkuprovider.cpp \
     Play/Danmu/Provider/tencentprovider.cpp \
     Download/BgmList/bgmlist.cpp \
-    UI/bgmlistwindow.cpp
+    UI/bgmlistwindow.cpp \
+    Download/Script/scriptmanager.cpp \
+    UI/ressearchwindow.cpp \
+    UI/managescript.cpp
 
 HEADERS += \
     UI/mainwindow.h \
@@ -194,11 +197,15 @@ HEADERS += \
     Play/Danmu/Provider/youkuprovider.h \
     Play/Danmu/Provider/tencentprovider.h \
     Download/BgmList/bgmlist.h \
-    UI/bgmlistwindow.h
+    UI/bgmlistwindow.h \
+    Download/Script/scriptmanager.h \
+    UI/ressearchwindow.h \
+    UI/managescript.h
 
 INCLUDEPATH += \
     Play/Video \
-    LANServer
+    LANServer \
+    Download/Script/lua
 RESOURCES += \
     res.qrc
 
@@ -210,4 +217,6 @@ contains(QT_ARCH, i386){
     win32: LIBS += -L$$PWD/lib/x64/ -llibmpv.dll
     win32: LIBS += -L$$PWD/lib/x64/ -lzlibstat
     win32: LIBS += -L$$PWD/lib/x64/ -lqhttpengine
+    win32: LIBS += -L$$PWD/lib/x64/ -llua53
 }
+

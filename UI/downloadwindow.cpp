@@ -30,6 +30,7 @@
 #include "selecttorrentfile.h"
 #include "globalobjects.h"
 #include "bgmlistwindow.h"
+#include "ressearchwindow.h"
 namespace
 {
     struct FontIconToolButtonOptions
@@ -365,9 +366,27 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     downContainerGLayout->setContentsMargins(0,0,0,0);
 
     BgmListWindow *bgmListWindow=new BgmListWindow(this);
+    ResSearchWindow *resSearchWindow=new ResSearchWindow(this);
+    QObject::connect(bgmListWindow,&BgmListWindow::searchBgm,this,[this,resSearchWindow](const QString &item){
+        taskTypeButtonGroup->button(4)->setChecked(true);
+        resSearchWindow->search(item);
+    });
+    QObject::connect(resSearchWindow,&ResSearchWindow::addTask,this,[this](const QStringList &urls){
+        AddUriTask addUriTaskDialog(this,urls);
+        if(QDialog::Accepted==addUriTaskDialog.exec())
+        {
+            for(QString &uri:addUriTaskDialog.uriList)
+            {
+                QString errInfo(GlobalObjects::downloadModel->addUriTask(uri,addUriTaskDialog.dir));
+                if(!errInfo.isEmpty())
+                    QMessageBox::information(this,tr("Error"),tr("An error occurred while adding : URI:\n %1 \n %2").arg(uri).arg(errInfo));
+            }
+        }
+    });
     rightPanelSLayout=new QStackedLayout();
     rightPanelSLayout->addWidget(downloadContainer);
     rightPanelSLayout->addWidget(bgmListWindow);
+    rightPanelSLayout->addWidget(resSearchWindow);
 
     QGridLayout *contentGLayout=new QGridLayout(this);
     contentGLayout->addWidget(setupLeftPanel(),0,0);
@@ -375,8 +394,8 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     contentGLayout->setColumnStretch(1,1);
     contentGLayout->setRowStretch(0,1);
     contentGLayout->setContentsMargins(0,0,10*logicalDpiX()/96,0);
-    refreshTimer=new QTimer();
 
+    refreshTimer=new QTimer();
     QObject::connect(refreshTimer,&QTimer::timeout,[this](){
         auto &items=GlobalObjects::downloadModel->getItems();
         for(auto iter=items.cbegin();iter!=items.cend();++iter)
@@ -479,11 +498,20 @@ QWidget *DownloadWindow::setupLeftPanel()
     bgmList->setFixedWidth(panelWidth);
     bgmList->setCheckable(true);
     bgmList->setText(tr("BgmList"));
-    QButtonGroup *taskTypeButtonGroup=new QButtonGroup(this);
+
+    btnOptions.iconChar=QChar(0xe609);
+    FontIconToolButton *resSearch=new FontIconToolButton(btnOptions,leftPanel);
+    resSearch->setObjectName(QStringLiteral("TaskTypeToolButton"));
+    resSearch->setFixedWidth(panelWidth);
+    resSearch->setCheckable(true);
+    resSearch->setText(tr("ResSearch"));
+
+    taskTypeButtonGroup=new QButtonGroup(this);
     taskTypeButtonGroup->addButton(downloadingTask,1);
     taskTypeButtonGroup->addButton(completedTask,2);
     taskTypeButtonGroup->addButton(allTask,0);
     taskTypeButtonGroup->addButton(bgmList,3);
+    taskTypeButtonGroup->addButton(resSearch,4);
     QObject::connect(taskTypeButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[this](int id, bool checked){
         if(checked)
         {
@@ -497,6 +525,10 @@ QWidget *DownloadWindow::setupLeftPanel()
             else if(id==3)
             {
                 rightPanelSLayout->setCurrentIndex(1);
+            }
+            else if(id==4)
+            {
+                rightPanelSLayout->setCurrentIndex(2);
             }
         }
     });
@@ -524,6 +556,7 @@ QWidget *DownloadWindow::setupLeftPanel()
     leftVLayout->addWidget(completedTask);
     leftVLayout->addWidget(allTask);
     leftVLayout->addWidget(bgmList);
+    leftVLayout->addWidget(resSearch);
     leftVLayout->addStretch(1);
     QGridLayout *speedInfoGLayout=new QGridLayout();
     speedInfoGLayout->addWidget(downSpeedIconLabel,0,0);

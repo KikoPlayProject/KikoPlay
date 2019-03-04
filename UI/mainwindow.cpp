@@ -401,7 +401,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Return:
     case Qt::Key_Space:
     case Qt::Key_Escape:
-        //if(!QApplication::focusWidget())
+        if(buttonPage_Play->isChecked())
             QApplication::sendEvent(playerWindow,event);
         break;
     default:

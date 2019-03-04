@@ -4,12 +4,16 @@
 #include <QDir>
 #include <QMessageBox>
 #include "Download/dirselectwidget.h"
-AddUriTask::AddUriTask(QWidget *parent) : CFramelessDialog(tr("Add URI"),parent,true,true,false)
+AddUriTask::AddUriTask(QWidget *parent, const QStringList &uris) : CFramelessDialog(tr("Add URI"),parent,true,true,false)
 {
     uriEdit=new QPlainTextEdit(this);
     uriEdit->setObjectName(QStringLiteral("UriEdit"));
     uriEdit->setPlaceholderText(tr("One link per line, multiple links separated by line breaks"));
     uriEdit->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
+    if(uris.count()>0)
+    {
+        uriEdit->setPlainText(uris.join('\n'));
+    }
 
     dirSelect=new DirSelectWidget(this);
 

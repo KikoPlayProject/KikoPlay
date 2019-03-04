@@ -8,7 +8,7 @@ class AddUriTask : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit AddUriTask(QWidget *parent = nullptr);
+    explicit AddUriTask(QWidget *parent = nullptr, const QStringList &uris=QStringList());
     QString dir;
     QStringList uriList;
 

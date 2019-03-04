@@ -764,6 +764,7 @@ void PlayerWindow::setupDanmuSettingPage()
         GlobalObjects::danmuPool->setMergeInterval(mergeInterval->value()*1000);
     });
     mergeInterval->setValue(GlobalObjects::appSetting->value("Play/MergeInterval",15).toInt());
+    GlobalObjects::danmuPool->setMergeInterval(mergeInterval->value()*1000);
 
     QLabel *contentSimLabel=new QLabel(tr("MaxDiff Char Count"),danmuSettingPage);
     contentSimCount=new QSpinBox(danmuSettingPage);
@@ -774,6 +775,7 @@ void PlayerWindow::setupDanmuSettingPage()
         GlobalObjects::danmuPool->setMaxUnSimCount(contentSimCount->value());
     });
     contentSimCount->setValue(GlobalObjects::appSetting->value("Play/MaxDiffCount",4).toInt());
+    GlobalObjects::danmuPool->setMaxUnSimCount(contentSimCount->value());
 
     QLabel *minMergeCountLabel=new QLabel(tr("Min Similar Danmu Count"),danmuSettingPage);
     minMergeCount=new QSpinBox(danmuSettingPage);
@@ -784,6 +786,7 @@ void PlayerWindow::setupDanmuSettingPage()
         GlobalObjects::danmuPool->setMinMergeCount(minMergeCount->value());
     });
     minMergeCount->setValue(GlobalObjects::appSetting->value("Play/MinSimCount",3).toInt());
+    GlobalObjects::danmuPool->setMinMergeCount(minMergeCount->value());
 
     QLabel *mergeCountTipLabel=new QLabel(tr("Merge Count Tip Position"),danmuSettingPage);
     mergeCountTipPos=new QComboBox(danmuSettingPage);

@@ -35,6 +35,15 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     poolView->setSortingEnabled(true);
     poolView->setContextMenuPolicy(Qt::ActionsContextMenu);
 
+    QLabel *stateLabel=new QLabel(this);
+    stateLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
+    QObject::connect(GlobalObjects::danmuManager,&DanmuManager::workerStateMessage,stateLabel,[stateLabel,managerModel](const QString &msg){
+       if(msg=="Done")
+           stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
+       else
+           stateLabel->setText(msg);
+    });
+
     QAction *act_editTimeLine=new QAction(tr("Edit TimeLine"),this);
     poolView->addAction(act_editTimeLine);
     QObject::connect(act_editTimeLine,&QAction::triggered,this,[this,managerModel,poolView,proxyModel](){
@@ -66,7 +75,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     });
     QAction *act_addWebSource=new QAction(tr("Add Web Source"),this);
     poolView->addAction(act_addWebSource);
-    QObject::connect(act_addWebSource,&QAction::triggered,this,[this,managerModel,poolView,proxyModel](){
+    QObject::connect(act_addWebSource,&QAction::triggered,this,[this,stateLabel,managerModel,poolView,proxyModel](){
         QModelIndexList indexList = poolView->selectionModel()->selectedRows();
         if(indexList.size()==0)return;
         DanmuPoolNode *poolNode=managerModel->getPoolNode(proxyModel->mapToSource(indexList.first()));
@@ -95,6 +104,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                     qDeleteAll((*iter).second);
                     managerModel->addSrcNode(poolNode,srcNode);
                 }
+                stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
             }
             poolView->setEnabled(true);
             this->showBusyState(false);
@@ -102,15 +112,6 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     });
     QPushButton *cancel=new QPushButton(tr("Cancel"),this);
     cancel->hide();
-
-    QLabel *stateLabel=new QLabel(this);
-    stateLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
-    QObject::connect(GlobalObjects::danmuManager,&DanmuManager::workerStateMessage,stateLabel,[stateLabel,managerModel](const QString &msg){
-       if(msg=="Done")
-           stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
-       else
-           stateLabel->setText(msg);
-    });
 
     QWidget *exportPage=new QWidget(this);
     QHBoxLayout *exportHLayout=new QHBoxLayout(exportPage);
