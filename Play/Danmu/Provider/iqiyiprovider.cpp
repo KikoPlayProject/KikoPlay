@@ -69,7 +69,7 @@ QString IqiyiProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
     try
     {
         QString replyStr(Network::httpGet(item->strId,QUrlQuery()));
-        QRegExp re("\"?tvId\"?:(.+),");
+        QRegExp re("playPageInfo.*(\\{.*\\});");
         re.setMinimal(true);
         int pos=re.indexIn(replyStr);
         if(pos==-1)
@@ -79,17 +79,17 @@ QString IqiyiProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
         else
         {
             QStringList captured=re.capturedTexts();
-            item->strId=captured[1];
-            if(item->title.isEmpty())
+            QJsonObject videoInfo(Network::toJson(captured[1]).object());
+            item->title=videoInfo.value("tvName").toString();
+            item->strId=QString::number(static_cast<qint64>(videoInfo.value("tvId").toDouble()));
+            QStringList durations(videoInfo.value("duration").toString().split(':',QString::SkipEmptyParts));
+            int duration=0,base=1;
+            for(int i=durations.size()-1;i>=0;--i)
             {
-                QRegExp tRe("\"?tvName\"?:\"(.+)\",");
-                tRe.setMinimal(true);
-                int pos=tRe.indexIn(replyStr);
-                if(pos!=-1)
-                {
-                    item->title=tRe.capturedTexts()[1];
-                }
+                duration+=durations.at(i).toInt()*base;
+                base*=60;
             }
+            item->extra=duration;
             downloadAllDanmu(item->strId,danmuList);
         }
     }

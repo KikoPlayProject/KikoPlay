@@ -334,7 +334,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 
 
     QWidget *detailInfoContent=new QWidget(this);
-    detailInfoContent->setContentsMargins(0,0,0,0);
+    detailInfoContent->setContentsMargins(0,0,0,10*logicalDpiX()/96);
     QStackedLayout *detailInfoSLayout=new QStackedLayout(detailInfoContent);
     detailInfoSLayout->addWidget(setupGeneralInfoPage());
     detailInfoSLayout->addWidget(setupFileInfoPage());

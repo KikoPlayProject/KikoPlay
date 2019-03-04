@@ -159,7 +159,11 @@ QString ScriptManager::search(QString sid, const QString &keyword, int page, int
     QString scriptPath;
     for(auto &s:scriptList)
     {
-        if(s.id==sid) scriptPath=QCoreApplication::applicationDirPath()+"/script/"+s.fileName;
+        if(s.id==sid)
+        {
+            scriptPath=QCoreApplication::applicationDirPath()+"/script/"+s.fileName;
+            break;
+        }
     }
     if(scriptPath.isEmpty())
     {
@@ -222,7 +226,7 @@ QString ScriptManager::search(QString sid, const QString &keyword, int page, int
         }
         else
         {
-            errInfo="Error: "+ QString(lua_tostring(currentState.L, -1));
+            errInfo="Error: "+ QString(lua_tostring(currentState.L, 1));
             pageCount=0;
         }
         lua_pop(currentState.L,3);
