@@ -184,7 +184,10 @@ void PPTVProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
                     {
                         DanmuSourceItem epItem;
                         epItem.strId=url;
-                        epItem.title=title + " " + parser.readContentText().trimmed();;
+                        epItem.title=title + " " + parser.readContentUntil("a",false).trimmed();;
+						QRegExp lre("<.*>");
+						lre.setMinimal(true);
+						epItem.title.replace(lre, "");
                         result->list.append(epItem);
                     }
                 }

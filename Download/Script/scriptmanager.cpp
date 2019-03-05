@@ -387,6 +387,11 @@ QVariant SearchListModel::data(const QModelIndex &index, int role) const
             return item.size;
         }
     }
+    else if(role==Qt::ToolTipRole)
+    {
+        if(col==1)
+            return item.title;
+    }
     return QVariant();
 }
 

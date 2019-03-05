@@ -51,6 +51,7 @@ private:
     bool showOnlyFocus;
     int curWeek;
     int localYear,localMonth;
+    int newBgmCount;
     QString dataVersion;
     QMap<QString,QString> sitesName;
     QSet<QString> focusSet;

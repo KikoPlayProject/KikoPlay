@@ -3,7 +3,7 @@
 #include "Common/network.h"
 #include <QBrush>
 BgmList::BgmList(QObject *parent) : QAbstractItemModel (parent),inited(false),needSave(false),showOnlyFocus(false),
-    curWeek(-1),localYear(0),localMonth(0)
+    curWeek(-1),localYear(0),localMonth(0),newBgmCount(0)
 {
     QFile sitesFile(":/res/onAirSites.json");
     sitesFile.open(QFile::ReadOnly);
@@ -46,6 +46,7 @@ void BgmList::refreshData(bool forceRefresh)
         {
             if(!content.isEmpty())
             {
+                newBgmCount=0;
                 QJsonObject bgmListObj(Network::toJson(content).object());
                 QList<BgmItem> tmpBgms;
                 QSet<QString> titleSet;
@@ -54,6 +55,7 @@ void BgmList::refreshData(bool forceRefresh)
                     QJsonObject bgmObj(iter->toObject());
                     BgmItem item;
                     item.isNew=bgmObj.value("newBgm").toBool();
+                    if(item.isNew) newBgmCount++;
                     item.title=bgmObj.value("titleCN").toString();
                     titleSet<<item.title;
                     item.week=bgmObj.value("weekDayCN").toInt();
@@ -83,7 +85,7 @@ void BgmList::refreshData(bool forceRefresh)
                 dataVersion=nDataVersion;
                 saveLocal();
             }
-            emit bgmStatusUpdated(1,tr("%1-%2 Total: %3%4").arg(localYear).arg(localMonth).arg(bgms.count()).arg(focusSet.isEmpty()?"":tr(" Focus: %1").arg(focusSet.count())));
+            emit bgmStatusUpdated(1,tr("%1-%2 %3/%4 %5").arg(localYear).arg(localMonth).arg(newBgmCount).arg(bgms.count()).arg(focusSet.isEmpty()?"":tr(" Focus: %1").arg(focusSet.count())));
         }
         eventLoop.quit();
     });
@@ -159,7 +161,7 @@ bool BgmList::setData(const QModelIndex &index, const QVariant &value, int )
             item.focus=false;
         }
         needSave=true;
-        emit bgmStatusUpdated(1,tr("%1-%2 Total: %3%4").arg(localYear).arg(localMonth).arg(bgms.count()).arg(focusSet.isEmpty()?"":tr(" Focus: %1").arg(focusSet.count())));
+        emit bgmStatusUpdated(1,tr("%1-%2 %3/%4 %5").arg(localYear).arg(localMonth).arg(newBgmCount).arg(bgms.count()).arg(focusSet.isEmpty()?"":tr(" Focus: %1").arg(focusSet.count())));
         return true;
     }
     return false;
@@ -230,6 +232,7 @@ bool BgmList::loadLocal()
                 item.bgmId=reader.attributes().value("bgmId").toInt();
                 item.showDate=reader.attributes().value("showDate").toString();
                 item.isNew=reader.attributes().value("isNew").toInt();
+                if(item.isNew) newBgmCount++;
                 item.onAirURL=reader.attributes().value("onAirURL").toString().split(';');
                 item.focus=focusSet.contains(item.title);
                 QStringList onAirURL(reader.attributes().value("onAirURL").toString().split(';'));
