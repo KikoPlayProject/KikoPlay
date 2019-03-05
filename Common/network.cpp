@@ -12,6 +12,7 @@ QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QS
     request.setUrl(queryUrl);
     if(header.size()>=2)
     {
+        Q_ASSERT((header.size() & 1) ==0);
         for(int i=0;i<header.size();i+=2)
             request.setRawHeader(header[i].toUtf8(),header[i+1].toUtf8());
     }
@@ -187,4 +188,54 @@ QJsonValue Network::getValue(QJsonObject &obj, const QString &path)
         }
     }
     return value;
+}
+
+QList<QPair<QString, QByteArray> > Network::httpGetBatch(const QStringList &urls, const QList<QUrlQuery> &querys, const QStringList &header)
+{
+    Q_ASSERT(urls.size()==querys.size() || querys.size()==0);
+    QList<QPair<QString, QByteArray> > results;
+    int finishCount=0;
+    QEventLoop eventLoop;
+    for(int i=0;i<urls.size();++i)
+    {
+        results.append(QPair<QString,QByteArray>());
+        QUrl queryUrl(urls.at(i));
+        if(!querys.isEmpty()) queryUrl.setQuery(querys.at(i));
+        QNetworkRequest request;
+        request.setUrl(queryUrl);
+        for(int j=0;i<header.size();j+=2) request.setRawHeader(header[j].toUtf8(),header[j+1].toUtf8());
+        QNetworkReply *reply = manager.get(request);
+        QTimer *timer=new QTimer;
+        timer->setInterval(timeout*2);
+        timer->setSingleShot(true);
+        QObject::connect(timer, &QTimer::timeout, reply, &QNetworkReply::abort);
+        QObject::connect(reply, &QNetworkReply::finished, reply, [i,&results,&finishCount,&eventLoop,reply,timer]()
+        {
+            int nStatusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            if(reply->isFinished())
+            {
+                if(reply->error() == QNetworkReply::NoError)
+                {
+                    if(nStatusCode==200)
+                        results[i].second = reply->readAll();
+                    else
+                        results[i].first = QObject::tr("Error,Status Code:%1").arg(nStatusCode);
+                }
+                else
+                {
+                    results[i].first = reply->errorString();
+                }
+            }
+            else
+            {
+                results[i].first = QObject::tr("Replay Timeout");
+            }
+            reply->deleteLater();
+            timer->deleteLater();
+            finishCount++;
+            if(finishCount==results.count()) eventLoop.quit();
+        });
+    }
+    eventLoop.exec();
+    return results;
 }
