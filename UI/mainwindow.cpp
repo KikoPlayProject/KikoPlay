@@ -35,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::stateChanged,[this](MPVPlayer::PlayState state){
         if(state==MPVPlayer::Stop)
         {
+            auto geo=originalGeo;
 			if (isFullScreen())
 			{
 				widgetTitlebar->show();
@@ -46,7 +47,7 @@ MainWindow::MainWindow(QWidget *parent)
             }
 			if (listShowState)listWindow->show();
 			else listWindow->hide();
-            setGeometry(originalGeo);
+            setGeometry(geo);
         }
     });
 }

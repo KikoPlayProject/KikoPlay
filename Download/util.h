@@ -49,6 +49,7 @@ struct DownloadTask
     qint64 finishTime;
 
     QString uri;
+    int torrentContentState; //-1:unknown 0:no torrent 1:has torrent
     QByteArray torrentContent;
     QString selectedIndexes;
     TorrentFileInfo *fileInfo;

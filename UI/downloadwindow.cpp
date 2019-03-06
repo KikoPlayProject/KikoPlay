@@ -787,12 +787,8 @@ void DownloadWindow::initActions()
         QModelIndexList selectedRows= downloadView->selectionModel()->selectedRows();
         if (selectedRows.size() == 0)return;
         DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(model->mapToSource(selectedRows.last()));
-        if(task->torrentContent.isEmpty())
-        {
-            GlobalObjects::downloadModel->tryLoadTorrentContent(task);
-            if(task->torrentContent.isEmpty())
-                return;
-        }
+        if(task->torrentContentState==-1) GlobalObjects::downloadModel->tryLoadTorrentContent(task);
+        if(task->torrentContent.isEmpty()) return;
         QString fileName = QFileDialog::getSaveFileName(this, tr("Save Torrent"),task->title,"Torrent File (*.torrent)");
         if(!fileName.isEmpty())
         {
@@ -823,7 +819,7 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
     if(task)
     {
         act_CopyURI->setEnabled(!task->uri.isEmpty());
-        act_SaveTorrent->setEnabled(!task->torrentContent.isEmpty());
+        act_SaveTorrent->setEnabled(task->torrentContentState==0);
         currentTask=task;
         taskTitleLabel->setText(task->title);
         taskTimeLabel->setText(tr("Create Time: %1 \t Finish Time: %2")
@@ -831,6 +827,7 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
                                .arg(task->finishTime<task->createTime?"----":QDateTime::fromSecsSinceEpoch(task->finishTime).toString("yyyy-MM-dd hh:mm:ss")));
         taskDirLabel->setText(QString("<a href = \"file:///%1\">%2</a>").arg(task->dir).arg(task->dir));
         taskDirLabel->setOpenExternalLinks(true);
+        if(task->torrentContentState==-1) GlobalObjects::downloadModel->tryLoadTorrentContent(task);
         if(!task->torrentContent.isEmpty())
         {
             if(task->fileInfo)

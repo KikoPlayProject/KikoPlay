@@ -94,6 +94,7 @@ QString DownloadModel::addTorrentTask(const QByteArray &torrentContent, const QS
         btTask->torrentContent=torrentContent;
         btTask->selectedIndexes=selIndexes;
         btTask->uri=magnet;
+        btTask->torrentContentState=1;
         addTask(btTask);
     }
     catch(RPCError &error)
@@ -270,6 +271,11 @@ void DownloadModel::tryLoadTorrentContent(DownloadTask *task)
     if(query.first())
     {
         task->torrentContent=query.value(0).toByteArray();
+        task->torrentContentState=1;
+    }
+    else
+    {
+        task->torrentContentState=0;
     }
 }
 
@@ -277,6 +283,7 @@ QString DownloadModel::restartDownloadTask(DownloadTask *task, bool allowOverwri
 {
     QJsonObject options;
     options.insert("dir", task->dir);
+    if(task->torrentContentState==-1) tryLoadTorrentContent(task);
     if(task->torrentContent.isEmpty())
     {
         options.insert("bt-metadata-only","true");
