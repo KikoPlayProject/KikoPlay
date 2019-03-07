@@ -208,20 +208,14 @@ QList<QPair<QString, QByteArray> > Network::httpGetBatch(const QStringList &urls
         QTimer *timer=new QTimer;
         timer->setInterval(timeout*2);
         timer->setSingleShot(true);
-        QObject::connect(timer, &QTimer::timeout,[reply,timer,i,&results,&finishCount,&eventLoop](){
-            reply->abort();
-            reply->deleteLater();
-            timer->deleteLater();
-            results[i].first = QObject::tr("Replay Timeout");
-            finishCount++;
-            if(finishCount==results.count()) eventLoop.quit();
-        });
+        QObject::connect(timer, &QTimer::timeout,reply,&QNetworkReply::abort);
+        timer->start();
         QObject::connect(reply, &QNetworkReply::finished, reply, [i,&results,&finishCount,&eventLoop,reply,timer]()
         {
-            timer->stop();
-            int nStatusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-            if(reply->isFinished())
+            if(timer->isActive())
             {
+                timer->stop();
+                int nStatusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
                 if(reply->error() == QNetworkReply::NoError)
                 {
                     if(nStatusCode==200)
