@@ -819,7 +819,6 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
     if(task)
     {
         act_CopyURI->setEnabled(!task->uri.isEmpty());
-        act_SaveTorrent->setEnabled(task->torrentContentState==0);
         currentTask=task;
         taskTitleLabel->setText(task->title);
         taskTimeLabel->setText(tr("Create Time: %1 \t Finish Time: %2")
@@ -828,6 +827,7 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
         taskDirLabel->setText(QString("<a href = \"file:///%1\">%2</a>").arg(task->dir).arg(task->dir));
         taskDirLabel->setOpenExternalLinks(true);
         if(task->torrentContentState==-1) GlobalObjects::downloadModel->tryLoadTorrentContent(task);
+		act_SaveTorrent->setEnabled(task->torrentContentState == 1);
         if(!task->torrentContent.isEmpty())
         {
             if(task->fileInfo)

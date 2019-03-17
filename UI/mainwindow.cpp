@@ -256,8 +256,8 @@ QWidget *MainWindow::setupPlayPage()
 
     playerWindow=new PlayerWindow();
     playerWindow->setMouseTracking(true);
-    QWindow* native_wnd  = QWindow::fromWinId(playerWindow->winId());
-    QWidget * playerWindowWidget=QWidget::createWindowContainer(native_wnd);
+    QWindow *native_wnd  = QWindow::fromWinId(playerWindow->winId());
+    QWidget *playerWindowWidget=QWidget::createWindowContainer(native_wnd);
     playerWindowWidget->setContentsMargins(1,0,1,1);
     playerWindowWidget->setMouseTracking(true);
     playerWindowWidget->setParent(playSplitter);
@@ -286,15 +286,17 @@ QWidget *MainWindow::setupPlayPage()
             listShowState=!listWindow->isHidden();
     });
     QObject::connect(playerWindow,&PlayerWindow::showFullScreen,[this](bool on){
+        static bool isMax;
         if(on)
         {
+            isMax=isMaximized();
             widgetTitlebar->hide();
             showFullScreen();
         }
         else
         {
             widgetTitlebar->show();
-            showNormal();
+            isMax?showMaximized():showNormal();
         }
     });
     QObject::connect(playerWindow, &PlayerWindow::setStayOnTop, this, &CFramelessWindow::setOnTop);
