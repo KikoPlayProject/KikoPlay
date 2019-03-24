@@ -8,7 +8,7 @@
 #include <QPushButton>
 #include <QComboBox>
 #include <QListWidget>
-#include <QTreeWidget>
+#include <QTreeView>
 #include <QMessageBox>
 #include <QTextEdit>
 #include <QHeaderView>
@@ -19,15 +19,16 @@
 #include "selectepisode.h"
 #include "globalobjects.h"
 
-AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo) : CFramelessDialog(tr("Add Danmu"),parent,true,true,autoPauseVideo),processCounter(0)
+AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,const QStringList &poolList) : CFramelessDialog(tr("Add Danmu"),parent,true,true,autoPauseVideo),
+    danmuPools(poolList),processCounter(0)
 {
+    danmuItemModel=new DanmuItemModel(this,!danmuPools.isEmpty(),item?item->title:"",this);
+
     QVBoxLayout *danmuVLayout=new QVBoxLayout(this);
     danmuVLayout->setContentsMargins(0,0,0,0);
     danmuVLayout->setSpacing(0);
 
-   // QWidget *contentWidget=new QWidget(this);
     QFont normalFont("Microsoft YaHei UI",12);
-
     QSize pageButtonSize(90 *logicalDpiX()/96,36*logicalDpiY()/96);
     onlineDanmuPage=new QToolButton(this);
     onlineDanmuPage->setFont(normalFont);
@@ -152,13 +153,8 @@ void AddDanmu::addSearchItem(DanmuAccessResult *result)
             sourceInfo.url=GlobalObjects::providerManager->getSourceURL(result->providerId,&sourceItem);
             sourceInfo.delay=0;
             sourceInfo.show=true;
-            int min=sourceItem.extra/60;
-            int sec=sourceItem.extra-min*60;
-            QString duration=QString("%1:%2").arg(min, 2, 10, QChar('0')).arg(sec, 2, 10, QChar('0'));
             selectedDanmuList.append(QPair<DanmuSourceInfo,QList<DanmuComment *> >(sourceInfo,tmplist));
-            QTreeWidgetItem *widgetItem=new QTreeWidgetItem(selectedDanmuWidget,
-                                                            QStringList()<<sourceInfo.name<<QString::number(sourceInfo.count)<<result->providerId<<duration);
-            widgetItem->setCheckState(0,Qt::Checked);
+            danmuItemModel->addItem(sourceItem.title,sourceItem.extra,result->providerId,sourceInfo.count);
         }
     }
     else
@@ -179,20 +175,16 @@ void AddDanmu::addSearchItem(DanmuAccessResult *result)
                     sourceInfo.delay=sourceItem.delay*1000;
                     sourceInfo.show=true;
                     selectedDanmuList.append(QPair<DanmuSourceInfo,QList<DanmuComment *> >(sourceInfo,tmplist));
-                    int min=sourceItem.extra/60;
-                    int sec=sourceItem.extra-min*60;
-                    QString duration=QString("%1:%2").arg(min, 2, 10, QChar('0')).arg(sec, 2, 10, QChar('0'));
-                    QTreeWidgetItem *widgetItem=new QTreeWidgetItem(selectedDanmuWidget,
-                                                                    QStringList()<<sourceInfo.name<<QString::number(sourceInfo.count)<<result->providerId<<duration);
-                    widgetItem->setCheckState(0,Qt::Checked);
-                    selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuWidget->topLevelItemCount()));
+                    danmuItemModel->addItem(sourceItem.title,sourceItem.extra,result->providerId,sourceInfo.count);
+
+                    selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuList.count()));
                 }
             }
         }
     }
     if(!errorInfo.isEmpty())
         QMessageBox::information(this,"Error",errorInfo);
-    selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuWidget->topLevelItemCount()));
+    selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuList.count()));
 }
 
 void AddDanmu::addURL()
@@ -276,17 +268,19 @@ QWidget *AddDanmu::setupSelectedPage()
     QWidget *selectedPage=new QWidget(this);
     selectedPage->setFont(QFont("Microsoft Yahei UI",12));
     QLabel *tipLabel=new QLabel(tr("Select danmu you want to add:"),selectedPage);
-    selectedDanmuWidget =new QTreeWidget(selectedPage);
-    selectedDanmuWidget->setRootIsDecorated(false);
-    selectedDanmuWidget->setFont(selectedPage->font());
-    selectedDanmuWidget->setHeaderLabels(QStringList()<<tr("Title")<<tr("DanmuCount")<<tr("Source")<<tr("Duration"));
-    selectedDanmuWidget->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
-    QHeaderView *selectedHeader = selectedDanmuWidget->header();
+    selectedDanmuView=new QTreeView(selectedPage);
+    selectedDanmuView->setRootIsDecorated(false);
+    selectedDanmuView->setFont(selectedPage->font());
+    selectedDanmuView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
+    selectedDanmuView->setModel(danmuItemModel);
+    selectedDanmuView->setItemDelegate(new PoolComboDelegate(danmuPools,this));
+    QHeaderView *selectedHeader = selectedDanmuView->header();
     selectedHeader->setFont(this->font());
-    selectedHeader->resizeSection(0, 300*logicalDpiX()/96);
+    selectedHeader->resizeSection(0, 220*logicalDpiX()/96);
+
     QVBoxLayout *spVLayout=new QVBoxLayout(selectedPage);
     spVLayout->addWidget(tipLabel);
-    spVLayout->addWidget(selectedDanmuWidget);
+    spVLayout->addWidget(selectedDanmuView);
     return selectedPage;
 }
 
@@ -311,13 +305,13 @@ void AddDanmu::endProcess()
 
 void AddDanmu::onAccept()
 {
-    int count=selectedDanmuWidget->topLevelItemCount();
-    for(int i=count-1;i>=0;i--)
+    for(int i=selectedDanmuList.count()-1;i>=0;i--)
     {
-        if(selectedDanmuWidget->topLevelItem(i)->checkState(0)!=Qt::Checked)
+        if(!danmuCheckedList[i])
         {
             qDeleteAll(selectedDanmuList[i].second);
             selectedDanmuList.removeAt(i);
+            danmuToPoolList.removeAt(i);
         }
     }
     GlobalObjects::appSetting->setValue("DialogSize/AddDanmu",size());
@@ -388,4 +382,131 @@ SearchItemWidget::SearchItemWidget(DanmuSourceItem *item):searchItem(*item)
 QSize SearchItemWidget::sizeHint() const
 {
     return layout()->sizeHint();
+}
+
+DanmuItemModel::DanmuItemModel(AddDanmu *dmDialog, bool hasPool, const QString &normalPool, QObject *parent) : QAbstractItemModel (parent),
+    danmuToPoolList(&dmDialog->danmuToPoolList),danmuCheckedList(&dmDialog->danmuCheckedList),hasPoolInfo(hasPool),nPool(normalPool)
+{
+
+}
+
+void DanmuItemModel::addItem(const QString &title, int duration, const QString &provider, int count)
+{
+    ItemInfo newItem;
+    newItem.title=title;
+    newItem.count=count;
+    newItem.provider=provider;
+    int min=duration/60;
+    int sec=duration-min*60;
+    newItem.duration=QString("%1:%2").arg(min, 2, 10, QChar('0')).arg(sec, 2, 10, QChar('0'));
+    beginInsertRows(QModelIndex(),items.count(),items.count());
+    items.append(newItem);
+    endInsertRows();
+    danmuCheckedList->append(true);
+    danmuToPoolList->append(nPool);
+}
+
+QVariant DanmuItemModel::data(const QModelIndex &index, int role) const
+{
+    if(!index.isValid()) return QVariant();
+    const ItemInfo &info=items.at(index.row());
+    int col=index.column();
+    if(role==Qt::DisplayRole)
+    {
+        switch (col)
+        {
+        case 0:
+            return info.title;
+        case 1:
+            return info.count;
+        case 2:
+            return info.provider;
+        case 3:
+            return info.duration;
+        case 4:
+            return danmuToPoolList->at(index.row());
+        }
+    }
+    else if(role==Qt::CheckStateRole)
+    {
+        if(col==0)
+            return danmuCheckedList->at(index.row())?Qt::Checked:Qt::Unchecked;
+    }
+    return QVariant();
+}
+
+bool DanmuItemModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    int row=index.row(),col=index.column();
+    switch (col)
+    {
+    case 0:
+        (*danmuCheckedList)[row]=(value==Qt::Checked);
+        break;
+    case 4:
+        (*danmuToPoolList)[row]=value.toString();
+        break;
+    default:
+        return false;
+    }
+    emit dataChanged(index,index);
+    return true;
+}
+
+QVariant DanmuItemModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    static QStringList headers={tr("Title"),tr("DanmuCount"),tr("Source"),tr("Duration"),tr("DanmuPool")};
+    if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
+    {
+        if(section<5)return headers.at(section);
+    }
+    return QVariant();
+}
+
+Qt::ItemFlags DanmuItemModel::flags(const QModelIndex &index) const
+{
+    Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index);
+    int col = index.column();
+    if (index.isValid())
+    {
+        if(col==0)
+            return  Qt::ItemIsUserCheckable | defaultFlags;
+        else if(col==4)
+            return  Qt::ItemIsEditable | defaultFlags;
+    }
+    return defaultFlags;
+}
+
+QWidget *PoolComboDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    if(index.column()==4)
+    {
+        QComboBox *combo=new QComboBox(parent);
+        combo->setFrame(false);
+        combo->addItems(poolList);
+        return combo;
+    }
+    return QStyledItemDelegate::createEditor(parent,option,index);
+}
+
+void PoolComboDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
+{
+    if(index.column()==4)
+    {
+        QComboBox *combo = static_cast<QComboBox*>(editor);
+        combo->setCurrentIndex(poolList.indexOf(index.data(Qt::DisplayRole).toString()));
+        return;
+    }
+    QStyledItemDelegate::setEditorData(editor,index);
+}
+
+void PoolComboDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
+{
+    if(index.column()==4)
+    {
+        QComboBox *combo = static_cast<QComboBox*>(editor);
+        model->setData(index,poolList.value(combo->currentIndex()),Qt::EditRole);
+        return;
+    }
+    QStyledItemDelegate::setModelData(editor,model,index);
 }

@@ -1,4 +1,6 @@
 .vs/
+*.diagsession
+*.vspx
 KikoPlay.pro.user
 .qmake.stash
 GeneratedFiles/

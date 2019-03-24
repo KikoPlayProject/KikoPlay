@@ -36,5 +36,16 @@ public:
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
 };
+class PoolSortProxyModel : public QSortFilterProxyModel
+{
+    Q_OBJECT
+public:
+    explicit PoolSortProxyModel(QObject *parent = nullptr):QSortFilterProxyModel(parent){comparer.setNumericMode(true);}
+private:
+    QCollator comparer;
+    // QSortFilterProxyModel interface
+protected:
+    virtual bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const;
+};
 
 #endif // MANAGERVIEW_H

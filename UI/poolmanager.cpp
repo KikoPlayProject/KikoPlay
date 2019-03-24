@@ -27,7 +27,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     poolView->setAlternatingRowColors(true);
 
     DanmuManagerModel *managerModel=new DanmuManagerModel(this);
-    QSortFilterProxyModel *proxyModel=new QSortFilterProxyModel(this);
+    PoolSortProxyModel *proxyModel=new PoolSortProxyModel(this);
     proxyModel->setSourceModel(managerModel);
     proxyModel->setFilterKeyColumn(0);
     proxyModel->setRecursiveFilteringEnabled(true);
@@ -83,29 +83,38 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         PlayListItem item;
         item.title=poolNode->title;
         item.animeTitle=poolNode->parent->title;
-        AddDanmu addDanmuDialog(&item, this,false);
+        QMap<QString,DanmuPoolNode *> poolNodeMap;
+        QStringList poolTitles;
+        for(auto node:*poolNode->parent->children)
+        {
+            poolNodeMap.insert(node->title,node);
+            poolTitles<<node->title;
+        }
+        AddDanmu addDanmuDialog(&item, this,false,poolTitles);
         if(QDialog::Accepted==addDanmuDialog.exec())
         {
             poolView->setEnabled(false);
             this->showBusyState(true);
-            if(GlobalObjects::danmuPool->getPoolID()==poolNode->idInfo)
+            int i = 0;
+            bool hasCurPlaying=false;
+            for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
             {
-                for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
+                DanmuPoolNode *curNode=poolNodeMap.value(addDanmuDialog.danmuToPoolList.at(i++));
+                Q_ASSERT(curNode);
+                if(GlobalObjects::danmuPool->getPoolID()==curNode->idInfo)
                 {
                     GlobalObjects::danmuPool->addDanmu((*iter).first,(*iter).second,false);
+                    hasCurPlaying=true;
                 }
-                GlobalObjects::danmuPool->resetModel();
-            }
-            else
-            {
-                for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
+                else
                 {
-                    DanmuPoolSourceNode *srcNode = GlobalObjects::danmuManager->addSource(poolNode,&(*iter).first,&(*iter).second);
+                    DanmuPoolSourceNode *srcNode = GlobalObjects::danmuManager->addSource(curNode,&(*iter).first,&(*iter).second);
                     qDeleteAll((*iter).second);
-                    managerModel->addSrcNode(poolNode,srcNode);
+                    managerModel->addSrcNode(curNode,srcNode);
                 }
-                stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
             }
+            if(hasCurPlaying) GlobalObjects::danmuPool->resetModel();
+            stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
             poolView->setEnabled(true);
             this->showBusyState(false);
         }

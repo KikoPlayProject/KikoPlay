@@ -334,3 +334,10 @@ bool DanmuManagerModel::setData(const QModelIndex &index, const QVariant &value,
     }
     return false;
 }
+
+bool PoolSortProxyModel::lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const
+{
+    if(sortColumn()==0)
+        return comparer.compare(source_left.data(sortRole()).toString(),source_right.data(sortRole()).toString())<0;
+    return QSortFilterProxyModel::lessThan(source_left,source_right);
+}
