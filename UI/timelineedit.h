@@ -17,7 +17,7 @@ private:
     // QAbstractItemModel interface
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
-    inline virtual QModelIndex parent(const QModelIndex &child) const{return QModelIndex();}
+    inline virtual QModelIndex parent(const QModelIndex &) const{return QModelIndex();}
     inline virtual int rowCount(const QModelIndex &parent) const{return parent.isValid()?0:timelineInfo.count();}
     inline virtual int columnCount(const QModelIndex &parent) const {return parent.isValid()?0:3;}
     virtual QVariant data(const QModelIndex &index, int role) const;
@@ -36,7 +36,7 @@ private:
     // QAbstractItemModel interface
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
-    inline virtual QModelIndex parent(const QModelIndex &child) const{return QModelIndex();}
+    inline virtual QModelIndex parent(const QModelIndex &) const{return QModelIndex();}
     inline virtual int rowCount(const QModelIndex &parent) const{return parent.isValid()?0:simpleDanmuList.count();}
     inline virtual int columnCount(const QModelIndex &parent) const {return parent.isValid()?0:3;}
     virtual QVariant data(const QModelIndex &index, int role) const;
@@ -75,7 +75,7 @@ class TimelineEdit : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo> &simpleDanmuList, QWidget *parent = nullptr);
+    explicit TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo> &simpleDanmuList, QWidget *parent = nullptr,int curTime=-1);
 private:
     DanmuSourceInfo *currentSource;
     TimeLineInfoModel *timelineModel;

@@ -2468,7 +2468,7 @@ The changes will take effect when KikoPlay is restarted</source>
 <context>
     <name>PoolEditor</name>
     <message>
-        <location filename="../../UI/pooleditor.cpp" line="14"/>
+        <location filename="../../UI/pooleditor.cpp" line="20"/>
         <source>Edit Pool</source>
         <translation>编辑弹幕池</translation>
     </message>
@@ -2476,67 +2476,77 @@ The changes will take effect when KikoPlay is restarted</source>
 <context>
     <name>PoolItem</name>
     <message>
-        <location filename="../../UI/pooleditor.cpp" line="54"/>
+        <location filename="../../UI/pooleditor.cpp" line="55"/>
+        <source>Copy TimeLine Info</source>
+        <translation>复制时间轴信息</translation>
+    </message>
+    <message>
+        <location filename="../../UI/pooleditor.cpp" line="59"/>
+        <source>Paste TimeLine Info</source>
+        <translation>粘贴时间轴信息</translation>
+    </message>
+    <message>
+        <location filename="../../UI/pooleditor.cpp" line="81"/>
         <source>Show</source>
         <translation>显示</translation>
     </message>
     <message>
-        <location filename="../../UI/pooleditor.cpp" line="67"/>
+        <location filename="../../UI/pooleditor.cpp" line="94"/>
         <source>Source: &lt;a href = %1&gt;%1&lt;/a&gt;</source>
         <translation>来源：&lt;a href=%1&gt;%1&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../../UI/pooleditor.cpp" line="71"/>
+        <location filename="../../UI/pooleditor.cpp" line="98"/>
         <source>Delay(s): </source>
         <translation>延迟(s)：</translation>
     </message>
     <message>
-        <location filename="../../UI/pooleditor.cpp" line="81"/>
+        <location filename="../../UI/pooleditor.cpp" line="108"/>
         <source>Edit Timeline</source>
         <translation>时间轴调整</translation>
     </message>
     <message>
-        <location filename="../../UI/pooleditor.cpp" line="91"/>
+        <location filename="../../UI/pooleditor.cpp" line="119"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="../../UI/pooleditor.cpp" line="99"/>
+        <location filename="../../UI/pooleditor.cpp" line="127"/>
         <source>Update</source>
         <translation>更新</translation>
     </message>
     <message>
-        <location filename="../../UI/pooleditor.cpp" line="123"/>
+        <location filename="../../UI/pooleditor.cpp" line="151"/>
         <source>Add %1 New Danmu</source>
         <translation>添加了 %1 条新弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/pooleditor.cpp" line="123"/>
+        <location filename="../../UI/pooleditor.cpp" line="151"/>
         <source>Update - %1</source>
         <translation>更新弹幕 - %1</translation>
     </message>
     <message>
-        <location filename="../../UI/pooleditor.cpp" line="130"/>
+        <location filename="../../UI/pooleditor.cpp" line="158"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="../../UI/pooleditor.cpp" line="130"/>
+        <location filename="../../UI/pooleditor.cpp" line="158"/>
         <source>Error:%1</source>
         <translation>错误：%1</translation>
     </message>
     <message>
-        <location filename="../../UI/pooleditor.cpp" line="138"/>
+        <location filename="../../UI/pooleditor.cpp" line="166"/>
         <source>Export</source>
         <translation>导出</translation>
     </message>
     <message>
-        <location filename="../../UI/pooleditor.cpp" line="142"/>
+        <location filename="../../UI/pooleditor.cpp" line="170"/>
         <source>Save Danmu</source>
         <translation>保存弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/pooleditor.cpp" line="142"/>
+        <location filename="../../UI/pooleditor.cpp" line="170"/>
         <source>Xml File (*.xml)</source>
         <translation></translation>
     </message>
@@ -3109,17 +3119,17 @@ Date: %2
         <translation type="vanished">时间</translation>
     </message>
     <message>
-        <location filename="../../UI/timelineedit.cpp" line="399"/>
+        <location filename="../../UI/timelineedit.cpp" line="442"/>
         <source>Content</source>
         <translation>内容</translation>
     </message>
     <message>
-        <location filename="../../UI/timelineedit.cpp" line="399"/>
+        <location filename="../../UI/timelineedit.cpp" line="442"/>
         <source>Original</source>
         <translation>原始</translation>
     </message>
     <message>
-        <location filename="../../UI/timelineedit.cpp" line="399"/>
+        <location filename="../../UI/timelineedit.cpp" line="442"/>
         <source>Adjusted</source>
         <translation>调整后</translation>
     </message>
@@ -3135,7 +3145,7 @@ Date: %2
 <context>
     <name>TimeLineBar</name>
     <message>
-        <location filename="../../UI/timelineedit.cpp" line="198"/>
+        <location filename="../../UI/timelineedit.cpp" line="241"/>
         <source>Total:%1 Max:%2</source>
         <translation>全部：%1 最大：%2</translation>
     </message>
@@ -3143,17 +3153,17 @@ Date: %2
 <context>
     <name>TimeLineInfoModel</name>
     <message>
-        <location filename="../../UI/timelineedit.cpp" line="322"/>
+        <location filename="../../UI/timelineedit.cpp" line="365"/>
         <source>Start</source>
         <translation>开始</translation>
     </message>
     <message>
-        <location filename="../../UI/timelineedit.cpp" line="322"/>
+        <location filename="../../UI/timelineedit.cpp" line="365"/>
         <source>End</source>
         <translation>结束</translation>
     </message>
     <message>
-        <location filename="../../UI/timelineedit.cpp" line="322"/>
+        <location filename="../../UI/timelineedit.cpp" line="365"/>
         <source>Duration</source>
         <translation>时长</translation>
     </message>
@@ -3161,22 +3171,37 @@ Date: %2
 <context>
     <name>TimelineEdit</name>
     <message>
-        <location filename="../../UI/timelineedit.cpp" line="20"/>
+        <location filename="../../UI/timelineedit.cpp" line="22"/>
         <source>Timeline Edit</source>
         <translation>时间轴编辑</translation>
     </message>
     <message>
-        <location filename="../../UI/timelineedit.cpp" line="45"/>
+        <location filename="../../UI/timelineedit.cpp" line="41"/>
+        <source>Start Time(mm:ss)</source>
+        <translation>开始时间(mm:ss)</translation>
+    </message>
+    <message>
+        <location filename="../../UI/timelineedit.cpp" line="48"/>
+        <source>Duration(s)</source>
+        <translation>时长(s)</translation>
+    </message>
+    <message>
+        <location filename="../../UI/timelineedit.cpp" line="52"/>
+        <source>Add</source>
+        <translation>添加</translation>
+    </message>
+    <message>
+        <location filename="../../UI/timelineedit.cpp" line="87"/>
         <source>Double Click: Begin/End Insert Space  Right Click: Cancel</source>
         <translation>双击：开始/结束插入空白  右键：取消插入</translation>
     </message>
     <message>
-        <location filename="../../UI/timelineedit.cpp" line="70"/>
+        <location filename="../../UI/timelineedit.cpp" line="112"/>
         <source>End: %1, Duration: %2</source>
         <translation>结束：%1,长度：%2</translation>
     </message>
     <message>
-        <location filename="../../UI/timelineedit.cpp" line="88"/>
+        <location filename="../../UI/timelineedit.cpp" line="130"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>

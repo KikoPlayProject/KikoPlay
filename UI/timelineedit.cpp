@@ -3,6 +3,8 @@
 #include <QTreeView>
 #include <QLabel>
 #include <QSplitter>
+#include <QLineEdit>
+#include <QPushButton>
 #include <QAction>
 #include <QHeaderView>
 #include <QVBoxLayout>
@@ -16,7 +18,7 @@ namespace
         return QString("%0%1:%2").arg(mSec<0?"-":"").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0'));
     }
 }
-TimelineEdit::TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo> &simpleDanmuList, QWidget *parent):
+TimelineEdit::TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo> &simpleDanmuList, QWidget *parent, int curTime):
     CFramelessDialog(tr("Timeline Edit"),parent,true),currentSource(source)
 {
     timelineModel=new TimeLineInfoModel(source,this);
@@ -33,6 +35,46 @@ TimelineEdit::TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo>
     timelineView->setModel(timelineModel);
     timelineView->setContextMenuPolicy(Qt::ActionsContextMenu);
     timelineView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
+
+    QLineEdit *startEdit=new QLineEdit(this);
+    startEdit->setClearButtonEnabled(true);
+    startEdit->setPlaceholderText(tr("Start Time(mm:ss)"));
+    QRegExpValidator *startValidator=new QRegExpValidator(QRegExp("\\d+:\\d+"),this);
+    startEdit->setValidator(startValidator);
+    if(curTime!=-1) startEdit->setText(formatTime(curTime*1000));
+
+    QLineEdit *durationEdit=new QLineEdit(this);
+    durationEdit->setClearButtonEnabled(true);
+    durationEdit->setPlaceholderText(tr("Duration(s)"));
+    QIntValidator *durationValidator=new QIntValidator(this);
+    durationEdit->setValidator(durationValidator);
+
+    QPushButton *addTimeSpace=new QPushButton(tr("Add"),this);
+    addTimeSpace->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
+    QObject::connect(addTimeSpace,&QPushButton::clicked,this,[startEdit,durationEdit,this,simpleDanmuPool,timelineBar](){
+        int duration=durationEdit->text().toInt()*1000;
+        if(duration==0) return;
+        QStringList startList=startEdit->text().split(':');
+        if(startList.count()==0) return;
+        int start=startList.last().toInt();
+        if(startList.count()==2) start+=startList.first().toInt()*60;
+        start*=1000;
+        timelineModel->addSpace(start,duration);
+        simpleDanmuPool->refreshTimeline(timelineModel->getTimeLine());
+        timelineBar->updateInfo();
+    });
+
+    QHBoxLayout *editHLayout=new QHBoxLayout;
+    editHLayout->setContentsMargins(0,0,0,0);
+    editHLayout->addWidget(startEdit);
+    editHLayout->addWidget(durationEdit);
+    editHLayout->addWidget(addTimeSpace);
+
+    QWidget *timelineViewContainer=new QWidget(this);
+    QVBoxLayout *containerVLayout=new QVBoxLayout(timelineViewContainer);
+    containerVLayout->setContentsMargins(0,0,0,0);
+    containerVLayout->addWidget(timelineView);
+    containerVLayout->addLayout(editHLayout);
 
     QTreeView *simpleDPView=new QTreeView(this);
     simpleDPView->setRootIsDecorated(false);
@@ -51,7 +93,7 @@ TimelineEdit::TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo>
     QSplitter *viewSplitter=new QSplitter(this);
     viewSplitter->setObjectName(QStringLiteral("NormalSplitter"));
     viewSplitter->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
-    viewSplitter->addWidget(timelineView);
+    viewSplitter->addWidget(timelineViewContainer);
     viewSplitter->addWidget(simpleDPView);
     viewSplitter->setStretchFactor(0,1);
     viewSplitter->setStretchFactor(1,1);
@@ -101,6 +143,7 @@ TimelineEdit::TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo>
     dialogVLayout->addWidget(viewSplitter);
     dialogVLayout->addWidget(tipLabel);
     resize(800*logicalDpiX()/96,420*logicalDpiY()/96);
+    viewSplitter->setSizes(QList<int>()<<timelineBar->width()/2<<timelineBar->width()/2);
 }
 
 void TimelineEdit::onAccept()
@@ -169,7 +212,7 @@ void TimeLineBar::paintEvent(QPaintEvent *event)
     float wRatio=(float)(bRect.width())/duration;
     float bHeight=bRect.height();
 
-    QColor barColor(51,168,255,200);
+    static QColor barColor(51,168,255,200);
     for(auto iter=statisInfo.countOfMinute.cbegin();iter!=statisInfo.countOfMinute.cend();++iter)
     {
         float l((*iter).first*wRatio);
@@ -177,7 +220,7 @@ void TimeLineBar::paintEvent(QPaintEvent *event)
         painter.fillRect(l,bHeight-h,wRatio<1.f?1.f:wRatio,h,barColor);
     }
 
-    QColor pSpaceColor(255,255,255,200);
+    static QColor pSpaceColor(255,255,255,200);
     auto &timelineInfo=timelineModel->getTimeLine();
     for(auto &spaceItem:timelineInfo)
     {

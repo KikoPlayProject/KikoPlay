@@ -373,11 +373,16 @@ QWidget *MainWindow::setupDownloadPage()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    GlobalObjects::appSetting->beginGroup("MainWindow");
-    GlobalObjects::appSetting->setValue("Geometry",geometry());
-    GlobalObjects::appSetting->setValue("SplitterState",playSplitter->saveState());
-    GlobalObjects::appSetting->setValue("ListVisibility",!listWindow->isHidden());
-    GlobalObjects::appSetting->endGroup();
+    if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
+    {
+        GlobalObjects::appSetting->beginGroup("MainWindow");
+        GlobalObjects::appSetting->setValue("Geometry",geometry());
+        GlobalObjects::appSetting->setValue("SplitterState",playSplitter->saveState());
+        GlobalObjects::appSetting->setValue("ListVisibility",!listWindow->isHidden());
+        GlobalObjects::appSetting->endGroup();
+    }
+    int playTime=GlobalObjects::mpvplayer->getTime();
+    GlobalObjects::playlist->setCurrentPlayTime(playTime);
     QWidget::closeEvent(event);
     playerWindow->close();
     GlobalObjects::clear();

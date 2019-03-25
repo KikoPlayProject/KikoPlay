@@ -8,9 +8,15 @@
 #include <QScrollArea>
 #include <QMessageBox>
 #include <QFileDialog>
-#include"globalobjects.h"
+#include <QAction>
+#include "globalobjects.h"
 #include "Play/Danmu/providermanager.h"
+#include "Play/Video/mpvplayer.h"
 #include "timelineedit.h"
+namespace
+{
+    QList<QPair<int,int> > timelineClipBoard;
+}
 PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),parent)
 {
     QWidget *contentWidget=new QWidget(this);
@@ -46,6 +52,27 @@ void PoolEditor::onClose()
 
 PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(parent),source(sourceInfo)
 {
+    QAction *copyTimeline=new QAction(tr("Copy TimeLine Info"), this);
+    QObject::connect(copyTimeline,&QAction::triggered,this,[sourceInfo](){
+        timelineClipBoard=sourceInfo->timelineInfo;
+    });
+    QAction *pasteTimeline=new QAction(tr("Paste TimeLine Info"), this);
+    QObject::connect(pasteTimeline,&QAction::triggered,this,[sourceInfo](){
+        if(timelineClipBoard.isEmpty()) return;
+        for(auto &pair:timelineClipBoard)
+        {
+            int i=0;
+            int c=sourceInfo->timelineInfo.count();
+            while(i<c && sourceInfo->timelineInfo.at(i).first<pair.first) i++;
+            if(i<c && sourceInfo->timelineInfo.at(i).first==pair.first) continue;
+            sourceInfo->timelineInfo.insert(i,pair);
+        }
+        GlobalObjects::danmuPool->refreshTimeLineDelayInfo(sourceInfo);
+    });
+    setContextMenuPolicy(Qt::ActionsContextMenu);
+    addAction(copyTimeline);
+    addAction(pasteTimeline);
+
     QFont normalFont("Microsoft YaHei",16);
     QLabel *name=new QLabel(QString("%1(%2)").arg(source->name).arg(source->count),this);
     name->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
@@ -81,7 +108,8 @@ PoolItem::PoolItem(DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(parent),
     QPushButton *editTimeline=new QPushButton(tr("Edit Timeline"),this);
     editTimeline->setFixedWidth(80*logicalDpiX()/96);
     QObject::connect(editTimeline,&QPushButton::clicked,[this](){
-        TimelineEdit timelineEdit(source,GlobalObjects::danmuPool->getSimpleDanmuInfo(source->id),this);
+        int curTime=curTime=GlobalObjects::mpvplayer->getTime();
+        TimelineEdit timelineEdit(source,GlobalObjects::danmuPool->getSimpleDanmuInfo(source->id),this,curTime);
         if(QDialog::Accepted==timelineEdit.exec())
         {
             GlobalObjects::danmuPool->refreshTimeLineDelayInfo(source);
