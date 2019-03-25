@@ -231,6 +231,17 @@ void YoukuProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
                     epStart=true;
                 }
             }
+            else if(youkuItem && parser.currentNodeProperty("class")=="mod-play mod-film-play")
+            {
+                parser.readNext();
+                if(parser.currentNode()=="a")
+                {
+                    DanmuSourceItem epItem;
+                    epItem.title=item.title;
+                    epItem.strId=parser.currentNodeProperty("href");
+                    result->list.append(epItem);
+                }
+            }
             else if(epStart && parser.isStartNode() && parser.currentNode()=="li")
             {
                 parser.readNext();

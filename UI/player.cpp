@@ -176,9 +176,10 @@ public:
 protected:
     virtual void paintEvent(QPaintEvent *event)
     {
+        static QColor bgColor(0,0,0,150),barColor(51,168,255,200),penColor(255,255,255);
         QRect bRect(event->rect());
         QPainter painter(this);
-        painter.fillRect(bRect,QColor(0,0,0,150));
+        painter.fillRect(bRect,bgColor);
         if(duration==0)return;
         bRect.adjust(1, 0, -1, 0);
         auto &statisInfo=GlobalObjects::danmuPool->getStatisInfo();
@@ -186,16 +187,15 @@ protected:
         float margin=8*logicalDpiX()/96;
         float wRatio=(float)(bRect.width()-margin*2)/duration;
         float bHeight=bRect.height();
-        QColor barColor(51,168,255,200);
         for(auto iter=statisInfo.countOfMinute.cbegin();iter!=statisInfo.countOfMinute.cend();++iter)
         {
             float l((*iter).first*wRatio);
             float h(floor((*iter).second*hRatio));
             painter.fillRect(l+margin,bHeight-h,wRatio<1.f?1.f:wRatio,h,barColor);
         }
-        painter.setPen(QColor(255,255,255));
+        painter.setPen(penColor);
         painter.drawText(bRect,Qt::AlignLeft|Qt::AlignTop,QObject::tr("Total:%1 Max:%2 Block:%3 Merge:%4")
-                         .arg(QString::number(statisInfo.totalCount))
+                         .arg(statisInfo.totalCount)
                          .arg(statisInfo.maxCountOfMinute)
                          .arg(statisInfo.blockCount)
                          .arg(statisInfo.mergeCount));
