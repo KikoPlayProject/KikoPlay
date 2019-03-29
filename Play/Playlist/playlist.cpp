@@ -381,7 +381,7 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
         QStringList tipContent;
 
         if(!item->animeTitle.isEmpty())
-            tipContent<<QString("%1-%2").arg(item->animeTitle).arg(item->title);
+            tipContent<<QString("%1-%2").arg(item->animeTitle, item->title);
         else
             tipContent<<QString("%1").arg(item->title);
         tipContent<<item->path;
@@ -400,7 +400,8 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
     }
     case Qt::ForegroundRole:
     {
-        if(item==d->currentItem) return QBrush(QColor(255,255,0));
+        static QBrush curBrush(QColor(255,255,0));
+        if(item==d->currentItem) return curBrush;
         static QBrush brs[]={QBrush(QColor(220,220,220)),QBrush(QColor(160,200,200)),QBrush(QColor(140,140,140))};
         return brs[item->playTimeState];
     }

@@ -49,7 +49,7 @@ QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QS
                         QString scheme(queryUrl.scheme());
                         if (!location.startsWith('/'))
                             location.push_front('/');
-                        location = QString("%1://%2%3").arg(scheme).arg(host).arg(location);
+                        location = QString("%1://%2%3").arg(scheme,host,location);
                     }
                     replyBytes=httpGet(location,QUrlQuery(),header);
                 }

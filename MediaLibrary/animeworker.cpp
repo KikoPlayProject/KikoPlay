@@ -167,7 +167,7 @@ void AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId)
                 }
             } catch (Network::NetworkError &error) {
                 emit downloadDetailMessage(tr("Downloading Character Info...%1 Failed: %2")
-                                           .arg(crt.name_cn.isEmpty()?crt.name:crt.name_cn).arg(error.errorInfo));
+                                           .arg(crt.name_cn.isEmpty()?crt.name:crt.name_cn, error.errorInfo));
             }
             anime->characters.append(crt);
         }

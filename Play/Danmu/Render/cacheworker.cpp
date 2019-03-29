@@ -154,10 +154,10 @@ void CacheWorker::beginCache(PrepareList *danmus)
     for(QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*> &dm:*danmus)
     {
          QString hash_str(QString("%1%2%3%4")
-                          .arg(dm.first->text)
-                          .arg(dm.first->color)
-                          .arg(danmuStyle->fontSizeTable[dm.first->fontSizeLevel])
-                          .arg(dm.first->mergedList?dm.first->mergedList->count():0));
+                          .arg(dm.first->text
+                               ,QString::number(dm.first->color)
+                               ,QString::number(danmuStyle->fontSizeTable[dm.first->fontSizeLevel])
+                          ,dm.first->mergedList?QString::number(dm.first->mergedList->count()):"0"));
          DanmuDrawInfo *drawInfo(danmuCache.value(hash_str,nullptr));
          if(!drawInfo)
          {

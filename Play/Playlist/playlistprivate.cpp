@@ -80,7 +80,7 @@ void PlayListPrivate::loadPlaylist()
                 {
                     if(pair.first==item->path)
                     {
-                        pair.second=item->animeTitle.isEmpty()?item->title:QString("%1 %2").arg(item->animeTitle).arg(item->title);
+                        pair.second=item->animeTitle.isEmpty()?item->title:QString("%1 %2").arg(item->animeTitle, item->title);
                         break;
                     }
                 }
@@ -207,7 +207,7 @@ void PlayListPrivate::updateRecentlist(PlayListItem *item)
         else
             iter++;
     }
-    recentList.push_front(QPair<QString,QString>(item->path,item->animeTitle.isEmpty()?item->title:QString("%1 %2").arg(item->animeTitle).arg(item->title)));
+    recentList.push_front(QPair<QString,QString>(item->path,item->animeTitle.isEmpty()?item->title:QString("%1 %2").arg(item->animeTitle, item->title)));
     if(recentList.count()>q->maxRecentItems) recentList.pop_back();
     emit q->recentItemsUpdated();
 }

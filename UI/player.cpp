@@ -177,7 +177,8 @@ protected:
     virtual void paintEvent(QPaintEvent *event)
     {
         static QColor bgColor(0,0,0,150),barColor(51,168,255,200),penColor(255,255,255);
-        QRect bRect(event->rect());
+        static QRect bRect;
+        bRect=event->rect();
         QPainter painter(this);
         painter.fillRect(bRect,bgColor);
         if(duration==0)return;
@@ -195,10 +196,10 @@ protected:
         }
         painter.setPen(penColor);
         painter.drawText(bRect,Qt::AlignLeft|Qt::AlignTop,QObject::tr("Total:%1 Max:%2 Block:%3 Merge:%4")
-                         .arg(statisInfo.totalCount)
-                         .arg(statisInfo.maxCountOfMinute)
-                         .arg(statisInfo.blockCount)
-                         .arg(statisInfo.mergeCount));
+                         .arg(QString::number(statisInfo.totalCount),
+                              QString::number(statisInfo.maxCountOfMinute),
+                              QString::number(statisInfo.blockCount),
+                              QString::number(statisInfo.mergeCount)));
     }
 };
 }

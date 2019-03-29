@@ -149,7 +149,7 @@ void HttpServer::stopServer()
 
 void HttpServer::genLog(const QString &logInfo)
 {
-    emit showLog(QString("%1%2").arg(QTime::currentTime().toString("[hh:mm:ss]")).arg(logInfo));
+    emit showLog(QString("%1%2").arg(QTime::currentTime().toString("[hh:mm:ss]"),logInfo));
 }
 
 void HttpServer::api_Playlist(QHttpEngine::Socket *socket)

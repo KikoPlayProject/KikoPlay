@@ -98,7 +98,7 @@ void PoolWorker::exportPool(const QList<DanmuPoolNode *> &exportList, const QStr
                 if(epNode->checkStatus==Qt::Unchecked)continue;
                 QString epTitle(epNode->title);
                 epTitle.replace(QRegExp("[\\\\/:*?\"<>|]"),"");
-                QFileInfo fi(dir,QString("%1-%2.xml").arg(animeTitle).arg(epTitle));
+                QFileInfo fi(dir,QString("%1-%2.xml").arg(animeTitle, epTitle));
                 emit stateMessage(tr("Exporting: %1").arg(fi.fileName()));
                 exportEp(epNode,fi.absoluteFilePath(),useTimeline,applyBlockRule);
             }
@@ -149,7 +149,7 @@ void PoolWorker::deletePool(const QList<DanmuPoolNode *> &deleteList)
                  {
                  case Qt::Checked:
                  {
-                     emit stateMessage(tr("Deleting: %1 %2").arg(node->title).arg(epNode->title));
+                     emit stateMessage(tr("Deleting: %1 %2").arg(node->title, epNode->title));
                      query.prepare("delete from pool where PoolID=?");
                      query.bindValue(0,epNode->idInfo);
                      query.exec();
@@ -168,7 +168,7 @@ void PoolWorker::deletePool(const QList<DanmuPoolNode *> &deleteList)
                      for(DanmuPoolNode *srcNode:*epNode->children)
                      {
                          if(srcNode->checkStatus!=Qt::Checked)continue;
-                         emit stateMessage(tr("Deleting: %1 %2 %3").arg(node->title).arg(epNode->title).arg(srcNode->title));
+                         emit stateMessage(tr("Deleting: %1 %2 %3").arg(node->title, epNode->title, srcNode->title));
                          query.bindValue(1,static_cast<DanmuPoolSourceNode *>(srcNode)->srcId);
                          query.exec();
                          deleteDMQuery.bindValue(1,static_cast<DanmuPoolSourceNode *>(srcNode)->srcId);
@@ -199,7 +199,7 @@ void PoolWorker::updatePool(QList<DanmuPoolNode *> &updateList)
             for(DanmuPoolNode *sourceNode:*epNode->children)
             {
                 if(sourceNode->checkStatus==Qt::Unchecked)continue;
-                emit stateMessage(tr("Updating: %1 %2 %3").arg(animeNode->title).arg(epNode->title).arg(sourceNode->idInfo));
+                emit stateMessage(tr("Updating: %1 %2 %3").arg(animeNode->title, epNode->title, sourceNode->idInfo));
                 updateSource(static_cast<DanmuPoolSourceNode *>(sourceNode),danmuHashSet);
             }
         }
@@ -330,7 +330,7 @@ void PoolWorker::addSource(DanmuPoolNode *epNode, const DanmuSourceInfo *sourceI
         QList<DanmuComment *> tmpList;
         for(auto comment:*danmuList)
         {
-            QByteArray hashData(QString("%0%1%2%3").arg(comment->text).arg(comment->originTime).arg(comment->sender).arg(comment->color).toUtf8());
+            QByteArray hashData(QString("%0%1%2%3").arg(comment->text, QString::number(comment->originTime), comment->sender, QString::number(comment->color)).toUtf8());
             QString danmuHash(QString(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex()));
             if(!(danmuHashSet.contains(danmuHash) || comment->text.isEmpty()))
             {
@@ -414,9 +414,9 @@ void PoolWorker::exportEp(const DanmuPoolNode *epNode, const QString &fileName, 
         }
 
         writer.writeStartElement("d");
-        writer.writeAttribute("p", QString("%0,%1,%2,%3,%4,%5,%6,%7").arg(QString::number(tmpComment.time/1000.0,'f',2))
+        writer.writeAttribute("p", QString("%0,%1,%2,%3,%4,0,%5,0").arg(QString::number(tmpComment.time/1000.0,'f',2))
                               .arg(type[tmpComment.type]).arg(fontSize[tmpComment.fontSizeLevel]).arg(tmpComment.color)
-                              .arg(tmpComment.date).arg("0").arg(tmpComment.sender).arg("0"));
+                              .arg(tmpComment.date).arg(tmpComment.sender));
         QString danmuText;
         for(const QChar &ch:tmpComment.text)
         {
@@ -447,7 +447,7 @@ void PoolWorker::updateSource(DanmuPoolSourceNode *sourceNode, const QSet<QStrin
     }
     for(auto iter=tmpList.begin();iter!=tmpList.end();)
     {
-        QByteArray hashData(QString("%0%1%2%3").arg((*iter)->text).arg((*iter)->originTime).arg((*iter)->sender).arg((*iter)->color).toUtf8());
+        QByteArray hashData(QString("%0%1%2%3").arg((*iter)->text, QString::number((*iter)->originTime), (*iter)->sender, QString::number((*iter)->color)).toUtf8());
         QString danmuHash(QString(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex()));
         if(danmuHashSet.contains(danmuHash) || (*iter)->text.isEmpty())
         {

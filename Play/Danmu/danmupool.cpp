@@ -66,7 +66,7 @@ int DanmuPool::addDanmu(DanmuSourceInfo &sourceInfo,QList<DanmuComment *> &danmu
         QSet<QString> danmuHashSet(getDanmuHash(source->id));
         for(auto iter=danmuList.begin();iter!=danmuList.end();)
         {
-            QByteArray hashData(QString("%0%1%2%3").arg((*iter)->text).arg((*iter)->originTime).arg((*iter)->sender).arg((*iter)->color).toUtf8());
+            QByteArray hashData(QString("%0%1%2%3").arg((*iter)->text, QString::number((*iter)->originTime), (*iter)->sender, QString::number((*iter)->color)).toUtf8());
             QString danmuHash(QString(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex()));
             if(danmuHashSet.contains(danmuHash))
             {
@@ -372,9 +372,9 @@ void DanmuPool::exportDanmu(int sourceId, const QString &fileName)
         if(sourceId==-1 || danmu->source==sourceId)
         {
             writer.writeStartElement("d");
-            writer.writeAttribute("p", QString("%0,%1,%2,%3,%4,%5,%6,%7").arg(QString::number(danmu->time/1000.f,'f',2))
+            writer.writeAttribute("p", QString("%0,%1,%2,%3,%4,0,%6,0").arg(QString::number(danmu->time/1000.f,'f',2))
                                   .arg(type[danmu->type]).arg(fontSize[danmu->fontSizeLevel]).arg(danmu->color)
-                                  .arg(danmu->date).arg("0").arg(danmu->sender).arg("0"));
+                                  .arg(danmu->date).arg(danmu->sender));
             QString danmuText;
             for(const QChar &ch:danmu->text)
             {
@@ -654,25 +654,32 @@ QVariant DanmuPool::data(const QModelIndex &index, int role) const
     }
     case Qt::ForegroundRole:
     {
+        static QBrush blockBrush(QColor(150,150,150));
+        static QBrush normalBrush;
         if(comment->blockBy!=-1)
-            return QBrush(QColor(150,150,150));
-        return QBrush(QColor((comment->color>>16)&0xff,(comment->color>>8)&0xff,comment->color&0xff,200));
+            return blockBrush;
+        normalBrush.setColor(QColor((comment->color>>16)&0xff,(comment->color>>8)&0xff,comment->color&0xff,200));
+        return normalBrush;
     }
     case Qt::ToolTipRole:
     {
         static QString types[3]={tr("Roll"),tr("Top"),tr("Bottom")};
-        return tr("User: %1\nTime: %2\nText: %3\nType: %4%5%6").arg(comment->sender).
-                arg(QDateTime::fromSecsSinceEpoch(comment->date).toString("yyyy-MM-dd hh:mm:ss"))
-                .arg(comment->text).arg(types[comment->type])
-                .arg(comment->blockBy==-1?"":tr("\nBlock By Rule:%1").arg(comment->blockBy))
-                .arg(comment->mergedList?tr("\nMerged Count: %1").arg(comment->mergedList->count()):"");
+        return tr("User: %1\nTime: %2\nText: %3\nType: %4%5%6")
+                .arg(comment->sender,
+                     QDateTime::fromSecsSinceEpoch(comment->date).toString("yyyy-MM-dd hh:mm:ss"),
+                     comment->text,
+                     types[comment->type],
+                     comment->blockBy==-1?"":tr("\nBlock By Rule:%1").arg(comment->blockBy),
+                     comment->mergedList?tr("\nMerged Count: %1").arg(comment->mergedList->count()):"");
     }
 	case Qt::FontRole:
     {
-		if (comment->blockBy != -1 && col==1)
-			return QFont("Microsoft YaHei UI", 11, -1, true);
+        static QFont blockFont("Microsoft YaHei UI", 11, -1, true);
+        static QFont mergeFont("Microsoft YaHei UI", 11, QFont::DemiBold);
+		if (comment->blockBy != -1 && col==1)    
+            return blockFont;
         if(comment->mergedList && comment->mergedList->count()>0)
-            return QFont("Microsoft YaHei UI", 11, QFont::DemiBold);
+            return mergeFont;
         break;
     }
     default:
