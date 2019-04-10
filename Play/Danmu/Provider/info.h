@@ -1,21 +1,6 @@
 #ifndef INFO_H
 #define INFO_H
 #include <QtCore>
-struct MatchInfo
-{
-    bool success;
-    bool error;
-    QString errorInfo;
-    QString poolID;
-    QString fileHash;
-    struct DetailInfo
-    {
-        QString animeTitle;
-        QString title;
-        //int episodeId;
-    };
-    QList<DetailInfo> matches;
-};
 struct DanmuSourceItem
 {
     QString title;

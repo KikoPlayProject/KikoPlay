@@ -13,6 +13,7 @@
 #include <QSortFilterProxyModel>
 #include "Play/Danmu/Manager/managermodel.h"
 #include "Play/Danmu/Manager/danmumanager.h"
+#include "Play/Danmu/Manager/pool.h"
 #include "Play/Playlist/playlistitem.h"
 #include "timelineedit.h"
 #include "adddanmu.h"
@@ -51,27 +52,20 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         if(indexList.size()==0)return;
         DanmuPoolSourceNode *srcNode=managerModel->getSourceNode(proxyModel->mapToSource(indexList.first()));
         if(!srcNode)return;
-        if(GlobalObjects::danmuPool->getPoolID()==srcNode->parent->idInfo)
+        QList<SimpleDanmuInfo> simpleDanmuList;
+        Pool *pool=GlobalObjects::danmuManager->getPool(srcNode->parent->idInfo);
+        if(pool)
         {
-            DanmuSourceInfo *srcInfo=&GlobalObjects::danmuPool->getSources()[srcNode->srcId];
-            TimelineEdit timeLineEdit(srcInfo,GlobalObjects::danmuPool->getSimpleDanmuInfo(srcInfo->id),this);
-            if(QDialog::Accepted==timeLineEdit.exec())
-            {
-                GlobalObjects::danmuPool->refreshTimeLineDelayInfo(srcInfo);
-            }
-        }
-        else
-        {
-            QList<SimpleDanmuInfo> simpleDanmuList;
-            GlobalObjects::danmuManager->loadSimpleDanmuInfo(srcNode->parent->idInfo,srcNode->srcId,simpleDanmuList);
+            pool->exportSimpleInfo(srcNode->srcId,simpleDanmuList);
             DanmuSourceInfo srcInfo(srcNode->toSourceInfo());
             TimelineEdit timeLineEdit(&srcInfo,simpleDanmuList,this);
             if(QDialog::Accepted==timeLineEdit.exec())
             {
                 srcNode->setTimeline(srcInfo);
-                GlobalObjects::danmuManager->updateSourceTimeline(srcNode);
+                pool->setTimeline(srcNode->srcId,srcInfo.timelineInfo);
             }
         }
+
     });
     QAction *act_addWebSource=new QAction(tr("Add Web Source"),this);
     poolView->addAction(act_addWebSource);
@@ -96,11 +90,42 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
             poolView->setEnabled(false);
             this->showBusyState(true);
             int i = 0;
-            bool hasCurPlaying=false;
+            //bool hasCurPlaying=false;
             for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
             {
                 DanmuPoolNode *curNode=poolNodeMap.value(addDanmuDialog.danmuToPoolList.at(i++));
                 Q_ASSERT(curNode);
+                Pool *pool=GlobalObjects::danmuManager->getPool(curNode->idInfo);
+                Q_ASSERT(pool);
+                DanmuSourceInfo &sourceInfo=(*iter).first;
+                QList<DanmuComment *> &danmuList=(*iter).second;
+                int srcId=pool->addSource(sourceInfo,danmuList,true);
+                if(srcId<0) continue;
+                DanmuPoolSourceNode *sourceNode(nullptr);
+                for(auto n:*curNode->children)
+                {
+                    DanmuPoolSourceNode *srcNode=static_cast<DanmuPoolSourceNode *>(n);
+                    if(srcNode->idInfo==sourceInfo.url)
+                    {
+                        sourceNode=srcNode;
+                        break;
+                    }
+                }
+                if(sourceNode)
+                {
+                    managerModel->addSrcNode(curNode,nullptr);
+                }
+                else
+                {
+                    sourceNode=new DanmuPoolSourceNode();
+                    sourceNode->title=sourceInfo.name;
+                    sourceNode->srcId=srcId;
+                    sourceNode->delay=sourceInfo.delay;
+                    sourceNode->idInfo=sourceInfo.url;
+                    sourceNode->danmuCount=sourceInfo.count;
+                    managerModel->addSrcNode(curNode,sourceNode);
+                }
+                /*
                 if(GlobalObjects::danmuPool->getPoolID()==curNode->idInfo)
                 {
                     GlobalObjects::danmuPool->addDanmu((*iter).first,(*iter).second,false);
@@ -112,8 +137,9 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                     qDeleteAll((*iter).second);
                     managerModel->addSrcNode(curNode,srcNode);
                 }
+                */
             }
-            if(hasCurPlaying) GlobalObjects::danmuPool->resetModel();
+            //if(hasCurPlaying) GlobalObjects::danmuPool->resetModel();
             stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
             poolView->setEnabled(true);
             this->showBusyState(false);

@@ -7,12 +7,10 @@
 
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/common.h"
-#include "Play/Danmu/blocker.h"
 #include "Play/Danmu/Manager/danmumanager.h"
+#include "Play/Danmu/Manager/pool.h"
 #include "globalobjects.h"
 
-#include <QSqlQuery>
-#include <QSqlRecord>
 #include <QCoreApplication>
 #include <QMimeDatabase>
 namespace
@@ -114,7 +112,7 @@ namespace
 }
 HttpServer::HttpServer(QObject *parent) : QObject(parent)
 {
-    MediaFileHandler *handler=new MediaFileHandler(&mediaHash, this);
+    MediaFileHandler *handler=new MediaFileHandler(&mediaHash,this);
     handler->setDocumentRoot(QCoreApplication::applicationDirPath()+"/web");
     handler->addRedirect(QRegExp("^$"), "/index.html");
 
@@ -124,7 +122,7 @@ HttpServer::HttpServer(QObject *parent) : QObject(parent)
     apiHandler->registerMethod("danmu/v3/", this, &HttpServer::api_Danmu);
     handler->addSubHandler(QRegExp("api/"), apiHandler);
 
-    server = new QHttpEngine::Server(handler);
+    server = new QHttpEngine::Server(handler,this);
 }
 
 HttpServer::~HttpServer()
@@ -190,13 +188,33 @@ void HttpServer::api_UpdateTime(QHttpEngine::Socket *socket)
 void HttpServer::api_Danmu(QHttpEngine::Socket *socket)
 { 
     QString poolId=socket->queryString().value("id");
-    genLog(QString("[%1]Request:Danmu").arg(socket->peerAddress().toString()));
-    QJsonObject resposeObj = GlobalObjects::danmuManager->exportJson(poolId);
+    bool update=(socket->queryString().value("update").toLower()=="true");
+    genLog(QString("[%1]Request:Danmu%2").arg(socket->peerAddress().toString(),update?", update=true":""));
+    Pool *pool=GlobalObjects::danmuManager->getPool(poolId);
+    QJsonArray danmuArray;
+    if(pool)
+    {
+        if(update)
+        {
+            QList<QSharedPointer<DanmuComment> > incList;
+            pool->update(-1,&incList);
+            danmuArray=Pool::exportJson(incList);
+        }
+        else
+        {
+            danmuArray=pool->exportJson();
+        }
+    }
+    QJsonObject resposeObj
+    {
+        {"code", 0},
+        {"data", danmuArray},
+        {"update",update}
+    };
     QByteArray data = QJsonDocument(resposeObj).toJson();
     socket->setHeader("Content-Length", QByteArray::number(data.length()));
     socket->setHeader("Content-Type", "application/json");
     socket->writeHeaders();
     socket->write(data);
-
     socket->close();
 }

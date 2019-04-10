@@ -1,6 +1,6 @@
 #include "matcheditor.h"
 #include "Play/Playlist/playlist.h"
-#include "Play/Danmu/Provider/matchprovider.h"
+#include "Play/Danmu/Manager/danmumanager.h"
 #include <QVBoxLayout>
 #include <QToolButton>
 #include <QStackedLayout>
@@ -162,7 +162,8 @@ void MatchEditor::search()
     searchButton->setText(tr("Searching"));
     showBusyState(true);
     MatchInfo *sInfo=nullptr;
-    if(searchLocation==0)//DanDan
+    sInfo=GlobalObjects::danmuManager->searchMatch(DanmuManager::MatchProvider(searchLocation),keyword);
+    /*if(searchLocation==0)//DanDan
     {
         sInfo = MatchProvider::SearchFormDandan(keyword);
     }
@@ -174,6 +175,7 @@ void MatchEditor::search()
     {
         sInfo=MatchProvider::SerchFromDB(keyword);
     }
+    */
     if(sInfo)
     {
         if(sInfo->error)

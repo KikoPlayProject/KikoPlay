@@ -48,7 +48,6 @@ SOURCES += \
     UI/framelessdialog.cpp \
     Play/Danmu/Provider/localprovider.cpp \
     UI/adddanmu.cpp \
-    Play/Danmu/Provider/matchprovider.cpp \
     UI/matcheditor.cpp \
     Play/Danmu/Provider/bilibiliprovider.cpp \
     UI/selectepisode.cpp \
@@ -97,7 +96,6 @@ SOURCES += \
     Play/Danmu/Render/cacheworker.cpp \
     Play/Danmu/Render/danmurender.cpp \
     Play/Danmu/Manager/danmumanager.cpp \
-    Play/Danmu/Manager/poolworker.cpp \
     Play/Danmu/Manager/nodeinfo.cpp \
     Play/Danmu/Manager/managermodel.cpp \
     MediaLibrary/animeworker.cpp \
@@ -113,7 +111,8 @@ SOURCES += \
     Download/Script/scriptmanager.cpp \
     UI/ressearchwindow.cpp \
     UI/managescript.cpp \
-    Play/Danmu/Provider/pptvprovider.cpp
+    Play/Danmu/Provider/pptvprovider.cpp \
+    Play/Danmu/Manager/pool.cpp
 
 HEADERS += \
     UI/mainwindow.h \
@@ -133,7 +132,6 @@ HEADERS += \
     Play/Danmu/Provider/localprovider.h \
     UI/adddanmu.h \
     Play/Danmu/common.h \
-    Play/Danmu/Provider/matchprovider.h \
     UI/matcheditor.h \
     Play/Danmu/Provider/bilibiliprovider.h \
     Play/Danmu/Provider/info.h \
@@ -186,7 +184,6 @@ HEADERS += \
     Play/Danmu/Render/cacheworker.h \
     Play/Danmu/Render/danmurender.h \
     Play/Danmu/Manager/danmumanager.h \
-    Play/Danmu/Manager/poolworker.h \
     Play/Danmu/Manager/nodeinfo.h \
     Play/Danmu/Manager/managermodel.h \
     MediaLibrary/animeworker.h \
@@ -202,7 +199,9 @@ HEADERS += \
     Download/Script/scriptmanager.h \
     UI/ressearchwindow.h \
     UI/managescript.h \
-    Play/Danmu/Provider/pptvprovider.h
+    Play/Danmu/Provider/pptvprovider.h \
+    Play/Danmu/Manager/pool.h \
+    Common/threadtask.h
 
 INCLUDEPATH += \
     Play/Video \

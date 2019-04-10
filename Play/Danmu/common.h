@@ -90,6 +90,21 @@ public:
     void  operator delete(void * p);
     static void DeleteObjPool();
 };
+struct MatchInfo
+{
+    bool success;
+    bool error;
+    QString errorInfo;
+    QString poolID;
+    QString fileHash;
+    struct DetailInfo
+    {
+        QString animeTitle;
+        QString title;
+        //int episodeId;
+    };
+    QList<DetailInfo> matches;
+};
 struct DanmuSourceInfo
 {
     int id;

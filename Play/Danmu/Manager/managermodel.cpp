@@ -2,6 +2,7 @@
 #include "globalobjects.h"
 #include "danmumanager.h"
 #include "../danmupool.h"
+#include "pool.h"
 DanmuManagerModel::DanmuManagerModel(QObject *parent) : QAbstractItemModel(parent)
 {
 
@@ -319,17 +320,13 @@ bool DanmuManagerModel::setData(const QModelIndex &index, const QVariant &value,
         if(isInt)
         {
             DanmuPoolSourceNode *srcNode=static_cast<DanmuPoolSourceNode *>(item);
-            srcNode->delay=newDelay;
-            if(GlobalObjects::danmuPool->getPoolID()==srcNode->parent->idInfo)
+            Pool *pool=GlobalObjects::danmuManager->getPool(srcNode->parent->idInfo,false);
+            if(pool && pool->setDelay(srcNode->srcId,newDelay))
             {
-                GlobalObjects::danmuPool->setDelay(&GlobalObjects::danmuPool->getSources()[srcNode->srcId],newDelay);
+                srcNode->delay=newDelay;
+                emit dataChanged(index,index);
+                return true;
             }
-            else
-            {
-                GlobalObjects::danmuManager->updateSourceDelay(srcNode);
-            }
-            emit dataChanged(index,index);
-            return true;
         }
     }
     return false;

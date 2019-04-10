@@ -10,9 +10,9 @@
 
 #include "playlistprivate.h"
 #include "globalobjects.h"
-#include "Play/Danmu/Provider/matchprovider.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Danmu/Manager/danmumanager.h"
+#include "Play/Danmu/Manager/pool.h"
 #include "MediaLibrary/animelibrary.h"
 
 namespace
@@ -147,6 +147,7 @@ int PlayList::addFolder(QString folderStr, QModelIndex parent)
         folderRootCollection.children->first()->moveTo(parentItem, insertPosition);
 		endInsertRows();
         d->playListChanged=true;
+        d->needRefresh = true;
 	}
     folderRootCollection.children->clear();
     emit message(tr("Add %1 item(s)").arg(itemCount),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
@@ -655,7 +656,7 @@ void PlayList::matchItems(const QModelIndexList &matchIndexes)
         else if(currentItem->poolID.isEmpty())
         {
 			if (!QFile::exists(currentItem->path))continue;
-            MatchInfo *matchInfo=MatchProvider::MatchFromDandan(currentItem->path);
+            MatchInfo *matchInfo=GlobalObjects::danmuManager->matchFrom(DanmuManager::DanDan,currentItem->path);
             if(!matchInfo) break;
             if(matchInfo->error)
             {
@@ -676,7 +677,7 @@ void PlayList::matchItems(const QModelIndexList &matchIndexes)
 					emit dataChanged(nIndex, nIndex);
                     if (currentItem == d->currentItem)
 					{
-						emit currentMatchChanged();
+                        emit currentMatchChanged(currentItem->poolID);
 					}
                     GlobalObjects::library->addToLibrary(currentItem->animeTitle,currentItem->title,currentItem->path);
                 }
@@ -700,14 +701,15 @@ void PlayList::matchIndex(QModelIndex &index, MatchInfo *matchInfo)
     MatchInfo::DetailInfo &bestMatch=matchInfo->matches.first();
     item->animeTitle=bestMatch.animeTitle;
     item->title=bestMatch.title;
-    item->poolID=MatchProvider::updateMatchInfo(item->path,matchInfo);
+    item->poolID=GlobalObjects::danmuManager->updateMatch(item->path,matchInfo);
+    //item->poolID=MatchProvider::updateMatchInfo(item->path,matchInfo);
     d->playListChanged = true;
     d->needRefresh = true;
     emit message(tr("Success: %1").arg(item->title),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
     emit dataChanged(index, index);
     if (item == d->currentItem)
     {
-        emit currentMatchChanged();
+        emit currentMatchChanged(item->poolID);
     }
     GlobalObjects::library->addToLibrary(item->animeTitle,item->title,item->path);
     d->savePlaylist();
@@ -820,7 +822,8 @@ void PlayList::exportDanmuItems(const QModelIndexList &exportIndexes)
                 emit message(tr("Exporting: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS);
                 QFileInfo fi(currentItem->path);
                 QFileInfo dfi(fi.absolutePath(),fi.baseName()+".xml");
-                GlobalObjects::danmuManager->exportPool(currentItem->poolID,dfi.absoluteFilePath());
+                Pool *pool=GlobalObjects::danmuManager->getPool(currentItem->poolID);
+                if(pool) pool->exportPool(dfi.absoluteFilePath());
             }
         }
     }

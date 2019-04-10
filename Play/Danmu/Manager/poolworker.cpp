@@ -10,6 +10,8 @@
 
 void PoolWorker::loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList)
 {
+	QElapsedTimer timer;
+	timer.start();
     QSqlQuery query(QSqlDatabase::database("Comment_W"));
     QMap<QString,DanmuPoolNode *> animeMap,epMap;
     //get all danmu pools
@@ -35,6 +37,7 @@ void PoolWorker::loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList)
         epNode->title=query.value(epNo).toString();
         epNode->idInfo=poolId;
     }
+	qDebug() << "Pool Time: " << timer.restart();
     //get source info
     query.exec("select * from source");
     int s_pidNo = query.record().indexOf("PoolID"),
@@ -54,6 +57,7 @@ void PoolWorker::loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList)
         sourceNode->delay=query.value(s_delayNo).toInt();
         sourceNode->timeline=query.value(s_timelineNo).toString();
     }
+	qDebug() << "Source Time: " << timer.restart();
     //get danmu count
     for (int i = 0; i < DanmuTableCount; ++i)
     {
@@ -76,11 +80,12 @@ void PoolWorker::loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList)
             }
         }
     }
-
+	qDebug() << "Count Time: " << timer.restart();
     for(DanmuPoolNode *animeNode:poolNodeList)
     {
         animeNode->setCount();
     }
+	qDebug() << "End Time: " << timer.restart();
     emit loadDone();
     emit stateMessage("Done");
 }
@@ -298,7 +303,7 @@ void PoolWorker::exportJson(const QString &pid)
         tmpComment.originTime=query.value(timeNo).toInt();
         if(GlobalObjects::blocker->isBlocked(&tmpComment))continue;
         Q_ASSERT(sourcesTable.contains(tmpComment.source));
-        GlobalObjects::danmuManager->setDelay(&tmpComment,&sourcesTable[tmpComment.source]);
+        //GlobalObjects::danmuManager->setDelay(&tmpComment,&sourcesTable[tmpComment.source]);
         QJsonArray danmuObj={tmpComment.time/1000.0,tmpComment.type,tmpComment.color,tmpComment.sender,tmpComment.text};
         danmuArray.append(danmuObj);
     }
@@ -406,7 +411,7 @@ void PoolWorker::exportEp(const DanmuPoolNode *epNode, const QString &fileName, 
         if(useTimeline)
         {
             Q_ASSERT(sourcesTable.contains(tmpComment.source));
-            GlobalObjects::danmuManager->setDelay(&tmpComment,&sourcesTable[tmpComment.source]);
+            //GlobalObjects::danmuManager->setDelay(&tmpComment,&sourcesTable[tmpComment.source]);
         }
         else
         {

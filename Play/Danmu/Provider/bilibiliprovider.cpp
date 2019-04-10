@@ -130,10 +130,14 @@ void BilibiliProvider::handleSearchReply(QJsonDocument &document, DanmuAccessRes
     }
     QJsonObject obj = document.object();
     QJsonValue bangumiResult(Network::getValue(obj,"data/result/media_bangumi")),
+            ftResult(Network::getValue(obj,"data/result/media_ft")),
             videoResult(Network::getValue(obj,"data/result/video"));
-    if(bangumiResult.type()==QJsonValue::Array)
+    if(bangumiResult.isArray() && ftResult.isArray())
     {
         QJsonArray bangumiArray=bangumiResult.toArray();
+        QJsonArray ftArray=ftResult.toArray();
+        for (auto value:ftArray)
+            bangumiArray.append(value);
         for(auto bangumiIter=bangumiArray.begin();bangumiIter!=bangumiArray.end();++bangumiIter)
         {
             if(!(*bangumiIter).isObject())continue;

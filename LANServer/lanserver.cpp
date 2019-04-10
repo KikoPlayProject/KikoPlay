@@ -2,14 +2,18 @@
 #include "httpserver.h"
 #include "globalobjects.h"
 #include <QSettings>
+#include <QThread>
 LANServer::LANServer(QObject *parent) : QObject(parent)
 {
-    QObject *workObj=new QObject();
-    workObj->moveToThread(GlobalObjects::workThread);
-    QMetaObject::invokeMethod(workObj,[workObj,this](){
-        server=new HttpServer();
-        workObj->deleteLater();
+    httpThread=new QThread();
+    httpThread->setObjectName(QStringLiteral("httpThread"));
+    httpThread->start(QThread::NormalPriority);
+    QObject workObj;
+    workObj.moveToThread(httpThread);
+    QMetaObject::invokeMethod(&workObj,[this](){
+        this->server=new HttpServer();
     },Qt::BlockingQueuedConnection);
+	
     QObject::connect(server,&HttpServer::showLog,this,[this](const QString &log){
         if(logs.size()>99)logs.pop_front();
         logs.append(log);
@@ -29,6 +33,8 @@ LANServer::LANServer(QObject *parent) : QObject(parent)
 
 LANServer::~LANServer()
 {
+    httpThread->quit();
+    httpThread->wait();
     server->deleteLater();
 }
 

@@ -11,9 +11,7 @@ class PoolItem : public QFrame
 {
     Q_OBJECT
 public:
-    explicit PoolItem(DanmuSourceInfo *sourceInfo,QWidget *parent=nullptr);
-private:
-    DanmuSourceInfo *source;
+    explicit PoolItem(const DanmuSourceInfo *sourceInfo,QWidget *parent=nullptr);
 };
 
 class PoolEditor : public CFramelessDialog

@@ -21,6 +21,7 @@
 #include "Play/Danmu/Render/danmurender.h"
 #include "Play/Danmu/Provider/localprovider.h"
 #include "Play/Danmu/danmupool.h"
+#include "Play/Danmu/Manager/pool.h"
 #include "Play/Danmu/blocker.h"
 #include "MediaLibrary/animelibrary.h"
 #include "globalobjects.h"
@@ -1661,8 +1662,9 @@ void PlayerWindow::dropEvent(QDropEvent *event)
                     sourceInfo.show=true;
                     sourceInfo.url=fi.filePath();
                     sourceInfo.count=tmplist.count();
-                    GlobalObjects::danmuPool->addDanmu(sourceInfo,tmplist);
-                    showMessage(tr("Danmu has been added"));
+                    Pool *pool=GlobalObjects::danmuPool->getPool();
+                    if(pool->addSource(sourceInfo,tmplist,true)>=0)
+                        showMessage(tr("Danmu has been added"));
                 }
             }
             else

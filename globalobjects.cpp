@@ -30,7 +30,10 @@ DanmuManager *GlobalObjects::danmuManager=nullptr;
 LANServer *GlobalObjects::lanServer=nullptr;
 QFont GlobalObjects::iconfont;
 QString GlobalObjects::dataPath;
-
+namespace  {
+    const char *mt_db_names[]={"Comment_M", "Bangumi_M","Download_M"};
+    const char *wt_db_names[]={"Comment_W", "Bangumi_W","Download_W"};
+}
 void GlobalObjects::init()
 {
     dataPath=QCoreApplication::applicationDirPath()+"/data/";
@@ -39,8 +42,8 @@ void GlobalObjects::init()
     {
         dir.mkpath(dataPath);
     }
-    const char *db_names[]={"Comment_M", "Bangumi_M","Download_M"};
-    initDatabase(db_names);
+
+    initDatabase(mt_db_names);
     appSetting=new QSettings(dataPath+"settings.ini",QSettings::IniFormat);
     mpvplayer=new MPVPlayer();
     danmuPool=new DanmuPool();
@@ -48,7 +51,7 @@ void GlobalObjects::init()
     QObject::connect(mpvplayer,&MPVPlayer::positionChanged, danmuPool,&DanmuPool::mediaTimeElapsed);
     QObject::connect(mpvplayer,&MPVPlayer::positionJumped,danmuPool,&DanmuPool::mediaTimeJumped);
     playlist=new PlayList();
-	QObject::connect(playlist, &PlayList::currentMatchChanged, danmuPool, &DanmuPool::refreshCurrentPoolID);
+    QObject::connect(playlist, &PlayList::currentMatchChanged, danmuPool, &DanmuPool::setPoolID);
     blocker=new Blocker();
     workThread=new QThread();
     workThread->setObjectName(QStringLiteral("workThread"));
@@ -56,8 +59,7 @@ void GlobalObjects::init()
     QObject *workObj=new QObject();
     workObj->moveToThread(workThread);
     QMetaObject::invokeMethod(workObj,[workObj](){
-        const char *db_names[]={"Comment_W", "Bangumi_W","Download_W"};
-        initDatabase(db_names);
+        initDatabase(wt_db_names);
         workObj->deleteLater();
     },Qt::QueuedConnection);
     providerManager=new ProviderManager();
@@ -87,6 +89,15 @@ void GlobalObjects::clear()
     downloadModel->deleteLater();
     danmuManager->deleteLater();
     lanServer->deleteLater();
+}
+
+QSqlDatabase GlobalObjects::getDB(int db)
+{
+    if(QThread::currentThread()->objectName()==QStringLiteral("workThread"))
+    {
+        return QSqlDatabase::database(wt_db_names[db]);
+    }
+    return QSqlDatabase::database(mt_db_names[db]);
 }
 
 void GlobalObjects::initDatabase(const char *db_names[])

@@ -2,35 +2,102 @@
 #define DANMUMANAGER_H
 
 #include <QAbstractItemModel>
-#include "poolworker.h"
 #include "../common.h"
+#include "nodeinfo.h"
 class DanmuManager : public QObject
 {
     Q_OBJECT
+    friend class Pool;
+    friend class PoolStateLock;
 public:
     explicit DanmuManager(QObject *parent = nullptr);
     virtual ~DanmuManager();
 public:
+    Pool *getPool(const QString &pid, bool loadDanmu=true);
     void loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList);
-    void loadPool(const QString &pid, QList<QSharedPointer<DanmuComment> > &danmuList,QHash<int,DanmuSourceInfo> &sourcesTable);
-    void loadSimpleDanmuInfo(const QString &pid, int srcId, QList<SimpleDanmuInfo> &simpleDanmuList);
-    void exportPool(const QList<DanmuPoolNode *> &exportList, const QString &dir, bool useTimeline=true, bool applyBlockRule=false);
-    void exportPool(const QString &pid,const QString &fileName);
-    QJsonObject exportJson(const QString &pid);
     void deletePool(const QList<DanmuPoolNode *> &deleteList);
-    void deleteSource(const QString &pid, int srcId);
-    void deleteDanmu(const QString &pid, const DanmuComment *danmu);
     void updatePool(QList<DanmuPoolNode *> &updateList);
-    void saveSource(const QString &pid, const DanmuSourceInfo *sourceInfo, const QList<DanmuComment *> *danmuList);
-    void updateSourceDelay(const QString &pid, const DanmuSourceInfo *sourceInfo);
-    void updateSourceDelay(const DanmuPoolSourceNode *srcNode);
-    void updateSourceTimeline(const QString &pid, const DanmuSourceInfo *sourceInfo);
-    void updateSourceTimeline(const DanmuPoolSourceNode *srcNode);
-    void setDelay(DanmuComment *danmu, DanmuSourceInfo *srcInfo);
-    DanmuPoolSourceNode *addSource(DanmuPoolNode *epNode, const DanmuSourceInfo *sourceInfo, const QList<DanmuComment *> *danmuList);
+    void exportPool(const QList<DanmuPoolNode *> &exportList, const QString &dir, bool useTimeline=true, bool applyBlockRule=false);
+public:
+    enum MatchProvider
+    {
+        DanDan,Bangumi,Local
+    };
+    MatchInfo *searchMatch(MatchProvider from, const QString &keyword);
+    MatchInfo *matchFrom(MatchProvider from, const QString &fileName);
+    QString updateMatch(const QString &fileName,const MatchInfo *newMatchInfo);
+private:
+    MatchInfo *ddSearch(const QString &keyword);
+    MatchInfo *bgmSearch(const QString &keyword);
+    MatchInfo *localSearch(const QString &keyword);
+    MatchInfo *ddMatch(const QString &fileName);
+    MatchInfo *localMatch(const QString &fileName);
+    MatchInfo *searchInMatchTable(const QString &fileHash);
+    QString getFileHash(const QString &fileName);
+    QString createPool(const QString &animeTitle, const QString &title, const QString &fileHash="");
+    void setMatch(const QString &fileHash, const QString &poolId);
+
 signals:
     void workerStateMessage(const QString &msg);
 private:
-    PoolWorker *poolWorker;
+    void loadPool(Pool *pool);
+    void updatePool(Pool *pool, QList<DanmuComment *> &outList, int sourceId=-1);
+    void saveSource(const QString &pid, const DanmuSourceInfo *source, const QList<QSharedPointer<DanmuComment> > &danmuList);
+    void deleteSource(const QString &pid, int sourceId);
+    void deleteDanmu(const QString &pid, const QSharedPointer<DanmuComment> danmu);
+    void updateSourceTimeline(const QString &pid, const DanmuSourceInfo *sourceInfo);
+    void updateSourceDelay(const QString &pid, const DanmuSourceInfo *sourceInfo);
+    QList<DanmuComment *> updateSource(const DanmuSourceInfo *sourceInfo, const QSet<QString> &danmuHashSet);
+
+private:
+    void loadAllPool();
+    void refreshCache(Pool *newPool=nullptr);
+    void deletePool(const QString &pid);
+
+private:
+    QMap<QString,int> poolDanmuCacheInfo;
+    QMap<QString,Pool *> pools;
+    QMutex cacheLock,removeLock;
+    QReadWriteLock poolStateLock;
+    QSet<QString> busyPoolSet;
+    bool countInited;
+    const int DanmuTableCount=5;
 };
+class PoolStateLock
+{
+    bool locked=false;
+    QString pid;
+public:
+    static DanmuManager *manager;
+    bool tryLock(const QString &pid)
+    {
+        manager->poolStateLock.lockForRead();
+        if(manager->busyPoolSet.contains(pid))
+        {
+            locked=false;
+            manager->poolStateLock.unlock();
+            return false;
+        }
+        else
+        {
+            manager->poolStateLock.unlock();
+            manager->poolStateLock.lockForWrite();
+            manager->busyPoolSet.insert(pid);
+            locked=true;
+            this->pid=pid;
+            manager->poolStateLock.unlock();
+            return true;
+        }
+    }
+    ~PoolStateLock()
+    {
+        if(locked)
+        {
+            manager->poolStateLock.lockForWrite();
+            manager->busyPoolSet.remove(pid);
+            manager->poolStateLock.unlock();
+        }
+    }
+};
+
 #endif // DANMUMANAGER_H

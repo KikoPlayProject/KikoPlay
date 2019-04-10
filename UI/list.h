@@ -41,7 +41,7 @@ public:
 private:
     void initActions();
     inline QModelIndex getPSParentIndex();
-    inline QSharedPointer<DanmuComment> &getSelectedDanmu();
+    inline QSharedPointer<DanmuComment> getSelectedDanmu();
 
     QWidget *infoTip;
 

@@ -16,6 +16,7 @@ public:
 private:
     HttpServer *server;
     QStringList logs;
+    QThread *httpThread;
 signals:
     void showLog(const QString &log);
 public slots:

@@ -260,18 +260,17 @@ QTreeView#danmulist {
     show-decoration-selected: 1;
 }
 QTreeView#danmulist::item {
-    /*color: rgb(200,200,200);*/
     border: none;
+    background-color: transparent;
+}
+QTreeView#danmulist::branch {
     background-color: transparent;
 }
 QTreeView#danmulist::item:hover, QTreeView#danmulist::branch:hover {
     background-color: rgba(255, 255, 255, 40);
 }
-QTreeView#danmulist::item:selected,QTreeView#danmulist::branch:selected{
+QTreeView#danmulist::item:selected, QTreeView#danmulist::branch:selected{
     background-color: rgba(255, 255, 255, 40);
-}
-QTreeView#danmulist::branch {
-    background-color: transparent;
 }
 QHeaderView{
     background-color: rgb(100,100,100);

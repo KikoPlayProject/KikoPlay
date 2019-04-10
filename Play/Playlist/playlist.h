@@ -29,7 +29,7 @@ public:
     QList<QPair<QString,QString> > &recent();
 signals:
     void currentInvaild();
-    void currentMatchChanged();
+    void currentMatchChanged(const QString &pid);
     void message(QString msg,int flag);
     void recentItemsUpdated();
 public slots :

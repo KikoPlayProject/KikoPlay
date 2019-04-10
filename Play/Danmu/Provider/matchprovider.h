@@ -1,6 +1,6 @@
 #ifndef MATCHPROVIDER_H
 #define MATCHPROVIDER_H
-#include "info.h"
+#include "../common.h"
 class MatchWorker : public QObject
 {
     Q_OBJECT

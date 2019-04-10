@@ -1,7 +1,17 @@
 #include "network.h"
 namespace
 {
-    QNetworkAccessManager manager;
+    QMap<QThread *,QNetworkAccessManager *> managerMap;
+    QNetworkAccessManager *getManager()
+    {
+        QNetworkAccessManager *manager=managerMap.value(QThread::currentThread());
+        if(!manager)
+        {
+            manager=new QNetworkAccessManager();
+            managerMap.insert(QThread::currentThread(),manager);
+        }
+        return manager;
+    }
 }
 QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QStringList &header)
 {
@@ -20,7 +30,7 @@ QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QS
     QTimer timer;
     timer.setInterval(timeout);
     timer.setSingleShot(true);
-    QNetworkReply *reply = manager.get(request);
+    QNetworkReply *reply = getManager()->get(request);
     QEventLoop eventLoop;
 	QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
     QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
@@ -111,7 +121,7 @@ QByteArray Network::httpPost(const QString &url, QByteArray &data, const QString
     QTimer timer;
     timer.setInterval(timeout);
     timer.setSingleShot(true);
-    QNetworkReply *reply = manager.post(request, data);
+    QNetworkReply *reply = getManager()->post(request, data);
     QEventLoop eventLoop;
 	QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
     QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
@@ -196,6 +206,7 @@ QList<QPair<QString, QByteArray> > Network::httpGetBatch(const QStringList &urls
     QList<QPair<QString, QByteArray> > results;
     int finishCount=0;
     QEventLoop eventLoop;
+    QNetworkAccessManager *manager(getManager());
     for(int i=0;i<urls.size();++i)
     {
         results.append(QPair<QString,QByteArray>());
@@ -204,7 +215,7 @@ QList<QPair<QString, QByteArray> > Network::httpGetBatch(const QStringList &urls
         QNetworkRequest request;
         request.setUrl(queryUrl);
         for(int j=0;i<header.size();j+=2) request.setRawHeader(header[j].toUtf8(),header[j+1].toUtf8());
-        QNetworkReply *reply = manager.get(request);
+        QNetworkReply *reply = manager->get(request);
         QTimer *timer=new QTimer;
         timer->setInterval(timeout*2);
         timer->setSingleShot(true);

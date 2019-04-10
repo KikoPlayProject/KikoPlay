@@ -1,6 +1,7 @@
 #ifndef GLOBALOBJECTS_H
 #define GLOBALOBJECTS_H
 #include <QString>
+#include <QSqlDatabase>
 class MPVPlayer;
 class DanmuPool;
 class DanmuRender;
@@ -34,6 +35,11 @@ public:
     static DanmuManager *danmuManager;
     static LANServer *lanServer;    
     static QString dataPath;
+
+    static const int Comment_DB=0;
+    static const int Bangumi_DB=1;
+    static const int Download_DB=2;
+    static QSqlDatabase getDB(int db);
 private:
     static void initDatabase(const char *db_names[]);
     static void setDatabase(const char *name, const char *file);

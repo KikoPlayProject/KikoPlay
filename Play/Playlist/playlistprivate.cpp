@@ -8,7 +8,7 @@
 #include "globalobjects.h"
 #include "Play/Video/mpvplayer.h"
 #include "MediaLibrary/animelibrary.h"
-#include "Play/Danmu/Provider/matchprovider.h"
+#include "Play/Danmu/Manager/danmumanager.h"
 
 PlayListPrivate::PlayListPrivate(PlayList *pl) : root(new PlayListItem), currentItem(nullptr), playListChanged(false),
     needRefresh(true), loopMode(PlayList::NO_Loop_All), q_ptr(pl)
@@ -326,7 +326,7 @@ void PlayListPrivate::autoLocalMatch(PlayListItem *item)
 {
     if(item->poolID.isEmpty())
     {
-        MatchInfo *matchInfo = MatchProvider::MatchFromDB(item->path);
+        MatchInfo *matchInfo = GlobalObjects::danmuManager->matchFrom(DanmuManager::Local,item->path);
         if(matchInfo)
         {
             item->animeTitle=matchInfo->matches.first().animeTitle;

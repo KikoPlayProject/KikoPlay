@@ -18,6 +18,7 @@
 #include "Play/Danmu/blocker.h"
 #include "Play/Danmu/Render/danmurender.h"
 #include "Play/Danmu/providermanager.h"
+#include "Play/Danmu/Manager/pool.h"
 namespace
 {
     class TextColorDelegate: public QStyledItemDelegate
@@ -29,7 +30,7 @@ namespace
         void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
         {
             QStyleOptionViewItem ViewOption(option);
-            QColor itemForegroundColor = index.data(Qt::ForegroundRole).value<QColor>();
+            QColor itemForegroundColor = index.data(Qt::ForegroundRole).value<QBrush>().color();
             if (itemForegroundColor.isValid())
             {
                 if (itemForegroundColor != option.palette.color(QPalette::WindowText))
@@ -396,11 +397,11 @@ void ListWindow::initActions()
         AddDanmu addDanmuDialog(currentItem, this);
         if(QDialog::Accepted==addDanmuDialog.exec())
         {
+            Pool *pool=GlobalObjects::danmuPool->getPool();
             for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
             {
-                GlobalObjects::danmuPool->addDanmu((*iter).first,(*iter).second,false);
+                pool->addSource((*iter).first,(*iter).second,iter==addDanmuDialog.selectedDanmuList.end()-1);
             }
-            GlobalObjects::danmuPool->resetModel();
         }
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
@@ -423,7 +424,8 @@ void ListWindow::initActions()
             sourceInfo.show=true;
             sourceInfo.url=file;
             sourceInfo.count=tmplist.count();
-            GlobalObjects::danmuPool->addDanmu(sourceInfo,tmplist);
+            GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist);
+            //GlobalObjects::danmuPool->addDanmu(sourceInfo,tmplist);
         }
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
@@ -510,7 +512,7 @@ QModelIndex ListWindow::getPSParentIndex()
     return model->mapToSource(parentIndex);
 }
 
-QSharedPointer<DanmuComment> &ListWindow::getSelectedDanmu()
+QSharedPointer<DanmuComment> ListWindow::getSelectedDanmu()
 {
     QModelIndexList selection =danmulistView->selectionModel()->selectedRows();
     //QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(danmulistView->model());
@@ -755,12 +757,14 @@ QWidget *ListWindow::setupDanmulistPage()
         act_addOnlineDanmu->setEnabled(false);
         act_addLocalDanmu->setEnabled(false);
         act_editPool->setEnabled(false);
-        auto &sources =  GlobalObjects::danmuPool->getSources();
+        const auto &sources =  GlobalObjects::danmuPool->getPool()->sources();
         int count=0;
-        for(auto iter=sources.begin();iter!=sources.end();++iter)
+        for(auto iter=sources.cbegin();iter!=sources.cend();++iter)
         {
             QList<DanmuComment *> tmpList;
             showMessage(tr("Updating: %1").arg(iter.value().url),PopMessageFlag::PM_PROCESS);
+            count+=GlobalObjects::danmuPool->getPool()->update(iter.key());
+            /*
             QString errInfo = GlobalObjects::providerManager->downloadBySourceURL(iter.value().url,tmpList);
             if(poolId!=GlobalObjects::danmuPool->getPoolID())
             {
@@ -777,8 +781,9 @@ QWidget *ListWindow::setupDanmulistPage()
                     count += GlobalObjects::danmuPool->addDanmu(si,tmpList,false);
                 }
             }
+            */
         }
-        if(count>0) GlobalObjects::danmuPool->resetModel();
+        //if(count>0) GlobalObjects::danmuPool->resetModel();
         showMessage(tr("Add %1 Danmu").arg(count),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
         act_autoAssociate->setEnabled(true);
         act_addOnlineDanmu->setEnabled(true);
@@ -899,7 +904,7 @@ void ListWindow::dropEvent(QDropEvent *event)
                         sourceInfo.show=true;
                         sourceInfo.url=fi.filePath();
                         sourceInfo.count=tmplist.count();
-                        GlobalObjects::danmuPool->addDanmu(sourceInfo,tmplist);
+                        GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist);
                     }
                 }
             }
