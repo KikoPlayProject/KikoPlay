@@ -105,50 +105,53 @@ QString PPTVProvider::downloadBySourceURL(const QString &url, QList<DanmuComment
 void PPTVProvider::downloadAllDanmu(const QString &id, int length, QList<DanmuComment *> &danmuList)
 {
     QString baseUrl=QString("http://danmucdn.api.pptv.com/danmu/v4/pplive/ref/vod_%1/danmu").arg(id);
+    QStringList urls;
+    QList<QUrlQuery> querys;
     for (int i=0;i<=length;++i)
     {
+        urls<<baseUrl;
         QUrlQuery query;
         query.addQueryItem("pos",QString::number(i*1000));
-        try
+        querys<<query;
+    }
+    QList<QPair<QString, QByteArray> > results(Network::httpGetBatch(urls,querys));
+    for(auto &result:results)
+    {
+        if(!result.first.isEmpty()) continue;
+        QJsonObject obj(Network::toJson(result.second).object().value("data").toObject());
+        QJsonArray danmuArray(obj.value("infos").toArray());
+        for(auto iter=danmuArray.begin();iter!=danmuArray.end();++iter)
         {
-            QString str(Network::httpGet(baseUrl,query));
-            QJsonObject obj(Network::toJson(str).object().value("data").toObject());
-            QJsonArray danmuArray(obj.value("infos").toArray());
-            for(auto iter=danmuArray.begin();iter!=danmuArray.end();++iter)
-            {
-                QJsonObject dmObj=(*iter).toObject();
-				if (dmObj.value("id").toInt() == 0) continue;
-                QJsonValue content=dmObj.value("content");
-                if(!content.isString()) continue;
-                QJsonValue user_name=dmObj.value("user_name");
-                if(!user_name.isString()) continue;
-                QJsonValue play_point=dmObj.value("play_point");
-                if(!play_point.isDouble()) continue;
-                QJsonValue createtime=dmObj.value("createtime");
-                if(!createtime.isDouble()) continue;
+            QJsonObject dmObj=(*iter).toObject();
+            if (dmObj.value("id").toInt() == 0) continue;
+            QJsonValue content=dmObj.value("content");
+            if(!content.isString()) continue;
+            QJsonValue user_name=dmObj.value("user_name");
+            if(!user_name.isString()) continue;
+            QJsonValue play_point=dmObj.value("play_point");
+            if(!play_point.isDouble()) continue;
+            QJsonValue createtime=dmObj.value("createtime");
+            if(!createtime.isDouble()) continue;
 
-                int colorVal=0xffffff;
-                QJsonValue color = dmObj.value("font_color");
-                if(color.isString()) colorVal=color.toString().mid(1).toInt(nullptr,16);
-                int pos=1;
-                int font_position=dmObj.value("font_position").toInt(),motion=dmObj.value("motion").toInt();
-                if(font_position==100 && motion==1) pos=5; //top
-                else if(font_position==300 && motion==1) pos=4; //bottom
+            int colorVal=0xffffff;
+            QJsonValue color = dmObj.value("font_color");
+            if(color.isString()) colorVal=color.toString().mid(1).toInt(nullptr,16);
+            int pos=1;
+            int font_position=dmObj.value("font_position").toInt(),motion=dmObj.value("motion").toInt();
+            if(font_position==100 && motion==1) pos=5; //top
+            else if(font_position==300 && motion==1) pos=4; //bottom
 
 
-                DanmuComment *danmu=new DanmuComment();
-                danmu->text=content.toString();
-                danmu->date=static_cast<long long>(createtime.toDouble()/1000);;
-                danmu->time =play_point.toInt()*100;
-                danmu->originTime=danmu->time;
-                danmu->color= colorVal;
-                danmu->fontSizeLevel=DanmuComment::Normal;
-                danmu->setType(pos);
-                danmu->sender="[PPTV]"+user_name.toString();
-                danmuList.append(danmu);
-            }
-        } catch (const Network::NetworkError &) {
-
+            DanmuComment *danmu=new DanmuComment();
+            danmu->text=content.toString();
+            danmu->date=static_cast<long long>(createtime.toDouble()/1000);;
+            danmu->time =play_point.toInt()*100;
+            danmu->originTime=danmu->time;
+            danmu->color= colorVal;
+            danmu->fontSizeLevel=DanmuComment::Normal;
+            danmu->setType(pos);
+            danmu->sender="[PPTV]"+user_name.toString();
+            danmuList.append(danmu);
         }
     }
 }

@@ -90,7 +90,8 @@ QString IqiyiProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
                 base*=60;
             }
             item->extra=duration;
-            downloadAllDanmu(item->strId,danmuList);
+            item->subId=duration / (60 * 5) + 1;
+            downloadAllDanmu(item->strId,item->subId,danmuList);
         }
     }
     catch(Network::NetworkError &error)
@@ -103,8 +104,10 @@ QString IqiyiProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
 
 QString IqiyiProvider::downloadBySourceURL(const QString &url, QList<DanmuComment *> &danmuList)
 {
-    QString tvId=url.mid(url.lastIndexOf(':')+1);
-    downloadAllDanmu(tvId,danmuList);
+    int s=url.indexOf(':')+1,e=url.indexOf(';');
+    QString tvId=url.mid(s,e==-1?-1:e-s);
+    int l=(e==-1?-1:url.mid(url.lastIndexOf(':')+1).toInt());
+    downloadAllDanmu(tvId,l,danmuList);
     return QString();
 }
 
@@ -168,71 +171,92 @@ void IqiyiProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
     result->error = false;
 }
 
-void IqiyiProvider::downloadAllDanmu(const QString &id, QList<DanmuComment *> &danmuList)
+void IqiyiProvider::downloadAllDanmu(const QString &id, int length, QList<DanmuComment *> &danmuList)
 {
     QString tvId = "0000" + id;
     QString s1(tvId.mid(tvId.length()-4,2)),s2(tvId.mid(tvId.length()-2));
     QString baseUrl=QString("http://cmts.iqiyi.com/bullet/%1/%2/%3_300_%4.z").arg(s1).arg(s2).arg(id);
-    int i = 1;
-    while(true)
+    if(length==-1)
     {
-        try
+        for(int i=1;;i++)
         {
-            QString dmUrl=baseUrl.arg(i++);
-            QByteArray replyBytes(Network::httpGet(dmUrl,QUrlQuery()));
-            QByteArray decompressResult;
-            if(decompress(replyBytes,decompressResult)!=Z_OK)continue;
-            QXmlStreamReader reader(decompressResult);
-            bool dmStart=false;
-            DanmuComment tmpDanmu;
-            tmpDanmu.setType(1);
-            tmpDanmu.fontSizeLevel=DanmuComment::Normal;
-            while(!reader.atEnd())
+            try
             {
-                if(reader.isStartElement())
-                {
-                    if(reader.name()=="bulletInfo")
-                    {
-                        dmStart=true;
-                    }
-                    else if(reader.name()=="contentId")
-                    {
-                        QString idText=reader.readElementText();
-                        tmpDanmu.date=idText.mid(0,10).toLongLong();
-                    }
-                    else if(reader.name()=="content")
-                    {
-                        tmpDanmu.text=reader.readElementText();
-                    }
-                    else if(reader.name()=="showTime")
-                    {
-                        tmpDanmu.time = reader.readElementText().toFloat() * 1000;
-                        tmpDanmu.originTime= tmpDanmu.time;
-                    }
-                    else if(reader.name()=="color")
-                    {
-                        tmpDanmu.color = reader.readElementText().toInt(nullptr,16);
-                    }
-                    else if(reader.name()=="uid")
-                    {
-                        tmpDanmu.sender="[iqiyi]"+reader.readElementText();
-                    }
-                }
-                else if(reader.isEndElement())
-                {
-                    if(reader.name()=="bulletInfo")
-                    {
-                        dmStart=false;
-                        danmuList.append(new DanmuComment(tmpDanmu));
-                    }
-                }
-                reader.readNext();
+                QString dmUrl=baseUrl.arg(i++);
+                QByteArray replyBytes(Network::httpGet(dmUrl,QUrlQuery()));
+                decodeDanmu(replyBytes,danmuList);
+            }
+            catch(Network::NetworkError &)
+            {
+                return;
             }
         }
-        catch(Network::NetworkError &)
+    }
+    else
+    {
+        QStringList urls;
+        for (int i=1;i<=length;++i)
         {
-            return;
+            urls<<baseUrl.arg(i);
         }
+        QList<QPair<QString, QByteArray> > results(Network::httpGetBatch(urls,QList<QUrlQuery>()));
+        for(auto &result:results)
+        {
+            if(!result.first.isEmpty()) continue;
+            decodeDanmu(result.second,danmuList);
+        }
+    }
+}
+
+void IqiyiProvider::decodeDanmu(const QByteArray &replyBytes, QList<DanmuComment *> &danmuList)
+{
+    QByteArray decompressResult;
+    if(decompress(replyBytes,decompressResult)!=Z_OK)return;
+    QXmlStreamReader reader(decompressResult);
+    bool dmStart=false;
+    DanmuComment tmpDanmu;
+    tmpDanmu.setType(1);
+    tmpDanmu.fontSizeLevel=DanmuComment::Normal;
+    while(!reader.atEnd())
+    {
+        if(reader.isStartElement())
+        {
+            if(reader.name()=="bulletInfo")
+            {
+                dmStart=true;
+            }
+            else if(reader.name()=="contentId")
+            {
+                QString idText=reader.readElementText();
+                tmpDanmu.date=idText.mid(0,10).toLongLong();
+            }
+            else if(reader.name()=="content")
+            {
+                tmpDanmu.text=reader.readElementText();
+            }
+            else if(reader.name()=="showTime")
+            {
+                tmpDanmu.time = reader.readElementText().toFloat() * 1000;
+                tmpDanmu.originTime= tmpDanmu.time;
+            }
+            else if(reader.name()=="color")
+            {
+                tmpDanmu.color = reader.readElementText().toInt(nullptr,16);
+            }
+            else if(reader.name()=="uid")
+            {
+                tmpDanmu.sender="[iqiyi]"+reader.readElementText();
+            }
+        }
+        else if(reader.isEndElement())
+        {
+            if(reader.name()=="bulletInfo")
+            {
+                dmStart=false;
+                danmuList.append(new DanmuComment(tmpDanmu));
+            }
+        }
+        reader.readNext();
     }
 }
 

@@ -119,67 +119,69 @@ void YoukuProvider::downloadAllDanmu(const QString &id, int length, QList<DanmuC
     QList<QPair<QString,QString> > queryItems({
         {"mcount","1"},{"ct","1001"},{"iid",id}
     });
-
+    QStringList urls;
+    QList<QUrlQuery> querys;
     for (int i=0;i<=length;++i)
     {
+        urls<<baseUrl;
         queryItems.append(QPair<QString,QString>("mat",QString::number(i)));
         QUrlQuery query;
         query.setQueryItems(queryItems);
         queryItems.removeLast();
-        try
+        querys<<query;
+    }
+    QList<QPair<QString, QByteArray> > results(Network::httpGetBatch(urls,querys));
+    for(auto &result:results)
+    {
+        if(!result.first.isEmpty()) continue;
+        QJsonObject obj(Network::toJson(result.second).object());
+        QJsonArray danmuArray(obj.value("result").toArray());
+        for(auto iter=danmuArray.begin();iter!=danmuArray.end();++iter)
         {
-            QString str(Network::httpGet(baseUrl,query));
-            QJsonObject obj(Network::toJson(str).object());
-            QJsonArray danmuArray(obj.value("result").toArray());
-            for(auto iter=danmuArray.begin();iter!=danmuArray.end();++iter)
+            QJsonObject dmObj=(*iter).toObject();
+            QJsonValue content=dmObj.value("content");
+            if(!content.isString()) continue;
+            QJsonValue date=dmObj.value("createtime");
+            if(!date.isDouble()) continue;
+            QJsonValue uid=dmObj.value("uid");
+            if(!uid.isDouble()) continue;
+            QJsonValue playat=dmObj.value("playat");
+            if(!playat.isDouble()) continue;
+
+            int posVal=3, colorVal=0xffffff;
+            try
             {
-                QJsonObject dmObj=(*iter).toObject();
-                QJsonValue content=dmObj.value("content");
-                if(!content.isString()) continue;
-                QJsonValue date=dmObj.value("createtime");
-                if(!date.isDouble()) continue;
-                QJsonValue uid=dmObj.value("uid");
-                if(!uid.isDouble()) continue;
-                QJsonValue playat=dmObj.value("playat");
-                if(!playat.isDouble()) continue;
-
-				int posVal=3, colorVal=0xffffff;
-				try
-				{
-					QJsonObject pobj(Network::toJson(dmObj.value("propertis").toString()).object());
-					QJsonValue pos = pobj.value("pos");
-					if (pos.isDouble()) posVal = pos.toInt();
-					else if (pos.isString()) posVal = pos.toString().toInt();
-					else
-						posVal = 3;
-					QJsonValue color = pobj.value("color");
-					if (color.isDouble()) colorVal = color.toInt();
-					else if (color.isString()) colorVal = color.toString().toInt();
-					else
-						colorVal = 0xffffff;
-				}
-				catch (const Network::NetworkError &)
-				{
-
-				}
-
-                DanmuComment *danmu=new DanmuComment();
-                danmu->text=content.toString();
-                danmu->time =playat.toInt();
-                danmu->originTime=danmu->time;
-                danmu->color= colorVal;
-                danmu->fontSizeLevel=DanmuComment::Normal;
-                if(posVal==3) danmu->setType(1);
-                else if(posVal==4) danmu->setType(5);
-                else if(posVal==6) danmu->setType(4);
-                else danmu->setType(1);
-
-                danmu->sender="[Youku]"+QString::number((long long)uid.toDouble());
-                danmu->date=static_cast<long long>(date.toDouble()/1000);
-                danmuList.append(danmu);
+                QJsonObject pobj(Network::toJson(dmObj.value("propertis").toString()).object());
+                QJsonValue pos = pobj.value("pos");
+                if (pos.isDouble()) posVal = pos.toInt();
+                else if (pos.isString()) posVal = pos.toString().toInt();
+                else
+                    posVal = 3;
+                QJsonValue color = pobj.value("color");
+                if (color.isDouble()) colorVal = color.toInt();
+                else if (color.isString()) colorVal = color.toString().toInt();
+                else
+                    colorVal = 0xffffff;
             }
-        } catch (const Network::NetworkError &) {
+            catch (const Network::NetworkError &)
+            {
 
+            }
+
+            DanmuComment *danmu=new DanmuComment();
+            danmu->text=content.toString();
+            danmu->time =playat.toInt();
+            danmu->originTime=danmu->time;
+            danmu->color= colorVal;
+            danmu->fontSizeLevel=DanmuComment::Normal;
+            if(posVal==3) danmu->setType(1);
+            else if(posVal==4) danmu->setType(5);
+            else if(posVal==6) danmu->setType(4);
+            else danmu->setType(1);
+
+            danmu->sender="[Youku]"+QString::number((long long)uid.toDouble());
+            danmu->date=static_cast<long long>(date.toDouble()/1000);
+            danmuList.append(danmu);
         }
     }
 }
