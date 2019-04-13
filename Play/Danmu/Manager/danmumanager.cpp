@@ -361,7 +361,7 @@ MatchInfo *DanmuManager::ddMatch(const QString &fileName)
                 matchInfo->error = false;
                 if(matchInfo->success && matchInfo->matches.count()>0)
                 {
-                    createPool(matchInfo->matches.first().animeTitle,matchInfo->matches.first().title,hashStr);
+                    matchInfo->poolID=createPool(matchInfo->matches.first().animeTitle,matchInfo->matches.first().title,hashStr);
                 }
                 return QVariant::fromValue(static_cast<void *>(matchInfo));
             }while(false);
