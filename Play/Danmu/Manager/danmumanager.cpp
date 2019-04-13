@@ -258,6 +258,7 @@ MatchInfo *DanmuManager::bgmSearch(const QString &keyword)
                 int bgmID=searchObj.value("id").toInt();
                 QString animeTitle=searchObj.value("name_cn").toString();
                 if(animeTitle.isEmpty())animeTitle=searchObj.value("name").toString();
+                animeTitle.replace("&amp;","&");
                 QString epUrl(QString("https://api.bgm.tv/subject/%1/ep").arg(bgmID));
                 try
                 {
@@ -270,6 +271,7 @@ MatchInfo *DanmuManager::bgmSearch(const QString &keyword)
                         QJsonObject epobj=(*epIter).toObject();
                         QString epTitle(epobj.value("name_cn").toString());
                         if(epTitle.isEmpty())epTitle=epobj.value("name").toString();
+                        epTitle.replace("&amp;","&");
                         MatchInfo::DetailInfo detailInfo;
                         detailInfo.animeTitle=animeTitle;
                         detailInfo.title=tr("No.%0 %1").arg(epobj.value("sort").toInt()).arg(epTitle);

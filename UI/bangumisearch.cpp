@@ -78,7 +78,7 @@ void BangumiSearch::search()
         for(auto iter=results.begin();iter!=results.end();++iter)
         {
             QJsonObject searchObj=(*iter).toObject();
-            new QTreeWidgetItem(bangumiList,QStringList()<<searchObj.value("name").toString()<<searchObj.value("name_cn").toString()<<QString::number(searchObj.value("id").toInt()));
+            new QTreeWidgetItem(bangumiList,QStringList()<<searchObj.value("name").toString().replace("&amp;","&")<<searchObj.value("name_cn").toString().replace("&amp;","&")<<QString::number(searchObj.value("id").toInt()));
         }
     }
     catch(Network::NetworkError &error)

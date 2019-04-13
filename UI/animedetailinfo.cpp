@@ -206,7 +206,7 @@ QWidget *AnimeDetailInfo::setupEpisodesPage()
             for(auto iter=epArray.begin();iter!=epArray.end();++iter)
             {
                 QJsonObject epobj=(*iter).toObject();
-                epNames.append(tr("No.%0 %1(%2)").arg(epobj.value("sort").toInt()).arg(epobj.value("name").toString()).arg(epobj.value("name_cn").toString()));
+                epNames.append(tr("No.%0 %1(%2)").arg(epobj.value("sort").toInt()).arg(epobj.value("name").toString().replace("&amp;","&")).arg(epobj.value("name_cn").toString().replace("&amp;","&")));
             }
             getEpNames->setText(tr("Getting Done"));
 
@@ -441,6 +441,7 @@ QWidget *AnimeDetailInfo::setupCapturePage()
     captureView->setUniformItemSizes(true);
     captureView->setResizeMode(QListView::Adjust);
     captureView->setMovement(QListView::Static);
+    captureView->setWordWrap(true);
 
     captureView->setModel(captureModel);
     QAction* actListMode = new QAction(tr("List Mode"),this);

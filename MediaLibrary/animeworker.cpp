@@ -106,6 +106,7 @@ void AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId)
         anime->bangumiID=bangumiId;
         QString newTitle(obj.value("name_cn").toString());
         if(newTitle.isEmpty())newTitle=obj.value("name").toString();
+        newTitle.replace("&amp;","&");
         if(newTitle!=anime->title)
         {
             animesMap.remove(anime->title);
