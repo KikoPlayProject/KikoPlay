@@ -18,6 +18,7 @@
 #include "Play/Danmu/blocker.h"
 #include "Play/Danmu/Render/danmurender.h"
 #include "Play/Danmu/providermanager.h"
+#include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 namespace
 {
@@ -211,6 +212,76 @@ void ListWindow::initActions()
             }
         }
     });
+    act_addWebDanmuSource=new QAction(tr("Add Danmu Source"),this);
+    QObject::connect(act_addWebDanmuSource,&QAction::triggered,[this](){
+        QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
+        QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
+        if (selection.size() == 0)return;
+        QModelIndex selIndex(selection.indexes().first());
+        const PlayListItem *item=GlobalObjects::playlist->getItem(selIndex);
+        if(item->poolID.isEmpty() || !GlobalObjects::danmuManager->getPool(item->poolID, false))
+        {
+            showMessage(tr("No pool associated"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+            return;
+        }
+        const QList<const PlayListItem *> &siblings=GlobalObjects::playlist->getSiblings(item);
+        QMap<QString, QString> poolIdMap;
+        QStringList poolTitles;
+        for(auto sItem:siblings)
+        {
+            Pool *pool=GlobalObjects::danmuManager->getPool(sItem->poolID,false);
+            if(pool)
+            {
+                poolIdMap.insert(pool->epTitle(),pool->id());
+                poolTitles<<pool->epTitle();
+            }
+        }
+        AddDanmu addDanmuDialog(item, this,false,poolTitles);
+        if(QDialog::Accepted==addDanmuDialog.exec())
+        {
+            int i = 0;
+            for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
+            {
+                Pool *pool=GlobalObjects::danmuManager->getPool(poolIdMap.value(addDanmuDialog.danmuToPoolList.at(i++)));
+                DanmuSourceInfo &sourceInfo=(*iter).first;
+                QList<DanmuComment *> &danmuList=(*iter).second;
+                if(pool)
+                {
+                    showMessage(tr("Adding: %1").arg(pool->epTitle()),PopMessageFlag::PM_PROCESS);
+                    if(pool->addSource(sourceInfo,danmuList,true)==-1)
+                    {
+                        qDeleteAll(danmuList);
+                    }
+                }
+                else
+                {
+                    qDeleteAll(danmuList);
+                }
+            }
+            showMessage(tr("Done adding"),PopMessageFlag::PM_OK|PopMessageFlag::PM_HIDE);
+        }
+
+    });
+    act_updateDanmu=new QAction(tr("Update Danmu"),this);
+    QObject::connect(act_updateDanmu,&QAction::triggered,[this](){
+        QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
+        QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
+        if (selection.size() == 0)return;
+        QModelIndexList indexes(selection.indexes());
+        actionDisable=true;
+        updatePlaylistActions();
+        act_addCollection->setEnabled(false);
+        act_addFolder->setEnabled(false);
+        act_addItem->setEnabled(false);
+        playlistView->setDragEnabled(false);
+        GlobalObjects::playlist->updateItemsDanmu(indexes);
+        actionDisable=false;
+        updatePlaylistActions();
+        playlistView->setDragEnabled(true);
+        act_addCollection->setEnabled(true);
+        act_addFolder->setEnabled(true);
+        act_addItem->setEnabled(true);
+    });
     act_exportDanmu=new QAction(tr("Export Danmu"),this);
     QObject::connect(act_exportDanmu,&QAction::triggered,[this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
@@ -400,7 +471,12 @@ void ListWindow::initActions()
             Pool *pool=GlobalObjects::danmuPool->getPool();
             for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
             {
-                pool->addSource((*iter).first,(*iter).second,iter==addDanmuDialog.selectedDanmuList.end()-1);
+                DanmuSourceInfo &sourceInfo=(*iter).first;
+                QList<DanmuComment *> &danmuList=(*iter).second;
+                if(pool->addSource(sourceInfo,danmuList,iter==addDanmuDialog.selectedDanmuList.end()-1)<0)
+                {
+                    qDeleteAll(danmuList);
+                }
             }
         }
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
@@ -525,6 +601,7 @@ void ListWindow::updatePlaylistActions()
     {
         act_autoAssociate->setEnabled(false);
         act_exportDanmu->setEnabled(false);
+        act_updateDanmu->setEnabled(false);
         act_cut->setEnabled(false);
         act_remove->setEnabled(false);
         act_moveUp->setEnabled(false);
@@ -535,6 +612,8 @@ void ListWindow::updatePlaylistActions()
     }
     bool hasPlaylistSelection = !playlistView->selectionModel()->selection().isEmpty();
     act_autoAssociate->setEnabled(hasPlaylistSelection);
+    act_updateDanmu->setEnabled(hasPlaylistSelection);
+    act_addWebDanmuSource->setEnabled(hasPlaylistSelection);
     act_cut->setEnabled(hasPlaylistSelection);
     act_remove->setEnabled(hasPlaylistSelection);
     act_moveUp->setEnabled(hasPlaylistSelection);
@@ -604,6 +683,8 @@ QWidget *ListWindow::setupPlaylistPage()
     QMenu *playlistContextMenu=new QMenu(playlistView);
     playlistContextMenu->addAction(act_play);
     playlistContextMenu->addAction(act_autoAssociate);
+    playlistContextMenu->addAction(act_addWebDanmuSource);
+    playlistContextMenu->addAction(act_updateDanmu);
     playlistContextMenu->addAction(act_exportDanmu);
     QMenu *addSubMenu=new QMenu(tr("Add"),playlistContextMenu);
     addSubMenu->addAction(act_addCollection);

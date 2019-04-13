@@ -15,16 +15,21 @@
 #include <QScrollArea>
 #include <QListWidget>
 #include <QLineEdit>
+#include <QListView>
+#include <QApplication>
+#include <QClipboard>
+#include <QMenu>
 #include "MediaLibrary/animeinfo.h"
 #include "MediaLibrary/animelibrary.h"
 #include "MediaLibrary/episodesmodel.h"
 #include "MediaLibrary/labelmodel.h"
+#include "MediaLibrary/capturelistmodel.h"
 #include "globalobjects.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Common/network.h"
 #include "Common/flowlayout.h"
-
+#include "captureview.h"
 
 AnimeDetailInfo::AnimeDetailInfo(Anime *anime, QWidget *parent) :
     CFramelessDialog(tr("Anime Info"),parent,false,true,false),currentAnime(anime)
@@ -62,6 +67,13 @@ AnimeDetailInfo::AnimeDetailInfo(Anime *anime, QWidget *parent) :
     tagPageButton->setObjectName(QStringLiteral("DialogPageButton"));
     tagPageButton->setFixedSize(pageButtonSize);
 
+    QToolButton *capturePageButton=new QToolButton(this);
+    capturePageButton->setText(tr("Capture"));
+    capturePageButton->setCheckable(true);
+    capturePageButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    capturePageButton->setObjectName(QStringLiteral("DialogPageButton"));
+    capturePageButton->setFixedSize(pageButtonSize);
+
     QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
     pageButtonHLayout->setContentsMargins(0,0,0,0);
     pageButtonHLayout->setSpacing(0);
@@ -69,6 +81,7 @@ AnimeDetailInfo::AnimeDetailInfo(Anime *anime, QWidget *parent) :
     pageButtonHLayout->addWidget(episodesPageButton);
     pageButtonHLayout->addWidget(characterPageButton);
     pageButtonHLayout->addWidget(tagPageButton);
+    pageButtonHLayout->addWidget(capturePageButton);
     pageButtonHLayout->addStretch(1);
     dialogVLayout->addLayout(pageButtonHLayout);
 
@@ -78,6 +91,7 @@ AnimeDetailInfo::AnimeDetailInfo(Anime *anime, QWidget *parent) :
     contentStackLayout->addWidget(setupEpisodesPage());
     contentStackLayout->addWidget(setupCharacterPage());
     contentStackLayout->addWidget(setupTagPage());
+    contentStackLayout->addWidget(setupCapturePage());
     dialogVLayout->addSpacing(6*logicalDpiY()/96);
     dialogVLayout->addLayout(contentStackLayout);
 
@@ -86,6 +100,7 @@ AnimeDetailInfo::AnimeDetailInfo(Anime *anime, QWidget *parent) :
     btnGroup->addButton(episodesPageButton, 1);
     btnGroup->addButton(characterPageButton, 2);
     btnGroup->addButton(tagPageButton, 3);
+    btnGroup->addButton(capturePageButton,4);
     QObject::connect(btnGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, [contentStackLayout](int id, bool checked) {
         if (checked)
             contentStackLayout->setCurrentIndex(id);
@@ -412,6 +427,84 @@ QWidget *AnimeDetailInfo::setupTagPage()
     contentStackLayout->addWidget(animeTagPage);
     contentStackLayout->addWidget(bgmTagPage);
     return pageWidget;
+}
+
+QWidget *AnimeDetailInfo::setupCapturePage()
+{
+    CaptureListModel *captureModel=new CaptureListModel(currentAnime->title,this);
+    QObject::connect(captureModel,&CaptureListModel::fetching,this,&AnimeDetailInfo::showBusyState);
+    QListView *captureView=new QListView(this);
+    captureView->setObjectName(QStringLiteral("captureView"));
+    captureView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    captureView->setIconSize(QSize(200*logicalDpiX()/96,112*logicalDpiY()/96));
+    captureView->setViewMode(QListView::IconMode);
+    captureView->setUniformItemSizes(true);
+    captureView->setResizeMode(QListView::Adjust);
+    captureView->setMovement(QListView::Static);
+
+    captureView->setModel(captureModel);
+    QAction* actListMode = new QAction(tr("List Mode"),this);
+    actListMode->setCheckable(true);
+    QObject::connect(actListMode, &QAction::triggered,[captureView](bool)
+    {
+        captureView->setViewMode(QListView::ListMode);
+    });
+    QAction* actIconMode = new QAction(tr("Icon Mode"));
+    actIconMode->setCheckable(true);
+    QObject::connect(actIconMode, &QAction::triggered,[captureView](bool)
+    {
+        captureView->setViewMode(QListView::IconMode);
+    });
+    QAction* actCopy = new QAction(tr("Copy"),this);
+    QObject::connect(actCopy, &QAction::triggered,[captureView,captureModel](bool)
+    {
+        auto selection = captureView->selectionModel()->selectedRows();
+        if(selection.size()==0) return;
+        QPixmap img(captureModel->getFullCapture(selection.first().row()));
+        QApplication::clipboard()->setPixmap(img);
+    });
+    QAction* actSave = new QAction(tr("Save"),this);
+    QObject::connect(actSave, &QAction::triggered,[this,captureView,captureModel](bool)
+    {
+        auto selection = captureView->selectionModel()->selectedRows();
+        if(selection.size()==0) return;
+        QPixmap img(captureModel->getFullCapture(selection.first().row()));
+        const CaptureItem *item=captureModel->getCaptureItem(selection.first().row());
+        QString fileName = QFileDialog::getSaveFileName(this, tr("Save Capture"),item->info,
+                                    tr("JPEG Images (*.jpg);;PNG Images (*.png)"));
+        if(!fileName.isEmpty())
+        {
+            img.save(fileName);
+        }
+    });
+    QAction* actRemove = new QAction(tr("Remove"),this);
+    QObject::connect(actRemove, &QAction::triggered,[captureView,captureModel](bool)
+    {
+        auto selection = captureView->selectionModel()->selectedRows();
+        if(selection.size()==0) return;
+        captureModel->deleteCaptures(selection);
+    });
+    QMenu *contexMenu = new QMenu(this);
+    QActionGroup *group=new QActionGroup(this);
+    group->addAction(actIconMode);
+    group->addAction(actListMode);
+    actIconMode->setChecked(true);
+    contexMenu->addAction(actCopy);
+    contexMenu->addAction(actSave);
+    contexMenu->addAction(actRemove);
+    contexMenu->addSeparator();
+    contexMenu->addAction(actIconMode);
+    contexMenu->addAction(actListMode);
+    captureView->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(captureView, &QListView::customContextMenuRequested, [contexMenu]()
+    {
+        contexMenu->exec(QCursor::pos());
+    });
+    QObject::connect(captureView,&QListView::doubleClicked,[this,captureModel](const QModelIndex &index){
+        CaptureView view(captureModel,index.row(),this);
+        view.exec();
+    });
+    return captureView;
 }
 
 LabelPanel::LabelPanel(QWidget *parent, bool allowDelete):QWidget(parent),showDelete(allowDelete)

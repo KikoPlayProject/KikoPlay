@@ -47,6 +47,7 @@ private:
     QWidget *setupEpisodesPage();
     QWidget *setupCharacterPage();
     QWidget *setupTagPage();
+    QWidget *setupCapturePage();
 signals:
     void playFile(const QString &file);
 public slots:

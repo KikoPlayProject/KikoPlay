@@ -100,7 +100,11 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                 DanmuSourceInfo &sourceInfo=(*iter).first;
                 QList<DanmuComment *> &danmuList=(*iter).second;
                 int srcId=pool->addSource(sourceInfo,danmuList,true);
-                if(srcId<0) continue;
+                if(srcId<0)
+                {
+                    qDeleteAll(danmuList);
+                    continue;
+                }
                 DanmuPoolSourceNode *sourceNode(nullptr);
                 for(auto n:*curNode->children)
                 {

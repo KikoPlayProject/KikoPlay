@@ -49,3 +49,25 @@ CREATE TABLE "tag" (
 PRIMARY KEY ("Anime", "Tag"),
 CONSTRAINT "Anime" FOREIGN KEY ("Anime") REFERENCES "anime" ("Anime") ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+CREATE TABLE "alias" (
+"Alias"  TEXT NOT NULL ON CONFLICT IGNORE,
+"Anime"  TEXT,
+PRIMARY KEY ("Alias" ASC)
+);
+
+CREATE INDEX "Alias_Index"
+ON "alias" ("Alias" ASC);
+
+CREATE TABLE "capture" (
+"Time"  INTEGER NOT NULL ON CONFLICT IGNORE,
+"Anime"  TEXT,
+"Info"  TEXT,
+"Thumb"  BLOB,
+"Image"  BLOB,
+PRIMARY KEY ("Time"),
+CONSTRAINT "Anime" FOREIGN KEY ("Anime") REFERENCES "anime" ("Anime") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX "Time_Index"
+ON "capture" ("Time" ASC);

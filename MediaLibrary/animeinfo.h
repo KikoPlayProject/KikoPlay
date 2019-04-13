@@ -33,4 +33,11 @@ struct Anime
     QList<Episode> eps;
     QList<Character> characters;
 };
+struct CaptureItem
+{
+    qint64 timeId;
+    QString info;
+    QByteArray thumb;
+};
+
 #endif // ANIMEINFO_H

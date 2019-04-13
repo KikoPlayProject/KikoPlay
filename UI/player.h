@@ -96,10 +96,10 @@ private:
      QSlider *volume;
      QLabel *timeLabel;
      QPushButton *play_pause,*prev,*next,*stop,*mute,*setting, *danmu,*fullscreen;
-     QAction *actPlayPause,*actPrev,*actNext,*actFullscreen;
-     QTimer ctrlPressTimer,hideCursorTimer;
+     QAction *actPlayPause,*actPrev,*actNext,*actFullscreen,*act_screenshotSrc,*act_screenshotAct;
+     QTimer doublePressTimer,hideCursorTimer;
      const int hideCursorTimeout=3000;
-     int ctrlPressCount;
+     int ctrlPressCount,altPressCount;
 
      QLabel *titleLabel;
      QToolButton *mediaInfo, *windowSize,*screenshot,*stayOnTop;

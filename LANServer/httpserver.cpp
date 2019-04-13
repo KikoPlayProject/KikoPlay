@@ -18,7 +18,7 @@ namespace
     class MediaFileHandler : public QHttpEngine::FilesystemHandler
     {
     public:
-        explicit MediaFileHandler(const QHash<QString,QString> *mediaHash,QObject *parent = 0):
+        explicit MediaFileHandler(const QHash<QString,QString> *mediaHash,QObject *parent = nullptr):
             FilesystemHandler(parent),mediaHashTable(mediaHash){}
 
         // FilesystemHandler interface
@@ -37,6 +37,19 @@ namespace
                 {
                     processFile(socket, mediaPath);
                 }
+            }
+            else if(path.startsWith("sub/")) // eg. sub/ass/...
+            {
+                QStringList infoList(path.split('/',QString::SkipEmptyParts));
+                if(infoList.count()<3)
+                {
+                    socket->writeError(QHttpEngine::Socket::BadRequest);
+                    return;
+                }
+                QString mediaPath(mediaHashTable->value(infoList[2],""));
+                QFileInfo fi(mediaPath);
+                QString subPath=QString("%1/%2.%3").arg(fi.absolutePath(),fi.baseName(),infoList[1]);
+                processFile(socket, subPath);
             }
             else
             {
@@ -120,6 +133,7 @@ HttpServer::HttpServer(QObject *parent) : QObject(parent)
     apiHandler->registerMethod("playlist", this, &HttpServer::api_Playlist);
     apiHandler->registerMethod("updateTime", this, &HttpServer::api_UpdateTime);
     apiHandler->registerMethod("danmu/v3/", this, &HttpServer::api_Danmu);
+    apiHandler->registerMethod("subtitle", this, &HttpServer::api_Subtitle);
     handler->addSubHandler(QRegExp("api/"), apiHandler);
 
     server = new QHttpEngine::Server(handler,this);
@@ -189,8 +203,10 @@ void HttpServer::api_Danmu(QHttpEngine::Socket *socket)
 { 
     QString poolId=socket->queryString().value("id");
     bool update=(socket->queryString().value("update").toLower()=="true");
-    genLog(QString("[%1]Request:Danmu%2").arg(socket->peerAddress().toString(),update?", update=true":""));
     Pool *pool=GlobalObjects::danmuManager->getPool(poolId);
+    genLog(QString("[%1]Request:Danmu %2%3").arg(socket->peerAddress().toString(),
+                                                   pool?pool->epTitle():"",
+                                                   update?", update=true":""));
     QJsonArray danmuArray;
     if(pool)
     {
@@ -210,6 +226,36 @@ void HttpServer::api_Danmu(QHttpEngine::Socket *socket)
         {"code", 0},
         {"data", danmuArray},
         {"update",update}
+    };
+    QByteArray data = QJsonDocument(resposeObj).toJson();
+    socket->setHeader("Content-Length", QByteArray::number(data.length()));
+    socket->setHeader("Content-Type", "application/json");
+    socket->writeHeaders();
+    socket->write(data);
+    socket->close();
+}
+
+void HttpServer::api_Subtitle(QHttpEngine::Socket *socket)
+{
+    QString mediaId=socket->queryString().value("id");
+    QString mediaPath=mediaHash.value(mediaId);
+    QFileInfo fi(mediaPath);
+    QString dir=fi.absolutePath(),name=fi.baseName();
+    static QStringList supportedSubFormats={"","ass","ssa","srt"};
+    genLog(QString("[%1]Request:Subtitle - %2").arg(socket->peerAddress().toString(),name));
+    int formatIndex=0;
+    for(int i=1;i<4;++i)
+    {
+        QFileInfo subInfo(dir,name+"."+supportedSubFormats[i]);
+        if(subInfo.exists())
+        {
+            formatIndex=i;
+            break;
+        }
+    }
+    QJsonObject resposeObj
+    {
+        {"type", supportedSubFormats[formatIndex]}
     };
     QByteArray data = QJsonDocument(resposeObj).toJson();
     socket->setHeader("Content-Length", QByteArray::number(data.length()));

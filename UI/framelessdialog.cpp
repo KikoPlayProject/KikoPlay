@@ -305,6 +305,11 @@ void CFramelessDialog::showBusyState(bool busy)
     }
 }
 
+void CFramelessDialog::setTitle(const QString &text)
+{
+    title->setText(text);
+}
+
 void CFramelessDialog::reject()
 {
     QDialog::reject();

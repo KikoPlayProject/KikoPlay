@@ -112,7 +112,10 @@ SOURCES += \
     UI/ressearchwindow.cpp \
     UI/managescript.cpp \
     Play/Danmu/Provider/pptvprovider.cpp \
-    Play/Danmu/Manager/pool.cpp
+    Play/Danmu/Manager/pool.cpp \
+    MediaLibrary/capturelistmodel.cpp \
+    UI/captureview.cpp \
+    UI/tip.cpp
 
 HEADERS += \
     UI/mainwindow.h \
@@ -201,7 +204,10 @@ HEADERS += \
     UI/managescript.h \
     Play/Danmu/Provider/pptvprovider.h \
     Play/Danmu/Manager/pool.h \
-    Common/threadtask.h
+    Common/threadtask.h \
+    MediaLibrary/capturelistmodel.h \
+    UI/captureview.h \
+    UI/tip.h
 
 INCLUDEPATH += \
     Play/Video \

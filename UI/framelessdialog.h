@@ -52,7 +52,7 @@ protected:
     virtual void showEvent(QShowEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
     void showBusyState(bool busy);
-
+    void setTitle(const QString &text);
     // QDialog interface
 public slots:
     virtual void reject();

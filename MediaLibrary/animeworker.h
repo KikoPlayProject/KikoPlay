@@ -11,6 +11,8 @@ private:
     QMap<QString,Anime *> animesMap;
     void updateAnimeInfo(Anime *anime);
     QString downloadLabelInfo(Anime *anime);
+    QString isAlias(const QString &animeName);
+    void setAlias(const QString &animeName, const QString &alias);
 
 public slots:
     void loadAnimes(QList<Anime *> *animes, int offset, int limit);

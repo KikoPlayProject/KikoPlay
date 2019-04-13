@@ -5,7 +5,10 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QFileDialog>
-Capture::Capture(QImage &captureImage, QWidget *parent) : CFramelessDialog("",parent)
+#include "globalobjects.h"
+#include "MediaLibrary/animelibrary.h"
+#include "Play/Video/mpvplayer.h"
+Capture::Capture(QImage &captureImage, QWidget *parent, const QString &animeTitle) : CFramelessDialog("",parent)
 {
     setResizeable(false);
     QLabel *imgLabel=new QLabel(this);
@@ -34,10 +37,20 @@ Capture::Capture(QImage &captureImage, QWidget *parent) : CFramelessDialog("",pa
             CFramelessDialog::onAccept();
         }
     });
+    QPushButton *addToLibrary=new QPushButton(tr("Add To Library"),buttonContainer);
+    addToLibrary->setEnabled(!animeTitle.isEmpty());
+    QObject::connect(addToLibrary,&QPushButton::clicked,[&captureImage,&animeTitle,this](){
+        int curTime=GlobalObjects::mpvplayer->getTime();
+        int cmin=curTime/60;
+        int cls=curTime-cmin*60;
+        QString info=QString("%1:%2 - %3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(animeTitle);
+        GlobalObjects::library->saveCapture(animeTitle,info,captureImage);
+        CFramelessDialog::onAccept();
+    });
     QHBoxLayout *btnHLayout=new QHBoxLayout(buttonContainer);
     btnHLayout->addWidget(copyToClipboard);
+    btnHLayout->addWidget(addToLibrary);
     btnHLayout->addItem(new QSpacerItem(1,1,QSizePolicy::MinimumExpanding));
     btnHLayout->addWidget(saveToFile);
-
     resize(w+4,h+50*logicalDpiY()/96);
 }

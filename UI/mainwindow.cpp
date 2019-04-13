@@ -11,6 +11,7 @@
 #include "poolmanager.h"
 #include "serversettting.h"
 #include "checkupdate.h"
+#include "tip.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/danmupool.h"
@@ -50,6 +51,14 @@ MainWindow::MainWindow(QWidget *parent)
             setGeometry(geo);
         }
     });
+    if(GlobalObjects::appSetting->value("MainWindow/ShowTip",true).toBool())
+    {
+        GlobalObjects::appSetting->setValue("MainWindow/ShowTip",false);
+        QTimer::singleShot(0,[this](){
+            Tip tip(buttonIcon);
+            tip.exec();
+        });
+    }
 }
 
 MainWindow::~MainWindow()
@@ -98,6 +107,13 @@ void MainWindow::setupUI()
         checkUpdate.exec();
     });
     buttonIcon->addAction(act_checkUpdate);
+
+    QAction *act_useTip=new QAction(tr("Useage Tip"), this);
+    QObject::connect(act_useTip,&QAction::triggered,[this](){
+        Tip tip(buttonIcon);
+        tip.exec();
+    });
+    buttonIcon->addAction(act_useTip);
 
     QAction *act_about=new QAction(tr("About"), this);
     QObject::connect(act_about,&QAction::triggered,[this](){

@@ -7,7 +7,7 @@ class Capture : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit Capture(QImage &captureImage, QWidget *parent = nullptr);
+    explicit Capture(QImage &captureImage, QWidget *parent = nullptr, const QString &animeTitle="");
 
 signals:
 

@@ -63,6 +63,19 @@ QModelIndex PlayList::getCurrentIndex() const
     return currentItem?createIndex(currentItem->parent->children->indexOf(currentItem),0,currentItem):QModelIndex();
 }
 
+QList<const PlayListItem *> PlayList::getSiblings(const PlayListItem *item)
+{
+    QList<const PlayListItem *> siblings;
+    if(item->parent)
+    {
+        for(PlayListItem *sibling:*item->parent->children)
+        {
+            if(sibling->animeTitle==item->animeTitle) siblings<<sibling;
+        }
+    }
+    return siblings;
+}
+
 PlayList::LoopMode PlayList::getLoopMode() const
 {
     Q_D(const PlayList);
@@ -702,7 +715,6 @@ void PlayList::matchIndex(QModelIndex &index, MatchInfo *matchInfo)
     item->animeTitle=bestMatch.animeTitle;
     item->title=bestMatch.title;
     item->poolID=GlobalObjects::danmuManager->updateMatch(item->path,matchInfo);
-    //item->poolID=MatchProvider::updateMatchInfo(item->path,matchInfo);
     d->playListChanged = true;
     d->needRefresh = true;
     emit message(tr("Success: %1").arg(item->title),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
@@ -714,6 +726,39 @@ void PlayList::matchIndex(QModelIndex &index, MatchInfo *matchInfo)
     GlobalObjects::library->addToLibrary(item->animeTitle,item->title,item->path);
     d->savePlaylist();
 
+}
+
+void PlayList::updateItemsDanmu(const QModelIndexList &itemIndexes)
+{
+    QList<PlayListItem *> items;
+    for(const QModelIndex &index : itemIndexes)
+    {
+        if (index.isValid())
+        {
+            PlayListItem *item = static_cast<PlayListItem*>(index.internalPointer());
+            items.append(item);
+        }
+    }
+    emit message(tr("Update Start"),PopMessageFlag::PM_PROCESS);
+    while(!items.empty())
+    {
+        PlayListItem *currentItem=items.takeFirst();
+        if(currentItem->children)
+        {
+            for(PlayListItem *child:*currentItem->children)
+            {
+                items.push_back(child);
+            }
+        }
+        else if(!currentItem->poolID.isEmpty())
+        {
+            Pool *pool=GlobalObjects::danmuManager->getPool(currentItem->poolID);
+            if(!pool) continue;
+            emit message(tr("Updating: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS);
+            pool->update();
+        }
+    }
+    emit message(tr("Update Done"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
 }
 
 void PlayList::setCurrentPlayTime(int playTime)

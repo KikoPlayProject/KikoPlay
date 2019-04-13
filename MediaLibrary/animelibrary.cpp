@@ -7,7 +7,7 @@
 #include "globalobjects.h"
 #include "animeworker.h"
 #include "Common/network.h"
-#include "Common/htmlparsersax.h"
+#include "Common/threadtask.h"
 #include "animemodel.h"
 #include "labelmodel.h"
 #define AnimeRole Qt::UserRole+1
@@ -222,6 +222,85 @@ void AnimeLibrary::fillAnimeInfo(Anime *anime)
         }
         anime->loadCrtImage=true;
     }
+}
+
+int AnimeLibrary::fetchAnimeCaptures(const QString &animeName, QList<CaptureItem *> &captureList, int offset, int limit)
+{
+    ThreadTask task(GlobalObjects::workThread);
+    return task.Run([&animeName,&captureList,offset,limit](){
+        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+        query.prepare("select Time,Info,Thumb from capture where Anime=? order by Time desc limit ? offset ?");
+        query.bindValue(0,animeName);
+        query.bindValue(1,limit);
+        query.bindValue(2,offset);
+        query.exec();
+        int timeNo=query.record().indexOf("Time"),
+            infoNo=query.record().indexOf("Info"),
+            thumbNo=query.record().indexOf("Thumb");
+        int count=0;
+        while (query.next())
+        {
+            CaptureItem *captrue=new CaptureItem;
+            captrue->timeId=query.value(timeNo).toLongLong();
+            captrue->info=query.value(infoNo).toString();
+            captrue->thumb=query.value(thumbNo).toByteArray();
+            captureList.append(captrue);
+            ++count;
+        }
+        return count;
+    }).toInt();
+}
+
+QPixmap AnimeLibrary::getCapture(qint64 timeId)
+{
+    QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+    query.prepare("select Image from capture where Time=?");
+    query.bindValue(0,timeId);
+    query.exec();
+    QPixmap image;
+    if(query.first())
+    {
+        image.loadFromData(query.value(0).toByteArray());
+    }
+    return image;
+}
+
+void AnimeLibrary::saveCapture(const QString &animeName, const QString &info, const QImage &image)
+{
+    ThreadTask task(GlobalObjects::workThread);
+    task.RunOnce([animeName,info,image](){
+        QByteArray imgBytes;
+        QBuffer bufferImage(&imgBytes);
+        bufferImage.open(QIODevice::WriteOnly);
+        image.save(&bufferImage, "JPG");
+
+        QImage &&thumb=image.scaled(200,112,Qt::AspectRatioMode::KeepAspectRatioByExpanding);
+        QByteArray thumbBytes;
+        QBuffer bufferThumb(&thumbBytes);
+        bufferThumb.open(QIODevice::WriteOnly);
+        thumb.save(&bufferThumb, "PNG");
+
+        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+        query.prepare("insert into capture(Time,Anime,Info,Thumb,Image) values(?,?,?,?,?)");
+        query.bindValue(0,QDateTime::currentDateTime().toSecsSinceEpoch());
+        query.bindValue(1,animeName);
+        query.bindValue(2,info);
+        query.bindValue(3,thumbBytes);
+        query.bindValue(4,imgBytes);
+        query.exec();
+    });
+
+}
+
+void AnimeLibrary::deleteCapture(qint64 timeId)
+{
+    ThreadTask task(GlobalObjects::workThread);
+    task.RunOnce([timeId](){
+        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+        query.prepare("delete from capture where Time=?");
+        query.bindValue(0,timeId);
+        query.exec();
+    });
 }
 
 int AnimeLibrary::getTotalAnimeCount()

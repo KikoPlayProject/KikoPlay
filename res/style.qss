@@ -931,3 +931,7 @@ QLineEdit#PageEdit{
      background:transparent;
      padding-bottom:-1px;
 }
+#captureView,#captureImageView{
+    border-style:none;
+    background: transparent;
+}

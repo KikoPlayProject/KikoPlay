@@ -45,5 +45,6 @@
         <file>res/images/down-light.png</file>
         <file>res/images/check-box-uncheck-light.png</file>
         <file>res/onAirSites.json</file>
+        <file>res/tip</file>
     </qresource>
 </RCC>

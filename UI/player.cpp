@@ -383,9 +383,11 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     volume->setSingleStep(1);
 
     ctrlPressCount=0;
-    QObject::connect(&ctrlPressTimer,&QTimer::timeout,[this](){
+    altPressCount=0;
+    QObject::connect(&doublePressTimer,&QTimer::timeout,[this](){
         ctrlPressCount=0;
-        ctrlPressTimer.stop();
+        altPressCount=0;
+        doublePressTimer.stop();
     });
     QObject::connect(&hideCursorTimer,&QTimer::timeout,[this](){
         if(isFullscreen)setCursor(Qt::BlankCursor);
@@ -451,24 +453,26 @@ void PlayerWindow::initActions()
     windowSizeGroup->actions().at(GlobalObjects::appSetting->value("Play/WindowSize",2).toInt())->trigger();
     windowSize->addActions(windowSizeGroup->actions());
 
-    QAction *act_screenshotSrc = new QAction(tr("Original Video"),this);
+    act_screenshotSrc = new QAction(tr("Original Video"),this);
     QObject::connect(act_screenshotSrc,&QAction::triggered,[this](){
         QTemporaryFile tmpImg("XXXXXX.jpg");
         if(tmpImg.open())
         {
             GlobalObjects::mpvplayer->screenshot(tmpImg.fileName());
             QImage captureImage(tmpImg.fileName());
-            Capture captureDialog(captureImage,screenshot);
+            const PlayListItem *curItem=GlobalObjects::playlist->getCurrentItem();
+            Capture captureDialog(captureImage,screenshot,curItem?curItem->animeTitle:"");
             QRect geo(captureDialog.geometry());
             geo.moveCenter(this->geometry().center());
             captureDialog.move(geo.topLeft());
             captureDialog.exec();
         }
     });
-    QAction *act_screenshotAct = new QAction(tr("Actual content"),this);
+    act_screenshotAct = new QAction(tr("Actual content"),this);
     QObject::connect(act_screenshotAct,&QAction::triggered,[this](){
         QImage captureImage(GlobalObjects::mpvplayer->grabFramebuffer());
-        Capture captureDialog(captureImage,screenshot);
+        const PlayListItem *curItem=GlobalObjects::playlist->getCurrentItem();
+        Capture captureDialog(captureImage,screenshot,curItem?curItem->animeTitle:"");
         QRect geo(captureDialog.geometry());
         geo.moveCenter(this->geometry().center());
         captureDialog.move(geo.topLeft());
@@ -1521,16 +1525,60 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
 	{
     case Qt::Key_Control:
     {
-        if(!ctrlPressTimer.isActive())
+        if(altPressCount>0)
         {
-            ctrlPressTimer.start(500);
+            altPressCount=0;
+            doublePressTimer.stop();
+        }
+        if(!doublePressTimer.isActive())
+        {
+            doublePressTimer.start(500);
         }
         ctrlPressCount++;
         if(ctrlPressCount==2)
         {
             danmuSwitch->click();
-            ctrlPressTimer.stop();
+            doublePressTimer.stop();
             ctrlPressCount=0;
+        }
+        break;
+    }
+    case Qt::Key_Alt:
+    {
+        if(ctrlPressCount>0)
+        {
+            ctrlPressCount=0;
+            doublePressTimer.stop();
+        }
+        if(!doublePressTimer.isActive())
+        {
+            doublePressTimer.start(500);
+        }
+        altPressCount++;
+        if(altPressCount==2)
+        {
+            doublePressTimer.stop();
+            altPressCount=0;
+            const PlayListItem *curItem=GlobalObjects::playlist->getCurrentItem();
+            if(curItem && !curItem->animeTitle.isEmpty())
+            {
+                int curTime=GlobalObjects::mpvplayer->getTime();
+                int cmin=curTime/60;
+                int cls=curTime-cmin*60;
+                QString info=QString("%1:%2 - %3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(curItem->title);
+                QTemporaryFile tmpImg("XXXXXX.jpg");
+                if(tmpImg.open())
+                {
+                    GlobalObjects::mpvplayer->screenshot(tmpImg.fileName());
+                    QImage captureImage(tmpImg.fileName());
+                    GlobalObjects::library->saveCapture(curItem->animeTitle,info,captureImage);
+                    showMessage(tr("Capture has been add to library: %1").arg(curItem->animeTitle));
+                }
+            }
+            else
+            {
+                act_screenshotSrc->trigger();
+            }
         }
         break;
     }

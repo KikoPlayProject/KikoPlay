@@ -655,18 +655,6 @@ void DanmuManager::loadAllPool()
 void DanmuManager::refreshCache(Pool *newPool)
 {
     QMutexLocker locker(&cacheLock);
-    if(newPool)
-    {
-        if(poolDanmuCacheInfo.contains(newPool->pid))
-        {
-            if(poolDanmuCacheInfo.value(newPool->pid)<5)
-                ++poolDanmuCacheInfo[newPool->pid];
-        }
-        else
-        {
-            poolDanmuCacheInfo[newPool->pid]=1;
-        }
-    }
     for(auto iter=poolDanmuCacheInfo.begin();iter!=poolDanmuCacheInfo.end();)
     {
         if(iter.value()==0)
@@ -680,6 +668,18 @@ void DanmuManager::refreshCache(Pool *newPool)
         {
             --iter.value();
             ++iter;
+        }
+    }
+    if(newPool)
+    {
+        if(poolDanmuCacheInfo.contains(newPool->pid))
+        {
+            if(poolDanmuCacheInfo.value(newPool->pid)<5)
+                ++poolDanmuCacheInfo[newPool->pid];
+        }
+        else
+        {
+            poolDanmuCacheInfo[newPool->pid]=1;
         }
     }
 }

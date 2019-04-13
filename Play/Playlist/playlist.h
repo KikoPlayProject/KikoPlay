@@ -24,6 +24,7 @@ public:
     const PlayListItem *getCurrentItem() const;
     QModelIndex getCurrentIndex() const;
     inline const PlayListItem *getItem(const QModelIndex &index){return index.isValid()?static_cast<PlayListItem*>(index.internalPointer()):nullptr; }
+    QList<const PlayListItem *> getSiblings(const PlayListItem *item);
     LoopMode getLoopMode() const;
     bool canPaste() const;
     QList<QPair<QString,QString> > &recent();
@@ -55,6 +56,7 @@ public slots :
     void checkCurrentItem(PlayListItem *itemDeleted);
     void matchItems(const QModelIndexList &matchIndexes);
     void matchIndex(QModelIndex &index,MatchInfo *matchInfo);
+    void updateItemsDanmu(const QModelIndexList &itemIndexes);
     void setCurrentPlayTime(int playTime);
     QModelIndex mergeItems(const QModelIndexList &mergeIndexes);
     void exportDanmuItems(const QModelIndexList &exportIndexes);
