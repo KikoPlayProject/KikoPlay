@@ -236,7 +236,7 @@ void ListWindow::initActions()
                 poolTitles<<pool->epTitle();
             }
         }
-        AddDanmu addDanmuDialog(item, this,false,poolTitles);
+        AddDanmu addDanmuDialog(item, this,true,poolTitles);
         if(QDialog::Accepted==addDanmuDialog.exec())
         {
             int i = 0;
