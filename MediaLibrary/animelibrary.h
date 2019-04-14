@@ -28,7 +28,7 @@ public:
     void fillAnimeInfo(Anime *anime);
     int fetchAnimeCaptures(const QString &animeName, QList<CaptureItem *> &captureList, int offset, int limit);
     QPixmap getCapture(qint64 timeId);
-    void saveCapture(const QString &animeName, const QString &info, const QImage &image);
+    void saveCapture(const QString &animeName, const QString &filePath, const QString &info, const QImage &image);
     void deleteCapture(qint64 timeId);
     int getTotalAnimeCount();
 signals:

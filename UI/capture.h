@@ -2,12 +2,12 @@
 #define CAPTURE_H
 
 #include "framelessdialog.h"
-
+class PlayListItem;
 class Capture : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit Capture(QImage &captureImage, QWidget *parent = nullptr, const QString &animeTitle="");
+    explicit Capture(QImage &captureImage, QWidget *parent = nullptr, const PlayListItem *item=nullptr);
 
 signals:
 

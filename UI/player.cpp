@@ -461,7 +461,7 @@ void PlayerWindow::initActions()
             GlobalObjects::mpvplayer->screenshot(tmpImg.fileName());
             QImage captureImage(tmpImg.fileName());
             const PlayListItem *curItem=GlobalObjects::playlist->getCurrentItem();
-            Capture captureDialog(captureImage,screenshot,curItem?curItem->animeTitle:"");
+            Capture captureDialog(captureImage,screenshot,curItem);
             QRect geo(captureDialog.geometry());
             geo.moveCenter(this->geometry().center());
             captureDialog.move(geo.topLeft());
@@ -472,7 +472,7 @@ void PlayerWindow::initActions()
     QObject::connect(act_screenshotAct,&QAction::triggered,[this](){
         QImage captureImage(GlobalObjects::mpvplayer->grabFramebuffer());
         const PlayListItem *curItem=GlobalObjects::playlist->getCurrentItem();
-        Capture captureDialog(captureImage,screenshot,curItem?curItem->animeTitle:"");
+        Capture captureDialog(captureImage,screenshot,curItem);
         QRect geo(captureDialog.geometry());
         geo.moveCenter(this->geometry().center());
         captureDialog.move(geo.topLeft());
@@ -1571,7 +1571,7 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
                 {
                     GlobalObjects::mpvplayer->screenshot(tmpImg.fileName());
                     QImage captureImage(tmpImg.fileName());
-                    GlobalObjects::library->saveCapture(curItem->animeTitle,info,captureImage);
+                    GlobalObjects::library->saveCapture(curItem->animeTitle,curItem->path,info,captureImage);
                     showMessage(tr("Capture has been add to library: %1").arg(curItem->animeTitle));
                 }
             }

@@ -265,10 +265,10 @@ QPixmap AnimeLibrary::getCapture(qint64 timeId)
     return image;
 }
 
-void AnimeLibrary::saveCapture(const QString &animeName, const QString &info, const QImage &image)
+void AnimeLibrary::saveCapture(const QString &animeName, const QString &filePath, const QString &info, const QImage &image)
 {
     ThreadTask task(GlobalObjects::workThread);
-    task.RunOnce([animeName,info,image](){
+    task.RunOnce([animeName,info,filePath,image](){
         QByteArray imgBytes;
         QBuffer bufferImage(&imgBytes);
         bufferImage.open(QIODevice::WriteOnly);
@@ -280,14 +280,45 @@ void AnimeLibrary::saveCapture(const QString &animeName, const QString &info, co
         bufferThumb.open(QIODevice::WriteOnly);
         thumb.save(&bufferThumb, "PNG");
 
-        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
-        query.prepare("insert into capture(Time,Anime,Info,Thumb,Image) values(?,?,?,?,?)");
-        query.bindValue(0,QDateTime::currentDateTime().toSecsSinceEpoch());
-        query.bindValue(1,animeName);
-        query.bindValue(2,info);
-        query.bindValue(3,thumbBytes);
-        query.bindValue(4,imgBytes);
-        query.exec();
+        std::function<bool (const QString &,const QString &,const QByteArray &, const QByteArray &)> addCapture
+                = [](const QString &animeName,const QString &info,const QByteArray &thumbBytes,const QByteArray &imgBytes)
+        {
+            QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+            query.prepare("insert into capture(Time,Anime,Info,Thumb,Image) values(?,?,?,?,?)");
+            query.bindValue(0,QDateTime::currentDateTime().toSecsSinceEpoch());
+            query.bindValue(1,animeName);
+            query.bindValue(2,info);
+            query.bindValue(3,thumbBytes);
+            query.bindValue(4,imgBytes);
+            return query.exec();
+        };
+
+        if(!addCapture(animeName,info,thumbBytes,imgBytes)) //AnimeTitle may inconsistent
+        {
+            //Firstly, check if the anime has alias
+            QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+            query.prepare("select Anime from alias where Alias=?");
+            query.bindValue(0,animeName);
+            query.exec();
+            bool success=false;
+            if(query.first()) //has alias
+            {
+                QString aName(query.value(0).toString());
+                success=addCapture(aName,info,thumbBytes,imgBytes);
+            }
+            //Secondly, try to find animeName according to the path
+            if(!success)
+            {
+                query.prepare("select Anime from eps where LocalFile=?");
+                query.bindValue(0,filePath);
+                query.exec();
+                if(query.first()) //has alias
+                {
+                    QString aName(query.value(0).toString());
+                    success=addCapture(aName,info,thumbBytes,imgBytes);
+                }
+            }
+        }
     });
 
 }

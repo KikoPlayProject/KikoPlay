@@ -8,7 +8,8 @@
 #include "globalobjects.h"
 #include "MediaLibrary/animelibrary.h"
 #include "Play/Video/mpvplayer.h"
-Capture::Capture(QImage &captureImage, QWidget *parent, const QString &animeTitle) : CFramelessDialog("",parent)
+#include "Play/Playlist/playlistitem.h"
+Capture::Capture(QImage &captureImage, QWidget *parent, const PlayListItem *item) : CFramelessDialog("",parent)
 {
     setResizeable(false);
     QLabel *imgLabel=new QLabel(this);
@@ -38,13 +39,13 @@ Capture::Capture(QImage &captureImage, QWidget *parent, const QString &animeTitl
         }
     });
     QPushButton *addToLibrary=new QPushButton(tr("Add To Library"),buttonContainer);
-    addToLibrary->setEnabled(!animeTitle.isEmpty());
-    QObject::connect(addToLibrary,&QPushButton::clicked,[&captureImage,&animeTitle,this](){
+    addToLibrary->setEnabled(item && !item->animeTitle.isEmpty());
+    QObject::connect(addToLibrary,&QPushButton::clicked,[&captureImage,item,this](){
         int curTime=GlobalObjects::mpvplayer->getTime();
         int cmin=curTime/60;
         int cls=curTime-cmin*60;
-        QString info=QString("%1:%2 - %3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(animeTitle);
-        GlobalObjects::library->saveCapture(animeTitle,info,captureImage);
+        QString info=QString("%1:%2 - %3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(item->animeTitle);
+        GlobalObjects::library->saveCapture(item->animeTitle,item->path,info,captureImage);
         CFramelessDialog::onAccept();
     });
     QHBoxLayout *btnHLayout=new QHBoxLayout(buttonContainer);
