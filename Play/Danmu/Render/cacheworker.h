@@ -12,6 +12,22 @@ struct DanmuStyle
     int mergeCountPos;
     bool enlargeMerged;
 };
+struct CacheMiddleInfo
+{
+    QString hash;
+    DanmuComment *comment;
+    DanmuDrawInfo *drawInfo;
+    QImage *img;
+    int texX,texY;
+};
+struct TextureInfo
+{
+    GLuint id;
+    int width;
+    int height;
+    int danmuDrawInfoCount;
+};
+
 class CacheWorker : public QObject
 {
     Q_OBJECT
@@ -20,12 +36,14 @@ public:
 private:
     const int max_cache=512;
     QHash<QString,DanmuDrawInfo *> danmuCache;
+    QHash<GLuint,TextureInfo> textureRef;
     const DanmuStyle *danmuStyle;
     QFont danmuFont;
     QPen danmuStrokePen;
     void cleanCache();
-    DanmuDrawInfo *createDanmuCache(const DanmuComment *comment);
-    void createDanmuTexture(DanmuDrawInfo *drawInfo, const QImage &img);
+    void createImage(CacheMiddleInfo &midInfo);
+    void createTexture(QList<CacheMiddleInfo> &midInfo);
+    TextureInfo *findTexture(int width, int height);
 signals:
     void cacheDone(PrepareList *danmus);
     void recyleRefList(QList<DanmuDrawInfo *> *descList);

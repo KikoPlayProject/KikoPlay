@@ -1,4 +1,4 @@
-#ifndef MPVPLAYER_H
+﻿#ifndef MPVPLAYER_H
 #define MPVPLAYER_H
 
 #include <QOpenGLWidget>
@@ -7,6 +7,7 @@
 #include <mpv/client.h>
 #include <mpv/opengl_cb.h>
 #include <mpv/qthelper.hpp>
+#include "Play/Danmu/common.h"
 class DanmuRender;
 class MPVPlayer : public QOpenGLWidget
 {
@@ -46,7 +47,7 @@ public:
 
     VideoSizeInfo getVideoSizeInfo();
     QMap<QString,QMap<QString,QString> > getMediaInfo();
-    void drawTexture(GLuint texture, float alpha, const QRectF &rect);
+    void drawTexture(QLinkedList<const DanmuObject *> &objList, float alpha);
 signals:
     void durationChanged(int value);
     void positionChanged(int value);

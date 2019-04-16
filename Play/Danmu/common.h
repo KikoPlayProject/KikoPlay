@@ -69,6 +69,7 @@ public:
     int height;
     int useCount;
     GLuint texture;
+    GLfloat l,r,t,b;
     //QMutex useCountLock;
     //QImage *img=nullptr;
     //~DanmuDrawInfo(){if(img)delete img;}

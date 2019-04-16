@@ -74,10 +74,13 @@ DanmuRender::~DanmuRender()
 
 void DanmuRender::drawDanmu()
 {
-    //painter.setOpacity(danmuOpacity);
     if(!hideLayout[DanmuComment::Rolling])layout_table[DanmuComment::Rolling]->drawLayout();
     if(!hideLayout[DanmuComment::Top])layout_table[DanmuComment::Top]->drawLayout();
     if(!hideLayout[DanmuComment::Bottom])layout_table[DanmuComment::Bottom]->drawLayout();
+    while(!objList.isEmpty())
+    {
+        GlobalObjects::mpvplayer->drawTexture(objList,danmuOpacity);
+    }
 }
 
 void DanmuRender::moveDanmu(float interval)
@@ -113,13 +116,6 @@ void DanmuRender::removeBlocked()
     layout_table[DanmuComment::Rolling]->removeBlocked();
     layout_table[DanmuComment::Top]->removeBlocked();
     layout_table[DanmuComment::Bottom]->removeBlocked();
-}
-
-void DanmuRender::drawDanmuTexture(const DanmuObject *danmuObj)
-{
-    static QRectF rect;
-    rect.setRect(danmuObj->x,danmuObj->y,danmuObj->drawInfo->width,danmuObj->drawInfo->height);
-    GlobalObjects::mpvplayer->drawTexture(danmuObj->drawInfo->texture,danmuOpacity,rect);
 }
 
 void DanmuRender::refDesc(DanmuDrawInfo *drawInfo)

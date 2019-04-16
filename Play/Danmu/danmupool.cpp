@@ -339,7 +339,7 @@ void DanmuPool::mediaTimeElapsed(int newTime)
     currentTime=newTime;
     PrepareList *prepareList(nullptr);
     prepareList=prepareListPool.isEmpty()?new PrepareList:prepareListPool.takeFirst();
-    const int bundleSize=20;
+    const int bundleSize=32;
     for(;currentPosition<finalPool.length();++currentPosition)
     {
         int curTime=finalPool.at(currentPosition)->time;

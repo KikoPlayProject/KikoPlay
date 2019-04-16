@@ -14,11 +14,14 @@ namespace
 const char *vShaderDanmu =
         "attribute mediump vec4 a_VtxCoord;\n"
         "attribute mediump vec2 a_TexCoord;\n"
+        "attribute mediump float a_Tex;\n"
         "varying mediump vec2 v_vTexCoord;\n"
+        "varying float texId;\n"
         "void main(void)\n"
         "{\n"
         "    gl_Position = a_VtxCoord;\n"
         "    v_vTexCoord = a_TexCoord;\n"
+        "    texId = a_Tex;\n"
         "}\n";
 
 const char *fShaderDanmu =
@@ -26,11 +29,12 @@ const char *fShaderDanmu =
         "precision lowp float;\n"
         "#endif\n"
         "varying mediump vec2 v_vTexCoord;\n"
-        "uniform sampler2D u_SamplerD;\n"
+        "varying float texId;\n"
+        "uniform sampler2D u_SamplerD[16];\n"
         "uniform float alpha;\n"
         "void main(void)\n"
         "{\n"
-        "    gl_FragColor.rgba = texture2D(u_SamplerD, v_vTexCoord).bgra;\n"
+        "    gl_FragColor.rgba = texture2D(u_SamplerD[int(texId)], v_vTexCoord).bgra;\n"
         "    gl_FragColor.a *= alpha;\n"
         "}\n";
 }
@@ -161,31 +165,81 @@ QMap<QString, QMap<QString, QString> > MPVPlayer::getMediaInfo()
     return mediaInfo;
 }
 
-void MPVPlayer::drawTexture(GLuint texture, float alpha, const QRectF &rect)
+void MPVPlayer::drawTexture(QLinkedList<const DanmuObject *> &objList, float alpha)
 {
-    static GLfloat vtx[8];
-    static GLfloat tex[8]={0,0,1,0,0,1,1,1};
+    static QVector<GLfloat> vtx(6*2*64),tex(6*2*64),texId(6*64);
+    static int Textures[] ={GL_TEXTURE0,GL_TEXTURE1,GL_TEXTURE2,GL_TEXTURE3,
+                            GL_TEXTURE4,GL_TEXTURE5,GL_TEXTURE6,GL_TEXTURE7,
+                           GL_TEXTURE8,GL_TEXTURE9,GL_TEXTURE10,GL_TEXTURE11,
+                           GL_TEXTURE12,GL_TEXTURE13,GL_TEXTURE14,GL_TEXTURE15};
+    static GLuint u_SamplerD[16]={0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+    static QHash<GLuint, int> texHash;
+	texHash.clear();
+    if(objList.size()>vtx.size()/12)
+    {
+        vtx.resize(objList.size()*12);
+        tex.resize(objList.size()*12);
+        texId.resize(objList.size()*6);
+    }
+    QOpenGLFunctions *glFuns=context()->functions();
     GLfloat h = 2.f / width(), v = 2.f / height();
-    GLfloat l = rect.left()*h - 1, r = rect.right()*h - 1, t = 1 - rect.top()*v, b = 1 - rect.bottom()*v;
-    vtx[0] = l; vtx[1] = t;
-    vtx[2] = r; vtx[3] = t;
-    vtx[4] = l; vtx[5] = b;
-    vtx[6] = r; vtx[7] = b;
+    int i=0;
+    int textureId=0;
+    while(!objList.isEmpty())
+    {
+        if(textureId>15) break;
+        const DanmuObject *obj=objList.takeFirst();
 
-	danmuShader.bind();
-	danmuShader.setUniformValue("alpha", alpha);
-    danmuShader.setUniformValue("u_SamplerD", 0);
-    danmuShader.setAttributeArray(0, vtx, 2);
-    danmuShader.setAttributeArray(1, tex, 2);
+        GLfloat l = obj->x*h - 1,r = (obj->x+obj->drawInfo->width)*h - 1,
+                t = 1 - obj->y*v,b = 1 - (obj->y+obj->drawInfo->height)*v;
+        vtx[i]=l;     vtx[i+1]=t;
+        vtx[i+2] = r; vtx[i+3] = t;
+        vtx[i+4] = l; vtx[i+5] = b;
+
+        vtx[i+6] = r;  vtx[i+7] = t;
+        vtx[i+8] = l;  vtx[i+9] = b;
+        vtx[i+10] = r; vtx[i+11] = b;
+
+        tex[i]=obj->drawInfo->l;     tex[i+1]=obj->drawInfo->t;
+        tex[i+2] = obj->drawInfo->r; tex[i+3] = obj->drawInfo->t;
+        tex[i+4] = obj->drawInfo->l; tex[i+5] = obj->drawInfo->b;
+
+        tex[i+6] = obj->drawInfo->r;  tex[i+7] = obj->drawInfo->t;
+        tex[i+8] = obj->drawInfo->l;  tex[i+9] = obj->drawInfo->b;
+        tex[i+10] = obj->drawInfo->r; tex[i+11] = obj->drawInfo->b;
+
+        int texIndex=texHash.value(obj->drawInfo->texture,-1);
+        if(texIndex<0)
+        {
+            texIndex=textureId++;
+            glFuns->glActiveTexture(Textures[texIndex]);
+            glFuns->glBindTexture(GL_TEXTURE_2D, obj->drawInfo->texture);
+			texHash.insert(obj->drawInfo->texture, texIndex);
+        }
+
+        texId[i/2]=texIndex;
+        texId[i/2+1]=texIndex;
+        texId[i/2+2]=texIndex;
+        texId[i/2+3]=texIndex;
+        texId[i/2+4]=texIndex;
+        texId[i/2+5]=texIndex;
+
+        i+=12;
+    }
+
+    danmuShader.bind();
+    danmuShader.setUniformValue("alpha", alpha);
+    danmuShader.setUniformValueArray("u_SamplerD", u_SamplerD,16);
+    danmuShader.setAttributeArray(0, vtx.constData(), 2);
+    danmuShader.setAttributeArray(1, tex.constData(), 2);
+    danmuShader.setAttributeArray(2,texId.constData(),1);
     danmuShader.enableAttributeArray(0);
     danmuShader.enableAttributeArray(1);
+	danmuShader.enableAttributeArray(2);
 
-    QOpenGLFunctions *glFuns=context()->functions();
     glFuns->glEnable(GL_BLEND);
     glFuns->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    glFuns->glActiveTexture(GL_TEXTURE0);
-    glFuns->glBindTexture(GL_TEXTURE_2D, texture);
-    glFuns->glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glFuns->glDrawArrays(GL_TRIANGLES, 0, i/2);
 }
 
 void MPVPlayer::setMedia(QString file)
@@ -321,7 +375,7 @@ void MPVPlayer::initializeGL()
     danmuShader.bind();
     danmuShader.bindAttributeLocation("a_VtxCoord", 0);
     danmuShader.bindAttributeLocation("a_TexCoord", 1);
-
+    danmuShader.bindAttributeLocation("a_Tex", 2);
     emit initContext();
 }
 

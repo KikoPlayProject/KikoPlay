@@ -985,7 +985,7 @@ void ListWindow::dropEvent(QDropEvent *event)
                         sourceInfo.show=true;
                         sourceInfo.url=fi.filePath();
                         sourceInfo.count=tmplist.count();
-                        GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist);
+                        GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true);
                     }
                 }
             }

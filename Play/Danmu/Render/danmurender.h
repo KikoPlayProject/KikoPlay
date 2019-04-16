@@ -22,7 +22,7 @@ public:
     int dense;
     QSharedPointer<DanmuComment> danmuAt(QPointF point);
     void removeBlocked();
-    void drawDanmuTexture(const DanmuObject *danmuObj);
+    inline void drawDanmuTexture(const DanmuObject *danmuObj){objList<<danmuObj;}
     void refDesc(DanmuDrawInfo *drawInfo);
 private:
     DanmuLayout *layout_table[3];
@@ -37,6 +37,7 @@ private:
     CacheWorker *cacheWorker;
     QList<QList<DanmuDrawInfo *> *> drListPool;
     QList<DanmuDrawInfo *>  *currentDrList;
+    QLinkedList<const DanmuObject *> objList;
     void refreshDMRect();
 public:
     void setBottomSubtitleProtect(bool bottomOn);
