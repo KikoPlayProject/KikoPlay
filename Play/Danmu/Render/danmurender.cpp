@@ -79,7 +79,13 @@ void DanmuRender::drawDanmu()
     if(!hideLayout[DanmuComment::Bottom])layout_table[DanmuComment::Bottom]->drawLayout();
     while(!objList.isEmpty())
     {
+#ifdef QT_DEBUG
+        int c=objList.count();
+#endif
         GlobalObjects::mpvplayer->drawTexture(objList,danmuOpacity);
+#ifdef QT_DEBUG
+        qDebug()<<"Draw Comment: "<<c;
+#endif
     }
 }
 

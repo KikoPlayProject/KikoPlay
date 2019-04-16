@@ -92,7 +92,7 @@ private:
     static void wakeup(void *ctx);
     static void *get_proc_address(void *ctx, const char *name);
 
-    const int timeRefreshInterval=20;
+    const int timeRefreshInterval=200;
     PlayState state;
     bool mute;
     bool danmuHide;

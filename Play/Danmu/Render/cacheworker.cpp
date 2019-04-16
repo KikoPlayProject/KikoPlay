@@ -32,18 +32,32 @@ void CacheWorker::cleanCache()
             ++iter;
         }
     }
-    danmuTextureContext->makeCurrent(surface);
-    QOpenGLFunctions *glFuns=danmuTextureContext->functions();
     for(auto iter=textureRef.begin();iter!=textureRef.end();)
     {
         Q_ASSERT(iter.value().danmuDrawInfoCount>= 0);
         if(iter.value().danmuDrawInfoCount==0)
         {
-            glFuns->glDeleteTextures(1,&iter.key());
+            iter.value().unuseCycle=1;
+            unuseTexture.append(iter.value());
             iter=textureRef.erase(iter);
         }
         else
         {
+            ++iter;
+        }
+    }
+    danmuTextureContext->makeCurrent(surface);
+    QOpenGLFunctions *glFuns=danmuTextureContext->functions();
+    for(auto iter=unuseTexture.begin();iter!=unuseTexture.end();)
+    {
+        if(iter->unuseCycle==0)
+        {
+            glFuns->glDeleteTextures(1,&iter->id);
+            iter=unuseTexture.erase(iter);
+        }
+        else
+        {
+            iter->unuseCycle--;
             ++iter;
         }
     }
@@ -89,6 +103,8 @@ void CacheWorker::createImage(CacheMiddleInfo &midInfo)
         mergeCountWidth=metrics.size(0,QString("[%1]").arg(comment->mergedList->count())).width();
         imgSize.rwidth()+=mergeCountWidth;
     }
+    if(imgSize.width()>2048)imgSize.rwidth()=2048;
+    if(imgSize.height()>2048)imgSize.rheight()=2048;
 
     DanmuDrawInfo *drawInfo=new DanmuDrawInfo;
     drawInfo->useCount=0;
@@ -198,6 +214,8 @@ void CacheWorker::createTexture(QList<CacheMiddleInfo> &midInfo)
         qDebug()<<"Reuse Texture";
 #endif
         texture=info->id;
+        textureWidth=info->width;
+        textureHeight=info->height;
         info->danmuDrawInfoCount=midInfo.size();
         glFuns->glBindTexture(GL_TEXTURE_2D, texture);
         glFuns->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -238,12 +256,19 @@ void CacheWorker::createTexture(QList<CacheMiddleInfo> &midInfo)
 
 TextureInfo *CacheWorker::findTexture(int width, int height)
 {
-    for(auto &texInfo:textureRef)
-    { 
-        if(texInfo.danmuDrawInfoCount==0 && texInfo.width>=width && texInfo.height>=height)
+    for(auto iter=unuseTexture.begin();iter!=unuseTexture.end();)
+    {
+        if(iter->width>=width && iter->height>=height)
         {
-            return &texInfo;
+            GLuint key=iter->id;
+            textureRef.insert(key,*iter);
+            unuseTexture.erase(iter);
+            return &textureRef[key];
         }
+		else
+		{
+			++iter;
+		}
     }
 	return nullptr;
 }
@@ -277,13 +302,16 @@ void CacheWorker::beginCache(PrepareList *danmus)
             tmpHash.insert(hash_str);
         }
     }
-    QtConcurrent::blockingMap(mInfoList,std::bind(&CacheWorker::createImage,this,std::placeholders::_1));
-    createTexture(mInfoList);
-    for(auto &mInfo:mInfoList)
-    {
-        Q_ASSERT(!danmuCache.contains(mInfo.hash));
-        danmuCache.insert(mInfo.hash,mInfo.drawInfo);
-    }
+	if (!mInfoList.isEmpty())
+	{
+		QtConcurrent::blockingMap(mInfoList, std::bind(&CacheWorker::createImage, this, std::placeholders::_1));
+		createTexture(mInfoList);
+		for (auto &mInfo : mInfoList)
+		{
+			Q_ASSERT(!danmuCache.contains(mInfo.hash));
+			danmuCache.insert(mInfo.hash, mInfo.drawInfo);
+		}
+	}
     int i=0;
     for(QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*> &dm:*danmus)
     {

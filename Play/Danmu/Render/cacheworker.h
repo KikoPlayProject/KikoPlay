@@ -26,6 +26,7 @@ struct TextureInfo
     int width;
     int height;
     int danmuDrawInfoCount;
+    int unuseCycle;
 };
 
 class CacheWorker : public QObject
@@ -37,6 +38,7 @@ private:
     const int max_cache=512;
     QHash<QString,DanmuDrawInfo *> danmuCache;
     QHash<GLuint,TextureInfo> textureRef;
+    QList<TextureInfo> unuseTexture;
     const DanmuStyle *danmuStyle;
     QFont danmuFont;
     QPen danmuStrokePen;
