@@ -23,7 +23,7 @@ void CacheWorker::cleanCache()
         Q_ASSERT(iter.value()->useCount >= 0);
         if(iter.value()->useCount==0)
         {
-            --textureRef[iter.value()->texture].danmuDrawInfoCount;
+            --textureRef[iter.value()->texture];
             delete iter.value();
             iter=danmuCache.erase(iter);
         }
@@ -32,32 +32,18 @@ void CacheWorker::cleanCache()
             ++iter;
         }
     }
+    danmuTextureContext->makeCurrent(surface);
+    QOpenGLFunctions *glFuns=danmuTextureContext->functions();
     for(auto iter=textureRef.begin();iter!=textureRef.end();)
     {
-        Q_ASSERT(iter.value().danmuDrawInfoCount>= 0);
-        if(iter.value().danmuDrawInfoCount==0)
+        Q_ASSERT(iter.value()>= 0);
+        if(iter.value()==0)
         {
-            iter.value().unuseCycle=1;
-            unuseTexture.append(iter.value());
+            glFuns->glDeleteTextures(1,&iter.key());
             iter=textureRef.erase(iter);
         }
         else
         {
-            ++iter;
-        }
-    }
-    danmuTextureContext->makeCurrent(surface);
-    QOpenGLFunctions *glFuns=danmuTextureContext->functions();
-    for(auto iter=unuseTexture.begin();iter!=unuseTexture.end();)
-    {
-        if(iter->unuseCycle==0)
-        {
-            glFuns->glDeleteTextures(1,&iter->id);
-            iter=unuseTexture.erase(iter);
-        }
-        else
-        {
-            iter->unuseCycle--;
             ++iter;
         }
     }
@@ -204,35 +190,15 @@ void CacheWorker::createTexture(QList<CacheMiddleInfo> &midInfo)
         }
     }
     if(textureHeight>2048) textureHeight=2048;
-    TextureInfo *info=findTexture(textureWidth,textureHeight);
     danmuTextureContext->makeCurrent(surface);
     QOpenGLFunctions *glFuns=danmuTextureContext->functions();
     GLuint texture;
-    if(info)
-    {
-#ifdef QT_DEBUG
-        qDebug()<<"Reuse Texture";
-#endif
-        texture=info->id;
-        textureWidth=info->width;
-        textureHeight=info->height;
-        info->danmuDrawInfoCount=midInfo.size();
-        glFuns->glBindTexture(GL_TEXTURE_2D, texture);
-        glFuns->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    }
-    else
-    {
-        glFuns->glGenTextures(1, &texture);
-        glFuns->glBindTexture(GL_TEXTURE_2D, texture);
-        glFuns->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glFuns->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        TextureInfo info;
-        info.id=texture;
-        info.width=textureWidth;
-        info.height=textureHeight;
-        info.danmuDrawInfoCount=midInfo.size();
-        textureRef.insert(texture,info);
-    }
+    glFuns->glGenTextures(1, &texture);
+    glFuns->glBindTexture(GL_TEXTURE_2D, texture);
+    glFuns->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glFuns->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    textureRef.insert(texture,midInfo.size());
+
     for(auto &mInfo:midInfo)
     {
         mInfo.drawInfo->texture=texture;
@@ -252,25 +218,6 @@ void CacheWorker::createTexture(QList<CacheMiddleInfo> &midInfo)
     glFuns->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glFuns->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     danmuTextureContext->doneCurrent();
-}
-
-TextureInfo *CacheWorker::findTexture(int width, int height)
-{
-    for(auto iter=unuseTexture.begin();iter!=unuseTexture.end();)
-    {
-        if(iter->width>=width && iter->height>=height)
-        {
-            GLuint key=iter->id;
-            textureRef.insert(key,*iter);
-            unuseTexture.erase(iter);
-            return &textureRef[key];
-        }
-		else
-		{
-			++iter;
-		}
-    }
-	return nullptr;
 }
 
 void CacheWorker::beginCache(PrepareList *danmus)

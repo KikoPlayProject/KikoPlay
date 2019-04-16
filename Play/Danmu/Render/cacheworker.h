@@ -20,14 +20,6 @@ struct CacheMiddleInfo
     QImage *img;
     int texX,texY;
 };
-struct TextureInfo
-{
-    GLuint id;
-    int width;
-    int height;
-    int danmuDrawInfoCount;
-    int unuseCycle;
-};
 
 class CacheWorker : public QObject
 {
@@ -37,15 +29,13 @@ public:
 private:
     const int max_cache=512;
     QHash<QString,DanmuDrawInfo *> danmuCache;
-    QHash<GLuint,TextureInfo> textureRef;
-    QList<TextureInfo> unuseTexture;
+    QHash<GLuint,int> textureRef;
     const DanmuStyle *danmuStyle;
     QFont danmuFont;
     QPen danmuStrokePen;
     void cleanCache();
     void createImage(CacheMiddleInfo &midInfo);
     void createTexture(QList<CacheMiddleInfo> &midInfo);
-    TextureInfo *findTexture(int width, int height);
 signals:
     void cacheDone(PrepareList *danmus);
     void recyleRefList(QList<DanmuDrawInfo *> *descList);

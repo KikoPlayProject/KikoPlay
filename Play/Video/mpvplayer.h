@@ -47,7 +47,7 @@ public:
 
     VideoSizeInfo getVideoSizeInfo();
     QMap<QString,QMap<QString,QString> > getMediaInfo();
-    void drawTexture(QLinkedList<const DanmuObject *> &objList, float alpha);
+    void drawTexture(QList<const DanmuObject *> &objList, float alpha);
 signals:
     void durationChanged(int value);
     void positionChanged(int value);

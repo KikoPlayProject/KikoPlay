@@ -77,16 +77,7 @@ void DanmuRender::drawDanmu()
     if(!hideLayout[DanmuComment::Rolling])layout_table[DanmuComment::Rolling]->drawLayout();
     if(!hideLayout[DanmuComment::Top])layout_table[DanmuComment::Top]->drawLayout();
     if(!hideLayout[DanmuComment::Bottom])layout_table[DanmuComment::Bottom]->drawLayout();
-    while(!objList.isEmpty())
-    {
-#ifdef QT_DEBUG
-        int c=objList.count();
-#endif
-        GlobalObjects::mpvplayer->drawTexture(objList,danmuOpacity);
-#ifdef QT_DEBUG
-        qDebug()<<"Draw Comment: "<<c;
-#endif
-    }
+    GlobalObjects::mpvplayer->drawTexture(objList,danmuOpacity);
 }
 
 void DanmuRender::moveDanmu(float interval)

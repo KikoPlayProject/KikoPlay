@@ -37,7 +37,7 @@ private:
     CacheWorker *cacheWorker;
     QList<QList<DanmuDrawInfo *> *> drListPool;
     QList<DanmuDrawInfo *>  *currentDrList;
-    QLinkedList<const DanmuObject *> objList;
+    QList<const DanmuObject *> objList;
     void refreshDMRect();
 public:
     void setBottomSubtitleProtect(bool bottomOn);
