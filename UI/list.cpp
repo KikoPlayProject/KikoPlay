@@ -500,7 +500,11 @@ void ListWindow::initActions()
             sourceInfo.show=true;
             sourceInfo.url=file;
             sourceInfo.count=tmplist.count();
-            GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist);
+            if(GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true)==-1)
+            {
+                qDeleteAll(tmplist);
+                showMessage(tr("Add Failed: Pool is busy"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+            }
             //GlobalObjects::danmuPool->addDanmu(sourceInfo,tmplist);
         }
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
@@ -985,7 +989,11 @@ void ListWindow::dropEvent(QDropEvent *event)
                         sourceInfo.show=true;
                         sourceInfo.url=fi.filePath();
                         sourceInfo.count=tmplist.count();
-                        GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true);
+                        if(GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true)==-1)
+                        {
+                            qDeleteAll(tmplist);
+                            showMessage(tr("Add Failed: Pool is busy"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+                        }
                     }
                 }
             }

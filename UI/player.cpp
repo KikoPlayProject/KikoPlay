@@ -1713,6 +1713,11 @@ void PlayerWindow::dropEvent(QDropEvent *event)
                     Pool *pool=GlobalObjects::danmuPool->getPool();
                     if(pool->addSource(sourceInfo,tmplist,true)>=0)
                         showMessage(tr("Danmu has been added"));
+                    else
+                    {
+                        qDeleteAll(tmplist);
+                        showMessage(tr("Add Faied: Pool is busy"));
+                    }
                 }
             }
             else
