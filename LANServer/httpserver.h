@@ -18,6 +18,7 @@ private:
     QHash<QString,QString> mediaHash;
     void genLog(const QString &logInfo);
     QJsonDocument playlistDoc;
+    int compress(const QByteArray &input, QByteArray &output);
 signals:
     void showLog(const QString &logInfo);
 public slots:

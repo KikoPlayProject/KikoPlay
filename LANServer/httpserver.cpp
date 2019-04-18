@@ -5,6 +5,7 @@
 #include "qhttpengine/qiodevicecopier.h"
 #include "qhttpengine/range.h"
 
+#include "Common/zlib.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/common.h"
 #include "Play/Danmu/Manager/danmumanager.h"
@@ -164,17 +165,60 @@ void HttpServer::genLog(const QString &logInfo)
     emit showLog(QString("%1%2").arg(QTime::currentTime().toString("[hh:mm:ss]"),logInfo));
 }
 
+
+int HttpServer::compress(const QByteArray &input, QByteArray &output)
+{
+    int ret;
+    unsigned have;
+    const int chunkSize=16384;
+    z_stream stream;
+    stream.zalloc = Z_NULL;
+    stream.zfree = Z_NULL;
+    stream.opaque = Z_NULL;
+    stream.avail_in = 0;
+    stream.next_in = Z_NULL;
+    ret = deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
+                            MAX_WBITS + 16, 8, Z_DEFAULT_STRATEGY);
+    if (ret != Z_OK) return ret;
+    unsigned char inBuf[chunkSize];
+    unsigned char outBuf[chunkSize];
+    QDataStream inStream(input);
+    int flush;
+    while(!inStream.atEnd())
+    {
+        stream.avail_in=inStream.readRawData((char *)&inBuf,chunkSize);
+        flush = stream.avail_in<chunkSize ? Z_FINISH : Z_NO_FLUSH;
+        stream.next_in = inBuf;
+        do
+        {
+            stream.avail_out = chunkSize;
+            stream.next_out = outBuf;
+            ret = deflate(&stream, flush);
+            assert(ret != Z_STREAM_ERROR);
+            have = chunkSize - stream.avail_out;
+            output.append((const char *)outBuf,have);
+        } while (stream.avail_out == 0);
+    }
+    (void)deflateEnd(&stream);
+    return Z_OK ;
+}
+
 void HttpServer::api_Playlist(QHttpEngine::Socket *socket)
 {
     QMetaObject::invokeMethod(GlobalObjects::playlist,[this](){
         GlobalObjects::playlist->dumpJsonPlaylist(playlistDoc,mediaHash);
     },Qt::BlockingQueuedConnection);
     genLog(QString("[%1]Request:Playlist").arg(socket->peerAddress().toString()));
+
     QByteArray data = playlistDoc.toJson();
-    socket->setHeader("Content-Length", QByteArray::number(data.length()));
+    QByteArray compressedBytes;
+    compress(data,compressedBytes);
+
+    socket->setHeader("Content-Length", QByteArray::number(compressedBytes.length()));
     socket->setHeader("Content-Type", "application/json");
+    socket->setHeader("Content-Encoding", "gzip");
     socket->writeHeaders();
-    socket->write(data);
+    socket->write(compressedBytes);
     socket->close();
 }
 
@@ -228,10 +272,13 @@ void HttpServer::api_Danmu(QHttpEngine::Socket *socket)
         {"update",update}
     };
     QByteArray data = QJsonDocument(resposeObj).toJson();
-    socket->setHeader("Content-Length", QByteArray::number(data.length()));
+    QByteArray compressedBytes;
+    compress(data,compressedBytes);
+    socket->setHeader("Content-Length", QByteArray::number(compressedBytes.length()));
     socket->setHeader("Content-Type", "application/json");
+    socket->setHeader("Content-Encoding", "gzip");
     socket->writeHeaders();
-    socket->write(data);
+    socket->write(compressedBytes);
     socket->close();
 }
 
