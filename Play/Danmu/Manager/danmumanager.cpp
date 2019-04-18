@@ -661,12 +661,12 @@ void DanmuManager::refreshCache(Pool *newPool)
     {
         if(poolDanmuCacheInfo.contains(newPool->pid))
         {
-            if(poolDanmuCacheInfo.value(newPool->pid)<6)
+            if(poolDanmuCacheInfo.value(newPool->pid)<8)
                 ++poolDanmuCacheInfo[newPool->pid];
         }
         else
         {
-            poolDanmuCacheInfo[newPool->pid]=2;
+            poolDanmuCacheInfo[newPool->pid]=4;
         }
     }
     for(auto iter=poolDanmuCacheInfo.begin();iter!=poolDanmuCacheInfo.end();)
