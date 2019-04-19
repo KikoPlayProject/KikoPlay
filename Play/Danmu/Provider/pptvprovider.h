@@ -10,7 +10,7 @@ public:
     inline virtual bool supportSearch(){return true;}
     inline virtual QString id(){return "PPTV";}
     virtual QStringList supportedURLs();
-    inline virtual QString sourceURL(DanmuSourceItem *item){return QString("pptv:%1;length:%2").arg(item->strId).arg(item->subId);}
+    inline virtual QString sourceURL(DanmuSourceItem *item){return QString("pptv:%1;length:%2;%3").arg(item->strId).arg(item->subId).arg(formatTime(item->extra));}
     inline virtual bool supportSourceURL(const QString &url){return url.startsWith("pptv:")?true:false;}
 
 public slots:

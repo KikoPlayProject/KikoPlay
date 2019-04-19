@@ -114,7 +114,8 @@ QString BilibiliProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuCommen
 
 QString BilibiliProvider::downloadBySourceURL(const QString &url, QList<DanmuComment *> &danmuList)
 {
-    int cid=url.mid(url.lastIndexOf(':')+1).toInt();
+    QStringList info(url.split(';',QString::SkipEmptyParts));
+    int cid=info[1].mid(info[1].indexOf(':')+1).toInt();
     DanmuSourceItem item;
     item.subId=cid;
     return downloadDanmu(&item,danmuList);

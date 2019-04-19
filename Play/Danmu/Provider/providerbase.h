@@ -24,5 +24,12 @@ signals:
     void searchDone(DanmuAccessResult *searchInfo);
     void epInfoDone(DanmuAccessResult *epInfo, DanmuSourceItem *srcItem);
     void downloadDone(QString errInfo, DanmuSourceItem *srcItem);
+protected:
+    inline static QString formatTime(int duration)
+    {
+        int min=duration/60;
+        int sec=duration-min*60;
+        return QString("%1:%2").arg(min, 2, 10, QChar('0')).arg(sec, 2, 10, QChar('0'));
+    }
 };
 #endif // PROVIDERBASE_H

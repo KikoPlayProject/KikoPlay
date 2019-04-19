@@ -11,7 +11,7 @@ public:
     inline virtual bool supportSearch(){return true;}
     inline virtual QString id(){return "Bilibili";}
     virtual QStringList supportedURLs();
-    inline virtual QString sourceURL(DanmuSourceItem *item){return QString("aid:%1;cid:%2").arg(item->id).arg(item->subId);}
+    inline virtual QString sourceURL(DanmuSourceItem *item){return QString("aid:%1;cid:%2;%3").arg(item->id).arg(item->subId).arg(formatTime(item->extra));}
     inline virtual bool supportSourceURL(const QString &url){return url.startsWith("aid:")?true:false;}
 public slots:
     virtual DanmuAccessResult *search(const QString &keyword);

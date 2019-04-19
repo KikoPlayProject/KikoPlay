@@ -111,9 +111,9 @@ QString TencentProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment
 
 QString TencentProvider::downloadBySourceURL(const QString &url, QList<DanmuComment *> &danmuList)
 {
-    int s=url.indexOf(':')+1,e=url.indexOf(';');
-    QString id=url.mid(s,e-s);
-    int l=url.mid(url.lastIndexOf(':')+1).toInt();
+    QStringList info(url.split(';',QString::SkipEmptyParts));
+    QString id(info[0].mid(info[0].indexOf(':')+1));
+    int l=info[1].mid(info[1].indexOf(':')+1).toInt();
     downloadAllDanmu(id,l,danmuList);
     return QString();
 }

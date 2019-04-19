@@ -104,10 +104,11 @@ QString IqiyiProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
 
 QString IqiyiProvider::downloadBySourceURL(const QString &url, QList<DanmuComment *> &danmuList)
 {
-    int s=url.indexOf(':')+1,e=url.indexOf(';');
-    QString tvId=url.mid(s,e==-1?-1:e-s);
-    int l=(e==-1?-1:url.mid(url.lastIndexOf(':')+1).toInt());
-    downloadAllDanmu(tvId,l,danmuList);
+    QStringList info(url.split(';',QString::SkipEmptyParts));
+    QString tvId=info[0].mid(info[0].indexOf(':')+1);
+    int length=-1;
+    if(info.count()>1) length=info[1].mid(info[1].indexOf(':')+1).toInt();
+    downloadAllDanmu(tvId,length,danmuList);
     return QString();
 }
 
