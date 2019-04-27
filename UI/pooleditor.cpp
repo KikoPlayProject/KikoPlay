@@ -40,7 +40,7 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),paren
     }
     poolItemVLayout->addItem(new QSpacerItem(1, 0, QSizePolicy::Minimum, QSizePolicy::MinimumExpanding));
 
-    addIgnoreWidget(contentWidget);
+    //addIgnoreWidget(contentWidget);
     setMinimumSize(300*logicalDpiX()/96,120*logicalDpiY()/96);
     resize(GlobalObjects::appSetting->value("DialogSize/PoolEdit",QSize(600*logicalDpiX()/96,320*logicalDpiY()/96)).toSize());
 }

@@ -15,12 +15,15 @@ DanmuAccessResult *BahamutProvider::search(const QString &keyword)
 {
     QString baseUrl = "https://ani.gamer.com.tw/search.php";
     QUrlQuery query;
+    QString outstr(keyword);
+#ifdef Q_OS_WIN
     WORD wLanguageID = MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED);
     LCID Locale = MAKELCID(wLanguageID, SORT_CHINESE_PRCP);
     QChar *buf=new QChar[keyword.length()];
     LCMapString(Locale,LCMAP_TRADITIONAL_CHINESE,reinterpret_cast<LPCWSTR>(keyword.constData()),keyword.length(),reinterpret_cast<LPWSTR>(buf),keyword.length());
-    QString outstr(buf, keyword.length());
+    outstr=QString(buf, keyword.length());
 	delete[] buf;
+#endif
     query.addQueryItem("kw", outstr);
 
     DanmuAccessResult *searchResult=new DanmuAccessResult;

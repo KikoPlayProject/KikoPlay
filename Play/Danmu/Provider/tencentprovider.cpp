@@ -172,7 +172,8 @@ void TencentProvider::downloadAllDanmu(const QString &id, int length, QList<Danm
             }
 
             DanmuComment *danmu=new DanmuComment();
-            danmu->text=content.toString();
+            QString contentStr(content.toString());
+            danmu->text=contentStr.startsWith("VIP :")?contentStr.mid(5):contentStr;
             danmu->date=0;
             danmu->time =timepoint.toInt()*1000;
             danmu->originTime=danmu->time;

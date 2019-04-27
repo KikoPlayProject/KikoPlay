@@ -1,7 +1,5 @@
 #include "UI/mainwindow.h"
 #include <QApplication>
-#include <Windows.h>
-#include <DbgHelp.h>
 #include <QMessageBox>
 #include <QLocalSocket>
 #include <QLocalServer>
@@ -10,6 +8,9 @@
 #include "Play/Video/mpvplayer.h"
 #include "Play/Danmu/danmupool.h"
 #include "Play/Danmu/Render/danmurender.h"
+#ifdef Q_OS_WIN
+#include <Windows.h>
+#include <DbgHelp.h>
 #pragma comment (lib,"DbgHelp.lib")
 LONG AppCrashHandler(EXCEPTION_POINTERS *pException) 
 {			
@@ -27,6 +28,7 @@ LONG AppCrashHandler(EXCEPTION_POINTERS *pException)
 	QMessageBox::critical(nullptr, "Error", QString("Error Code: %1 Error Address: %2").arg(errCode).arg(errAdr),QMessageBox::Ok);
 	return EXCEPTION_EXECUTE_HANDLER;
 }
+#endif
 void decodeParam()
 {
     QStringList args=QCoreApplication::arguments();
@@ -92,7 +94,9 @@ bool isRunning()
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+#ifdef Q_OS_WIN
     SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)AppCrashHandler);
+#endif
     if(isRunning()) return 0;
     QString qss;
     QFile qssFile(":/res/style.qss");

@@ -82,8 +82,8 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,
 			contentStackLayout->setCurrentIndex(id);
 		}
 	});
-
-    QLabel *itemInfoLabel=new QLabel(item?(item->animeTitle.isEmpty()?item->title:QString("%1-%2").arg(item->animeTitle).arg(item->title)):"",this);
+    QString itemInfo(item?(item->animeTitle.isEmpty()?item->title:QString("%1-%2").arg(item->animeTitle).arg(item->title)):"");
+    QLabel *itemInfoLabel=new QLabel(itemInfo,this);
     itemInfoLabel->setFont(QFont("Microsoft YaHei UI",10,QFont::Bold));
     itemInfoLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     danmuVLayout->addWidget(itemInfoLabel);

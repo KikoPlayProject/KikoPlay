@@ -76,12 +76,16 @@ void MainWindow::setupUI()
 //------title bar
     widgetTitlebar = new QWidget(centralWidget);
     widgetTitlebar->setObjectName(QStringLiteral("widgetTitlebar"));
+#ifdef Q_OS_WIN
     widgetTitlebar->setFixedHeight(40*logicalDpiY()/96);
+#endif
 
     QFont normalFont("Microsoft YaHei",12);
     buttonIcon = new QToolButton(widgetTitlebar);
     buttonIcon->setFont(normalFont);
+#ifdef Q_OS_WIN
     buttonIcon->setText(" KikoPlay");
+#endif
     buttonIcon->setObjectName(QStringLiteral("LogoButton"));
     buttonIcon->setIcon(QIcon(":/res/images/kikoplay-3.png"));
     buttonIcon->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
@@ -91,6 +95,7 @@ void MainWindow::setupUI()
     QObject::connect(act_poolManager,&QAction::triggered,[this](){
         PoolManager poolManage(buttonIcon);
         poolManage.exec();
+
     });
     buttonIcon->addAction(act_poolManager);
 
@@ -130,11 +135,15 @@ void MainWindow::setupUI()
     });
     buttonIcon->addAction(act_exit);
     QSize pageButtonSize(100*logicalDpiX()/96,32*logicalDpiY()/96);
-
+#ifdef Q_OS_WIN
+    #define pageBtnObjName "PageButton"
+#else
+    #define pageBtnObjName "PageButton_O"
+#endif
     buttonPage_Play = new QToolButton(widgetTitlebar);
     buttonPage_Play->setFont(normalFont);
     buttonPage_Play->setText(tr("Player"));
-    buttonPage_Play->setObjectName(QStringLiteral("PageButton"));
+    buttonPage_Play->setObjectName(QStringLiteral(pageBtnObjName));
     buttonPage_Play->setCheckable(true);
     buttonPage_Play->setToolButtonStyle(Qt::ToolButtonTextOnly);
     buttonPage_Play->setFixedSize(pageButtonSize);
@@ -143,7 +152,7 @@ void MainWindow::setupUI()
     buttonPage_Library = new QToolButton(widgetTitlebar);
     buttonPage_Library->setFont(normalFont);
     buttonPage_Library->setText(tr("Library"));
-    buttonPage_Library->setObjectName(QStringLiteral("PageButton"));
+    buttonPage_Library->setObjectName(QStringLiteral(pageBtnObjName));
     buttonPage_Library->setCheckable(true);
     buttonPage_Library->setToolButtonStyle(Qt::ToolButtonTextOnly);
     buttonPage_Library->setFixedSize(pageButtonSize);
@@ -151,7 +160,7 @@ void MainWindow::setupUI()
     buttonPage_Downlaod = new QToolButton(widgetTitlebar);
     buttonPage_Downlaod->setFont(normalFont);
     buttonPage_Downlaod->setText(tr("Download"));
-    buttonPage_Downlaod->setObjectName(QStringLiteral("PageButton"));
+    buttonPage_Downlaod->setObjectName(QStringLiteral(pageBtnObjName));
     buttonPage_Downlaod->setCheckable(true);
     buttonPage_Downlaod->setToolButtonStyle(Qt::ToolButtonTextOnly);
     buttonPage_Downlaod->setFixedSize(pageButtonSize);
@@ -167,24 +176,19 @@ void MainWindow::setupUI()
         }
     });
 
-    QHBoxLayout *layout = new QHBoxLayout(widgetTitlebar);
-    layout->setSpacing(0);
-    layout->setContentsMargins(8*logicalDpiY()/96,0,8*logicalDpiY()/96,0);
-    layout->addWidget(buttonIcon);
-    layout->addSpacing(20*logicalDpiY()/96);
+
     QVBoxLayout *pageVerticalLayout = new QVBoxLayout();
     pageVerticalLayout->setContentsMargins(0,0,0,0);
-    //pageVerticalLayout->addSpacing(10*logicalDpiY()/96);
+#ifdef Q_OS_WIN
     pageVerticalLayout->addSpacerItem(new QSpacerItem(1,10,QSizePolicy::Minimum,QSizePolicy::MinimumExpanding));
+#endif
     QHBoxLayout *pageHLayout = new QHBoxLayout();
     pageHLayout->setContentsMargins(0,0,0,0);
     pageHLayout->addWidget(buttonPage_Play);
     pageHLayout->addWidget(buttonPage_Library);
     pageHLayout->addWidget(buttonPage_Downlaod);
     pageVerticalLayout->addLayout(pageHLayout);
-    layout->addLayout(pageVerticalLayout);
-    QSpacerItem *horizontalSpacer1 = new QSpacerItem(100, 20, QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
-    layout->addItem(horizontalSpacer1);
+
 
     GlobalObjects::iconfont.setPointSize(10);
     int cbHeight=24*logicalDpiY()/96;
@@ -221,11 +225,26 @@ void MainWindow::setupUI()
     QObject::connect(closeButton,&QToolButton::clicked,[this](){
        this->close();
     });
-
+    QHBoxLayout *layout = new QHBoxLayout(widgetTitlebar);
+    layout->setSpacing(0);
+#ifdef Q_OS_WIN
+    layout->setContentsMargins(8*logicalDpiY()/96,0,8*logicalDpiY()/96,0);
+    layout->addWidget(buttonIcon);
+    layout->addSpacing(20*logicalDpiY()/96);
+    layout->addLayout(pageVerticalLayout);
+    layout->addStretch(1);
     layout->addWidget(minButton);
     layout->addWidget(maxButton);
     layout->addWidget(closeButton);
-
+#else
+    layout->setContentsMargins(0,0,4*logicalDpiX()/96,0);
+    layout->addLayout(pageVerticalLayout);
+    layout->addStretch(1);
+    layout->addWidget(buttonIcon);
+    minButton->hide();
+    maxButton->hide();
+    closeButton->hide();
+#endif
     verticalLayout->addWidget(widgetTitlebar);
 
     contentStackLayout=new QStackedLayout();

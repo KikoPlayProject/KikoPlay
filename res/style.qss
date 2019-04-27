@@ -14,6 +14,20 @@ QToolButton#PageButton:checked{
        color:#FFFFFF;
        background:#666a6e;
 }
+QToolButton#PageButton_O{
+       border-style:none;
+       border-radius:0px;
+       padding:5px;
+       color:#989898;
+       background:#484d50;
+}
+QToolButton#PageButton_O:hover,
+QToolButton#PageButton_O:pressed,
+QToolButton#PageButton_O:checked{
+       border-style:none;
+       color:#FFFFFF;
+       background:#666a6e;
+}
 QToolButton#ListPageButton{
        border-style:none;
        border-radius:0px;
@@ -288,6 +302,10 @@ QHeaderView::section {
     padding: 2px;
 }
 #framelessDialog{
+    background-color:rgb(245,245,245);
+}
+#framelessDialog_O{
+    border:2px solid #a2aab1;
     background-color:rgb(245,245,245);
 }
 QSpinBox#Delay{

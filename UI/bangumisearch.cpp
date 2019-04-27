@@ -48,7 +48,7 @@ BangumiSearch::BangumiSearch(Anime *anime, QWidget *parent) : CFramelessDialog(t
     bgmGLayout->addWidget(searchWordEdit,0,0);
     bgmGLayout->addWidget(searchButton,0,1);
     bgmGLayout->addWidget(downloadTag,0,2);
-    bgmGLayout->addWidget(bangumiList,1,0,1,3);
+    bgmGLayout->addWidget(bangumiList,1,0,1,3); 
     bgmGLayout->addWidget(downloadInfoLabel,2,0,1,3);
     bgmGLayout->setRowStretch(1,1);
     bgmGLayout->setColumnStretch(0,1);

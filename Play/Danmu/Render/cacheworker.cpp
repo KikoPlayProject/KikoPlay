@@ -78,7 +78,19 @@ void CacheWorker::createImage(CacheMiddleInfo &midInfo)
     int strokeWidth=danmuStyle->strokeWidth;
     int left=qAbs(metrics.leftBearing(comment->text.front()));
 
-    QSize textSize(metrics.size(0, comment->text));
+    QSize textSize;
+    int pointSize=danmuFont.pointSize();
+    int minPointSize=pointSize/2;
+    //If the width is greater than 2048, then adjust the font size
+    //but the font size cannot be less than half of the previous point size
+    do
+    {
+        danmuFont.setPointSize(pointSize--);
+        QFontMetrics tMetrice(danmuFont);
+        textSize = tMetrice.size(0, comment->text);
+        metrics.swap(tMetrice);
+    }while(textSize.width()>2048 && pointSize>minPointSize);
+
     QSize imgSize=textSize+QSize(strokeWidth*2+left,strokeWidth);
     int mergeCountWidth=0;
     if(comment->mergedList && danmuStyle->mergeCountPos>0)

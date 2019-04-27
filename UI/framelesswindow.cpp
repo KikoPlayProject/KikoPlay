@@ -295,5 +295,12 @@ void CFramelessWindow::showFullScreen()
     }
     QMainWindow::showFullScreen();
 }
-
+#else
+void CFramelessWindow::setOnTop(bool on)
+{
+    auto flags = windowFlags();
+    if(on) flags = (flags | Qt::WindowStaysOnTopHint);
+    else flags = (flags & ~Qt::WindowStaysOnTopHint);
+    setWindowFlags(flags);
+}
 #endif //Q_OS_WIN

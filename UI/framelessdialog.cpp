@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QPoint>
 #include <QSize>
+
 #ifdef Q_OS_WIN
 
 #include <windows.h>
@@ -327,5 +328,269 @@ QRect CFramelessDialog::contentsRect() const
     rect.setHeight(height);
     return rect;
 }
+#else
+#include <QPushButton>
+#include <QLabel>
+#include <QHBoxLayout>
+#include "globalobjects.h"
+#include "Play/Video/mpvplayer.h"
+CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showAccept, bool showClose, bool autoPauseVideo)
+    : QDialog(parent),
+      m_borderWidth(5),
+      m_bJustMaximized(false),
+      m_bResizeable(true),
+      restorePlayState(false),
+      isMousePressed(false),
+      resizeMouseDown(false)
+{
 
-#endif //Q_OS_WIN
+    setWindowFlags((Qt::Dialog| Qt::FramelessWindowHint));
+    setObjectName(QStringLiteral("framelessDialog_O"));
+    setMouseTracking(true);
+    GlobalObjects::iconfont.setPointSize(10);
+    titleBar=new QWidget(this);
+    titleBar->installEventFilter(this);
+
+    QSize btnSize(20*logicalDpiX()/96,20*logicalDpiY()/96);
+
+    closeButton=new QPushButton(titleBar);
+    closeButton->setObjectName(QStringLiteral("DialogCloseButton"));
+    closeButton->setFixedSize(btnSize);
+    closeButton->setFont(GlobalObjects::iconfont);
+    closeButton->setText(QChar(0xe60b));
+    QObject::connect(closeButton,&QPushButton::clicked,this,&CFramelessDialog::onClose);
+    closeButton->setVisible(showClose);
+    closeButton->setDefault(false);
+    closeButton->setAutoDefault(false);
+
+    acceptButton=new QPushButton(titleBar);
+    acceptButton->setObjectName(QStringLiteral("DialogAcceptButton"));
+    acceptButton->setFixedSize(btnSize);
+    acceptButton->setFont(GlobalObjects::iconfont);
+    acceptButton->setText(QChar(0xe680));
+    QObject::connect(acceptButton,&QPushButton::clicked,this,&CFramelessDialog::onAccept);
+    acceptButton->setVisible(showAccept);
+    acceptButton->setDefault(false);
+    acceptButton->setAutoDefault(false);
+
+    QMovie *downloadingIcon=new QMovie(this);
+    busyLabel=new QLabel(this);
+    busyLabel->setMovie(downloadingIcon);
+    downloadingIcon->setFileName(":/res/images/loading-spinner.gif");
+    busyLabel->setFixedSize(btnSize);
+    busyLabel->setScaledContents(true);
+    downloadingIcon->start();
+    busyLabel->hide();
+
+
+    title=new QLabel(titleStr, titleBar);
+    title->setFont(QFont("Microsoft YaHei",10));
+    title->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
+    title->setGeometry(10,10,title->width(),title->height());
+    title->setOpenExternalLinks(true);
+
+    QHBoxLayout *titleHBLayout=new QHBoxLayout(titleBar);
+    //titleHBLayout->setContentsMargins(0,0,0,0);
+    titleHBLayout->addWidget(title);
+    titleHBLayout->addWidget(busyLabel);
+    titleHBLayout->addWidget(acceptButton);
+    titleHBLayout->addWidget(closeButton);
+    setContentsMargins(6*logicalDpiX()/96,38*logicalDpiY()/96,6*logicalDpiX()/96,6*logicalDpiY()/96);
+    if (autoPauseVideo && GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
+    {
+        restorePlayState = true;
+        GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
+    }
+}
+
+void CFramelessDialog::setResizeable(bool resizeable)
+{
+    m_bResizeable = resizeable;
+}
+
+void CFramelessDialog::onAccept()
+{
+    accept();
+    if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
+}
+
+void CFramelessDialog::onClose()
+{
+    reject();
+    if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
+
+}
+
+void CFramelessDialog::setContentsMargins(const QMargins &margins)
+{
+    QDialog::setContentsMargins(margins+m_frames);
+    m_margins = margins;
+}
+void CFramelessDialog::setContentsMargins(int left, int top, int right, int bottom)
+{
+    QDialog::setContentsMargins(left+m_frames.left(),\
+                                    top+m_frames.top(), \
+                                    right+m_frames.right(), \
+                                    bottom+m_frames.bottom());
+    m_margins.setLeft(left);
+    m_margins.setTop(top);
+    m_margins.setRight(right);
+    m_margins.setBottom(bottom);
+}
+QMargins CFramelessDialog::contentsMargins() const
+{
+    QMargins margins = QDialog::contentsMargins();
+    margins -= m_frames;
+    return margins;
+}
+void CFramelessDialog::getContentsMargins(int *left, int *top, int *right, int *bottom) const
+{
+    QDialog::getContentsMargins(left,top,right,bottom);
+    if (!(left&&top&&right&&bottom)) return;
+    if (isMaximized())
+    {
+        *left -= m_frames.left();
+        *top -= m_frames.top();
+        *right -= m_frames.right();
+        *bottom -= m_frames.bottom();
+    }
+}
+
+bool CFramelessDialog::eventFilter(QObject *obj, QEvent *e)
+{
+    if(obj==titleBar)
+    {
+        if(e->type() == QEvent::MouseButtonPress)
+        {
+            QMouseEvent *event = static_cast<QMouseEvent*>(e);
+            if(event->button() == Qt::LeftButton)
+            {
+                isMousePressed = true;
+                mousePressPos = event->globalPos() - this->pos();
+                return true;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return QObject::eventFilter(obj,e);
+}
+
+void CFramelessDialog::mouseMoveEvent(QMouseEvent *e)
+{
+    if(isMousePressed)
+    {
+        this->move(e->globalPos() - mousePressPos);
+        e->accept();
+        return;
+    }
+    if(!m_bResizeable)
+    {
+        QDialog::mouseMoveEvent(e);
+        return;
+    }
+    int x = e->x();
+    int y = e->y();
+    if (resizeMouseDown)
+    {
+        int dx = x - oldPos.x();
+        int dy = y - oldPos.y();
+
+        QRect g = geometry();
+        if (left)
+            g.setLeft(g.left() + dx);
+        if (right)
+            g.setRight(g.right() + dx);
+        if (bottom)
+            g.setBottom(g.bottom() + dy);
+        setGeometry(g);
+        oldPos = QPoint(!left ? e->x() : oldPos.x(), e->y());
+    }
+    else
+    {
+        QRect r = rect();
+        left = qAbs(x - r.left()) <= 5;
+        right = qAbs(x - r.right()) <= 5;
+        bottom = qAbs(y - r.bottom()) <= 5;
+        bool hor = left | right;
+
+        if (hor && bottom)
+        {
+            if (left)
+                setCursor(Qt::SizeBDiagCursor);
+            else
+                setCursor(Qt::SizeFDiagCursor);
+        } else if (hor)
+        {
+            setCursor(Qt::SizeHorCursor);
+        } else if (bottom)
+        {
+            setCursor(Qt::SizeVerCursor);
+        } else
+        {
+            setCursor(Qt::ArrowCursor);
+        }
+    }
+}
+
+void CFramelessDialog::mousePressEvent(QMouseEvent *e)
+{
+    oldPos = e->pos();
+    resizeMouseDown = e->button() == Qt::LeftButton;
+    QDialog::mousePressEvent(e);
+}
+
+void CFramelessDialog::mouseReleaseEvent(QMouseEvent *e)
+{
+    isMousePressed=false;
+    resizeMouseDown = false;
+    QDialog::mouseReleaseEvent(e);
+}
+
+void CFramelessDialog::resizeEvent(QResizeEvent *)
+{
+    titleBar->setGeometry(0,0,width(),42*logicalDpiY()/96);
+}
+
+void CFramelessDialog::showBusyState(bool busy)
+{
+    if(busy)
+    {
+        busyLabel->show();
+        acceptButton->setEnabled(false);
+        closeButton->setEnabled(false);
+
+    }
+    else
+    {
+        busyLabel->hide();
+        acceptButton->setEnabled(true);
+        closeButton->setEnabled(true);
+    }
+}
+
+void CFramelessDialog::setTitle(const QString &text)
+{
+    title->setText(text);
+}
+
+void CFramelessDialog::reject()
+{
+    QDialog::reject();
+    if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
+}
+
+QRect CFramelessDialog::contentsRect() const
+{
+    QRect rect = QDialog::contentsRect();
+    int width = rect.width();
+    int height = rect.height();
+    rect.setLeft(rect.left() - m_frames.left());
+    rect.setTop(rect.top() - m_frames.top());
+    rect.setWidth(width);
+    rect.setHeight(height);
+    return rect;
+}
+#endif
