@@ -5,6 +5,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QBrush>
+#include <setjmp.h>
 namespace
 {
     jmp_buf jbuf;

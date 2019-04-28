@@ -97,6 +97,7 @@ private:
     bool mute;
     bool danmuHide;
     int volume;
+    bool oldOpenGLVersion;
     QString currentFile;
     QOpenGLShaderProgram danmuShader;
     QTimer refreshTimer;

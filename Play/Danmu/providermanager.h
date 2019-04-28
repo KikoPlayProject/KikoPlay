@@ -4,6 +4,9 @@
 #include <QObject>
 #include "common.h"
 #include "Provider/info.h"
+#ifndef Q_OS_WIN
+#include "globalobjects.h"
+#endif
 class ProviderBase;
 class ProviderManager : public QObject
 {

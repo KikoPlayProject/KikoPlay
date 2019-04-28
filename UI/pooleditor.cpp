@@ -105,9 +105,9 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
        GlobalObjects::danmuPool->getPool()->setDelay(sourceInfo->id,delaySpinBox->value()*1000);
     });
     QPushButton *editTimeline=new QPushButton(tr("Edit Timeline"),this);
-    editTimeline->setFixedWidth(80*logicalDpiX()/96);
+    //editTimeline->setFixedWidth(80*logicalDpiX()/96);
     QObject::connect(editTimeline,&QPushButton::clicked,[sourceInfo,this](){
-        int curTime=curTime=GlobalObjects::mpvplayer->getTime();
+        int curTime=GlobalObjects::mpvplayer->getTime();
         DanmuSourceInfo srcInfo(*sourceInfo);
         QList<SimpleDanmuInfo> list;
         GlobalObjects::danmuPool->getPool()->exportSimpleInfo(srcInfo.id,list);

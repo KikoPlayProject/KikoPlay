@@ -565,7 +565,6 @@ QWidget *DownloadWindow::setupLeftPanel()
     speedInfoGLayout->addWidget(upSpeedLabel,1,1);
     speedInfoGLayout->setContentsMargins(30*logicalDpiX()/96,0,20*logicalDpiX()/96,20*logicalDpiY()/96);
     leftVLayout->addLayout(speedInfoGLayout);
-	_ASSERTE(_CrtCheckMemory());
     return leftPanel;
 }
 

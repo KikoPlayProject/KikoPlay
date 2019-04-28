@@ -7,12 +7,21 @@
 Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent)
 {
     QProcess *process = new QProcess(this);
+#ifdef Q_OS_WIN
     process->start("taskkill /im aria2c.exe /f");
+#else
+    process->start("pkill -f aria2c");
+#endif
     process->waitForFinished(-1);
     QStringList args;
     args << "--enable-rpc=true";
     args << "--rpc-listen-port=6800";
+#ifdef Q_OS_WIN
     process->start(QCoreApplication::applicationDirPath()+"\\aria2c.exe", args);
+#else
+    process->start(QCoreApplication::applicationDirPath()+"/aria2c", args);
+
+#endif
     process->waitForStarted(-1);
 }
 

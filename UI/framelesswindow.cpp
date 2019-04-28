@@ -298,9 +298,12 @@ void CFramelessWindow::showFullScreen()
 #else
 void CFramelessWindow::setOnTop(bool on)
 {
+/*
     auto flags = windowFlags();
-    if(on) flags = (flags | Qt::WindowStaysOnTopHint);
-    else flags = (flags & ~Qt::WindowStaysOnTopHint);
+    if(on) flags = (flags | Qt::WindowStaysOnTopHint |Qt::X11BypassWindowManagerHint);
+    else flags = (flags & ~Qt::WindowStaysOnTopHint &~Qt::X11BypassWindowManagerHint);
     setWindowFlags(flags);
+    show();
+*/
 }
 #endif //Q_OS_WIN

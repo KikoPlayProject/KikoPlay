@@ -14,9 +14,11 @@ RC_FILE += kikoplay.rc
 RC_ICONS = kikoplay.ico
 
 TRANSLATIONS += res/lang/zh_CN.ts
-QMAKE_LFLAGS_RELEASE += /MAP
-QMAKE_CFLAGS_RELEASE += /Zi
-QMAKE_LFLAGS_RELEASE += /debug /opt:ref
+win32{
+    QMAKE_LFLAGS_RELEASE += /MAP
+    QMAKE_CFLAGS_RELEASE += /Zi
+    QMAKE_LFLAGS_RELEASE += /debug /opt:ref
+}
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -225,5 +227,13 @@ contains(QT_ARCH, i386){
     win32: LIBS += -L$$PWD/lib/x64/ -lzlibstat
     win32: LIBS += -L$$PWD/lib/x64/ -lqhttpengine
     win32: LIBS += -L$$PWD/lib/x64/ -llua53
+    unix{
+        LIBS += -L/usr/lib/x86_64-linux-gnu/ -lmpv
+        LIBS += -L/usr/lib/x86_64-linux-gnu/ -lz
+        LIBS += -L/usr/lib/x86_64-linux-gnu/ -lm
+        LIBS += -L$$PWD/lib/x64/linux/ -llua
+        LIBS += -L/usr/local/lib/ -lqhttpengine
+        LIBS += -L/usr/lib/x86_64-linux-gnu/ -ldl
+    }
 }
 

@@ -439,7 +439,8 @@ QMenu::indicator:exclusive:checked:selected {
     background: none;
 }
 #LogoButton {
-    background: transparent;
+    background:transparent;
+    border-style:none;
     color:rgb(200,200,200);
 }
 #LogoButton:menu-indicator{
@@ -447,7 +448,7 @@ QMenu::indicator:exclusive:checked:selected {
     subcontrol-origin: padding;
 }
 #LogoButton:hover {
-   color:rgb(255,255,255);
+    color:rgb(255,255,255);
 }
 QSplitter::handle {
     background-color:rgb(100,100,100);

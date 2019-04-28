@@ -4,6 +4,7 @@
 #include <QAbstractItemModel>
 #include "../common.h"
 #include "nodeinfo.h"
+class Pool;
 class DanmuManager : public QObject
 {
     Q_OBJECT

@@ -6,7 +6,7 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QMap>
-
+#include <clocale>
 #include "Play/Danmu/Render/danmurender.h"
 #include "globalobjects.h"
 namespace
@@ -37,10 +37,33 @@ const char *fShaderDanmu =
         "    gl_FragColor.rgba = texture2D(u_SamplerD[int(texId)], v_vTexCoord).bgra;\n"
         "    gl_FragColor.a *= alpha;\n"
         "}\n";
+const char *vShaderDanmu_Old =
+        "attribute mediump vec4 a_VtxCoord;\n"
+        "attribute mediump vec2 a_TexCoord;\n"
+        "varying mediump vec2 v_vTexCoord;\n"
+        "void main(void)\n"
+        "{\n"
+        "    gl_Position = a_VtxCoord;\n"
+        "    v_vTexCoord = a_TexCoord;\n"
+        "}\n";
+
+const char *fShaderDanmu_Old =
+        "#ifdef GL_ES\n"
+        "precision lowp float;\n"
+        "#endif\n"
+        "varying mediump vec2 v_vTexCoord;\n"
+        "uniform sampler2D u_SamplerD;\n"
+        "uniform float alpha;\n"
+        "void main(void)\n"
+        "{\n"
+        "    gl_FragColor.rgba = texture2D(u_SamplerD, v_vTexCoord).bgra;\n"
+        "    gl_FragColor.a *= alpha;\n"
+"}\n";
 }
 MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::Stop),
-    mute(false),danmuHide(false),currentDuration(0)
+    mute(false),danmuHide(false),oldOpenGLVersion(false),currentDuration(0)
 {
+    std::setlocale(LC_NUMERIC, "C");
     mpv = mpv::qt::Handle::FromRawHandle(mpv_create());
     if (!mpv)
         throw std::runtime_error("could not create mpv context");
@@ -182,6 +205,7 @@ void MPVPlayer::drawTexture(QList<const DanmuObject *> &objList, float alpha)
     }
     QOpenGLFunctions *glFuns=context()->functions();
     GLfloat h = 2.f / width(), v = 2.f / height();
+    int allowTexCount=oldOpenGLVersion?0:15;
     while(!objList.isEmpty())
     {
         texHash.clear();
@@ -189,7 +213,7 @@ void MPVPlayer::drawTexture(QList<const DanmuObject *> &objList, float alpha)
         int textureId=0;
         while(!objList.isEmpty())
         {
-            if(textureId>15) break;
+            if(textureId>allowTexCount) break;
             const DanmuObject *obj=objList.takeFirst();
 
             GLfloat l = obj->x*h - 1,r = (obj->x+obj->drawInfo->width)*h - 1,
@@ -231,13 +255,20 @@ void MPVPlayer::drawTexture(QList<const DanmuObject *> &objList, float alpha)
 
         danmuShader.bind();
         danmuShader.setUniformValue("alpha", alpha);
-        danmuShader.setUniformValueArray("u_SamplerD", u_SamplerD,16);
         danmuShader.setAttributeArray(0, vtx.constData(), 2);
         danmuShader.setAttributeArray(1, tex.constData(), 2);
-        danmuShader.setAttributeArray(2,texId.constData(),1);
         danmuShader.enableAttributeArray(0);
         danmuShader.enableAttributeArray(1);
-        danmuShader.enableAttributeArray(2);
+        if(oldOpenGLVersion)
+        {
+            danmuShader.setUniformValue("u_SamplerD", 0);
+        }
+        else
+        {
+            danmuShader.setUniformValueArray("u_SamplerD", u_SamplerD,16);
+            danmuShader.setAttributeArray(2,texId.constData(),1);
+            danmuShader.enableAttributeArray(2);
+        }
 
         glFuns->glEnable(GL_BLEND);
         glFuns->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -372,13 +403,29 @@ void MPVPlayer::initializeGL()
     if (r < 0)
         throw std::runtime_error("could not initialize OpenGL");
 
-    danmuShader.addShaderFromSourceCode(QOpenGLShader::Vertex, vShaderDanmu);
-    danmuShader.addShaderFromSourceCode(QOpenGLShader::Fragment, fShaderDanmu);
-    danmuShader.link();
-    danmuShader.bind();
-    danmuShader.bindAttributeLocation("a_VtxCoord", 0);
-    danmuShader.bindAttributeLocation("a_TexCoord", 1);
-    danmuShader.bindAttributeLocation("a_Tex", 2);
+    QOpenGLFunctions *glFuns=context()->functions();
+    const char *version = reinterpret_cast<const char*>(glFuns->glGetString(GL_VERSION));
+    qDebug()<<"OpenGL Version:"<<version;
+    oldOpenGLVersion = version[0]<'4';
+    if(oldOpenGLVersion)
+    {
+        danmuShader.addShaderFromSourceCode(QOpenGLShader::Vertex, vShaderDanmu_Old);
+        danmuShader.addShaderFromSourceCode(QOpenGLShader::Fragment, fShaderDanmu_Old);
+        danmuShader.link();
+        danmuShader.bind();
+        danmuShader.bindAttributeLocation("a_VtxCoord", 0);
+        danmuShader.bindAttributeLocation("a_TexCoord", 1);
+    }
+    else
+    {
+        danmuShader.addShaderFromSourceCode(QOpenGLShader::Vertex, vShaderDanmu);
+        danmuShader.addShaderFromSourceCode(QOpenGLShader::Fragment, fShaderDanmu);
+        danmuShader.link();
+        danmuShader.bind();
+        danmuShader.bindAttributeLocation("a_VtxCoord", 0);
+        danmuShader.bindAttributeLocation("a_TexCoord", 1);
+        danmuShader.bindAttributeLocation("a_Tex", 2);
+    }
     emit initContext();
 }
 
