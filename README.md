@@ -28,13 +28,62 @@ KikoPlay基于以下项目：
  - [QHttpEngine](https://github.com/nitroshare/qhttpengine)
  - Lua 5.3
 
-编译环境： MSVC2015
+编译环境： MSVC2015，gcc 7.3.0(其他版本未测试)
+
+Windows上使用Qt Creator打开工程文件后可直接编译
+
+Linux上我只测试了Ubuntu 18.04 x64，可尝试使用百度网盘里打包过的程序，解压后执行./KikoPlay.sh。其他系统可自行编译
+
+Ubuntu 18.04 x64上编译的大概流程：
+
+ 1. 安装Qt(测试安装的是Qt 5.12.3) 
+ 2. 安装OpenGL Library:
+     '''
+     sudo apt-get install build-essential
+     sudo apt-get install build-essential libgl1-mesa-dev
+     '''
+ 3. 安装libmpv和zlib:
+     '''
+     sudo apt-get install libmpv-dev
+     sudo apt-get install zlib1g-dev
+     '''
+ 4. 下载编译安装[QHttpEngine](https://github.com/nitroshare/qhttpengine)
+ 5. 下载Lua 5.3.4编译，得到liblua.a
+ 6. 准备好KikoPlay.pro文件，现在链接部分是这样的：
+     '''
+     contains(QT_ARCH, i386){
+         win32: LIBS += -L$$PWD/lib/ -llibmpv.dll
+         win32: LIBS += -L$$PWD/lib/ -lzlibstat
+         win32: LIBS += -L$$PWD/lib/ -lqhttpengine
+     }else{
+         win32: LIBS += -L$$PWD/lib/x64/ -llibmpv.dll
+         win32: LIBS += -L$$PWD/lib/x64/ -lzlibstat
+         win32: LIBS += -L$$PWD/lib/x64/ -lqhttpengine
+         win32: LIBS += -L$$PWD/lib/x64/ -llua53
+         unix{
+             LIBS += -L/usr/lib/x86_64-linux-gnu/ -lmpv
+             LIBS += -L/usr/lib/x86_64-linux-gnu/ -lz
+             LIBS += -L/usr/lib/x86_64-linux-gnu/ -lm
+             LIBS += -L$$PWD/lib/x64/linux/ -llua
+             LIBS += -L/usr/local/lib/ -lqhttpengine
+             LIBS += -L/usr/lib/x86_64-linux-gnu/ -ldl
+         }
+     }  
+     '''
+    注意unix部分链接的外部库的路径，默认liblua.a的位置是KikoPlay工程目录下lib/x64/linux目录下，编译好之后可以放到这里
+ 7. 开始编译，进入KikoPlay工程目录：
+     '''
+     qmake
+     make
+     '''
+    编译成功后得到KikoPlay文件，可直接运行./KikoPlay，如果提示缺少libqhttpengine等库，可尝试将编译QHttpEngine得到的库放到/usr/lib目录下。下载功能需要aria2c，可自行编译后放到KikoPlay同一目录下
 
 自从0.2.3版本后只提供64位版本，需要32位版本可自行尝试编译
 
 ## 截图
 
 ![](screenshot/KikoPlay1.jpg)
+![](screenshot/KikoPlay-Ubuntu.png)
 ![](screenshot/KikoPlay2.jpg)
 ![](screenshot/KikoPlay3.jpg)
 ![](screenshot/KikoPlay4.jpg)
