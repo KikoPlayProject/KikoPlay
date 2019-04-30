@@ -80,16 +80,6 @@ Ubuntu 18.04 x64上编译的大概流程：
 
 自从0.2.3版本后只提供64位版本，需要32位版本可自行尝试编译
 
-## 截图
-
-![](screenshot/KikoPlay1.jpg)
-![](screenshot/KikoPlay-Ubuntu.png)
-![](screenshot/KikoPlay2.jpg)
-![](screenshot/KikoPlay3.jpg)
-![](screenshot/KikoPlay4.jpg)
-![](screenshot/KikoPlay5.jpg)
-![](screenshot/KikoPlay_web.jpg)
-
 ## 下载
 
 最新版本均在百度网盘发布（最新版本：0.5.0）
@@ -99,3 +89,13 @@ Ubuntu 18.04 x64上编译的大概流程：
 
 如果有问题，欢迎创建issue或者联系我:
 dx_8820832#yeah.net（#→@），或者加QQ群874761809反馈
+
+## 截图
+
+![](screenshot/KikoPlay1.jpg)
+![](screenshot/KikoPlay-Ubuntu.png)
+![](screenshot/KikoPlay2.jpg)
+![](screenshot/KikoPlay3.jpg)
+![](screenshot/KikoPlay4.jpg)
+![](screenshot/KikoPlay5.jpg)
+![](screenshot/KikoPlay_web.jpg)
