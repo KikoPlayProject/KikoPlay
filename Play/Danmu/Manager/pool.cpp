@@ -145,7 +145,7 @@ int Pool::addSource(const DanmuSourceInfo &sourceInfo, QList<DanmuComment *> &da
         tmpList.append(sp);
     }
     if(!pid.isEmpty())GlobalObjects::danmuManager->saveSource(pid,containSource?nullptr:source,tmpList);
-    if(reset && danmuList.count()>0 && used)
+    if(reset && used)
     {
         std::sort(commentList.begin(),commentList.end(),DanmuSPCompare);
         emit poolChanged(true);
