@@ -84,7 +84,7 @@ void MainWindow::setupUI()
     buttonIcon = new QToolButton(widgetTitlebar);
     buttonIcon->setFont(normalFont);
 #ifdef Q_OS_WIN
-    buttonIcon->setText(" KikoPlay");
+    buttonIcon->setText(" KikoPlay ");
 #endif
     buttonIcon->setObjectName(QStringLiteral("LogoButton"));
     buttonIcon->setIcon(QIcon(":/res/images/kikoplay-3.png"));

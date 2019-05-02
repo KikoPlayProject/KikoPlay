@@ -26,9 +26,11 @@ bool Pool::load()
         PoolStateLock locker;
         if(!locker.tryLock(pid)) return false;
         GlobalObjects::danmuManager->loadPool(this);
+        GlobalObjects::blocker->checkDanmu(commentList);
         isLoaded=true;
         return true;
     }
+    GlobalObjects::blocker->checkDanmu(commentList);
     return false;
 }
 
