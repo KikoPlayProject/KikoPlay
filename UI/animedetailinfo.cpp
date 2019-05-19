@@ -9,7 +9,6 @@
 #include <QTreeView>
 #include <QFileDialog>
 #include <QPushButton>
-#include <QMessageBox>
 #include <QAction>
 #include <QHeaderView>
 #include <QScrollArea>
@@ -213,7 +212,7 @@ QWidget *AnimeDetailInfo::setupEpisodesPage()
         }
         catch(Network::NetworkError &error)
         {
-            QMessageBox::information(this,tr("Error"),error.errorInfo);
+            showMessage(error.errorInfo,1);
             getEpNames->setEnabled(true);
             getEpNames->setText(tr("Get Epsoide Names"));
         }
@@ -229,7 +228,7 @@ QWidget *AnimeDetailInfo::setupEpisodesPage()
             {
                 items<<(*iter).localFile;
             }
-            QMessageBox::information(this,"KikoPlay",tr("Add %1 items to Playlist").arg(GlobalObjects::playlist->addItems(items,collectIndex)));
+            showMessage(tr("Add %1 items to Playlist").arg(GlobalObjects::playlist->addItems(items,collectIndex)));
         }
     });
     QAction *deleteAction=new QAction(tr("Delete"),pageWidget);
@@ -251,7 +250,7 @@ QWidget *AnimeDetailInfo::setupEpisodesPage()
                 items<<currentAnime->eps.at(row).localFile;
             }
         }
-        QMessageBox::information(this,"KikoPlay",tr("Add %1 items to Playlist").arg(GlobalObjects::playlist->addItems(items,QModelIndex())));
+        showMessage(tr("Add %1 items to Playlist").arg(GlobalObjects::playlist->addItems(items,QModelIndex())));
     });
     QAction *playAction=new QAction(tr("Play"),pageWidget);
     QObject::connect(playAction,&QAction::triggered,[episodeView,this](){
@@ -260,7 +259,7 @@ QWidget *AnimeDetailInfo::setupEpisodesPage()
         QFileInfo info(currentAnime->eps.at(selection.last().row()).localFile);
         if(!info.exists())
         {
-            QMessageBox::information(this,"KikoPlay",tr("File Not Exist"));
+            showMessage(tr("File Not Exist"),1);
             return;
         }
         emit playFile(info.absoluteFilePath());
@@ -273,7 +272,7 @@ QWidget *AnimeDetailInfo::setupEpisodesPage()
         QFileInfo info(currentAnime->eps.at(selection.last().row()).localFile);
         if(!info.exists())
         {
-            QMessageBox::information(this,"KikoPlay",tr("File not Exist"));
+            showMessage(tr("File not Exist"),1);
             return;
         }
         QString command("Explorer /select," + QDir::toNativeSeparators(info.absoluteFilePath()));
@@ -406,7 +405,7 @@ QWidget *AnimeDetailInfo::setupTagPage()
        GlobalObjects::library->downloadTags(currentAnime,tags,&errorInfo);
        if(!errorInfo.isEmpty())
        {
-           QMessageBox::information(this,"KikoPlay",errorInfo);
+           showMessage(errorInfo,1);
        }
        else
        {

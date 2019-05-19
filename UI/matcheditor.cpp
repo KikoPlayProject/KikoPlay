@@ -9,7 +9,6 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QTreeWidget>
-#include <QMessageBox>
 #include <QButtonGroup>
 #include "globalobjects.h"
 MatchEditor::MatchEditor(const PlayListItem *item, MatchInfo *matchInfo, QWidget *parent) : CFramelessDialog(tr("Edit Match"),parent,true)
@@ -166,7 +165,7 @@ void MatchEditor::search()
     if(sInfo)
     {
         if(sInfo->error)
-            QMessageBox::information(this,"Error",sInfo->errorInfo);
+            showMessage(sInfo->errorInfo,1);
         else
         {
             searchResult->clear();
@@ -206,7 +205,7 @@ void MatchEditor::onAccept()
         auto selectedItems=searchResult->selectedItems();
         if(selectedItems.count()==0)
         {
-            QMessageBox::information(this,tr("Tip"),tr("You need to choose one"));
+            showMessage(tr("You need to choose one"),1);
             return;
         }
         QTreeWidgetItem *selectedItem=selectedItems.first();
@@ -219,7 +218,7 @@ void MatchEditor::onAccept()
         title=subtitleEdit->text().trimmed();
         if(animeTitle.isEmpty()||title.isEmpty())
         {
-            QMessageBox::information(this,tr("Tip"),tr("AnimeTitle and Subtitle can't be empty"));
+            showMessage(tr("AnimeTitle and Subtitle can't be empty"),1);
             return;
         }
     }

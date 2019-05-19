@@ -5,7 +5,6 @@
 #include <QLabel>
 #include <QCheckBox>
 #include <QHBoxLayout>
-#include <QMessageBox>
 #include <QHeaderView>
 #include "Download/dirselectwidget.h"
 #include "Download/torrent.h"
@@ -58,18 +57,18 @@ void SelectTorrentFile::onAccept()
     QString selectIndexes=model->getCheckedIndex();
     if(selectIndexes.isEmpty())
     {
-        QMessageBox::information(this,tr("Error"),tr("No File is Selected"));
+        showMessage(tr("No File is Selected"),1);
         return;
     }
     this->selectIndexes=selectIndexes;
     if(!dirSelect->isValid())
     {
-        QMessageBox::information(this,tr("Error"),tr("Dir is invaild"));
+        showMessage(tr("Dir is invaild"),1);
         return;
     }
     if(checkedFileSize>dirSelect->getFreeSpace())
     {
-        QMessageBox::information(this,tr("Error"),tr("Insufficient Disk Space"));
+        showMessage(tr("Insufficient Disk Space"),1);
         return;
     }
     this->dir=dirSelect->getDir();

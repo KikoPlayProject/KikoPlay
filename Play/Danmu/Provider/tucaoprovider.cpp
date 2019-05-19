@@ -204,9 +204,6 @@ void TucaoProvider::handleDownloadReply(QString &reply, QList<DanmuComment *> &d
                 danmu->sender="[Tucao]";
                 switch (attrList[2].toInt())
                 {
-                case 25:
-                    danmu->fontSizeLevel=DanmuComment::Normal;
-                    break;
                 case 18:
                     danmu->fontSizeLevel=DanmuComment::Small;
                     break;
@@ -214,6 +211,7 @@ void TucaoProvider::handleDownloadReply(QString &reply, QList<DanmuComment *> &d
                     danmu->fontSizeLevel=DanmuComment::Large;
                     break;
                 default:
+                    danmu->fontSizeLevel=DanmuComment::Normal;
                     break;
                 }
                 if(danmu->type!=DanmuComment::UNKNOW)danmuList.append(danmu);

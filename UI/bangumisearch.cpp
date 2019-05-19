@@ -3,7 +3,6 @@
 #include <QPushButton>
 #include <QLineEdit>
 #include <QTreeWidget>
-#include <QMessageBox>
 #include <QHeaderView>
 #include <QLabel>
 #include <QCheckBox>
@@ -83,7 +82,7 @@ void BangumiSearch::search()
     }
     catch(Network::NetworkError &error)
     {
-        QMessageBox::information(this,tr("Error"),error.errorInfo);
+        showMessage(error.errorInfo,1);
     }
     searchButton->setEnabled(true);
     searchWordEdit->setEnabled(true);
@@ -94,7 +93,7 @@ void BangumiSearch::onAccept()
 {
     if(bangumiList->selectedItems().count()==0)
     {
-        QMessageBox::information(this,tr("Tip"),tr("You need to choose a bangumi"));
+        showMessage(tr("You need to choose a bangumi"),1);
         return;
     }
     else
@@ -110,7 +109,7 @@ void BangumiSearch::onAccept()
         searchWordEdit->setEnabled(true);
         if(!errInfo.isEmpty())
         {
-            QMessageBox::information(this,tr("Error"),errInfo);
+            showMessage(errInfo,1);
             return;
         }
         CFramelessDialog::onAccept();

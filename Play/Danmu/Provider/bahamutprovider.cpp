@@ -229,9 +229,6 @@ void BahamutProvider::handleDownloadReply(QJsonDocument &document, QList<DanmuCo
         danmu->sender = "[Gamer]"+user.toString();
         switch (size.toInt())
         {
-        case 1:
-            danmu->fontSizeLevel=DanmuComment::Normal;
-            break;
         case 0:
             danmu->fontSizeLevel=DanmuComment::Small;
             break;
@@ -239,6 +236,7 @@ void BahamutProvider::handleDownloadReply(QJsonDocument &document, QList<DanmuCo
             danmu->fontSizeLevel=DanmuComment::Large;
             break;
         default:
+            danmu->fontSizeLevel=DanmuComment::Normal;
             break;
         }
         if(danmu->type!=DanmuComment::UNKNOW)danmuList.append(danmu);

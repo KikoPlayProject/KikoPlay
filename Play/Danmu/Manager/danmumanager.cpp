@@ -912,9 +912,11 @@ void DanmuManager::loadPool(Pool *pool)
             DanmuComment *danmu=new DanmuComment();
             danmu->color=query.value(colorNo).toInt();
             danmu->date=query.value(dateNo).toLongLong();
-            danmu->fontSizeLevel=DanmuComment::FontSizeLevel(query.value(sizeNo).toInt());
+            int fontSizeLevel(query.value(sizeNo).toInt());
+            danmu->fontSizeLevel=DanmuComment::FontSizeLevel(fontSizeLevel<3 && fontSizeLevel>=0?fontSizeLevel:0);
             danmu->sender=query.value(userNo).toString();
-            danmu->type=DanmuComment::DanmuType(query.value(modeNo).toInt());
+            int type(query.value(sizeNo).toInt());
+            danmu->type=DanmuComment::DanmuType(type<3 && type>=0?type:0);
             danmu->source=query.value(sourceNo).toInt();
             danmu->text=text;
             danmu->originTime=query.value(timeNo).toInt();

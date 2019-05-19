@@ -9,7 +9,6 @@
 #include <QComboBox>
 #include <QListWidget>
 #include <QTreeView>
-#include <QMessageBox>
 #include <QTextEdit>
 #include <QHeaderView>
 #include <QButtonGroup>
@@ -108,7 +107,7 @@ void AddDanmu::search()
     QString tmpProviderId=sourceCombo->currentText();
     DanmuAccessResult *searchResult=GlobalObjects::providerManager->search(tmpProviderId,keyword);
     if(searchResult->error)
-        QMessageBox::information(this,"Error",searchResult->errorInfo);
+        showMessage(searchResult->errorInfo,1);
     else
     {
         providerId=tmpProviderId;
@@ -194,7 +193,7 @@ void AddDanmu::addSearchItem(DanmuAccessResult *result)
         }
     }
     if(!errorInfo.isEmpty())
-        QMessageBox::information(this,"Error",errorInfo);
+        showMessage(errorInfo,1);
     selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuList.count()));
 }
 
@@ -208,7 +207,7 @@ void AddDanmu::addURL()
     DanmuAccessResult *result=GlobalObjects::providerManager->getURLInfo(url);
     if(result->error)
     {
-        QMessageBox::information(this,"Error",result->errorInfo);
+        showMessage(result->errorInfo,1);
     }
     else
     {

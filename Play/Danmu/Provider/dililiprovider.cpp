@@ -263,9 +263,6 @@ void DililiProvider::handleDownloadReply(const QString &reply, QList<DanmuCommen
                 danmu->sender="[5dm]"+attrList[6];
                 switch (attrList[2].toInt())
                 {
-                case 25:
-                    danmu->fontSizeLevel=DanmuComment::Normal;
-                    break;
                 case 18:
                     danmu->fontSizeLevel=DanmuComment::Small;
                     break;
@@ -273,6 +270,7 @@ void DililiProvider::handleDownloadReply(const QString &reply, QList<DanmuCommen
                     danmu->fontSizeLevel=DanmuComment::Large;
                     break;
                 default:
+                    danmu->fontSizeLevel=DanmuComment::Normal;
                     break;
                 }
                 if(danmu->type!=DanmuComment::UNKNOW)danmuList.append(danmu);
