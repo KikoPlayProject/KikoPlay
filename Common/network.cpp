@@ -1,4 +1,5 @@
 #include "network.h"
+#include "Common/zlib.h"
 namespace
 {
     QMap<QThread *,QNetworkAccessManager *> managerMap;
@@ -251,4 +252,95 @@ QList<QPair<QString, QByteArray> > Network::httpGetBatch(const QStringList &urls
     }
     eventLoop.exec();
     return results;
+}
+
+int Network::gzipCompress(const QByteArray &input, QByteArray &output)
+{
+    int ret;
+    unsigned have;
+    const int chunkSize=16384;
+    z_stream stream;
+    stream.zalloc = Z_NULL;
+    stream.zfree = Z_NULL;
+    stream.opaque = Z_NULL;
+    stream.avail_in = 0;
+    stream.next_in = Z_NULL;
+    ret = deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
+                            MAX_WBITS + 16, 8, Z_DEFAULT_STRATEGY);
+    if (ret != Z_OK) return ret;
+    unsigned char inBuf[chunkSize];
+    unsigned char outBuf[chunkSize];
+    QDataStream inStream(input);
+    int flush;
+    while(!inStream.atEnd())
+    {
+        stream.avail_in=inStream.readRawData((char *)&inBuf,chunkSize);
+        flush = stream.avail_in<chunkSize ? Z_FINISH : Z_NO_FLUSH;
+        stream.next_in = inBuf;
+        do
+        {
+            stream.avail_out = chunkSize;
+            stream.next_out = outBuf;
+            ret = deflate(&stream, flush);
+            assert(ret != Z_STREAM_ERROR);
+            have = chunkSize - stream.avail_out;
+            output.append((const char *)outBuf,have);
+        } while (stream.avail_out == 0);
+    }
+    (void)deflateEnd(&stream);
+    return Z_OK ;
+}
+
+int Network::gzipDecompress(const QByteArray &input, QByteArray &output)
+{
+    int ret;
+    unsigned have;
+    const int chunkSize=16384;
+    z_stream stream;
+    stream.zalloc = Z_NULL;
+    stream.zfree = Z_NULL;
+    stream.opaque = Z_NULL;
+    stream.avail_in = 0;
+    stream.next_in = Z_NULL;
+    ret = inflateInit2(&stream, MAX_WBITS + 16);
+    if (ret != Z_OK) return ret;
+    unsigned char inBuf[chunkSize];
+    unsigned char outBuf[chunkSize];
+    static char dummy_head[2] = {
+            0x8 + 0x7 * 0x10,
+            (((0x8 + 0x7 * 0x10) * 0x100 + 30) / 31 * 31) & 0xFF,
+        };
+    QDataStream inStream(input);
+    while(!inStream.atEnd())
+    {
+        stream.avail_in=inStream.readRawData((char *)&inBuf,chunkSize);
+        if (stream.avail_in == 0)
+            break;
+        stream.next_in = inBuf;
+        do
+        {
+            stream.avail_out = chunkSize;
+            stream.next_out = outBuf;
+            ret = inflate(&stream, Z_NO_FLUSH);
+            switch (ret)
+            {
+            case Z_NEED_DICT:
+                ret = Z_DATA_ERROR;
+                (void)inflateEnd(&stream);
+                return ret;
+            case Z_DATA_ERROR:
+                stream.next_in = (Bytef*) dummy_head;
+                stream.avail_in = sizeof(dummy_head);
+                if((ret = inflate(&stream, Z_NO_FLUSH)) == Z_OK)
+                    break;
+            case Z_MEM_ERROR:
+                (void)inflateEnd(&stream);
+                return ret;
+            }
+            have = chunkSize - stream.avail_out;
+            output.append((const char *)outBuf,have);
+        } while (stream.avail_out == 0);
+    }
+    (void)inflateEnd(&stream);
+    return Z_OK ;
 }

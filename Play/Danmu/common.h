@@ -55,6 +55,9 @@ public:
     QList<QSharedPointer<DanmuComment> > *mergedList;
     DanmuComment *m_parent;
 };
+QDataStream &operator<<(QDataStream &stream, const DanmuComment &danmu);
+QDataStream &operator>>(QDataStream &stream, DanmuComment &danmu);
+
 Q_DECLARE_OPAQUE_POINTER(DanmuComment *)
 struct SimpleDanmuInfo
 {
@@ -115,7 +118,12 @@ struct DanmuSourceInfo
     QString url;
     bool show;
     QList<QPair<int,int> >timelineInfo;
+    void setTimeline(const QString &timelineStr);
+    QString getTimelineStr() const;
 };
+QDataStream &operator<<(QDataStream &stream, const DanmuSourceInfo &src);
+QDataStream &operator>>(QDataStream &stream, DanmuSourceInfo &src);
+
 struct BlockRule
 {
     enum Field
@@ -135,6 +143,7 @@ struct BlockRule
     Relation relation;
     bool isRegExp;
     bool enable;
+    bool usePreFilter;
     QString name;
     QString content;
     QScopedPointer<QRegExp> re;

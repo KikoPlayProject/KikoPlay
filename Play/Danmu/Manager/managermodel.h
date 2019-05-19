@@ -10,6 +10,7 @@ public:
     virtual ~DanmuManagerModel();
     void refreshList();
     void exportPool(const QString &dir, bool useTimeline=true, bool applyBlockRule=false);
+    void exportKdFile(const QString &dir, const QString &comment="");
     void deletePool();
     void updatePool();
     int totalDanmuCount();
@@ -17,7 +18,10 @@ public:
     bool hasSelected();
     DanmuPoolSourceNode *getSourceNode(const QModelIndex &index);
     DanmuPoolNode *getPoolNode(const QModelIndex &index);
+    QString getAnime(const QModelIndex &index);
     void addSrcNode(DanmuPoolNode *epNode, DanmuPoolSourceNode *srcNode);
+    void addPoolNode(const QString &animeTitle, const QString &epTitle, const QString &pid);
+    void renamePoolNode(DanmuPoolNode *epNode, const QString &animeTitle, const QString &epTitle, const QString &pid);
 private:
     QList<DanmuPoolNode *> animeNodeList;
     const QStringList headers={tr("Title"),tr("Source"),tr("Delay"),tr("Danmu Count")};

@@ -19,6 +19,9 @@ class PoolEditor : public CFramelessDialog
     Q_OBJECT
 public:
     explicit PoolEditor(QWidget *parent = nullptr);
+private:
+    QVBoxLayout *poolItemVLayout;
+    void refreshItems();
 protected:
     virtual void onClose();
 };

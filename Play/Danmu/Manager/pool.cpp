@@ -2,6 +2,7 @@
 #include "danmumanager.h"
 #include "globalobjects.h"
 #include "../blocker.h"
+#include "Common/network.h"
 namespace
 {
     struct
@@ -129,9 +130,10 @@ int Pool::addSource(const DanmuSourceInfo &sourceInfo, QList<DanmuComment *> &da
         DanmuSourceInfo newSource;
         newSource.id=sourcesTable.isEmpty()?0:sourcesTable.lastKey()+1;
         newSource.delay=sourceInfo.delay;
-        newSource.count=sourceInfo.count;
+        newSource.count=danmuList.count();
         newSource.url=sourceInfo.url;
         newSource.name=sourceInfo.name;
+        newSource.timelineInfo=sourceInfo.timelineInfo;
         newSource.show=true;
         sourcesTable.insert(newSource.id,newSource);
         source = &sourcesTable[newSource.id];
@@ -267,19 +269,35 @@ void Pool::exportPool(const QString &fileName, bool useTimeline, bool applyBlock
         QString danmuText;
         for(const QChar &ch:danmu->text)
         {
-            if(ch == 0x9 //\t
-                    || ch == 0xA //\n
-                    || ch == 0xD //\r
-                    || (ch >= 0x20 && ch <= 0xD7FF)
-                    || (ch >= 0xE000 && ch <= 0xFFFD)
-                    )
-                danmuText.append(ch);
+            if((ch>=0x0 && ch<=0x8) || (ch>=0xb && ch<=0xc) || (ch>=0xe && ch<=0x1f))
+                continue;
+            danmuText.append(ch);
+//            if(ch == 0x9 //\t
+//                    || ch == 0xA //\n
+//                    || ch == 0xD //\r
+//                    || (ch >= 0x20 && ch <= 0xD7FF)
+//                    || (ch >= 0xE000 && ch <= 0xFFFD)
+//                    )
+//                danmuText.append(ch);
         }
         writer.writeCharacters(danmuText);
         writer.writeEndElement();
     }
     writer.writeEndElement();
     writer.writeEndDocument();
+}
+
+void Pool::exportKdFile(QDataStream &stream, const QList<int> &ids)
+{
+    stream<<anime<<ep;
+    stream<<GlobalObjects::danmuManager->getAssociatedFile16Md5(pid).join(';');
+    stream<<sourcesTable.values();
+    stream<<commentList.count();
+    for(const auto &danmu:commentList)
+    {
+        if(!ids.isEmpty() && !ids.contains(danmu->source)) continue;
+        stream<<*danmu;
+    }
 }
 
 void Pool::exportSimpleInfo(int srcId, QList<SimpleDanmuInfo> &simpleDanmuList)
@@ -322,6 +340,70 @@ QJsonArray Pool::exportJson(const QList<QSharedPointer<DanmuComment> > &danmuLis
     return danmuArray;
 }
 
+QString Pool::getPoolCode(const QStringList &addition) const
+{
+    if(sourcesTable.isEmpty() && addition.isEmpty()) return QString();
+    QJsonArray poolArray;
+    //addition: magnet,animeName,epName,file16MBHash
+    for(const QString &item:addition)
+        poolArray.append(QJsonValue(item));
+    for(const DanmuSourceInfo &src:sourcesTable)
+    {
+        QFileInfo fi(src.url);
+        if(fi.exists()) continue;
+        poolArray.append(QJsonArray({src.name,src.url,src.delay,src.getTimelineStr()}));
+    }
+    if(poolArray.isEmpty()) return QString();
+    QByteArray compressedBytes;
+    Network::gzipCompress(QJsonDocument(poolArray).toJson(QJsonDocument::Compact),compressedBytes);
+    return compressedBytes.toBase64();
+}
+
+bool Pool::addPoolCode(const QString &code, bool hasAddition)
+{
+    QJsonArray poolArray(getPoolCodeInfo(code));
+    if(poolArray.isEmpty()) return false;
+    if(hasAddition && poolArray.count()<4) return false;
+    int i=hasAddition?4:0;
+    QList<DanmuComment *> emptyList;
+    for(;i<poolArray.count();++i)
+    {
+        addSourceJson(poolArray[i].toArray());
+    }
+    if(used)
+    {
+        emit poolChanged(true);
+    }
+    return true;
+}
+
+bool Pool::addPoolCode(const QJsonArray &infoArray)
+{
+    if(infoArray.isEmpty()) return false;
+    for(int i=0;i<infoArray.count();++i)
+    {
+        addSourceJson(infoArray[i].toArray());
+    }
+    if(used)
+    {
+        emit poolChanged(true);
+    }
+    return true;
+}
+
+QJsonArray Pool::getPoolCodeInfo(const QString &code)
+{
+    QByteArray base64Src(QByteArray::fromBase64(code.toUtf8()));
+    QByteArray jsonBytes;
+    if(Network::gzipDecompress(base64Src,jsonBytes)!=0) return QJsonArray();
+    try
+    {
+        return Network::toJson(jsonBytes).array();
+    } catch (Network::NetworkError &) {
+        return QJsonArray();
+    }
+}
+
 
 QSet<QString> Pool::getDanmuHashSet(int sourceId)
 {
@@ -336,6 +418,19 @@ QSet<QString> Pool::getDanmuHashSet(int sourceId)
         }
     }
     return hashSet;
+}
+
+void Pool::addSourceJson(const QJsonArray &array)
+{
+    if(array.count()!=4) return;
+    DanmuSourceInfo srcInfo;
+    srcInfo.name=array[0].toString();
+    srcInfo.url=array[1].toString();
+    srcInfo.delay=array[2].toInt();
+    srcInfo.count=0;
+    srcInfo.setTimeline(array[3].toString());
+    QList<DanmuComment *> emptyList;
+    addSource(srcInfo,emptyList);
 }
 
 void Pool::setDelay(DanmuComment *danmu)

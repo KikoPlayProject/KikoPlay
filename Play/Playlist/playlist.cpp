@@ -906,3 +906,23 @@ void PlayList::updatePlayTime(const QString &path, int time, int state)
     }
 }
 
+void PlayList::renameItemPoolId(const QString &opid, const QString &npid, const QString &animeTitle, const QString &epTitle)
+{
+    Q_D(PlayList);
+    for(PlayListItem *item:d->fileItems)
+    {
+        if(item->poolID==opid)
+        {
+            item->poolID=npid;
+            item->animeTitle=animeTitle;
+            item->title=epTitle;
+            if (item == d->currentItem)
+            {
+                emit currentMatchChanged(item->poolID);
+            }
+            d->playListChanged=true;
+            d->needRefresh=true;
+        }
+    }
+}
+

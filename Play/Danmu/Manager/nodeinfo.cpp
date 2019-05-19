@@ -80,26 +80,11 @@ DanmuSourceInfo DanmuPoolSourceNode::toSourceInfo()
     srcInfo.name=title;
     srcInfo.count=danmuCount;
     srcInfo.delay=delay;
-    QStringList timelineList(timeline.split(';',QString::SkipEmptyParts));
-    QTextStream ts;
-    for(QString &spaceInfo:timelineList)
-    {
-        ts.setString(&spaceInfo,QIODevice::ReadOnly);
-        int start,duration;
-        ts>>start>>duration;
-        srcInfo.timelineInfo.append(QPair<int,int>(start,duration));
-    }
+    srcInfo.setTimeline(timeline);
     return srcInfo;
 }
 
 void DanmuPoolSourceNode::setTimeline(const DanmuSourceInfo &srcInfo)
 {
-    QString timelineInfo;
-    QTextStream ts(&timelineInfo);
-    for(auto &spaceItem:srcInfo.timelineInfo)
-    {
-        ts<<spaceItem.first<<' '<<spaceItem.second<<';';
-    }
-    ts.flush();
-    timeline=timelineInfo;
+    timeline=srcInfo.getTimelineStr();
 }

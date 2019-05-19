@@ -60,9 +60,11 @@ public slots :
     void setCurrentPlayTime(int playTime);
     QModelIndex mergeItems(const QModelIndexList &mergeIndexes);
     void exportDanmuItems(const QModelIndexList &exportIndexes);
+
     
     void dumpJsonPlaylist(QJsonDocument &jsonDoc,QHash<QString,QString> &mediaHash);
     void updatePlayTime(const QString &path, int time, int state);
+    void renameItemPoolId(const QString &opid, const QString &npid, const QString &animeTitle, const QString &epTitle);
 
     // QAbstractItemModel interface
 public:

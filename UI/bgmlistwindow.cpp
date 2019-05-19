@@ -126,7 +126,7 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
         bgmContextMenu->clear();
         bgmContextMenu->addAction(addToLibrary);
         bgmContextMenu->addAction(onBangumi);
-        QStringList sites(item.sitesName.split('|'));
+        QStringList sites(item.sitesName.split('|',QString::SkipEmptyParts));
         if(sites.count()>0)
         {
             bgmContextMenu->addSeparator();

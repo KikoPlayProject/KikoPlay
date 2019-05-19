@@ -25,9 +25,14 @@ public:
     void setUsed(bool on);
     void setSourceVisibility(int srcId, bool show);
     void exportPool(const QString &fileName, bool useTimeline=true, bool applyBlockRule=false, const QList<int> &ids=QList<int>());
+    void exportKdFile(QDataStream &stream, const QList<int> &ids=QList<int>());
     void exportSimpleInfo(int srcId, QList<SimpleDanmuInfo> &simpleDanmuList);
     QJsonArray exportJson();
     static QJsonArray exportJson(const QList<QSharedPointer<DanmuComment> > &danmuList);
+    QString getPoolCode(const QStringList &addition=QStringList()) const;
+    bool addPoolCode(const QString &code, bool hasAddition=false);
+    bool addPoolCode(const QJsonArray &infoArray);
+    static QJsonArray getPoolCodeInfo(const QString &code);
 private:
     QString pid;
     QString anime,ep;
@@ -40,6 +45,7 @@ private:
     bool clean();
     void setDelay(DanmuComment *danmu);
     QSet<QString> getDanmuHashSet(int sourceId=-1);
+    void addSourceJson(const QJsonArray &array);
 
     friend class DanmuManager;
 signals:

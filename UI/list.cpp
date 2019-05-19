@@ -6,6 +6,7 @@
 #include <QPushButton>
 #include <QApplication>
 #include <QMessageBox>
+#include <QInputDialog>
 
 #include "globalobjects.h"
 #include "pooleditor.h"
@@ -20,6 +21,7 @@
 #include "Play/Danmu/providermanager.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
+#include "Download/downloadmodel.h"
 namespace
 {
     class TextColorDelegate: public QStyledItemDelegate
@@ -303,6 +305,63 @@ void ListWindow::initActions()
         act_addItem->setEnabled(true);
     });
 
+    act_shareResourceCode=new QAction(tr("Resource Code"),this);
+    QObject::connect(act_shareResourceCode,&QAction::triggered,[this](){
+        QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
+        QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
+        if (selection.size() == 0)return;
+        QModelIndex selIndex(selection.indexes().first());
+        const PlayListItem *item=GlobalObjects::playlist->getItem(selIndex);
+        Pool *pool = nullptr;
+        if(item->poolID.isEmpty() || !(pool=GlobalObjects::danmuManager->getPool(item->poolID, false)))
+        {
+            showMessage(tr("No pool associated"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+            return;
+        }
+        QString uri = QInputDialog::getText(this, tr("Resource URI"),
+                                             tr("Set Resource URI(eg. magnet)\n"
+                                                "The KikoPlay Resource Code would contain the uri and the danmu pool info associated with the anime(only for single file)"), QLineEdit::Normal,
+                                             GlobalObjects::downloadModel->findFileUri(item->path));
+        if(uri.isEmpty()) return;
+        QString file16MD5(GlobalObjects::danmuManager->getFileHash(item->path));
+        QString code(pool->getPoolCode(QStringList({uri,pool->animeTitle(),pool->epTitle(),file16MD5})));
+        if(code.isEmpty())
+        {
+            showMessage(tr("No Danmu Source to Share"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+        }
+        else
+        {
+            QClipboard *cb = QApplication::clipboard();
+            cb->setText("kikoplay:anime="+code);
+            showMessage(tr("Resource Code has been Copied to Clipboard"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+        }
+    });
+    act_sharePoolCode=new QAction(tr("Danmu Pool Code"),this);
+    QObject::connect(act_sharePoolCode,&QAction::triggered,[this](){
+        QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
+        QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
+        if (selection.size() == 0)return;
+        QModelIndex selIndex(selection.indexes().first());
+        const PlayListItem *item=GlobalObjects::playlist->getItem(selIndex);
+        Pool *pool = nullptr;
+        if(item->poolID.isEmpty() || !(pool=GlobalObjects::danmuManager->getPool(item->poolID, false)))
+        {
+            showMessage(tr("No pool associated"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+            return;
+        }
+        QString code(pool->getPoolCode());
+        if(code.isEmpty())
+        {
+            showMessage(tr("No Danmu Source to Share"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+        }
+        else
+        {
+            QClipboard *cb = QApplication::clipboard();
+            cb->setText("kikoplay:pool="+code);
+            showMessage(tr("Pool Code has been Copied to Clipboard"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+        }
+    });
+
     act_addCollection=new QAction(tr("Add Collection"),this);
     QObject::connect(act_addCollection,&QAction::triggered,[this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
@@ -541,6 +600,7 @@ void ListWindow::initActions()
         rule->relation=BlockRule::Relation::Contain;
         rule->enable=true;
         rule->isRegExp=false;
+        rule->usePreFilter=false;
         rule->content=getSelectedDanmu()->text;
         GlobalObjects::blocker->addBlockRule(rule);
         showMessage(tr("Blocked"),PopMessageFlag::PM_OK|PopMessageFlag::PM_HIDE);
@@ -552,6 +612,7 @@ void ListWindow::initActions()
         rule->relation=BlockRule::Relation::Equal;
         rule->enable=true;
         rule->isRegExp=false;
+        rule->usePreFilter=false;
         rule->content=QString::number(getSelectedDanmu()->color,16);
         GlobalObjects::blocker->addBlockRule(rule);
         showMessage(tr("Blocked"),PopMessageFlag::PM_OK|PopMessageFlag::PM_HIDE);
@@ -563,6 +624,7 @@ void ListWindow::initActions()
         rule->relation=BlockRule::Relation::Equal;
         rule->enable=true;
         rule->isRegExp=false;
+        rule->usePreFilter=false;
         rule->content=getSelectedDanmu()->sender;
         GlobalObjects::blocker->addBlockRule(rule);
         showMessage(tr("Blocked"),PopMessageFlag::PM_OK|PopMessageFlag::PM_HIDE);
@@ -687,9 +749,11 @@ QWidget *ListWindow::setupPlaylistPage()
     QMenu *playlistContextMenu=new QMenu(playlistView);
     playlistContextMenu->addAction(act_play);
     playlistContextMenu->addAction(act_autoAssociate);
-    playlistContextMenu->addAction(act_addWebDanmuSource);
-    playlistContextMenu->addAction(act_updateDanmu);
-    playlistContextMenu->addAction(act_exportDanmu);
+    QMenu *danmuSubMenu=new QMenu(tr("Danmu"),playlistContextMenu);
+    danmuSubMenu->addAction(act_addWebDanmuSource);
+    danmuSubMenu->addAction(act_updateDanmu);
+    danmuSubMenu->addAction(act_exportDanmu);
+    playlistContextMenu->addMenu(danmuSubMenu);
     QMenu *addSubMenu=new QMenu(tr("Add"),playlistContextMenu);
     addSubMenu->addAction(act_addCollection);
     addSubMenu->addAction(act_addItem);
@@ -713,6 +777,10 @@ QWidget *ListWindow::setupPlaylistPage()
     sortSubMenu->addAction(act_sortSelectionAscending);
     sortSubMenu->addAction(act_sortSelectionDescending);
     playlistContextMenu->addMenu(sortSubMenu);
+    QMenu *shareSubMenu=new QMenu(tr("Share"),playlistContextMenu);
+    shareSubMenu->addAction(act_sharePoolCode);
+    shareSubMenu->addAction(act_shareResourceCode);
+    playlistContextMenu->addMenu(shareSubMenu);
     playlistContextMenu->addAction(act_browseFile);
 
     QObject::connect(playlistView,&QTreeView::customContextMenuRequested,[playlistContextMenu](){
@@ -836,8 +904,8 @@ QWidget *ListWindow::setupDanmulistPage()
     updatePool->setToolButtonStyle(Qt::ToolButtonTextOnly);
     updatePool->setToolTip(tr("Update Danmu Pool"));
     QObject::connect(updatePool,&QToolButton::clicked,[this](){
-        QString poolId=GlobalObjects::danmuPool->getPoolID();
-        if(poolId.isEmpty()) return;
+        //QString poolId=GlobalObjects::danmuPool->getPoolID();
+        //if(!GlobalObjects::danmuPool->hasPool()) return;
         act_autoAssociate->setEnabled(false);
         act_addOnlineDanmu->setEnabled(false);
         act_addLocalDanmu->setEnabled(false);
@@ -849,24 +917,6 @@ QWidget *ListWindow::setupDanmulistPage()
             QList<DanmuComment *> tmpList;
             showMessage(tr("Updating: %1").arg(iter.value().url),PopMessageFlag::PM_PROCESS);
             count+=GlobalObjects::danmuPool->getPool()->update(iter.key());
-            /*
-            QString errInfo = GlobalObjects::providerManager->downloadBySourceURL(iter.value().url,tmpList);
-            if(poolId!=GlobalObjects::danmuPool->getPoolID())
-            {
-                qDeleteAll(tmpList);
-                break;
-            }
-            if(errInfo.isEmpty())
-            {
-                if(tmpList.count()>0)
-                {
-                    DanmuSourceInfo si;
-                    si.count = tmpList.count();
-                    si.url = iter.value().url;
-                    count += GlobalObjects::danmuPool->addDanmu(si,tmpList,false);
-                }
-            }
-            */
         }
         //if(count>0) GlobalObjects::danmuPool->resetModel();
         showMessage(tr("Add %1 Danmu").arg(count),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);

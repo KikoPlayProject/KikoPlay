@@ -19,7 +19,8 @@ public:
     explicit DanmuPool(QObject *parent = nullptr);
     virtual ~DanmuPool();
 
-    inline QString getPoolID() const { return poolID; }
+    inline bool hasPool() const {return curPool!=emptyPool;}
+    //inline QString getPoolID() const { return poolID; }
     inline QModelIndex getCurrentIndex(){return (currentPosition >= 0 && currentPosition < finalPool.count())?createIndex(currentPosition, 0,finalPool.at(currentPosition).data()):QModelIndex();}
     inline void recyclePrepareList(PrepareList *list){list->clear();prepareListPool.append(list);}
     inline bool isEmpty() const{return danmuPool.isEmpty();}
@@ -39,7 +40,7 @@ private:
     StatisInfo statisInfo;
     int currentPosition;
     int currentTime;
-    QString poolID;
+   // QString poolID;
 
     bool enableMerged;
     int mergeInterval; //ms

@@ -25,6 +25,11 @@ void DanmuManagerModel::exportPool(const QString &dir, bool useTimeline, bool ap
     GlobalObjects::danmuManager->exportPool(animeNodeList,dir,useTimeline,applyBlockRule);
 }
 
+void DanmuManagerModel::exportKdFile(const QString &dir, const QString &comment)
+{
+    GlobalObjects::danmuManager->exportKdFile(animeNodeList,dir,comment);
+}
+
 void DanmuManagerModel::deletePool()
 {
     GlobalObjects::danmuManager->deletePool(animeNodeList);
@@ -157,6 +162,14 @@ DanmuPoolNode *DanmuManagerModel::getPoolNode(const QModelIndex &index)
     else return item->parent;
 }
 
+QString DanmuManagerModel::getAnime(const QModelIndex &index)
+{
+    DanmuPoolNode *item = static_cast<DanmuPoolNode*>(index.internalPointer());
+    if(item->type==DanmuPoolNode::AnimeNode) return item->title;
+    else if(item->type==DanmuPoolNode::EpNode) return item->parent->title;
+    else return item->parent->parent->title;
+}
+
 void DanmuManagerModel::addSrcNode(DanmuPoolNode *epNode, DanmuPoolSourceNode *srcNode)
 {
     QModelIndex epIndex(createIndex(epNode->parent->children->indexOf(epNode),0,epNode));
@@ -170,6 +183,101 @@ void DanmuManagerModel::addSrcNode(DanmuPoolNode *epNode, DanmuPoolSourceNode *s
     epNode->parent->setCount();
     emit dataChanged(epIndex.siblingAtColumn(3),epIndex.siblingAtColumn(3));
     emit dataChanged(epIndex.parent().siblingAtColumn(3),epIndex.parent().siblingAtColumn(3));
+}
+
+void DanmuManagerModel::addPoolNode(const QString &animeTitle, const QString &epTitle, const QString &pid)
+{
+    int i=0;
+    for(DanmuPoolNode *node:animeNodeList)
+    {
+        if(node->title==animeTitle)
+        {
+            DanmuPoolNode *epNode=new DanmuPoolNode(DanmuPoolNode::EpNode,node);
+            epNode->title=epTitle;
+            epNode->idInfo=pid;
+            QModelIndex animeIndex(createIndex(i,0,node));
+            beginInsertRows(animeIndex,node->children->count()-1,node->children->count()-1);
+            endInsertRows();
+            return;
+        }
+        ++i;
+    }
+    DanmuPoolNode *animeNode=new DanmuPoolNode(DanmuPoolNode::AnimeNode);
+    animeNode->title=animeTitle;
+    DanmuPoolNode *epNode=new DanmuPoolNode(DanmuPoolNode::EpNode,animeNode);
+    epNode->title=epTitle;
+    epNode->idInfo=pid;
+    beginInsertRows(QModelIndex(),i,i);
+    animeNodeList.append(animeNode);
+    endInsertRows();
+
+}
+
+void DanmuManagerModel::renamePoolNode(DanmuPoolNode *epNode, const QString &animeTitle, const QString &epTitle, const QString &pid)
+{
+    epNode->idInfo=pid;
+    epNode->title=epTitle;
+    if(animeTitle==epNode->parent->title)
+    {
+        QModelIndex epIndex(createIndex(epNode->parent->children->indexOf(epNode),0,epNode));
+        emit dataChanged(epIndex,epIndex);
+    }
+    else
+    {
+        DanmuPoolNode *oldAnimeNode=epNode->parent;
+        oldAnimeNode->danmuCount-=epNode->danmuCount;
+        QModelIndex animeIndex(createIndex(animeNodeList.indexOf(oldAnimeNode),0,oldAnimeNode));
+        int row=oldAnimeNode->children->indexOf(epNode);
+        beginRemoveRows(animeIndex,row,row);
+        oldAnimeNode->children->removeAt(row);
+        endRemoveRows();
+        if(oldAnimeNode->children->isEmpty())
+        {
+            int row=animeNodeList.indexOf(oldAnimeNode);
+            beginRemoveRows(QModelIndex(),row,row);
+            animeNodeList.removeAt(row);
+            delete oldAnimeNode;
+            endRemoveRows();
+        }
+        else
+        {
+            emit dataChanged(animeIndex.siblingAtColumn(3),animeIndex.siblingAtColumn(3));
+        }
+
+        DanmuPoolNode *animeNode(nullptr);
+        int index=0;
+        for(DanmuPoolNode *node:animeNodeList)
+        {
+            if(node->title==animeTitle)
+            {
+                animeNode=node;
+                break;
+            }
+            ++index;
+        }
+        if(!animeNode)
+        {
+            animeNode=new DanmuPoolNode(DanmuPoolNode::AnimeNode);
+            animeNode->title=animeTitle;
+            epNode->parent=animeNode;
+            animeNode->children->append(epNode);
+            animeNode->danmuCount=epNode->danmuCount;
+            beginInsertRows(QModelIndex(),animeNodeList.count(),animeNodeList.count());
+            animeNodeList.append(animeNode);
+            endInsertRows();
+        }
+        else
+        {
+            QModelIndex nAnimeIndex(createIndex(index,0,animeNode));
+            epNode->parent=animeNode;
+            animeNode->danmuCount+=epNode->danmuCount;
+            beginInsertRows(nAnimeIndex,animeNode->children->count(),animeNode->children->count());
+            animeNode->children->append(epNode);
+            endInsertRows();
+            emit dataChanged(nAnimeIndex.siblingAtColumn(3),nAnimeIndex.siblingAtColumn(3));
+        }
+
+    }
 }
 
 void DanmuManagerModel::refreshChildrenCheckStatus(const QModelIndex &index)

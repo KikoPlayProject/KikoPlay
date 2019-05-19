@@ -12,6 +12,8 @@ namespace Network
     QList<QPair<QString,QByteArray> > httpGetBatch(const QStringList &urls, const QList<QUrlQuery> &querys,const QStringList &header=QStringList());
     QJsonDocument toJson(const QString &str);
     QJsonValue getValue(QJsonObject &obj, const QString &path);
+    int gzipCompress(const QByteArray &input, QByteArray &output);
+    int gzipDecompress(const QByteArray &input, QByteArray &output);
     class NetworkError
     {
     public:

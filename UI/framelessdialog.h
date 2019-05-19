@@ -6,7 +6,17 @@
 #include <QList>
 #include <QMargins>
 #include <QRect>
+#include <QTimer>
 class QLabel;
+class DialogTip : public QWidget
+{
+public:
+    explicit DialogTip(QWidget *parent=nullptr);
+    void showMessage(const QString &msg, int type=0);
+private:
+    QLabel *infoText;
+    QTimer hideTimer;
+};
 #ifdef Q_OS_WIN
 class CFramelessDialog : public QDialog
 {
@@ -48,12 +58,15 @@ private:
     QWidget *titleBar;
 	bool restorePlayState;
 
+    DialogTip *dialogTip;
+
     // QWidget interface
 protected:
     virtual void showEvent(QShowEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
     void showBusyState(bool busy);
     void setTitle(const QString &text);
+    void showMessage(const QString &msg, int type=0);
     // QDialog interface
 public slots:
     virtual void reject();
@@ -99,6 +112,8 @@ private:
     bool left, right, bottom;
     QPoint oldPos;
 
+    DialogTip *dialogTip;
+
     // QWidget interface
 protected:
     bool eventFilter(QObject *obj, QEvent *e);
@@ -108,6 +123,7 @@ protected:
     virtual void resizeEvent(QResizeEvent *event);
     void showBusyState(bool busy);
     void setTitle(const QString &text);
+    void showMessage(const QString &msg, int type=0);
     // QDialog interface
 public slots:
     virtual void reject();

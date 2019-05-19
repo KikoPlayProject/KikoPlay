@@ -56,6 +56,7 @@ private:
     void addTask(DownloadTask *task);
     void removeItem(DownloadTask *task, bool deleteFile);
     bool containTask(const QString &taskId);
+    QString processKikoPlayCode(const QString &code);
 signals:
     void magnetDone(const QString &path, const QString &magnet);
     void removeTask(const QString &gid);
@@ -72,6 +73,7 @@ public slots:
     void queryItemStatus();
     void saveItemStatus();
     void saveItemStatus(const DownloadTask *task);
+    QString findFileUri(const QString &fileName);
     // QAbstractItemModel interface
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}

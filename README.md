@@ -14,13 +14,14 @@
  - 集成aria2下载功能
  - 每日放送功能：可快速浏览新番列表并添加关注
  - 基于Lua脚本的资源搜索功能，你也可以为KikoPlay编写脚本，[脚本仓库](https://github.com/Protostars/KikoPlayScript)
+ - 独特的KikoPlay资源代码和弹幕池代码，可直接分享包含弹幕池信息的资源链接
  - .........
 
 ## 编译
 
 KikoPlay基于以下项目：
 
- - Qt 5.12.0
+ - Qt 5.12.3
  - [libmpv](https://github.com/mpv-player/mpv)
  - [aria2](https://github.com/aria2/aria2)
  - [Qt-Nice-Frameless-Window](https://github.com/Bringer-of-Light/Qt-Nice-Frameless-Window)
@@ -78,11 +79,11 @@ Ubuntu 18.04 x64上编译的大概流程：
      ```
     编译成功后得到KikoPlay文件，可直接运行./KikoPlay，如果提示缺少libqhttpengine等库，可尝试将编译QHttpEngine得到的库放到/usr/lib目录下。下载功能需要aria2c，可自行编译后放到KikoPlay同一目录下
 
-自从0.2.3版本后只提供64位版本，需要32位版本可自行尝试编译
+自从0.2.3版本后只提供64位版本，不建议使用32位版本
 
 ## 下载
 
-最新版本均在百度网盘发布（最新版本：0.5.0）
+最新版本均在百度网盘发布（最新版本：0.5.1）
 [百度网盘](https://pan.baidu.com/s/1gyT0FU9rioaa77znhAUx2w)
 
 ## 反馈

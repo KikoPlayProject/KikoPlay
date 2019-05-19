@@ -4,6 +4,7 @@
 #include <QLineEdit>
 #include "globalobjects.h"
 #include "Play/Danmu/danmupool.h"
+#include "Common/network.h"
 #define BlockNameRole Qt::UserRole+1
 QWidget *ComboBoxDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
@@ -39,7 +40,7 @@ void ComboBoxDelegate::setEditorData(QWidget *editor, const QModelIndex &index) 
         break;
     }
     case 0:
-    case 5:
+    case 6:
     {
         QLineEdit *lineEdit=static_cast<QLineEdit *>(editor);
         lineEdit->setText(index.data(col==0?BlockNameRole:Qt::DisplayRole).toString());
@@ -88,6 +89,7 @@ Blocker::Blocker(QObject *parent):QAbstractItemModel(parent),maxId(1)
                 rule->relation=BlockRule::Relation(reader.attributes().value("relation").toInt());
                 rule->isRegExp=(reader.attributes().value("isRegExp")=="true");
                 rule->enable=(reader.attributes().value("enable")=="true");
+                rule->usePreFilter=(reader.attributes().value("preFilter")=="true");
                 rule->content=reader.readElementText().trimmed();
                 blockList.append(rule);
             }
@@ -111,6 +113,7 @@ void Blocker::addBlockRule()
     rule->relation=BlockRule::Relation::Contain;
     rule->isRegExp=true;
     rule->enable=true;
+    rule->usePreFilter=false;
 	int insertPosition = blockList.count();
     beginInsertRows(QModelIndex(), insertPosition, insertPosition);
     blockList.append(rule);
@@ -204,6 +207,97 @@ void Blocker::save()
     }
 }
 
+void Blocker::preFilter(QList<DanmuComment *> &danmuList)
+{
+    QList<BlockRule *> preFilterRules;
+    for(BlockRule *rule:blockList)
+    {
+        if(rule->usePreFilter)
+            preFilterRules<<rule;
+    }
+    if(preFilterRules.isEmpty()) return;
+
+    for(auto iter=danmuList.begin();iter!=danmuList.end();)
+    {
+        bool removed=false;
+        for(BlockRule *rule:preFilterRules)
+        {
+            if(rule->blockTest(*iter))
+            {
+                removed=true;
+                break;
+            }
+        }
+        if(removed)
+        {
+            delete *iter;
+            iter=danmuList.erase(iter);
+        }
+        else ++iter;
+    }
+}
+
+int Blocker::exportRules(const QString &fileName)
+{
+    QFile kbrFile(fileName);
+    bool ret=kbrFile.open(QIODevice::WriteOnly);
+    if(!ret) return -1;
+    QByteArray content;
+    QBuffer buffer(&content);
+    buffer.open(QIODevice::WriteOnly);
+    QDataStream ds(&buffer);
+    ds<<blockList.count();
+    for(BlockRule *rule:blockList)
+    {
+        ds<<rule->name<<static_cast<int>(rule->blockField)<<static_cast<int>(rule->relation)
+         <<rule->isRegExp<<rule->enable<<rule->usePreFilter<<rule->content;
+    }
+    QByteArray compressedContent;
+    Network::gzipCompress(content,compressedContent);
+    QDataStream fs(&kbrFile);
+    fs<<QString("kbr")<<compressedContent;
+    return 0;
+}
+
+int Blocker::importRules(const QString &fileName)
+{
+    QFile kbr(fileName);
+    bool ret=kbr.open(QIODevice::ReadOnly);
+    if(!ret) return -1;
+    QDataStream fs(&kbr);
+    QString head,comment;
+    fs>>head;
+    if(head!="kbr") return -2;
+
+    QByteArray compressedConent,content;
+    fs>>compressedConent;
+    if(Network::gzipDecompress(compressedConent,content)!=0) return -2;
+    QBuffer buffer(&content);
+    buffer.open(QIODevice::ReadOnly);
+    QDataStream ds(&buffer);
+    int count=0;
+    ds>>count;
+    if(count<=0) return 0;
+
+    int insertPosition = blockList.count();
+    beginInsertRows(QModelIndex(), insertPosition, insertPosition+count-1);
+    while(count-- >0)
+    {
+        BlockRule *rule=new BlockRule;
+        rule->id=maxId++;
+        int field,relation;
+        ds>>rule->name>>field>>relation>>rule->isRegExp>>rule->enable
+                     >>rule->usePreFilter>>rule->content;
+        rule->blockField=BlockRule::Field(field);
+        rule->relation=BlockRule::Relation(relation);
+		blockList << rule;
+        GlobalObjects::danmuPool->testBlockRule(rule);
+    }
+    endInsertRows();
+    saveBlockRules();
+    return 0;
+}
+
 void Blocker::saveBlockRules()
 {
     QFile blockFile(blockFileName);
@@ -222,6 +316,7 @@ void Blocker::saveBlockRules()
         writer.writeAttribute("relation", QString::number(rule->relation));
         writer.writeAttribute("isRegExp", rule->isRegExp?"true":"false");
         writer.writeAttribute("enable", rule->enable?"true":"false");
+        writer.writeAttribute("preFilter", rule->usePreFilter?"true":"false");
         writer.writeCharacters(rule->content);
         writer.writeEndElement();
     }
@@ -250,7 +345,7 @@ QVariant Blocker::data(const QModelIndex &index, int role) const
         {
             return relations.at(rule->relation);
         }
-        else if(col==5)
+        else if(col==6)
         {
             return rule->content;
         }
@@ -262,16 +357,22 @@ QVariant Blocker::data(const QModelIndex &index, int role) const
             return rule->enable?Qt::Checked:Qt::Unchecked;
         else if(col==4)
             return rule->isRegExp?Qt::Checked:Qt::Unchecked;
+        else if(col==5)
+            return rule->usePreFilter?Qt::Checked:Qt::Unchecked;
     }
         break;
     case Qt::DecorationRole:
-        if(rule->blockField==BlockRule::Field::DanmuColor && col==5)
+        if(rule->blockField==BlockRule::Field::DanmuColor && col==6)
         {
             bool ok;
             int color=rule->content.toInt(&ok,16);
             if(ok)
                 return QColor(color>>16,(color>>8)&0xff,color&0xff);
         }
+        break;
+    case Qt::ToolTipRole:
+        if(col==5) return tr("After pre-filtering is enabled, block rules will be applied when downloading danmu, which will not be added to the database");
+        else if(col==6) return rule->content;
         break;
     case BlockNameRole:
         return rule->name;
@@ -306,6 +407,10 @@ bool Blocker::setData(const QModelIndex &index, const QVariant &value, int)
         rule->isRegExp=(value==Qt::Checked);
         break;
     case 5:
+        if(rule->usePreFilter==(value==Qt::Checked))return false;
+        rule->usePreFilter=(value==Qt::Checked);
+        break;
+    case 6:
         if(rule->content==value.toString())return false;
         rule->content=value.toString();
         rule->re.reset();
@@ -323,7 +428,7 @@ QVariant Blocker::headerData(int section, Qt::Orientation orientation, int role)
 {
     if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
     {
-        if(section<6)return headers.at(section);
+        if(section<7)return headers.at(section);
     }
     return QVariant();
 }
@@ -334,7 +439,7 @@ Qt::ItemFlags Blocker::flags(const QModelIndex &index) const
 	int col = index.column();
     if (index.isValid())
 	{
-		if(col==1||col==4)
+        if(col==1||col==4||col==5)
 			return  Qt::ItemIsUserCheckable | defaultFlags;
         else
 			return  Qt::ItemIsEditable | defaultFlags;

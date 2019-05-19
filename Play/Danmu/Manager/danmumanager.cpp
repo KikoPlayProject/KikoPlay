@@ -5,7 +5,7 @@
 #include <QXmlStreamWriter>
 #include <QFile>
 #include <QFileInfo>
-
+#include <QMessageBox>
 #include "pool.h"
 #include "Common/threadtask.h"
 #include "Common/network.h"
@@ -38,6 +38,11 @@ Pool *DanmuManager::getPool(const QString &pid, bool loadDanmu)
         refreshCache(pool);
     }
     return pool;
+}
+
+Pool *DanmuManager::getPool(const QString &animeTitle, const QString &title, bool loadDanmu)
+{
+    return getPool(getPoolId(animeTitle,title),loadDanmu);
 }
 
 void DanmuManager::loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList)
@@ -73,6 +78,8 @@ void DanmuManager::loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList)
         });
         countInited=true;
     }
+    qDeleteAll(poolNodeList);
+    poolNodeList.clear();
     QMap<QString,DanmuPoolNode *> animeMap;
     for(Pool *pool:pools)
     {
@@ -141,6 +148,142 @@ void DanmuManager::exportPool(const QList<DanmuPoolNode *> &exportList, const QS
     });
 }
 
+void DanmuManager::exportKdFile(const QList<DanmuPoolNode *> &exportList, const QString &dir, const QString &comment)
+{
+    ThreadTask task(GlobalObjects::workThread);
+    task.Run([this,&exportList, dir,comment](){
+        for(const DanmuPoolNode *node:exportList)
+        {
+            if(node->type==DanmuPoolNode::AnimeNode && node->checkStatus!=Qt::Unchecked)
+            {
+                QString animeTitle(node->title);
+                animeTitle.replace(QRegExp("[\\\\/:*?\"<>|]"),"");
+                QFileInfo fi(dir,QString("%1.kd").arg(animeTitle));
+                emit workerStateMessage(tr("Exporting: %1").arg(fi.fileName()));
+                QFile kdFile(fi.absoluteFilePath());
+                bool ret=kdFile.open(QIODevice::WriteOnly);
+                if(!ret)
+                {
+                    emit workerStateMessage(tr("Create File Failed: %1").arg(fi.fileName()));
+                    continue;
+                }
+                QByteArray content;
+                QBuffer buffer(&content);
+                buffer.open(QIODevice::WriteOnly);
+                QDataStream ds(&buffer);
+                for(DanmuPoolNode *epNode:*node->children)
+                {
+                    if(epNode->checkStatus==Qt::Unchecked)continue;
+                    Pool *pool=getPool(epNode->idInfo);
+                    QList<int> srcList;
+                    if(epNode->checkStatus!=Qt::Checked)
+                    {
+                        for(DanmuPoolNode *srcNode:*epNode->children)
+                        {
+                            if(srcNode->checkStatus==Qt::Checked)
+                                srcList<<static_cast<DanmuPoolSourceNode *>(srcNode)->srcId;
+                        }
+                    }
+                    ds<<int(0x23);
+                    pool->exportKdFile(ds,srcList);
+                }
+                QByteArray compressedContent;
+                Network::gzipCompress(content,compressedContent);
+                QDataStream fs(&kdFile);
+                fs<<QString("kd")<<comment<<compressedContent;
+            }
+        }
+        emit workerStateMessage("Done");
+        return 0;
+    });
+}
+
+int DanmuManager::importKdFile(const QString &fileName, QWidget *parent)
+{
+    QFile kdFile(fileName);
+    bool ret=kdFile.open(QIODevice::ReadOnly);
+    if(!ret) return -1;
+    QDataStream fs(&kdFile);
+    QString head,comment;
+    fs>>head;
+    if(head!="kd") return -2;
+    fs>>comment;
+    bool readContent=comment.isEmpty();
+    if(!comment.isEmpty())
+    {
+        QMessageBox::StandardButton btn =
+                QMessageBox::information(parent,tr("Kd Comment"),comment,
+                                 QMessageBox::Ok|QMessageBox::Cancel,QMessageBox::Ok);
+        readContent=(btn==QMessageBox::Ok);
+    }
+    if(!readContent) return 0;
+    ThreadTask task(GlobalObjects::workThread);
+    return task.Run([this,&fs](){
+        QByteArray compressedConent,content;
+        fs>>compressedConent;
+        if(Network::gzipDecompress(compressedConent,content)!=0) return -2;
+        QBuffer buffer(&content);
+        buffer.open(QIODevice::ReadOnly);
+        QDataStream ds(&buffer);
+        while(true)
+        {
+            int poolFlag=0;
+            ds>>poolFlag;
+            if(poolFlag!=0x23) break;
+
+            QString curAnime,curEp,file16MD5;
+            QList<DanmuSourceInfo> srcInfoList;
+            QHash<int, QPair<DanmuSourceInfo,QList<DanmuComment *> > > danmuInfo;
+            int danmuConut=0;
+
+            ds>>curAnime>>curEp>>file16MD5>>srcInfoList>>danmuConut;
+            emit workerStateMessage(tr("Adding: %1-%2").arg(curAnime,curEp));
+            for(auto &src:srcInfoList)
+            {
+                danmuInfo[src.id].first=src;
+            }
+            while(danmuConut-- > 0)
+            {
+                DanmuComment *danmu=new DanmuComment;
+                ds>>*danmu;
+                if(danmu->type!=DanmuComment::UNKNOW)
+                {
+                    Q_ASSERT(danmuInfo.contains(danmu->source));
+                    danmuInfo[danmu->source].second.append(danmu);
+                }
+                else delete danmu;
+            }
+            QStringList file16Md5List(file16MD5.split(';',QString::SkipEmptyParts));
+            QString pid(this->createPool(curAnime,curEp,file16Md5List.count()==1?file16Md5List.first():""));
+            if(file16Md5List.count()>1)
+            {
+                for(const QString &md5:file16Md5List) this->setMatch(md5,pid);
+            }
+            Pool *pool=getPool(pid);
+            int c = 1;
+            for(auto &srcItem:danmuInfo)
+            {
+                pool->addSource(srcItem.first,srcItem.second, c==danmuInfo.size());
+                ++c;
+            }
+        }
+        emit workerStateMessage("Done");
+        return 1;
+    }).toInt();
+}
+
+QStringList DanmuManager::getAssociatedFile16Md5(const QString &pid)
+{
+    QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
+    query.exec(QString("select MD5 from match where PoolID='%1'").arg(pid));
+    QStringList md5s;
+    while (query.next())
+    {
+        md5s<<query.value(0).toString();
+    }
+    return md5s;
+}
+
 MatchInfo *DanmuManager::searchMatch(DanmuManager::MatchProvider from, const QString &keyword)
 {
     switch (from)
@@ -205,7 +348,7 @@ MatchInfo *DanmuManager::ddSearch(const QString &keyword)
                     QJsonObject animeObj=(*animeIter).toObject();
                     QJsonValue animeTitle=animeObj.value("animeTitle");
                     if(animeTitle.type()!=QJsonValue::String)continue;
-                    QString animeTitleStr=animeTitle.toString();
+                    QString animeTitleStr=animeTitle.toString().trimmed();
                     QJsonValue episodes= animeObj.value("episodes");
                     if(episodes.type()!=QJsonValue::Array) continue;
                     QJsonArray episodeArray=episodes.toArray();
@@ -217,7 +360,7 @@ MatchInfo *DanmuManager::ddSearch(const QString &keyword)
                         if(episodeTitle.type()!=QJsonValue::String)continue;
                         MatchInfo::DetailInfo detailInfo;
                         detailInfo.animeTitle=animeTitleStr;
-                        detailInfo.title=episodeTitle.toString();
+                        detailInfo.title=episodeTitle.toString().trimmed();
                         searchInfo->matches.append(detailInfo);
                     }
                 }
@@ -256,8 +399,8 @@ MatchInfo *DanmuManager::bgmSearch(const QString &keyword)
             {
                 QJsonObject searchObj=(*iter).toObject();
                 int bgmID=searchObj.value("id").toInt();
-                QString animeTitle=searchObj.value("name_cn").toString();
-                if(animeTitle.isEmpty())animeTitle=searchObj.value("name").toString();
+                QString animeTitle=searchObj.value("name_cn").toString().trimmed();
+                if(animeTitle.isEmpty())animeTitle=searchObj.value("name").toString().trimmed();
                 animeTitle.replace("&amp;","&");
                 QString epUrl(QString("https://api.bgm.tv/subject/%1/ep").arg(bgmID));
                 try
@@ -269,8 +412,8 @@ MatchInfo *DanmuManager::bgmSearch(const QString &keyword)
                     for(auto epIter=epArray.begin();epIter!=epArray.end();++epIter)
                     {
                         QJsonObject epobj=(*epIter).toObject();
-                        QString epTitle(epobj.value("name_cn").toString());
-                        if(epTitle.isEmpty())epTitle=epobj.value("name").toString();
+                        QString epTitle(epobj.value("name_cn").toString().trimmed());
+                        if(epTitle.isEmpty())epTitle=epobj.value("name").toString().trimmed();
                         epTitle.replace("&amp;","&");
                         MatchInfo::DetailInfo detailInfo;
                         detailInfo.animeTitle=animeTitle;
@@ -356,8 +499,8 @@ MatchInfo *DanmuManager::ddMatch(const QString &fileName)
                     QJsonValue episodeTitle=detailObj.value("episodeTitle");
                     if(episodeTitle.type()!=QJsonValue::String)continue;
                     MatchInfo::DetailInfo detailInfo;
-                    detailInfo.animeTitle=animeTitle.toString();
-                    detailInfo.title=episodeTitle.toString();
+                    detailInfo.animeTitle=animeTitle.toString().trimmed();
+                    detailInfo.title=episodeTitle.toString().trimmed();
                     matchInfo->matches.append(detailInfo);
                 }
                 matchInfo->error = false;
@@ -418,8 +561,7 @@ QString DanmuManager::getFileHash(const QString &fileName)
 
 QString DanmuManager::createPool(const QString &animeTitle, const QString &title, const QString &fileHash)
 {
-    QByteArray hashData = QString("%1-%2").arg(animeTitle).arg(title).toUtf8();
-    QString poolId(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex());
+    QString poolId(getPoolId(animeTitle,title));
     if(!pools.contains(poolId))
     {
         QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
@@ -434,6 +576,44 @@ QString DanmuManager::createPool(const QString &animeTitle, const QString &title
     if(!fileHash.isEmpty())
         setMatch(fileHash,poolId);
     return poolId;
+}
+
+QString DanmuManager::renamePool(const QString &pid, const QString &nAnimeTitle, const QString &nEpTitle)
+{
+    Pool *pool=getPool(pid,false);
+    if(!pool) return QString();
+    if(nAnimeTitle==pool->anime && nEpTitle==pool->ep) return pool->pid;
+    PoolStateLock lock;
+    if(!lock.tryLock(pid)) return QString();
+    QString npid(getPoolId(nAnimeTitle,nEpTitle));
+
+    QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
+    query.prepare("update pool set PoolID=?,AnimeTitle=?,Title=? where PoolID=?");
+    query.bindValue(0,npid);
+    query.bindValue(1,nAnimeTitle);
+    query.bindValue(2,nEpTitle);
+    query.bindValue(3,pool->pid);
+    query.exec();
+
+    QMutexLocker locker(&removeLock);
+    if(poolDanmuCacheInfo.contains(pid))
+    {
+        QMutexLocker locker(&cacheLock);
+        poolDanmuCacheInfo.remove(pid);
+    }
+    pools.remove(pid);
+    pool->pid=npid;
+    pool->anime=nAnimeTitle;
+    pool->ep=nEpTitle;
+    pools.insert(npid,pool);
+
+    return npid;
+}
+
+QString DanmuManager::getPoolId(const QString &animeTitle, const QString &title)
+{
+    QByteArray hashData = QString("%1-%2").arg(animeTitle).arg(title).toUtf8();
+    return QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex();
 }
 
 void DanmuManager::setMatch(const QString &fileHash, const QString &poolId)
@@ -638,18 +818,7 @@ void DanmuManager::loadAllPool()
         srcInfo.count=0;
         srcInfo.delay=query.value(s_delayNo).toInt();
         srcInfo.show=true;
-        QStringList timelineList(query.value(s_timelineNo).toString().split(';',QString::SkipEmptyParts));
-        QTextStream ts;
-        for(QString &spaceInfo:timelineList)
-        {
-            ts.setString(&spaceInfo,QIODevice::ReadOnly);
-            int start,duration;
-            ts>>start>>duration;
-            srcInfo.timelineInfo.append(QPair<int,int>(start,duration));
-        }
-        std::sort(srcInfo.timelineInfo.begin(),srcInfo.timelineInfo.end(),[](const QPair<int,int> &s1,const QPair<int,int> &s2){
-            return s1.first<s2.first;
-        });
+        srcInfo.setTimeline(query.value(s_timelineNo).toString());
         pool->sourcesTable.insert(srcInfo.id, srcInfo);
     }
 }
@@ -707,21 +876,12 @@ void DanmuManager::updateSourceTimeline(const QString &pid, const DanmuSourceInf
 {
     ThreadTask task(GlobalObjects::workThread);
     DanmuSourceInfo srcInfo(*sourceInfo);
-    auto timeLine(sourceInfo->timelineInfo);
-    int srcId=sourceInfo->id;
-    task.RunOnce([pid,timeLine,srcId](){
+    task.RunOnce([pid, srcInfo](){
         QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
         query.prepare("update source set TimeLine= ? where PoolID=? and ID=?");
-        QString timelineInfo;
-        QTextStream ts(&timelineInfo);
-        for(const auto &spaceItem:timeLine)
-        {
-            ts<<spaceItem.first<<' '<<spaceItem.second<<';';
-        }
-        ts.flush();
-        query.bindValue(0,timelineInfo);
+        query.bindValue(0,srcInfo.getTimelineStr());
         query.bindValue(1,pid);
-        query.bindValue(2,srcId);
+        query.bindValue(2,srcInfo.id);
         query.exec();
     });
 
@@ -806,15 +966,7 @@ void DanmuManager::saveSource(const QString &pid, const DanmuSourceInfo *source,
             query.bindValue(2,src.name);
             query.bindValue(3,src.delay);
             query.bindValue(4,src.url);
-
-            QString timelineInfo;
-            QTextStream ts(&timelineInfo);
-            for(auto &spaceItem:src.timelineInfo)
-            {
-                ts<<spaceItem.first<<' '<<spaceItem.second<<';';
-            }
-            ts.flush();
-            query.bindValue(5,timelineInfo);
+            query.bindValue(5,src.getTimelineStr());
             query.exec();
         }
         int tableId=DanmuPoolNode::idHash(pid);

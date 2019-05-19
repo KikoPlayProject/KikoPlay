@@ -586,6 +586,7 @@ void PlayerWindow::initActions()
         rule->enable=true;
         rule->isRegExp=false;
         rule->content=currentDanmu->text;
+        rule->usePreFilter=false;
         GlobalObjects::blocker->addBlockRule(rule);
         currentDanmu=nullptr;
         showMessage(tr("Block Rule Added"));
@@ -598,6 +599,7 @@ void PlayerWindow::initActions()
         rule->relation=BlockRule::Relation::Equal;
         rule->enable=true;
         rule->isRegExp=false;
+        rule->usePreFilter=false;
         rule->content=currentDanmu->sender;
         GlobalObjects::blocker->addBlockRule(rule);
         currentDanmu=nullptr;
@@ -611,6 +613,7 @@ void PlayerWindow::initActions()
         rule->relation=BlockRule::Relation::Equal;
         rule->enable=true;
         rule->isRegExp=false;
+        rule->usePreFilter=false;
         rule->content=QString::number(currentDanmu->color,16);
         GlobalObjects::blocker->addBlockRule(rule);
         currentDanmu=nullptr;
@@ -1117,7 +1120,7 @@ void PlayerWindow::setupSignals()
         else
         {
             showMessage(tr("File is not associated with Danmu Pool"));
-            if (!GlobalObjects::danmuPool->getPoolID().isEmpty())
+            if (GlobalObjects::danmuPool->hasPool())
             {
                 GlobalObjects::danmuPool->setPoolID("");
                 //GlobalObjects::danmuPool->cleanUp();

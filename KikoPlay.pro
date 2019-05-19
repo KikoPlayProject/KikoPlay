@@ -34,6 +34,8 @@ DEFINES += ZLIB_WINAPI
 CONFIG += C++11
 
 SOURCES += \
+    UI/addpool.cpp \
+    UI/danmuview.cpp \
         main.cpp \
     UI/mainwindow.cpp \
     UI/framelesswindow.cpp \
@@ -120,6 +122,9 @@ SOURCES += \
     UI/tip.cpp
 
 HEADERS += \
+    Play/Danmu/danmuviewmodel.h \
+    UI/addpool.h \
+    UI/danmuview.h \
     UI/mainwindow.h \
     UI/framelesswindow.h \
     Play/Danmu/Layouts/bottomlayout.h \

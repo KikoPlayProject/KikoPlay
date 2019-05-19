@@ -109,3 +109,71 @@ void DanmuObject::DeleteObjPool()
     }
     poolCount=0;
 }
+
+void DanmuSourceInfo::setTimeline(const QString &timelineStr)
+{
+    QStringList timelineList(timelineStr.split(';',QString::SkipEmptyParts));
+    QTextStream ts;
+    timelineInfo.clear();
+    for(QString &spaceInfo:timelineList)
+    {
+        ts.setString(&spaceInfo,QIODevice::ReadOnly);
+        int start,duration;
+        ts>>start>>duration;
+        timelineInfo.append(QPair<int,int>(start,duration));
+    }
+    std::sort(timelineInfo.begin(),timelineInfo.end(),[](const QPair<int,int> &s1,const QPair<int,int> &s2){
+        return s1.first<s2.first;
+    });
+}
+
+QString DanmuSourceInfo::getTimelineStr() const
+{
+    QString timelineStr;
+    QTextStream ts(&timelineStr);
+    for(auto &spaceItem:timelineInfo)
+    {
+        ts<<spaceItem.first<<' '<<spaceItem.second<<';';
+    }
+    ts.flush();
+    return timelineStr;
+}
+
+QDataStream &operator<<(QDataStream &stream, const DanmuComment &danmu)
+{
+    static int type[3]={1,5,4};
+    static int fontSize[3]={25,18,36};
+    stream<<danmu.originTime<<type[danmu.type]<<fontSize[danmu.fontSizeLevel]<<danmu.color
+         <<danmu.date<<danmu.sender<<danmu.source<<danmu.text;
+    return stream;
+}
+
+QDataStream &operator>>(QDataStream &stream, DanmuComment &danmu)
+{
+    stream>>danmu.originTime;
+    danmu.time=danmu.originTime;
+    int type,fontSize;
+    stream>>type>>fontSize;
+    danmu.setType(type);
+
+    if(fontSize==18) danmu.fontSizeLevel=DanmuComment::Small;
+    else if(fontSize==36) danmu.fontSizeLevel=DanmuComment::Large;
+    else danmu.fontSizeLevel=DanmuComment::Normal;
+
+    stream>>danmu.color>>danmu.date>>danmu.sender>>danmu.source>>danmu.text;
+    return stream;
+}
+
+QDataStream &operator<<(QDataStream &stream, const DanmuSourceInfo &src)
+{
+    stream<<src.id<<src.name<<src.url<<src.delay<<src.getTimelineStr();
+    return stream;
+}
+
+QDataStream &operator>>(QDataStream &stream, DanmuSourceInfo &src)
+{
+    QString timeline;
+    stream>>src.id>>src.name>>src.url>>src.delay>>timeline;
+    if(!timeline.isEmpty()) src.setTimeline(timeline);
+    return stream;
+}

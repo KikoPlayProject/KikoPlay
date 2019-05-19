@@ -220,7 +220,7 @@ void DanmuPool::setConnect(Pool *pool)
 		curPool->setUsed(false);
 	}
     curPool=pool;
-    poolID=curPool->id();
+    //poolID=curPool->id();
     reset();
     curPool->setUsed(true);
     beginResetModel();
@@ -321,7 +321,7 @@ void DanmuPool::setMinMergeCount(int val)
 
 void DanmuPool::setPoolID(const QString &pid)
 {
-    if(pid==poolID) return;
+    if(pid==curPool->id()) return;
     Pool *pool = GlobalObjects::danmuManager->getPool(pid);
     if(pool) setConnect(pool);
     else if(curPool!=emptyPool) setConnect(emptyPool);

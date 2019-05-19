@@ -3,6 +3,9 @@
 #include "aria2jsonrpc.h"
 #include <QSqlQuery>
 #include <QSqlRecord>
+#include "Common/network.h"
+#include "Play/Danmu/Manager/danmumanager.h"
+#include "Play/Danmu/Manager/pool.h"
 DownloadWorker *DownloadModel::downloadWorker=nullptr;
 DownloadModel::DownloadModel(QObject *parent) : QAbstractItemModel(parent),currentOffset(0),
     hasMoreTasks(true),rpc(nullptr)
@@ -45,6 +48,9 @@ QString DownloadModel::addUriTask(const QString &uri, const QString &dir)
     QString taskID(QCryptographicHash::hash(uri.toUtf8(),QCryptographicHash::Sha1).toHex());
     if(containTask(taskID))
         return QString(tr("The task already exists: \n%1").arg(uri));
+    QString nUri(uri);
+    if(nUri.startsWith("kikoplay:anime="))
+        nUri = processKikoPlayCode(uri.mid(15));
     QJsonObject options;
     options.insert("dir", dir);
     options.insert("bt-metadata-only","true");
@@ -54,15 +60,15 @@ QString DownloadModel::addUriTask(const QString &uri, const QString &dir)
 
     try
     {
-       QString gid=rpc->addUri(uri,options);
+       QString gid=rpc->addUri(nUri,options);
        DownloadTask *newTask=new DownloadTask();
        newTask->gid=gid;
-       newTask->uri=uri;
+       newTask->uri=nUri;
        newTask->createTime=QDateTime::currentSecsSinceEpoch();
        newTask->finishTime=0;
        newTask->taskID = taskID;
        newTask->dir=dir;
-       newTask->title=uri;
+       newTask->title=nUri;
        addTask(newTask);
     }
     catch(RPCError &error)
@@ -128,6 +134,27 @@ bool DownloadModel::containTask(const QString &taskId)
     query.exec();
     if(query.first()) return true;
     return false;
+}
+
+QString DownloadModel::processKikoPlayCode(const QString &code)
+{
+    QByteArray base64Src(QByteArray::fromBase64(code.toUtf8()));
+    QByteArray jsonBytes;
+    if(Network::gzipDecompress(base64Src,jsonBytes)!=0) return QString();
+    try
+    {
+        QJsonArray array(Network::toJson(jsonBytes).array());
+        QString uri(array.takeAt(0).toString());
+        QString animeTitle(array.takeAt(0).toString());
+        QString epTitle(array.takeAt(0).toString());
+        QString file16MD5(array.takeAt(0).toString());
+        QString pid = GlobalObjects::danmuManager->createPool(animeTitle,epTitle,file16MD5);
+        Pool *pool=GlobalObjects::danmuManager->getPool(pid,false);
+        pool->addPoolCode(array);
+        return uri;
+    } catch (Network::NetworkError &) {
+        return QString();
+    }
 }
 
 void DownloadModel::removeItem(QModelIndexList &removeIndexes, bool deleteFile)
@@ -346,6 +373,25 @@ void DownloadModel::saveItemStatus(const DownloadTask *task)
     QMetaObject::invokeMethod(downloadWorker,[task](){
         downloadWorker->updateTaskInfo(task);
     },Qt::QueuedConnection);
+}
+
+QString DownloadModel::findFileUri(const QString &fileName)
+{
+    QFileInfo fi(fileName);
+    QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Download_DB));
+    query.exec(QString("select Dir,URI from task where Title='%1'").arg(fi.fileName()));
+    int dirNo=query.record().indexOf("Dir"),uriNo=query.record().indexOf("URI");
+    QString uri;
+    while (query.next())
+    {
+        QFileInfo tfi(query.value(dirNo).toString(),fi.fileName());
+        if(tfi==fi)
+        {
+            uri=query.value(uriNo).toString();
+            break;
+        }
+    }
+    return uri;
 }
 
 QVariant DownloadModel::data(const QModelIndex &index, int role) const

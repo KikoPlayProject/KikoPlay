@@ -98,7 +98,7 @@ QWidget *MatchEditor::setupSearchPage(MatchInfo *matchInfo)
     QObject::connect(localSource,&QRadioButton::toggled,[this](bool checked){
        if(checked)searchLocation=2;
     });
-    dandanSource->toggle();
+    bgmSource->toggle();
     keywordEdit=new QLineEdit(searchPage);
 	keywordEdit->installEventFilter(this);
 
@@ -163,19 +163,6 @@ void MatchEditor::search()
     showBusyState(true);
     MatchInfo *sInfo=nullptr;
     sInfo=GlobalObjects::danmuManager->searchMatch(DanmuManager::MatchProvider(searchLocation),keyword);
-    /*if(searchLocation==0)//DanDan
-    {
-        sInfo = MatchProvider::SearchFormDandan(keyword);
-    }
-    else if(searchLocation==1)//Bangumi
-    {
-        sInfo=MatchProvider::SearchFormBangumi(keyword);
-    }
-    else if(searchLocation==2)//Local
-    {
-        sInfo=MatchProvider::SerchFromDB(keyword);
-    }
-    */
     if(sInfo)
     {
         if(sInfo->error)

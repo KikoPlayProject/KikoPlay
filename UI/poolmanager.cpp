@@ -11,12 +11,17 @@
 #include <QLabel>
 #include <QAction>
 #include <QSortFilterProxyModel>
+#include <QInputDialog>
+#include <QApplication>
 #include "Play/Danmu/Manager/managermodel.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Playlist/playlistitem.h"
+#include "Play/Playlist/playlist.h"
 #include "timelineedit.h"
 #include "adddanmu.h"
+#include "addpool.h"
+#include "danmuview.h"
 #include "globalobjects.h"
 
 PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Manager"),parent)
@@ -46,7 +51,6 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     });
 
     QAction *act_editTimeLine=new QAction(tr("Edit TimeLine"),this);
-    poolView->addAction(act_editTimeLine);
     QObject::connect(act_editTimeLine,&QAction::triggered,this,[this,managerModel,poolView,proxyModel](){
         QModelIndexList indexList = poolView->selectionModel()->selectedRows();
         if(indexList.size()==0)return;
@@ -68,7 +72,6 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
 
     });
     QAction *act_addWebSource=new QAction(tr("Add Web Source"),this);
-    poolView->addAction(act_addWebSource);
     QObject::connect(act_addWebSource,&QAction::triggered,this,[this,stateLabel,managerModel,poolView,proxyModel](){
         QModelIndexList indexList = poolView->selectionModel()->selectedRows();
         if(indexList.size()==0)return;
@@ -102,6 +105,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                 int srcId=pool->addSource(sourceInfo,danmuList,true);
                 if(srcId<0)
                 {
+                    showMessage(tr("Add %1 Failed").arg(sourceInfo.name),1);
                     qDeleteAll(danmuList);
                     continue;
                 }
@@ -129,19 +133,6 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                     sourceNode->danmuCount=sourceInfo.count;
                     managerModel->addSrcNode(curNode,sourceNode);
                 }
-                /*
-                if(GlobalObjects::danmuPool->getPoolID()==curNode->idInfo)
-                {
-                    GlobalObjects::danmuPool->addDanmu((*iter).first,(*iter).second,false);
-                    hasCurPlaying=true;
-                }
-                else
-                {
-                    DanmuPoolSourceNode *srcNode = GlobalObjects::danmuManager->addSource(curNode,&(*iter).first,&(*iter).second);
-                    qDeleteAll((*iter).second);
-                    managerModel->addSrcNode(curNode,srcNode);
-                }
-                */
             }
             //if(hasCurPlaying) GlobalObjects::danmuPool->resetModel();
             stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
@@ -149,21 +140,160 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
             this->showBusyState(false);
         }
     });
+
+    QAction *act_pastePoolCode=new QAction(tr("Paste Danmu Pool Code"),this);
+    QObject::connect(act_pastePoolCode,&QAction::triggered,this,[this,managerModel,poolView,proxyModel](){
+        QModelIndexList indexList = poolView->selectionModel()->selectedRows();
+        if(indexList.size()==0)return;
+        DanmuPoolNode *poolNode=managerModel->getPoolNode(proxyModel->mapToSource(indexList.first()));
+        if(!poolNode)return;
+        QClipboard *cb = QApplication::clipboard();
+        QString code(cb->text());
+        if(code.isEmpty() ||
+                (!code.startsWith("kikoplay:pool=") &&
+                !code.startsWith("kikoplay:anime="))) return;
+        poolView->setEnabled(false);
+        this->showBusyState(true);
+        Pool *pool = GlobalObjects::danmuManager->getPool(poolNode->idInfo,false);
+        bool ret = pool->addPoolCode(
+                    code.mid(code.startsWith("kikoplay:pool=")?14:15),
+                    code.startsWith("kikoplay:anime="));
+        if(ret)
+        {
+            for(const DanmuSourceInfo &sourceInfo:pool->sources())
+            {
+                bool isNewSource=true;
+                for(auto n:*poolNode->children)
+                {
+                    DanmuPoolSourceNode *srcNode=static_cast<DanmuPoolSourceNode *>(n);
+                    if(srcNode->idInfo==sourceInfo.url)
+                    {
+                        isNewSource=false;
+                        break;
+                    }
+                }
+                if(isNewSource)
+                {
+                    DanmuPoolSourceNode *sourceNode=new DanmuPoolSourceNode();
+                    sourceNode->title=sourceInfo.name;
+                    sourceNode->srcId=sourceInfo.id;
+                    sourceNode->delay=sourceInfo.delay;
+                    sourceNode->idInfo=sourceInfo.url;
+                    sourceNode->danmuCount=sourceInfo.count;
+                    managerModel->addSrcNode(poolNode,sourceNode);
+                }
+            }
+        }
+        poolView->setEnabled(true);
+        this->showBusyState(false);
+        this->showMessage(ret?tr("Code Added"):tr("Code Error"),ret?0:1);
+    });
+    QAction *act_copyPoolCode=new QAction(tr("Copy Danmu Pool Code"),this);
+    QObject::connect(act_copyPoolCode,&QAction::triggered,this,[this,managerModel,poolView,proxyModel](){
+        QModelIndexList indexList = poolView->selectionModel()->selectedRows();
+        if(indexList.size()==0)return;
+        DanmuPoolNode *poolNode=managerModel->getPoolNode(proxyModel->mapToSource(indexList.first()));
+        if(!poolNode)return;
+        Pool *pool = GlobalObjects::danmuManager->getPool(poolNode->idInfo,false);
+        QString code(pool->getPoolCode());
+        if(code.isEmpty())
+        {
+            showMessage(tr("No Danmu Source to Share"),1);
+        }
+        else
+        {
+            QClipboard *cb = QApplication::clipboard();
+            cb->setText("kikoplay:pool="+code);
+            showMessage(tr("Pool Code has been Copied to Clipboard"));
+        }
+    });
+
+    QAction *act_addPool=new QAction(tr("Add Pool"),this);
+    QObject::connect(act_addPool,&QAction::triggered,this,[this,managerModel,poolView,proxyModel](){
+        QModelIndexList indexList = poolView->selectionModel()->selectedRows();
+        if(indexList.size()==0)return;
+        QString animeTitle=managerModel->getAnime(proxyModel->mapToSource(indexList.first()));;
+        AddPool addPool(this,animeTitle);
+        if(QDialog::Accepted==addPool.exec())
+        {
+            QString pid(GlobalObjects::danmuManager->createPool(addPool.animeTitle,addPool.epTitle));
+            managerModel->addPoolNode(addPool.animeTitle,addPool.epTitle,pid);
+        }
+
+    });
+
+    QAction *act_renamePool=new QAction(tr("Rename Pool"),this);
+    QObject::connect(act_renamePool,&QAction::triggered,this,[this,managerModel,poolView,proxyModel](){
+        QModelIndexList indexList = poolView->selectionModel()->selectedRows();
+        if(indexList.size()==0)return;
+        DanmuPoolNode *poolNode=managerModel->getPoolNode(proxyModel->mapToSource(indexList.first()));
+        if(!poolNode)return;
+        AddPool addPool(this,poolNode->parent->title,poolNode->title);
+        if(QDialog::Accepted==addPool.exec())
+        {
+            QString opid(poolNode->idInfo);
+            QString npid = GlobalObjects::danmuManager->renamePool(opid,addPool.animeTitle,addPool.epTitle);
+            if(npid.isEmpty())
+            {
+                showMessage(tr("Rename Failed, Try Again?"),1);
+                return;
+            }
+            managerModel->renamePoolNode(poolNode,addPool.animeTitle,addPool.epTitle,npid);
+            GlobalObjects::playlist->renameItemPoolId(opid,npid,addPool.animeTitle,addPool.epTitle);
+        }
+
+    });
+    QAction *actView=new QAction(tr("View Danmu"),this);
+    QObject::connect(actView,&QAction::triggered,this,[this,managerModel,poolView,proxyModel](){
+        QModelIndexList indexList = poolView->selectionModel()->selectedRows();
+        if(indexList.size()==0)return;
+        DanmuPoolNode *poolNode=managerModel->getPoolNode(proxyModel->mapToSource(indexList.first()));
+        if(!poolNode)return;
+        Pool *pool=GlobalObjects::danmuManager->getPool(poolNode->idInfo);
+        DanmuView view(&pool->comments(),this);
+        view.exec();
+    });
+
+    poolView->addAction(actView);
+    poolView->addAction(act_addWebSource);
+    poolView->addAction(act_editTimeLine);
+    QAction *act_separator0=new QAction(this);
+    act_separator0->setSeparator(true);
+    poolView->addAction(act_separator0);
+
+    poolView->addAction(act_addPool);
+    poolView->addAction(act_renamePool);
+
+    QAction *act_separator1=new QAction(this);
+    act_separator1->setSeparator(true);
+    poolView->addAction(act_separator1);
+
+    poolView->addAction(act_copyPoolCode);
+    poolView->addAction(act_pastePoolCode);
+
     QPushButton *cancel=new QPushButton(tr("Cancel"),this);
     cancel->hide();
 
     QWidget *exportPage=new QWidget(this);
     QHBoxLayout *exportHLayout=new QHBoxLayout(exportPage);
     exportHLayout->setContentsMargins(0,0,0,0);
+    QCheckBox *exportKdFile=new QCheckBox(tr("Export KikoPlay Format"), exportPage);
     QCheckBox *useTimelineCheck=new QCheckBox(tr("Apply delay and timeline info"), exportPage);
     useTimelineCheck->setChecked(true);
     QCheckBox *useBlockRule=new QCheckBox(tr("Apply block rules"),exportPage);
     QPushButton *exportConfirm=new QPushButton(tr("Export"),exportPage);
+    exportHLayout->addWidget(exportKdFile);
     exportHLayout->addWidget(useTimelineCheck);
     exportHLayout->addWidget(useBlockRule);
     exportHLayout->addStretch(1);
     exportHLayout->addWidget(exportConfirm);
-    QObject::connect(exportConfirm,&QPushButton::clicked,[this,poolView,managerModel,exportConfirm,cancel,useTimelineCheck,useBlockRule](){
+
+    QObject::connect(exportKdFile,&QCheckBox::stateChanged, this,[useBlockRule,useTimelineCheck](int state){
+       useBlockRule->setEnabled(state!=Qt::Checked);
+       useTimelineCheck->setEnabled(state!=Qt::Checked);
+    });
+
+    QObject::connect(exportConfirm,&QPushButton::clicked,[this,poolView,managerModel,exportConfirm,cancel,useTimelineCheck,useBlockRule,exportKdFile](){
         if(!managerModel->hasSelected())return;
         QString directory = QFileDialog::getExistingDirectory(this,
                                     tr("Select folder"), "",
@@ -176,7 +306,15 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         cancel->setEnabled(false);
         useTimelineCheck->setEnabled(false);
         useBlockRule->setEnabled(false);
-        managerModel->exportPool(directory,useTimelineCheck->isChecked(),useBlockRule->isChecked());
+        if(exportKdFile->isChecked())
+        {
+            QString text = QInputDialog::getText(this, tr("Set Comment"),tr("Comment(Optional)"), QLineEdit::Normal);
+            managerModel->exportKdFile(directory, text);
+        }
+        else
+        {
+            managerModel->exportPool(directory,useTimelineCheck->isChecked(),useBlockRule->isChecked());
+        }
         this->showBusyState(false);
         exportConfirm->setText(tr("Export"));
         exportConfirm->setEnabled(true);
@@ -235,7 +373,9 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     });
 
     QWidget *mainPage=new QWidget(this);
+    QPushButton *importKdFile=new QPushButton(tr("Import"), mainPage);
     QPushButton *exportPool=new QPushButton(tr("Export Pool(s)"),mainPage);
+    QPushButton *addDanmuPool=new QPushButton(tr("Add"), mainPage);
     QPushButton *deletePool=new QPushButton(tr("Delete Pool(s)"),mainPage);
     QPushButton *updatePool=new QPushButton(tr("Update Pool(s)"),mainPage);
     QLineEdit *searchEdit=new QLineEdit(this);
@@ -248,7 +388,9 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     });
     QHBoxLayout *mainHLayout=new QHBoxLayout(mainPage);
     mainHLayout->setContentsMargins(0,0,0,0);
+    mainHLayout->addWidget(importKdFile);
     mainHLayout->addWidget(exportPool);
+    mainHLayout->addWidget(addDanmuPool);
     mainHLayout->addWidget(deletePool);
     mainHLayout->addWidget(updatePool);
     mainHLayout->addStretch(1);
@@ -264,10 +406,46 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     QObject::connect(cancel,&QPushButton::clicked,[funcStackLayout](){
        funcStackLayout->setCurrentIndex(0);
     });
+    QObject::connect(importKdFile,&QPushButton::clicked,[this,poolView,managerModel,
+                     importKdFile,exportPool,deletePool,updatePool,addDanmuPool](){
+        QStringList files = QFileDialog::getOpenFileNames(this,tr("Select KikoPlay Danmu Pool File"),"","KikoPlay Danmu Pool File(*.kd)");
+        if(files.isEmpty()) return;
+        this->showBusyState(true);
+        importKdFile->setText(tr("Importing..."));
+        importKdFile->setEnabled(false);
+        poolView->setEnabled(false);
+        exportPool->setEnabled(false);
+        deletePool->setEnabled(false);
+        updatePool->setEnabled(false);
+        addDanmuPool->setEnabled(false);
+        bool refreshList=false;
+        for(auto &file:files)
+        {
+            if(GlobalObjects::danmuManager->importKdFile(file, this)>0)
+                refreshList=true;
+        }
+        if(refreshList) managerModel->refreshList();
+        this->showBusyState(false);
+        importKdFile->setText(tr("Import"));
+        poolView->setEnabled(true);
+        importKdFile->setEnabled(true);
+        exportPool->setEnabled(true);
+        deletePool->setEnabled(true);
+        addDanmuPool->setEnabled(true);
+        updatePool->setEnabled(true);
+    });
     QObject::connect(exportPool,&QPushButton::clicked,[cancel, exportHLayout,funcStackLayout](){
         exportHLayout->addWidget(cancel);
         cancel->show();
         funcStackLayout->setCurrentIndex(1);
+    });
+    QObject::connect(addDanmuPool,&QPushButton::clicked,[this,managerModel](){
+        AddPool addPool(this);
+        if(QDialog::Accepted==addPool.exec())
+        {
+            QString pid(GlobalObjects::danmuManager->createPool(addPool.animeTitle,addPool.epTitle));
+            managerModel->addPoolNode(addPool.animeTitle,addPool.epTitle,pid);
+        }
     });
     QObject::connect(deletePool,&QPushButton::clicked,[cancel, deleteHLayout,funcStackLayout](){
         deleteHLayout->addWidget(cancel);
@@ -297,9 +475,13 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     poolHeader->resizeSection(3, 120*logicalDpiX()/96); //Count
 
 
-    QTimer::singleShot(0,[this,managerModel](){
+    QTimer::singleShot(0,[this,managerModel,importKdFile,addDanmuPool](){
         this->showBusyState(true);
+        importKdFile->setEnabled(false);
+        addDanmuPool->setEnabled(false);
         managerModel->refreshList();
         this->showBusyState(false);
+        importKdFile->setEnabled(true);
+        addDanmuPool->setEnabled(true);
     });
 }

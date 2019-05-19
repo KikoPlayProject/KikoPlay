@@ -15,10 +15,17 @@ public:
     virtual ~DanmuManager();
 public:
     Pool *getPool(const QString &pid, bool loadDanmu=true);
+    Pool *getPool(const QString &animeTitle, const QString &title, bool loadDanmu=true);
     void loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList);
     void deletePool(const QList<DanmuPoolNode *> &deleteList);
     void updatePool(QList<DanmuPoolNode *> &updateList);
     void exportPool(const QList<DanmuPoolNode *> &exportList, const QString &dir, bool useTimeline=true, bool applyBlockRule=false);
+    void exportKdFile(const QList<DanmuPoolNode *> &exportList, const QString &dir, const QString &comment="");
+    int importKdFile(const QString &fileName, QWidget *parent);
+    QStringList getAssociatedFile16Md5(const QString &pid);
+    QString createPool(const QString &animeTitle, const QString &title, const QString &fileHash="");
+    QString renamePool(const QString &pid, const QString &nAnimeTitle, const QString &nEpTitle);
+    QString getFileHash(const QString &fileName);
 public:
     enum MatchProvider
     {
@@ -34,8 +41,6 @@ private:
     MatchInfo *ddMatch(const QString &fileName);
     MatchInfo *localMatch(const QString &fileName);
     MatchInfo *searchInMatchTable(const QString &fileHash);
-    QString getFileHash(const QString &fileName);
-    QString createPool(const QString &animeTitle, const QString &title, const QString &fileHash="");
     void setMatch(const QString &fileHash, const QString &poolId);
 
 signals:
@@ -43,6 +48,7 @@ signals:
 private:
     void loadPool(Pool *pool);
     void updatePool(Pool *pool, QList<DanmuComment *> &outList, int sourceId=-1);
+    QString getPoolId(const QString &animeTitle, const QString &title);
     void saveSource(const QString &pid, const DanmuSourceInfo *source, const QList<QSharedPointer<DanmuComment> > &danmuList);
     void deleteSource(const QString &pid, int sourceId);
     void deleteDanmu(const QString &pid, const QSharedPointer<DanmuComment> danmu);

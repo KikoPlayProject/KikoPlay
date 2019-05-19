@@ -13,10 +13,13 @@
 #include <QTextEdit>
 #include <QHeaderView>
 #include <QButtonGroup>
+#include <QAction>
 
 #include "Play/Danmu/providermanager.h"
 #include "Play/Playlist/playlist.h"
 #include "selectepisode.h"
+#include "danmuview.h"
+#include "Play/Danmu/blocker.h"
 #include "globalobjects.h"
 
 AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,const QStringList &poolList) : CFramelessDialog(tr("Add Danmu"),parent,true,true,autoPauseVideo),
@@ -147,6 +150,10 @@ void AddDanmu::addSearchItem(DanmuAccessResult *result)
         errorInfo = GlobalObjects::providerManager->downloadDanmu(result->providerId,&sourceItem,tmplist);
         if(errorInfo.isEmpty())
         {
+            int srcCount=tmplist.count();
+            GlobalObjects::blocker->preFilter(tmplist);
+            int filterCount=srcCount - tmplist.count();
+            if(filterCount>0) showMessage(tr("Pre-filter %1 Danmu").arg(filterCount));
             DanmuSourceInfo sourceInfo;
             sourceInfo.count=tmplist.count();
             sourceInfo.name=sourceItem.title;
@@ -168,6 +175,10 @@ void AddDanmu::addSearchItem(DanmuAccessResult *result)
                 errorInfo = GlobalObjects::providerManager->downloadDanmu(result->providerId,&sourceItem,tmplist);
                 if(errorInfo.isEmpty())
                 {
+                    int srcCount=tmplist.count();
+                    GlobalObjects::blocker->preFilter(tmplist);
+                    int filterCount=srcCount - tmplist.count();
+                    if(filterCount>0) showMessage(tr("Pre-filter %1 Danmu").arg(filterCount));
                     DanmuSourceInfo sourceInfo;
                     sourceInfo.count=tmplist.count();
                     sourceInfo.name=sourceItem.title;
@@ -281,6 +292,17 @@ QWidget *AddDanmu::setupSelectedPage()
     QVBoxLayout *spVLayout=new QVBoxLayout(selectedPage);
     spVLayout->addWidget(tipLabel);
     spVLayout->addWidget(selectedDanmuView);
+
+    QAction *actView=new QAction(tr("View Danmu"),this);
+    QObject::connect(actView,&QAction::triggered,this,[this](){
+        auto selection = selectedDanmuView->selectionModel()->selectedRows();
+        if (selection.size() == 0)return;
+        int row=selection.first().row();
+        DanmuView view(&selectedDanmuList.at(row).second,this);
+        view.exec();
+    });
+    selectedDanmuView->setContextMenuPolicy(Qt::ContextMenuPolicy::ActionsContextMenu);
+    selectedDanmuView->addAction(actView);
     return selectedPage;
 }
 

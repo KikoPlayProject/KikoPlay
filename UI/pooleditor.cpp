@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QAction>
+#include <QApplication>
 #include "globalobjects.h"
 #include "Play/Danmu/providermanager.h"
 #include "Play/Danmu/Manager/pool.h"
@@ -17,36 +18,87 @@
 namespace
 {
     QList<QPair<int,int> > timelineClipBoard;
+    QList<PoolItem *> items;
 }
 PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),parent)
 {
     QWidget *contentWidget=new QWidget(this);
-    QHBoxLayout *cHLayout=new QHBoxLayout(this);
-    cHLayout->setContentsMargins(0,0,0,0);
+
     contentWidget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
     QScrollArea *contentScrollArea=new QScrollArea(this);
+    contentScrollArea->setObjectName(QStringLiteral("PoolItemContainer"));
     contentScrollArea->setWidget(contentWidget);
     contentScrollArea->setWidgetResizable(true);
     contentScrollArea->setAlignment(Qt::AlignCenter);
-    cHLayout->addWidget(contentScrollArea);
+
+    poolItemVLayout=new QVBoxLayout(contentWidget);
+    poolItemVLayout->addStretch(1);
+    refreshItems();
+   // poolItemVLayout->addItem(new QSpacerItem(1, 0, QSizePolicy::Minimum, QSizePolicy::MinimumExpanding));
 
 
-    QVBoxLayout *poolItemVLayout=new QVBoxLayout(contentWidget);
-    const auto &sources=GlobalObjects::danmuPool->getPool()->sources();
-    for(auto iter=sources.begin();iter!=sources.end();++iter)
-    {
-        PoolItem *poolItem=new PoolItem(&iter.value(),this);
-        poolItemVLayout->addWidget(poolItem);
-    }
-    poolItemVLayout->addItem(new QSpacerItem(1, 0, QSizePolicy::Minimum, QSizePolicy::MinimumExpanding));
+    QPushButton *shareCodeButton=new QPushButton(tr("Share Pool Code"),this);
+    QObject::connect(shareCodeButton,&QPushButton::clicked,this,[this](){
+        QString code(GlobalObjects::danmuPool->getPool()->getPoolCode());
+        if(code.isEmpty())
+        {
+            this->showMessage(tr("No Danmu Source to Share"),1);
+        }
+        else
+        {
+            QClipboard *cb = QApplication::clipboard();
+            cb->setText("kikoplay:pool="+code);
+            this->showMessage(tr("Pool Code has been Copied to Clipboard"));
+        }
 
-    //addIgnoreWidget(contentWidget);
+    });
+
+    QPushButton *addCodeButton=new QPushButton(tr("Add Pool Code"),this);
+    QObject::connect(addCodeButton,&QPushButton::clicked,this,[this](){
+        QClipboard *cb = QApplication::clipboard();
+        QString code(cb->text());
+        if(code.isEmpty() ||
+                (!code.startsWith("kikoplay:pool=") &&
+                !code.startsWith("kikoplay:anime="))) return;
+        bool ret = GlobalObjects::danmuPool->getPool()->addPoolCode(
+                    code.mid(code.startsWith("kikoplay:pool=")?14:15),
+                    code.startsWith("kikoplay:anime="));
+        if(ret) refreshItems();
+        this->showMessage(ret?tr("Code Added"):tr("Code Error"),ret?0:1);
+    });
+
+    QGridLayout *blockGLayout=new QGridLayout(this);
+    blockGLayout->setContentsMargins(0,0,0,0);
+    blockGLayout->addWidget(shareCodeButton,0,0);
+    blockGLayout->addWidget(addCodeButton,0,1);
+    blockGLayout->addWidget(contentScrollArea,1,0,1,3);
+    blockGLayout->setRowStretch(1,1);
+    blockGLayout->setColumnStretch(2,1);
+    blockGLayout->setContentsMargins(0, 0, 0, 0);
+
     setMinimumSize(300*logicalDpiX()/96,120*logicalDpiY()/96);
     resize(GlobalObjects::appSetting->value("DialogSize/PoolEdit",QSize(600*logicalDpiX()/96,320*logicalDpiY()/96)).toSize());
 }
 
+void PoolEditor::refreshItems()
+{
+    for(auto item:items)
+    {
+        item->deleteLater();
+    }
+    items.clear();
+    const auto &sources=GlobalObjects::danmuPool->getPool()->sources();
+    for(auto iter=sources.begin();iter!=sources.end();++iter)
+    {
+        PoolItem *poolItem=new PoolItem(&iter.value(),this);
+        items<<poolItem;
+        poolItemVLayout->insertWidget(0,poolItem);
+    }
+}
+
 void PoolEditor::onClose()
 {
+     items.clear();
      GlobalObjects::appSetting->setValue("DialogSize/PoolEdit",size());
      CFramelessDialog::onClose();
 }
@@ -77,7 +129,7 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
 
     QFont normalFont("Microsoft YaHei",16);
     QLabel *name=new QLabel(QString("%1(%2)").arg(sourceInfo->name).arg(sourceInfo->count),this);
-    name->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
+    name->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Minimum);
     name->setFont(normalFont);
 
     QCheckBox *itemSwitch=new QCheckBox(tr("Show"),this);
@@ -124,6 +176,7 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
     deleteButton->setObjectName(QStringLiteral("DialogButton"));
     QObject::connect(deleteButton,&QPushButton::clicked,[this,sourceInfo](){
         GlobalObjects::danmuPool->getPool()->deleteSource(sourceInfo->id);
+        items.removeOne(this);
         this->deleteLater();
     });
     QPushButton *updateButton=new QPushButton(tr("Update"),this);
