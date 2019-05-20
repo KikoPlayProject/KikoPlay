@@ -18,10 +18,11 @@
 namespace
 {
     QList<QPair<int,int> > timelineClipBoard;
-    QList<PoolItem *> items;
+    QList<PoolItem *> *items;
 }
 PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),parent)
 {
+    items=&poolItems;
     QWidget *contentWidget=new QWidget(this);
 
     contentWidget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
@@ -82,23 +83,22 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),paren
 
 void PoolEditor::refreshItems()
 {
-    for(auto item:items)
+    for(auto item:poolItems)
     {
         item->deleteLater();
     }
-    items.clear();
+    poolItems.clear();
     const auto &sources=GlobalObjects::danmuPool->getPool()->sources();
     for(auto iter=sources.begin();iter!=sources.end();++iter)
     {
         PoolItem *poolItem=new PoolItem(&iter.value(),this);
-        items<<poolItem;
+        poolItems<<poolItem;
         poolItemVLayout->insertWidget(0,poolItem);
     }
 }
 
 void PoolEditor::onClose()
 {
-     items.clear();
      GlobalObjects::appSetting->setValue("DialogSize/PoolEdit",size());
      CFramelessDialog::onClose();
 }
@@ -176,7 +176,7 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
     deleteButton->setObjectName(QStringLiteral("DialogButton"));
     QObject::connect(deleteButton,&QPushButton::clicked,[this,sourceInfo](){
         GlobalObjects::danmuPool->getPool()->deleteSource(sourceInfo->id);
-        items.removeOne(this);
+        items->removeOne(this);
         this->deleteLater();
     });
     QPushButton *updateButton=new QPushButton(tr("Update"),this);

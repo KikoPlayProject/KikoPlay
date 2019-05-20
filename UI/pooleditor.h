@@ -22,6 +22,7 @@ public:
 private:
     QVBoxLayout *poolItemVLayout;
     void refreshItems();
+    QList<PoolItem *> poolItems;
 protected:
     virtual void onClose();
 };
