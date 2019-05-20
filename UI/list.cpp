@@ -6,13 +6,13 @@
 #include <QPushButton>
 #include <QApplication>
 #include <QMessageBox>
-#include <QInputDialog>
 
 #include "globalobjects.h"
 #include "pooleditor.h"
 #include "adddanmu.h"
 #include "matcheditor.h"
 #include "blockeditor.h"
+#include "inputdialog.h"
 #include "Play/Danmu/Provider/localprovider.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
@@ -318,11 +318,11 @@ void ListWindow::initActions()
             showMessage(tr("No pool associated"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
             return;
         }
-        QString uri = QInputDialog::getText(this, tr("Resource URI"),
-                                             tr("Set Resource URI(eg. magnet)\n"
-                                                "The KikoPlay Resource Code would contain the uri and the danmu pool info associated with the anime(only for single file)"), QLineEdit::Normal,
-                                             GlobalObjects::downloadModel->findFileUri(item->path));
-        if(uri.isEmpty()) return;
+        InputDialog inputDialog(tr("Resource URI"),tr("Set Resource URI(eg. magnet)\n"
+                                                      "The KikoPlay Resource Code would contain the uri and the danmu pool info associated with the anime(only for single file)"),
+                                GlobalObjects::downloadModel->findFileUri(item->path),false,this);
+        if(QDialog::Accepted!=inputDialog.exec()) return;
+        QString uri = inputDialog.text;
         QString file16MD5(GlobalObjects::danmuManager->getFileHash(item->path));
         QString code(pool->getPoolCode(QStringList({uri,pool->animeTitle(),pool->epTitle(),file16MD5})));
         if(code.isEmpty())

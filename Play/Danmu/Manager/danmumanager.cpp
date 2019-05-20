@@ -769,6 +769,7 @@ QList<DanmuComment *> DanmuManager::updateSource(const DanmuSourceInfo *sourceIn
     QList<DanmuComment *> tmpList;
     QString errInfo = GlobalObjects::providerManager->downloadBySourceURL(sourceInfo->url,tmpList);
     if(!errInfo.isEmpty())return tmpList;
+    GlobalObjects::blocker->preFilter(tmpList);
     for(auto iter=tmpList.begin();iter!=tmpList.end();)
     {
         QByteArray hashData(QString("%0%1%2%3").arg((*iter)->text, QString::number((*iter)->originTime), (*iter)->sender, QString::number((*iter)->color)).toUtf8());

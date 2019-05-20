@@ -3,6 +3,10 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QGridLayout>
+#include <QActionGroup>
+#include <QToolButton>
+#include <QMenu>
+#include <QWidgetAction>
 #include "globalobjects.h"
 #include "Play/Danmu/danmuviewmodel.h"
 DanmuView::DanmuView(const QList<DanmuComment *> *danmuList, QWidget *parent):CFramelessDialog (tr("View Danmu"),parent)
@@ -11,10 +15,10 @@ DanmuView::DanmuView(const QList<DanmuComment *> *danmuList, QWidget *parent):CF
     DanmuViewModel<DanmuComment *> *model=new DanmuViewModel<DanmuComment *>(danmuList,this);
     QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-    proxyModel->setFilterKeyColumn(4);
     proxyModel->setSourceModel(model);
     danmuView->setModel(proxyModel);
-    QObject::connect(filterEdit,&QLineEdit::textChanged,[proxyModel](const QString &keyword){
+    QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[proxyModel](int type, const QString &keyword){
+        proxyModel->setFilterKeyColumn(type);
         proxyModel->setFilterRegExp(keyword);
     });
 }
@@ -28,9 +32,10 @@ DanmuView::DanmuView(const QList<QSharedPointer<DanmuComment> > *danmuList, QWid
     proxyModel->setFilterKeyColumn(4);
     proxyModel->setSourceModel(model);
     danmuView->setModel(proxyModel);
-    QObject::connect(filterEdit,&QLineEdit::textChanged,[proxyModel](const QString &keyword){
+    QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[proxyModel](int type, const QString &keyword){
+        proxyModel->setFilterKeyColumn(type);
         proxyModel->setFilterRegExp(keyword);
-    });
+	});
 }
 
 void DanmuView::initView(int danmuCount)
@@ -42,7 +47,7 @@ void DanmuView::initView(int danmuCount)
     danmuView->setSortingEnabled(true);
 
     QLabel *tipLabel = new QLabel(tr("Danmu Count: %1").arg(danmuCount),this);
-    filterEdit=new QLineEdit(this);
+    filterEdit=new DanmuFilterBox(this);
 
     QGridLayout *viewGLayout=new QGridLayout(this);
     viewGLayout->addWidget(tipLabel,0,0);
@@ -58,4 +63,56 @@ void DanmuView::onClose()
 {
     GlobalObjects::appSetting->setValue("DialogSize/DanmuView",size());
     CFramelessDialog::onClose();
+}
+
+DanmuFilterBox::DanmuFilterBox(QWidget *parent): QLineEdit(parent)
+  , filterTypeGroup(new QActionGroup(this))
+{
+    setClearButtonEnabled(true);
+
+    QMenu *menu = new QMenu(this);
+
+    filterTypeGroup->setExclusive(true);
+    QAction *filterContent = menu->addAction(tr("Content"));
+    filterContent->setData(QVariant(int(4)));
+    filterContent->setCheckable(true);
+    filterContent->setChecked(true);
+    filterTypeGroup->addAction(filterContent);
+
+    QAction *filterUser = menu->addAction(tr("User"));
+    filterUser->setData(QVariant(int(2)));
+    filterUser->setCheckable(true);
+    filterTypeGroup->addAction(filterUser);
+
+    QAction *filterType = menu->addAction(tr("Type"));
+    filterType->setData(QVariant(int(1)));
+    filterType->setCheckable(true);
+    filterTypeGroup->addAction(filterType);
+
+    QAction *filterTime = menu->addAction(tr("Time"));
+    filterTime->setData(QVariant(int(0)));
+    filterTime->setCheckable(true);
+    filterTypeGroup->addAction(filterTime);
+
+    connect(filterTypeGroup, &QActionGroup::triggered,[this](QAction *act){
+        emit filterChanged(act->data().toInt(),this->text());
+    });
+    connect(this, &QLineEdit::textChanged, [this](const QString &text){
+        emit filterChanged(filterTypeGroup->checkedAction()->data().toInt(),text);
+    });
+
+    QToolButton *optionsButton = new QToolButton;
+    optionsButton->setCursor(Qt::ArrowCursor);
+
+    optionsButton->setFocusPolicy(Qt::NoFocus);
+    optionsButton->setObjectName(QStringLiteral("FilterOptionButton"));
+    GlobalObjects::iconfont.setPointSize(14);
+    optionsButton->setFont(GlobalObjects::iconfont);
+    optionsButton->setText(QChar(0xe609));
+    optionsButton->setMenu(menu);
+    optionsButton->setPopupMode(QToolButton::InstantPopup);
+
+    QWidgetAction *optionsAction = new QWidgetAction(this);
+    optionsAction->setDefaultWidget(optionsButton);
+    addAction(optionsAction, QLineEdit::LeadingPosition);
 }

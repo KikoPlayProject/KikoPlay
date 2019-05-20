@@ -36,6 +36,7 @@ CONFIG += C++11
 SOURCES += \
     UI/addpool.cpp \
     UI/danmuview.cpp \
+    UI/inputdialog.cpp \
         main.cpp \
     UI/mainwindow.cpp \
     UI/framelesswindow.cpp \
@@ -125,6 +126,7 @@ HEADERS += \
     Play/Danmu/danmuviewmodel.h \
     UI/addpool.h \
     UI/danmuview.h \
+    UI/inputdialog.h \
     UI/mainwindow.h \
     UI/framelesswindow.h \
     Play/Danmu/Layouts/bottomlayout.h \

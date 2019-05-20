@@ -11,7 +11,6 @@
 #include <QLabel>
 #include <QAction>
 #include <QSortFilterProxyModel>
-#include <QInputDialog>
 #include <QApplication>
 #include "Play/Danmu/Manager/managermodel.h"
 #include "Play/Danmu/Manager/danmumanager.h"
@@ -22,6 +21,7 @@
 #include "adddanmu.h"
 #include "addpool.h"
 #include "danmuview.h"
+#include "inputdialog.h"
 #include "globalobjects.h"
 
 PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Manager"),parent)
@@ -87,6 +87,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
             poolNodeMap.insert(node->title,node);
             poolTitles<<node->title;
         }
+        std::sort(poolTitles.begin(),poolTitles.end());
         AddDanmu addDanmuDialog(&item, this,false,poolTitles);
         if(QDialog::Accepted==addDanmuDialog.exec())
         {
@@ -308,8 +309,9 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         useBlockRule->setEnabled(false);
         if(exportKdFile->isChecked())
         {
-            QString text = QInputDialog::getText(this, tr("Set Comment"),tr("Comment(Optional)"), QLineEdit::Normal);
-            managerModel->exportKdFile(directory, text);
+            InputDialog inputDialog(tr("Set Comment"),tr("Comment(Optional)"),"",true,this);
+            inputDialog.exec();
+            managerModel->exportKdFile(directory, inputDialog.text);
         }
         else
         {
