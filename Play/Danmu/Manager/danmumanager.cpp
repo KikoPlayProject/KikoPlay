@@ -260,6 +260,7 @@ int DanmuManager::importKdFile(const QString &fileName, QWidget *parent)
                 for(const QString &md5:file16Md5List) this->setMatch(md5,pid);
             }
             Pool *pool=getPool(pid);
+			Q_ASSERT(pool);
             int c = 1;
             for(auto &srcItem:danmuInfo)
             {

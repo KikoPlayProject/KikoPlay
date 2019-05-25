@@ -291,13 +291,27 @@ void Pool::exportKdFile(QDataStream &stream, const QList<int> &ids)
 {
     stream<<anime<<ep;
     stream<<GlobalObjects::danmuManager->getAssociatedFile16Md5(pid).join(';');
-    stream<<sourcesTable.values();
-    stream<<commentList.count();
+	auto srcList(sourcesTable.values());
+	int count = 0;
+	for (auto iter = srcList.begin(); iter != srcList.end();)
+	{
+		if (!ids.isEmpty() && !ids.contains(iter->id))iter = srcList.erase(iter);
+		else 
+		{
+			count += iter->count;
+			++iter;
+		}
+	}
+    stream<<srcList;
+    stream<<count;
+	int i = 0;
     for(const auto &danmu:commentList)
     {
         if(!ids.isEmpty() && !ids.contains(danmu->source)) continue;
         stream<<*danmu;
+		++i;
     }
+	Q_ASSERT(i == count);
 }
 
 void Pool::exportSimpleInfo(int srcId, QList<SimpleDanmuInfo> &simpleDanmuList)
