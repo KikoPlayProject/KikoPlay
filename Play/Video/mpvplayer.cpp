@@ -406,7 +406,8 @@ void MPVPlayer::initializeGL()
     QOpenGLFunctions *glFuns=context()->functions();
     const char *version = reinterpret_cast<const char*>(glFuns->glGetString(GL_VERSION));
     qDebug()<<"OpenGL Version:"<<version;
-    oldOpenGLVersion = version[0]<'4';
+    oldOpenGLVersion = !(version[0]<='9' &&  version[0]>='4');
+    if(oldOpenGLVersion)qDebug()<<"Unsupport sampler2D Array";
     if(oldOpenGLVersion)
     {
         danmuShader.addShaderFromSourceCode(QOpenGLShader::Vertex, vShaderDanmu_Old);

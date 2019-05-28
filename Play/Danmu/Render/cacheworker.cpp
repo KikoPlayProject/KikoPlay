@@ -1,5 +1,9 @@
 #include "cacheworker.h"
 #include <QtConcurrent>
+#ifdef TEXTURE_MAIN_THREAD
+#include "globalobjects.h"
+#include "Play/Video/mpvplayer.h"
+#endif
 extern QOpenGLContext *danmuTextureContext;
 extern QSurface *surface;
 
@@ -32,6 +36,9 @@ void CacheWorker::cleanCache()
             ++iter;
         }
     }
+#ifdef TEXTURE_MAIN_THREAD
+    QMetaObject::invokeMethod(GlobalObjects::mpvplayer,[this](){
+#endif
     danmuTextureContext->makeCurrent(surface);
     QOpenGLFunctions *glFuns=danmuTextureContext->functions();
     for(auto iter=textureRef.begin();iter!=textureRef.end();)
@@ -48,6 +55,9 @@ void CacheWorker::cleanCache()
         }
     }
     danmuTextureContext->doneCurrent();
+#ifdef TEXTURE_MAIN_THREAD
+    },Qt::BlockingQueuedConnection);
+#endif
 #ifdef QT_DEBUG
     qDebug()<<"clean done:"<<timer.elapsed()<<"ms, left item:"<<danmuCache.size();
 #endif
@@ -202,6 +212,9 @@ void CacheWorker::createTexture(QList<CacheMiddleInfo> &midInfo)
         }
     }
     if(textureHeight>2048) textureHeight=2048;
+#ifdef TEXTURE_MAIN_THREAD
+    QMetaObject::invokeMethod(GlobalObjects::mpvplayer,[this,&midInfo,textureWidth,textureHeight](){
+#endif
     danmuTextureContext->makeCurrent(surface);
     QOpenGLFunctions *glFuns=danmuTextureContext->functions();
     GLuint texture;
@@ -230,6 +243,9 @@ void CacheWorker::createTexture(QList<CacheMiddleInfo> &midInfo)
     glFuns->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glFuns->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     danmuTextureContext->doneCurrent();
+#ifdef TEXTURE_MAIN_THREAD
+    },Qt::BlockingQueuedConnection);
+#endif
 }
 
 void CacheWorker::beginCache(PrepareList *danmus)

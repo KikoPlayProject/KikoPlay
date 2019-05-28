@@ -56,7 +56,9 @@ DanmuRender::DanmuRender()
         danmuTextureContext->setFormat(sharectx->format());
         danmuTextureContext->setShareContext(sharectx);
         danmuTextureContext->create();
+#ifndef TEXTURE_MAIN_THREAD
         danmuTextureContext->moveToThread(&cacheThread);
+#endif
     });
     currentDrList=nullptr;
 }
