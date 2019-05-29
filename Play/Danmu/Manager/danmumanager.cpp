@@ -587,14 +587,27 @@ QString DanmuManager::renamePool(const QString &pid, const QString &nAnimeTitle,
     PoolStateLock lock;
     if(!lock.tryLock(pid)) return QString();
     QString npid(getPoolId(nAnimeTitle,nEpTitle));
+    int oldId=DanmuPoolNode::idHash(pool->pid),newId=DanmuPoolNode::idHash(npid);
+    QSqlDatabase db(GlobalObjects::getDB(GlobalObjects::Comment_DB));
+    db.transaction();
 
-    QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
+    QSqlQuery query(db);
     query.prepare("update pool set PoolID=?,AnimeTitle=?,Title=? where PoolID=?");
     query.bindValue(0,npid);
     query.bindValue(1,nAnimeTitle);
     query.bindValue(2,nEpTitle);
     query.bindValue(3,pool->pid);
     query.exec();
+
+    if(oldId!=newId)
+    {
+        query.prepare(QString("insert into danmu_%1 select * from danmu_%2 where PoolID=?").arg(newId).arg(oldId));
+        query.bindValue(0,npid);
+        query.exec();
+        query.exec(QString("delete from danmu_%1 where PoolID='%2'").arg(oldId).arg(npid));
+    }
+
+    if(!db.commit()) return QString();
 
     QMutexLocker locker(&removeLock);
     if(poolDanmuCacheInfo.contains(pid))

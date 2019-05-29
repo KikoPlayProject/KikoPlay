@@ -289,6 +289,9 @@ void Pool::exportPool(const QString &fileName, bool useTimeline, bool applyBlock
 
 void Pool::exportKdFile(QDataStream &stream, const QList<int> &ids)
 {
+    PoolStateLock lock;
+    if(!lock.tryLock(pid)) return;
+
     stream<<anime<<ep;
     stream<<GlobalObjects::danmuManager->getAssociatedFile16Md5(pid).join(';');
 	auto srcList(sourcesTable.values());
