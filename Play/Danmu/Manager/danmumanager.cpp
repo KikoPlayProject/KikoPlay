@@ -930,7 +930,7 @@ void DanmuManager::loadPool(Pool *pool)
             int fontSizeLevel(query.value(sizeNo).toInt());
             danmu->fontSizeLevel=DanmuComment::FontSizeLevel(fontSizeLevel<3 && fontSizeLevel>=0?fontSizeLevel:0);
             danmu->sender=query.value(userNo).toString();
-            int type(query.value(sizeNo).toInt());
+            int type(query.value(modeNo).toInt());
             danmu->type=DanmuComment::DanmuType(type<3 && type>=0?type:0);
             danmu->source=query.value(sourceNo).toInt();
             danmu->text=text;
