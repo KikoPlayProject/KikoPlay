@@ -33,7 +33,7 @@ KikoPlay基于以下项目：
 
 Windows上使用Qt Creator打开工程文件后可直接编译
 
-Linux上我只测试了Ubuntu 18.04 x64，可尝试使用百度网盘里打包过的程序，解压后执行./KikoPlay.sh。其他系统可自行编译
+Linux上我测试了Ubuntu 18.04 x64，Manjaro 18.0.4 x64，其他系统可自行编译
 
 Ubuntu 18.04 x64上编译的大概流程：
 
@@ -77,7 +77,17 @@ Ubuntu 18.04 x64上编译的大概流程：
      qmake
      make
      ```
-    编译成功后得到KikoPlay文件，可直接运行./KikoPlay，如果提示缺少libqhttpengine等库，可尝试将编译QHttpEngine得到的库放到/usr/lib目录下。下载功能需要aria2c，可自行编译后放到KikoPlay同一目录下
+
+Manjaro上的编译更为简单：
+ 1. 安装mpv
+ 2. 下载编译安装[QHttpEngine](https://github.com/nitroshare/qhttpengine)
+ 3. 开始编译，进入KikoPlay工程目录：
+     ```
+     qmake
+     make
+     ```
+
+编译成功后得到KikoPlay文件，可直接运行./KikoPlay，如果提示缺少libqhttpengine等库，可尝试将编译QHttpEngine得到的库放到/usr/lib目录下，也可以将/usr/local/lib加入LD_LIBRARY_PATH环境变量中。下载功能需要aria2c，可自行编译或者下载后放到KikoPlay同一目录下
 
 自从0.2.3版本后只提供64位版本，不建议使用32位版本
 
