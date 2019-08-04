@@ -34,9 +34,11 @@ DEFINES += ZLIB_WINAPI
 CONFIG += C++11
 
 SOURCES += \
+    Play/Danmu/eventanalyzer.cpp \
     UI/addpool.cpp \
     UI/danmuview.cpp \
     UI/inputdialog.cpp \
+    UI/widgets/clickslider.cpp \
         main.cpp \
     UI/mainwindow.cpp \
     UI/framelesswindow.cpp \
@@ -124,6 +126,7 @@ SOURCES += \
 
 HEADERS += \
     Play/Danmu/danmuviewmodel.h \
+    Play/Danmu/eventanalyzer.h \
     UI/addpool.h \
     UI/danmuview.h \
     UI/inputdialog.h \
@@ -134,6 +137,7 @@ HEADERS += \
     Play/Danmu/Layouts/rolllayout.h \
     Play/Danmu/Layouts/toplayout.h \
     Play/Danmu/danmupool.h \
+    UI/widgets/clickslider.h \
     globalobjects.h \
     Play/Playlist/playlist.h \
     Play/Video/mpvplayer.h \

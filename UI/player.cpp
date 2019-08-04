@@ -13,6 +13,7 @@
 #include <QGraphicsOpacityEffect>
 #include <QButtonGroup>
 
+#include "widgets/clickslider.h"
 #include "capture.h"
 #include "mediainfo.h"
 #include "mpvparametersetting.h"
@@ -749,6 +750,12 @@ void PlayerWindow::setupDanmuSettingPage()
     });
     fontFamilyCombo->setCurrentFont(QFont(GlobalObjects::appSetting->value("Play/DanmuFont","Microsoft Yahei").toString()));
 
+    enableAnalyze=new QCheckBox(tr("Enable Danmu Event Analyze"),danmuSettingPage);
+    enableAnalyze->setChecked(true);
+    QObject::connect(enableAnalyze,&QCheckBox::stateChanged,[](int state){
+        GlobalObjects::danmuPool->setAnalyzeEnable(state==Qt::Checked?true:false);
+    });
+    enableAnalyze->setChecked(GlobalObjects::appSetting->value("Play/EnableAnalyze",true).toBool());
 
     enableMerge=new QCheckBox(tr("Enable Danmu Merge"),danmuSettingPage);
     enableMerge->setChecked(true);
@@ -821,19 +828,19 @@ void PlayerWindow::setupDanmuSettingPage()
     appearancePage->setMaximumHeight(28 * logicalDpiY()/96);
     appearancePage->setObjectName(QStringLiteral("DialogPageButton"));
 
-    QToolButton *mergePage=new QToolButton(danmuSettingPage);
-    mergePage->setText(tr("Merge"));
-    mergePage->setCheckable(true);
-    mergePage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    mergePage->setMaximumHeight(28 * logicalDpiY()/96);
-    mergePage->setObjectName(QStringLiteral("DialogPageButton"));
+    QToolButton *advancedPage=new QToolButton(danmuSettingPage);
+    advancedPage->setText(tr("Advanced"));
+    advancedPage->setCheckable(true);
+    advancedPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    advancedPage->setMaximumHeight(28 * logicalDpiY()/96);
+    advancedPage->setObjectName(QStringLiteral("DialogPageButton"));
 
 
     QStackedLayout *danmuSettingSLayout=new QStackedLayout();
     QButtonGroup *btnGroup=new QButtonGroup(this);
     btnGroup->addButton(generalPage,0);
     btnGroup->addButton(appearancePage,1);
-    btnGroup->addButton(mergePage,2);
+    btnGroup->addButton(advancedPage,2);
     QObject::connect(btnGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[danmuSettingSLayout](int id, bool checked){
         if(checked)
         {
@@ -844,7 +851,7 @@ void PlayerWindow::setupDanmuSettingPage()
     QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
     pageButtonHLayout->addWidget(generalPage);
     pageButtonHLayout->addWidget(appearancePage);
-    pageButtonHLayout->addWidget(mergePage);
+    pageButtonHLayout->addWidget(advancedPage);
 
     QVBoxLayout *danmuSettingVLayout=new QVBoxLayout(danmuSettingPage);
     danmuSettingVLayout->addLayout(pageButtonHLayout);
@@ -887,22 +894,23 @@ void PlayerWindow::setupDanmuSettingPage()
     appearanceGLayout->addWidget(bold,2,1);
     appearanceGLayout->addWidget(randomSize,3,1);
 
-    QWidget *pageMerge=new QWidget(danmuSettingPage);
-    danmuSettingSLayout->addWidget(pageMerge);
-    QGridLayout *mergeGLayout=new QGridLayout(pageMerge);
+    QWidget *pageAdvanced=new QWidget(danmuSettingPage);
+    danmuSettingSLayout->addWidget(pageAdvanced);
+    QGridLayout *mergeGLayout=new QGridLayout(pageAdvanced);
     mergeGLayout->setContentsMargins(0,0,0,0);
     mergeGLayout->setColumnStretch(0,1);
     mergeGLayout->setColumnStretch(1,1);
-    mergeGLayout->addWidget(enableMerge,0,0);
-    mergeGLayout->addWidget(enlargeMerged,1,0);
-    mergeGLayout->addWidget(mergeIntervalLabel,2,0);
-    mergeGLayout->addWidget(mergeInterval,3,0);
-    mergeGLayout->addWidget(contentSimLabel,4,0);
-    mergeGLayout->addWidget(contentSimCount,5,0);
-    mergeGLayout->addWidget(minMergeCountLabel,0,1);
-    mergeGLayout->addWidget(minMergeCount,1,1);
-    mergeGLayout->addWidget(mergeCountTipLabel,2,1);
-    mergeGLayout->addWidget(mergeCountTipPos,3,1);
+    mergeGLayout->addWidget(enableAnalyze,0,0);
+    mergeGLayout->addWidget(enableMerge,1,0);
+    mergeGLayout->addWidget(enlargeMerged,2,0);
+    mergeGLayout->addWidget(mergeIntervalLabel,3,0);
+    mergeGLayout->addWidget(mergeInterval,4,0);
+    mergeGLayout->addWidget(contentSimLabel,0,1);
+    mergeGLayout->addWidget(contentSimCount,1,1);
+    mergeGLayout->addWidget(minMergeCountLabel,2,1);
+    mergeGLayout->addWidget(minMergeCount,3,1);
+    mergeGLayout->addWidget(mergeCountTipLabel,4,1);
+    mergeGLayout->addWidget(mergeCountTipPos,5,1);
 }
 
 void PlayerWindow::setupPlaySettingPage()
@@ -1100,6 +1108,7 @@ void PlayerWindow::setupSignals()
         int ls=ts-lmin*60;
         process->setRange(0,duration);
         process->setSingleStep(1);
+        process->setEventMark(QList<DanmuEvent>());
         totalTimeStr=QString("/%1:%2").arg(lmin,2,10,QChar('0')).arg(ls,2,10,QChar('0'));
         timeLabel->setText("00:00"+this->totalTimeStr);
         static_cast<DanmuStatisInfo *>(danmuStatisBar)->duration=ts;
@@ -1141,6 +1150,7 @@ void PlayerWindow::setupSignals()
         else
             titleLabel->setText(QString("%1-%2").arg(currentItem->animeTitle).arg(currentItem->title));
     });
+    QObject::connect(GlobalObjects::danmuPool, &DanmuPool::eventAnalyzeFinished,process,&ClickSlider::setEventMark);
     QObject::connect(GlobalObjects::playlist,&PlayList::recentItemsUpdated,[this](){
         static_cast<PlayerContent *>(playerContent)->refreshItems();
     });
@@ -1248,14 +1258,19 @@ void PlayerWindow::setupSignals()
     QObject::connect(process,&ClickSlider::sliderReleased,[this](){
         this->processPressed=false;
     });
-    QObject::connect(process,&ClickSlider::mouseMove,[this](int x,int ,int pos){
+    QObject::connect(process,&ClickSlider::mouseMove,[this](int x,int ,int pos, const QString &desc){
         int cs=pos/1000;
         int cmin=cs/60;
         int cls=cs-cmin*60;
-        timeInfoTip->setText(QString("%1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')));
+        QString timeTip(QString("%1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')));
+        if(!desc.isEmpty())
+            timeTip+="\n"+desc;
+        timeInfoTip->setText(timeTip);
         timeInfoTip->adjustSize();
         int ty=danmuStatisBar->isHidden()?height()-controlPanelHeight-timeInfoTip->height():height()-controlPanelHeight-timeInfoTip->height()-statisBarHeight;
-        timeInfoTip->move(x-timeInfoTip->width()/3,ty);
+        int nx = x-timeInfoTip->width()/3;
+        if(nx+timeInfoTip->width()>width()) nx = width()-timeInfoTip->width();
+        timeInfoTip->move(nx<0?0:nx,ty);
         timeInfoTip->show();
         timeInfoTip->raise();
         //QToolTip::showText(QPoint(x,process->geometry().topLeft()-40),QString("%1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')),process,process->rect());

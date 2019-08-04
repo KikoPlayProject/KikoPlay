@@ -4,6 +4,7 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QMessageBox>
+#include "eventanalyzer.h"
 #include "Render/danmurender.h"
 #include "globalobjects.h"
 #include "blocker.h"
@@ -30,6 +31,7 @@ namespace
 DanmuPool::DanmuPool(QObject *parent) : QAbstractItemModel(parent),curPool(nullptr), emptyPool(new Pool("","","",this)),
     currentPosition(0),currentTime(0),enableMerged(true),mergeInterval(15*1000),maxContentUnsimCount(4),minMergeCount(3)
 {
+    analyzer=new EventAnalyzer(this);
 	setConnect(emptyPool);
 }
 
@@ -212,6 +214,18 @@ bool DanmuPool::contentSimilar(const DanmuComment *dm1, const DanmuComment *dm2)
 
 }
 
+void DanmuPool::setAnalyzation()
+{
+#ifdef QT_DEBUG
+    QElapsedTimer timer;
+    timer.start();
+#endif
+    emit eventAnalyzeFinished(enableAnalyze?analyzer->analyze(curPool):QList<DanmuEvent>());
+#ifdef QT_DEBUG
+    qDebug()<<"Analyze time:"<<timer.elapsed();
+#endif
+}
+
 void DanmuPool::setConnect(Pool *pool)
 {
 	if (curPool)
@@ -227,11 +241,13 @@ void DanmuPool::setConnect(Pool *pool)
     danmuPool=curPool->comments();
     setMerged();
     setStatisInfo();
+    setAnalyzation();
     endResetModel();
     QObject::connect(curPool,&Pool::poolChanged,this,[this](bool ){
         beginResetModel();
         danmuPool=curPool->comments();
         setMerged();
+        setAnalyzation();
         setStatisInfo();
         endResetModel();
         currentPosition = std::lower_bound(finalPool.begin(), finalPool.end(), currentTime, DanmuComparer) - finalPool.begin();
@@ -273,6 +289,12 @@ void DanmuPool::setStatisInfo()
 		statisInfo.maxCountOfMinute = curMinuteCount;
     emit statisInfoChange();
 
+}
+
+void DanmuPool::setAnalyzeEnable(bool enable)
+{
+    enableAnalyze = enable;
+    setAnalyzation();
 }
 
 void DanmuPool::setMergeEnable(bool enable)

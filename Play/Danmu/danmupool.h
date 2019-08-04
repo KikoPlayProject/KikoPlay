@@ -12,6 +12,7 @@ struct StatisInfo
     int mergeCount;
 };
 class Pool;
+class EventAnalyzer;
 class DanmuPool : public QAbstractItemModel
 {
     Q_OBJECT
@@ -38,20 +39,24 @@ private:
     QList<QSharedPointer<DanmuComment> > finalPool;
     QLinkedList<PrepareList *> prepareListPool;
     StatisInfo statisInfo;
+    EventAnalyzer *analyzer;
     int currentPosition;
     int currentTime;
    // QString poolID;
 
+    bool enableAnalyze;
     bool enableMerged;
     int mergeInterval; //ms
     int maxContentUnsimCount;
     int minMergeCount;
     void setMerged();
     bool contentSimilar(const DanmuComment *dm1, const DanmuComment *dm2);
+    void setAnalyzation();
     void setConnect(Pool *pool);
 
     void setStatisInfo();
 public:
+    void setAnalyzeEnable(bool enable);
     void setMergeEnable(bool enable);
     void setMergeInterval(int val);
     void setMaxUnSimCount(int val);
@@ -62,6 +67,7 @@ public:
 
 signals:
     void statisInfoChange();
+    void eventAnalyzeFinished(const QList<DanmuEvent> &);
 public slots:
     void mediaTimeElapsed(int newTime);
     void mediaTimeJumped(int newTime);

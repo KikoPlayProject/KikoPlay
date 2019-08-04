@@ -2,7 +2,6 @@
 #define PLAYERWINDOW_H
 
 #include <QMainWindow>
-#include <QSlider>
 #include <QPushButton>
 #include <QToolButton>
 #include <QLabel>
@@ -14,64 +13,9 @@ class QComboBox;
 class QActionGroup;
 class CFramelessDialog;
 class QSpinBox;
-class ClickSlider: public QSlider
-{
-    Q_OBJECT
-public:
-    explicit ClickSlider(QWidget *parent=nullptr):QSlider(Qt::Horizontal,parent){}
-signals:
-    void sliderClick(int position);
-    void sliderUp(int position);
-    void mouseMove(int x,int y,int pos);
-    void mouseEnter();
-    void mouseLeave();
-protected:
-    virtual void mousePressEvent(QMouseEvent *event)
-    {
-        QSlider::mousePressEvent(event);
-        if(!isSliderDown() && event->button() == Qt::LeftButton)
-        {
-            int dur = maximum()-minimum();
-            double x=event->x();
-            if(x<0)x=0;
-            if(x>maximum())x=maximum();
-            int pos = minimum() + dur * (x /width());
-            emit sliderClick(pos);
-            setValue(pos);
-        }
-    }
-    virtual void mouseReleaseEvent(QMouseEvent *event)
-    {
-        if(isSliderDown())
-        {
-            int dur = maximum()-minimum();
-            double x=event->x();
-            if(x<0)x=0;
-            if(x>maximum())x=maximum();
-            int pos = minimum() + dur * (x /width());
-            emit sliderUp(pos);
-            setValue(pos);
-        }
-        QSlider::mouseReleaseEvent(event);
-    }
-    virtual void mouseMoveEvent(QMouseEvent *event)
-    {
-        int dur = maximum()-minimum();
-        double x=event->x();
-        if(x<0)x=0;
-        if(x>maximum())x=maximum();
-        int pos = minimum() + dur * (x /width());
-        emit mouseMove(event->x(),event->y(),pos);
-    }
-    virtual void enterEvent(QEvent *)
-    {
-        emit mouseEnter();
-    }
-    virtual void leaveEvent(QEvent *)
-    {
-        emit mouseLeave();
-    }
-};
+class QSlider;
+class ClickSlider;
+
 class PlayerWindow : public QMainWindow
 {
     Q_OBJECT
@@ -114,7 +58,7 @@ private:
      QWidget *danmuSettingPage,*playSettingPage;
      QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold,
                 *bottomSubtitleProtect,*topSubtitleProtect,*randomSize,
-                *enableMerge,*enlargeMerged;
+                *enableAnalyze, *enableMerge,*enlargeMerged;
      QSpinBox *mergeInterval,*contentSimCount,*minMergeCount;
      QFontComboBox *fontFamilyCombo;
      QComboBox *aspectRatioCombo,*playSpeedCombo,*clickBehaviorCombo,*dbClickBehaviorCombo,

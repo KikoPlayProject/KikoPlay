@@ -150,4 +150,10 @@ struct BlockRule
     bool blockTest(DanmuComment *comment);
 };
 typedef QLinkedList<QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo *> > PrepareList;
+struct DanmuEvent
+{
+    int start;
+    int duration;
+    QString description;
+};
 #endif // DANMUCOMMENT_H
