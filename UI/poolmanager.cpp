@@ -239,6 +239,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                 showMessage(tr("Rename Failed, Try Again?"),1);
                 return;
             }
+            if(opid==npid) return;
             managerModel->renamePoolNode(poolNode,addPool.animeTitle,addPool.epTitle,npid);
             GlobalObjects::playlist->renameItemPoolId(opid,npid,addPool.animeTitle,addPool.epTitle);
         }

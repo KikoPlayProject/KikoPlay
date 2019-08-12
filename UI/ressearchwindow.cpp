@@ -17,6 +17,7 @@
 #include <QUrl>
 #include <QIntValidator>
 #include <QMovie>
+#include "widgets/dialogtip.h"
 #include "globalobjects.h"
 namespace
 {
@@ -24,7 +25,6 @@ namespace
 }
 ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0),currentPage(0),isSearching(false)
 {
-    scriptManager=new ScriptManager(this);
     searchListModel=new SearchListModel(this);
     QSortFilterProxyModel *searchProxyModel=new QSortFilterProxyModel(this);
     searchProxyModel->setSourceModel(searchListModel);
@@ -32,18 +32,18 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     searchProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
     scriptCombo=new QComboBox(this);
-    QObject::connect(scriptManager,&ScriptManager::refreshDone,this,[this](){
+    QObject::connect(GlobalObjects::scriptManager,&ScriptManager::refreshDone,this,[this](){
         scriptCombo->clear();
-        for(auto &item:scriptManager->getScriptList())
+        for(auto &item:GlobalObjects::scriptManager->getScriptList())
         {
             scriptCombo->addItem(item.title,item.id);
         }
-        scriptCombo->setCurrentIndex(scriptCombo->findData(scriptManager->getNormalScriptId()));
+        scriptCombo->setCurrentIndex(scriptCombo->findData(GlobalObjects::scriptManager->getNormalScriptId()));
     });
 
     QPushButton *manageScript=new QPushButton(tr("Manage Script"),this);
     QObject::connect(manageScript,&QPushButton::clicked,this,[this](){
-        ManageScript manager(scriptManager,this);
+        ManageScript manager(this);
         manager.exec();
     });
 
@@ -100,6 +100,9 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     });
 
     totalPageTip=new QLabel("/0", this);
+
+    dialogTip = new DialogTip(this);
+    dialogTip->hide();
 
     searchListView=new QTreeView(this);
     searchListView->setModel(searchProxyModel);
@@ -174,17 +177,17 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
 
 }
 
-void ResSearchWindow::search(const QString &keyword)
+void ResSearchWindow::search(const QString &keyword, bool setSearchEdit)
 {
     if(isSearching) return;
     if(keyword.isEmpty()) return;
     if(scriptCombo->currentText().isEmpty()) return;
+    if(setSearchEdit) searchEdit->setText(keyword);
     isSearching=true;
-    searchEdit->setText(keyword);
     int pageCount;
     QList<ResItem> results;
     setEnable(false);
-    QString errInfo(scriptManager->search(scriptCombo->currentData().toString(),keyword,1,pageCount,results));
+    QString errInfo(GlobalObjects::scriptManager->search(scriptCombo->currentData().toString(),keyword,1,pageCount,results));
     if(errInfo.isEmpty())
     {
         currentPage= pageCount>0?1:0;
@@ -198,7 +201,9 @@ void ResSearchWindow::search(const QString &keyword)
     }
     else
     {
-        QMessageBox::information(this,"KikoPlay",errInfo);
+        //QMessageBox::information(this,"KikoPlay",errInfo);
+        dialogTip->showMessage(errInfo, 1);
+        dialogTip->raise();
     }
     isSearching=false;
     setEnable(true);
@@ -229,7 +234,7 @@ void ResSearchWindow::pageTurning(int page)
     int pageCount;
     QList<ResItem> results;
     setEnable(false);
-    QString errInfo(scriptManager->search(currentScriptId,currentKeyword,page,pageCount,results));
+    QString errInfo(GlobalObjects::scriptManager->search(currentScriptId,currentKeyword,page,pageCount,results));
     if(errInfo.isEmpty())
     {
         searchListModel->setList(results);
@@ -241,7 +246,8 @@ void ResSearchWindow::pageTurning(int page)
     }
     else
     {
-        QMessageBox::information(this,"KikoPlay",errInfo);
+        dialogTip->showMessage(errInfo, 1);
+        dialogTip->raise();
     }
     setEnable(true);
 }

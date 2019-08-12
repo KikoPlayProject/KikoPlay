@@ -50,10 +50,17 @@ void ClickSlider::mouseMoveEvent(QMouseEvent *event)
     {
         for(auto &e:eventList)
         {
-            if(pos>=e.start && pos<=e.start+e.duration)
+            if(pos>=e.start-3000)
             {
-                emit mouseMove(event->x(),event->y(),pos,e.description);
-                return;
+                if(pos<=e.start+e.duration+3000)
+                {
+                    emit mouseMove(event->x(),event->y(),pos,e.description);
+                    return;
+                }
+            }
+            else
+            {
+                break;
             }
         }
     }

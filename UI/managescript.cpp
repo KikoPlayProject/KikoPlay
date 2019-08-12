@@ -5,31 +5,32 @@
 #include <QGridLayout>
 #include <QMessageBox>
 #include "Download/Script/scriptmanager.h"
-ManageScript::ManageScript(ScriptManager *manager, QWidget *parent):CFramelessDialog(tr("Manage Script"),parent)
+#include "globalobjects.h"
+ManageScript::ManageScript(QWidget *parent):CFramelessDialog(tr("Manage Script"),parent)
 {
     QTreeView *scriptView=new QTreeView(this);
     scriptView->setRootIsDecorated(false);
     scriptView->setSelectionMode(QAbstractItemView::SingleSelection);
-    scriptView->setModel(manager);
+    scriptView->setModel(GlobalObjects::scriptManager);
     scriptView->setAlternatingRowColors(true);
-    QObject::connect(scriptView, &QTreeView::doubleClicked,manager,&ScriptManager::setNormalScript);
+    QObject::connect(scriptView, &QTreeView::doubleClicked,GlobalObjects::scriptManager,&ScriptManager::setNormalScript);
 
     QPushButton *refresh=new QPushButton(tr("Refresh"),this);
     QPushButton *remove=new QPushButton(tr("Remove"),this);
-    QObject::connect(remove,&QPushButton::clicked,[scriptView,manager,this](){
+    QObject::connect(remove,&QPushButton::clicked,[scriptView,this](){
         auto selection = scriptView->selectionModel()->selectedRows();
         if (selection.size() == 0)return;
         if(QMessageBox::information(this,tr("Remove"),tr("Delete the Script File?"),
                       QMessageBox::Yes|QMessageBox::No,QMessageBox::No)==QMessageBox::Yes)
-            manager->removeScript(selection.last());
+            GlobalObjects::scriptManager->removeScript(selection.last());
     });
-    QObject::connect(refresh,&QPushButton::clicked,this,[this,manager,remove,scriptView](){
+    QObject::connect(refresh,&QPushButton::clicked,this,[this,remove,scriptView](){
         showBusyState(true);
         remove->setEnabled(false);
         scriptView->setEnabled(false);
-        manager->refresh();
+        GlobalObjects::scriptManager->refresh();
     });
-    QObject::connect(manager,&ScriptManager::refreshDone,this,[this,remove,scriptView](){
+    QObject::connect(GlobalObjects::scriptManager,&ScriptManager::refreshDone,this,[this,remove,scriptView](){
         showBusyState(false);
         remove->setEnabled(true);
         scriptView->setEnabled(true);

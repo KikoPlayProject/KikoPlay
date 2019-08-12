@@ -1,6 +1,7 @@
 #ifndef SCRIPTMANAGER_H
 #define SCRIPTMANAGER_H
 #include <QAbstractItemModel>
+#include <QMutex>
 struct ScriptInfo
 {
     QString title;
@@ -46,6 +47,7 @@ private:
     ScriptWorker *scriptWorker;
     QString curScriptId;
     QString normalScriptId;
+    QMutex searchMutex;
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}

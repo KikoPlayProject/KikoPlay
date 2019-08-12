@@ -3,8 +3,9 @@
 #include "globalobjects.h"
 #include <QBrush>
 #define TYPELEVEL 1
-#define LABEL_TIME 2
+#define LABEL_MONTH 2
 #define LABEL_TAG 3
+#define LABEL_YEAR 4
 #define CountRole Qt::UserRole+1
 
 LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
@@ -67,7 +68,7 @@ LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
        if(timeList.value(insPos).first==time)
        {
            ++timeList[insPos].second;
-           QModelIndex index(createIndex(insPos,0,LABEL_TIME));
+           QModelIndex index(createIndex(insPos,0,LABEL_MONTH));
            emit dataChanged(index,index);
        }
        else
@@ -84,7 +85,7 @@ LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
            if(timeList.value(oldPos).first==oldTime)
            {
                --timeList[oldPos].second;
-               QModelIndex index(createIndex(oldPos,0,LABEL_TIME));
+               QModelIndex index(createIndex(oldPos,0,LABEL_MONTH));
                if(timeList[oldPos].second==0)
                {
                    beginRemoveRows(index.parent(),index.row(),index.row());
@@ -203,7 +204,7 @@ LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
         if(timeList.value(insPos).first==time)
         {
             --timeList[insPos].second;
-            QModelIndex index(createIndex(insPos,0,LABEL_TIME));
+            QModelIndex index(createIndex(insPos,0,LABEL_MONTH));
             if(timeList[insPos].second==0)
             {
                 beginRemoveRows(index.parent(),index.row(),index.row());
@@ -255,7 +256,7 @@ void LabelModel::selLabelList(const QModelIndexList &indexes, QStringList &tags,
     for(const QModelIndex &index:indexes)
     {
         if(!index.isValid()) continue;
-        if(index.internalId()==LABEL_TIME)
+        if(index.internalId()==LABEL_MONTH)
         {
             times<<timeList.at(index.row()).first;
         }
@@ -273,7 +274,7 @@ QModelIndex LabelModel::index(int row, int column, const QModelIndex &parent) co
     {
         if(parent.row()==0)
         {
-            return row<timeList.count()?createIndex(row,column,LABEL_TIME):QModelIndex();
+            return row<timeList.count()?createIndex(row,column,LABEL_MONTH):QModelIndex();
         }
         else
         {
@@ -291,7 +292,7 @@ QModelIndex LabelModel::parent(const QModelIndex &child) const
     if (!child.isValid()) return QModelIndex();
     switch(child.internalId())
     {
-    case LABEL_TIME:
+    case LABEL_MONTH:
         return createIndex(0, 0, TYPELEVEL);
     case LABEL_TAG:
         return createIndex(1, 0, TYPELEVEL);
@@ -327,7 +328,7 @@ QVariant LabelModel::data(const QModelIndex &index, int role) const
             else if(index.row()==1)
                 return tr("Tag");
         }
-        else if(index.internalId()==LABEL_TIME)
+        else if(index.internalId()==LABEL_MONTH)
         {
             return timeList.at(index.row()).first;
         }
@@ -339,7 +340,7 @@ QVariant LabelModel::data(const QModelIndex &index, int role) const
     }
     case CountRole:
     {
-        if(index.internalId()==LABEL_TIME)
+        if(index.internalId()==LABEL_MONTH)
         {
             return timeList.at(index.row()).second;
         }

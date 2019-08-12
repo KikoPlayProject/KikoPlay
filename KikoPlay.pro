@@ -34,11 +34,16 @@ DEFINES += ZLIB_WINAPI
 CONFIG += C++11
 
 SOURCES += \
+    Download/autodownloadmanager.cpp \
     Play/Danmu/eventanalyzer.cpp \
     UI/addpool.cpp \
+    UI/addrule.cpp \
+    UI/autodownloadwindow.cpp \
     UI/danmuview.cpp \
     UI/inputdialog.cpp \
     UI/widgets/clickslider.cpp \
+    UI/widgets/dialogtip.cpp \
+    UI/widgets/fonticontoolbutton.cpp \
         main.cpp \
     UI/mainwindow.cpp \
     UI/framelesswindow.cpp \
@@ -78,7 +83,7 @@ SOURCES += \
     MediaLibrary/episodesmodel.cpp \
     Download/util.cpp \
     Download/aria2jsonrpc.cpp \
-    Download/dirselectwidget.cpp \
+    UI/widgets/dirselectwidget.cpp \
     Download/downloaditemdelegate.cpp \
     Download/downloadmodel.cpp \
     Download/torrent.cpp \
@@ -125,9 +130,12 @@ SOURCES += \
     UI/tip.cpp
 
 HEADERS += \
+    Download/autodownloadmanager.h \
     Play/Danmu/danmuviewmodel.h \
     Play/Danmu/eventanalyzer.h \
     UI/addpool.h \
+    UI/addrule.h \
+    UI/autodownloadwindow.h \
     UI/danmuview.h \
     UI/inputdialog.h \
     UI/mainwindow.h \
@@ -138,6 +146,8 @@ HEADERS += \
     Play/Danmu/Layouts/toplayout.h \
     Play/Danmu/danmupool.h \
     UI/widgets/clickslider.h \
+    UI/widgets/dialogtip.h \
+    UI/widgets/fonticontoolbutton.h \
     globalobjects.h \
     Play/Playlist/playlist.h \
     Play/Video/mpvplayer.h \
@@ -173,7 +183,7 @@ HEADERS += \
     MediaLibrary/episodesmodel.h \
     Download/util.h \
     Download/aria2jsonrpc.h \
-    Download/dirselectwidget.h \
+    UI/widgets/dirselectwidget.h \
     Download/downloaditemdelegate.h \
     Download/downloadmodel.h \
     Download/torrent.h \

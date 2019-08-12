@@ -484,6 +484,39 @@ QCheckBox::indicator:unchecked:hover {
 QCheckBox::indicator:checked {
     image: url(:/res/images/check-box-check.png);
 }
+QLineEdit,QSpinBox {
+    background-color:#fafafa;
+    border: 1px solid #dddddd;
+    padding: 2px 2px 2px 2px;
+}
+QLineEdit:hover,QSpinBox:hover {
+    background-color:#fdfdfd;
+    border: 1px solid #bcbcbc;
+}
+QSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: top right; /* position at the top right corner */
+
+    width: 16px; /* 16 + 2*1px border-width = 15px padding + 3px parent border */
+    border-image: url(:/res/images/up-arrow.png) 1;
+    border-width: 1px;
+}
+
+QSpinBox::up-button:hover {
+    border-image: url(:/res/images/up-arrow-hover.png) 1;
+}
+QSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right; /* position at bottom right corner */
+
+    width: 16px;
+    border-image: url(:/res/images/down-arrow.png) 1;
+    border-width: 1px;
+    border-top-width: 0;
+}
+QSpinBox::down-button:hover {
+    border-image: url(:/res/images/down-arrow-hover.png) 1;
+}
 QComboBox {
     background-color:#fafafa;
     border: 1px solid #dddddd;

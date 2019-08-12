@@ -54,7 +54,7 @@ QJsonObject Aria2JsonRPC::rpcCall(const QString &method, const QJsonArray &param
             }
             else
             {
-                emit showLog(tr("RPC Reply Error: %1").arg(method));
+                emit showLog(tr("[%0]RPC Reply Error: %1").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"),method));
             }
             reply->deleteLater();
         });
@@ -94,7 +94,7 @@ void Aria2JsonRPC::handleRPCReply(const QString &method, const QJsonObject &repl
         QJsonObject statusObj(replyObj.value("result").toObject());
         QString errMsg(statusObj.value("errorMessage").toString());
         if(!errMsg.isEmpty())
-            emit showLog(errMsg);
+            emit showLog(QString("[%1]%2").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"), errMsg));
         emit refreshStatus(statusObj);
     }
     else if(method=="aria2.getGlobalStat")

@@ -47,5 +47,12 @@
         <file>res/onAirSites.json</file>
         <file>res/tip</file>
         <file>res/about</file>
+        <file>res/images/checking.png</file>
+        <file>res/images/free.png</file>
+        <file>res/images/stop.png</file>
+        <file>res/images/down-arrow.png</file>
+        <file>res/images/down-arrow-hover.png</file>
+        <file>res/images/up-arrow.png</file>
+        <file>res/images/up-arrow-hover.png</file>
     </qresource>
 </RCC>

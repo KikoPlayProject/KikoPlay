@@ -904,12 +904,9 @@ QWidget *ListWindow::setupDanmulistPage()
     updatePool->setToolButtonStyle(Qt::ToolButtonTextOnly);
     updatePool->setToolTip(tr("Update Danmu Pool"));
     QObject::connect(updatePool,&QToolButton::clicked,[this](){
-        //QString poolId=GlobalObjects::danmuPool->getPoolID();
-        //if(!GlobalObjects::danmuPool->hasPool()) return;
         act_autoAssociate->setEnabled(false);
         act_addOnlineDanmu->setEnabled(false);
         act_addLocalDanmu->setEnabled(false);
-        act_editPool->setEnabled(false);
         const auto &sources =  GlobalObjects::danmuPool->getPool()->sources();
         int count=0;
         for(auto iter=sources.cbegin();iter!=sources.cend();++iter)
@@ -918,12 +915,10 @@ QWidget *ListWindow::setupDanmulistPage()
             showMessage(tr("Updating: %1").arg(iter.value().url),PopMessageFlag::PM_PROCESS);
             count+=GlobalObjects::danmuPool->getPool()->update(iter.key());
         }
-        //if(count>0) GlobalObjects::danmuPool->resetModel();
         showMessage(tr("Add %1 Danmu").arg(count),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
         act_autoAssociate->setEnabled(true);
         act_addOnlineDanmu->setEnabled(true);
         act_addLocalDanmu->setEnabled(true);
-        act_editPool->setEnabled(true);
     });
 
     QToolButton *addDanmu=new QToolButton(danmulistPage);

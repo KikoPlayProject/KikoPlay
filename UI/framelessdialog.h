@@ -8,15 +8,7 @@
 #include <QRect>
 #include <QTimer>
 class QLabel;
-class DialogTip : public QWidget
-{
-public:
-    explicit DialogTip(QWidget *parent=nullptr);
-    void showMessage(const QString &msg, int type=0);
-private:
-    QLabel *infoText;
-    QTimer hideTimer;
-};
+class DialogTip;
 #ifdef Q_OS_WIN
 class CFramelessDialog : public QDialog
 {

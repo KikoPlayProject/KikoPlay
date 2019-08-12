@@ -9,6 +9,8 @@
 #include "LANServer/lanserver.h"
 #include "Download/downloadmodel.h"
 #include "Play/Danmu/Manager/danmumanager.h"
+#include "Download/Script/scriptmanager.h"
+#include "Download/autodownloadmanager.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -28,6 +30,8 @@ AnimeLibrary *GlobalObjects::library=nullptr;
 DownloadModel *GlobalObjects::downloadModel=nullptr;
 DanmuManager *GlobalObjects::danmuManager=nullptr;
 LANServer *GlobalObjects::lanServer=nullptr;
+ScriptManager *GlobalObjects::scriptManager=nullptr;
+AutoDownloadManager *GlobalObjects::autoDownloadManager=nullptr;
 QFont GlobalObjects::iconfont;
 QString GlobalObjects::dataPath;
 namespace  {
@@ -67,6 +71,8 @@ void GlobalObjects::init()
     downloadModel=new DownloadModel();
     danmuManager=new DanmuManager();
     lanServer=new LANServer();
+    scriptManager=new ScriptManager();
+    autoDownloadManager=new AutoDownloadManager();
 
     int fontId = QFontDatabase::addApplicationFont(":/res/iconfont.ttf");
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
@@ -89,6 +95,8 @@ void GlobalObjects::clear()
     downloadModel->deleteLater();
     danmuManager->deleteLater();
     lanServer->deleteLater();
+    scriptManager->deleteLater();
+    autoDownloadManager->deleteLater();
 }
 
 QSqlDatabase GlobalObjects::getDB(int db)

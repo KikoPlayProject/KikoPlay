@@ -2,8 +2,8 @@
 #include <QPlainTextEdit>
 #include <QHBoxLayout>
 #include <QDir>
-#include "Download/dirselectwidget.h"
-AddUriTask::AddUriTask(QWidget *parent, const QStringList &uris) : CFramelessDialog(tr("Add URI"),parent,true,true,false)
+#include "widgets/dirselectwidget.h"
+AddUriTask::AddUriTask(QWidget *parent, const QStringList &uris, const QString &path) : CFramelessDialog(tr("Add URI"),parent,true,true,false)
 {
     uriEdit=new QPlainTextEdit(this);
     uriEdit->setObjectName(QStringLiteral("UriEdit"));
@@ -15,7 +15,7 @@ AddUriTask::AddUriTask(QWidget *parent, const QStringList &uris) : CFramelessDia
     }
 
     dirSelect=new DirSelectWidget(this);
-
+    if(!path.isEmpty())dirSelect->setDir(path);
     QVBoxLayout *dialogVLayout=new QVBoxLayout(this);
     dialogVLayout->addWidget(uriEdit);
     dialogVLayout->addWidget(dirSelect);

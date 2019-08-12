@@ -5,23 +5,23 @@
 class QTreeView;
 class QLabel;
 class QLineEdit;
-class ScriptManager;
 class SearchListModel;
 class QPushButton;
 class QComboBox;
+class DialogTip;
 class ResSearchWindow : public QWidget
 {
     Q_OBJECT
 public:
     explicit ResSearchWindow(QWidget *parent = nullptr);
-    void search(const QString &keyword);
+    void search(const QString &keyword, bool setSearchEdit=false);
 private:
     QTreeView *searchListView;
     QLabel *totalPageTip,*busyLabel;
     QLineEdit *searchEdit,*pageEdit;
     QPushButton *prevPage, *nextPage;
     QComboBox *scriptCombo;
-    ScriptManager *scriptManager;
+    DialogTip *dialogTip;
     SearchListModel *searchListModel;
     int totalPage,currentPage;
     bool isSearching;

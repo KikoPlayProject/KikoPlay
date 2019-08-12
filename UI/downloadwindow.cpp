@@ -31,96 +31,9 @@
 #include "globalobjects.h"
 #include "bgmlistwindow.h"
 #include "ressearchwindow.h"
-namespace
-{
-    struct FontIconToolButtonOptions
-    {
-        QChar iconChar;
-        int fontSize;
-        int iconSize;
-        int leftMargin;
-        int normalColor;
-        int hoverColor;
-        int iconTextSpace;
-    };
-    class FontIconToolButton : public QToolButton
-    {
-    public:
-        explicit FontIconToolButton(const FontIconToolButtonOptions &options, QWidget *parent=nullptr):QToolButton(parent)
-        {
-            iconLabel=new QLabel(this);
-            textLabel=new QLabel(this);
-            GlobalObjects::iconfont.setPointSize(options.iconSize);
-            iconLabel->setFont(GlobalObjects::iconfont);
-            iconLabel->setText(options.iconChar);
-            iconLabel->setMaximumWidth(iconLabel->height()+options.iconTextSpace);
-            textLabel->setFont(QFont("Microsoft Yahei",options.fontSize));
-            textLabel->setAlignment(Qt::AlignLeft|Qt::AlignVCenter);
-            QHBoxLayout *btnHLayout=new QHBoxLayout(this);
-            btnHLayout->setSpacing(0);
-            btnHLayout->addSpacing(options.leftMargin*logicalDpiX()/96);
-            btnHLayout->addWidget(iconLabel);
-            btnHLayout->addSpacing(10*logicalDpiX()/96);
-            btnHLayout->addWidget(textLabel);
-            btnHLayout->addStretch(1);
-            normalStyleSheet=QString("*{color:#%1;}").arg(options.normalColor,0,16);
-            hoverStyleSheet=QString("*{color:#%1;}").arg(options.hoverColor,0,16);
-            setNormalState();
-            QObject::connect(this,&FontIconToolButton::toggled,[this](bool toggled){
-               if(toggled)setHoverState();
-               else setNormalState();
-            });
-        }
-        void setCheckable(bool checkable)
-        {
-            if(checkable)
-            {
-                QObject::disconnect(this,&FontIconToolButton::pressed,this,&FontIconToolButton::setHoverState);
-                QObject::disconnect(this,&FontIconToolButton::released,this,&FontIconToolButton::setNormalState);
-            }
-            QToolButton::setCheckable(checkable);
-        }
-        void setText(const QString &text)
-        {
-            textLabel->setText(text);
-        }
-    protected:
-        QLabel *iconLabel,*textLabel;
-        QString normalStyleSheet,hoverStyleSheet;
-        virtual void setHoverState()
-        {
-            iconLabel->setStyleSheet(hoverStyleSheet);
-            textLabel->setStyleSheet(hoverStyleSheet);
-        }
-        virtual void setNormalState()
-        {
-            iconLabel->setStyleSheet(normalStyleSheet);
-            textLabel->setStyleSheet(normalStyleSheet);
-        }
+#include "autodownloadwindow.h"
+#include "widgets/fonticontoolbutton.h"
 
-        virtual void enterEvent(QEvent *)
-        {
-            setHoverState();
-        }
-        virtual void leaveEvent(QEvent *)
-        {
-            if(!isChecked())
-                setNormalState();
-        }
-        virtual void mousePressEvent(QMouseEvent *e)
-        {
-            setHoverState();
-			QToolButton::mousePressEvent(e);
-        }
-
-        // QWidget interface
-    public:
-        virtual QSize sizeHint() const
-        {
-            return layout()->sizeHint();
-        }
-    };
-}
 DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nullptr)
 {
     initActions();
@@ -369,7 +282,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     ResSearchWindow *resSearchWindow=new ResSearchWindow(this);
     QObject::connect(bgmListWindow,&BgmListWindow::searchBgm,this,[this,resSearchWindow](const QString &item){
         taskTypeButtonGroup->button(4)->setChecked(true);
-        resSearchWindow->search(item);
+        resSearchWindow->search(item, true);
     });
     QObject::connect(resSearchWindow,&ResSearchWindow::addTask,this,[this](const QStringList &urls){
         AddUriTask addUriTaskDialog(this,urls);
@@ -383,10 +296,40 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
             }
         }
     });
+    AutoDownloadWindow *autoDownloadWindow = new AutoDownloadWindow(this);
+    QObject::connect(autoDownloadWindow,&AutoDownloadWindow::addTask,this,[this](const QStringList &uris, bool directly, const QString &path){
+        if(directly)
+        {
+            for(const QString &uri:uris)
+            {
+                QString errInfo(GlobalObjects::downloadModel->addUriTask(uri,path,true));
+                if(!errInfo.isEmpty())
+                    logView->appendPlainText(QString("[%0]%1: %2").
+                                             arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss")).
+                                             arg(errInfo).
+                                             arg(uri));
+            }
+        }
+        else
+        {
+            AddUriTask addUriTaskDialog(this,uris,path);
+            if(QDialog::Accepted==addUriTaskDialog.exec())
+            {
+                for(QString &uri:addUriTaskDialog.uriList)
+                {
+                    QString errInfo(GlobalObjects::downloadModel->addUriTask(uri,addUriTaskDialog.dir));
+                    if(!errInfo.isEmpty())
+                        QMessageBox::information(this,tr("Error"),tr("An error occurred while adding : URI:\n %1 \n %2").arg(uri).arg(errInfo));
+                }
+            }
+        }
+    });
+
     rightPanelSLayout=new QStackedLayout();
     rightPanelSLayout->addWidget(downloadContainer);
     rightPanelSLayout->addWidget(bgmListWindow);
     rightPanelSLayout->addWidget(resSearchWindow);
+    rightPanelSLayout->addWidget(autoDownloadWindow);
 
     QGridLayout *contentGLayout=new QGridLayout(this);
     contentGLayout->addWidget(setupLeftPanel(),0,0);
@@ -506,12 +449,20 @@ QWidget *DownloadWindow::setupLeftPanel()
     resSearch->setCheckable(true);
     resSearch->setText(tr("ResSearch"));
 
+    btnOptions.iconChar=QChar(0xe610);
+    FontIconToolButton *autoDownload=new FontIconToolButton(btnOptions,leftPanel);
+    autoDownload->setObjectName(QStringLiteral("TaskTypeToolButton"));
+    autoDownload->setFixedWidth(panelWidth);
+    autoDownload->setCheckable(true);
+    autoDownload->setText(tr("AutoDownload"));
+
     taskTypeButtonGroup=new QButtonGroup(this);
     taskTypeButtonGroup->addButton(downloadingTask,1);
     taskTypeButtonGroup->addButton(completedTask,2);
     taskTypeButtonGroup->addButton(allTask,0);
     taskTypeButtonGroup->addButton(bgmList,3);
     taskTypeButtonGroup->addButton(resSearch,4);
+    taskTypeButtonGroup->addButton(autoDownload,5);
     QObject::connect(taskTypeButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[this](int id, bool checked){
         if(checked)
         {
@@ -522,13 +473,9 @@ QWidget *DownloadWindow::setupLeftPanel()
                 model->setTaskStatus(id);
                 model->setFilterKeyColumn(1);
             }
-            else if(id==3)
+            else
             {
-                rightPanelSLayout->setCurrentIndex(1);
-            }
-            else if(id==4)
-            {
-                rightPanelSLayout->setCurrentIndex(2);
+                rightPanelSLayout->setCurrentIndex(id-2);
             }
         }
     });
@@ -557,6 +504,7 @@ QWidget *DownloadWindow::setupLeftPanel()
     leftVLayout->addWidget(allTask);
     leftVLayout->addWidget(bgmList);
     leftVLayout->addWidget(resSearch);
+    leftVLayout->addWidget(autoDownload);
     leftVLayout->addStretch(1);
     QGridLayout *speedInfoGLayout=new QGridLayout();
     speedInfoGLayout->addWidget(downSpeedIconLabel,0,0);

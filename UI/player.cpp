@@ -180,7 +180,7 @@ protected:
     {
         static QColor bgColor(0,0,0,150),barColor(51,168,255,200),penColor(255,255,255);
         static QRect bRect;
-        bRect=event->rect();
+        bRect=rect();
         QPainter painter(this);
         painter.fillRect(bRect,bgColor);
         if(duration==0)return;
@@ -1267,7 +1267,7 @@ void PlayerWindow::setupSignals()
             timeTip+="\n"+desc;
         timeInfoTip->setText(timeTip);
         timeInfoTip->adjustSize();
-        int ty=danmuStatisBar->isHidden()?height()-controlPanelHeight-timeInfoTip->height():height()-controlPanelHeight-timeInfoTip->height()-statisBarHeight;
+        int ty=danmuStatisBar->isHidden()?height()-controlPanelHeight-timeInfoTip->height():height()-controlPanelHeight-timeInfoTip->height()-statisBarHeight-1;
         int nx = x-timeInfoTip->width()/3;
         if(nx+timeInfoTip->width()>width()) nx = width()-timeInfoTip->width();
         timeInfoTip->move(nx<0?0:nx,ty);
@@ -1679,6 +1679,7 @@ void PlayerWindow::closeEvent(QCloseEvent *)
     GlobalObjects::appSetting->setValue("MaxCount",maxDanmuCount->value());
     GlobalObjects::appSetting->setValue("Dense",denseLevel->currentIndex());
     GlobalObjects::appSetting->setValue("EnableMerge",enableMerge->isChecked());
+	GlobalObjects::appSetting->setValue("EnableAnalyze", enableAnalyze->isChecked());
     GlobalObjects::appSetting->setValue("EnlargeMerged",enlargeMerged->isChecked());
     GlobalObjects::appSetting->setValue("MergeInterval",mergeInterval->value());
     GlobalObjects::appSetting->setValue("MaxDiffCount",contentSimCount->value());

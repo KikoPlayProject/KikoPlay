@@ -43,7 +43,7 @@ void DownloadModel::addTask(DownloadTask *task)
     },Qt::QueuedConnection);
 }
 
-QString DownloadModel::addUriTask(const QString &uri, const QString &dir)
+QString DownloadModel::addUriTask(const QString &uri, const QString &dir, bool directlyDownload)
 {
     QString taskID(QCryptographicHash::hash(uri.toUtf8(),QCryptographicHash::Sha1).toHex());
     if(containTask(taskID))
@@ -53,7 +53,8 @@ QString DownloadModel::addUriTask(const QString &uri, const QString &dir)
         nUri = processKikoPlayCode(uri.mid(15));
     QJsonObject options;
     options.insert("dir", dir);
-    options.insert("bt-metadata-only","true");
+    if(!directlyDownload)
+        options.insert("bt-metadata-only","true");
     options.insert("bt-save-metadata","true");
 	options.insert("seed-time", QString::number(GlobalObjects::appSetting->value("Download/SeedTime", 5).toInt()));
 	options.insert("bt-tracker", GlobalObjects::appSetting->value("Download/Trackers", QStringList()).toStringList().join(','));
@@ -94,6 +95,7 @@ QString DownloadModel::addTorrentTask(const QByteArray &torrentContent, const QS
         DownloadTask *btTask=new DownloadTask();
         btTask->gid=gid;
         btTask->createTime=QDateTime::currentSecsSinceEpoch();
+        btTask->finishTime=0;
         btTask->taskID =infoHash;
         btTask->dir=dir;
         btTask->title=infoHash;

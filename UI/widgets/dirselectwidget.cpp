@@ -6,7 +6,7 @@
 #include <QFileDialog>
 #include <QStorageInfo>
 #include <QSettings>
-#include "util.h"
+#include "Download/util.h"
 #include "globalobjects.h"
 DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent), dirChanged(false)
 {

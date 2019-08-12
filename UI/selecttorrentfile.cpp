@@ -6,7 +6,7 @@
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QHeaderView>
-#include "Download/dirselectwidget.h"
+#include "widgets/dirselectwidget.h"
 #include "Download/torrent.h"
 SelectTorrentFile::SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *parent) : CFramelessDialog(tr("Add Torrent"),parent,true),model(nullptr)
 {

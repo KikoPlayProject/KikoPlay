@@ -139,6 +139,7 @@ void ScriptManager::refresh()
 
 QString ScriptManager::search(QString sid, const QString &keyword, int page, int &pageCount, QList<ResItem> &resultList)
 {
+    QMutexLocker locker(&searchMutex);
     if(sid.isEmpty())
     {
         sid = normalScriptId;

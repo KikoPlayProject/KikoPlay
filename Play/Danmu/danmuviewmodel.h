@@ -20,7 +20,7 @@ public:
     virtual int rowCount(const QModelIndex &parent) const{return parent.isValid()?0:danmuList->count();}
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const
     {
-        static QStringList headers={QObject::tr("Time"),QObject::tr("Type"),QObject::tr("User"),QObject::tr("Send Time"),tr("Content")};
+        static QStringList headers={QObject::tr("Time"),QObject::tr("Type"),QObject::tr("User"),QObject::tr("Send Time"),QObject::tr("Content")};
         if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
         {
             if(section<5)return headers[section];
