@@ -48,9 +48,9 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     ruleView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ruleView->setAlternatingRowColors(true);
     ruleView->setModel(GlobalObjects::autoDownloadManager);
-    ruleView->header()->resizeSection(1, 230 * logicalDpiX() / 96);
-    ruleView->header()->resizeSection(2, 190 * logicalDpiX() / 96);
-    ruleView->header()->resizeSection(3, 190 * logicalDpiX() / 96);
+    ruleView->header()->resizeSection(1, 220 * logicalDpiX() / 96);
+    ruleView->header()->resizeSection(2, 180 * logicalDpiX() / 96);
+    ruleView->header()->resizeSection(3, 180 * logicalDpiX() / 96);
     QObject::connect(GlobalObjects::autoDownloadManager, &AutoDownloadManager::addTask, this, [this](const QString &uri, const QString &path){
         emit this->addTask(QStringList({uri}), true, path);
     });
@@ -75,6 +75,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     urlView->setModel(GlobalObjects::autoDownloadManager->urlModel);
     urlView->header()->resizeSection(0, 500 * logicalDpiX() / 96);
     urlView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    QObject::connect(GlobalObjects::autoDownloadManager->urlModel, &URLModel::rowsInserted,urlView, &QTreeView::scrollToBottom);
 
     int pageBtnHeight=28*logicalDpiY()/96;
 
@@ -180,7 +181,7 @@ void AutoDownloadWindow::setupActions()
     ruleView->addAction(editRule);
     ruleView->addAction(removeRule);
 
-    QObject::connect(ruleView, &QTreeView::doubleClicked,[this](const QModelIndex &index){
+    QObject::connect(ruleView, &QTreeView::doubleClicked,[](const QModelIndex &index){
         DownloadRule *rule = GlobalObjects::autoDownloadManager->getRule(index);
         if(rule->state==0)
             GlobalObjects::autoDownloadManager->stopRules(QModelIndexList()<<index);
@@ -192,7 +193,7 @@ void AutoDownloadWindow::setupActions()
         if(selectedRows.size()==0)
         {
             static_cast<LogFilterProxyModel *>(logView->model())->setFilterId(-1);
-            GlobalObjects::autoDownloadManager->urlModel->setRule(nullptr);
+            GlobalObjects::autoDownloadManager->urlModel->setRule(nullptr);            
         }
         else
         {
@@ -200,6 +201,8 @@ void AutoDownloadWindow::setupActions()
             static_cast<LogFilterProxyModel *>(logView->model())->setFilterId(rule->id);
             GlobalObjects::autoDownloadManager->urlModel->setRule(rule);
         }
+        logView->scrollToBottom();
+        urlView->scrollToBottom();
     });
     QAction *copyLog=new QAction(tr("Copy"), this);
     QObject::connect(copyLog, &QAction::triggered, this, [this](){

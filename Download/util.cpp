@@ -57,7 +57,7 @@ void TorrentFile::setParentCheckStatus()
 }
 
 DownloadTask::DownloadTask(): status(Downloading),totalLength(0),completedLength(0),
-    downloadSpeed(0),uploadSpeed(0),torrentContentState(-1),fileInfo(nullptr)
+    downloadSpeed(0),uploadSpeed(0),torrentContentState(-1),directlyDownload(false),fileInfo(nullptr)
 {
 
 }

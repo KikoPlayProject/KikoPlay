@@ -448,10 +448,10 @@ DownloadRuleLog DownloadRuleLog::setLog(DownloadRule *rule, int type, const QStr
 
 void LogModel::addLog(const DownloadRuleLog &log)
 {
-    if(logList.count()>120)
+    if(logList.count()>1000)
     {
-        beginRemoveRows(QModelIndex(), 0, 20);
-        logList.erase(logList.begin(), logList.begin()+21);
+        beginRemoveRows(QModelIndex(), 0, 500);
+        logList.erase(logList.begin(), logList.begin()+501);
         endRemoveRows();
     }
     beginInsertRows(QModelIndex(), logList.count(), logList.count());

@@ -102,13 +102,6 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         act_getDetailInfo->setEnabled(hasSelection);
     });
 
-    AnimeFilterBox *filterBox=new AnimeFilterBox(this);
-    filterBox->setMinimumWidth(300*logicalDpiX()/96);
-    QObject::connect(filterBox,&AnimeFilterBox::filterChanged,[proxyModel](int type,const QString &str){
-       proxyModel->setFilterType(type);
-       proxyModel->setFilterRegExp(str);
-    });
-
     tagCollapseButton=new QPushButton(this);
     GlobalObjects::iconfont.setPointSize(8);
     tagCollapseButton->setFont(GlobalObjects::iconfont);
@@ -144,21 +137,41 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     labelView->setIndentation(16*logicalDpiX()/96);
     labelView->setItemDelegate(new LabelItemDelegate(this));
     labelView->hide();
-    labelView->setModel(GlobalObjects::library->labelModel);
+    LabelProxyModel *labelProxyModel = new LabelProxyModel(this);
+    labelProxyModel->setSourceModel(GlobalObjects::library->labelModel);
+    labelView->setModel(labelProxyModel);
+    labelView->setSortingEnabled(true);
+    labelProxyModel->sort(0, Qt::AscendingOrder);
+    labelProxyModel->setFilterKeyColumn(0);
     labelView->setContextMenuPolicy(Qt::ActionsContextMenu);
 
+    AnimeFilterBox *filterBox=new AnimeFilterBox(this);
+    filterBox->setMinimumWidth(300*logicalDpiX()/96);
+    QObject::connect(filterBox,&AnimeFilterBox::filterChanged,[proxyModel,labelProxyModel](int type,const QString &str){
+        if(type==4)
+        {
+            labelProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+            labelProxyModel->setFilterRegExp(str);
+        }
+        else
+        {
+            proxyModel->setFilterType(type);
+            proxyModel->setFilterRegExp(str);
+        }
+    });
+
     QAction *act_deleteTag=new QAction(tr("Delete"),this);
-    QObject::connect(act_deleteTag,&QAction::triggered,[this](){
+    QObject::connect(act_deleteTag,&QAction::triggered,[this,labelProxyModel](){
         QItemSelection selection=labelView->selectionModel()->selection();
         if(selection.size()==0)return;
-        GlobalObjects::library->labelModel->removeTag(selection.indexes().first());
+        GlobalObjects::library->labelModel->removeTag(labelProxyModel->mapSelectionToSource(selection).indexes().first());
     });
     labelView->addAction(act_deleteTag);
 
-    QObject::connect(labelView->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this,proxyModel](){
+    QObject::connect(labelView->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this,proxyModel,labelProxyModel](){
         QStringList tags;
         QSet<QString> times;
-        GlobalObjects::library->labelModel->selLabelList(labelView->selectionModel()->selectedIndexes(),tags,times);
+        GlobalObjects::library->labelModel->selLabelList(labelProxyModel->mapSelectionToSource(labelView->selectionModel()->selection()).indexes(),tags,times);
         proxyModel->setTags(tags);
         proxyModel->setTime(times);
     });
@@ -267,6 +280,11 @@ AnimeFilterBox::AnimeFilterBox(QWidget *parent)
     filterCrt->setData(QVariant(int(3)));
     filterCrt->setCheckable(true);
     filterTypeGroup->addAction(filterCrt);
+
+    QAction *filterTag = menu->addAction(tr("Tag"));
+    filterTag->setData(QVariant(int(4)));
+    filterTag->setCheckable(true);
+    filterTypeGroup->addAction(filterTag);
 
     connect(filterTypeGroup, &QActionGroup::triggered,[this](QAction *act){
         emit filterChanged(act->data().toInt(),this->text());

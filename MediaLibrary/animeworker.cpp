@@ -7,15 +7,26 @@
 #include <QSqlError>
 void AnimeWorker::addAnimeInfo(const QString &animeName,const QString &epName, const QString &path)
 {
-    QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
-    query.prepare("select Anime from eps where LocalFile=?");
+    QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+    query.prepare("select Name from eps where LocalFile=?");
     query.bindValue(0,path);
     query.exec();
-    if(query.first()) return;
+    if(query.first())
+    {
+        QString ep(query.value(0).toString());
+        if(ep==epName) return;
+        query.prepare("update eps set Name=? where LocalFile=?");
+        query.bindValue(0,epName);
+        query.bindValue(1,path);
+        query.exec();
+        Anime *anime=animesMap.value(animeName,nullptr);
+        if(anime) anime->eps.clear();
+        return;
+    }
     std::function<void (const QString &,const QString &,const QString &)> insertEpInfo
             = [](const QString &animeName,const QString &epName,const QString &path)
     {
-        QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
+        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
         query.prepare("insert into eps(Anime,Name,LocalFile) values(?,?,?)");
         query.bindValue(0,animeName);
         query.bindValue(1,epName);
@@ -38,7 +49,7 @@ void AnimeWorker::addAnimeInfo(const QString &animeName,const QString &epName, c
             anime->title=animeName;
             anime->epCount=0;
             anime->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
-            QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
+            QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
             query.prepare("insert into anime(Anime,AddTime,BangumiID) values(?,?,?)");
             query.bindValue(0,anime->title);
             query.bindValue(1,anime->addTime);

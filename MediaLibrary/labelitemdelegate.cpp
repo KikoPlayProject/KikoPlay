@@ -1,9 +1,11 @@
 #include "labelitemdelegate.h"
 #include <QPainter>
 #define TYPELEVEL 1
-#define LABEL_TIME 2
-#define LABEL_TAG 3
+#define LABEL_YEAR 2
+#define LABEL_MONTH 3
+#define LABEL_TAG 4
 #define CountRole Qt::UserRole+1
+#define TypeRole Qt::UserRole+2
 
 LabelItemDelegate::LabelItemDelegate(QObject *parent) : QStyledItemDelegate(parent)
 {
@@ -21,7 +23,8 @@ void LabelItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
 
     }
     QStyledItemDelegate::paint(painter, ViewOption, index);
-    if(index.internalId()==TYPELEVEL) return;
+    if(index.data(TypeRole)==TYPELEVEL) return;
+
     QRect decoration = option.rect;
     decoration.setHeight(decoration.height()-10);
     decoration.setWidth(decoration.width()/6);
@@ -34,7 +37,7 @@ void LabelItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     painter->setFont(decorationFont);
     painter->setPen(decorationPen);
     QPainterPath path;
-    path.addRoundedRect(decoration, 14, 14);
+    path.addRoundedRect(decoration, 4, 4);
     painter->fillPath(path, decorationBrush);
     int count=index.data(CountRole).toInt();
     painter->drawText(decoration, Qt::AlignCenter, count>999?"999+":QString::number(count));

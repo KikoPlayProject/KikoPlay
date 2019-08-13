@@ -159,10 +159,11 @@ void AddRule::onAccept()
     curRule->minSize=minSizeSpin->value();
     curRule->maxSize=maxSizeSpin->value();
     curRule->filePath=filePathSelector->getDir();
+    bool scriptChanged=(curRule->scriptId!=scriptIdCombo->currentData().toString());
     curRule->scriptId=scriptIdCombo->currentData().toString();
     curRule->searchInterval=searchIntervalSpin->value();
     curRule->download=downloadCombo->currentIndex()==0?true:false;
-    if(searchWordChanged)
+    if(searchWordChanged || scriptChanged)
     {
         showBusyState(true);
         int pageCount;

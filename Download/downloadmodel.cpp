@@ -53,8 +53,7 @@ QString DownloadModel::addUriTask(const QString &uri, const QString &dir, bool d
         nUri = processKikoPlayCode(uri.mid(15));
     QJsonObject options;
     options.insert("dir", dir);
-    if(!directlyDownload)
-        options.insert("bt-metadata-only","true");
+    options.insert("bt-metadata-only","true");
     options.insert("bt-save-metadata","true");
 	options.insert("seed-time", QString::number(GlobalObjects::appSetting->value("Download/SeedTime", 5).toInt()));
 	options.insert("bt-tracker", GlobalObjects::appSetting->value("Download/Trackers", QStringList()).toStringList().join(','));
@@ -70,6 +69,7 @@ QString DownloadModel::addUriTask(const QString &uri, const QString &dir, bool d
        newTask->taskID = taskID;
        newTask->dir=dir;
        newTask->title=nUri;
+       newTask->directlyDownload=directlyDownload;
        addTask(newTask);
     }
     catch(RPCError &error)
@@ -260,7 +260,7 @@ void DownloadModel::updateItemStatus(const QJsonObject &statusObj)
                 QFileInfo info(item->dir,statusObj.value("infoHash").toString()+".torrent");
                 gidMap.remove(gid);
                 emit removeTask(gid);
-                emit magnetDone(info.absoluteFilePath(),item->uri);
+                emit magnetDone(info.absoluteFilePath(),item->uri, item->directlyDownload);
                 removeItem(item,true);
             }
             else

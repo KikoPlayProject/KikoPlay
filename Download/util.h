@@ -50,7 +50,7 @@ struct DownloadTask
 
     QString uri;
     int torrentContentState; //-1:unknown 0:no torrent 1:has torrent
-    //bool directlyDownload; //for magnet: whether to open the SelectTorrentFile dialog
+    bool directlyDownload; //for magnet: whether to open the SelectTorrentFile dialog
     QByteArray torrentContent;
     QString selectedIndexes;
     TorrentFileInfo *fileInfo;

@@ -362,18 +362,34 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 
     QObject::connect(rpc,&Aria2JsonRPC::showLog,logView,&QPlainTextEdit::appendPlainText);
 
-    QObject::connect(GlobalObjects::downloadModel,&DownloadModel::magnetDone,[this](const QString &path, const QString &magnet){
+    QObject::connect(GlobalObjects::downloadModel,&DownloadModel::magnetDone,[this](const QString &path, const QString &magnet, bool directlyDownload){
         try
         {
             TorrentDecoder decoder(path);
-            SelectTorrentFile selectTorrentFile(decoder.root,this);
-            QCoreApplication::processEvents();
-            if(QDialog::Accepted==selectTorrentFile.exec())
+            if(directlyDownload)
             {
-                QString errInfo(GlobalObjects::downloadModel->addTorrentTask(decoder.rawContent,decoder.infoHash,
-                                                             selectTorrentFile.dir,selectTorrentFile.selectIndexes,magnet));
+                TorrentFileModel model(decoder.root);
+                model.checkAll(true);
+                QFileInfo torrentFile(path);
+                QString errInfo=GlobalObjects::downloadModel->addTorrentTask(decoder.rawContent,decoder.infoHash,
+                                                                            torrentFile.absoluteDir().absolutePath(),model.getCheckedIndex(),magnet);
                 if(!errInfo.isEmpty())
-                    QMessageBox::information(this,tr("Error"),tr("An error occurred while adding Torrent : \n %1 ").arg(errInfo));
+                    logView->appendPlainText(QString("[%0]%1: %2").
+                                             arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss")).
+                                             arg(errInfo).
+                                             arg(magnet));
+            }
+            else
+            {
+                SelectTorrentFile selectTorrentFile(decoder.root,this);
+                QCoreApplication::processEvents();
+                if(QDialog::Accepted==selectTorrentFile.exec())
+                {
+                    QString errInfo(GlobalObjects::downloadModel->addTorrentTask(decoder.rawContent,decoder.infoHash,
+                                                                 selectTorrentFile.dir,selectTorrentFile.selectIndexes,magnet));
+                    if(!errInfo.isEmpty())
+                        QMessageBox::information(this,tr("Error"),tr("An error occurred while adding Torrent : \n %1 ").arg(errInfo));
+                }
             }
             delete decoder.root;
         }
@@ -547,7 +563,18 @@ QWidget *DownloadWindow::setupFileInfoPage()
         TorrentFile *item = static_cast<TorrentFile*>(index.internalPointer());
         if(currentTask && item->index>0 && item->completedSize==item->size)
         {
-            QFileInfo info(currentTask->dir,item->name);
+            QString dir(currentTask->dir);
+            TorrentFile *root(item),*curItem(item->parent);
+            while(root->parent) root=root->parent;
+            QStringList folders;
+            while(curItem && curItem!=root)
+            {
+                folders.push_front(curItem->name);
+                curItem=curItem->parent;
+            }
+            if(root->children.count()>1) folders.push_front(root->name);
+            if(folders.count()>0) dir+="/" + folders.join('/');
+            QFileInfo info(dir,item->name);
             if(!info.exists())
             {
                 QMessageBox::information(this,"KikoPlay",tr("File Not Exist"));
