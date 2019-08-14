@@ -130,6 +130,7 @@ SOURCES += \
     UI/tip.cpp
 
 HEADERS += \
+    Common/kcache.h \
     Download/autodownloadmanager.h \
     Play/Danmu/danmuviewmodel.h \
     Play/Danmu/eventanalyzer.h \

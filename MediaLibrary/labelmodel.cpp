@@ -20,7 +20,7 @@ LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
                 tagMap.insert(tag,QSet<QString>({title}));
                 int insPos = tagCollectionNode->subNodes->size();
                 beginInsertRows(createIndex(1,0,tagCollectionNode),insPos,insPos);
-                new TagNode(title, tagCollectionNode, 1, LABEL_TAG);
+                new TagNode(tag, tagCollectionNode, 1, LABEL_TAG);
                 endInsertRows();
             }
             else

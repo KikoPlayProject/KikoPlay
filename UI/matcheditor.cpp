@@ -10,6 +10,10 @@
 #include <QPushButton>
 #include <QTreeWidget>
 #include <QButtonGroup>
+#include <QAction>
+#include <QClipboard>
+#include <QApplication>
+#include "Common/kcache.h"
 #include "globalobjects.h"
 MatchEditor::MatchEditor(const PlayListItem *item, MatchInfo *matchInfo, QWidget *parent) : CFramelessDialog(tr("Edit Match"),parent,true)
 {
@@ -69,6 +73,19 @@ MatchEditor::MatchEditor(const PlayListItem *item, MatchInfo *matchInfo, QWidget
     animeEdit->setText(item->animeTitle);
     subtitleEdit->setText(item->title);
     this->matchInfo=nullptr;
+
+    if(!item->animeTitle.isEmpty())
+    {
+        MatchInfo *match=GlobalObjects::kCache->get<MatchInfo>(QString::number(searchLocation)+item->animeTitle);
+        if(match)
+        {
+            for(MatchInfo::DetailInfo &detailInfo:match->matches)
+            {
+                new QTreeWidgetItem(searchResult,QStringList()<<detailInfo.animeTitle<<detailInfo.title);
+            }
+            delete match;
+        }
+    }
     resize(GlobalObjects::appSetting->value("DialogSize/MatchEditor",QSize(400*logicalDpiX()/96,400*logicalDpiY()/96)).toSize());
 
 }
@@ -110,12 +127,23 @@ QWidget *MatchEditor::setupSearchPage(MatchInfo *matchInfo)
     searchResult->setRootIsDecorated(false);
     searchResult->setFont(searchPage->font());
     searchResult->setHeaderLabels(QStringList()<<tr("Anime Title")<<tr("Subtitle"));
+    searchResult->setContextMenuPolicy(Qt::ActionsContextMenu);
+
+    QAction *copy=new QAction(tr("Copy"), this);
+    QObject::connect(copy, &QAction::triggered, this, [this](){
+        auto selectedItems=searchResult->selectedItems();
+        if(selectedItems.count()==0) return;
+        QTreeWidgetItem *selectedItem=selectedItems.first();
+        QClipboard *cb = QApplication::clipboard();
+        cb->setText(QString("%1 %2").arg(selectedItem->data(0,0).toString(), selectedItem->data(1,0).toString()));
+    });
+    searchResult->addAction(copy);
+
     if(matchInfo)
     {
         for(MatchInfo::DetailInfo &detailInfo:matchInfo->matches)
         {
-            QTreeWidgetItem *item=new QTreeWidgetItem(searchResult,
-                                                      QStringList()<<detailInfo.animeTitle<<detailInfo.title);
+            new QTreeWidgetItem(searchResult, QStringList()<<detailInfo.animeTitle<<detailInfo.title);
         }
     }
     QGridLayout *searchPageGLayout=new QGridLayout(searchPage);
@@ -171,9 +199,9 @@ void MatchEditor::search()
             searchResult->clear();
             for(MatchInfo::DetailInfo &detailInfo:sInfo->matches)
             {
-                QTreeWidgetItem *item=new QTreeWidgetItem(searchResult,
-                                                          QStringList()<<detailInfo.animeTitle<<detailInfo.title);
+                new QTreeWidgetItem(searchResult,QStringList()<<detailInfo.animeTitle<<detailInfo.title);
             }
+            GlobalObjects::kCache->put(QString::number(searchLocation)+keyword, *sInfo);
         }
         delete sInfo;
     }

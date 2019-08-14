@@ -109,6 +109,10 @@ struct MatchInfo
     };
     QList<DetailInfo> matches;
 };
+QDataStream &operator<<(QDataStream &stream, const MatchInfo &match);
+QDataStream &operator>>(QDataStream &stream, MatchInfo &match);
+QDataStream &operator<<(QDataStream &stream, const MatchInfo::DetailInfo &md);
+QDataStream &operator>>(QDataStream &stream, MatchInfo::DetailInfo &md);
 struct DanmuSourceInfo
 {
     int id;

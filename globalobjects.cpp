@@ -11,6 +11,7 @@
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Download/Script/scriptmanager.h"
 #include "Download/autodownloadmanager.h"
+#include "Common/kcache.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -32,6 +33,7 @@ DanmuManager *GlobalObjects::danmuManager=nullptr;
 LANServer *GlobalObjects::lanServer=nullptr;
 ScriptManager *GlobalObjects::scriptManager=nullptr;
 AutoDownloadManager *GlobalObjects::autoDownloadManager=nullptr;
+KCache *GlobalObjects::kCache=nullptr;
 QFont GlobalObjects::iconfont;
 QString GlobalObjects::dataPath;
 namespace  {
@@ -73,6 +75,7 @@ void GlobalObjects::init()
     lanServer=new LANServer();
     scriptManager=new ScriptManager();
     autoDownloadManager=new AutoDownloadManager();
+    kCache=new KCache(128);
 
     int fontId = QFontDatabase::addApplicationFont(":/res/iconfont.ttf");
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
@@ -97,6 +100,7 @@ void GlobalObjects::clear()
     lanServer->deleteLater();
     scriptManager->deleteLater();
     autoDownloadManager->deleteLater();
+    delete kCache;
 }
 
 QSqlDatabase GlobalObjects::getDB(int db)

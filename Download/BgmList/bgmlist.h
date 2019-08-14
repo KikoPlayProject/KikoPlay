@@ -14,16 +14,17 @@ struct BgmItem
     bool focus;
     bool isNew;
 };
-class BgmWorker : public QObject
+struct BgmSeason
 {
-    Q_OBJECT
-public:
-    explicit BgmWorker(QObject *parent = nullptr):QObject(parent){}
-public slots:
-    void fetchListInfo(int localYear, int localMonth, const QString &dataVersion, bool forceRefresh);
-signals:
-    void fetchDone(const QString &errInfo, const QString &content, int nYear,int nMonth,const QString &nDataVersion);
+    QList<BgmItem> bgmList;
+    QSet<QString> focusSet;
+    QString id;
+    QString version;
+    QString path;
+    QString latestVersion;
+    int newBgmCount;
 };
+
 class BgmList : public QAbstractItemModel
 {
     Q_OBJECT
@@ -31,12 +32,14 @@ public:
     explicit BgmList(QObject *parent = nullptr);
     ~BgmList();
     void init();
-    const QList<BgmItem> &bgmList(){return bgms;}
-    void refreshData(bool forceRefresh=false);
+    const QStringList &seasonList(){return seasons;}
+    const QList<BgmItem> &bgmList(){return curSeason->bgmList;}
+    void setSeason(const QString &id);
+    void refresh();
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
-    inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:bgms.count();}
+    inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:(curSeason?curSeason->bgmList.count():0);}
     inline virtual int columnCount(const QModelIndex &parent) const{return parent.isValid()?0:4;}
     inline virtual Qt::ItemFlags flags(const QModelIndex &index) const {return index.column()==3?(QAbstractItemModel::flags(index)|Qt::ItemIsUserCheckable):QAbstractItemModel::flags(index);}
     virtual QVariant data(const QModelIndex &index, int role) const;
@@ -45,20 +48,22 @@ public:
 signals:
     //1:static 2:process 3: refresh
     void bgmStatusUpdated(int type, const QString &msg);
+    void seasonsUpdated();
 private:
     bool inited;
     bool needSave;
-    bool showOnlyFocus;
-    int curWeek;
-    int localYear,localMonth;
-    int newBgmCount;
-    QString dataVersion;
     QMap<QString,QString> sitesName;
-    QSet<QString> focusSet;
-    QList<BgmItem> bgms;
-    BgmWorker *bgmWorker;
-    bool loadLocal();
-    void saveLocal();
+    bool seasonsDownloaded, curSeasonDownloaded;
+    QMap<QString, BgmSeason> bgmSeasons;
+    QStringList seasons;
+    BgmSeason *curSeason;
+
+    bool fetchMetaInfo();
+    bool fetchBgmList(BgmSeason &season);
+    bool loadLocal(BgmSeason &season);
+    void saveLocal(const BgmSeason &season);
+    bool getLocalSeasons();
+
     QString getSiteName(const QString &url);
 
 };

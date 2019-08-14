@@ -493,6 +493,10 @@ QLineEdit:hover,QSpinBox:hover {
     background-color:#fdfdfd;
     border: 1px solid #bcbcbc;
 }
+QLineEdit:focus,QSpinBox:focus {
+    background-color: #ffffff;
+    border: 1px solid #2BA9EC;
+}
 QSpinBox::up-button {
     subcontrol-origin: border;
     subcontrol-position: top right; /* position at the top right corner */

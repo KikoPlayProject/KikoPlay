@@ -64,15 +64,12 @@ void DanmuManager::loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList)
                     Pool *pool = pools.value(query.value(pidNo).toString(),nullptr);
                     Q_ASSERT(pool);
                     int src_id=query.value(srcNo).toInt();
-                    for(auto &src:pool->sourcesTable)
+                    if(pool->sourcesTable.contains(src_id))
                     {
-                        if(src.id==src_id)
-                        {
-                            src.count=query.value(countNo).toInt();
-                            break;
-                        }
+                        pool->sourcesTable[src_id].count=query.value(countNo).toInt();
                     }
                 }
+
             }
             return 0;
         });

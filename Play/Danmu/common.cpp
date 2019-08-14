@@ -177,3 +177,23 @@ QDataStream &operator>>(QDataStream &stream, DanmuSourceInfo &src)
     if(!timeline.isEmpty()) src.setTimeline(timeline);
     return stream;
 }
+
+QDataStream &operator<<(QDataStream &stream, const MatchInfo &match)
+{
+    return stream<<match.success<<match.error<<match.errorInfo<<match.poolID<<match.fileHash<<match.matches;
+}
+
+QDataStream &operator>>(QDataStream &stream, MatchInfo &match)
+{
+    return stream>>match.success>>match.error>>match.errorInfo>>match.poolID>>match.fileHash>>match.matches;
+}
+
+QDataStream &operator<<(QDataStream &stream, const MatchInfo::DetailInfo &md)
+{
+    return stream<<md.title<<md.animeTitle;
+}
+
+QDataStream &operator>>(QDataStream &stream, MatchInfo::DetailInfo &md)
+{
+    return stream>>md.title>>md.animeTitle;
+}

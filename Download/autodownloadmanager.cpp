@@ -405,9 +405,9 @@ void DownloadRuleChecker::fetchInfo(DownloadRule *rule)
 bool DownloadRuleChecker::satisfyRule(ResItem *item, DownloadRule *rule, const QList<QRegExp> &filterRegExps)
 {
     static QRegExp re("(\\d+(?:\\.\\d+)?)\\s*([KkMmGgTt])i?B|b");
-    for(auto &re:filterRegExps)
+    for(auto &r:filterRegExps)
     {
-        if(!item->title.contains(re)) return false;
+        if(!item->title.contains(r)) return false;
     }
     if(rule->minSize==0 && rule->maxSize==0) return true;
     if(re.indexIn(item->size)==-1) return false;

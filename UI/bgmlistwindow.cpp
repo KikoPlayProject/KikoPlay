@@ -9,6 +9,8 @@
 #include <QHeaderView>
 #include <QMenu>
 #include <QDesktopServices>
+#include <QComboBox>
+#include <QApplication>
 #include <QStyledItemDelegate>
 #include "globalobjects.h"
 #include "MediaLibrary/animelibrary.h"
@@ -71,17 +73,36 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     });
     filterButtonGroup->button(weekDay)->setChecked(true);
     btnHLayout->addStretch(1);
+
+    QComboBox *seasonIdCombo=new QComboBox(this);
+    seasonIdCombo->view()->setMinimumWidth(seasonIdCombo->view()->fontMetrics().width("0000-00") +
+                                           QApplication::style()->pixelMetric(QStyle::PixelMetric::PM_ScrollBarExtent) +
+                                           seasonIdCombo->view()->autoScrollMargin());
+    seasonIdCombo->addItems(bgmList->seasonList());
+    QObject::connect(seasonIdCombo, (void (QComboBox::*)(const QString &))&QComboBox::currentIndexChanged,this,[this,seasonIdCombo](const QString &id){
+        seasonIdCombo->setEnabled(false);
+        bgmListView->setEnabled(false);
+        bgmList->setSeason(id);
+        seasonIdCombo->setEnabled(true);
+        bgmListView->setEnabled(true);
+    });
+    QObject::connect(bgmList, &BgmList::seasonsUpdated, this, [this,seasonIdCombo](){
+       seasonIdCombo->clear();
+       seasonIdCombo->addItems(bgmList->seasonList());
+       seasonIdCombo->setCurrentIndex(seasonIdCombo->count()-1);
+    });
+    btnHLayout->addWidget(seasonIdCombo);
+
     QLabel *infoLabel=new QLabel(this);
     btnHLayout->addWidget(infoLabel);
     QPushButton *refreshBtn=new QPushButton(tr("Refresh"),this);
     btnHLayout->addWidget(refreshBtn);
 
-    QLabel *bgmLabel=new QLabel("<a href = \"https://bgmlist.com/\">BgmList</a>", this);
-    bgmLabel->setOpenExternalLinks(true);
-    btnHLayout->addWidget(bgmLabel);
-    QObject::connect(refreshBtn,&QPushButton::clicked,this,[this,bgmListProxyModel](){
-       bgmList->refreshData(true);
-       bgmListProxyModel->invalidate();
+    QObject::connect(refreshBtn,&QPushButton::clicked,this,[this,bgmListProxyModel,seasonIdCombo](){
+        seasonIdCombo->setEnabled(false);
+        bgmList->refresh();
+        bgmListProxyModel->invalidate();
+        seasonIdCombo->setEnabled(true);
     });
     QObject::connect(bgmList,&BgmList::bgmStatusUpdated,this,[infoLabel,refreshBtn](int type,const QString &msg){
         infoLabel->setText(msg);
