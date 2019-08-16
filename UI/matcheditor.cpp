@@ -68,6 +68,7 @@ MatchEditor::MatchEditor(const PlayListItem *item, MatchInfo *matchInfo, QWidget
     QString matchStr=item->poolID.isEmpty()?tr("No Match Info"):QString("%1-%2").arg(item->animeTitle).arg(item->title);
     QLabel *matchInfoLabel=new QLabel(matchStr,this);
     matchInfoLabel->setFont(QFont("Microsoft YaHei UI",10,QFont::Bold));
+    matchInfoLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     matchVLayout->addWidget(matchInfoLabel);
     keywordEdit->setText(item->animeTitle.isEmpty()?item->title:item->animeTitle);
     animeEdit->setText(item->animeTitle);

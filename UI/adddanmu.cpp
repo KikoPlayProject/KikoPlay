@@ -628,7 +628,7 @@ void RelWordWidget::setRelWordList(const QStringList &relWords)
     for(auto &rel:relWords)
     {
         QPushButton *relBtn=new QPushButton(rel, this);
-		relBtn->setObjectName(QStringLiteral("FlatButton"));
+        relBtn->setObjectName(QStringLiteral("LinkFlatButton"));
         QObject::connect(relBtn, &QPushButton::clicked, this, [relBtn, this](){
            emit relWordClicked(relBtn->text());
         });

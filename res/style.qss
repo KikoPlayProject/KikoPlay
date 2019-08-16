@@ -408,14 +408,14 @@ QMenu::item:selected:enabled {
     background-color: #32a7fe;
     color:#ffffff;
 }
-QMenu::indicator:exclusive:checked {
+QMenu::indicator:checked {
   image: url(:/res/images/check-normal.png);
   width:24px;
   height:24px;
   margin:4px;
 }
 
-QMenu::indicator:exclusive:checked:selected {
+QMenu::indicator:checked:selected {
   image: url(:/res/images/check-hover.png);
   width:24px;
   height:24px;
@@ -574,6 +574,20 @@ QPushButton:pressed{
     background-color:rgb(255,255,255);
 }
 #FlatButton:pressed{
+    border-color:rgb(150,150,150);
+    background-color:rgb(231,231,231);
+}
+#LinkFlatButton{
+    border:1px solid #ebebeb;
+    background-color:transparent;
+    color:#47a0e9;
+    padding:4px 4px 4px 4px;
+}
+#LinkFlatButton:hover{
+    border:1px solid #dddddd;
+    background-color:rgb(255,255,255);
+}
+#LinkFlatButton:pressed{
     border-color:rgb(150,150,150);
     background-color:rgb(231,231,231);
 }
