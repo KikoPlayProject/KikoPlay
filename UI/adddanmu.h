@@ -72,6 +72,21 @@ public:
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
 };
+class RelWordWidget : public QWidget
+{
+    Q_OBJECT
+public:
+    explicit RelWordWidget(QWidget *parent=nullptr);
+    void setRelWordList(const QStringList &relWords);
+    bool isEmpty() const {return relBtns.isEmpty();}
+private:
+    QList<QPushButton *> relBtns;
+signals:
+    void relWordClicked(const QString &relWord);
+    // QWidget interface
+public:
+    virtual QSize sizeHint() const;
+};
 
 class AddDanmu : public CFramelessDialog
 {
@@ -91,6 +106,8 @@ private:
     QString providerId;
     QStringList danmuPools;
     DanmuItemModel *danmuItemModel;
+    RelWordWidget *relWordWidget;
+    QString themeWord;
 
     void search();
     void addSearchItem(DanmuAccessResult *result);

@@ -20,10 +20,69 @@
 #include "danmuview.h"
 #include "Play/Danmu/blocker.h"
 #include "globalobjects.h"
+namespace
+{
 
+    class RelWordCache
+    {
+    public:
+        explicit RelWordCache():cacheChanged(false)
+        {
+             QFile cacheFile(GlobalObjects::dataPath + "relCache");
+             if(cacheFile.open(QIODevice::ReadOnly))
+             {
+                QDataStream fs(&cacheFile);
+                fs>>relWordHash;
+             }
+        }
+        QStringList get(const QString &word)
+        {
+            return relWordHash.value(word);
+        }
+        void put(const QString &word, const QString &rel)
+        {
+            if(!relWordHash.contains(word))
+            {
+                relWordHash.insert(word, {rel});
+            }
+            else
+            {
+                QStringList &rels=relWordHash[word];
+                if(rels.contains(rel)) rels.removeOne(rel);
+                rels.push_front(rel);
+            }
+            cacheChanged=true;
+        }
+        void save()
+        {
+            if(cacheChanged)
+            {
+                QFile cacheFile(GlobalObjects::dataPath + "relCache");
+                if(cacheFile.open(QIODevice::WriteOnly))
+                {
+                    QDataStream fs(&cacheFile);
+                    for(auto &list:relWordHash)
+                    {
+                        if(list.count()>5)
+                        {
+                            list.erase(list.begin()+1, list.end());
+                        }
+                    }
+                    fs<<relWordHash;
+                }
+            }
+            cacheChanged=false;
+        }
+    private:
+        QHash<QString, QStringList> relWordHash;
+        bool cacheChanged;
+    };
+    RelWordCache *relCache=nullptr;
+}
 AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,const QStringList &poolList) : CFramelessDialog(tr("Add Danmu"),parent,true,true,autoPauseVideo),
     danmuPools(poolList),processCounter(0)
 {
+    if(!relCache) relCache=new RelWordCache();
     danmuItemModel=new DanmuItemModel(this,!danmuPools.isEmpty(),item?item->title:"",this);
 
     QVBoxLayout *danmuVLayout=new QVBoxLayout(this);
@@ -94,6 +153,11 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,
     keywordEdit->installEventFilter(this);
     searchButton->setAutoDefault(false);
     searchButton->setDefault(false);
+    if(item && !item->animeTitle.isEmpty())
+    {
+        themeWord=item->animeTitle;
+        relWordWidget->setRelWordList(relCache->get(themeWord));
+    }
     resize(GlobalObjects::appSetting->value("DialogSize/AddDanmu",QSize(600*logicalDpiX()/96,500*logicalDpiY()/96)).toSize());
 }
 
@@ -110,6 +174,10 @@ void AddDanmu::search()
         showMessage(searchResult->errorInfo,1);
     else
     {
+        if(!themeWord.isEmpty() && themeWord!=keyword)
+        {
+            relCache->put(themeWord, keyword);
+        }
         providerId=tmpProviderId;
         searchResultWidget->clear();
         searchResultWidget->setEnabled(true);
@@ -120,6 +188,10 @@ void AddDanmu::search()
                 beginProcrss();
                 DanmuAccessResult *result=GlobalObjects::providerManager->getEpInfo(providerId,item);
                 addSearchItem(result);
+                if(result->providerId=="Bilibili" || result->providerId=="AcFun" || result->providerId=="Gamer")
+                {
+                    if(item->title!=themeWord) relCache->put(themeWord, item->title);
+                }
                 delete result;
                 endProcess();
             });
@@ -228,14 +300,20 @@ QWidget *AddDanmu::setupSearchPage()
     keywordEdit=new QLineEdit(searchPage);
     searchButton=new QPushButton(tr("Search"),searchPage);
     QObject::connect(searchButton,&QPushButton::clicked,this,&AddDanmu::search);
+    relWordWidget=new RelWordWidget(this);
     searchResultWidget=new QListWidget(searchPage);
+    QObject::connect(relWordWidget, &RelWordWidget::relWordClicked, [this](const QString &relWord){
+       keywordEdit->setText(relWord);
+       search();
+    });
     QGridLayout *searchPageGLayout=new QGridLayout(searchPage);
     searchPageGLayout->addWidget(sourceCombo,0,0);
     searchPageGLayout->addWidget(keywordEdit,0,1);
     searchPageGLayout->addWidget(searchButton,0,2);
-    searchPageGLayout->addWidget(searchResultWidget,1,0,1,3);
+    searchPageGLayout->addWidget(relWordWidget,1,0,1,3);
+    searchPageGLayout->addWidget(searchResultWidget,2,0,1,3);
     searchPageGLayout->setColumnStretch(1,1);
-    searchPageGLayout->setRowStretch(1,1);
+    searchPageGLayout->setRowStretch(2,1);
 
     return searchPage;
 }
@@ -310,6 +388,7 @@ void AddDanmu::beginProcrss()
     processCounter++;
     showBusyState(true);
     searchButton->setEnabled(false);
+    relWordWidget->setEnabled(false);
     keywordEdit->setEnabled(false);
 }
 
@@ -320,6 +399,7 @@ void AddDanmu::endProcess()
     {
         searchButton->setEnabled(true);
         keywordEdit->setEnabled(true);
+        relWordWidget->setEnabled(true);
         showBusyState(false);
     }
 }
@@ -336,6 +416,7 @@ void AddDanmu::onAccept()
         }
     }
     GlobalObjects::appSetting->setValue("DialogSize/AddDanmu",size());
+    relCache->save();
     CFramelessDialog::onAccept();
 }
 
@@ -346,6 +427,7 @@ void AddDanmu::onClose()
         qDeleteAll((*iter).second);
     }
     GlobalObjects::appSetting->setValue("DialogSize/AddDanmu",size());
+    relCache->save();
     CFramelessDialog::onClose();
 }
 
@@ -530,4 +612,34 @@ void PoolComboDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
         return;
     }
     QStyledItemDelegate::setModelData(editor,model,index);
+}
+
+RelWordWidget::RelWordWidget(QWidget *parent):QWidget(parent)
+{
+    QHBoxLayout *relHLayout = new QHBoxLayout(this);
+    relHLayout->setContentsMargins(0,0,0,0);
+    relHLayout->addStretch(1);
+    setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
+}
+
+void RelWordWidget::setRelWordList(const QStringList &relWords)
+{
+    qDeleteAll(relBtns);
+    for(auto &rel:relWords)
+    {
+        QPushButton *relBtn=new QPushButton(rel, this);
+		relBtn->setObjectName(QStringLiteral("FlatButton"));
+        QObject::connect(relBtn, &QPushButton::clicked, this, [relBtn, this](){
+           emit relWordClicked(relBtn->text());
+        });
+        relBtns<<relBtn;
+        static_cast<QHBoxLayout *>(layout())->insertWidget(0,relBtn);
+    }
+    if(relBtns.isEmpty()) hide();
+    else show();
+}
+
+QSize RelWordWidget::sizeHint() const
+{
+    return layout()->sizeHint();
 }
