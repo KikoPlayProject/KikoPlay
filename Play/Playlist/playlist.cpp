@@ -15,6 +15,8 @@
 #include "Play/Danmu/Manager/pool.h"
 #include "MediaLibrary/animelibrary.h"
 
+#define BgmCollectionRole Qt::UserRole+1
+
 namespace
 {
     static QCollator comparer;
@@ -40,6 +42,24 @@ PlayList::PlayList(QObject *parent) : QAbstractItemModel(parent), d_ptr(new Play
     comparer.setNumericMode(true);
     d->loadRecentlist();
     d->loadPlaylist();
+    qRegisterMetaType<QList<PlayListItem *> >("QList<PlayListItem *>");
+    matchWorker=new MatchWorker();
+    matchWorker->moveToThread(GlobalObjects::workThread);
+    QObject::connect(GlobalObjects::workThread, &QThread::finished, matchWorker, &QObject::deleteLater);
+    QObject::connect(matchWorker,&MatchWorker::message, this, &PlayList::message);
+    QObject::connect(matchWorker, &MatchWorker::matchDown, this, [this](const QList<PlayListItem *> &matchedItems){
+        Q_D(PlayList);
+        d->playListChanged = true;
+        for(auto currentItem : matchedItems)
+        {
+            QModelIndex nIndex = createIndex(currentItem->parent->children->indexOf(currentItem), 0, currentItem);
+            emit dataChanged(nIndex, nIndex);
+            if (currentItem == d->currentItem) emit currentMatchChanged(currentItem->poolID);
+            autoMoveToBgmCollection(nIndex);
+        }
+        d->savePlaylist();
+        emit matchStatusChanged(false);
+    });
 }
 
 PlayList::~PlayList()
@@ -97,16 +117,6 @@ QList<QPair<QString, QString> > &PlayList::recent()
 int PlayList::addItems(QStringList &items, QModelIndex parent)
 {
     Q_D(PlayList);
-    int insertPosition(0);
-    PlayListItem *parentItem = parent.isValid() ? static_cast<PlayListItem*>(parent.internalPointer()) : d->root;
-	if(parentItem->children)
-        insertPosition = parentItem->children->size();
-	else
-	{
-        insertPosition = parentItem->parent->children->indexOf(parentItem) + 1;
-		parentItem = parentItem->parent;
-		parent = this->parent(parent);
-	}
 	QStringList tmpItems;
     for(auto iter=items.cbegin();iter!=items.cend();++iter)
     {
@@ -118,6 +128,17 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
         emit message(tr("File exist or Unsupported format"), PM_HIDE|PM_INFO);
         return 0;
     }
+    int insertPosition(0);
+    PlayListItem *parentItem = parent.isValid() ? static_cast<PlayListItem*>(parent.internalPointer()) : d->root;
+    if(parentItem->children)
+        insertPosition = parentItem->children->size();
+    else
+    {
+        insertPosition = parentItem->parent->children->indexOf(parentItem) + 1;
+        parentItem = parentItem->parent;
+        parent = this->parent(parent);
+    }
+    QList<PlayListItem *> matchItems;
     beginInsertRows(parent, insertPosition, insertPosition+ tmpItems.count()-1);
     for (const QString &item : tmpItems)
 	{
@@ -127,11 +148,19 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
         newItem->title = title;
 		newItem->path = item;
         d->fileItems.insert(newItem->path,newItem);
+        if(d->autoMatch) matchItems<<newItem;
 	}
 	endInsertRows();
     d->playListChanged=true;
     d->needRefresh = true;
     emit message(tr("Add %1 item(s)").arg(tmpItems.size()),PM_HIDE|PM_OK);
+    if(d->autoMatch && matchItems.count()>0)
+    {
+        emit matchStatusChanged(true);
+        QMetaObject::invokeMethod(matchWorker, [this, matchItems](){
+            matchWorker->match(matchItems);
+        },Qt::QueuedConnection);
+    }
     return tmpItems.size();
 }
 
@@ -154,16 +183,44 @@ int PlayList::addFolder(QString folderStr, QModelIndex parent)
     PlayListItem folderRootCollection;
     int itemCount=0;
     d->addSubFolder(folderStr, &folderRootCollection,itemCount);
+    QList<PlayListItem *> matchItems;
     if (folderRootCollection.children->count())
 	{
+        PlayListItem *folderRoot(folderRootCollection.children->first());
         beginInsertRows(parent, insertPosition, insertPosition);
-        folderRootCollection.children->first()->moveTo(parentItem, insertPosition);
+        folderRoot->moveTo(parentItem, insertPosition);
 		endInsertRows();
         d->playListChanged=true;
         d->needRefresh = true;
+        if(d->autoMatch)
+        {
+            QList<PlayListItem *> items({folderRoot});
+            while(!items.empty())
+            {
+                PlayListItem *currentItem=items.takeFirst();
+                if(currentItem->children)
+                {
+                    for(PlayListItem *child:*currentItem->children)
+                    {
+                        items.push_back(child);
+                    }
+                }
+                else if(currentItem->poolID.isEmpty())
+                {
+                    matchItems<<currentItem;
+                }
+            }
+        }
 	}
-    folderRootCollection.children->clear();
+    //folderRootCollection.children->clear();
     emit message(tr("Add %1 item(s)").arg(itemCount),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
+    if(d->autoMatch && matchItems.count()>0)
+    {
+        emit matchStatusChanged(true);
+        QMetaObject::invokeMethod(matchWorker, [this, matchItems](){
+            matchWorker->match(matchItems);
+        },Qt::QueuedConnection);
+    }
     return itemCount;
 }
 
@@ -346,6 +403,54 @@ void PlayList::moveUpDown(QModelIndex index, bool up)
     d->needRefresh = true;
 }
 
+void PlayList::switchBgmCollection(const QModelIndex &index)
+{
+    Q_D(PlayList);
+    if(!index.isValid())return;
+    PlayListItem *item= static_cast<PlayListItem*>(index.internalPointer());
+    if(!item->children) return;
+    item->isBgmCollection=!item->isBgmCollection;
+    if(item->isBgmCollection)
+    {
+        d->bgmCollectionItems.insert(item->title, item);
+    }
+    else
+    {
+        d->bgmCollectionItems.remove(item->title);
+    }
+    d->playListChanged=true;
+    emit dataChanged(index, index);
+}
+
+void PlayList::autoMoveToBgmCollection(const QModelIndex &index)
+{
+    Q_D(PlayList);
+    PlayListItem *currentItem= static_cast<PlayListItem*>(index.internalPointer());
+    PlayListItem *bgmCollectionItem=d->bgmCollectionItems.value(currentItem->animeTitle, nullptr);
+    if(!bgmCollectionItem)
+    {
+        PlayListItem *parentItem= currentItem->parent;
+        int insertPosition = parentItem->children->indexOf(currentItem) + 1;
+        QModelIndex pIndex = parentItem==d->root?QModelIndex():
+                                                 createIndex(parentItem->parent->children->indexOf(parentItem), 0, parentItem);
+
+        beginInsertRows(pIndex, insertPosition, insertPosition);
+        bgmCollectionItem=new PlayListItem(parentItem,false,insertPosition);
+        bgmCollectionItem->title = currentItem->animeTitle;
+        bgmCollectionItem->isBgmCollection=true;
+        endInsertRows();
+        d->bgmCollectionItems.insert(bgmCollectionItem->title, bgmCollectionItem);
+    }
+    beginRemoveRows(index.parent(), index.row(), index.row());
+    currentItem->parent->children->removeAt(index.row());
+    endRemoveRows();
+    QModelIndex bgmCollectionIndex=createIndex(bgmCollectionItem->parent->children->indexOf(bgmCollectionItem),0,bgmCollectionItem);
+    int insertPosition = bgmCollectionItem->children->count();
+    beginInsertRows(bgmCollectionIndex, insertPosition, insertPosition);
+    currentItem->moveTo(bgmCollectionItem);
+    endInsertRows();
+}
+
 QModelIndex PlayList::index(int row, int column, const QModelIndex &parent) const
 {
     Q_D(const PlayList);
@@ -390,7 +495,11 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
         return item->title;
     case Qt::ToolTipRole:
     {
-        if(item->children) return item->title;
+        if(item->children)
+        {
+            if(item->isBgmCollection) return tr("%1\nBangumi Collection").arg(item->title);
+            return item->title;
+        }
 
         QStringList tipContent;
 
@@ -421,6 +530,8 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
     }
     case Qt::DecorationRole:
         return item==d->currentItem?QIcon(":/res/images/playing.png"):QVariant();
+    case BgmCollectionRole:
+        return (item->isBgmCollection && item->children);
     default:
         return QVariant();
     }
@@ -514,6 +625,11 @@ bool PlayList::setData(const QModelIndex &index, const QVariant &value, int)
     QString val=value.toString();
     if(!val.isEmpty())
     {
+        if(item->children && item->isBgmCollection)
+        {
+            d->bgmCollectionItems.remove(item->title);
+            d->bgmCollectionItems.insert(val, item);
+        }
         item->title=val;
         emit dataChanged(index,index);
         d->playListChanged=true;
@@ -636,6 +752,7 @@ void PlayList::checkCurrentItem(PlayListItem *itemDeleted)
 {
     Q_D(PlayList);
     if(!itemDeleted->path.isEmpty())d->fileItems.remove(itemDeleted->path);
+    if(itemDeleted->isBgmCollection) d->bgmCollectionItems.remove(itemDeleted->title);
     if(itemDeleted==d->currentItem)
     {
         d->currentItem=nullptr;
@@ -643,10 +760,15 @@ void PlayList::checkCurrentItem(PlayListItem *itemDeleted)
     }
 }
 
-void PlayList::matchItems(const QModelIndexList &matchIndexes)
+void PlayList::setAutoMatch(bool on)
 {
     Q_D(PlayList);
-    QList<PlayListItem *> items;
+    d->autoMatch=on;
+}
+
+void PlayList::matchItems(const QModelIndexList &matchIndexes)
+{
+    QList<PlayListItem *> items, selectedItems;
     for(const QModelIndex &index : matchIndexes)
     {
         if (index.isValid())
@@ -655,7 +777,6 @@ void PlayList::matchItems(const QModelIndexList &matchIndexes)
             items.append(item);
         }
     }
-    emit message(tr("Match Start"),PopMessageFlag::PM_PROCESS);
     while(!items.empty())
     {
         PlayListItem *currentItem=items.takeFirst();
@@ -668,42 +789,14 @@ void PlayList::matchItems(const QModelIndexList &matchIndexes)
         }
         else if(currentItem->poolID.isEmpty())
         {
-			if (!QFile::exists(currentItem->path))continue;
-            MatchInfo *matchInfo=GlobalObjects::danmuManager->matchFrom(DanmuManager::DanDan,currentItem->path);
-            if(!matchInfo) break;
-            if(matchInfo->error)
-            {
-                emit message(tr("Failed: %1").arg(matchInfo->errorInfo),PopMessageFlag::PM_PROCESS);
-            }
-            else
-            {
-                QList<MatchInfo::DetailInfo> &matchList=matchInfo->matches;
-                if(matchInfo->success && matchList.count()>0)
-                {
-                    MatchInfo::DetailInfo &bestMatch=matchList.first();
-                    emit message(tr("Success: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS);
-                    currentItem->animeTitle=bestMatch.animeTitle;
-                    currentItem->title=bestMatch.title;
-                    currentItem->poolID=matchInfo->poolID;
-                    d->playListChanged = true;
-					QModelIndex nIndex = createIndex(currentItem->parent->children->indexOf(currentItem), 0, currentItem);
-					emit dataChanged(nIndex, nIndex);
-                    if (currentItem == d->currentItem)
-					{
-                        emit currentMatchChanged(currentItem->poolID);
-					}
-                    GlobalObjects::library->addToLibrary(currentItem->animeTitle,currentItem->title,currentItem->path);
-                }
-                else
-                {
-                    emit message(tr("Need manually: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS);
-                }
-            }
-            delete matchInfo;
+            selectedItems<<currentItem;
         }
     }
-    emit message(tr("Match Done"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
-    d->savePlaylist();
+    if(selectedItems.count()==0) return;
+    emit matchStatusChanged(true);
+    QMetaObject::invokeMethod(matchWorker, [this, selectedItems](){
+        matchWorker->match(selectedItems);
+    },Qt::QueuedConnection);
 }
 
 void PlayList::matchIndex(QModelIndex &index, MatchInfo *matchInfo)
@@ -723,6 +816,7 @@ void PlayList::matchIndex(QModelIndex &index, MatchInfo *matchInfo)
     {
         emit currentMatchChanged(item->poolID);
     }
+    autoMoveToBgmCollection(index);
     GlobalObjects::library->addToLibrary(item->animeTitle,item->title,item->path);
     d->savePlaylist();
 
@@ -926,3 +1020,41 @@ void PlayList::renameItemPoolId(const QString &opid, const QString &npid, const 
     }
 }
 
+
+void MatchWorker::match(const QList<PlayListItem *> &items)
+{
+    QList<PlayListItem *> matchedItems;
+    emit message(tr("Match Start"),PopMessageFlag::PM_PROCESS);
+    for(auto currentItem: items)
+    {
+        if(!currentItem->poolID.isEmpty()) continue;
+        if (!QFile::exists(currentItem->path))continue;
+        MatchInfo *matchInfo=GlobalObjects::danmuManager->matchFrom(DanmuManager::DanDan,currentItem->path);
+        if(!matchInfo) continue;
+        if(matchInfo->error)
+        {
+            emit  message(tr("Failed: %1").arg(matchInfo->errorInfo),PopMessageFlag::PM_PROCESS);
+        }
+        else
+        {
+            QList<MatchInfo::DetailInfo> &matchList=matchInfo->matches;
+            if(matchInfo->success && matchList.count()>0)
+            {
+                MatchInfo::DetailInfo &bestMatch=matchList.first();
+                emit message(tr("Success: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS);
+                currentItem->animeTitle=bestMatch.animeTitle;
+                currentItem->title=bestMatch.title;
+                currentItem->poolID=matchInfo->poolID;
+                matchedItems<<currentItem;
+                GlobalObjects::library->addToLibrary(currentItem->animeTitle,currentItem->title,currentItem->path);
+            }
+            else
+            {
+                emit message(tr("Need manually: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS);
+            }
+        }
+        delete matchInfo;
+    }
+    emit matchDown(matchedItems);
+    emit message(tr("Match Done"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
+}

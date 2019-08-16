@@ -51,6 +51,9 @@ void GlobalObjects::init()
 
     initDatabase(mt_db_names);
     appSetting=new QSettings(dataPath+"settings.ini",QSettings::IniFormat);
+    workThread=new QThread();
+    workThread->setObjectName(QStringLiteral("workThread"));
+    workThread->start(QThread::NormalPriority);
     mpvplayer=new MPVPlayer();
     danmuPool=new DanmuPool();
     danmuRender=new DanmuRender();
@@ -59,9 +62,6 @@ void GlobalObjects::init()
     playlist=new PlayList();
     QObject::connect(playlist, &PlayList::currentMatchChanged, danmuPool, &DanmuPool::setPoolID);
     blocker=new Blocker();
-    workThread=new QThread();
-    workThread->setObjectName(QStringLiteral("workThread"));
-    workThread->start(QThread::NormalPriority);
     QObject *workObj=new QObject();
     workObj->moveToThread(workThread);
     QMetaObject::invokeMethod(workObj,[workObj](){

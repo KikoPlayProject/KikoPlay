@@ -48,9 +48,9 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     ruleView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ruleView->setAlternatingRowColors(true);
     ruleView->setModel(GlobalObjects::autoDownloadManager);
-    ruleView->header()->resizeSection(1, 220 * logicalDpiX() / 96);
-    ruleView->header()->resizeSection(2, 180 * logicalDpiX() / 96);
-    ruleView->header()->resizeSection(3, 180 * logicalDpiX() / 96);
+    ruleView->header()->resizeSection(1, 200 * logicalDpiX() / 96);
+    ruleView->header()->resizeSection(2, 160 * logicalDpiX() / 96);
+    ruleView->header()->resizeSection(3, 160 * logicalDpiX() / 96);
     QObject::connect(GlobalObjects::autoDownloadManager, &AutoDownloadManager::addTask, this, [this](const QString &uri, const QString &path){
         emit this->addTask(QStringList({uri}), true, path);
     });
@@ -160,6 +160,7 @@ void AutoDownloadWindow::setupActions()
         QModelIndexList selectedRows= ruleView->selectionModel()->selectedRows();
         if(selectedRows.size()==0) return;
         DownloadRule *rule = GlobalObjects::autoDownloadManager->getRule(selectedRows.last(), true);
+        if(!rule) return;
         AddRule addRule(rule, this);
         QRect geo(0,0,300,300);
         geo.moveCenter(this->geometry().center());

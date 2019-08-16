@@ -398,8 +398,11 @@ void DownloadRuleChecker::fetchInfo(DownloadRule *rule)
         searchResults.clear();
         if(positionFinded) break;
     } while(page<pageCount && page<maxPageCount);
-    if(!newCheckPosition.isEmpty())rule->lastCheckPosition = newCheckPosition;
-    rule->lastCheckTime = QDateTime::currentDateTime().toSecsSinceEpoch();
+    if(!newCheckPosition.isEmpty())
+    {
+        rule->lastCheckPosition = newCheckPosition;
+        rule->lastCheckTime = QDateTime::currentDateTime().toSecsSinceEpoch();
+    }
 }
 
 bool DownloadRuleChecker::satisfyRule(ResItem *item, DownloadRule *rule, const QList<QRegExp> &filterRegExps)

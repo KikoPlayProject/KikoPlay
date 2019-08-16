@@ -22,6 +22,7 @@
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Download/downloadmodel.h"
+#define BgmCollectionRole Qt::UserRole+1
 namespace
 {
     class TextColorDelegate: public QStyledItemDelegate
@@ -41,6 +42,16 @@ namespace
 
             }
             QStyledItemDelegate::paint(painter, ViewOption, index);
+            if(index.data(BgmCollectionRole).toBool())
+            {
+                static QPixmap bgmCollectionIcon(":/res/images/bgm-collection.png");
+                QRect decoration = option.rect;
+                decoration.setHeight(decoration.height()-10);
+                decoration.setWidth(decoration.height());
+                decoration.moveCenter(option.rect.center());
+                decoration.moveRight(option.rect.width()+option.rect.x()-10);
+                painter->drawPixmap(decoration,bgmCollectionIcon);
+            }
         }
     };
     class InfoTip : public QWidget
@@ -68,12 +79,12 @@ namespace
                 hide();
             });
         }
-        void showMessage(QString msg,int flag)
+        void showMessage(const QString &msg,int flag)
         {
+            if(hideTimer.isActive())
+                hideTimer.stop();
             if(flag&PopMessageFlag::PM_HIDE)
             {
-                if(hideTimer.isActive())
-                    hideTimer.stop();
                 hideTimer.setSingleShot(true);
                 hideTimer.start(3000);
             }
@@ -98,7 +109,7 @@ namespace
         QTimer hideTimer;
     };
 }
-ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false)
+ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),matchStatus(0)
 {
     initActions();
 
@@ -158,6 +169,28 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false)
     infoTip->setWindowFlag(Qt::WindowStaysOnTopHint);
     QObject::connect(GlobalObjects::playlist,&PlayList::message,this,&ListWindow::showMessage);
 
+    QObject::connect(GlobalObjects::playlist,&PlayList::matchStatusChanged, this, [this](bool on){
+        matchStatus+=(on?1:-1);
+        if(matchStatus==0)
+        {
+            actionDisable=false;
+            updatePlaylistActions();
+            playlistView->setDragEnabled(true);
+            act_addCollection->setEnabled(true);
+            act_addFolder->setEnabled(true);
+            act_addItem->setEnabled(true);
+        }
+        else
+        {
+            actionDisable=true;
+            updatePlaylistActions();
+            act_addCollection->setEnabled(false);
+            act_addFolder->setEnabled(false);
+            act_addItem->setEnabled(false);
+            playlistView->setDragEnabled(false);
+        }
+    });
+
     updatePlaylistActions();
 	updateDanmuActions();
     setFocusPolicy(Qt::StrongFocus);
@@ -187,33 +220,47 @@ void ListWindow::initActions()
                 MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),nullptr,this);
                 if(QDialog::Accepted==matchEditor.exec())
                     GlobalObjects::playlist->matchIndex(indexes.first(),matchEditor.getMatchInfo());
-                return;
             }
-        }
-        actionDisable=true;
-        updatePlaylistActions();
-        act_addCollection->setEnabled(false);
-        act_addFolder->setEnabled(false);
-        act_addItem->setEnabled(false);
-        playlistView->setDragEnabled(false);
-        GlobalObjects::playlist->matchItems(indexes);
-        actionDisable=false;
-        updatePlaylistActions();
-        playlistView->setDragEnabled(true);
-        act_addCollection->setEnabled(true);
-        act_addFolder->setEnabled(true);
-        act_addItem->setEnabled(true);
-        if(indexes.count()==1)
-        {
-            const PlayListItem *item=GlobalObjects::playlist->getItem(indexes.first());
-            if(!item->children && item->poolID.isEmpty())
+            else if(!item->children)
             {
-                MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),nullptr,this);
-                if(QDialog::Accepted==matchEditor.exec())
-                    GlobalObjects::playlist->matchIndex(indexes.first(),matchEditor.getMatchInfo());
+                showMessage(tr("Match Start"),PopMessageFlag::PM_PROCESS);
+                MatchInfo *matchInfo=GlobalObjects::danmuManager->matchFrom(DanmuManager::DanDan,item->path);
+                bool matchSuccess=(matchInfo && !matchInfo->error && matchInfo->success && matchInfo->matches.count()>0);
+                if(matchSuccess)
+                {
+                    GlobalObjects::playlist->matchIndex(indexes.first(),matchInfo);
+                }
+                else
+                {
+                    MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),nullptr,this);
+                    if(QDialog::Accepted==matchEditor.exec())
+                        GlobalObjects::playlist->matchIndex(indexes.first(),matchEditor.getMatchInfo());
+                    else
+                        showMessage(tr("Match Done"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
+                }
             }
+            return;
         }
+        GlobalObjects::playlist->matchItems(indexes);
     });
+    act_autoMatchMode=new QAction(tr("Auto Match Mode"),this);
+    act_autoMatchMode->setCheckable(true);
+    act_autoMatchMode->setChecked(true);
+    QObject::connect(act_autoMatchMode,&QAction::toggled, this, [](bool checked){
+        GlobalObjects::playlist->setAutoMatch(checked);
+        GlobalObjects::appSetting->setValue("List/AutoMatch",checked);
+    });
+    act_autoMatchMode->setChecked(GlobalObjects::appSetting->value("List/AutoMatch", true).toBool());
+
+    act_markBgmCollection=new QAction(tr("Mark/Unmark Bangumi Collecion"),this);
+    QObject::connect(act_markBgmCollection,&QAction::triggered,[this](){
+        QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
+        QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
+        if (selection.size() == 0)return;
+        QModelIndex selIndex(selection.indexes().first());
+        GlobalObjects::playlist->switchBgmCollection(selIndex);
+    });
+
     act_addWebDanmuSource=new QAction(tr("Add Danmu Source"),this);
     QObject::connect(act_addWebDanmuSource,&QAction::triggered,[this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
@@ -767,6 +814,9 @@ QWidget *ListWindow::setupPlaylistPage()
     playlistView->addAction(act_cut);
     playlistView->addAction(act_paste);
     playlistContextMenu->addMenu(editSubMenu);
+    QMenu *markSubMenu=new QMenu(tr("Mark"),playlistContextMenu);
+    markSubMenu->addAction(act_markBgmCollection);
+    playlistContextMenu->addMenu(markSubMenu);
     playlistContextMenu->addAction(act_remove);
     playlistContextMenu->addSeparator();
     QMenu *moveSubMenu=new QMenu(tr("Move"),playlistContextMenu);
@@ -782,6 +832,8 @@ QWidget *ListWindow::setupPlaylistPage()
     shareSubMenu->addAction(act_shareResourceCode);
     playlistContextMenu->addMenu(shareSubMenu);
     playlistContextMenu->addAction(act_browseFile);
+    playlistContextMenu->addSeparator();
+    playlistContextMenu->addAction(act_autoMatchMode);
 
     QObject::connect(playlistView,&QTreeView::customContextMenuRequested,[playlistContextMenu](){
         playlistContextMenu->exec(QCursor::pos());
@@ -1096,7 +1148,7 @@ void ListWindow::playItem(const QModelIndex &index, bool playChild)
     }
 }
 
-void ListWindow::showMessage(QString msg,int flag)
+void ListWindow::showMessage(const QString &msg,int flag)
 {
     infoTip->show();
     infoTip->setGeometry(0, height() - 60*logicalDpiY()/96, width(), 30*logicalDpiX()/96);

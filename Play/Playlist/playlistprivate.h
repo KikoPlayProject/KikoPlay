@@ -12,10 +12,11 @@ public:
     PlayListItem *currentItem;
     bool playListChanged, needRefresh;
     PlayList::LoopMode loopMode;
+    bool autoMatch;
 
     QList<PlayListItem *> itemsClipboard;
     QList<QPair<QString,QString> > recentList;
-    QHash<QString,PlayListItem *> fileItems;
+    QHash<QString,PlayListItem *> fileItems, bgmCollectionItems;
 
 public:
     void loadPlaylist();

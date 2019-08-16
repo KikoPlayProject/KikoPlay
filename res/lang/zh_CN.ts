@@ -196,7 +196,7 @@
     <message>
         <location filename="../../UI/addrule.cpp" line="32"/>
         <source>Search Word:</source>
-        <translation>搜素词：</translation>
+        <translation>搜索词：</translation>
     </message>
     <message>
         <location filename="../../UI/addrule.cpp" line="35"/>

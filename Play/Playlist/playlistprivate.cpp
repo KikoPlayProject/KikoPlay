@@ -11,7 +11,7 @@
 #include "Play/Danmu/Manager/danmumanager.h"
 
 PlayListPrivate::PlayListPrivate(PlayList *pl) : root(new PlayListItem), currentItem(nullptr), playListChanged(false),
-    needRefresh(true), loopMode(PlayList::NO_Loop_All), q_ptr(pl)
+    needRefresh(true), loopMode(PlayList::NO_Loop_All), autoMatch(true), q_ptr(pl)
 {
     PlayListItem::playlist = pl;
     plPath = GlobalObjects::dataPath + "playlist.xml";
@@ -50,6 +50,8 @@ void PlayListPrivate::loadPlaylist()
             {
                 PlayListItem *collection=new PlayListItem(parents.last(),false);
                 collection->title=reader.attributes().value("title").toString();
+                collection->isBgmCollection=(reader.attributes().value("bgmCollection")=="true");
+                if(collection->isBgmCollection) bgmCollectionItems.insert(collection->title, collection);
                 parents.push_back(collection);
                 break;
             }
@@ -133,6 +135,7 @@ void PlayListPrivate::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
     {
         writer.writeStartElement("collection");
         writer.writeAttribute("title",item->title);
+        writer.writeAttribute("bgmCollection",item->isBgmCollection?"true":"false");
     }
     for(PlayListItem *child : *item->children)
     {

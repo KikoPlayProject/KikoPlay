@@ -54,9 +54,10 @@ private:
             *act_sortSelectionAscending,*act_sortSelectionDescending,*act_sortAllAscending,*act_sortAllDescending,
             *act_noLoopOne,*act_noLoopAll,*act_loopOne,*act_loopAll,*act_random,
             *act_browseFile,*act_autoAssociate,*act_exportDanmu,*act_addWebDanmuSource,*act_updateDanmu,
-            *act_sharePoolCode, *act_shareResourceCode;
+            *act_sharePoolCode, *act_shareResourceCode, *act_autoMatchMode, *act_markBgmCollection;
     bool actionDisable;
     QActionGroup *loopModeGroup;
+    int matchStatus;
     QWidget *setupPlaylistPage();
 
     QTreeView *danmulistView;
@@ -76,7 +77,7 @@ public slots:
     void sortSelection(bool allItem,bool ascending);
     void playItem(const QModelIndex &index,bool playChild=true);
 
-    void showMessage(QString msg,int flag);
+    void showMessage(const QString &msg, int flag);
     void updatePlaylistActions();
     void updateDanmuActions();
 

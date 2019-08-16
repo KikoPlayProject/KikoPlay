@@ -6,6 +6,17 @@
 #include "playlistitem.h"
 struct MatchInfo;
 class PlayListPrivate;
+class MatchWorker : public QObject
+{
+    Q_OBJECT
+public:
+    explicit MatchWorker(QObject *parent = nullptr):QObject(parent){}
+    void match(const QList<PlayListItem *> &items);
+signals:
+    void matchDown(const QList<PlayListItem *> &matchedItems);
+    void message(const QString &msg,int flag);
+};
+
 class PlayList : public QAbstractItemModel
 {
     Q_OBJECT
@@ -31,8 +42,9 @@ public:
 signals:
     void currentInvaild();
     void currentMatchChanged(const QString &pid);
-    void message(QString msg,int flag);
+    void message(const QString &msg,int flag);
     void recentItemsUpdated();
+    void matchStatusChanged(bool on);
 public slots :
     int addItems(QStringList &items, QModelIndex parent);
     int addFolder(QString folderStr, QModelIndex parent);
@@ -47,6 +59,8 @@ public slots :
     void cutItems(const QModelIndexList &cutIndexes);
     void pasteItems(QModelIndex parent);
     void moveUpDown(QModelIndex index,bool up);
+    void switchBgmCollection(const QModelIndex &index);
+    void autoMoveToBgmCollection(const QModelIndex &index);
 
     const PlayListItem *setCurrentItem(const QModelIndex &index,bool playChild=true);
     const PlayListItem *setCurrentItem(const QString &path);
@@ -54,6 +68,7 @@ public slots :
     const PlayListItem *playPrevOrNext(bool prev);
     void setLoopMode(LoopMode newMode);
     void checkCurrentItem(PlayListItem *itemDeleted);
+    void setAutoMatch(bool on);
     void matchItems(const QModelIndexList &matchIndexes);
     void matchIndex(QModelIndex &index,MatchInfo *matchInfo);
     void updateItemsDanmu(const QModelIndexList &itemIndexes);
@@ -81,6 +96,7 @@ public:
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
 private:
     PlayListPrivate * const d_ptr;
+    MatchWorker *matchWorker;
     Q_DECLARE_PRIVATE(PlayList)
     Q_DISABLE_COPY(PlayList)
 

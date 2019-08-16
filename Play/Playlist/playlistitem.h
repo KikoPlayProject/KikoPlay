@@ -20,6 +20,7 @@ public:
     int playTime;
     int playTimeState;
     int level;
+    bool isBgmCollection;
 
     QString title;
     QString animeTitle;

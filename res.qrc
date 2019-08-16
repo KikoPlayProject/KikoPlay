@@ -54,5 +54,6 @@
         <file>res/images/down-arrow-hover.png</file>
         <file>res/images/up-arrow.png</file>
         <file>res/images/up-arrow-hover.png</file>
+        <file>res/images/bgm-collection.png</file>
     </qresource>
 </RCC>
