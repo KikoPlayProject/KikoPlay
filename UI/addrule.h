@@ -22,7 +22,7 @@ private:
         bool matched;
     };
     QList<SearchItem> searchResults;
-    QString lastSearchWord;
+    QString lastSearchWord,lastScriptId;
     float getSize(const QString &sizeStr);
     bool checkSize(int size, int min, int max);
 public:

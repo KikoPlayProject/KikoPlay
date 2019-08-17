@@ -201,7 +201,7 @@ QString ScriptManager::search(QString sid, const QString &keyword, int page, int
         lua_getglobal(currentState.L, "search");
         luaL_checktype(currentState.L,-1,LUA_TFUNCTION);
         lua_pushstring(currentState.L,keyword.toStdString().c_str());
-        lua_pushnumber(currentState.L, page);
+        lua_pushinteger(currentState.L, page);
         if(lua_pcall(currentState.L, 2, 3, 0))
         {
             errInfo="Script Error: "+ QString(lua_tostring(currentState.L, -1));

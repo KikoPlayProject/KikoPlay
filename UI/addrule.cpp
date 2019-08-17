@@ -119,6 +119,13 @@ void AddRule::setupSignals()
        showBusyState(false);
        previewModel->filter(filterWordEdit->text().trimmed(), minSizeSpin->value(), maxSizeSpin->value());
     });
+    QObject::connect(scriptIdCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[this](){
+        if(searchWordEdit->text().trimmed().isEmpty()) return;
+        showBusyState(true);
+        previewModel->search(searchWordEdit->text().trimmed(), scriptIdCombo->currentData().toString());
+        showBusyState(false);
+        previewModel->filter(filterWordEdit->text().trimmed(), minSizeSpin->value(), maxSizeSpin->value());
+    });
     QObject::connect(filterWordEdit, &QLineEdit::editingFinished, this, [this](){
         previewModel->filter(filterWordEdit->text().trimmed(), minSizeSpin->value(), maxSizeSpin->value());
     });
@@ -230,7 +237,7 @@ bool PreviewModel::checkSize(int size, int min, int max)
 
 void PreviewModel::search(const QString &searchWord, const QString &scriptId)
 {
-    if(searchWord==lastSearchWord) return;
+    if(searchWord==lastSearchWord && lastScriptId==scriptId) return;
     int pageCount;
     QList<ResItem> resList;
     QString errInfo = GlobalObjects::scriptManager->search(scriptId, searchWord, 1, pageCount, resList);
@@ -244,6 +251,7 @@ void PreviewModel::search(const QString &searchWord, const QString &scriptId)
             searchResults<<sItem;
         }
         lastSearchWord=searchWord;
+        lastScriptId=scriptId;
     }
     else
     {
