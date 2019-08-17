@@ -316,27 +316,27 @@ QHeaderView::section {
     border:2px solid #a2aab1;
     background-color:rgb(245,245,245);
 }
-QSpinBox#Delay{
+#Delay{
     border:none;
     border-color:rgb(200,200,200);
     background:transparent;
 }
-QSpinBox#Delay::up-button {
+#Delay::up-button {
     subcontrol-origin:border;
     subcontrol-position:right;
-    image: url(:/res/images/plus.png);
+    image: url(:/res/images/border.png);
     width: 20px; height: 20px;
 }
-QSpinBox#Delay::down-button {
+#Delay::down-button {
      subcontrol-origin:border;
      subcontrol-position:left;
-     image: url(:/res/images/minus.png);
+     image: url(:/res/images/border.png);
      width: 20px; height: 20px;
 }
-QSpinBox#Delay::up-button:pressed {
+#Delay::up-button:pressed {
     margin:2px;
 }
-QSpinBox#Delay::down-button:pressed {
+#Delay::down-button:pressed {
     margin:2px;
 }
 QPushButton#DialogButton{

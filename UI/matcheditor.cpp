@@ -15,6 +15,10 @@
 #include <QApplication>
 #include "Common/kcache.h"
 #include "globalobjects.h"
+namespace
+{
+    QSet<QString> hitWords;
+}
 MatchEditor::MatchEditor(const PlayListItem *item, MatchInfo *matchInfo, QWidget *parent) : CFramelessDialog(tr("Edit Match"),parent,true)
 {
     QVBoxLayout *matchVLayout=new QVBoxLayout(this);
@@ -186,6 +190,21 @@ void MatchEditor::search()
 {
     QString keyword=keywordEdit->text().trimmed();
     if(keyword.isEmpty())return;
+    if(!hitWords.contains(keyword))
+    {
+        MatchInfo *match=GlobalObjects::kCache->get<MatchInfo>(QString::number(searchLocation)+keyword);
+        if(match)
+        {
+            searchResult->clear();
+            for(MatchInfo::DetailInfo &detailInfo:match->matches)
+            {
+                new QTreeWidgetItem(searchResult,QStringList()<<detailInfo.animeTitle<<detailInfo.title);
+            }
+            delete match;
+            hitWords<<keyword;
+            return;
+        }
+    }
     searchButton->setEnabled(false);
     searchButton->setText(tr("Searching"));
     showBusyState(true);
@@ -203,6 +222,7 @@ void MatchEditor::search()
                 new QTreeWidgetItem(searchResult,QStringList()<<detailInfo.animeTitle<<detailInfo.title);
             }
             GlobalObjects::kCache->put(QString::number(searchLocation)+keyword, *sInfo);
+            hitWords.remove(keyword);
         }
         delete sInfo;
     }

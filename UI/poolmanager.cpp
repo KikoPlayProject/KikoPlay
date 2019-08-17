@@ -61,7 +61,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         if(pool)
         {
             pool->exportSimpleInfo(srcNode->srcId,simpleDanmuList);
-            DanmuSourceInfo srcInfo(srcNode->toSourceInfo());
+            DanmuSourceInfo srcInfo(pool->sources()[srcNode->srcId]);
             TimelineEdit timeLineEdit(&srcInfo,simpleDanmuList,this);
             if(QDialog::Accepted==timeLineEdit.exec())
             {

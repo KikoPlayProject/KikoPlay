@@ -68,6 +68,7 @@ private:
      bool isFullscreen;
      int resizePercent;
      int clickBehavior,dbClickBehaivior;
+     int jumpForwardTime, jumpBackwardTime;
      QSharedPointer<DanmuComment> currentDanmu;
 
      QMenu *contexMenu;

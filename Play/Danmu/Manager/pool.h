@@ -28,7 +28,8 @@ public:
     void exportKdFile(QDataStream &stream, const QList<int> &ids=QList<int>());
     void exportSimpleInfo(int srcId, QList<SimpleDanmuInfo> &simpleDanmuList);
     QJsonArray exportJson();
-    static QJsonArray exportJson(const QList<QSharedPointer<DanmuComment> > &danmuList);
+    QJsonObject exportFullJson();
+    static QJsonArray exportJson(const QList<QSharedPointer<DanmuComment> > &danmuList, bool useOrigin=false);
     QString getPoolCode(const QStringList &addition=QStringList()) const;
     bool addPoolCode(const QString &code, bool hasAddition=false);
     bool addPoolCode(const QJsonArray &infoArray);

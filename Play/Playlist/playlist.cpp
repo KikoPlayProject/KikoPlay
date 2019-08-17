@@ -50,6 +50,7 @@ PlayList::PlayList(QObject *parent) : QAbstractItemModel(parent), d_ptr(new Play
     QObject::connect(matchWorker, &MatchWorker::matchDown, this, [this](const QList<PlayListItem *> &matchedItems){
         Q_D(PlayList);
         d->playListChanged = true;
+        d->needRefresh = true;
         for(auto currentItem : matchedItems)
         {
             QModelIndex nIndex = createIndex(currentItem->parent->children->indexOf(currentItem), 0, currentItem);
@@ -449,6 +450,8 @@ void PlayList::autoMoveToBgmCollection(const QModelIndex &index)
     beginInsertRows(bgmCollectionIndex, insertPosition, insertPosition);
     currentItem->moveTo(bgmCollectionItem);
     endInsertRows();
+    d->playListChanged = true;
+    d->needRefresh = true;
 }
 
 QModelIndex PlayList::index(int row, int column, const QModelIndex &parent) const

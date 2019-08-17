@@ -206,7 +206,7 @@ protected:
 };
 }
 PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideControlPanel(true),
-    onTopWhilePlaying(false),updatingTrack(false),isFullscreen(false),resizePercent(-1)
+    onTopWhilePlaying(false),updatingTrack(false),isFullscreen(false),resizePercent(-1),jumpForwardTime(5),jumpBackwardTime(5)
 {
     setWindowFlags(Qt::FramelessWindowHint);
     GlobalObjects::mpvplayer->setParent(this);
@@ -1029,6 +1029,30 @@ void PlayerWindow::setupPlaySettingPage()
     dbClickBehaviorCombo->setCurrentIndex(GlobalObjects::appSetting->value("Play/DBClickBehavior",0).toInt());
     dbClickBehaivior=dbClickBehaviorCombo->currentIndex();
 
+    QLabel *forwardTimeLabel=new QLabel(tr("Forward Jump Time(s)"),playSettingPage);
+    QSpinBox *forwardTimeSpin=new QSpinBox(playSettingPage);
+    forwardTimeSpin->setRange(1,20);
+    forwardTimeSpin->setAlignment(Qt::AlignCenter);
+    forwardTimeSpin->setObjectName(QStringLiteral("Delay"));
+    QObject::connect(forwardTimeSpin,&QSpinBox::editingFinished,this,[this,forwardTimeSpin](){
+        jumpForwardTime=forwardTimeSpin->value();
+        GlobalObjects::appSetting->setValue("Play/ForwardJump",jumpForwardTime);
+    });
+    forwardTimeSpin->setValue(GlobalObjects::appSetting->value("Play/ForwardJump",5).toInt());
+    jumpForwardTime=forwardTimeSpin->value();
+
+    QLabel *backwardTimeLabel=new QLabel(tr("Backward Jump Time(s)"),playSettingPage);
+    QSpinBox *backwardTimeSpin=new QSpinBox(playSettingPage);
+    backwardTimeSpin->setRange(1,20);
+    backwardTimeSpin->setAlignment(Qt::AlignCenter);
+    backwardTimeSpin->setObjectName(QStringLiteral("Delay"));
+    QObject::connect(backwardTimeSpin,&QSpinBox::editingFinished,this,[this,backwardTimeSpin](){
+        jumpBackwardTime=backwardTimeSpin->value();
+        GlobalObjects::appSetting->setValue("Play/BackwardJump",jumpBackwardTime);
+    });
+    backwardTimeSpin->setValue(GlobalObjects::appSetting->value("Play/BackwardJump",5).toInt());
+    jumpBackwardTime=backwardTimeSpin->value();
+
     QToolButton *playPage=new QToolButton(playSettingPage);
     playPage->setText(tr("Play"));
     playPage->setCheckable(true);
@@ -1092,11 +1116,15 @@ void PlayerWindow::setupPlaySettingPage()
     QGridLayout *appearanceGLayout=new QGridLayout(pageBehavior);
     appearanceGLayout->setContentsMargins(0,0,0,0);
     appearanceGLayout->setColumnStretch(1, 1);
-    appearanceGLayout->setRowStretch(2,1);
+    appearanceGLayout->setRowStretch(4,1);
     appearanceGLayout->addWidget(clickBehaivorLabel,0,0);
     appearanceGLayout->addWidget(clickBehaviorCombo,0,1);
     appearanceGLayout->addWidget(dbClickBehaivorLabel,1,0);
     appearanceGLayout->addWidget(dbClickBehaviorCombo,1,1);
+    appearanceGLayout->addWidget(forwardTimeLabel,2,0);
+    appearanceGLayout->addWidget(forwardTimeSpin,2,1);
+    appearanceGLayout->addWidget(backwardTimeLabel,3,0);
+    appearanceGLayout->addWidget(backwardTimeSpin,3,1);
 }
 
 void PlayerWindow::setupSignals()
@@ -1623,7 +1651,7 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
             showMessage(tr("Frame Step:Forward"));
         }
 		else
-			GlobalObjects::mpvplayer->seek(5, true);
+            GlobalObjects::mpvplayer->seek(jumpForwardTime, true);
 		break;
 	case Qt::Key_Left:
 		if (event->modifiers() == Qt::ControlModifier)
@@ -1632,7 +1660,7 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
             showMessage(tr("Frame Step:Backward"));
         }
 		else
-			GlobalObjects::mpvplayer->seek(-5, true);
+            GlobalObjects::mpvplayer->seek(-jumpBackwardTime, true);
 		break;
     case Qt::Key_PageUp:
         actPrev->trigger();

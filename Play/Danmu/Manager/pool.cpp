@@ -335,6 +335,30 @@ QJsonArray Pool::exportJson()
     return exportJson(commentList);
 }
 
+QJsonObject Pool::exportFullJson()
+{
+    QJsonArray danmuArray(exportJson(commentList, true));
+    QJsonArray sourceArray;
+    for(auto &source:sourcesTable)
+    {
+        QJsonObject sourceObj
+        {
+            {"name", source.name},
+            {"id", source.id},
+            {"url", source.url},
+            {"delay", source.delay},
+            {"timeline", source.getTimelineStr()}
+        };
+        sourceArray.append(sourceObj);
+    }
+    QJsonObject poolObj
+    {
+        {"source", sourceArray},
+        {"comment", danmuArray}
+    };
+    return poolObj;
+}
+
 /*QJsonObject Pool::exportJson()
 {
     QJsonObject resposeObj
@@ -345,14 +369,20 @@ QJsonArray Pool::exportJson()
     return resposeObj;
 }*/
 
-QJsonArray Pool::exportJson(const QList<QSharedPointer<DanmuComment> > &danmuList)
+QJsonArray Pool::exportJson(const QList<QSharedPointer<DanmuComment> > &danmuList, bool useOrigin)
 {
     QJsonArray danmuArray;
     for(const auto &danmu:danmuList)
     {
         if(danmu->blockBy!=-1) continue;
-        QJsonArray danmuObj={danmu->time/1000.0,danmu->type,danmu->color,danmu->sender,danmu->text};
-        danmuArray.append(danmuObj);
+        if(useOrigin)
+        {
+            danmuArray.append(QJsonArray({danmu->originTime/1000.0,danmu->type,danmu->color,danmu->source,danmu->text}));
+        }
+        else
+        {
+            danmuArray.append(QJsonArray({danmu->time/1000.0,danmu->type,danmu->color,danmu->sender,danmu->text}));
+        }
     }
     return danmuArray;
 }

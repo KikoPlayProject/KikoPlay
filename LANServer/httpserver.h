@@ -27,6 +27,9 @@ public slots:
     void api_Playlist(QHttpEngine::Socket *socket);
     void api_UpdateTime(QHttpEngine::Socket *socket);
     void api_Danmu(QHttpEngine::Socket *socket);
+    void api_DanmuFull(QHttpEngine::Socket *socket);
+    void api_UpdateDelay(QHttpEngine::Socket *socket);
+    void api_UpdateTimeline(QHttpEngine::Socket *socket);
     void api_Subtitle(QHttpEngine::Socket *socket);
 };
 

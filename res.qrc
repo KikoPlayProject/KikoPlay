@@ -6,8 +6,6 @@
         <file>res/images/branch-closed.png</file>
         <file>res/images/branch-open.png</file>
         <file>res/images/playing.png</file>
-        <file>res/images/minus.png</file>
-        <file>res/images/plus.png</file>
         <file>res/images/info.png</file>
         <file>res/images/loading-rolling.gif</file>
         <file>res/images/ok.png</file>
@@ -55,5 +53,6 @@
         <file>res/images/up-arrow.png</file>
         <file>res/images/up-arrow-hover.png</file>
         <file>res/images/bgm-collection.png</file>
+        <file>res/images/border.png</file>
     </qresource>
 </RCC>

@@ -135,6 +135,9 @@ HttpServer::HttpServer(QObject *parent) : QObject(parent)
     apiHandler->registerMethod("updateTime", this, &HttpServer::api_UpdateTime);
     apiHandler->registerMethod("danmu/v3/", this, &HttpServer::api_Danmu);
     apiHandler->registerMethod("subtitle", this, &HttpServer::api_Subtitle);
+    apiHandler->registerMethod("danmu/full/", this, &HttpServer::api_DanmuFull);
+    apiHandler->registerMethod("updateDelay", this, &HttpServer::api_UpdateDelay);
+    apiHandler->registerMethod("updateTimeline", this, &HttpServer::api_UpdateTimeline);
     handler->addSubHandler(QRegExp("api/"), apiHandler);
 
     server = new QHttpEngine::Server(handler,this);
@@ -241,6 +244,78 @@ void HttpServer::api_Danmu(QHttpEngine::Socket *socket)
     socket->setHeader("Content-Encoding", "gzip");
     socket->writeHeaders();
     socket->write(compressedBytes);
+    socket->close();
+}
+
+void HttpServer::api_DanmuFull(QHttpEngine::Socket *socket)
+{
+    QString poolId=socket->queryString().value("id");
+    bool update=(socket->queryString().value("update").toLower()=="true");
+    Pool *pool=GlobalObjects::danmuManager->getPool(poolId);
+    genLog(QString("[%1]Request:Danmu(Full) %2%3").arg(socket->peerAddress().toString(),
+                                                   pool?pool->epTitle():"",
+                                                   update?", update=true":""));
+    QJsonObject resposeObj;
+    if(pool)
+    {
+        if(update)
+        {
+            QList<QSharedPointer<DanmuComment> > incList;
+            pool->update(-1,&incList);
+            resposeObj=
+            {
+                {"comment", Pool::exportJson(incList, true)},
+                {"update", true}
+            };
+        }
+        else
+        {
+            resposeObj=pool->exportFullJson();
+            resposeObj.insert("update", false);
+        }
+    }
+    QByteArray data = QJsonDocument(resposeObj).toJson();
+    QByteArray compressedBytes;
+    Network::gzipCompress(data,compressedBytes);
+    socket->setHeader("Content-Length", QByteArray::number(compressedBytes.length()));
+    socket->setHeader("Content-Type", "application/json");
+    socket->setHeader("Content-Encoding", "gzip");
+    socket->writeHeaders();
+    socket->write(compressedBytes);
+    socket->close();
+}
+
+void HttpServer::api_UpdateDelay(QHttpEngine::Socket *socket)
+{
+    QJsonDocument document;
+    if (socket->readJson(document))
+    {
+        QVariantMap data = document.object().toVariantMap();
+        QString poolId=data.value("danmuPool").toString();
+        int delay=data.value("delay").toInt();  //ms
+        int sourceId=data.value("source").toInt();
+        genLog(QString("[%1]Request:UpdateDelay, SourceId: %2").arg(socket->peerAddress().toString(),QString::number(sourceId)));
+        Pool *pool=GlobalObjects::danmuManager->getPool(poolId,false);
+        if(pool) pool->setDelay(sourceId, delay);
+    }
+    socket->close();
+}
+
+void HttpServer::api_UpdateTimeline(QHttpEngine::Socket *socket)
+{
+    QJsonDocument document;
+    if (socket->readJson(document))
+    {
+        QVariantMap data = document.object().toVariantMap();
+        QString poolId=data.value("danmuPool").toString();
+        QString timelineStr=data.value("timeline").toString();
+        int sourceId=data.value("source").toInt();
+        genLog(QString("[%1]Request:UpdateTimeline, SourceId: %2").arg(socket->peerAddress().toString(),QString::number(sourceId)));
+        Pool *pool=GlobalObjects::danmuManager->getPool(poolId,false);
+        DanmuSourceInfo srcInfo;
+        srcInfo.setTimeline(timelineStr);
+        if(pool) pool->setTimeline(sourceId, srcInfo.timelineInfo);
+    }
     socket->close();
 }
 

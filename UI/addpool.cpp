@@ -14,6 +14,10 @@
 #include "globalobjects.h"
 #include "Common/kcache.h"
 #include "Play/Danmu/Manager/danmumanager.h"
+namespace
+{
+    QSet<QString> hitWords;
+}
 AddPool::AddPool(QWidget *parent, const QString &srcAnime, const QString &srcEp) : CFramelessDialog(tr("Add Danmu Pool"),parent,true)
 {
     QVBoxLayout *addPoolVLayout=new QVBoxLayout(this);
@@ -121,6 +125,21 @@ QWidget *AddPool::setupSearchPage()
     QObject::connect(searchButton,&QPushButton::clicked,this,[this,searchButton](){
         QString keyword=keywordEdit->text().trimmed();
         if(keyword.isEmpty())return;
+        if(!hitWords.contains(keyword))
+        {
+            MatchInfo *match=GlobalObjects::kCache->get<MatchInfo>(QString::number(searchLocation)+keyword);
+            if(match)
+            {
+                searchResult->clear();
+                for(MatchInfo::DetailInfo &detailInfo:match->matches)
+                {
+                    new QTreeWidgetItem(searchResult,QStringList()<<detailInfo.animeTitle<<detailInfo.title);
+                }
+                delete match;
+                hitWords<<keyword;
+                return;
+            }
+        }
         keywordEdit->setEnabled(false);
         searchButton->setEnabled(false);
         searchButton->setText(tr("Searching"));
@@ -139,6 +158,7 @@ QWidget *AddPool::setupSearchPage()
                     new QTreeWidgetItem(searchResult,QStringList()<<detailInfo.animeTitle<<detailInfo.title);
                 }
                 GlobalObjects::kCache->put(QString::number(searchLocation)+keyword, *sInfo);
+                hitWords.remove(keyword);
             }
             delete sInfo;
         }
