@@ -3008,12 +3008,12 @@ Bangumi Collection</source>
     <message>
         <location filename="../../UI/player.cpp" line="1032"/>
         <source>Forward Jump Time(s)</source>
-        <translation type="unfinished"></translation>
+        <translation>向前跳转时间(s)</translation>
     </message>
     <message>
         <location filename="../../UI/player.cpp" line="1044"/>
         <source>Backward Jump Time(s)</source>
-        <translation type="unfinished"></translation>
+        <translation>向后跳转时间(s)</translation>
     </message>
     <message>
         <location filename="../../UI/player.cpp" line="1415"/>

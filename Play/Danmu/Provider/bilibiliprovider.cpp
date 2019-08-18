@@ -3,13 +3,15 @@
 namespace
 {
     const char *supportedUrlRe[]={"(https?://)?www\\.bilibili\\.com/video/av[0-9]+/?",
-                                  "av[0-9]+"};
+                                  "av[0-9]+",
+                                 "(https?://)?www\\.bilibili\\.com/bangumi/media/md[0-9]+/?"};
 }
 
 QStringList BilibiliProvider::supportedURLs()
 {
     return QStringList({"https://www.bilibili.com/video/av1728704",
-                        "av24213033"});
+                        "av24213033",
+                       "https://www.bilibili.com/bangumi/media/md28221404"});
 }
 
 DanmuAccessResult *BilibiliProvider::search(const QString &keyword)
@@ -84,7 +86,7 @@ DanmuAccessResult *BilibiliProvider::getURLInfo(const QString &url)
     {
         return nullptr;
     }
-    QRegExp re("av([0-9]+)");
+    QRegExp re(matchIndex==2?"md([0-9]+)":"av([0-9]+)");
     re.indexIn(url);
     QStringList captured=re.capturedTexts();
     QString aidStr = captured[1];
@@ -92,7 +94,7 @@ DanmuAccessResult *BilibiliProvider::getURLInfo(const QString &url)
     item.id=aidStr.toInt();
     item.subId=0;
     //item.source=DanmuSource::Bilibili;
-    item.extra=0;
+    item.extra=matchIndex==2?-1:0;
     return getEpInfo(&item);
 }
 
