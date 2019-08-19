@@ -427,6 +427,7 @@ void PlayList::autoMoveToBgmCollection(const QModelIndex &index)
 {
     Q_D(PlayList);
     PlayListItem *currentItem= static_cast<PlayListItem*>(index.internalPointer());
+    if(currentItem->parent->isBgmCollection && currentItem->parent->title==currentItem->animeTitle) return;
     PlayListItem *bgmCollectionItem=d->bgmCollectionItems.value(currentItem->animeTitle, nullptr);
     if(!bgmCollectionItem)
     {
