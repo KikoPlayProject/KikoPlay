@@ -64,7 +64,7 @@ private:
 private:
     QMap<QString,int> poolDanmuCacheInfo;
     QMap<QString,Pool *> pools;
-    QMutex cacheLock,removeLock;
+    QMutex *cacheLock,*removeLock;
     QReadWriteLock poolStateLock;
     QSet<QString> busyPoolSet;
     bool countInited;

@@ -18,6 +18,8 @@
 DanmuManager *PoolStateLock::manager=nullptr;
 DanmuManager::DanmuManager(QObject *parent) : QObject(parent),countInited(false)
 {
+    cacheLock = new QMutex(QMutex::Recursive);
+    removeLock = new QMutex(QMutex::Recursive);
     PoolStateLock::manager=this;
     loadAllPool();
 }
@@ -26,11 +28,13 @@ DanmuManager::~DanmuManager()
 {
     //poolWorker->deleteLater();
     for(auto pool:pools) pool->deleteLater();
+    delete cacheLock;
+    delete removeLock;
 }
 
 Pool *DanmuManager::getPool(const QString &pid, bool loadDanmu)
 {
-    QMutexLocker locker(&removeLock);
+    QMutexLocker locker(removeLock);
     Pool *pool=pools.value(pid,nullptr);
     if(pool && loadDanmu)
     {
@@ -568,7 +572,7 @@ QString DanmuManager::createPool(const QString &animeTitle, const QString &title
         query.bindValue(1,animeTitle);
         query.bindValue(2,title);
         query.exec();
-        QMutexLocker locker(&removeLock);
+        QMutexLocker locker(removeLock);
         pools.insert(poolId,new Pool(poolId,animeTitle,title));
     }
     if(!fileHash.isEmpty())
@@ -606,10 +610,10 @@ QString DanmuManager::renamePool(const QString &pid, const QString &nAnimeTitle,
 
     if(!db.commit()) return QString();
 
-    QMutexLocker locker(&removeLock);
+    QMutexLocker locker(removeLock);
     if(poolDanmuCacheInfo.contains(pid))
     {
-        QMutexLocker locker(&cacheLock);
+        QMutexLocker locker(cacheLock);
         poolDanmuCacheInfo.remove(pid);
     }
     pools.remove(pid);
@@ -837,7 +841,7 @@ void DanmuManager::loadAllPool()
 
 void DanmuManager::refreshCache(Pool *newPool)
 {
-    QMutexLocker locker(&cacheLock);
+    QMutexLocker locker(cacheLock);
     if(newPool)
     {
         if(poolDanmuCacheInfo.contains(newPool->pid))
@@ -869,13 +873,13 @@ void DanmuManager::refreshCache(Pool *newPool)
 
 void DanmuManager::deletePool(const QString &pid)
 {
-    QMutexLocker locker(&removeLock);
+    QMutexLocker locker(removeLock);
     Pool *pool=pools.value(pid,nullptr);
     if(pool)
     {
         if(poolDanmuCacheInfo.contains(pid))
         {
-            QMutexLocker locker(&cacheLock);
+            QMutexLocker locker(cacheLock);
             poolDanmuCacheInfo.remove(pid);
         }
         pools.remove(pid);
