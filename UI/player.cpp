@@ -1191,12 +1191,22 @@ void PlayerWindow::setupSignals()
         timeLabel->setText(QString("%1:%2%3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(this->totalTimeStr));
     });
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::stateChanged,[this](MPVPlayer::PlayState state){
+        if(GlobalObjects::playlist->getCurrentItem()!=nullptr)
+        {
+#ifdef Q_OS_WIN
+            if(state==MPVPlayer::Play)
+                SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED);
+            else
+                SetThreadExecutionState(ES_CONTINUOUS);
+#endif
+            if(onTopWhilePlaying)
+            {
+                emit setStayOnTop(state==MPVPlayer::Play);
+            }
+        }
         if(onTopWhilePlaying && GlobalObjects::playlist->getCurrentItem() != nullptr)
         {
-            if(state==MPVPlayer::Play)
-                emit setStayOnTop(true);
-            else
-                emit setStayOnTop(false);
+
         }
         switch(state)
         {

@@ -19,7 +19,8 @@ CFramelessWindow::CFramelessWindow(QWidget *parent)
       m_titlebar(Q_NULLPTR),
       m_borderWidth(5),
       m_bJustMaximized(false),
-      m_bResizeable(true)
+      m_bResizeable(true),
+      screen_save(true)
 {
     setWindowFlags(windowFlags() | Qt::Window | Qt::FramelessWindowHint | Qt::WindowSystemMenuHint);
 
@@ -96,6 +97,11 @@ void CFramelessWindow::addIgnoreWidget(QWidget* widget)
     m_whiteList.append(widget);
 }
 
+void CFramelessWindow::setScreenSave(bool on)
+{
+    screen_save=on;
+}
+
 bool CFramelessWindow::nativeEvent(const QByteArray &eventType, void *message, long *result)
 {
     MSG* msg = (MSG *)message;
@@ -106,6 +112,15 @@ bool CFramelessWindow::nativeEvent(const QByteArray &eventType, void *message, l
         //this kills the window frame and title bar we added with WS_THICKFRAME and WS_CAPTION
         *result = 0;
         return true;
+    }
+    case WM_SYSCOMMAND:
+    {
+        if(msg->wParam==SC_SCREENSAVE && !screen_save)
+        {
+            *result=1;
+            return true;
+        }
+        return false;
     }
     case WM_NCHITTEST:
     {

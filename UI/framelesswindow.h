@@ -41,6 +41,7 @@ protected:
     //as a result, we can not drag and move the MainWindow with this "label1" again
     //we can fix this by add "label1" to a ignorelist, just call addIgnoreWidget(label1)
     void addIgnoreWidget(QWidget* widget);
+    void setScreenSave(bool on);
 
     bool nativeEvent(const QByteArray &eventType, void *message, long *result);
 private slots:
@@ -63,6 +64,7 @@ private:
     bool m_bJustMaximized;
 
     bool m_bResizeable;
+    bool screen_save;
 };
 
 #else

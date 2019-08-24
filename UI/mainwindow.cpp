@@ -50,6 +50,9 @@ MainWindow::MainWindow(QWidget *parent)
 			else listWindow->hide();
             setGeometry(geo);
         }
+#ifdef Q_OS_WIN
+        setScreenSave(!(state==MPVPlayer::Play && GlobalObjects::playlist->getCurrentItem()!=nullptr));
+#endif
     });
     if(GlobalObjects::appSetting->value("MainWindow/ShowTip",true).toBool())
     {
@@ -320,18 +323,20 @@ QWidget *MainWindow::setupPlayPage()
         if(GlobalObjects::playlist->getCurrentItem()==nullptr)
             listShowState=!listWindow->isHidden();
     });
-    QObject::connect(playerWindow,&PlayerWindow::showFullScreen,[this](bool on){
+    QObject::connect(playerWindow,&PlayerWindow::showFullScreen,[this,playVerticalLayout](bool on){
         static bool isMax;
         if(on)
         {
             isMax=isMaximized();
             widgetTitlebar->hide();
             showFullScreen();
+            playVerticalLayout->setContentsMargins(0,0,0,0);
         }
         else
         {
             widgetTitlebar->show();
             isMax?showMaximized():showNormal();
+            playVerticalLayout->setContentsMargins(1,0,1,1);
         }
     });
     QObject::connect(playerWindow, &PlayerWindow::setStayOnTop, this, &CFramelessWindow::setOnTop);
