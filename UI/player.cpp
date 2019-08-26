@@ -1136,23 +1136,29 @@ void PlayerWindow::setupSignals()
         int ls=ts-lmin*60;
         process->setRange(0,duration);
         process->setSingleStep(1);
-        process->setEventMark(QList<DanmuEvent>());
         totalTimeStr=QString("/%1:%2").arg(lmin,2,10,QChar('0')).arg(ls,2,10,QChar('0'));
         timeLabel->setText("00:00"+this->totalTimeStr);
         static_cast<DanmuStatisInfo *>(danmuStatisBar)->duration=ts;
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
+        if(currentItem->playTime>15 && currentItem->playTime<ts-15)
+        {
+            GlobalObjects::mpvplayer->seek(currentItem->playTime*1000);
+            showMessage(tr("Jumped to the last play position"));
+        }
+        if(resizePercent!=-1) adjustPlayerSize(resizePercent);
+        qDebug()<<"Duration Changed";
+    });
+    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::fileChanged,[this](){
+        const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
+        Q_ASSERT(currentItem);
+        process->setEventMark(QList<DanmuEvent>());
         if(currentItem->animeTitle.isEmpty())
-        {
             titleLabel->setText(currentItem->title);
-        }
         else
-        {
-            titleLabel->setText(QString("%1-%2").arg(currentItem->animeTitle).arg(currentItem->title));
-        }
+            titleLabel->setText(QString("%1-%2").arg(currentItem->animeTitle,currentItem->title));
         if(!currentItem->poolID.isEmpty())
         {
-			GlobalObjects::danmuPool->setPoolID(currentItem->poolID);
-            //GlobalObjects::danmuPool->loadDanmuFromDB();
+            GlobalObjects::danmuPool->setPoolID(currentItem->poolID);
         }
         else
         {
@@ -1160,17 +1166,11 @@ void PlayerWindow::setupSignals()
             if (GlobalObjects::danmuPool->hasPool())
             {
                 GlobalObjects::danmuPool->setPoolID("");
-                //GlobalObjects::danmuPool->cleanUp();
             }
         }
-        if(resizePercent!=-1)
-            adjustPlayerSize(resizePercent);
-        if(currentItem->playTime>15 && currentItem->playTime<ts-15)
-        {
-            GlobalObjects::mpvplayer->seek(currentItem->playTime*1000);
-            showMessage(tr("Jumped to the last play position"));
-        }
+        qDebug()<<"File Changed,Current Item: "<<currentItem->title;
     });
+
     QObject::connect(GlobalObjects::playlist,&PlayList::currentMatchChanged,[this](){
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
         if(currentItem->animeTitle.isEmpty())

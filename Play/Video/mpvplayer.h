@@ -49,6 +49,7 @@ public:
     QMap<QString,QMap<QString,QString> > getMediaInfo();
     void drawTexture(QList<const DanmuObject *> &objList, float alpha);
 signals:
+    void fileChanged();
     void durationChanged(int value);
     void positionChanged(int value);
     void positionJumped(int value);

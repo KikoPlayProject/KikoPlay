@@ -408,6 +408,8 @@ void MPVPlayer::initializeGL()
     qDebug()<<"OpenGL Version:"<<version;
     oldOpenGLVersion = !(version[0]<='9' &&  version[0]>='4');
     if(oldOpenGLVersion)qDebug()<<"Unsupport sampler2D Array";
+    bool useSample2DArray = GlobalObjects::appSetting->value("Play/Sampler2DArray",true).toBool();
+	if (!oldOpenGLVersion && !useSample2DArray) oldOpenGLVersion = true;
     if(oldOpenGLVersion)
     {
         danmuShader.addShaderFromSourceCode(QOpenGLShader::Vertex, vShaderDanmu_Old);
@@ -548,6 +550,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
         setMPVProperty("ao-volume",volume);
 		setMPVProperty("ao-mute", mute);
 		loadTracks();
+        emit fileChanged();
 		emit trackInfoChange(0);
 		emit trackInfoChange(1);
         break;
