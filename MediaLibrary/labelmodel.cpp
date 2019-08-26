@@ -18,7 +18,7 @@ LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
             if(!tagMap.contains(tag))
             {
                 tagMap.insert(tag,QSet<QString>({title}));
-                int insPos = tagCollectionNode->subNodes->size();
+                int insPos = tagCollectionNode->subNodes?tagCollectionNode->subNodes->size():0;
                 beginInsertRows(createIndex(1,0,tagCollectionNode),insPos,insPos);
                 new TagNode(tag, tagCollectionNode, 1, LABEL_TAG);
                 endInsertRows();
@@ -235,6 +235,7 @@ void LabelModel::refreshLabel()
     GlobalObjects::library->loadTags(tagMap,timeMap);
     QMap<QString, TagNode *> yearNodes;
     TagNode *airDateNode=new TagNode(tr("Air Date"), root, 0, TYPELEVEL);
+    airDateNode->subNodes=new QList<TagNode *>();
     for(auto iter=timeMap.begin();iter!=timeMap.end();++iter)
     {
         QString year(iter.key().left(4));
@@ -247,6 +248,7 @@ void LabelModel::refreshLabel()
         new TagNode(iter.key().right(2), yearNode, iter.value(), LABEL_MONTH);
     }
     TagNode *tagCollectionNode=new TagNode(tr("Tag"), root, 0, TYPELEVEL);
+    tagCollectionNode->subNodes=new QList<TagNode *>();
     for(auto iter=tagMap.begin();iter!=tagMap.end();++iter)
     {
         new TagNode(iter.key(), tagCollectionNode, iter.value().count(), LABEL_TAG);
