@@ -18,7 +18,7 @@ DanmuAccessResult *YoukuProvider::search(const QString &keyword)
     searchResult->providerId=id();
     try
     {
-        QString str(Network::httpGet(baseUrl,QUrlQuery()));
+        QString str(Network::httpGet(baseUrl,QUrlQuery(),QStringList({"Cookie","cna=7CDwFXXyiVsCAXwQYfPAzNg1"})));
         handleSearchReply(str,searchResult);
     }
     catch(Network::NetworkError &error)
