@@ -82,8 +82,8 @@ void ClickSlider::paintEvent(QPaintEvent *event)
 
     for(auto &e:eventList)
     {
-        int left = QStyle::sliderPositionFromValue(minimum(), maximum(), e.start, width());
-        int right = QStyle::sliderPositionFromValue(minimum(), maximum(), e.start+e.duration, width());
+        int left = QStyle::sliderPositionFromValue(minimum(), maximum(), qBound(minimum(), e.start, maximum()), width());
+        int right = QStyle::sliderPositionFromValue(minimum(), maximum(), qBound(minimum(), e.start+e.duration, maximum()), width());
         painter.fillRect(left,y,right-left,h,eColor);
     }
 
