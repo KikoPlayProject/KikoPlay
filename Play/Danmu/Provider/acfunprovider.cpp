@@ -107,19 +107,26 @@ QString AcfunProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
         emit downloadDone(errInfo,item);
         return errInfo;
     }
-    QString replyStr(Network::httpGet(baseUrl,QUrlQuery()));
-    QRegExp re("\"videoId\":([0-9]+)");
-    int pos=re.indexIn(replyStr);
-    if(pos==-1)
-    {
-        errInfo = tr("Decode Failed");
-    }
-    else
-    {
-        QStringList captured=re.capturedTexts();
-        item->id=captured[1].toInt();
-        downloadAllDanmu(danmuList,item->id);
-    }
+	try
+	{
+		QString replyStr(Network::httpGet(baseUrl, QUrlQuery()));
+		QRegExp re("\"videoId\":([0-9]+)");
+		int pos = re.indexIn(replyStr);
+		if (pos == -1)
+		{
+			errInfo = tr("Decode Failed");
+		}
+		else
+		{
+			QStringList captured = re.capturedTexts();
+			item->id = captured[1].toInt();
+			downloadAllDanmu(danmuList, item->id);
+		}
+	}
+	catch (Network::NetworkError &error)
+	{
+		errInfo = error.errorInfo;
+	}
     emit downloadDone(errInfo,item);
     return errInfo;
 }
