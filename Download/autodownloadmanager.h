@@ -6,6 +6,7 @@
 #include <QThread>
 #include <QMutex>
 #include <QIcon>
+#include <QQueue>
 struct DownloadRule
 {
     DownloadRule():minSize(0),maxSize(0),lastCheckTime(0),searchInterval(10),state(0),download(true){}
@@ -46,6 +47,9 @@ signals:
     void log(const DownloadRuleLog &ruleLog);
     void updateState(QSharedPointer<DownloadRule> rule);
 private:
+    QQueue<QSharedPointer<DownloadRule> > ruleQueue;
+    bool isChecking;
+    void check();
     void fetchInfo(DownloadRule *rule);
     bool satisfyRule(ResItem *item, DownloadRule *rule, const QList<QRegExp> &filterRegExps);
 };

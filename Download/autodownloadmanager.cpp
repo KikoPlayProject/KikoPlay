@@ -327,15 +327,28 @@ QVariant AutoDownloadManager::headerData(int section, Qt::Orientation orientatio
     return QVariant();
 }
 
-DownloadRuleChecker::DownloadRuleChecker(QObject *parent) : QObject(parent)
+DownloadRuleChecker::DownloadRuleChecker(QObject *parent) : QObject(parent), isChecking(false)
 {
 
 }
 
 void DownloadRuleChecker::checkRules(QList<QSharedPointer<DownloadRule> > rules)
 {
-    for (auto &rule: rules)
+    for(auto &rule : rules)
     {
+        if(ruleQueue.contains(rule)) continue;
+        ruleQueue.append(rule);
+    }
+    if(isChecking) return;
+    check();
+}
+
+void DownloadRuleChecker::check()
+{
+    isChecking = true;
+    while(!ruleQueue.isEmpty())
+    {
+        auto rule = ruleQueue.dequeue();
         if(rule->state != 0) continue;
         if(!rule->lock.tryLock())
         {
@@ -351,6 +364,7 @@ void DownloadRuleChecker::checkRules(QList<QSharedPointer<DownloadRule> > rules)
         emit updateState(rule);
         rule->lock.unlock();
     }
+    isChecking = false;
 }
 
 void DownloadRuleChecker::fetchInfo(DownloadRule *rule)
