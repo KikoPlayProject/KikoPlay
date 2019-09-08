@@ -72,7 +72,8 @@ bool isRunning()
                 QFileInfo fi(path);
                 if(fi.isFile())
                 {
-                    if(GlobalObjects::mpvplayer->videoFileFormats.contains("*."+fi.suffix().toLower()))
+                    const QStringList videoFileFormats = {"*.mp4","*.mkv","*.avi","*.flv","*.wmv"};
+                    if(videoFileFormats.contains("*."+fi.suffix().toLower()))
                     {
                         fileList.append(fi.filePath());
                     }
