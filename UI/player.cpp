@@ -1806,11 +1806,15 @@ void PlayerWindow::dropEvent(QDropEvent *event)
 void PlayerWindow::wheelEvent(QWheelEvent *event)
 {
 	int val = volume->value();
-	if(val>0 && val<100)
-		QApplication::sendEvent(volume,event);
-	else if(val==0 && event->angleDelta().y()>0)
-		QApplication::sendEvent(volume, event);
-	else if(val==100 && event->angleDelta().y()<0)
-		QApplication::sendEvent(volume, event);
+	if (val > 0 && val < 100 || val == 0 && event->angleDelta().y()>0 || val == 100 && event->angleDelta().y() < 0)
+	{
+		static bool inProcess = false;
+		if (!inProcess)
+		{
+			inProcess = true;
+			QApplication::sendEvent(volume, event);
+			inProcess = false;
+		}
+	}
     showMessage(tr("Volume: %0").arg(volume->value()));
 }
