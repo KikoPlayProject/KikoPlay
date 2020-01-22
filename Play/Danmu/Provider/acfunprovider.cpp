@@ -110,7 +110,7 @@ QString AcfunProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
 	try
 	{
 		QString replyStr(Network::httpGet(baseUrl, QUrlQuery()));
-		QRegExp re("\"videoId\":([0-9]+)");
+        QRegExp re("\"(current)?(V|v)ideoId\":([0-9]+)");
 		int pos = re.indexIn(replyStr);
 		if (pos == -1)
 		{
@@ -119,8 +119,16 @@ QString AcfunProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
 		else
 		{
 			QStringList captured = re.capturedTexts();
-			item->id = captured[1].toInt();
+            item->id = captured[3].toInt();
 			downloadAllDanmu(danmuList, item->id);
+            QRegExp reDuration("\"durationMillis\":([0-9]+)");
+            int pos = reDuration.indexIn(replyStr);
+            if (pos != -1)
+            {
+                item->extra=reDuration.capturedTexts()[1].toInt()/1000;
+            }
+
+
 		}
 	}
 	catch (Network::NetworkError &error)
@@ -308,6 +316,41 @@ void AcfunProvider::downloadAllDanmu(QList<DanmuComment *> &danmuList, int video
 {
     try
     {
+        QString baseUrl="https://www.acfun.cn/rest/pc-direct/new-danmaku/poll";
+        QByteArray data(QString("videoId=%1&lastFetchTime=0").arg(videoId).toUtf8());
+
+        QString replyStr(Network::httpPost(baseUrl,data,{"Cookie","_did=web;"}));
+        QJsonDocument document(Network::toJson(replyStr));
+
+        QJsonArray added_dms(document.object().value("added").toArray());
+        for(auto iter=added_dms.begin();iter!=added_dms.end();++iter)
+        {
+            QJsonObject dmObj=(*iter).toObject();
+            DanmuComment *danmu=new DanmuComment();
+            danmu->text=dmObj.value("body").toString();
+            danmu->time =dmObj.value("position").toInt();
+            danmu->originTime=danmu->time;
+            danmu->color=dmObj.value("color").toInt();
+            danmu->setType(dmObj.value("mode").toInt());
+            danmu->sender="[Acfun]"+QString::number(dmObj.value("userId").toInt());
+            switch (dmObj.value("size").toInt())
+            {
+            case 25:
+                danmu->fontSizeLevel=DanmuComment::Normal;
+                break;
+            case 18:
+                danmu->fontSizeLevel=DanmuComment::Small;
+                break;
+            case 36:
+                danmu->fontSizeLevel=DanmuComment::Large;
+                break;
+            default:
+                danmu->fontSizeLevel=DanmuComment::Normal;
+            }
+            if(danmu->type!=DanmuComment::UNKNOW)danmuList.append(danmu);
+            else delete danmu;
+        }
+        /*
         int downloadCount=0;
         QString timeStamp("4073558400000");
         do
@@ -350,6 +393,7 @@ void AcfunProvider::downloadAllDanmu(QList<DanmuComment *> &danmuList, int video
                 timeStamp=QString::number(danmuList.last()->date);
 
         }while(downloadCount>=1000);
+        */
     }
     catch(Network::NetworkError &)
     {
