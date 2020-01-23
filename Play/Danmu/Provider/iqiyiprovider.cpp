@@ -69,7 +69,7 @@ QString IqiyiProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
     try
     {
         QString replyStr(Network::httpGet(item->strId,QUrlQuery()));
-        QRegExp re("playPageInfo.*(\\{.*\\});");
+        QRegExp re("playPageInfo\\s*=\\s*(\\{.*\\})");
         re.setMinimal(true);
         int pos=re.indexIn(replyStr);
         if(pos==-1)
@@ -114,56 +114,46 @@ QString IqiyiProvider::downloadBySourceURL(const QString &url, QList<DanmuCommen
 
 void IqiyiProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
 {
-    QRegExp re("(<ul class=\"mod_result_list\">)(.*)(<div class=\"mod-page\")");
+    QRegExp re("<div class=\"layout-main\">(.*)<div class=\"layout-side j-search-aside\">");
     int pos=re.indexIn(reply);
     if(pos!=-1)
     {
         QStringList list = re.capturedTexts();
-        HTMLParserSax parser(list.at(2));
+        HTMLParserSax parser(list.at(1));
         DanmuSourceItem item;
         item.extra=0;
         bool itemStart=false;
-        bool epStart=false;
         while(!parser.atEnd())
         {
-            if(parser.currentNodeProperty("class")=="list_item")
+            if(parser.currentNodeProperty("class")=="qy-search-result-tit")
             {
-                if(!itemStart)itemStart=true;
-				else
+                do{
+                    parser.readNext();
+                }while(parser.currentNodeProperty("class")!="main-tit");
+                if(itemStart)
 				{
-                    if (!epStart && !item.title.trimmed().isEmpty())result->list.append(item);
+                    result->list.append(item);
 				}
-                epStart=false;
-                item.title=parser.currentNodeProperty("data-widget-searchlist-tvname");
-            }
-            else if(parser.currentNodeProperty("class")=="result_title")
-            {
-                parser.readNext();
+                itemStart=true;
+                item.title=parser.currentNodeProperty("title");
                 item.strId=parser.currentNodeProperty("href");
             }
-            else if(parser.currentNodeProperty("class")=="info_play_btn")
+            else if(parser.currentNodeProperty("class")=="qy-search-result-album")
             {
-                item.strId=parser.currentNodeProperty("href");
-            }
-            else if(parser.currentNodeProperty("class")=="result_info_txt")
-            {
-                item.description=parser.readContentText();
-            }
-            else if(parser.currentNodeProperty("class")=="result_album clearfix" &&
-                    parser.currentNodeProperty("data-tvlist-elem")=="list")
-            {
-                epStart=true;
-            }
-            else if(epStart && parser.currentNodeProperty("class")=="album_link")
-            {
-                if(!parser.currentNodeProperty("href").isEmpty())
+                while(parser.currentNode()!="ul" || parser.isStartNode())
                 {
-                    DanmuSourceItem epItem;
-                    epItem.title=item.title + " " + parser.currentNodeProperty("title");
-                    epItem.strId=parser.currentNodeProperty("href");
-                    epItem.extra=0;
-                    result->list.append(epItem);
+                    parser.readNext();
+                    if(parser.currentNode()=="li" && parser.currentNodeProperty("class")=="album-item")
+                    {
+                        parser.readNext();
+                        DanmuSourceItem epItem;
+                        epItem.title=item.title + " " + parser.currentNodeProperty("title");
+                        epItem.strId=parser.currentNodeProperty("href");
+                        epItem.extra=0;
+                        result->list.append(epItem);
+                    }
                 }
+                itemStart = false;
             }
             parser.readNext();
         }

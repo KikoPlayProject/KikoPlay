@@ -332,6 +332,7 @@ void AcfunProvider::downloadAllDanmu(QList<DanmuComment *> &danmuList, int video
             danmu->originTime=danmu->time;
             danmu->color=dmObj.value("color").toInt();
             danmu->setType(dmObj.value("mode").toInt());
+            danmu->date = 0;
             danmu->sender="[Acfun]"+QString::number(dmObj.value("userId").toInt());
             switch (dmObj.value("size").toInt())
             {
