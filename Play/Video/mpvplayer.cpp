@@ -83,6 +83,7 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
         QString opt(option.trimmed());
         if(opt.startsWith('#'))continue;
         int eqPos=opt.indexOf('=');
+        if(eqPos==-1) eqPos = opt.length();
 		mpv::qt::set_option_variant(mpv, opt.left(eqPos), opt.mid(eqPos+1));
     }
     mpv_set_option_string(mpv, "terminal", "yes");
