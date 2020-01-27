@@ -59,6 +59,30 @@ const char *fShaderDanmu_Old =
         "    gl_FragColor.rgba = texture2D(u_SamplerD, v_vTexCoord).bgra;\n"
         "    gl_FragColor.a *= alpha;\n"
 "}\n";
+#ifdef Q_OS_WIN
+#pragma comment (lib,"user32.lib")
+#pragma comment (lib,"gdi32.lib")
+static  QString get_color_profile(HWND hwnd)
+{
+    HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
+    MONITORINFOEXW mi;
+    mi.cbSize = sizeof mi;
+    GetMonitorInfo(monitor, (MONITORINFO*)&mi);
+    QString name;
+
+    HDC ic = CreateICW(mi.szDevice, nullptr, nullptr, nullptr);
+    if(ic)
+    {
+        wchar_t wname[MAX_PATH + 1];
+        DWORD bufSize(MAX_PATH);
+        if (GetICMProfile(ic, &bufSize, wname))
+            name = QString::fromWCharArray(wname);
+    }
+    if (ic)
+        DeleteDC(ic);
+    return name;
+}
+#endif
 }
 MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::Stop),
     mute(false),danmuHide(false),oldOpenGLVersion(false),currentDuration(0)
@@ -84,7 +108,16 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
         if(opt.startsWith('#'))continue;
         int eqPos=opt.indexOf('=');
         if(eqPos==-1) eqPos = opt.length();
-		mpv::qt::set_option_variant(mpv, opt.left(eqPos), opt.mid(eqPos+1));
+        QString key(opt.left(eqPos)), val(opt.mid(eqPos+1));
+        mpv::qt::set_option_variant(mpv, key, val);
+        optionsMap.insert(key, val);
+    }
+    if(optionsMap.contains("icc-profile-auto"))
+    {
+#ifdef Q_OS_WIN
+        QString iccProfile(get_color_profile((HWND)winId()));
+        mpv::qt::set_option_variant(mpv, "icc-profile",iccProfile);
+#endif
     }
     mpv_set_option_string(mpv, "terminal", "yes");
     mpv_set_option_string(mpv, "keep-open", "yes");  

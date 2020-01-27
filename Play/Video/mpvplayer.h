@@ -103,6 +103,7 @@ private:
     QOpenGLShaderProgram danmuShader;
     QTimer refreshTimer;
     QElapsedTimer elapsedTimer;
+    QMap<QString, QString> optionsMap;
 
     int currentDuration;
     TrackInfo audioTrack,subtitleTrack;
