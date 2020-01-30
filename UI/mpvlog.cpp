@@ -8,7 +8,7 @@ MPVLog::MPVLog(QWidget *parent) : CFramelessDialog(tr("MPV Log"),parent,false,tr
 {
     QPlainTextEdit *logView=new QPlainTextEdit(this);
     logView->setReadOnly(true);
-    logView->setMaximumBlockCount(256);
+    logView->setMaximumBlockCount(1024);
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::showLog,[logView](const QString &log){
         logView->appendPlainText(log.trimmed());
         QTextCursor cursor = logView->textCursor();

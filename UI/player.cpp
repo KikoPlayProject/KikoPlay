@@ -213,6 +213,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     setCentralWidget(GlobalObjects::mpvplayer);
     GlobalObjects::mpvplayer->setMouseTracking(true);
     setContentsMargins(0,0,0,0);
+    GlobalObjects::mpvplayer->setOptions();
 
     logDialog=new MPVLog(this);
 

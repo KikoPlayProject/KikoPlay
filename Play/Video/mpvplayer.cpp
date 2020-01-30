@@ -4,6 +4,8 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLPaintDevice>
 #include <QCoreApplication>
+#include <QApplication>
+#include <QDesktopWidget>
 #include <QDebug>
 #include <QMap>
 #include <clocale>
@@ -62,7 +64,7 @@ const char *fShaderDanmu_Old =
 #ifdef Q_OS_WIN
 #pragma comment (lib,"user32.lib")
 #pragma comment (lib,"gdi32.lib")
-static  QString get_color_profile(HWND hwnd)
+static QString get_color_profile(HWND hwnd)
 {
     HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
     MONITORINFOEXW mi;
@@ -112,13 +114,7 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
         mpv::qt::set_option_variant(mpv, key, val);
         optionsMap.insert(key, val);
     }
-    if(optionsMap.contains("icc-profile-auto"))
-    {
-#ifdef Q_OS_WIN
-        QString iccProfile(get_color_profile((HWND)winId()));
-        mpv::qt::set_option_variant(mpv, "icc-profile",iccProfile);
-#endif
-    }
+
     mpv_set_option_string(mpv, "terminal", "yes");
     mpv_set_option_string(mpv, "keep-open", "yes");  
     // Make use of the MPV_SUB_API_OPENGL_CB API.
@@ -214,6 +210,24 @@ QMap<QString, QMap<QString, QString> > MPVPlayer::getMediaInfo()
     mediaInfo.insert(tr("Meta Data"),metaInfo);
 
     return mediaInfo;
+}
+
+void MPVPlayer::setOptions()
+{
+    if(optionsMap.contains("icc-profile-auto"))
+    {
+#ifdef Q_OS_WIN
+        if(this->parent())
+        {
+            QWidget *pWidget = dynamic_cast<QWidget *>(this->parent());
+            if(pWidget)
+            {
+                QString iccProfile(get_color_profile((HWND)pWidget->winId()));
+                mpv::qt::set_option_variant(mpv, "icc-profile",iccProfile);
+            }
+        }
+#endif
+    }
 }
 
 void MPVPlayer::drawTexture(QList<const DanmuObject *> &objList, float alpha)

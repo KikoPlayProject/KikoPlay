@@ -47,6 +47,7 @@ public:
 
     VideoSizeInfo getVideoSizeInfo();
     QMap<QString,QMap<QString,QString> > getMediaInfo();
+    void setOptions();
     void drawTexture(QList<const DanmuObject *> &objList, float alpha);
 signals:
     void fileChanged();
