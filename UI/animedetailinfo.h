@@ -2,6 +2,7 @@
 #define ANIMEDETAILINFO_H
 
 #include "framelessdialog.h"
+#include <QMap>
 struct Anime;
 struct Character;
 class CharacterItem : public QWidget

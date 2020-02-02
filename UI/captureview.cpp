@@ -7,6 +7,8 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QFileDialog>
+#include <QMouseEvent>
+#include <QWheelEvent>
 CaptureView::CaptureView(CaptureListModel *captureModel, int curRow, QWidget *parent) : CFramelessDialog("",parent,false,true,false)
 {
     this->curRow=curRow;
