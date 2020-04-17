@@ -127,7 +127,11 @@ namespace
 HttpServer::HttpServer(QObject *parent) : QObject(parent)
 {
     MediaFileHandler *handler=new MediaFileHandler(&mediaHash,this);
+#ifndef CONFIG_HOME_DATA
     handler->setDocumentRoot(QCoreApplication::applicationDirPath()+"/web");
+#else
+    handler->setDocumentRoot(QDir::homePath()+"/.config/kikoplay/web");
+#endif
     handler->addRedirect(QRegExp("^$"), "/index.html");
 
     QHttpEngine::QObjectHandler *apiHandler=new QHttpEngine::QObjectHandler(this);

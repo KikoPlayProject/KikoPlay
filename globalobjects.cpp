@@ -42,7 +42,11 @@ namespace  {
 }
 void GlobalObjects::init()
 {
+#ifndef CONFIG_HOME_DATA
     dataPath=QCoreApplication::applicationDirPath()+"/data/";
+#else
+    dataPath=QDir::homePath()+"/.config/kikoplay/data/";
+#endif
     QDir dir;
     if(!dir.exists(dataPath))
     {

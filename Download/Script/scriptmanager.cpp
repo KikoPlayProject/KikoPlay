@@ -163,7 +163,11 @@ QString ScriptManager::search(QString sid, const QString &keyword, int page, int
     {
         if(s.id==sid)
         {
+#ifndef CONFIG_HOME_DATA
             scriptPath=QCoreApplication::applicationDirPath()+"/script/"+s.fileName;
+#else
+            scriptPath=QDir::homePath()+"/.config/kikoplay/script/"+s.fileName;
+#endif
             break;
         }
     }
@@ -270,7 +274,11 @@ void ScriptManager::removeScript(const QModelIndex &index)
         else
             normalScriptId="";
     }
+#ifndef CONFIG_HOME_DATA
     QFileInfo fi(QCoreApplication::applicationDirPath()+"/script/"+script.fileName);
+#else
+    QFileInfo fi(QDir::homePath()+"/.config/kikoplay/script/"+script.fileName);
+#endif
     if(fi.exists()) fi.dir().remove(fi.fileName());
     beginRemoveRows(QModelIndex(),index.row(),index.row());
     scriptList.removeAt(index.row());
@@ -319,7 +327,11 @@ QVariant ScriptManager::headerData(int section, Qt::Orientation orientation, int
 
 void ScriptWorker::refreshScriptList()
 {
+#ifndef CONFIG_HOME_DATA
     QString scriptPath(QCoreApplication::applicationDirPath()+"/script/");
+#else
+    QString scriptPath(QDir::homePath()+"/.config/kikoplay/script/");
+#endif
     QDir folder(scriptPath);
     QList<ScriptInfo> sList;
     for (QFileInfo fileInfo : folder.entryInfoList())
