@@ -253,9 +253,17 @@ contains(QT_ARCH, i386){
         LIBS += -L/usr/lib/x86_64-linux-gnu/ -lmpv
         LIBS += -L/usr/lib/x86_64-linux-gnu/ -lz
         LIBS += -L/usr/lib/x86_64-linux-gnu/ -lm
-        LIBS += -L$$PWD/lib/x64/linux/ -llua
+        LIBS += -L$$PWD/lib/x64/linux/ -llua5.3
         LIBS += -L/usr/local/lib/ -lqhttpengine
         LIBS += -L/usr/lib/x86_64-linux-gnu/ -ldl
+
+        target.path += /usr/bin
+        unix:icons.path = /usr/share/pixmaps
+        unix:desktop.path = /usr/share/applications
+        unix:icons.files = kikoplay.png kikoplay.xpm
+        unix:desktop.files = kikoplay.desktop
+
+        INSTALLS += target icons desktop
+        DEFINES += CONFIG_HOME_DATA
     }
 }
-
