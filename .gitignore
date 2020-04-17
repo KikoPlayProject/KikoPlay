@@ -14,3 +14,10 @@ Win32/
 kikoplay.aps
 release/
 debug/
+Makefile
+KikoPlay
+kikoplay
+*.o
+qrc_res.cpp
+moc_*.cpp
+moc_predefs.h
