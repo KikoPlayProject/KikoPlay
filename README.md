@@ -88,6 +88,16 @@ Manjaro上的编译更为简单：
      make
      ```
 
+Gentoo上的编译安装流程：
+
+ 1. 添加[Gentoo GURU overlay](https://github.com/gentoo/guru)
+ 2. 直接安装 ``media-video/kikoplay``，会自动解决所有依赖关系以及编译好。
+
+    ```bash
+    sudo layman -a guru
+    sudo emerge media-video/kikoplay
+    ```
+
 编译成功后得到KikoPlay文件，可直接运行./KikoPlay，如果提示缺少libqhttpengine等库，可尝试将编译QHttpEngine得到的库放到/usr/lib目录下，也可以将/usr/local/lib加入LD_LIBRARY_PATH环境变量中。下载功能需要aria2c，可自行编译或者下载后放到KikoPlay同一目录下
 
 自从0.2.3版本后只提供64位版本，不建议使用32位版本
