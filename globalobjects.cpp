@@ -17,7 +17,7 @@
 #include <QSqlQuery>
 #include <QApplication>
 #include <QSqlError>
-
+#include <QFileInfo>
 
 MPVPlayer *GlobalObjects::mpvplayer=nullptr;
 DanmuPool *GlobalObjects::danmuPool=nullptr;
@@ -42,7 +42,14 @@ namespace  {
 }
 void GlobalObjects::init()
 {
-    dataPath=QCoreApplication::applicationDirPath()+"/data/";
+    const QFileInfo fileinfoConfig(QDir::homePath()+"/.config");
+    /* Test Linux/MacOS style environment */
+    if (fileinfoConfig.exists() || fileinfoConfig.isDir() || fileinfoConfig.isWritable()) {
+        dataPath=QDir::homePath()+"/.config/kikoplay/data/";
+    } else {
+        dataPath=QCoreApplication::applicationDirPath()+"/data/";
+    }
+
     QDir dir;
     if(!dir.exists(dataPath))
     {

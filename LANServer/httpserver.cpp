@@ -14,6 +14,8 @@
 
 #include <QCoreApplication>
 #include <QMimeDatabase>
+#include <QFileInfo>
+
 namespace
 {
     class MediaFileHandler : public QHttpEngine::FilesystemHandler
@@ -127,7 +129,23 @@ namespace
 HttpServer::HttpServer(QObject *parent) : QObject(parent)
 {
     MediaFileHandler *handler=new MediaFileHandler(&mediaHash,this);
-    handler->setDocumentRoot(QCoreApplication::applicationDirPath()+"/web");
+
+    const QString strHome(QDir::homePath()+"/.config/kikoplay/web");
+    const QString strSys("/usr/share/kikoplay/web");
+    const QString strApp(QCoreApplication::applicationDirPath()+"/web");
+
+    const QFileInfo fileinfoHome(strHome);
+    const QFileInfo fileinfoSys(strSys);
+    const QFileInfo fileinfoApp(strApp);
+
+    if (fileinfoHome.exists() || fileinfoHome.isDir()) {
+        handler->setDocumentRoot(strHome);
+    } else if (fileinfoSys.exists() || fileinfoSys.isDir()) {
+        handler->setDocumentRoot(strSys);
+    } else {
+        handler->setDocumentRoot(strApp);
+    }
+
     handler->addRedirect(QRegExp("^$"), "/index.html");
 
     QHttpEngine::QObjectHandler *apiHandler=new QHttpEngine::QObjectHandler(this);

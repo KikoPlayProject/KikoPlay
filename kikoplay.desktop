@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=KikoPlay
+Comment=KikoPlay is a full-featured danmu player!
+TryExec=KikoPlay
+Exec=KikoPlay
+Icon=/usr/share/pixmaps/kikoplay.png
+Terminal=false
+StartupNotify=true
+Categories=Qt;AudioVideo;Video;

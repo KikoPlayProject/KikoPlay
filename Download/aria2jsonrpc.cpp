@@ -1,4 +1,5 @@
 #include "aria2jsonrpc.h"
+#include <QFileInfo>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
@@ -19,7 +20,13 @@ Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent)
 #ifdef Q_OS_WIN
     process->start(QCoreApplication::applicationDirPath()+"\\aria2c.exe", args);
 #else
-    process->start(QCoreApplication::applicationDirPath()+"/aria2c", args);
+    QFileInfo check_file(QCoreApplication::applicationDirPath()+"/aria2c");
+    /* check if file exists and if yes: Is it really a file and no directory? */
+    if (check_file.exists() && check_file.isFile()) {
+        process->start(QCoreApplication::applicationDirPath()+"/aria2c", args);
+    } else {
+        process->start("aria2c", args);
+    }
 
 #endif
     process->waitForStarted(-1);
