@@ -262,8 +262,9 @@ contains(QT_ARCH, i386){
         unix:desktop.path = /usr/share/applications
         unix:icons.files = kikoplay.png kikoplay.xpm
         unix:desktop.files = kikoplay.desktop
+        unix:web.path = /usr/share/kikoplay/web
+        unix:web.files = web/*
 
-        INSTALLS += target icons desktop
-        DEFINES += CONFIG_HOME_DATA
+        INSTALLS += target icons desktop web
     }
 }
