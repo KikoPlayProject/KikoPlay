@@ -169,13 +169,17 @@ border-color: #bcbcbc;
      border: 1px solid #999999;
      height: 1px;
      margin: 0px 0;
-     left: 8px; right: 8px;
+     margin-left:8px;
+     margin-right:8px;
+     /*left: 8px; right: 8px;*/
  }
 #widgetProcessSlider::groove:horizontal:hover {
     border: 1px solid #999999;
     height: 4px;
     margin: 0px 0;
-    left: 8px; right: 8px;
+    margin-left:8px;
+    margin-right:8px;
+    /*left: 8px; right: 8px;*/
 }
 #widgetProcessSlider::handle:horizontal {
     width: 10px;

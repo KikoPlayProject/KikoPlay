@@ -461,7 +461,13 @@ void MPVPlayer::initializeGL()
     QOpenGLFunctions *glFuns=context()->functions();
     const char *version = reinterpret_cast<const char*>(glFuns->glGetString(GL_VERSION));
     qDebug()<<"OpenGL Version:"<<version;
-    oldOpenGLVersion = !(version[0]<='9' &&  version[0]>='4');
+    int mainVersion=0;
+	while (version && *version >= '0' && *version <= '9')
+	{
+		mainVersion = mainVersion * 10 + *version - '0';
+		++version;
+	}
+    oldOpenGLVersion = mainVersion<4;
     if(oldOpenGLVersion)qDebug()<<"Unsupport sampler2D Array";
     bool useSample2DArray = GlobalObjects::appSetting->value("Play/Sampler2DArray",true).toBool();
 	if (!oldOpenGLVersion && !useSample2DArray) oldOpenGLVersion = true;
@@ -614,6 +620,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
         setMPVProperty("ao-volume",volume);
 		setMPVProperty("ao-mute", mute);
 		loadTracks();
+        loadChapters();
         emit fileChanged();
 		emit trackInfoChange(0);
 		emit trackInfoChange(1);
@@ -676,7 +683,18 @@ void MPVPlayer::loadTracks()
 			subtitleTrack.desc_str.append(title.isEmpty() ? trackMap["id"].toString() : title);
 			subtitleTrack.ids.append(trackMap["id"].toInt());
 		}
-	}
+    }
+}
+
+void MPVPlayer::loadChapters()
+{
+    QVariantList chapters=mpv::qt::get_property(mpv,"chapter-list").toList();
+    this->chapters.clear();
+    for(auto &cp : chapters)
+    {
+		auto mp = cp.toMap();
+        this->chapters.append(ChapterInfo({mp["title"].toString(), static_cast<int>(mp["time"].toInt()*1000)}));
+    }
 }
 
 int MPVPlayer::setMPVCommand(const QVariant &params)

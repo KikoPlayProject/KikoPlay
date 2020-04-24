@@ -30,6 +30,12 @@ public:
         int dwidth;
         int dheight;
     };
+    struct ChapterInfo
+    {
+        QString title;
+        int position;
+    };
+
     const QStringList videoFileFormats = {"*.mp4","*.mkv","*.avi","*.flv","*.wmv"};
     const QStringList subtitleFormats = {"*.sub","*.srt","*.ass","*.ssa","*.smi","*.rt","*.txt","*.mks","*.vtt","*.sup"};
     const QStringList speedLevel={"0.5","0.75","1","1.5","2"};
@@ -44,6 +50,7 @@ public:
     inline int getCurrentSubTrack() const{return subtitleTrack.ids.indexOf(mpv::qt::get_property(mpv,"sid").toInt());}
     inline int getTime() const{return mpv::qt::get_property(mpv,"playback-time").toDouble();}
     inline int getDuration() const{return currentDuration;}
+    inline const QList<ChapterInfo> &getChapters() const {return chapters;}
 
     VideoSizeInfo getVideoSizeInfo();
     QMap<QString,QMap<QString,QString> > getMediaInfo();
@@ -109,6 +116,9 @@ private:
     int currentDuration;
     TrackInfo audioTrack,subtitleTrack;
     void loadTracks();
+
+    QList<ChapterInfo> chapters;
+    void loadChapters();
 
     inline int setMPVCommand(const QVariant& params);
     inline void setMPVProperty(const QString& name, const QVariant& value);

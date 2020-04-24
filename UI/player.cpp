@@ -1169,6 +1169,7 @@ void PlayerWindow::setupSignals()
                 GlobalObjects::danmuPool->setPoolID("");
             }
         }
+        process->setChapterMark(GlobalObjects::mpvplayer->getChapters());
         qDebug()<<"File Changed,Current Item: "<<currentItem->title;
     });
 
