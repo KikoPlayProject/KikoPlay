@@ -21,6 +21,7 @@ public:
         imgLabel = new QLabel(this);
         imgLabel->setAlignment(Qt::AlignCenter);
         imgLabel->setScaledContents(true);
+        imgLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
         titleLabel=new QLabel(this);
         titleLabel->setAlignment(Qt::AlignCenter);
         titleLabel->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);

@@ -129,10 +129,10 @@ namespace
 HttpServer::HttpServer(QObject *parent) : QObject(parent)
 {
     MediaFileHandler *handler=new MediaFileHandler(&mediaHash,this);
-
+    const QString strApp(QCoreApplication::applicationDirPath()+"/web");
+#ifdef CONFIG_UNIX_DATA
     const QString strHome(QDir::homePath()+"/.config/kikoplay/web");
     const QString strSys("/usr/share/kikoplay/web");
-    const QString strApp(QCoreApplication::applicationDirPath()+"/web");
 
     const QFileInfo fileinfoHome(strHome);
     const QFileInfo fileinfoSys(strSys);
@@ -145,7 +145,9 @@ HttpServer::HttpServer(QObject *parent) : QObject(parent)
     } else {
         handler->setDocumentRoot(strApp);
     }
-
+#else
+    handler->setDocumentRoot(strApp);
+#endif
     handler->addRedirect(QRegExp("^$"), "/index.html");
 
     QHttpEngine::QObjectHandler *apiHandler=new QHttpEngine::QObjectHandler(this);

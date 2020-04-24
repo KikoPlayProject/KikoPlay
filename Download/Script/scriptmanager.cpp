@@ -99,6 +99,31 @@ namespace
         }
         return table;
     }
+    QString getScriptPath()
+    {
+        const QString strApp(QCoreApplication::applicationDirPath()+"/script");
+    #ifdef CONFIG_UNIX_DATA
+        const QString strHome(QDir::homePath()+"/.config/kikoplay/script");
+        const QString strSys("/usr/share/kikoplay/script");
+
+        const QFileInfo fileinfoHome(strHome);
+        const QFileInfo fileinfoSys(strSys);
+        const QFileInfo fileinfoApp(strApp);
+
+        QString scriptPathBase;
+
+        if (fileinfoHome.exists() || fileinfoHome.isDir()) {
+            scriptPathBase = strHome;
+        } else if (fileinfoSys.exists() || fileinfoSys.isDir()) {
+            scriptPathBase = strSys;
+        } else {
+            scriptPathBase = strApp;
+        }
+        return scriptPathBase;
+    #else
+        return strApp;
+    #endif
+    }
 }
 ScriptManager::ScriptManager(QObject *parent):QAbstractItemModel(parent)
 {
@@ -152,7 +177,7 @@ QString ScriptManager::search(QString sid, const QString &keyword, int page, int
             {
                 sid=scriptList.first().id;
                 normalScriptId=sid;
-                GlobalObjects::appSetting->setValue("cript/NormalRScript",sid);
+                GlobalObjects::appSetting->setValue("Script/NormalRScript",sid);
             }
             else
             {
@@ -162,31 +187,13 @@ QString ScriptManager::search(QString sid, const QString &keyword, int page, int
         }
     }
 
-    const QString strHome(QDir::homePath()+"/.config/kikoplay/script");
-    const QString strSys("/usr/share/kikoplay/script");
-    const QString strApp(QCoreApplication::applicationDirPath()+"/script");
-
-    const QFileInfo fileinfoHome(strHome);
-    const QFileInfo fileinfoSys(strSys);
-    const QFileInfo fileinfoApp(strApp);
-
-    QString scriptPathBase;
-
-    if (fileinfoHome.exists() || fileinfoHome.isDir()) {
-        scriptPathBase = strHome;
-    } else if (fileinfoSys.exists() || fileinfoSys.isDir()) {
-        scriptPathBase = strSys;
-    } else {
-        scriptPathBase = strApp;
-    }
-
     QString scriptPath;
 
     for(auto &s:scriptList)
     {
         if(s.id==sid)
         {
-            scriptPath = scriptPathBase + "/" + s.fileName;
+            scriptPath = getScriptPath() + "/" + s.fileName;
             break;
         }
     }
@@ -294,25 +301,7 @@ void ScriptManager::removeScript(const QModelIndex &index)
             normalScriptId="";
     }
 
-    const QString strHome(QDir::homePath()+"/.config/kikoplay/script");
-    const QString strSys("/usr/share/kikoplay/script");
-    const QString strApp(QCoreApplication::applicationDirPath()+"/script");
-
-    const QFileInfo fileinfoHome(strHome);
-    const QFileInfo fileinfoSys(strSys);
-    const QFileInfo fileinfoApp(strApp);
-
-    QString scriptPathBase;
-
-    if (fileinfoHome.exists() || fileinfoHome.isDir()) {
-        scriptPathBase = strHome;
-    } else if (fileinfoSys.exists() || fileinfoSys.isDir()) {
-        scriptPathBase = strSys;
-    } else {
-        scriptPathBase = strApp;
-    }
-
-    QFileInfo fi(scriptPathBase + "/" + script.fileName);
+    QFileInfo fi(getScriptPath() + "/" + script.fileName);
 
     if(fi.exists()) fi.dir().remove(fi.fileName());
     beginRemoveRows(QModelIndex(),index.row(),index.row());
@@ -362,25 +351,7 @@ QVariant ScriptManager::headerData(int section, Qt::Orientation orientation, int
 
 void ScriptWorker::refreshScriptList()
 {
-    const QString strHome(QDir::homePath()+"/.config/kikoplay/script");
-    const QString strSys("/usr/share/kikoplay/script");
-    const QString strApp(QCoreApplication::applicationDirPath()+"/script");
-
-    const QFileInfo fileinfoHome(strHome);
-    const QFileInfo fileinfoSys(strSys);
-    const QFileInfo fileinfoApp(strApp);
-
-    QString scriptPathBase;
-
-    if (fileinfoHome.exists() || fileinfoHome.isDir()) {
-        scriptPathBase = strHome;
-    } else if (fileinfoSys.exists() || fileinfoSys.isDir()) {
-        scriptPathBase = strSys;
-    } else {
-        scriptPathBase = strApp;
-    }
-
-    QString scriptPath(scriptPathBase + "/");
+    QString scriptPath(getScriptPath() + "/");
     QDir folder(scriptPath);
     QList<ScriptInfo> sList;
     for (QFileInfo fileInfo : folder.entryInfoList())

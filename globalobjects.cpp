@@ -42,14 +42,15 @@ namespace  {
 }
 void GlobalObjects::init()
 {
-    const QFileInfo fileinfoConfig(QDir::homePath()+"/.config");
-    /* Test Linux/MacOS style environment */
-    if (fileinfoConfig.exists() || fileinfoConfig.isDir() || fileinfoConfig.isWritable()) {
-        dataPath=QDir::homePath()+"/.config/kikoplay/data/";
-    } else {
-        dataPath=QCoreApplication::applicationDirPath()+"/data/";
-    }
+	dataPath = QCoreApplication::applicationDirPath() + "/data/";
 
+#ifdef CONFIG_UNIX_DATA
+	const QFileInfo fileinfoConfig(QDir::homePath() + "/.config");
+	/* Test Linux/MacOS style environment */
+	if (fileinfoConfig.exists() || fileinfoConfig.isDir() || fileinfoConfig.isWritable()) {
+		dataPath = QDir::homePath() + "/.config/kikoplay/data/";
+	}
+#endif
     QDir dir;
     if(!dir.exists(dataPath))
     {
