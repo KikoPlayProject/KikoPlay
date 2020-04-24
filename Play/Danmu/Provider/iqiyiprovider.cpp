@@ -5,12 +5,13 @@
 
 namespace
 {
-    const char *supportedUrlRe[]={"(https?://)?www\\.iqiyi\\.com/v_.+\\.html"};
+    const char *supportedUrlRe[]={"(https?://)?www\\.iqiyi\\.com/(v|w)_.+\\.html"};
 }
 
 QStringList IqiyiProvider::supportedURLs()
 {
-    return QStringList({"https://www.iqiyi.com/v_19rr1jer2o.html"});
+    return QStringList({"https://www.iqiyi.com/v_19rr1jer2o.html",
+                        "https://www.iqiyi.com/w_19rsjq2cbh.html"});
 }
 
 DanmuAccessResult *IqiyiProvider::search(const QString &keyword)
@@ -69,7 +70,7 @@ QString IqiyiProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
     try
     {
         QString replyStr(Network::httpGet(item->strId,QUrlQuery()));
-        QRegExp re("playPageInfo\\s*=\\s*(\\{.*\\})");
+        QRegExp re("playPageInfo\\s*(=|\\|\\|)\\s*(\\{\".*\\})(;|\\s)");
         re.setMinimal(true);
         int pos=re.indexIn(replyStr);
         if(pos==-1)
@@ -79,7 +80,7 @@ QString IqiyiProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
         else
         {
             QStringList captured=re.capturedTexts();
-            QJsonObject videoInfo(Network::toJson(captured[1]).object());
+            QJsonObject videoInfo(Network::toJson(captured[2]).object());
             item->title=videoInfo.value("tvName").toString();
             item->strId=QString::number(static_cast<qint64>(videoInfo.value("tvId").toDouble()));
             QStringList durations(videoInfo.value("duration").toString().split(':',QString::SkipEmptyParts));
@@ -114,7 +115,7 @@ QString IqiyiProvider::downloadBySourceURL(const QString &url, QList<DanmuCommen
 
 void IqiyiProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
 {
-    QRegExp re("<div class=\"layout-main\">(.*)<div class=\"layout-side j-search-aside\">");
+    QRegExp re("<div class=\"layout-main\">(.*)<div class=\"layout-side\">");
     int pos=re.indexIn(reply);
     if(pos!=-1)
     {
@@ -137,6 +138,7 @@ void IqiyiProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
                 itemStart=true;
                 item.title=parser.currentNodeProperty("title");
                 item.strId=parser.currentNodeProperty("href");
+                if(item.strId.startsWith("//")) item.strId.push_front("http:");
             }
             else if(parser.currentNodeProperty("class")=="qy-search-result-album")
             {
@@ -149,6 +151,25 @@ void IqiyiProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
                         DanmuSourceItem epItem;
                         epItem.title=item.title + " " + parser.currentNodeProperty("title");
                         epItem.strId=parser.currentNodeProperty("href");
+                        if(epItem.strId.startsWith("//")) epItem.strId.push_front("http:");
+                        epItem.extra=0;
+                        result->list.append(epItem);
+                    }
+                }
+                itemStart = false;
+            }
+            else if(parser.currentNodeProperty("class")=="qy-search-result-album-half")
+            {
+                while(parser.currentNode()!="ul" || parser.isStartNode())
+                {
+                    parser.readNext();
+                    if(parser.currentNode()=="li" && parser.currentNodeProperty("class")=="album-item")
+                    {
+                        parser.readNext();
+                        DanmuSourceItem epItem;
+                        epItem.title=parser.currentNodeProperty("title");
+                        epItem.strId=parser.currentNodeProperty("href");
+                        if(epItem.strId.startsWith("//")) epItem.strId.push_front("http:");
                         epItem.extra=0;
                         result->list.append(epItem);
                     }

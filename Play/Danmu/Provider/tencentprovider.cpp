@@ -210,7 +210,7 @@ void TencentProvider::handleSearchReply(QString &reply, DanmuAccessResult *resul
         QString titleUrl(parser.currentNodeProperty("href"));
         if(!titleUrl.startsWith("http://v.qq.com") && !titleUrl.startsWith("https://v.qq.com")) continue;
         QString title(parser.readContentUntil("a",false));
-        QRegExp lre("<.*>");
+        QRegExp lre("<.*>|\n|\t");
         lre.setMinimal(true);
         title.replace(lre,"");
         if(isItem_v)

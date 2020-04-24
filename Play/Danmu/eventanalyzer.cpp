@@ -95,7 +95,7 @@ QList<int> EventAnalyzer::zScoreThresholding()
     for(int i=lag;i<count;++i)
     {
         float nval(timeSeries[i]);
-        if(abs(nval-avg)>std*threshold && nval>gThreshold)
+        if(fabsf(nval-avg)>std*threshold && nval>gThreshold)
         {
             eventPoints.append(i);
             nval=influence*nval + (1-influence)*filteredWindow[lag-1];
@@ -218,7 +218,7 @@ QString EventAnalyzer::textRank(const QStringList &dmList)
         {
             float sum = std::inner_product(weightMatrix[k].begin(), weightMatrix[k].end(), score.begin(), 0.f);
             float ns = 1-d + d*sum;
-            t_c += abs(score[k]-ns);
+            t_c += fabsf(score[k]-ns);
             score[k] = ns;
         }
         if(t_c<c) break;

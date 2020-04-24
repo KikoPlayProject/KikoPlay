@@ -4,6 +4,7 @@
 #include <QSqlRecord>
 #include <QPixmap>
 #include <QCollator>
+#include <QDateTime>
 #include "globalobjects.h"
 #include "animeworker.h"
 #include "Common/network.h"

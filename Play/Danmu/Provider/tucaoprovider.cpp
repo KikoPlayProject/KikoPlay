@@ -4,7 +4,7 @@
 
 namespace
 {
-    const char *supportedUrlRe[]={"(http://)?www\\.tucao\\.one/play/h[0-9]+(#[0-9]+)?/?",
+    const char *supportedUrlRe[]={"(https?://)?www\\.tucao\\.one/play/h[0-9]+(#[0-9]+)?/?",
                                  "h[0-9]+(#[0-9]+)?"};
 }
 DanmuAccessResult *TucaoProvider::search(const QString &keyword)

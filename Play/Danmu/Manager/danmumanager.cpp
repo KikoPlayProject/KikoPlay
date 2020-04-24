@@ -585,9 +585,10 @@ QString DanmuManager::renamePool(const QString &pid, const QString &nAnimeTitle,
     Pool *pool=getPool(pid,false);
     if(!pool) return QString();
     if(nAnimeTitle==pool->anime && nEpTitle==pool->ep) return pool->pid;
+    QString npid(getPoolId(nAnimeTitle,nEpTitle));
+    if(pools.contains(npid)) return QString();
     PoolStateLock lock;
     if(!lock.tryLock(pid)) return QString();
-    QString npid(getPoolId(nAnimeTitle,nEpTitle));
     int oldId=DanmuPoolNode::idHash(pool->pid),newId=DanmuPoolNode::idHash(npid);
     QSqlDatabase db(GlobalObjects::getDB(GlobalObjects::Comment_DB));
     db.transaction();

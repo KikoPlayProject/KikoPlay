@@ -3,14 +3,18 @@
 namespace
 {
     const char *supportedUrlRe[]={"(https?://)?www\\.bilibili\\.com/video/av[0-9]+/?",
+                                  "(https?://)?www\\.bilibili\\.com/video/BV[\\dA-Za-z]+/?",
                                   "av[0-9]+",
+                                  "BV[\\dA-Za-z]+",
                                  "(https?://)?www\\.bilibili\\.com/bangumi/media/md[0-9]+/?"};
 }
 
 QStringList BilibiliProvider::supportedURLs()
 {
     return QStringList({"https://www.bilibili.com/video/av1728704",
+                        "https://www.bilibili.com/video/BV11x411P7TB",
                         "av24213033",
+                        "BV11x411P7TB",
                        "https://www.bilibili.com/bangumi/media/md28221404"});
 }
 
@@ -39,12 +43,18 @@ DanmuAccessResult *BilibiliProvider::search(const QString &keyword)
 DanmuAccessResult *BilibiliProvider::getEpInfo(DanmuSourceItem *item)
 {
     bool fromBangumi=(item->extra==-1);
+    bool useBvid=(item->id==-1 && !item->strId.isEmpty());
     QString baseUrl = fromBangumi?"https://bangumi.bilibili.com/view/web_api/season":
-                                    "https://api.bilibili.com/view";
+                                    (useBvid?"http://api.bilibili.com/x/web-interface/view":
+                                             "https://api.bilibili.com/view");
     QUrlQuery query;
     if(fromBangumi)
     {
         query.addQueryItem("media_id", QString::number(item->id));
+    }
+    else if(useBvid)
+    {
+        query.addQueryItem("bvid", item->strId);
     }
     else
     {
@@ -59,6 +69,8 @@ DanmuAccessResult *BilibiliProvider::getEpInfo(DanmuSourceItem *item)
         QJsonDocument document(Network::toJson(str));
         if(fromBangumi)
             handleBangumiReply(document,result);
+        else if(useBvid)
+            handleBvViewReply(document,result,item);
         else
             handleViewReply(document,result,item);
     }
@@ -86,15 +98,25 @@ DanmuAccessResult *BilibiliProvider::getURLInfo(const QString &url)
     {
         return nullptr;
     }
-    QRegExp re(matchIndex==2?"md([0-9]+)":"av([0-9]+)");
+    const char *patten = "av([0-9]+)";
+    if(matchIndex==1 || matchIndex==3) patten="BV[\\dA-Za-z]+";
+    else if(matchIndex==4) patten = "md([0-9]+)";
+    QRegExp re(patten);
     re.indexIn(url);
     QStringList captured=re.capturedTexts();
-    QString aidStr = captured[1];
     DanmuSourceItem item;
-    item.id=aidStr.toInt();
     item.subId=0;
-    //item.source=DanmuSource::Bilibili;
-    item.extra=matchIndex==2?-1:0;
+    if(matchIndex==1 || matchIndex==3)
+    {
+        item.id = -1;
+        item.strId = captured[0]; //bvid
+    }
+    else
+    {
+        QString aidStr = captured[1];
+        item.id=aidStr.toInt();
+        item.extra=matchIndex==4?-1:0;
+    }
     return getEpInfo(&item);
 }
 
@@ -177,11 +199,14 @@ void BilibiliProvider::handleSearchReply(QJsonDocument &document, DanmuAccessRes
             if(aid.type()!=QJsonValue::Double)continue;
             QJsonValue duration=bangumiObj.value("duration");
             if(duration.type()!=QJsonValue::String)continue;
+            QJsonValue bvid=bangumiObj.value("bvid");
+            if(bvid.type()!=QJsonValue::String)continue;
             DanmuSourceItem item;
             item.danmuCount=-1;
             item.title=title.toString().replace(QRegExp("<([^<>]*)em([^<>]*)>"),"");
             item.description=desc.toString();
             item.id=aid.toInt();
+            item.strId=bvid.toString();
             //item.source=DanmuSource::Bilibili;
             QStringList durationTimeList=duration.toString().split(':');
             item.extra=durationTimeList.count()==2? //from video
@@ -221,12 +246,15 @@ void BilibiliProvider::handleBangumiReply(QJsonDocument &document, DanmuAccessRe
             if(aid.type()!=QJsonValue::Double)continue;
             QJsonValue duration = bangumiObj.value("duration");
             if (duration.type() != QJsonValue::Double)continue;
+            QJsonValue bvid=bangumiObj.value("bvid");
+            if(bvid.type()!=QJsonValue::String)continue;
 
             DanmuSourceItem item;
             item.danmuCount=-1;
             item.title=QString("%1-%2").arg(index.toString()).arg(title.toString());
             item.id=aid.toInt();
             item.subId=cid.toInt();
+            item.strId=bvid.toString();
             //item.source=DanmuSource::Bilibili;
             item.extra=duration.toInt()/1000;
             item.delay=0;
@@ -298,6 +326,41 @@ void BilibiliProvider::handleViewReply(QJsonDocument &document, DanmuAccessResul
     result->errorInfo=QObject::tr("Reply JSON Format Error");
 }
 
+void BilibiliProvider::handleBvViewReply(QJsonDocument &document, DanmuAccessResult *result, DanmuSourceItem *sItem)
+{
+    do
+    {
+        if (!document.isObject()) break;
+        QJsonObject obj = document.object().value("data").toObject();
+        QJsonValue aid=obj.value("aid");
+        if(aid.type()!=QJsonValue::Double)break;
+        QJsonArray pageArray = obj["pages"].toArray();
+        for (auto p = pageArray.begin(); p != pageArray.end(); ++p)
+        {
+            if (!(*p).isObject())continue;
+            QJsonObject pObj = (*p).toObject();
+            QJsonValue ptitle = pObj["part"];
+            if (ptitle.type() != QJsonValue::String)continue;
+            QJsonValue pduration = pObj["duration"];
+            if (pduration.type() != QJsonValue::Double)continue;
+            QJsonValue pcid = pObj["cid"];
+            if (pcid.type() != QJsonValue::Double)continue;
+            DanmuSourceItem pitem;
+            pitem.danmuCount = -1;
+            pitem.title = ptitle.toString();
+            pitem.id = aid.toInt();
+            pitem.subId = pcid.toInt();
+            pitem.strId = sItem->strId;
+            pitem.extra = pduration.toInt();
+            result->list.append(pitem);
+        }
+        result->error = false;
+        return;
+    }while(false);
+    result->error=true;
+    result->errorInfo=QObject::tr("Reply JSON Format Error");
+}
+
 void BilibiliProvider::decodeVideoList(const QByteArray &bytes, DanmuAccessResult *result, int aid)
 {
     QJsonParseError jsonError;
@@ -305,6 +368,7 @@ void BilibiliProvider::decodeVideoList(const QByteArray &bytes, DanmuAccessResul
     if (jsonError.error != QJsonParseError::NoError) return;
     if (!document.isObject()) return;
     QJsonObject obj = document.object();
+	QJsonValue bvid = obj.value("bvid");
     if (obj.contains("pages") && obj["pages"].isArray())
     {
         QJsonArray pageArray = obj["pages"].toArray();
@@ -318,11 +382,13 @@ void BilibiliProvider::decodeVideoList(const QByteArray &bytes, DanmuAccessResul
             if (duration.type() != QJsonValue::Double)continue;
             QJsonValue cid = pObj["cid"];
             if (cid.type() != QJsonValue::Double)continue;
+
             DanmuSourceItem item;
             item.danmuCount = -1;
             item.title = title.toString();
             item.id=aid;
             item.subId = cid.toInt();
+            item.strId = bvid.toString();
             //item.source = DanmuSource::Bilibili;
             item.extra = duration.toInt();
             result->list.append(item);
@@ -345,11 +411,14 @@ void BilibiliProvider::decodeEpList(const QByteArray &bytes, DanmuAccessResult *
         if(title.type()!=QJsonValue::String)continue;
         QJsonValue cid=pObj["cid"];
         if(cid.type()!=QJsonValue::Double)continue;
+        QJsonValue bvid=pObj["bvid"];
+        if(bvid.type()!=QJsonValue::String)continue;
         DanmuSourceItem item;
         item.danmuCount=-1;
         item.title=title.toString();
         item.id=aid;
         item.subId=cid.toInt();
+        item.strId=bvid.toString();
         //item.source=DanmuSource::Bilibili;
         item.extra=0;
         result->list.append(item);

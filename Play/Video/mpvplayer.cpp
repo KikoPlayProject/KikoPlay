@@ -260,6 +260,7 @@ void MPVPlayer::drawTexture(QList<const DanmuObject *> &objList, float alpha)
 
             GLfloat l = obj->x*h - 1,r = (obj->x+obj->drawInfo->width)*h - 1,
                     t = 1 - obj->y*v,b = 1 - (obj->y+obj->drawInfo->height)*v;
+
             vtx[i]=l;     vtx[i+1]=t;
             vtx[i+2] = r; vtx[i+3] = t;
             vtx[i+4] = l; vtx[i+5] = b;
@@ -275,6 +276,7 @@ void MPVPlayer::drawTexture(QList<const DanmuObject *> &objList, float alpha)
             tex[i+6] = obj->drawInfo->r;  tex[i+7] = obj->drawInfo->t;
             tex[i+8] = obj->drawInfo->l;  tex[i+9] = obj->drawInfo->b;
             tex[i+10] = obj->drawInfo->r; tex[i+11] = obj->drawInfo->b;
+
 
             int texIndex=texHash.value(obj->drawInfo->texture,-1);
             if(texIndex<0)

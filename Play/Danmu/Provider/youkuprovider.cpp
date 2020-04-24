@@ -3,12 +3,14 @@
 #include "Common/network.h"
 namespace
 {
-    const char *supportedUrlRe[]={"(https?://)?v\\.youku\\.com/v_show/id_[a-zA-Z0-9]+(==)?(.html)?"};
+    const char *supportedUrlRe[]={"(https?://)?v\\.youku\\.com/v_show/id_[a-zA-Z0-9]+(==)?(.html)?",
+                                  "(https?://)?v\\.youku\\.com/v_nextstage/id_[a-zA-Z0-9]+(==)?(.html)?"};
 }
 
 QStringList YoukuProvider::supportedURLs()
 {
-    return QStringList({"https://v.youku.com/v_show/id_XMTI3ODI4OTU1Ng"});
+    return QStringList({"https://v.youku.com/v_show/id_XMTI3ODI4OTU1Ng",
+                       "https://v.youku.com/v_nextstage/id_f82c894261ad11e0bea1.html"});
 }
 
 DanmuAccessResult *YoukuProvider::search(const QString &keyword)
@@ -188,78 +190,59 @@ void YoukuProvider::downloadAllDanmu(const QString &id, int length, QList<DanmuC
 
 void YoukuProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
 {
-    QRegExp re("\"domid\":\"bpmodule-main\"(.*)\"html\":\"(.*)\"..</script>");
-    re.setMinimal(true);
-    int pos=re.indexIn(reply);
-    if(pos!=-1)
+    HTMLParserSax parser(reply);
+    QRegExp anchorReg("<div type=\"(\\d+)\" data-name=\"m_pos\">");
+    int pos=reply.indexOf(anchorReg, 0);
+
+    while(pos != -1)
     {
-        QStringList list = re.capturedTexts();
-		QString html(list.at(2));
-		html.replace("\\n", "\n");
-		html.replace("\\t", "\t");
-		html.replace("\\\"", "\"");
-        HTMLParserSax parser(html);
-        DanmuSourceItem item;
-        bool epStart=false;
-        bool youkuItem=false;
-        while(!parser.atEnd())
+        parser.seekTo(pos);
+        QString type = anchorReg.capturedTexts()[1];
+        int nextPos = reply.indexOf(anchorReg,pos+1);
+        int marginPos = nextPos;
+        if(marginPos == -1)
         {
-            if(parser.currentNodeProperty("class")=="mod-main")
-            {
-                while(parser.currentNode()!="a") parser.readNext();
-                QString strId(parser.currentNodeProperty("href"));
-                if(strId.contains("v.youku.com"))
-                {
-                    item.title= parser.readContentUntil("a",false);
-                    QRegExp lre("<.*>");
-                    lre.setMinimal(true);
-                    item.title.replace(lre, "");
-                    if(strId.startsWith("//"))strId="http:"+strId;
-                    item.strId=strId;
-                    youkuItem=true;
-                }
-                else
-                {
-                    youkuItem=false;
-                }
-                epStart=false;
-            }
-            else if(youkuItem && parser.currentNodeProperty("class")=="mod-play")
-            {
-                parser.readNext();
-                if(!parser.isStartNode())
-                {
-                    result->list.append(item);
-                }
-                else
-                {
-                    epStart=true;
-                }
-            }
-            else if(youkuItem && parser.currentNodeProperty("class")=="mod-play mod-film-play")
-            {
-                parser.readNext();
-                if(parser.currentNode()=="a")
-                {
-                    DanmuSourceItem epItem;
-                    epItem.title=item.title;
-                    epItem.strId=parser.currentNodeProperty("href");
-                    result->list.append(epItem);
-                }
-            }
-            else if(epStart && parser.isStartNode() && parser.currentNode()=="li")
-            {
-                parser.readNext();
-                if(parser.currentNode()=="a")
-                {
-                    DanmuSourceItem epItem;
-                    epItem.title=item.title + " " + parser.currentNodeProperty("title");
-                    epItem.strId=parser.currentNodeProperty("href");
-                    result->list.append(epItem);
-                }
-            }
-            parser.readNext();
+            marginPos = reply.indexOf("<div style=\"margin-bottom", pos+1);
+            if(marginPos == -1) marginPos = reply.length();
         }
+        if(type != "1005" && type != "1027")
+        {
+            pos = nextPos;
+            continue;
+        }
+        while(!parser.currentNodeProperty("class").startsWith("title_")) parser.readNext();
+        if(type == "1027") parser.readNext();
+        DanmuSourceItem item;
+        item.strId = parser.currentNodeProperty("href");
+        if(item.strId.startsWith("//")) item.strId.push_front("http:");
+        parser.readNext(); parser.readNext();
+        item.title = parser.readContentUntil("a", false);
+        QRegExp lre("<.*>");
+        lre.setMinimal(true);
+        item.title.replace(lre, "");
+        result->list.append(item);
+
+
+        if(type == "1027")
+        {
+            while(parser.curPos() < marginPos)
+            {
+                if(parser.currentNodeProperty("class").startsWith("box-item"))
+                {
+                    if(!parser.currentNodeProperty("title").isEmpty())
+                    {
+                        DanmuSourceItem epItem;
+                        epItem.title = QString("%1 %2").arg(item.title, parser.currentNodeProperty("title"));
+                        while(parser.currentNode()!="a") parser.readNext();
+                        epItem.strId = parser.currentNodeProperty("href");
+                        if(epItem.strId.startsWith("//")) epItem.strId.push_front("http:");
+                        result->list.append(epItem);
+                    }
+                }
+                parser.readNext();
+            }
+        }
+        pos=nextPos;
     }
     result->error = false;
 }

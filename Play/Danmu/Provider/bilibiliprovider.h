@@ -11,7 +11,7 @@ public:
     inline virtual bool supportSearch(){return true;}
     inline virtual QString id(){return "Bilibili";}
     virtual QStringList supportedURLs();
-    inline virtual QString sourceURL(DanmuSourceItem *item){return QString("aid:%1;cid:%2;%3").arg(item->id).arg(item->subId).arg(formatTime(item->extra));}
+    inline virtual QString sourceURL(DanmuSourceItem *item){return QString("aid:%1;cid:%2;bvid:%4;%3").arg(item->id).arg(item->subId).arg(formatTime(item->extra)).arg(item->strId);}
     inline virtual bool supportSourceURL(const QString &url){return url.startsWith("aid:")?true:false;}
 public slots:
     virtual DanmuAccessResult *search(const QString &keyword);
@@ -23,6 +23,7 @@ private:
     void handleSearchReply(QJsonDocument &document, DanmuAccessResult *searchResult);
     void handleBangumiReply(QJsonDocument &document,DanmuAccessResult *result);
     void handleViewReply(QJsonDocument &document, DanmuAccessResult *result, DanmuSourceItem *sItem);
+    void handleBvViewReply(QJsonDocument &document, DanmuAccessResult *result, DanmuSourceItem *sItem);
     void decodeVideoList(const QByteArray &bytes, DanmuAccessResult *result, int aid);
     void decodeEpList(const QByteArray &bytes, DanmuAccessResult *result, int aid);
     void handleDownloadReply(QString &reply,QList<DanmuComment *> &danmuList);
