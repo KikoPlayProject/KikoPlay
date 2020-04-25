@@ -104,7 +104,7 @@ Gentoo上的编译安装流程：
 
 ## 下载
 
-最新版本均在百度网盘发布（最新版本：0.6.0）
+最新版本均在百度网盘发布
 [百度网盘](https://pan.baidu.com/s/1gyT0FU9rioaa77znhAUx2w)
 
 ## 反馈
