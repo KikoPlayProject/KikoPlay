@@ -39,7 +39,7 @@ void CacheWorker::cleanCache()
 #ifdef TEXTURE_MAIN_THREAD
     QMetaObject::invokeMethod(GlobalObjects::mpvplayer,[this](){
 #endif
-    danmuTextureContext->makeCurrent(surface);
+    if(!danmuTextureContext->makeCurrent(surface)) return;
     QOpenGLFunctions *glFuns=danmuTextureContext->functions();
     for(auto iter=textureRef.begin();iter!=textureRef.end();)
     {

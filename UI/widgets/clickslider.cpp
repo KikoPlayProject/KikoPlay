@@ -50,13 +50,13 @@ void ClickSlider::mouseMoveEvent(QMouseEvent *event)
     double x=event->x();
     if(x<0)x=0;
     if(x>maximum())x=maximum();
-    int pos = minimum() + dur * (x /width());
+    mousePos = minimum() + dur * (x /width());
     QString desc;
     if(!chapters.isEmpty())
     {
         for(auto &c:chapters)
         {
-            if(qAbs(pos-c.position)<3000)
+            if(qAbs(mousePos-c.position)<3000)
             {
                 desc = tr("Chapter: %1").arg(c.title);
                 break;
@@ -67,9 +67,9 @@ void ClickSlider::mouseMoveEvent(QMouseEvent *event)
     {
         for(auto &e:eventList)
         {
-            if(pos>=e.start-3000)
+            if(mousePos>=e.start-3000)
             {
-                if(pos<=e.start+e.duration+3000)
+                if(mousePos<=e.start+e.duration+3000)
                 {
                     if(!desc.isEmpty()) desc += "\n";
                     desc += e.description;
@@ -82,8 +82,8 @@ void ClickSlider::mouseMoveEvent(QMouseEvent *event)
             }
         }
     }
-
-    emit mouseMove(event->x(),event->y(),pos,desc);
+    mouseX = event->x();
+    emit mouseMove(event->x(),event->y(),mousePos,desc);
 }
 
 void ClickSlider::paintEvent(QPaintEvent *event)
@@ -94,7 +94,7 @@ void ClickSlider::paintEvent(QPaintEvent *event)
     QStylePainter painter(this);
     QStyleOptionSlider opt;
     initStyleOption(&opt);
-    static QColor eColor1(255,117,0),eColor2(0xff,0x00,0x33), cColor1(0xbc,0xbc,0xbc), cColor2(0x43,0x9c,0xf3);
+    static QColor eColor1(255,117,0),eColor2(0xff,0xff,0x00), cColor1(0xbc,0xbc,0xbc), cColor2(0x43,0x9c,0xf3);
     int h = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove,this).height();
     int y =height()-h;
     y=(y&1)?y/2+1:y/2;

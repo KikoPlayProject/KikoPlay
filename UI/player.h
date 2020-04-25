@@ -26,7 +26,9 @@ private:
      QWidget *playControlPanel,*playInfoPanel;
      QWidget *playInfo,*playerContent,*danmuStatisBar;
      QPushButton *playListCollapseButton;
-     QLabel *timeInfoTip;
+     QLabel *timeInfoTip, *previewLabel;
+     QWidget *progressInfo;
+     bool isShowPreview;
      bool autoHideControlPanel;
 
      const int controlPanelHeight=80*logicalDpiY()/96;
@@ -39,6 +41,7 @@ private:
      ClickSlider *process;
      QSlider *volume;
      QLabel *timeLabel;
+
      QPushButton *play_pause,*prev,*next,*stop,*mute,*setting, *danmu,*fullscreen;
      QAction *actPlayPause,*actPrev,*actNext,*actFullscreen,*act_screenshotSrc,*act_screenshotAct;
      QTimer doublePressTimer,hideCursorTimer;
@@ -58,7 +61,7 @@ private:
      QWidget *danmuSettingPage,*playSettingPage;
      QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold,
                 *bottomSubtitleProtect,*topSubtitleProtect,*randomSize,
-                *enableAnalyze, *enableMerge,*enlargeMerged;
+                *enableAnalyze, *enableMerge,*enlargeMerged, *showPreview;
      QSpinBox *mergeInterval,*contentSimCount,*minMergeCount;
      QFontComboBox *fontFamilyCombo;
      QComboBox *aspectRatioCombo,*playSpeedCombo,*clickBehaviorCombo,*dbClickBehaviorCombo,

@@ -87,7 +87,7 @@ static QString get_color_profile(HWND hwnd)
 #endif
 }
 MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::Stop),
-    mute(false),danmuHide(false),oldOpenGLVersion(false),currentDuration(0)
+    mute(false),danmuHide(false),oldOpenGLVersion(false),currentDuration(0), mpvPreview(nullptr), previewThread(nullptr)
 {
     std::setlocale(LC_NUMERIC, "C");
     mpv = mpv_create();
@@ -138,6 +138,15 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
        double curTime = mpv::qt::get_property(mpv,QStringLiteral("playback-time")).toDouble();
        emit positionChanged(curTime*1000);
     });
+
+    if(GlobalObjects::appSetting->value("Play/ShowPreview", false).toBool())
+    {
+        mpvPreview = new MPVPreview(QSize(220*logicalDpiX()/96,124*logicalDpiY()/96));
+        previewThread = new QThread();
+        previewThread->start();
+        mpvPreview->moveToThread(previewThread);
+        QObject::connect(mpvPreview, &MPVPreview::previewDown, this, &MPVPlayer::refreshPreview);
+    }
 }
 
 MPVPlayer::~MPVPlayer()
@@ -145,6 +154,12 @@ MPVPlayer::~MPVPlayer()
     makeCurrent();
     if (mpv_gl) mpv_render_context_free(mpv_gl);
     mpv_terminate_destroy(mpv);
+    if(mpvPreview)
+    {
+        previewThread->quit();
+        previewThread->wait();
+        mpvPreview->deleteLater();
+    }
 }
 
 MPVPlayer::VideoSizeInfo MPVPlayer::getVideoSizeInfo()
@@ -327,6 +342,7 @@ void MPVPlayer::setMedia(QString file)
         currentFile=file;
 		state = PlayState::Play;
         refreshTimer.start(timeRefreshInterval);
+        if(mpvPreview) mpvPreview->reset(file);
         QCoreApplication::processEvents();
 		emit stateChanged(state);
     }
@@ -352,6 +368,8 @@ void MPVPlayer::setState(MPVPlayer::PlayState newState)
         setMPVCommand(QVariantList()<<"stop");
         refreshTimer.stop();
         state=PlayState::Stop;
+        if(mpvPreview) mpvPreview->reset();
+        update();
         emit stateChanged(state);
     }
         break;

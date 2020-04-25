@@ -750,10 +750,11 @@ QPushButton:pressed{
     padding:1px;
 }
 #TimeInfoTip{
-    border-color: rgb(100, 100,100);
+    border-color: rgb(150, 150,150);
     border-style:solid;
     border-width:1px;
-    background-color:rgb(250,250,250);
+    color:rgb(255,255,255);
+    background-color:rgba(0,0,0,150);
 }
 #AnimeItemBg{
     background-color:rgba(0,0,0,0);

@@ -7,12 +7,15 @@ class ClickSlider: public QSlider
 {
     Q_OBJECT
 public:
-    explicit ClickSlider(QWidget *parent=nullptr):QSlider(Qt::Horizontal,parent){}
+    explicit ClickSlider(QWidget *parent=nullptr):QSlider(Qt::Horizontal,parent),mousePos(0){}
     void setEventMark(const QList<DanmuEvent> &eventList);
     void setChapterMark(const QList<MPVPlayer::ChapterInfo> &chapters);
+    inline int curMousePos() const {return mousePos;}
+    inline int curMouseX() const {return mouseX;}
 private:
     QList<DanmuEvent> eventList;
     QList<MPVPlayer::ChapterInfo> chapters;
+    int mousePos, mouseX;
 signals:
     void sliderClick(int position);
     void sliderUp(int position);

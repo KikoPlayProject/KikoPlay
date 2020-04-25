@@ -8,6 +8,7 @@
 #include <mpv/render_gl.h>
 #include <mpv/qthelper.hpp>
 #include "Play/Danmu/common.h"
+#include "mpvpreview.h"
 class DanmuRender;
 class MPVPlayer : public QOpenGLWidget
 {
@@ -51,6 +52,7 @@ public:
     inline int getTime() const{return mpv::qt::get_property(mpv,"playback-time").toDouble();}
     inline int getDuration() const{return currentDuration;}
     inline const QList<ChapterInfo> &getChapters() const {return chapters;}
+    inline QPixmap *getPreview(int timePos) { if(!mpvPreview) return nullptr; return mpvPreview->getPreview(timePos);}
 
     VideoSizeInfo getVideoSizeInfo();
     QMap<QString,QMap<QString,QString> > getMediaInfo();
@@ -65,6 +67,7 @@ signals:
     void trackInfoChange(int type);
     void initContext();
     void showLog(const QString &log);
+    void refreshPreview(int time, QPixmap *pixmap);
 public slots:   
     void setMedia(QString file);
     void setState(PlayState newState);
@@ -119,6 +122,9 @@ private:
 
     QList<ChapterInfo> chapters;
     void loadChapters();
+
+    MPVPreview *mpvPreview;
+    QThread *previewThread;
 
     inline int setMPVCommand(const QVariant& params);
     inline void setMPVProperty(const QString& name, const QVariant& value);

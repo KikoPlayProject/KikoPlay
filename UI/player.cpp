@@ -220,9 +220,32 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     playInfo=new InfoTip(this);
     playInfo->hide();
 
-    timeInfoTip=new QLabel(this);
+    progressInfo=new QWidget(this);
+    QStackedLayout *piSLayout = new QStackedLayout(progressInfo);
+    piSLayout->setStackingMode(QStackedLayout::StackAll);
+    piSLayout->setContentsMargins(0,0,0,0);
+    piSLayout->setSpacing(0);
+    QWidget *tiWidget = new QWidget(progressInfo);
+    QVBoxLayout *piVLayout = new QVBoxLayout(tiWidget);
+    piVLayout->setContentsMargins(0,0,0,0);
+    piVLayout->setSpacing(0);
+    QHBoxLayout *piHLayout = new QHBoxLayout();
+    piHLayout->setContentsMargins(0,0,0,0);
+    piHLayout->setSpacing(0);
+
+    timeInfoTip=new QLabel(tiWidget);
     timeInfoTip->setObjectName(QStringLiteral("TimeInfoTip"));
-    timeInfoTip->hide();
+    timeInfoTip->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    previewLabel=new QLabel(progressInfo);
+    isShowPreview = GlobalObjects::appSetting->value("Play/ShowPreview",false).toBool();
+    piVLayout->addStretch(1);
+    piHLayout->addWidget(timeInfoTip);
+    piHLayout->addStretch(1);
+    piVLayout->addLayout(piHLayout);
+    piSLayout->addWidget(tiWidget);
+    piSLayout->addWidget(previewLabel);
+    previewLabel->hide();
+    progressInfo->hide();
 
     playerContent=new PlayerContent(this);
     playerContent->show();
@@ -1054,6 +1077,10 @@ void PlayerWindow::setupPlaySettingPage()
     backwardTimeSpin->setValue(GlobalObjects::appSetting->value("Play/BackwardJump",5).toInt());
     jumpBackwardTime=backwardTimeSpin->value();
 
+    showPreview = new QCheckBox(tr("Show Preview Over ProgressBar(Need Restart)"), playSettingPage);
+    showPreview->setChecked(isShowPreview);
+
+
     QToolButton *playPage=new QToolButton(playSettingPage);
     playPage->setText(tr("Play"));
     playPage->setCheckable(true);
@@ -1126,6 +1153,7 @@ void PlayerWindow::setupPlaySettingPage()
     appearanceGLayout->addWidget(forwardTimeSpin,2,1);
     appearanceGLayout->addWidget(backwardTimeLabel,3,0);
     appearanceGLayout->addWidget(backwardTimeSpin,3,1);
+    appearanceGLayout->addWidget(showPreview,4,0,1,2);
 }
 
 void PlayerWindow::setupSignals()
@@ -1153,6 +1181,7 @@ void PlayerWindow::setupSignals()
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
         Q_ASSERT(currentItem);
         process->setEventMark(QList<DanmuEvent>());
+        process->setChapterMark(QList<MPVPlayer::ChapterInfo>());
         if(currentItem->animeTitle.isEmpty())
             titleLabel->setText(currentItem->title);
         else
@@ -1192,6 +1221,22 @@ void PlayerWindow::setupSignals()
             process->setValue(newtime);
         timeLabel->setText(QString("%1:%2%3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(this->totalTimeStr));
     });
+    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::refreshPreview,[this](int timePos, QPixmap *pixmap){
+		int cp = process->curMousePos() / 1000;
+        if(!progressInfo->isHidden() && qAbs(timePos-cp)<3)
+        {
+            previewLabel->resize(pixmap->width(), pixmap->height());
+            previewLabel->setPixmap(*pixmap);
+            progressInfo->adjustSize();
+            timeInfoTip->setMaximumWidth(pixmap->width());
+            int ty=danmuStatisBar->isHidden()?height()-controlPanelHeight-progressInfo->height():height()-controlPanelHeight-progressInfo->height()-statisBarHeight-1;
+            int nx = process->curMouseX()-progressInfo->width()/3;
+            if(nx+progressInfo->width()>width()) nx = width()-progressInfo->width();
+            progressInfo->move(nx<0?0:nx,ty);
+            previewLabel->show();
+            //previewLabel->adjustSize();
+        }
+    });
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::stateChanged,[this](MPVPlayer::PlayState state){
         if(GlobalObjects::playlist->getCurrentItem()!=nullptr)
         {
@@ -1205,10 +1250,6 @@ void PlayerWindow::setupSignals()
             {
                 emit setStayOnTop(state==MPVPlayer::Play);
             }
-        }
-        if(onTopWhilePlaying && GlobalObjects::playlist->getCurrentItem() != nullptr)
-        {
-
         }
         switch(state)
         {
@@ -1307,12 +1348,29 @@ void PlayerWindow::setupSignals()
             timeTip+="\n"+desc;
         timeInfoTip->setText(timeTip);
         timeInfoTip->adjustSize();
-        int ty=danmuStatisBar->isHidden()?height()-controlPanelHeight-timeInfoTip->height():height()-controlPanelHeight-timeInfoTip->height()-statisBarHeight-1;
-        int nx = x-timeInfoTip->width()/3;
-        if(nx+timeInfoTip->width()>width()) nx = width()-timeInfoTip->width();
-        timeInfoTip->move(nx<0?0:nx,ty);
-        timeInfoTip->show();
-        timeInfoTip->raise();
+        if(isShowPreview)
+        {
+            previewLabel->clear();
+            QPixmap *pixmap = GlobalObjects::mpvplayer->getPreview(cs);
+            if(pixmap)
+            {
+                previewLabel->resize(pixmap->width(), pixmap->height());
+                previewLabel->setPixmap(*pixmap);
+                previewLabel->show();
+                timeInfoTip->setMaximumWidth(pixmap->width());
+            }
+            else
+            {
+                previewLabel->hide();
+            }
+        }
+        progressInfo->adjustSize();
+        int ty=danmuStatisBar->isHidden()?height()-controlPanelHeight-progressInfo->height():height()-controlPanelHeight-progressInfo->height()-statisBarHeight-1;
+        int nx = x-progressInfo->width()/3;
+        if(nx+progressInfo->width()>width()) nx = width()-progressInfo->width();
+        progressInfo->move(nx<0?0:nx,ty);
+        progressInfo->show();
+        progressInfo->raise();
         //QToolTip::showText(QPoint(x,process->geometry().topLeft()-40),QString("%1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')),process,process->rect());
     });
     QObject::connect(process,&ClickSlider::mouseEnter,[this](){
@@ -1321,7 +1379,7 @@ void PlayerWindow::setupSignals()
     });
     QObject::connect(process,&ClickSlider::mouseLeave,[this](){
         danmuStatisBar->hide();
-        timeInfoTip->hide();
+        progressInfo->hide();
     });
     QObject::connect(volume,&QSlider::valueChanged,[this](int val){
         GlobalObjects::mpvplayer->setVolume(val);
@@ -1697,6 +1755,7 @@ void PlayerWindow::closeEvent(QCloseEvent *)
 {
     setPlayTime();
     GlobalObjects::appSetting->beginGroup("Play");
+    GlobalObjects::appSetting->setValue("ShowPreview",showPreview->isChecked());
     GlobalObjects::appSetting->setValue("HideDanmu",danmuSwitch->isChecked());
     GlobalObjects::appSetting->setValue("HideRolling",hideRollingDanmu->isChecked());
     GlobalObjects::appSetting->setValue("HideTop",hideTopDanmu->isChecked());

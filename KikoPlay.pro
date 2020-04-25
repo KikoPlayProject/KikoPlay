@@ -36,6 +36,7 @@ CONFIG += C++11
 SOURCES += \
     Download/autodownloadmanager.cpp \
     Play/Danmu/eventanalyzer.cpp \
+    Play/Video/mpvpreview.cpp \
     UI/addpool.cpp \
     UI/addrule.cpp \
     UI/autodownloadwindow.cpp \
@@ -134,6 +135,7 @@ HEADERS += \
     Download/autodownloadmanager.h \
     Play/Danmu/danmuviewmodel.h \
     Play/Danmu/eventanalyzer.h \
+    Play/Video/mpvpreview.h \
     UI/addpool.h \
     UI/addrule.h \
     UI/autodownloadwindow.h \
