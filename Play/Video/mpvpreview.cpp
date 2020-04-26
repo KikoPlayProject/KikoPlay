@@ -28,12 +28,11 @@ MPVPreview::MPVPreview(const QSize &previewSize, int pInterval, QObject *parent)
 
     pSurface = new QOffscreenSurface(nullptr, this);
     pSurface->setFormat(QSurfaceFormat::defaultFormat());
-    bool ret;
     pSurface->create();
     ctx = new QOpenGLContext(this);
     ctx->setFormat(pSurface->format());
-    ret = ctx->create();
-    ret = ctx->makeCurrent(pSurface);
+    ctx->create();
+    ctx->makeCurrent(pSurface);
     QOpenGLFramebufferObjectFormat fboFormat;
     fboFormat.setSamples(0);
     pFbo = new QOpenGLFramebufferObject(previewSize, fboFormat);
