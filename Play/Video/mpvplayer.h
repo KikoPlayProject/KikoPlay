@@ -52,7 +52,7 @@ public:
     inline int getTime() const{return mpv::qt::get_property(mpv,"playback-time").toDouble();}
     inline int getDuration() const{return currentDuration;}
     inline const QList<ChapterInfo> &getChapters() const {return chapters;}
-    inline QPixmap *getPreview(int timePos) { if(!mpvPreview) return nullptr; return mpvPreview->getPreview(timePos);}
+    inline QPixmap *getPreview(int timePos, bool refresh=true) { if(!mpvPreview) return nullptr; return mpvPreview->getPreview(timePos, refresh);}
 
     VideoSizeInfo getVideoSizeInfo();
     QMap<QString,QMap<QString,QString> > getMediaInfo();

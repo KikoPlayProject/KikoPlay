@@ -15,7 +15,7 @@ class MPVPreview : public QObject
 public:
     MPVPreview(const QSize &previewSize, int pInterval=3, QObject *parent = nullptr);
     ~MPVPreview();
-    QPixmap *getPreview(int timePos);
+    QPixmap *getPreview(int timePos, bool refresh=true);
     void reset(const QString &filename="");
 signals:
     void previewDown(int time, QPixmap *pixmap);

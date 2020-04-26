@@ -28,6 +28,7 @@ private:
      QPushButton *playListCollapseButton;
      QLabel *timeInfoTip, *previewLabel;
      QWidget *progressInfo;
+     QTimer previewTimer;
      bool isShowPreview;
      bool autoHideControlPanel;
 
@@ -86,6 +87,7 @@ private:
      void setPlayTime();
      void showMessage(const QString &msg);
      void switchItem(bool prev,const QString &nullMsg);
+     void adjustProgressInfoPos();
 
 signals:
     void toggleListVisibility();

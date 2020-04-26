@@ -247,6 +247,22 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     previewLabel->hide();
     progressInfo->hide();
 
+    QObject::connect(&previewTimer,&QTimer::timeout,[this](){
+        if(isShowPreview && !progressInfo->isHidden() && previewLabel->isHidden())
+        {
+            QPixmap *pixmap = GlobalObjects::mpvplayer->getPreview(process->curMousePos()/1000);
+            if(pixmap)
+            {
+                previewLabel->resize(pixmap->width(), pixmap->height());
+                previewLabel->setPixmap(*pixmap);
+                timeInfoTip->setMaximumWidth(pixmap->width());
+                adjustProgressInfoPos();
+                previewLabel->show();
+            }
+        }
+        previewTimer.stop();
+    });
+
     playerContent=new PlayerContent(this);
     playerContent->show();
     playerContent->raise();
@@ -1229,10 +1245,7 @@ void PlayerWindow::setupSignals()
             previewLabel->setPixmap(*pixmap);
             progressInfo->adjustSize();
             timeInfoTip->setMaximumWidth(pixmap->width());
-            int ty=danmuStatisBar->isHidden()?height()-controlPanelHeight-progressInfo->height():height()-controlPanelHeight-progressInfo->height()-statisBarHeight-1;
-            int nx = process->curMouseX()-progressInfo->width()/3;
-            if(nx+progressInfo->width()>width()) nx = width()-progressInfo->width();
-            progressInfo->move(nx<0?0:nx,ty);
+            adjustProgressInfoPos();
             previewLabel->show();
             //previewLabel->adjustSize();
         }
@@ -1290,6 +1303,8 @@ void PlayerWindow::setupSignals()
             this->play_pause->setText(QChar(0xe606));
             this->process->setValue(0);
 			this->process->setRange(0, 0);
+            this->process->setEventMark(QList<DanmuEvent>());
+            this->process->setChapterMark(QList<MPVPlayer::ChapterInfo>());
             this->timeLabel->setText("00:00/00:00");
             titleLabel->setText(QString());
             GlobalObjects::playlist->cleanCurrentItem();
@@ -1348,10 +1363,11 @@ void PlayerWindow::setupSignals()
             timeTip+="\n"+desc;
         timeInfoTip->setText(timeTip);
         timeInfoTip->adjustSize();
-        if(isShowPreview)
+        if(previewTimer.isActive()) previewTimer.stop();
+        if(isShowPreview && GlobalObjects::playlist->getCurrentItem() != nullptr)
         {
             previewLabel->clear();
-            QPixmap *pixmap = GlobalObjects::mpvplayer->getPreview(cs);
+            QPixmap *pixmap = GlobalObjects::mpvplayer->getPreview(cs, false);
             if(pixmap)
             {
                 previewLabel->resize(pixmap->width(), pixmap->height());
@@ -1362,13 +1378,11 @@ void PlayerWindow::setupSignals()
             else
             {
                 previewLabel->hide();
+                previewTimer.start(80);
             }
         }
         progressInfo->adjustSize();
-        int ty=danmuStatisBar->isHidden()?height()-controlPanelHeight-progressInfo->height():height()-controlPanelHeight-progressInfo->height()-statisBarHeight-1;
-        int nx = x-progressInfo->width()/3;
-        if(nx+progressInfo->width()>width()) nx = width()-progressInfo->width();
-        progressInfo->move(nx<0?0:nx,ty);
+        adjustProgressInfoPos();
         progressInfo->show();
         progressInfo->raise();
         //QToolTip::showText(QPoint(x,process->geometry().topLeft()-40),QString("%1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')),process,process->rect());
@@ -1500,6 +1514,14 @@ void PlayerWindow::switchItem(bool prev, const QString &nullMsg)
             break;
         }
     }
+}
+
+void PlayerWindow::adjustProgressInfoPos()
+{
+    int ty=danmuStatisBar->isHidden()?height()-controlPanelHeight-progressInfo->height():height()-controlPanelHeight-progressInfo->height()-statisBarHeight-1;
+    int nx = process->curMouseX()-progressInfo->width()/3;
+    if(nx+progressInfo->width()>width()) nx = width()-progressInfo->width();
+    progressInfo->move(nx<0?0:nx,ty);
 }
 
 void PlayerWindow::mouseMoveEvent(QMouseEvent *event)

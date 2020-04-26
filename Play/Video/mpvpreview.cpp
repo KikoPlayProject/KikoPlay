@@ -66,7 +66,7 @@ MPVPreview::~MPVPreview()
     ctx = nullptr;
 }
 
-QPixmap *MPVPreview::getPreview(int timePos)
+QPixmap *MPVPreview::getPreview(int timePos, bool refresh)
 {
     if(curFilename.isEmpty()) return nullptr;
     int pos = timePos / previewInterval;
@@ -77,7 +77,7 @@ QPixmap *MPVPreview::getPreview(int timePos)
         pixmap = &previewCache[pos];
     }
     locker.unlock();
-    if(!pixmap)
+    if(!pixmap && refresh)
     {
         mpv::qt::command_variant(mpv, QVariantList() << "seek" << timePos << "absolute");
     }
