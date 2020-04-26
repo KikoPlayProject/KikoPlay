@@ -1305,6 +1305,7 @@ void PlayerWindow::setupSignals()
 			this->process->setRange(0, 0);
             this->process->setEventMark(QList<DanmuEvent>());
             this->process->setChapterMark(QList<MPVPlayer::ChapterInfo>());
+            previewLabel->hide();
             this->timeLabel->setText("00:00/00:00");
             titleLabel->setText(QString());
             GlobalObjects::playlist->cleanCurrentItem();
