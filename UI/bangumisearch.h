@@ -3,6 +3,7 @@
 #include "framelessdialog.h"
 class QTreeWidget;
 class QLineEdit;
+class QComboBox;
 struct Anime;
 class BangumiSearch : public CFramelessDialog
 {
@@ -15,6 +16,7 @@ private:
     QLineEdit *searchWordEdit;
     QPushButton *searchButton;
     QLabel *downloadInfoLabel;
+    QComboBox *qualityCombo;
     void search();
     // CFramelessDialog interface
 protected:

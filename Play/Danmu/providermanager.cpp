@@ -154,10 +154,20 @@ QString ProviderManager::downloadDanmu(QString &providerId, DanmuSourceItem *ite
 
 QString ProviderManager::downloadBySourceURL(const QString &url, QList<DanmuComment *> &danmuList)
 {
+    QString providerId = getProviderIdByURL(url);
+    if(providers.contains(providerId))
+    {
+        return providers[providerId]->downloadBySourceURL(url, danmuList);
+    }
+    return tr("Unsupported Source");
+}
+
+QString ProviderManager::getProviderIdByURL(const QString &url)
+{
     for(auto iter=providers.cbegin();iter!=providers.cend();++iter)
     {
         if(iter.value()->supportSourceURL(url))
-            return iter.value()->downloadBySourceURL(url,danmuList);
+            return iter.value()->id();
     }
-    return tr("Unsupported Source");
+    return QString();
 }

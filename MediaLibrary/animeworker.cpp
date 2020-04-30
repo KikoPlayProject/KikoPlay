@@ -143,7 +143,9 @@ void AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId)
         anime->summary=obj.value("summary").toString();
         anime->date=obj.value("air_date").toString();
         anime->epCount=obj.value("eps_count").toInt();
-        QByteArray cover(Network::httpGet(Network::getValue(obj,"images/common").toString(),QUrlQuery()));
+        int quality = GlobalObjects::appSetting->value("Library/CoverQuality", 1).toInt() % 3;
+        const char *qualityTypes[] = {"images/medium","images/common","images/large"};
+        QByteArray cover(Network::httpGet(Network::getValue(obj,qualityTypes[quality]).toString(),QUrlQuery()));
         anime->coverPixmap.loadFromData(cover);
 
         QJsonArray staffArray(obj.value("staff").toArray());

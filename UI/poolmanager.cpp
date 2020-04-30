@@ -14,6 +14,7 @@
 #include <QApplication>
 #include "Play/Danmu/Manager/managermodel.h"
 #include "Play/Danmu/Manager/danmumanager.h"
+#include "Play/Danmu/providermanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Playlist/playlistitem.h"
 #include "Play/Playlist/playlist.h"
@@ -252,7 +253,8 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         DanmuPoolNode *poolNode=managerModel->getPoolNode(proxyModel->mapToSource(indexList.first()));
         if(!poolNode)return;
         Pool *pool=GlobalObjects::danmuManager->getPool(poolNode->idInfo);
-        DanmuView view(&pool->comments(),this);
+        DanmuPoolNode *sourceNode=managerModel->getSourceNode(proxyModel->mapToSource(indexList.first()));
+        DanmuView view(&pool->comments(),this, sourceNode?GlobalObjects::providerManager->getProviderIdByURL(sourceNode->idInfo):"");
         view.exec();
     });
 

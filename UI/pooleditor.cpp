@@ -15,14 +15,17 @@
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Video/mpvplayer.h"
 #include "timelineedit.h"
+#include "danmuview.h"
 namespace
 {
     QList<QPair<int,int> > timelineClipBoard;
     QList<PoolItem *> *items;
+    PoolEditor *editor;
 }
 PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),parent)
 {
     items=&poolItems;
+    editor=this;
     QWidget *contentWidget=new QWidget(this);
 
     contentWidget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
@@ -105,6 +108,12 @@ void PoolEditor::onClose()
 
 PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(parent)
 {
+    QAction *viewDanmu=new QAction(tr("View Danmu"),this);
+    QObject::connect(viewDanmu,&QAction::triggered,this,[sourceInfo](){
+        DanmuView view(&GlobalObjects::danmuPool->getPool()->comments(),editor,
+                       GlobalObjects::providerManager->getProviderIdByURL(sourceInfo->url));
+        view.exec();
+    });
     QAction *copyTimeline=new QAction(tr("Copy TimeLine Info"), this);
     QObject::connect(copyTimeline,&QAction::triggered,this,[sourceInfo](){
         timelineClipBoard=sourceInfo->timelineInfo;
@@ -126,6 +135,7 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
     setContextMenuPolicy(Qt::ActionsContextMenu);
     addAction(copyTimeline);
     addAction(pasteTimeline);
+    addAction(viewDanmu);
 
     QFont normalFont("Microsoft YaHei",16);
     QLabel *name=new QLabel(QString("%1(%2)").arg(sourceInfo->name).arg(sourceInfo->count),this);
@@ -195,7 +205,8 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
         int addCount = GlobalObjects::danmuPool->getPool()->update(sourceInfo->id);
         if(addCount>0)
         {
-            QMessageBox::information(this,tr("Update - %1").arg(sourceInfo->name),tr("Add %1 New Danmu").arg(addCount));
+            editor->showMessage(tr("Add %1 New Danmu").arg(addCount));
+            //QMessageBox::information(this,tr("Update - %1").arg(sourceInfo->name),tr("Add %1 New Danmu").arg(addCount));
             name->setText(QString("%1(%2)").arg(sourceInfo->name).arg(sourceInfo->count));
         }
         updateButton->setEnabled(true);

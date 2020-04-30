@@ -6,10 +6,11 @@
 #include <QActionGroup>
 #include <QToolButton>
 #include <QMenu>
+#include <QHeaderView>
 #include <QWidgetAction>
 #include "globalobjects.h"
 #include "Play/Danmu/danmuviewmodel.h"
-DanmuView::DanmuView(const QList<DanmuComment *> *danmuList, QWidget *parent):CFramelessDialog (tr("View Danmu"),parent)
+DanmuView::DanmuView(const QList<DanmuComment *> *danmuList, QWidget *parent, const QString &filterStr, DanmuFilterBox::FilterType type):CFramelessDialog (tr("View Danmu"),parent)
 {
     initView(danmuList->count());
     DanmuViewModel<DanmuComment *> *model=new DanmuViewModel<DanmuComment *>(danmuList,this);
@@ -17,13 +18,15 @@ DanmuView::DanmuView(const QList<DanmuComment *> *danmuList, QWidget *parent):CF
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     proxyModel->setSourceModel(model);
     danmuView->setModel(proxyModel);
-    QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[proxyModel](int type, const QString &keyword){
+    QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[proxyModel,this](int type, const QString &keyword){
         proxyModel->setFilterKeyColumn(type);
         proxyModel->setFilterRegExp(keyword);
+        tipLabel->setText(tr("Danmu Count: %1").arg(proxyModel->rowCount()));
     });
+    if(!filterStr.isEmpty()) filterEdit->setFilter(type, filterStr);
 }
 
-DanmuView::DanmuView(const QList<QSharedPointer<DanmuComment> > *danmuList, QWidget *parent):CFramelessDialog (tr("View Danmu"),parent)
+DanmuView::DanmuView(const QList<QSharedPointer<DanmuComment> > *danmuList, QWidget *parent, const QString &filterStr, DanmuFilterBox::FilterType type):CFramelessDialog (tr("View Danmu"),parent)
 {
     initView(danmuList->count());
     DanmuViewModel<QSharedPointer<DanmuComment> > *model=new DanmuViewModel<QSharedPointer<DanmuComment> >(danmuList,this);
@@ -32,10 +35,12 @@ DanmuView::DanmuView(const QList<QSharedPointer<DanmuComment> > *danmuList, QWid
     proxyModel->setFilterKeyColumn(4);
     proxyModel->setSourceModel(model);
     danmuView->setModel(proxyModel);
-    QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[proxyModel](int type, const QString &keyword){
+    QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[proxyModel,this](int type, const QString &keyword){
         proxyModel->setFilterKeyColumn(type);
         proxyModel->setFilterRegExp(keyword);
-	});
+        tipLabel->setText(tr("Danmu Count: %1").arg(proxyModel->rowCount()));
+    });
+    if(!filterStr.isEmpty()) filterEdit->setFilter(type, filterStr);
 }
 
 void DanmuView::initView(int danmuCount)
@@ -45,8 +50,9 @@ void DanmuView::initView(int danmuCount)
     danmuView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     danmuView->setAlternatingRowColors(true);
     danmuView->setSortingEnabled(true);
+    danmuView->header()->setSortIndicator(0, Qt::SortOrder::AscendingOrder);
 
-    QLabel *tipLabel = new QLabel(tr("Danmu Count: %1").arg(danmuCount),this);
+    tipLabel = new QLabel(tr("Danmu Count: %1").arg(danmuCount),this);
     filterEdit=new DanmuFilterBox(this);
 
     QGridLayout *viewGLayout=new QGridLayout(this);
@@ -115,4 +121,10 @@ DanmuFilterBox::DanmuFilterBox(QWidget *parent): QLineEdit(parent)
     QWidgetAction *optionsAction = new QWidgetAction(this);
     optionsAction->setDefaultWidget(optionsButton);
     addAction(optionsAction, QLineEdit::LeadingPosition);
+}
+
+void DanmuFilterBox::setFilter(FilterType type, const QString &filterStr)
+{
+    filterTypeGroup->actions()[type]->setChecked(true);
+    setText(filterStr);
 }

@@ -17,6 +17,7 @@ public:
 class PoolEditor : public CFramelessDialog
 {
     Q_OBJECT
+    friend class PoolItem;
 public:
     explicit PoolEditor(QWidget *parent = nullptr);
 private:

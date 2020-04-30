@@ -21,6 +21,7 @@ public:
     DanmuAccessResult *getURLInfo(QString &url);
     QString downloadDanmu(QString &providerId,DanmuSourceItem *item,QList<DanmuComment *> &danmuList);
     QString downloadBySourceURL(const QString &url,QList<DanmuComment *> &danmuList);
+    QString getProviderIdByURL(const QString &url);
 private:
     QMap<QString,ProviderBase *> providers;
     QList<ProviderBase *> orderedProviders;
