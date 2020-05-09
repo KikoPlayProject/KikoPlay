@@ -7,7 +7,7 @@ class AnimeFilterProxyModel : public QSortFilterProxyModel
     Q_OBJECT
 public:
     explicit AnimeFilterProxyModel(QObject *parent = nullptr);
-    void setFilterType(int type);
+    void setFilter(int type, const QString &str);
     void setTags(const QStringList &tagList);
     void setTime(const QSet<QString> &timeSet);
 signals:

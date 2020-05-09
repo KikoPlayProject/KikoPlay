@@ -10,10 +10,10 @@ AnimeFilterProxyModel::AnimeFilterProxyModel(QObject *parent):QSortFilterProxyMo
                      this, &AnimeFilterProxyModel::refreshAnimeCount);
 }
 
-void AnimeFilterProxyModel::setFilterType(int type)
+void AnimeFilterProxyModel::setFilter(int type, const QString &str)
 {
     filterType=type;
-    invalidateFilter();
+    setFilterRegExp(str);
     GlobalObjects::library->animeModel->showStatisMessage();
 }
 void AnimeFilterProxyModel::setTags(const QStringList &tagList)

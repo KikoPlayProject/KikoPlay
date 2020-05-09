@@ -155,8 +155,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         }
         else
         {
-            proxyModel->setFilterType(type);
-            proxyModel->setFilterRegExp(str);
+            proxyModel->setFilter(type, str);
         }
     });
 
