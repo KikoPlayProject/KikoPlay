@@ -32,9 +32,9 @@ private:
      bool isShowPreview;
      bool autoHideControlPanel;
 
-     const int controlPanelHeight=80*logicalDpiY()/96;
+     //const int controlPanelHeight=80*logicalDpiY()/96;
      const int statisBarHeight=64*logicalDpiY()/96;
-     const int infoPanelHeight=42*logicalDpiY()/96;
+     //const int infoPanelHeight=42*logicalDpiY()/96;
      const int playlistCollapseWidth=25*logicalDpiX()/96;
      const int playlistCollapseHeight=80*logicalDpiX()/96;
 

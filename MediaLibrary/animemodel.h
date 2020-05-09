@@ -12,8 +12,10 @@ public:
     void setActive(bool isActive);
     void deleteAnime(const QModelIndex &index);
     Anime *getAnime(const QModelIndex &index, bool fillInfo);
+    void showStatisMessage();
 signals:
     void animeMessage(const QString &msg, int flags, bool hasMore);
+    void animeCountInfo(int cur, int total);
 public:
     virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     virtual QModelIndex parent(const QModelIndex &) const{return QModelIndex();}
@@ -30,7 +32,6 @@ private:
     bool hasMoreAnimes;
     void addAnime(Anime *anime);
     void removeAnime(Anime *anime);
-    void showStatisMessage();
 };
 
 #endif // ANIMEMODEL_H

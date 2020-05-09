@@ -194,7 +194,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     QObject::connect(loadMore,&QPushButton::clicked,[](){
         GlobalObjects::library->animeModel->fetchMore(QModelIndex());
     });
-    QObject::connect(GlobalObjects::library->animeModel,&AnimeModel::animeMessage,this,
+    QObject::connect(proxyModel,&AnimeFilterProxyModel::animeMessage,this,
                      [totalCountLabel,loadMore,loadingLabel](const QString &msg, int flag,bool hasMore){
         totalCountLabel->setText(msg);
         if(hasMore)

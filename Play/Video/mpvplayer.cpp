@@ -261,7 +261,7 @@ void MPVPlayer::drawTexture(QList<const DanmuObject *> &objList, float alpha)
         texId.resize(objList.size()*6);
     }
     QOpenGLFunctions *glFuns=context()->functions();
-    GLfloat h = 2.f / width(), v = 2.f / height();
+    GLfloat h = 2.f / (width()*devicePixelRatioF()), v = 2.f / (height()*devicePixelRatioF());
     int allowTexCount=oldOpenGLVersion?0:15;
     while(!objList.isEmpty())
     {
@@ -513,7 +513,8 @@ void MPVPlayer::initializeGL()
 
 void MPVPlayer::paintGL()
 {
-    mpv_opengl_fbo mpfbo{static_cast<int>(defaultFramebufferObject()), width(), height(), 0};
+    mpv_opengl_fbo mpfbo{static_cast<int>(defaultFramebufferObject()),
+                static_cast<int>(width()*devicePixelRatioF()),  static_cast<int>(height()*devicePixelRatioF()), 0};
     int flip_y{1};
 
     mpv_render_param params[] = {
@@ -527,7 +528,7 @@ void MPVPlayer::paintGL()
     if(!danmuHide)
     {
         QOpenGLFramebufferObject::bindDefault();
-        QOpenGLPaintDevice fboPaintDevice(width(), height());
+        QOpenGLPaintDevice fboPaintDevice(width()*devicePixelRatioF(), height()*devicePixelRatioF());
         QPainter painter(&fboPaintDevice);
         painter.beginNativePainting();
         GlobalObjects::danmuRender->drawDanmu();

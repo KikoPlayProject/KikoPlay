@@ -176,7 +176,7 @@ public:
     }
     int duration;
 protected:
-    virtual void paintEvent(QPaintEvent *event)
+    virtual void paintEvent(QPaintEvent *)
     {
         static QColor bgColor(0,0,0,150),barColor(51,168,255,200),penColor(255,255,255);
         static QRect bRect;
@@ -209,18 +209,17 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     onTopWhilePlaying(false),updatingTrack(false),isFullscreen(false),resizePercent(-1),jumpForwardTime(5),jumpBackwardTime(5)
 {
     setWindowFlags(Qt::FramelessWindowHint);
-    GlobalObjects::mpvplayer->setParent(this);
-    setCentralWidget(GlobalObjects::mpvplayer);
-    GlobalObjects::mpvplayer->setMouseTracking(true);
-    setContentsMargins(0,0,0,0);
-    GlobalObjects::mpvplayer->setOptions();
+    QWidget *centralWidget = new QWidget(this);
+    centralWidget->setMouseTracking(true);
+    setCentralWidget(centralWidget);
+    QWidget *contralContainer = new QWidget(centralWidget);
 
     logDialog=new MPVLog(this);
 
-    playInfo=new InfoTip(this);
+    playInfo=new InfoTip(centralWidget);
     playInfo->hide();
 
-    progressInfo=new QWidget(this);
+    progressInfo=new QWidget(centralWidget);
     QStackedLayout *piSLayout = new QStackedLayout(progressInfo);
     piSLayout->setStackingMode(QStackedLayout::StackAll);
     piSLayout->setContentsMargins(0,0,0,0);
@@ -267,7 +266,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     playerContent->show();
     playerContent->raise();
 
-    playInfoPanel=new QWidget(this);
+    playInfoPanel=new QWidget(contralContainer);
     playInfoPanel->setObjectName(QStringLiteral("widgetPlayInfo"));
     playInfoPanel->hide();
 
@@ -278,7 +277,8 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     playListCollapseButton->setText(QChar(GlobalObjects::appSetting->value("MainWindow/ListVisibility",true).toBool()?0xe945:0xe946));
     playListCollapseButton->hide();
 
-    danmuStatisBar=new DanmuStatisInfo(this);
+    danmuStatisBar=new DanmuStatisInfo(contralContainer);
+    danmuStatisBar->setMinimumHeight(statisBarHeight);
     danmuStatisBar->hide();
 
     QFont normalFont;
@@ -286,7 +286,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     normalFont.setPointSize(12);
 
     titleLabel=new QLabel(playInfoPanel);
-    titleLabel->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
+    titleLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     titleLabel->setObjectName(QStringLiteral("labelTitle"));
     titleLabel->setFont(normalFont);
 
@@ -327,14 +327,14 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     QHBoxLayout *infoHLayout=new QHBoxLayout(playInfoPanel);
     infoHLayout->setSpacing(0);
     infoHLayout->addWidget(titleLabel);
-    infoHLayout->addItem(new QSpacerItem(1,1,QSizePolicy::MinimumExpanding));
+    infoHLayout->addStretch(1);
     infoHLayout->addWidget(mediaInfo);
     infoHLayout->addWidget(windowSize);
     infoHLayout->addWidget(screenshot);
     infoHLayout->addWidget(stayOnTop);
 
 
-    playControlPanel=new QWidget(this);
+    playControlPanel=new QWidget(contralContainer);
     playControlPanel->setObjectName(QStringLiteral("widgetPlayControl"));
     playControlPanel->hide();
 
@@ -449,6 +449,28 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     buttonHLayout->addWidget(fullscreen);
 
     controlVLayout->addLayout(buttonHLayout);
+
+    GlobalObjects::mpvplayer->setParent(centralWidget);
+    //setCentralWidget(GlobalObjects::mpvplayer);
+    GlobalObjects::mpvplayer->setMouseTracking(true);
+    setContentsMargins(0,0,0,0);
+    GlobalObjects::mpvplayer->setOptions();
+    QStackedLayout *playerSLayout = new QStackedLayout(centralWidget);
+    playerSLayout->setStackingMode(QStackedLayout::StackAll);
+    playerSLayout->setContentsMargins(0,0,0,0);
+    playerSLayout->setSpacing(0);
+    //GlobalObjects::mpvplayer->hide();
+    contralContainer->setMouseTracking(true);
+    QVBoxLayout *contralVLayout = new QVBoxLayout(contralContainer);
+    contralVLayout->setContentsMargins(0,0,0,0);
+    contralVLayout->setSpacing(0);
+    contralVLayout->addWidget(playInfoPanel);
+    contralVLayout->addStretch(1);
+    contralVLayout->addWidget(danmuStatisBar);
+    contralVLayout->addWidget(playControlPanel);
+    playerSLayout->addWidget(contralContainer);
+    playerSLayout->addWidget(GlobalObjects::mpvplayer);
+
 
     setupDanmuSettingPage();
     setupPlaySettingPage();
@@ -664,7 +686,7 @@ void PlayerWindow::initActions()
 
 void PlayerWindow::setupDanmuSettingPage()
 {
-    danmuSettingPage=new QWidget(this);
+    danmuSettingPage=new QWidget(this->centralWidget());
     danmuSettingPage->setObjectName(QStringLiteral("PopupPage"));
     danmuSettingPage->installEventFilter(this);
     danmuSettingPage->resize(360 *logicalDpiX()/96,220*logicalDpiY()/96);
@@ -955,7 +977,7 @@ void PlayerWindow::setupDanmuSettingPage()
 
 void PlayerWindow::setupPlaySettingPage()
 {
-    playSettingPage=new QWidget(this);
+    playSettingPage=new QWidget(this->centralWidget());
     playSettingPage->setObjectName(QStringLiteral("PopupPage"));
     playSettingPage->installEventFilter(this);
     playSettingPage->resize(320 *logicalDpiX()/96,200*logicalDpiY()/96);
@@ -1427,7 +1449,7 @@ void PlayerWindow::setupSignals()
 		}
         danmuSettingPage->show();
 		danmuSettingPage->raise();
-        QPoint leftTop(width() - danmuSettingPage->width() - 10, height() - controlPanelHeight - danmuSettingPage->height()+40);
+        QPoint leftTop(width() - danmuSettingPage->width() - 10, height() - playControlPanel->height() - danmuSettingPage->height()+40);
         danmuSettingPage->move(leftTop-QPoint(0,20));
     });
     QObject::connect(setting,&QPushButton::clicked,[this](){
@@ -1439,7 +1461,7 @@ void PlayerWindow::setupSignals()
 		}
         playSettingPage->show();
 		playSettingPage->raise();
-        QPoint leftTop(width() - playSettingPage->width() - 10, height() - controlPanelHeight - playSettingPage->height() + 40);
+        QPoint leftTop(width() - playSettingPage->width() - 10, height() - playControlPanel->height() - playSettingPage->height() + 40);
         playSettingPage->move(leftTop-QPoint(0,20));
     });
     QObject::connect(next,&QPushButton::clicked,actNext,&QAction::trigger);
@@ -1483,7 +1505,7 @@ void PlayerWindow::setPlayTime()
 void PlayerWindow::showMessage(const QString &msg)
 {
     static_cast<InfoTip *>(playInfo)->showMessage(msg);
-    playInfo->move((width()-playInfo->width())/2,height()-controlPanelHeight-playInfo->height()-20);
+    playInfo->move((width()-playInfo->width())/2,height()-playControlPanel->height()-playInfo->height()-20);
     playInfo->raise();
 }
 
@@ -1520,7 +1542,8 @@ void PlayerWindow::switchItem(bool prev, const QString &nullMsg)
 
 void PlayerWindow::adjustProgressInfoPos()
 {
-    int ty=danmuStatisBar->isHidden()?height()-controlPanelHeight-progressInfo->height():height()-controlPanelHeight-progressInfo->height()-statisBarHeight-1;
+    int ty=danmuStatisBar->isHidden()?height()-playControlPanel->height()-progressInfo->height():
+                                      height()-playControlPanel->height()-progressInfo->height()-statisBarHeight-1;
     int nx = process->curMouseX()-progressInfo->width()/3;
     if(nx+progressInfo->width()>width()) nx = width()-progressInfo->width();
     progressInfo->move(nx<0?0:nx,ty);
@@ -1536,13 +1559,13 @@ void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
     }
     if(clickBehavior==1)return;
     const QPoint pos=event->pos();
-    if(this->height()-pos.y()<controlPanelHeight+40)
+    if(this->height()-pos.y()<playControlPanel->height()+40)
     {
         playControlPanel->show();
         playInfoPanel->show();
         hideCursorTimer.stop();
     }
-    else if(pos.y()<infoPanelHeight)
+    else if(pos.y()<playInfoPanel->height())
     {
          playInfoPanel->show();
          playControlPanel->hide();
@@ -1609,22 +1632,20 @@ void PlayerWindow::mousePressEvent(QMouseEvent *event)
 
 void PlayerWindow::resizeEvent(QResizeEvent *)
 {
-    playControlPanel->setGeometry(0,height()-controlPanelHeight,width(),controlPanelHeight);
-    playInfoPanel->setGeometry(0,0,width(),infoPanelHeight);
+    playInfoPanel->setMaximumWidth(width());
     playListCollapseButton->setGeometry(width()-playlistCollapseWidth,(height()-playlistCollapseHeight)/2,playlistCollapseWidth,playlistCollapseHeight);
-    danmuStatisBar->setGeometry(0,height()-controlPanelHeight-statisBarHeight,width(),statisBarHeight);
     if(!playSettingPage->isHidden())
     {
-		QPoint leftTop(width() - playSettingPage->width() - 10, height() - controlPanelHeight - playSettingPage->height() + 20);
+        QPoint leftTop(width() - playSettingPage->width() - 10, height() - playControlPanel->height() - playSettingPage->height() + 20);
         playSettingPage->move(leftTop);
     }
 	if (!danmuSettingPage->isHidden())
 	{
-		QPoint leftTop(width() - danmuSettingPage->width() - 10, height() - controlPanelHeight - danmuSettingPage->height() + 20);
+        QPoint leftTop(width() - danmuSettingPage->width() - 10, height() - playControlPanel->height() - danmuSettingPage->height() + 20);
 		danmuSettingPage->move(leftTop);
 	}
     playerContent->move((width()-playerContent->width())/2,(height()-playerContent->height())/2);
-    playInfo->move((width()-playInfo->width())/2,height()-controlPanelHeight-playInfo->height()-20);
+    playInfo->move((width()-playInfo->width())/2,height()-playControlPanel->height()-playInfo->height()-20);
 }
 
 void PlayerWindow::leaveEvent(QEvent *)

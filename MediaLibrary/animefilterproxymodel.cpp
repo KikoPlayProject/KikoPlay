@@ -4,21 +4,36 @@
 #include "labelmodel.h"
 #include "globalobjects.h"
 
+AnimeFilterProxyModel::AnimeFilterProxyModel(QObject *parent):QSortFilterProxyModel(parent),filterType(0)
+{
+    QObject::connect(GlobalObjects::library->animeModel, &AnimeModel::animeCountInfo,
+                     this, &AnimeFilterProxyModel::refreshAnimeCount);
+}
+
 void AnimeFilterProxyModel::setFilterType(int type)
 {
     filterType=type;
     invalidateFilter();
+    GlobalObjects::library->animeModel->showStatisMessage();
 }
 void AnimeFilterProxyModel::setTags(const QStringList &tagList)
 {
     tagFilterList=tagList;
     invalidateFilter();
+    GlobalObjects::library->animeModel->showStatisMessage();
 }
 
 void AnimeFilterProxyModel::setTime(const QSet<QString> &timeSet)
 {
     timeFilterSet=timeSet;
     invalidateFilter();
+    GlobalObjects::library->animeModel->showStatisMessage();
+}
+
+void AnimeFilterProxyModel::refreshAnimeCount(int cur, int total)
+{
+    emit animeMessage(tr("Current: %1/%2 Loaded: %2/%3").arg(rowCount()).arg(cur).arg(total),
+                      total==cur?PopMessageFlag::PM_OK:PopMessageFlag::PM_INFO,total!=cur);
 }
 
 bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const

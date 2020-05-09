@@ -143,8 +143,10 @@ void DanmuRender::refDesc(DanmuDrawInfo *drawInfo)
 
 void DanmuRender::refreshDMRect()
 {
-    const QSize surfaceSize(GlobalObjects::mpvplayer->size());
-    this->surfaceRect.setRect(0,0,surfaceSize.width(),surfaceSize.height());
+    QSize surfaceSize(GlobalObjects::mpvplayer->size());
+    surfaceSize.setWidth(surfaceSize.width()*GlobalObjects::mpvplayer->devicePixelRatioF());
+    surfaceSize.setHeight(surfaceSize.height()*GlobalObjects::mpvplayer->devicePixelRatioF());
+    this->surfaceRect.setRect(0,0,surfaceSize.width(), surfaceSize.height());
     if(bottomSubtitleProtect)
     {
         this->surfaceRect.setBottom(surfaceSize.height()*0.85);

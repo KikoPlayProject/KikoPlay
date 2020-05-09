@@ -81,14 +81,7 @@ void AnimeModel::removeAnime(Anime *anime)
 void AnimeModel::showStatisMessage()
 {
     int totalCount=GlobalObjects::library->getTotalAnimeCount();
-    if(totalCount==animes.count())
-    {
-        emit animeMessage(tr("Anime: %1 All Loaded").arg(totalCount),PopMessageFlag::PM_OK,false);
-    }
-    else
-    {
-        emit animeMessage(tr("Total Anime: %1  Loaded: %2").arg(totalCount).arg(animes.count()),PopMessageFlag::PM_INFO,true);
-    }
+    emit animeCountInfo(animes.count(), totalCount);
 }
 
 QVariant AnimeModel::data(const QModelIndex &index, int role) const
