@@ -116,7 +116,9 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
     });
     QAction *copyTimeline=new QAction(tr("Copy TimeLine Info"), this);
     QObject::connect(copyTimeline,&QAction::triggered,this,[sourceInfo](){
+        if(sourceInfo->timelineInfo.empty()) return;
         timelineClipBoard=sourceInfo->timelineInfo;
+        editor->showMessage(tr("The Timeline Info has been copied"));
     });
     QAction *pasteTimeline=new QAction(tr("Paste TimeLine Info"), this);
     QObject::connect(pasteTimeline,&QAction::triggered,this,[sourceInfo](){
@@ -131,6 +133,7 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
             timeline.insert(i,pair);
         }
         GlobalObjects::danmuPool->getPool()->setTimeline(sourceInfo->id,timeline);
+        editor->showMessage(tr("Pasted Timeline Info"));
     });
     setContextMenuPolicy(Qt::ActionsContextMenu);
     addAction(copyTimeline);
