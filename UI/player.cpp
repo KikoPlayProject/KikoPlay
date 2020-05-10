@@ -451,15 +451,12 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     controlVLayout->addLayout(buttonHLayout);
 
     GlobalObjects::mpvplayer->setParent(centralWidget);
-    //setCentralWidget(GlobalObjects::mpvplayer);
-    GlobalObjects::mpvplayer->setMouseTracking(true);
     setContentsMargins(0,0,0,0);
     GlobalObjects::mpvplayer->setOptions();
     QStackedLayout *playerSLayout = new QStackedLayout(centralWidget);
     playerSLayout->setStackingMode(QStackedLayout::StackAll);
     playerSLayout->setContentsMargins(0,0,0,0);
     playerSLayout->setSpacing(0);
-    //GlobalObjects::mpvplayer->hide();
     contralContainer->setMouseTracking(true);
     QVBoxLayout *contralVLayout = new QVBoxLayout(contralContainer);
     contralVLayout->setContentsMargins(0,0,0,0);
@@ -478,6 +475,27 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     setupSignals();
     setFocusPolicy(Qt::StrongFocus);
     setAcceptDrops(true);
+}
+
+void PlayerWindow::toggleListCollapseState(bool on)
+{
+    playListCollapseButton->setText(on?QChar(0xe945):QChar(0xe946));
+}
+
+void PlayerWindow::toggleFullScreenState(bool on)
+{
+    isFullscreen=on;
+    if(isFullscreen) fullscreen->setText(QChar(0xe6ac));
+    else fullscreen->setText(QChar(0xe621));
+    if(isFullscreen)
+    {
+        hideCursorTimer.start(hideCursorTimeout);
+    }
+    else
+    {
+        hideCursorTimer.stop();
+        setCursor(Qt::ArrowCursor);
+    }
 }
 
 void PlayerWindow::initActions()
@@ -605,19 +623,8 @@ void PlayerWindow::initActions()
     });
     actFullscreen=new QAction(tr("Fullscreen"),this);
     QObject::connect(actFullscreen,&QAction::triggered,[this](){
-        isFullscreen=!isFullscreen;
+        toggleFullScreenState(!isFullscreen);
         emit showFullScreen(isFullscreen);
-        if(isFullscreen) fullscreen->setText(QChar(0xe6ac));
-        else fullscreen->setText(QChar(0xe621));
-        if(isFullscreen)
-        {
-            hideCursorTimer.start(hideCursorTimeout);
-        }
-        else
-        {
-            hideCursorTimer.stop();
-            setCursor(Qt::ArrowCursor);
-        }
     });
     actPrev=new QAction(tr("Prev"),this);
     QObject::connect(actPrev,&QAction::triggered,[this](){

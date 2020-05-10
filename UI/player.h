@@ -21,6 +21,8 @@ class PlayerWindow : public QMainWindow
     Q_OBJECT
 public:
     explicit PlayerWindow(QWidget *parent = nullptr);
+    void toggleListCollapseState(bool on);
+    void toggleFullScreenState(bool on);
 
 private:
      QWidget *playControlPanel,*playInfoPanel;

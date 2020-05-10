@@ -40,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
 			if (isFullScreen())
 			{
 				widgetTitlebar->show();
+                playerWindow->toggleFullScreenState(false);
 				showNormal();
 			}
             if(isMaximized())
@@ -48,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
             }
 			if (listShowState)listWindow->show();
 			else listWindow->hide();
+            playerWindow->toggleListCollapseState(listShowState);
             setGeometry(geo);
         }
 #ifdef Q_OS_WIN
@@ -324,17 +326,22 @@ QWidget *MainWindow::setupPlayPage()
             listShowState=!listWindow->isHidden();
     });
     QObject::connect(playerWindow,&PlayerWindow::showFullScreen,[this,playVerticalLayout](bool on){
-        static bool isMax;
+        static bool isMax, isShowPlaylist;
         if(on)
         {
+            isShowPlaylist=!listWindow->isHidden();
             isMax=isMaximized();
             widgetTitlebar->hide();
             showFullScreen();
+            listWindow->hide();
+            playerWindow->toggleListCollapseState(false);
             playVerticalLayout->setContentsMargins(0,0,0,0);
         }
         else
         {
             widgetTitlebar->show();
+            isShowPlaylist?listWindow->show():listWindow->hide();
+            playerWindow->toggleListCollapseState(isShowPlaylist);
             isMax?showMaximized():showNormal();
             playVerticalLayout->setContentsMargins(1,0,1,1);
         }
