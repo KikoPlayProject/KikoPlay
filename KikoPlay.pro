@@ -268,5 +268,6 @@ contains(QT_ARCH, i386){
         unix:web.files = web/*
 
         INSTALLS += target icons desktop web
+        DEFINES += CONFIG_UNIX_DATA
     }
 }
