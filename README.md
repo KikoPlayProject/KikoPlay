@@ -1,8 +1,11 @@
 # KikoPlay - A Full-Featured Danmu Player
+
 ---
 全功能弹幕播放器
+[![latest packaged version(s)](https://repology.org/badge/latest-versions/kikoplay.svg)](https://repology.org/project/kikoplay/versions)
 
 ## 特性
+
  - OpenGL渲染，流畅的弹幕体验
  - libmpv播放内核，支持多种媒体文件格式，保留mpv灵活的参数设置，支持实时进度条预览
  - 树形播放列表，可随意组织你的番剧
