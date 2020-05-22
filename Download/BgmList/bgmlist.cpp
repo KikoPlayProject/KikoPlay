@@ -74,6 +74,20 @@ void BgmList::refresh()
     }
 }
 
+void BgmList::setHoverColor(const QColor &color)
+{
+    beginResetModel();
+    hoverColor = color;
+    endResetModel();
+}
+
+void BgmList::setNormColor(const QColor &color)
+{
+    beginResetModel();
+    normColor = color;
+    endResetModel();
+}
+
 QVariant BgmList::data(const QModelIndex &index, int role) const
 {
     if(!curSeason) return QVariant();
@@ -104,8 +118,8 @@ QVariant BgmList::data(const QModelIndex &index, int role) const
     }
     case Qt::ForegroundRole:
     {
-        if(item.isNew) return QBrush(QColor(0,155,255));
-        else return QBrush(QColor(100,100,100));
+        if(item.isNew) return QBrush(hoverColor);
+        else return QBrush(normColor);
     }
     case Qt::CheckStateRole:
     {

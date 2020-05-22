@@ -270,3 +270,4 @@ contains(QT_ARCH, i386){
         INSTALLS += target icons desktop web
     }
 }
+

@@ -2,6 +2,7 @@
 #define BGMLIST_H
 #include <QtCore>
 #include <QAbstractItemModel>
+#include <QColor>
 struct BgmItem
 {
     QString title;
@@ -36,6 +37,12 @@ public:
     const QList<BgmItem> &bgmList(){return curSeason->bgmList;}
     void setSeason(const QString &id);
     void refresh();
+
+    QColor getHoverColor() const {return hoverColor;}
+    void setHoverColor(const QColor& color);
+    QColor getNormColor() const {return normColor;}
+    void setNormColor(const QColor& color);
+
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
@@ -57,6 +64,7 @@ private:
     QMap<QString, BgmSeason> bgmSeasons;
     QStringList seasons;
     BgmSeason *curSeason;
+    QColor hoverColor, normColor;
 
     bool fetchMetaInfo();
     bool fetchBgmList(BgmSeason &season);

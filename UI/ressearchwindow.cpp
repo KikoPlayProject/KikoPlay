@@ -105,6 +105,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     dialogTip->hide();
 
     searchListView=new QTreeView(this);
+    searchListView->setObjectName(QStringLiteral("SearchListView"));
     searchListView->setModel(searchProxyModel);
     searchListView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
     searchListView->setRootIsDecorated(false);

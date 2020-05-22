@@ -43,8 +43,6 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     btnOptions.fontSize=10;
     btnOptions.leftMargin=3*logicalDpiX()/96;
     btnOptions.iconTextSpace=2*logicalDpiX()/96;
-    btnOptions.normalColor=0x606060;
-    btnOptions.hoverColor=0x4599f7;
 
     btnOptions.iconChar=QChar(0xe604);
     FontIconToolButton *addUriTask=new FontIconToolButton(btnOptions, this);
@@ -424,8 +422,6 @@ QWidget *DownloadWindow::setupLeftPanel()
     FontIconToolButtonOptions btnOptions;
     btnOptions.fontSize=12;
     btnOptions.iconSize=12;
-    btnOptions.normalColor=0xc5c5c5;
-    btnOptions.hoverColor=0x679bcc;
     btnOptions.leftMargin=20*logicalDpiX()/96;
     btnOptions.iconTextSpace=4*logicalDpiX()/96;
 
@@ -556,6 +552,7 @@ QWidget *DownloadWindow::setupFileInfoPage()
     fileInfoView=new QTreeView(this);
     fileInfoView->setAlternatingRowColors(true);
     fileInfoView->setModel(selectedTFModel);
+    fileInfoView->setObjectName(QStringLiteral("TaskFileInfoView"));
     //fileInfoView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     fileInfoView->header()->resizeSection(0,300*logicalDpiX()/96);
 
@@ -608,6 +605,7 @@ QWidget *DownloadWindow::setupGlobalLogPage()
     logView->setReadOnly(true);
     logView->setCenterOnScroll(true);
     logView->setMaximumBlockCount(50);
+    logView->setObjectName(QStringLiteral("TaskLogView"));
     //logView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
     return logView;
 }

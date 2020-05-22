@@ -5,7 +5,7 @@ class AnimeItemDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 public:
-    explicit AnimeItemDelegate(QObject *parent = 0);
+    explicit AnimeItemDelegate(QObject *parent = nullptr);
 
     // QAbstractItemDelegate interface
 public:

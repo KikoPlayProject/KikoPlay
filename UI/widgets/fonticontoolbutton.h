@@ -8,16 +8,23 @@ struct FontIconToolButtonOptions
     int fontSize;
     int iconSize;
     int leftMargin;
-    int normalColor;
-    int hoverColor;
     int iconTextSpace;
 };
 class FontIconToolButton : public QToolButton
 {
+    Q_OBJECT
+    Q_PROPERTY(QColor hoverColor READ getHoverColor WRITE setHoverColor)
+    Q_PROPERTY(QColor normColor READ getNormColor WRITE setNormColor)
 public:
     explicit FontIconToolButton(const FontIconToolButtonOptions &options, QWidget *parent=nullptr);
     void setCheckable(bool checkable);
     void setText(const QString &text);
+
+    QColor getHoverColor() const;
+    void setHoverColor(const QColor& color);
+
+    QColor getNormColor() const;
+    void setNormColor(const QColor& color);
 protected:
     QLabel *iconLabel,*textLabel;
     QString normalStyleSheet,hoverStyleSheet;
@@ -39,5 +46,7 @@ protected:
     // QWidget interface
 public:
     virtual QSize sizeHint() const;
+private:
+    QColor hoverColor, normColor;
 };
 #endif // FONTICONTOOLBUTTON_H

@@ -2,6 +2,7 @@
 #define LABELMODEL_H
 #include <QAbstractItemModel>
 #include <QtCore>
+#include <QColor>
 struct TagNode
 {
     TagNode(const QString &title="", TagNode *p=nullptr, int count=0, int tp=0):tagTitle(title),animeCount(count),type(tp),
@@ -33,12 +34,19 @@ class LabelModel : public QAbstractItemModel
 {
     Q_OBJECT
 public:
+    enum BrushType
+    {
+        TopLevel,
+        ChildLevel
+    };
+
     explicit LabelModel(AnimeLibrary *library = nullptr);
     ~LabelModel();
     void refreshLabel();
     void removeTag(const QModelIndex &index);
     void selLabelList(const QModelIndexList &indexes, QStringList &tags, QSet<QString> &times);
     inline const QMap<QString,QSet<QString> > getTags(){return tagMap;}
+    void setBrushColor(BrushType type, const QColor &color);
     // QAbstractItemModel interface
 public:
     virtual QModelIndex index(int row, int column, const QModelIndex &parent) const;
@@ -49,6 +57,7 @@ public:
 private:
     TagNode *root;
     QMap<QString,QSet<QString> > tagMap;
+    QColor foregroundColor[2];
 };
 class LabelProxyModel : public QSortFilterProxyModel
 {

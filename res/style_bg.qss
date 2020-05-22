@@ -3,7 +3,7 @@ QToolButton#PageButton{
        border-radius:0px;
        padding:5px;
        color:#989898;
-       background:#484d50;
+       background-color: rgba(48,77,80,0);
 }
 QToolButton#PageButton:hover,
 QToolButton#PageButton:pressed,
@@ -19,7 +19,7 @@ QToolButton#PageButton_O{
        border-radius:0px;
        padding:5px;
        color:#989898;
-       background:#484d50;
+       background-color: rgba(48,77,80,0);
 }
 QToolButton#PageButton_O:hover,
 QToolButton#PageButton_O:pressed,
@@ -77,7 +77,7 @@ QToolButton#ListEditButton:checked{
        margin-top:2px;
 }
 #widgetTitlebar{
-    background-color: rgb(60, 65,68);
+    background-color: rgba(60, 65,68,180);
 }
 #widgetPagePlay{
     background-color: rgb(60, 65,68);
@@ -298,11 +298,22 @@ QTreeView#danmulist::item:hover, QTreeView#danmulist::branch:hover {
 QTreeView#danmulist::item:selected, QTreeView#danmulist::branch:selected{
     background-color: rgba(255, 255, 255, 40);
 }
-QHeaderView{
+QDialog QHeaderView{
     background-color: rgb(100,100,100);
 }
-QHeaderView::section {
+QDialog QHeaderView::section {
     background-color: rgb(100,100,100);/*qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                    stop:0 #616161, stop: 0.5 #505050,
+                                    stop: 0.6 #434343, stop:1 #656565);*/
+    color: white;
+    padding-left: 4px;
+    border: 1px solid #6c6c6c;
+}
+QHeaderView{
+    background-color: rgba(100,100,100,180);
+}
+QHeaderView::section {
+    background-color: rgba(100,100,100,0);/*qlineargradient(x1:0, y1:0, x2:0, y2:1,
                                     stop:0 #616161, stop: 0.5 #505050,
                                     stop: 0.6 #434343, stop:1 #656565);*/
     color: white;
@@ -432,7 +443,7 @@ QMenu::indicator:checked:selected {
 #playlist QScrollBar::handle:vertical,#danmulist QScrollBar::handle:vertical {
     background: rgba(255,255,255,180);
     min-height: 70px;
-    border-radius: 4px;
+    border-radius: 1px;
 }
 #playlist QScrollBar::handle:vertical:hover,#danmulist QScrollBar::handle:vertical:hover {
     background: rgba(255,255,255,255);
@@ -489,7 +500,7 @@ QCheckBox::indicator:checked {
     image: url(:/res/images/check-box-check.png);
 }
 QLineEdit,QSpinBox {
-    background-color:#fafafa;
+    background-color:rgba(250,250,250,120);
     border: 1px solid #dddddd;
     padding: 2px 2px 2px 2px;
 }
@@ -526,7 +537,7 @@ QSpinBox::down-button:hover {
     border-image: url(:/res/images/down-arrow-hover.png) 1;
 }
 QComboBox {
-    background-color:#fafafa;
+    background-color:rgba(250,250,250,180);
     border: 1px solid #dddddd;
     padding: 2px 2px 2px 2px;
 }
@@ -555,6 +566,12 @@ QComboBox QAbstractItemView {
       selection-background-color: #019aff;
 }
 QPushButton{
+    border:1px solid;
+    border-color:rgb(221,221,221);
+    background-color:rgba(250,250,250,180);
+    padding:4px 4px 4px 4px;
+}
+QDialog QPushButton{
     border:1px solid;
     border-color:rgb(221,221,221);
     background-color:rgb(250,250,250);
@@ -769,7 +786,7 @@ QPushButton:pressed{
 #FilterPage{
     background-color:rgba(100,100,100,200);
 }
-#AnimeLabelTip{
+#eLabelTip{
     color:#ffffff;
 }
 #TagButton{
@@ -803,34 +820,163 @@ QPushButton:pressed{
     background-color:rgba(13,189,244,200);
 }
 /* ScrollBar Setting */
+#DownloadView QScrollBar:horizontal,
+#RuleListView QScrollBar:horizontal,
+#RuleLogView QScrollBar:horizontal,
+#RuleURLView QScrollBar:horizontal,
+#TaskFileInfoView QScrollBar:horizontal,
+#SearchListView QScrollBar:horizontal{
+    background: transparent;
+    height: 10px;
+}
+#DownloadView QScrollBar::handle:horizontal,
+#RuleListView QScrollBar::handle:horizontal,
+#RuleLogView QScrollBar::handle:horizontal,
+#RuleURLView QScrollBar::handle:horizontal,
+#TaskFileInfoView QScrollBar::handle:horizontal,
+#SearchListView QScrollBar::handle:horizontal{
+    background: rgba(255,255,255,180);
+    min-height: 70px;
+    border-radius: 1px;
+}
+#DownloadView QScrollBar::handle:horizontal:hover,
+#RuleListView QScrollBar::handle:horizontal:hover,
+#RuleLogView QScrollBar::handle:horizontal:hover,
+#RuleURLView QScrollBar::handle:horizontal:hover,
+#TaskFileInfoView QScrollBar::handle:horizontal:hover,
+#SearchListView QScrollBar::handle:horizontal:hover{
+    background: rgba(255,255,255,255);
+}
+#DownloadView QScrollBar::handle:horizontal:pressed,
+#RuleListView QScrollBar::handle:horizontal:pressed,
+#RuleLogView QScrollBar::handle:horizontal:pressed,
+#RuleURLView QScrollBar::handle:horizontal:pressed,
+#TaskFileInfoView QScrollBar::handle:horizontal:pressed,
+#SearchListView QScrollBar::handle:horizontal:pressed{
+    background: rgba(255,255,255,200);
+}
+#DownloadView QScrollBar::add-line:horizontal,
+#RuleListView QScrollBar::add-line:horizontal,
+#RuleLogView QScrollBar::add-line:horizontal,
+#RuleURLView QScrollBar::add-line:horizontal,
+#TaskFileInfoView QScrollBar::add-line:horizontal,
+#SearchListView QScrollBar::add-line:horizontal{
+    background: none;
+}
+#DownloadView QScrollBar::sub-line:horizontal,
+#RuleListView QScrollBar::sub-line:horizontal,
+#RuleLogView QScrollBar::sub-line:horizontal,
+#RuleURLView QScrollBar::sub-line:horizontal,
+#TaskFileInfoView QScrollBar::sub-line:horizontal,
+#SearchListView QScrollBar::sub-line:horizontal{
+    background: none;
+}
+#DownloadView QScrollBar::add-page:horizontal,
+#DownloadView QScrollBar::sub-page:horizontal,
+#RuleListView QScrollBar::add-page:horizontal,
+#RuleListView QScrollBar::sub-page:horizontal,
+#RuleLogView QScrollBar::add-page:horizontal,
+#RuleLogView QScrollBar::sub-page:horizontal,
+#RuleURLView QScrollBar::add-page:horizontal,
+#RuleURLView QScrollBar::sub-page:horizontal,
+#TaskFileInfoView QScrollBar::add-page:horizontal,
+#TaskFileInfoView QScrollBar::sub-page:horizontal,
+#SearchListView QScrollBar::add-page:horizontal,
+#SearchListView QScrollBar::sub-page:horizontal{
+    background: none;
+}
 
+#DownloadView QScrollBar:vertical,
+#SearchListView QScrollBar:vertical,
+#BgmListView QScrollBar:vertical,
+#RuleListView QScrollBar:vertical,
+#RuleLogView QScrollBar:vertical,
+#RuleURLView QScrollBar:vertical,
+#TaskLogView QScrollBar:vertical,
+#TaskFileInfoView QScrollBar:vertical,
 #LabelView QScrollBar:vertical,
 #AnimesContent QScrollBar:vertical{
     background: transparent;
     width: 10px;
 }
+#DownloadView QScrollBar::handle:vertical,
+#SearchListView QScrollBar::handle:vertical,
+#BgmListView QScrollBar::handle:vertical,
+#RuleListView QScrollBar::handle:vertical,
+#RuleLogView QScrollBar::handle:vertical,
+#RuleURLView QScrollBar::handle:vertical,
+#TaskLogView QScrollBar::handle:vertical,
+#TaskFileInfoView QScrollBar::handle:vertical,
 #LabelView QScrollBar::handle:vertical,
 #AnimesContent QScrollBar::handle:vertical{
     background: rgba(255,255,255,180);
     min-height: 70px;
     border-radius: 1px;
 }
+#DownloadView QScrollBar::handle:vertical:hover,
+#SearchListView QScrollBar::handle:vertical:hover,
+#BgmListView QScrollBar::handle:vertical:hover,
+#RuleListView QScrollBar::handle:vertical:hover,
+#RuleLogView QScrollBar::handle:vertical:hover,
+#RuleURLView QScrollBar::handle:vertical:hover,
+#TaskLogView QScrollBar::handle:vertical:hover,
+#TaskFileInfoView QScrollBar::handle:vertical:hover,
 #LabelView QScrollBar::handle:vertical:hover,
 #AnimesContent QScrollBar::handle:vertical:hover {
     background: rgba(255,255,255,255);
 }
+#DownloadView QScrollBar::handle:vertical:pressed,
+#SearchListView QScrollBar::handle:vertical:pressed,
+#BgmListView QScrollBar::handle:vertical:pressed,
+#RuleListView QScrollBar::handle:vertical:pressed,
+#RuleLogView QScrollBar::handle:vertical:pressed,
+#RuleURLView QScrollBar::handle:vertical:pressed,
+#TaskLogView QScrollBar::handle:vertical:pressed,
+#TaskFileInfoView QScrollBar::handle:vertical:pressed,
 #LabelView QScrollBar::handle:vertical:pressed,
 #AnimesContent QScrollBar::handle:vertical:pressed {
     background: rgba(255,255,255,200);
 }
+#DownloadView QScrollBar::add-line:vertical,
+#SearchListView QScrollBar::add-line:vertical,
+#BgmListView QScrollBar::add-line:vertical,
+#RuleListView QScrollBar::add-line:vertical,
+#RuleLogView QScrollBar::add-line:vertical,
+#RuleURLView QScrollBar::add-line:vertical,
+#RuleURLView QScrollBar::add-line:vertical,
+#TaskFileInfoView QScrollBar::add-line:vertical,
 #LabelView QScrollBar::add-line:vertical,
 #AnimesContent QScrollBar::add-line:vertical{
     background: none;
 }
+#DownloadView QScrollBar::sub-line:vertical,
+#SearchListView QScrollBar::sub-line:vertical,
+#BgmListView QScrollBar::sub-line:vertical,
+#RuleListView QScrollBar::sub-line:vertical,
+#RuleLogView QScrollBar::sub-line:vertical,
+#RuleURLView QScrollBar::sub-line:vertical,
+#TaskLogView QScrollBar::sub-line:vertical,
+#TaskFileInfoView QScrollBar::sub-line:vertical,
 #LabelView QScrollBar::sub-line:vertical,
 #AnimesContent QScrollBar::sub-line:vertical{
     background: none;
 }
+#DownloadView QScrollBar::add-page:vertical,
+#DownloadView QScrollBar::sub-page:vertical,
+#SearchListView QScrollBar::add-page:vertical,
+#SearchListView QScrollBar::sub-page:vertical,
+#BgmListView QScrollBar::add-page:vertical,
+#BgmListView QScrollBar::sub-page:vertical,
+#RuleListView QScrollBar::add-page:vertical,
+#RuleListView QScrollBar::sub-page:vertical,
+#RuleLogView QScrollBar::add-page:vertical,
+#RuleLogView QScrollBar::sub-page:vertical,
+#RuleURLView QScrollBar::add-page:vertical,
+#RuleURLView QScrollBar::sub-page:vertical,
+#TaskLogView QScrollBar::add-page:vertical,
+#TaskLogView QScrollBar::sub-page:vertical,
+#TaskFileInfoView QScrollBar::add-page:vertical,
+#TaskFileInfoView QScrollBar::sub-page:vertical,
 #LabelView  QScrollBar::add-page:vertical,
 #LabelView  QScrollBar::sub-page:vertical,
 #AnimesContent QScrollBar::add-page:vertical,
@@ -838,6 +984,7 @@ QPushButton:pressed{
     background: none;
 }
 /* --ScrollBar Setting-- */
+
 #FilterOptionButton{
     border:none;
 }
@@ -848,15 +995,15 @@ QPushButton:pressed{
       width:0px;
 }
 #DownloadLeftPanel{
-    background-color: rgb(60, 73,82);
+    background-color: rgb(60, 73,82,120);
 }
 #TaskTypeToolButton{
     border-style:none;
     border-radius:0px;
     padding:5px;
-    color:#c5c5c5;
+    color:#454545;
     background:transparent;
-    qproperty-normColor: rgb(192,192,192);
+    qproperty-normColor: rgb(240,240,240);
     qproperty-hoverColor: rgb(103,155,204);
 }
 #TaskTypeToolButton:hover,
@@ -866,14 +1013,14 @@ QPushButton:pressed{
     border-width:0px 0px 0px 4px;
     border-color:#1CA0E4;
     color:#679bcc;
-    background:#2d3641;
+    background:rgba(45,54,65,40);
 }
 #DownloadToolButton{
     border-style:none;
     border-radius:0px;
     padding:5px;
     background:transparent;
-    qproperty-normColor: rgb(96,96,96);
+    qproperty-normColor: rgb(0,0,0);
     qproperty-hoverColor: rgb(69,153,247);
 }
 #DownloadToolButton:hover,
@@ -914,7 +1061,7 @@ QToolButton#DownloadInfoPage{
     border-style:none;
     border-radius:0px;
     padding:5px;
-    color:#989898;
+    color:#606060;
     background:transparent;
 }
 QToolButton#DownloadInfoPage:hover,
@@ -949,19 +1096,21 @@ QProgressBar::chunk {
 }
 QTreeView#DownloadView{
     outline:0px;
+    background-color: rgba(255,255,255,40);
+    alternate-background-color: transparent;
 }
 QTreeView#DownloadView::item:selected{
     color: rgb(0, 0, 0);
 }
 #LabelView {
     border: 0px solid rgb(50, 50, 50);
-    background-color: rgba(57, 58, 60,200);
+    background: rgba(57, 58, 60,120);
     selection-background-color: rgba(255, 255, 255,0);
     selection-color: rgb(0, 160, 230);
     show-decoration-selected: 1;
     outline:0px;
     qproperty-topLevelColor: rgb(64, 179, 253);
-    qproperty-childLevelColor: rgb(220,220,220);
+    qproperty-childLevelColor: rgb(240,240,240);
     qproperty-countFColor: rgb(240,240,240);
     qproperty-countBColor: rgb(113, 123, 136);
 }
@@ -988,34 +1137,34 @@ QTreeView#LabelView::branch:closed:has-children {
 }
 #BgmListView {
     border: 1px solid #1abc9c;
-    background-color: transparent;
+    background-color: rgba(255,255,255,40);
     selection-background-color: rgba(255, 255, 255,0);
     selection-color: rgb(0, 160, 230);
     show-decoration-selected: 1;
     outline:0px;
-    qproperty-normColor: rgb(100,100,100);
+    qproperty-normColor: rgb(90,90,90);
     qproperty-hoverColor: rgb(0,155,255);
 }
 QTreeView#BgmListView::item {
     border: none;
-    background-color: #f2faf8;
+    background-color: transparent;
     padding-top:8px;
     padding-bottom:8px;
 }
 QTreeView#BgmListView::item:hover, QTreeView#BgmListView::branch:hover {
-    background-color: #cbfdf1;
+    background-color: rgba(203,253,241,80);
 }
 QTreeView#BgmListView::item:selected, QTreeView#BgmListView::branch:selected{
-    background-color: #cbfdf1;
+    background-color: rgba(203,253,241,80);
 }
 QTreeView#BgmListView::branch {
     background-color: #f2faf8;
 }
 QHeaderView#BgmListHeader{
-    background-color: #1abc9c;
+    background-color: rgba(26, 188, 156,180);
 }
 QHeaderView#BgmListHeader::section {
-    background-color: #1abc9c;
+    background-color: rgba(26, 188, 156,0);
     color: white;
     padding-left: 4px;
     border: none;
@@ -1030,4 +1179,27 @@ QLineEdit#PageEdit{
 #captureView,#captureImageView{
     border-style:none;
     background: transparent;
+}
+QTreeView#SearchListView {
+    background-color: rgba(255,255,255,40);
+    alternate-background-color: transparent;
+}
+QTreeView#RuleListView {
+    background-color: rgba(255,255,255,40);
+    alternate-background-color: transparent;
+}
+QTreeView#RuleLogView {
+    background-color: rgba(255,255,255,40);
+    alternate-background-color: transparent;
+}
+QTreeView#RuleURLView {
+    background-color: rgba(255,255,255,40);
+    alternate-background-color: transparent;
+}
+QTreeView#TaskFileInfoView {
+    background-color: rgba(255,255,255,40);
+    alternate-background-color: transparent;
+}
+#TaskLogView{
+    background-color: rgba(255,255,255,40);
 }

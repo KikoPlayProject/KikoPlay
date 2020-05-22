@@ -243,6 +243,14 @@ void ListWindow::initActions()
         }
         GlobalObjects::playlist->matchItems(indexes);
     });
+    act_removeMatch=new QAction(tr("Remove Match"),this);
+    QObject::connect(act_removeMatch,&QAction::triggered,[this](){
+        QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
+        QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
+        if (selection.size() == 0)return;
+        QModelIndexList indexes(selection.indexes());
+        GlobalObjects::playlist->removeMatch(indexes);
+    });
     act_autoMatchMode=new QAction(tr("Auto Match Mode"),this);
     act_autoMatchMode->setCheckable(true);
     act_autoMatchMode->setChecked(true);
@@ -713,6 +721,7 @@ void ListWindow::updatePlaylistActions()
     if(actionDisable)
     {
         act_autoAssociate->setEnabled(false);
+        act_removeMatch->setEnabled(false);
         act_exportDanmu->setEnabled(false);
         act_updateDanmu->setEnabled(false);
         act_cut->setEnabled(false);
@@ -725,6 +734,7 @@ void ListWindow::updatePlaylistActions()
     }
     bool hasPlaylistSelection = !playlistView->selectionModel()->selection().isEmpty();
     act_autoAssociate->setEnabled(hasPlaylistSelection);
+    act_removeMatch->setEnabled(hasPlaylistSelection);
     act_updateDanmu->setEnabled(hasPlaylistSelection);
     act_addWebDanmuSource->setEnabled(hasPlaylistSelection);
     act_cut->setEnabled(hasPlaylistSelection);
@@ -796,6 +806,7 @@ QWidget *ListWindow::setupPlaylistPage()
     QMenu *playlistContextMenu=new QMenu(playlistView);
     playlistContextMenu->addAction(act_play);
     playlistContextMenu->addAction(act_autoAssociate);
+    playlistContextMenu->addAction(act_removeMatch);
     QMenu *danmuSubMenu=new QMenu(tr("Danmu"),playlistContextMenu);
     danmuSubMenu->addAction(act_addWebDanmuSource);
     danmuSubMenu->addAction(act_updateDanmu);

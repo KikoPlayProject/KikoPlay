@@ -71,6 +71,7 @@ public slots :
     void setAutoMatch(bool on);
     void matchItems(const QModelIndexList &matchIndexes);
     void matchIndex(QModelIndex &index,MatchInfo *matchInfo);
+    void removeMatch(const QModelIndexList &matchIndexes);
     void updateItemsDanmu(const QModelIndexList &itemIndexes);
     void setCurrentPlayTime(int playTime);
     QModelIndex mergeItems(const QModelIndexList &mergeIndexes);

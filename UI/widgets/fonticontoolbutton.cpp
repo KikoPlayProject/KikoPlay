@@ -20,9 +20,6 @@ FontIconToolButton::FontIconToolButton(const FontIconToolButtonOptions &options,
     btnHLayout->addSpacing(10*logicalDpiX()/96);
     btnHLayout->addWidget(textLabel);
     btnHLayout->addStretch(1);
-    normalStyleSheet=QString("*{color:#%1;}").arg(options.normalColor,0,16);
-    hoverStyleSheet=QString("*{color:#%1;}").arg(options.hoverColor,0,16);
-    setNormalState();
     QObject::connect(this,&FontIconToolButton::toggled,[this](bool toggled){
         if(toggled)setHoverState();
         else setNormalState();
@@ -44,14 +41,38 @@ void FontIconToolButton::setText(const QString &text)
     textLabel->setText(text);
 }
 
+QColor FontIconToolButton::getHoverColor() const
+{
+    return hoverColor;
+}
+
+void FontIconToolButton::setHoverColor(const QColor &color)
+{
+    hoverStyleSheet=QString("*{color:#%1;}").arg(color.rgba(),0,16);
+    if(isChecked()) setHoverState();
+}
+
+QColor FontIconToolButton::getNormColor() const
+{
+    return normColor;
+}
+
+void FontIconToolButton::setNormColor(const QColor &color)
+{
+    normalStyleSheet=QString("*{color:#%1;}").arg(color.rgba(),0,16);
+    if(!isChecked()) setNormalState();
+}
+
 void FontIconToolButton::setHoverState()
 {
+    if(hoverStyleSheet.isEmpty()) return;
     iconLabel->setStyleSheet(hoverStyleSheet);
     textLabel->setStyleSheet(hoverStyleSheet);
 }
 
 void FontIconToolButton::setNormalState()
 {
+    if(normalStyleSheet.isEmpty()) return;
     iconLabel->setStyleSheet(normalStyleSheet);
     textLabel->setStyleSheet(normalStyleSheet);
 }

@@ -262,7 +262,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
         previewTimer.stop();
     });
 
-    playerContent=new PlayerContent(this);
+    playerContent=new PlayerContent(contralContainer);
     playerContent->show();
     playerContent->raise();
 
@@ -270,7 +270,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     playInfoPanel->setObjectName(QStringLiteral("widgetPlayInfo"));
     playInfoPanel->hide();
 
-    playListCollapseButton=new QPushButton(this);
+    playListCollapseButton=new QPushButton(contralContainer);
     playListCollapseButton->setObjectName(QStringLiteral("widgetPlayListCollapse"));
     GlobalObjects::iconfont.setPointSize(12);
     playListCollapseButton->setFont(GlobalObjects::iconfont);

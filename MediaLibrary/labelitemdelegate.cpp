@@ -1,5 +1,6 @@
 #include "labelitemdelegate.h"
 #include <QPainter>
+#include "globalobjects.h"
 #define TYPELEVEL 1
 #define LABEL_YEAR 2
 #define LABEL_MONTH 3
@@ -31,15 +32,23 @@ void LabelItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     decoration.moveCenter(option.rect.center());
     decoration.moveRight(option.rect.width());
 
-    static QPen decorationPen(QColor(220,220,220));
-    static QBrush decorationBrush(QColor( 126, 135, 147 ));
     static QFont decorationFont("Microsoft Yahei UI", 9);
     painter->setFont(decorationFont);
-    painter->setPen(decorationPen);
+    painter->setPen(QPen(penColor));
     QPainterPath path;
     path.addRoundedRect(decoration, 4, 4);
-    painter->fillPath(path, decorationBrush);
+    painter->fillPath(path, QBrush(brushColor));
     int count=index.data(CountRole).toInt();
     painter->drawText(decoration, Qt::AlignCenter, count>999?"999+":QString::number(count));
 
+}
+
+void LabelItemDelegate::setPenColor(const QColor &color)
+{
+    penColor = color;
+}
+
+void LabelItemDelegate::setBrushColor(const QColor &color)
+{
+    brushColor = color;
 }

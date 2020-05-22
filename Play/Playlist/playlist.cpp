@@ -826,6 +826,42 @@ void PlayList::matchIndex(QModelIndex &index, MatchInfo *matchInfo)
 
 }
 
+void PlayList::removeMatch(const QModelIndexList &matchIndexes)
+{
+    Q_D(PlayList);
+    QList<PlayListItem *> items, selectedItems;
+    for(const QModelIndex &index : matchIndexes)
+    {
+        if (index.isValid())
+        {
+            PlayListItem *item = static_cast<PlayListItem*>(index.internalPointer());
+            items.append(item);
+        }
+    }
+    while(!items.empty())
+    {
+        PlayListItem *currentItem=items.takeFirst();
+        if(currentItem->children)
+        {
+            for(PlayListItem *child:*currentItem->children)
+            {
+                items.push_back(child);
+            }
+        }
+        else
+        {
+            currentItem->poolID = "";
+            int suffixPos = currentItem->path.lastIndexOf('.'), pathPos = currentItem->path.lastIndexOf('/') + 1;
+            currentItem->title = currentItem->path.mid(pathPos, suffixPos - pathPos);
+            if (currentItem == d->currentItem) emit currentMatchChanged(currentItem->poolID);
+            d->playListChanged = true;
+            d->needRefresh = true;
+            QModelIndex nIndex = createIndex(currentItem->parent->children->indexOf(currentItem), 0, currentItem);
+            emit dataChanged(nIndex, nIndex);
+        }
+    }
+}
+
 void PlayList::updateItemsDanmu(const QModelIndexList &itemIndexes)
 {
     QList<PlayListItem *> items;

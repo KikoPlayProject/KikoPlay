@@ -2,6 +2,7 @@
 #define GLOBALOBJECTS_H
 #include <QString>
 #include <QSqlDatabase>
+#include <QColor>
 class MPVPlayer;
 class DanmuPool;
 class DanmuRender;
@@ -22,6 +23,18 @@ class KCache;
 class GlobalObjects
 {
 public:
+    enum Color
+    {
+        Label_TopLevel,
+        Label_CLevel,
+        Label_CountTip_B,
+        Label_CountTip_F,
+        Download_LeftItem_Norm,
+        Download_LeftItem_Hover,
+        Download_ToolBtn_Norm,
+        Download_ToolBtn_Hover,
+        Color_Max
+    };
     static void init();
     static void clear();
     static MPVPlayer *mpvplayer;
@@ -56,6 +69,5 @@ enum PopMessageFlag
     PM_PROCESS=2,
     PM_INFO=4,
     PM_OK=8
-
 };
 #endif // GLOBALOBJECTS_H

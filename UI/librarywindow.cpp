@@ -17,6 +17,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QWidgetAction>
+#include <QSplitter>
 
 #include "globalobjects.h"
 #include "bangumisearch.h"
@@ -29,6 +30,34 @@
 #include "MediaLibrary/labelmodel.h"
 #include "MediaLibrary/labelitemdelegate.h"
 #include "MediaLibrary/animefilterproxymodel.h"
+
+namespace
+{
+    class CListView : public QListView
+    {
+    public:
+        using QListView::QListView;
+
+        // QWidget interface
+    protected:
+        virtual void resizeEvent(QResizeEvent *event)
+        {
+            QSize sz(this->itemDelegate()->sizeHint(QStyleOptionViewItem(),QModelIndex()));
+            int w = event->size().width() - (this->verticalScrollBar()->isHidden()?
+                                                 0:this->verticalScrollBar()->width());
+            int c = w / sz.width();
+            if (c > 0)
+            {
+                int wInc = (w % sz.width()) / c;
+                setGridSize(QSize(sz.width() + wInc, sz.height()));
+            }
+            else
+            {
+                setGridSize(sz);
+            }
+        }
+    };
+}
 
 LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
 {
@@ -43,7 +72,10 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         infoDialog.exec();
     });
 
-    animeListView=new QListView(this);
+    splitter = new QSplitter(this);
+    QWidget *animeContainer = new QWidget(splitter);
+
+    animeListView=new CListView(animeContainer);
     animeListView->setObjectName(QStringLiteral("AnimesContent"));
     animeListView->setViewMode(QListView::IconMode);
     animeListView->setUniformItemSizes(true);
@@ -102,41 +134,16 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         act_getDetailInfo->setEnabled(hasSelection);
     });
 
-    tagCollapseButton=new QPushButton(this);
-    GlobalObjects::iconfont.setPointSize(8);
-    tagCollapseButton->setFont(GlobalObjects::iconfont);
-    tagCollapseButton->setText(QChar(0xe6b1));
-    tagCollapseButton->setFixedSize(12*logicalDpiX()/96,80*logicalDpiY()/96);
-    tagCollapseButton->setObjectName(QStringLiteral("TagPanelCollapse"));
-    tagCollapseButton->move(width()-tagCollapseButton->width(),(height()-tagCollapseButton->height())/2);
-    QObject::connect(tagCollapseButton,&QPushButton::clicked,[this](){
-        bool panelOpen=!labelView->isHidden();
-        labelView->resize(width()/4,animeListView->height());
-        QPropertyAnimation *moveAnime = new QPropertyAnimation(labelView, "pos");
-        QPoint endPos(panelOpen?width():width()/4*3-tagCollapseButton->width(),animeListView->y()),
-                startPos(panelOpen?labelView->x():width(),animeListView->y());
-        moveAnime->setDuration(500);
-        moveAnime->setEasingCurve(QEasingCurve::OutExpo);
-        moveAnime->setStartValue(startPos);
-        moveAnime->setEndValue(endPos);
-        labelView->show();
-        moveAnime->start(QAbstractAnimation::DeleteWhenStopped);
-        tagCollapseButton->setText(panelOpen?QChar(0xe6b1):QChar(0xe943));
-        QObject::connect(moveAnime,&QPropertyAnimation::finished,[this,panelOpen](){
-            if(panelOpen)labelView->hide();
-        });
-    });
-
-    labelView=new QTreeView(this);
+    labelView=new LabelTreeView(splitter);
     labelView->setObjectName(QStringLiteral("LabelView"));
-    labelView->resize(width()/4,animeListView->height());
+    //labelView->resize(width()/4,animeListView->height());
     labelView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
     labelView->header()->hide();
     labelView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     labelView->setFont(QFont("Microsoft YaHei UI",12));
     labelView->setIndentation(16*logicalDpiX()/96);
-    labelView->setItemDelegate(new LabelItemDelegate(this));
-    labelView->hide();
+    LabelItemDelegate *labelItemDelegate = new LabelItemDelegate(this);
+    labelView->setItemDelegate(labelItemDelegate);
     LabelProxyModel *labelProxyModel = new LabelProxyModel(this);
     labelProxyModel->setSourceModel(GlobalObjects::library->labelModel);
     labelView->setModel(labelProxyModel);
@@ -144,9 +151,18 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     labelProxyModel->sort(0, Qt::AscendingOrder);
     labelProxyModel->setFilterKeyColumn(0);
     labelView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    QObject::connect(labelView, &LabelTreeView::topLevelColorChanged, [](const QColor &color){
+        GlobalObjects::library->labelModel->setBrushColor(LabelModel::BrushType::TopLevel, color);
+    });
+    QObject::connect(labelView, &LabelTreeView::childLevelColorChanged, [](const QColor &color){
+        GlobalObjects::library->labelModel->setBrushColor(LabelModel::BrushType::ChildLevel, color);
+    });
+    QObject::connect(labelView, &LabelTreeView::countFColorChanged, labelItemDelegate, &LabelItemDelegate::setPenColor);
+    QObject::connect(labelView, &LabelTreeView::countBColorChanged, labelItemDelegate, &LabelItemDelegate::setBrushColor);
+
 
     AnimeFilterBox *filterBox=new AnimeFilterBox(this);
-    filterBox->setMinimumWidth(300*logicalDpiX()/96);
+    filterBox->setMinimumWidth(240*logicalDpiX()/96);
     QObject::connect(filterBox,&AnimeFilterBox::filterChanged,[proxyModel,labelProxyModel](int type,const QString &str){
         if(type==4)
         {
@@ -174,12 +190,14 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         proxyModel->setTags(tags);
         proxyModel->setTime(times);
     });
-    QTimer::singleShot(0,[](){
+    QTimer::singleShot(0,[labelProxyModel,this](){
         GlobalObjects::library->labelModel->refreshLabel();
+        labelView->expand(labelProxyModel->index(0,0,QModelIndex()));
+        labelView->expand(labelProxyModel->index(1,0,QModelIndex()));
     });
 
-    QMovie *loadingIcon=new QMovie(this);
-    QLabel *loadingLabel=new QLabel(this);
+    QMovie *loadingIcon=new QMovie(animeContainer);
+    QLabel *loadingLabel=new QLabel(animeContainer);
     loadingLabel->setMovie(loadingIcon);
     loadingLabel->setFixedSize(36,36);
     loadingLabel->setScaledContents(true);
@@ -187,7 +205,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     loadingIcon->start();
     loadingLabel->hide();
 
-    QLabel *totalCountLabel=new QLabel(this);
+    QLabel *totalCountLabel=new QLabel(animeContainer);
     totalCountLabel->setFont(QFont("Microsoft Yahei",12));
     QPushButton *loadMore=new QPushButton(tr("Continue to load"),this);
     QObject::connect(loadMore,&QPushButton::clicked,[](){
@@ -223,10 +241,30 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     toolbuttonHLayout->addStretch(1);
     toolbuttonHLayout->addWidget(filterBox);
 
+    QVBoxLayout *containerVLayout=new QVBoxLayout(animeContainer);
+    containerVLayout->setContentsMargins(10*logicalDpiX()/96,10*logicalDpiY()/96,0,10*logicalDpiY()/96);
+    containerVLayout->addLayout(toolbuttonHLayout);
+    containerVLayout->addWidget(animeListView);
+
+    splitter->addWidget(labelView);
+    splitter->addWidget(animeContainer);
+    splitter->setHandleWidth(1);
+
+    splitter->setCollapsible(0,false);
+    splitter->setCollapsible(1,false);
+    splitter->setStretchFactor(0,2);
+    splitter->setStretchFactor(1,3);
+
     QVBoxLayout *libraryVLayout=new QVBoxLayout(this);
-    libraryVLayout->setContentsMargins(10*logicalDpiX()/96,10*logicalDpiY()/96,10*logicalDpiX()/96,10*logicalDpiY()/96);
-    libraryVLayout->addLayout(toolbuttonHLayout);
-    libraryVLayout->addWidget(animeListView);
+    libraryVLayout->setContentsMargins(0,0,10*logicalDpiX()/96,0);
+    libraryVLayout->addWidget(splitter);
+
+    QVariant splitterState(GlobalObjects::appSetting->value("Library/SplitterState"));
+    if(!splitterState.isNull())
+        splitter->restoreState(splitterState.toByteArray());
+    QObject::connect(splitter, &QSplitter::splitterMoved, this, [this](){
+        GlobalObjects::appSetting->setValue("Library/SplitterState",splitter->saveState());
+    });
 }
 
 
@@ -238,15 +276,6 @@ void LibraryWindow::showEvent(QShowEvent *)
 void LibraryWindow::hideEvent(QHideEvent *)
 {
     GlobalObjects::library->animeModel->setActive(false);
-}
-
-void LibraryWindow::resizeEvent(QResizeEvent *)
-{
-    tagCollapseButton->move(width()-tagCollapseButton->width(),(height()-tagCollapseButton->height())/2);
-    if(!labelView->isHidden())
-    {
-        labelView->setGeometry(width()/4*3-tagCollapseButton->width(),animeListView->y(),width()/4,animeListView->height());
-    }
 }
 
 AnimeFilterBox::AnimeFilterBox(QWidget *parent)

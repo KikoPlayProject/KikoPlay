@@ -80,6 +80,7 @@ AnimeItemDelegate::AnimeItemDelegate(QObject *parent):QStyledItemDelegate(parent
 
 }
 
+
 void AnimeItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     QStyleOptionViewItem viewOption(option);

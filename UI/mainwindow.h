@@ -10,16 +10,29 @@
 #include <QHBoxLayout>
 #include <QStackedLayout>
 class QSplitter;
+class DropableWidget : public QWidget
+{
+    Q_OBJECT
+public:
+    using QWidget::QWidget;
+signals:
+    void fileDrop(const QString &url);
+    // QWidget interface
+protected:
+    virtual void dragEnterEvent(QDragEnterEvent *event);
+    virtual void dropEvent(QDropEvent *event);
+    virtual void paintEvent(QPaintEvent *event);
+};
 class MainWindow : public CFramelessWindow
 {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = 0);
+    MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
 private:
-    QWidget *widgetTitlebar;
+    DropableWidget *widgetTitlebar;
     QToolButton *buttonIcon,*buttonPage_Play,*buttonPage_Library,*buttonPage_Downlaod;
     QToolButton *minButton,*maxButton,*closeButton;
     QSplitter *playSplitter;
@@ -31,8 +44,11 @@ private:
     QStackedLayout *contentStackLayout;
     QRect originalGeo;
     bool listShowState;
+    bool hasBackground;
+    QImage background;
     void setupUI();
     void switchToPlay(const QString &fileToPlay);
+    void setBackground(const QString &imagePath, bool forceRefreshQSS=false);
 
     QWidget *setupPlayPage();
     QWidget *setupLibraryPage();

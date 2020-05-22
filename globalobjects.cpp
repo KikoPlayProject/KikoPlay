@@ -17,7 +17,7 @@
 #include <QSqlQuery>
 #include <QApplication>
 #include <QSqlError>
-#include <QFileInfo>
+#include <QFileInfo> 
 
 MPVPlayer *GlobalObjects::mpvplayer=nullptr;
 DanmuPool *GlobalObjects::danmuPool=nullptr;
@@ -153,3 +153,4 @@ void GlobalObjects::setDatabase(const char *name, const char *file)
         }
     }
 }
+

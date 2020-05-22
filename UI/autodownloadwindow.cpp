@@ -20,8 +20,6 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     btnOptions.fontSize=10;
     btnOptions.leftMargin=3*logicalDpiX()/96;
     btnOptions.iconTextSpace=2*logicalDpiX()/96;
-    btnOptions.normalColor=0x606060;
-    btnOptions.hoverColor=0x4599f7;
     btnOptions.iconChar=QChar(0xe600);
     FontIconToolButton *addRuleBtn=new FontIconToolButton(btnOptions, this);
     addRuleBtn->setObjectName(QStringLiteral("DownloadToolButton"));
@@ -44,6 +42,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     toolBarHLayout->addStretch(1);
 
     ruleView = new QTreeView(this);
+    ruleView->setObjectName(QStringLiteral("RuleListView"));
     ruleView->setRootIsDecorated(false);
     ruleView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ruleView->setAlternatingRowColors(true);
@@ -60,6 +59,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     logView->setRootIsDecorated(false);
     logView->setSelectionMode(QAbstractItemView::SingleSelection);
     logView->setAlternatingRowColors(true);
+    logView->setObjectName(QStringLiteral("RuleLogView"));
     LogFilterProxyModel *logProxyModel=new LogFilterProxyModel(this);
     logProxyModel->setSourceModel(GlobalObjects::autoDownloadManager->logModel);
     logView->setModel(logProxyModel);
@@ -72,6 +72,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     urlView->setRootIsDecorated(false);
     urlView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     urlView->setAlternatingRowColors(true);
+    urlView->setObjectName(QStringLiteral("RuleURLView"));
     urlView->setModel(GlobalObjects::autoDownloadManager->urlModel);
     urlView->header()->resizeSection(0, 500 * logicalDpiX() / 96);
     urlView->setContextMenuPolicy(Qt::ActionsContextMenu);

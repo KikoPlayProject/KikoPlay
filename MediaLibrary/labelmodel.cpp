@@ -293,6 +293,13 @@ void LabelModel::selLabelList(const QModelIndexList &indexes, QStringList &tags,
     }
 }
 
+void LabelModel::setBrushColor(LabelModel::BrushType type, const QColor &color)
+{
+    beginResetModel();
+    foregroundColor[type]=color;
+    endResetModel();
+}
+
 QModelIndex LabelModel::index(int row, int column, const QModelIndex &parent) const
 {
     if (!hasIndex(row, column, parent)) return QModelIndex();
@@ -338,8 +345,7 @@ QVariant LabelModel::data(const QModelIndex &index, int role) const
     }
     case Qt::ForegroundRole:
     {
-        static QBrush labelBrs[]={QBrush(QColor(29,131,247)),QBrush(QColor(200,200,200))};
-        return node->type==TYPELEVEL?labelBrs[0]:labelBrs[1];
+        return node->type==TYPELEVEL?foregroundColor[BrushType::TopLevel]:foregroundColor[BrushType::ChildLevel];
     }
     }
     return QVariant();

@@ -16,8 +16,48 @@
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/danmupool.h"
 #include "Play/Danmu/Render/danmurender.h"
+namespace
+{
+    class BackgroundWidget : public QWidget
+    {
+    public:
+        using QWidget::QWidget;
+        void setImage(const QString &path)
+        {
+            if(path.isEmpty())
+            {
+                QImage t;
+                img.swap(t);
+                return;
+            }
+            if(img.load(path))
+            {
+                QPainter p(&img);
+                p.fillRect(img.rect(), QColor(255,255,255,130));
+                p.end();
+                update();
+            }
+        }
+        // QWidget interface
+    protected:
+        virtual void paintEvent(QPaintEvent *e)
+        {
+            if(!img.isNull())
+            {
+                QPixmap output = QPixmap::fromImage(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding));
+                QPainter painter(this);
+                painter.setRenderHint(QPainter::Antialiasing);
+                painter.setRenderHint(QPainter::SmoothPixmapTransform);
+                painter.drawPixmap(0, 0, output);
+                QWidget::paintEvent(e);
+            }
+        }
+    private:
+        QImage img;
+    };
+}
 MainWindow::MainWindow(QWidget *parent)
-    : CFramelessWindow(parent),listWindowWidth(0)
+    : CFramelessWindow(parent),listWindowWidth(0),hasBackground(false)
 {
     setupUI();
     setWindowIcon(QIcon(":/res/kikoplay.ico"));
@@ -74,12 +114,14 @@ MainWindow::~MainWindow()
 void MainWindow::setupUI()
 {
 
-    QWidget *centralWidget = new QWidget(this);
+    QWidget *centralWidget = new BackgroundWidget(this);
+
     QVBoxLayout *verticalLayout = new QVBoxLayout(centralWidget);
     verticalLayout->setContentsMargins(0, 0, 0, 0);
     verticalLayout->setSpacing(0);
 //------title bar
-    widgetTitlebar = new QWidget(centralWidget);
+    widgetTitlebar = new DropableWidget(centralWidget);
+    widgetTitlebar->setAcceptDrops(true);
     widgetTitlebar->setObjectName(QStringLiteral("widgetTitlebar"));
 #ifdef Q_OS_WIN
     widgetTitlebar->setFixedHeight(40*logicalDpiY()/96);
@@ -264,6 +306,18 @@ void MainWindow::setupUI()
     setTitleBar(widgetTitlebar);
 	setFocusPolicy(Qt::StrongFocus);
 
+    QObject::connect(widgetTitlebar, &DropableWidget::fileDrop, [this](const QString &url){
+       QFileInfo fi(url);
+       const QStringList imageFormats{"jpg", "png"};
+       if(imageFormats.contains(fi.suffix().toLower())){
+           setBackground(url);
+       }
+       else {
+           setBackground("");
+       }
+    });
+    setBackground(GlobalObjects::appSetting->value("MainWindow/Background", "").toString(), true);
+
 }
 
 void MainWindow::switchToPlay(const QString &fileToPlay)
@@ -279,6 +333,39 @@ void MainWindow::switchToPlay(const QString &fileToPlay)
         GlobalObjects::mpvplayer->setMedia(curItem->path);
         buttonPage_Play->click();
     }
+}
+
+void MainWindow::setBackground(const QString &imagePath, bool forceRefreshQSS)
+{
+    BackgroundWidget *centralWidget = static_cast<BackgroundWidget*>(this->centralWidget());
+    bool refreshQSS = false;
+    QString qssFile;
+    if(!imagePath.isEmpty() && QFile::exists(imagePath))
+    {
+        centralWidget->setImage(imagePath);
+        refreshQSS = !hasBackground;
+        qssFile = ":/res/style_bg.qss";
+        hasBackground = true;
+        GlobalObjects::appSetting->setValue("MainWindow/Background", imagePath);
+    }
+    else
+    {
+        centralWidget->setImage("");
+        refreshQSS = hasBackground;
+        hasBackground = false;
+        qssFile = ":/res/style.qss";
+        GlobalObjects::appSetting->setValue("MainWindow/Background", "");
+    }
+    if(refreshQSS || forceRefreshQSS)
+    {
+        QFile qss(qssFile);
+        if(qss.open(QFile::ReadOnly))
+        {
+            QString qssContent = QLatin1String(qss.readAll());
+            qApp->setStyleSheet(qssContent);
+        }
+    }
+
 }
 
 QWidget *MainWindow::setupPlayPage()
@@ -475,4 +562,30 @@ void MainWindow::resizeEvent(QResizeEvent *)
 {
     if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
         originalGeo=geometry();
+}
+
+void DropableWidget::dragEnterEvent(QDragEnterEvent *event)
+{
+    if(event->mimeData()->hasUrls())
+    {
+        event->acceptProposedAction();
+    }
+}
+
+void DropableWidget::dropEvent(QDropEvent *event)
+{
+    QList<QUrl> urls(event->mimeData()->urls());
+    if(urls.size()>0)
+    {
+        QUrl u = urls.first();
+        if(u.isLocalFile()) emit fileDrop(u.toLocalFile());
+    }
+}
+
+void DropableWidget::paintEvent(QPaintEvent *)
+{
+    QStyleOption o;
+    o.initFrom(this);
+    QPainter p(this);
+    style()->drawPrimitive(QStyle::PE_Widget, &o, &p, this);
 }

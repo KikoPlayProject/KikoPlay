@@ -50,7 +50,7 @@ private:
     QStackedLayout *contentStackLayout;
     QAction *act_play,*act_addCollection,*act_addItem,*act_addFolder,
             *act_cut,*act_paste,*act_moveUp,*act_moveDown,*act_merge,
-            *act_remove,*act_clear,
+            *act_remove,*act_clear, *act_removeMatch,
             *act_sortSelectionAscending,*act_sortSelectionDescending,*act_sortAllAscending,*act_sortAllDescending,
             *act_noLoopOne,*act_noLoopAll,*act_loopOne,*act_loopAll,*act_random,
             *act_browseFile,*act_autoAssociate,*act_exportDanmu,*act_addWebDanmuSource,*act_updateDanmu,

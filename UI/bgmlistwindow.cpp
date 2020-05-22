@@ -39,6 +39,7 @@ namespace
 BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
 {
     bgmList=new BgmList(this);
+    bgmList->setObjectName(QStringLiteral("bgmListModel"));
     BgmListFilterProxyModel *bgmListProxyModel=new BgmListFilterProxyModel(this);
     bgmListProxyModel->setSourceModel(bgmList);
     QHBoxLayout *btnHLayout=new QHBoxLayout();
@@ -109,7 +110,7 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
         refreshBtn->setVisible(type==3);
     });
 
-    bgmListView=new QTreeView(this);
+    bgmListView=new BgmTreeView(this);
     bgmListView->setModel(bgmListProxyModel);
     bgmListView->setItemDelegate(new TextColorDelegate(this));
     bgmListView->setObjectName(QStringLiteral("BgmListView"));
@@ -124,6 +125,8 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
         const BgmItem &item=bgmList->bgmList().at(bgmListProxyModel->mapToSource(index).row());
         emit searchBgm(item.title);
     });
+    QObject::connect(bgmListView, &BgmTreeView::normColorChanged, bgmList, &BgmList::setNormColor);
+    QObject::connect(bgmListView, &BgmTreeView::hoverColorChanged, bgmList, &BgmList::setHoverColor);
 
     QAction *addToLibrary=new QAction(tr("Add To Library"), this);
     QObject::connect(addToLibrary,&QAction::triggered,this,[this,bgmListProxyModel](){
