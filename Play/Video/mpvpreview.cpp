@@ -35,7 +35,11 @@ MPVPreview::MPVPreview(const QSize &previewSize, int pInterval, QObject *parent)
     ctx->makeCurrent(pSurface);
     QOpenGLFramebufferObjectFormat fboFormat;
     fboFormat.setSamples(0);
-    pFbo = new QOpenGLFramebufferObject(previewSize, fboFormat);
+    this->previewSize = previewSize;
+    QSize vSize(previewSize);
+    vSize.rwidth()*=2;
+    vSize.rheight()*=2;
+    pFbo = new QOpenGLFramebufferObject(vSize, fboFormat);
 
 
     mpv_opengl_init_params gl_init_params{get_proc_address, nullptr, nullptr};
@@ -123,7 +127,7 @@ void MPVPreview::update()
     int pos = ptime / previewInterval;
 
     locker.lockForWrite();
-    previewCache[pos] = QPixmap::fromImage(pFbo->toImage());
+    previewCache[pos] = QPixmap::fromImage(pFbo->toImage().scaled(previewSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     locker.unlock();
     emit previewDown(ptime, &previewCache[pos]);
 
