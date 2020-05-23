@@ -43,7 +43,8 @@ namespace
         virtual void resizeEvent(QResizeEvent *event)
         {
             QSize sz(this->itemDelegate()->sizeHint(QStyleOptionViewItem(),QModelIndex()));
-            int w = event->size().width() - (this->verticalScrollBar()->isHidden()?
+
+            int w = event->size().width() - 2*logicalDpiX()/96 - (this->verticalScrollBar()->isHidden()?
                                                  0:this->verticalScrollBar()->width());
             int c = w / sz.width();
             if (c > 0)
