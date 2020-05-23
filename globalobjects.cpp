@@ -101,13 +101,13 @@ void GlobalObjects::clear()
 	playlist->deleteLater();
     blocker->deleteLater();
     providerManager->deleteLater();
-    appSetting->deleteLater();
     library->deleteLater();
     downloadModel->deleteLater();
     danmuManager->deleteLater();
     lanServer->deleteLater();
     scriptManager->deleteLater();
     autoDownloadManager->deleteLater();
+    appSetting->deleteLater();
     delete kCache;
 }
 

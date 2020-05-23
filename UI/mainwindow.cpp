@@ -519,6 +519,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     GlobalObjects::playlist->setCurrentPlayTime(playTime);
     QWidget::closeEvent(event);
     playerWindow->close();
+    library->beforeClose();
     GlobalObjects::clear();
     QCoreApplication::instance()->exit();
 }

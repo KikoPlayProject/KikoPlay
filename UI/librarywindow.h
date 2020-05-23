@@ -70,7 +70,7 @@ class LibraryWindow : public QWidget
     Q_OBJECT
 public:
     explicit LibraryWindow(QWidget *parent = nullptr);
-    virtual ~LibraryWindow();
+    void beforeClose();
 private:
     QListView *animeListView;
     LabelTreeView *labelView;

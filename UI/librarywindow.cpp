@@ -270,7 +270,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     });
 }
 
-LibraryWindow::~LibraryWindow()
+void LibraryWindow::beforeClose()
 {
     GlobalObjects::appSetting->setValue("Library/SplitterState", splitterState);
 }
