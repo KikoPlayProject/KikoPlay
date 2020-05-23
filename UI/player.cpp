@@ -1582,6 +1582,7 @@ void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
     {
         playInfoPanel->hide();
         playControlPanel->hide();
+        danmuStatisBar->hide();
     }
     if(this->width()-pos.x()<playlistCollapseWidth+20)
     {
