@@ -468,6 +468,12 @@ QSplitter::handle {
 #NormalSplitter::handle {
     background-color:transparent;
 }
+#LabelSplitter::handle {
+    background-color:transparent;
+}
+#DownloadSpliter::handle {
+    background-color:transparent;
+}
 QCheckBox {
     spacing: 5px;
 }

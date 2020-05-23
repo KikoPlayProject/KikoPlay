@@ -15,15 +15,8 @@
 #include "addrule.h"
 AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
 {
-    FontIconToolButtonOptions btnOptions;
-    btnOptions.iconSize=12;
-    btnOptions.fontSize=10;
-    btnOptions.leftMargin=3*logicalDpiX()/96;
-    btnOptions.iconTextSpace=2*logicalDpiX()/96;
-    btnOptions.iconChar=QChar(0xe600);
-    FontIconToolButton *addRuleBtn=new FontIconToolButton(btnOptions, this);
+    FontIconToolButton *addRuleBtn=new FontIconToolButton(QChar(0xe600),tr("Add Rule"),12,10,2*logicalDpiX()/96,this);
     addRuleBtn->setObjectName(QStringLiteral("DownloadToolButton"));
-    addRuleBtn->setText(tr("Add Rule"));
     QObject::connect(addRuleBtn, &FontIconToolButton::clicked, this, [this](){
         AddRule addRule(nullptr, this);
         QRect geo(0,0,300,300);
@@ -37,7 +30,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     });
 
     QHBoxLayout *toolBarHLayout=new QHBoxLayout();
-    toolBarHLayout->setContentsMargins(0,10*logicalDpiY()/96,0,0);
+    toolBarHLayout->setContentsMargins(0,0,0,0);
     toolBarHLayout->addWidget(addRuleBtn);
     toolBarHLayout->addStretch(1);
 
@@ -107,7 +100,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     logPage->setChecked(true);
 
     QWidget *logContent=new QWidget(this);
-    logContent->setContentsMargins(0,0,0,10*logicalDpiX()/96);
+    logContent->setContentsMargins(0,0,0,0);
     QStackedLayout *logSLayout=new QStackedLayout(logContent);
     logSLayout->addWidget(logView);
     logSLayout->addWidget(urlView);
@@ -134,7 +127,6 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     downContainerGLayout->addLayout(toolBarHLayout,0,1);
     downContainerGLayout->addWidget(viewBottomSplitter,1,1);
     downContainerGLayout->setRowStretch(1,1);
-    downContainerGLayout->setContentsMargins(0,0,0,0);
 
     setupActions();
 }

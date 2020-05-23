@@ -525,6 +525,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QWidget::closeEvent(event);
     playerWindow->close();
     library->beforeClose();
+    download->beforeClose();
     GlobalObjects::clear();
     QCoreApplication::instance()->exit();
 }

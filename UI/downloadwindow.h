@@ -8,6 +8,7 @@ class QLabel;
 class QPlainTextEdit;
 class QStackedLayout;
 class QButtonGroup;
+class QSplitter;
 struct DownloadTask;
 class CTorrentFileModel;
 class TorrentTreeView : public QTreeView
@@ -41,11 +42,12 @@ class DownloadWindow : public QWidget
     Q_OBJECT
 public:
     explicit DownloadWindow(QWidget *parent = nullptr);
-    ~DownloadWindow();
+    void beforeClose();
 private:
     const int refreshInterval=1000;
     const int backgoundRefreshInterval=10000;
 
+    QSplitter *contentSplitter;
     QTreeView *downloadView;
     QPlainTextEdit *logView;
     TorrentTreeView *fileInfoView;
@@ -60,15 +62,15 @@ private:
     Aria2JsonRPC *rpc;
     DownloadTask *currentTask;
 
-    QLabel *downSpeedLabel,*upSpeedLabel;
+    QLabel *downSpeedLabel,*upSpeedLabel,*downSpeedIconLabel,*upSpeedIconLabel;
     QStackedLayout *rightPanelSLayout;
     QButtonGroup *taskTypeButtonGroup;
     QTimer *refreshTimer;
 
-    QWidget *setupLeftPanel();
-    QWidget *setupGeneralInfoPage();
-    QWidget *setupFileInfoPage();
-    QWidget *setupGlobalLogPage();
+    QWidget *setupLeftPanel(QWidget *parent);
+    QWidget *setupGeneralInfoPage(QWidget *parent);
+    QWidget *setupFileInfoPage(QWidget *parent);
+    QWidget *setupGlobalLogPage(QWidget *parent);
 
     void initActions();
     void downloadSelectionChanged();

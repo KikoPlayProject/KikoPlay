@@ -24,7 +24,7 @@ void LabelItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
 
     }
     QStyledItemDelegate::paint(painter, ViewOption, index);
-    if(index.data(TypeRole)==TYPELEVEL) return;
+    if(index.data(TypeRole)==TYPELEVEL ) return;
 
     static QFont decorationFont("Microsoft Yahei UI", 9);
     painter->setFont(decorationFont);
@@ -33,6 +33,7 @@ void LabelItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     QRect decoration = option.rect;
     decoration.setHeight(decoration.height()-10);
     int decorationWidth = painter->fontMetrics().width(QStringLiteral("00000"));
+    if(decorationWidth > decoration.width()/3) return;
     decoration.setWidth(decorationWidth);
     decoration.moveCenter(option.rect.center());
     decoration.moveRight(option.rect.width());

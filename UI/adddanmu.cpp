@@ -504,9 +504,9 @@ void DanmuItemModel::addItem(const QString &title, int duration, const QString &
     newItem.duration=QString("%1:%2").arg(min, 2, 10, QChar('0')).arg(sec, 2, 10, QChar('0'));
     beginInsertRows(QModelIndex(),items.count(),items.count());
     items.append(newItem);
-    endInsertRows();
     danmuCheckedList->append(true);
     danmuToPoolList->append(nPool);
+    endInsertRows();
 }
 
 QVariant DanmuItemModel::data(const QModelIndex &index, int role) const

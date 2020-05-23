@@ -38,16 +38,16 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 {
     initActions();
 
-    FontIconToolButtonOptions btnOptions;
-    btnOptions.iconSize=12;
-    btnOptions.fontSize=10;
-    btnOptions.leftMargin=3*logicalDpiX()/96;
-    btnOptions.iconTextSpace=2*logicalDpiX()/96;
+    contentSplitter = new QSplitter(this);
+    contentSplitter->setObjectName(QStringLiteral("DownloadSpliter"));
+    QWidget *containerWidget = new QWidget(contentSplitter);
+    containerWidget->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Ignored);
+    containerWidget->setMinimumWidth(100*logicalDpiX()/96);
 
-    btnOptions.iconChar=QChar(0xe604);
-    FontIconToolButton *addUriTask=new FontIconToolButton(btnOptions, this);
+    QWidget *downloadContainer=new QWidget(this);
+
+    FontIconToolButton *addUriTask=new FontIconToolButton(QChar(0xe604), tr("Add URI"), 12, 10, 2*logicalDpiX()/96, downloadContainer);
     addUriTask->setObjectName(QStringLiteral("DownloadToolButton"));
-    addUriTask->setText(tr("Add URI"));
     QObject::connect(addUriTask,&FontIconToolButton::clicked,[this](){
         AddUriTask addUriTaskDialog(this);
         if(QDialog::Accepted==addUriTaskDialog.exec())
@@ -61,10 +61,8 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         }
     });
 
-    btnOptions.iconChar=QChar(0xe605);
-    FontIconToolButton *addTorrentTask=new FontIconToolButton(btnOptions,this);
+    FontIconToolButton *addTorrentTask=new FontIconToolButton(QChar(0xe605),tr("Add Torrent"),12, 10, 2*logicalDpiX()/96,downloadContainer);
     addTorrentTask->setObjectName(QStringLiteral("DownloadToolButton"));
-    addTorrentTask->setText(tr("Add Torrent"));
     QObject::connect(addTorrentTask,&FontIconToolButton::clicked,[this](){
         QString file = QFileDialog::getOpenFileName(this,tr("Select Torrent File"),"","Torrent(*.torrent) ");
         if(!file.isEmpty())
@@ -90,10 +88,8 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         }
     });
 
-    btnOptions.iconChar=QChar(0xe615);
-    FontIconToolButton *settings=new FontIconToolButton(btnOptions,this);
+    FontIconToolButton *settings=new FontIconToolButton(QChar(0xe615),tr("Settings"), 12, 10, 2*logicalDpiX()/96, downloadContainer);
     settings->setObjectName(QStringLiteral("DownloadToolButton"));
-    settings->setText(tr("Settings"));
     QObject::connect(settings,&FontIconToolButton::clicked,[this](){
         DownloadSetting settingDialog(this);
         QRect geo(0,0,400,400);
@@ -138,20 +134,20 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         }
     });
 
-    QLineEdit *searchEdit=new QLineEdit(this);
+    QLineEdit *searchEdit=new QLineEdit(downloadContainer);
     searchEdit->setPlaceholderText(tr("Search Task"));
     searchEdit->setMinimumWidth(180*logicalDpiX()/96);
     searchEdit->setClearButtonEnabled(true);
 
     QHBoxLayout *toolBarHLayout=new QHBoxLayout();
-    toolBarHLayout->setContentsMargins(0,10*logicalDpiY()/96,0,0);
+    toolBarHLayout->setContentsMargins(0,0,0,0);
     toolBarHLayout->addWidget(addUriTask);
     toolBarHLayout->addWidget(addTorrentTask);
     toolBarHLayout->addWidget(settings);
     toolBarHLayout->addStretch(1);
     toolBarHLayout->addWidget(searchEdit);
 
-    downloadView=new QTreeView(this);
+    downloadView=new QTreeView(downloadContainer);
     downloadView->setObjectName(QStringLiteral("DownloadView"));
     downloadView->setFont(QFont("Microsoft Yahei UI",10));
     downloadView->setRootIsDecorated(false);
@@ -167,7 +163,6 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         globalOptions.insert("max-concurrent-downloads",QString::number(GlobalObjects::appSetting->value("Download/ConcurrentDownloads",5).toInt()));
         rpc->changeGlobalOption(globalOptions);
     });
-	//downloadView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     downloadView->setItemDelegate(new DownloadItemDelegate(this));
     downloadView->setContextMenuPolicy(Qt::ActionsContextMenu);
     TaskFilterProxyModel *proxyModel=new TaskFilterProxyModel(this);
@@ -212,19 +207,19 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     });
 
     int pageBtnHeight=28*logicalDpiY()/96;
-    QToolButton *generalInfoPage=new QToolButton(this);
+    QToolButton *generalInfoPage=new QToolButton(downloadContainer);
     generalInfoPage->setObjectName(QStringLiteral("DownloadInfoPage"));
     generalInfoPage->setText(tr("General"));
     generalInfoPage->setFixedHeight(pageBtnHeight);
     generalInfoPage->setCheckable(true);
 
-    QToolButton *fileInfoPage=new QToolButton(this);
+    QToolButton *fileInfoPage=new QToolButton(downloadContainer);
     fileInfoPage->setObjectName(QStringLiteral("DownloadInfoPage"));
     fileInfoPage->setText(tr("File"));
     fileInfoPage->setFixedHeight(pageBtnHeight);
     fileInfoPage->setCheckable(true);
 
-    QToolButton *logPage=new QToolButton(this);
+    QToolButton *logPage=new QToolButton(downloadContainer);
     logPage->setObjectName(QStringLiteral("DownloadInfoPage"));
     logPage->setFixedHeight(pageBtnHeight);
     logPage->setText(tr("Global Log"));
@@ -237,7 +232,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     pageBarHLayout->addWidget(logPage);
     pageBarHLayout->addStretch(1);
 
-    QButtonGroup *pageButtonGroup=new QButtonGroup(this);
+    QButtonGroup *pageButtonGroup=new QButtonGroup(downloadContainer);
     pageButtonGroup->addButton(generalInfoPage,0);
     pageButtonGroup->addButton(fileInfoPage,1);
     pageButtonGroup->addButton(logPage,2);
@@ -245,18 +240,18 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     generalInfoPage->setChecked(true);
 
 
-    QWidget *detailInfoContent=new QWidget(this);
-    detailInfoContent->setContentsMargins(0,0,0,10*logicalDpiX()/96);
+    QWidget *detailInfoContent=new QWidget(downloadContainer);
+    detailInfoContent->setContentsMargins(0,0,0,0);
     QStackedLayout *detailInfoSLayout=new QStackedLayout(detailInfoContent);
-    detailInfoSLayout->addWidget(setupGeneralInfoPage());
-    detailInfoSLayout->addWidget(setupFileInfoPage());
-    detailInfoSLayout->addWidget(setupGlobalLogPage());
+    detailInfoSLayout->addWidget(setupGeneralInfoPage(downloadContainer));
+    detailInfoSLayout->addWidget(setupFileInfoPage(downloadContainer));
+    detailInfoSLayout->addWidget(setupGlobalLogPage(downloadContainer));
 
     QObject::connect(pageButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[detailInfoSLayout](int id, bool checked){
         if(checked)detailInfoSLayout->setCurrentIndex(id);
     });
 
-    QWidget *bottomContent=new QWidget(this);
+    QWidget *bottomContent=new QWidget(downloadContainer);
     QVBoxLayout *bvLayout=new QVBoxLayout(bottomContent);
     bvLayout->setContentsMargins(0,0,0,0);
     bvLayout->addLayout(pageBarHLayout);
@@ -270,15 +265,14 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     viewBottomSplitter->setCollapsible(0,false);
     viewBottomSplitter->setCollapsible(1,true);
 
-    QWidget *downloadContainer=new QWidget(this);
+
     QGridLayout *downContainerGLayout=new QGridLayout(downloadContainer);
     downContainerGLayout->addLayout(toolBarHLayout,0,1);
     downContainerGLayout->addWidget(viewBottomSplitter,1,1);
     downContainerGLayout->setRowStretch(1,1);
-    downContainerGLayout->setContentsMargins(0,0,0,0);
 
-    BgmListWindow *bgmListWindow=new BgmListWindow(this);
-    ResSearchWindow *resSearchWindow=new ResSearchWindow(this);
+    BgmListWindow *bgmListWindow=new BgmListWindow(containerWidget);
+    ResSearchWindow *resSearchWindow=new ResSearchWindow(containerWidget);
     QObject::connect(bgmListWindow,&BgmListWindow::searchBgm,this,[this,resSearchWindow](const QString &item){
         taskTypeButtonGroup->button(4)->setChecked(true);
         resSearchWindow->search(item, true);
@@ -295,7 +289,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
             }
         }
     });
-    AutoDownloadWindow *autoDownloadWindow = new AutoDownloadWindow(this);
+    AutoDownloadWindow *autoDownloadWindow = new AutoDownloadWindow(containerWidget);
     QObject::connect(autoDownloadWindow,&AutoDownloadWindow::addTask,this,[this](const QStringList &uris, bool directly, const QString &path){
         if(directly)
         {
@@ -324,18 +318,33 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         }
     });
 
-    rightPanelSLayout=new QStackedLayout();
+
+    rightPanelSLayout=new QStackedLayout(containerWidget);
     rightPanelSLayout->addWidget(downloadContainer);
     rightPanelSLayout->addWidget(bgmListWindow);
     rightPanelSLayout->addWidget(resSearchWindow);
     rightPanelSLayout->addWidget(autoDownloadWindow);
 
-    QGridLayout *contentGLayout=new QGridLayout(this);
-    contentGLayout->addWidget(setupLeftPanel(),0,0);
-    contentGLayout->addLayout(rightPanelSLayout,0,1);
-    contentGLayout->setColumnStretch(1,1);
-    contentGLayout->setRowStretch(0,1);
-    contentGLayout->setContentsMargins(0,0,10*logicalDpiX()/96,0);
+    contentSplitter->setHandleWidth(1);
+    contentSplitter->addWidget(setupLeftPanel(contentSplitter));
+    contentSplitter->addWidget(containerWidget);
+    contentSplitter->setCollapsible(1, false);
+
+    QHBoxLayout *contentHLayout=new QHBoxLayout(this);
+    contentHLayout->addWidget(contentSplitter);
+    contentHLayout->setContentsMargins(0,0,0,0);
+
+    QByteArray splitterState = GlobalObjects::appSetting->value("Download/SplitterState").toByteArray();
+    if(!splitterState.isNull())
+    {
+        contentSplitter->restoreState(splitterState);
+    }
+
+    QObject::connect(contentSplitter, &QSplitter::splitterMoved, this, [contentHLayout, this](){
+        int leftSize = contentSplitter->sizes()[0];
+        if(leftSize == 0) contentHLayout->setContentsMargins(5*logicalDpiX()/96,0,0,0);
+        else contentHLayout->setContentsMargins(0,0,0,0);
+    });
 
     refreshTimer=new QTimer();
     QObject::connect(refreshTimer,&QTimer::timeout,[this](){
@@ -407,69 +416,56 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 
 }
 
-DownloadWindow::~DownloadWindow()
+void DownloadWindow::beforeClose()
 {
     act_Pause->trigger();
+    GlobalObjects::appSetting->setValue("Download/SplitterState", contentSplitter->saveState());
+
 }
 
-QWidget *DownloadWindow::setupLeftPanel()
+QWidget *DownloadWindow::setupLeftPanel(QWidget *parent)
 {
-    QWidget *leftPanel=new QWidget(this);
+    QWidget *leftPanel=new QWidget(parent);
     leftPanel->setObjectName(QStringLiteral("DownloadLeftPanel"));
-    const int panelWidth=220*logicalDpiX()/96;
-    leftPanel->setFixedWidth(panelWidth);
+    leftPanel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    const int panelWidth=200*logicalDpiX()/96;
+    leftPanel->resize(panelWidth, leftPanel->height());
 
-    //const int tbHeight=45*logicalDpiY()/96;
-    FontIconToolButtonOptions btnOptions;
-    btnOptions.fontSize=12;
-    btnOptions.iconSize=12;
-    btnOptions.leftMargin=20*logicalDpiX()/96;
-    btnOptions.iconTextSpace=4*logicalDpiX()/96;
-
-    btnOptions.iconChar=QChar(0xe653);
-    FontIconToolButton *downloadingTask=new FontIconToolButton(btnOptions,leftPanel);
+    const int iconSpace = 8*logicalDpiX()/96;
+    const QSizePolicy btnSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    FontIconToolButton *downloadingTask=new FontIconToolButton(QChar(0xe653),tr("Downloading"),12,12,iconSpace,leftPanel);
     downloadingTask->setObjectName(QStringLiteral("TaskTypeToolButton"));
-    downloadingTask->setFixedWidth(panelWidth);
+    downloadingTask->setSizePolicy(btnSizePolicy);
     downloadingTask->setCheckable(true);
+    downloadingTask->setAutoHideText(true);
     downloadingTask->setChecked(true);
-    downloadingTask->setText(tr("Downloading"));
 
-    btnOptions.iconChar=QChar(0xe69a);
-    FontIconToolButton *completedTask=new FontIconToolButton(btnOptions,leftPanel);
+    FontIconToolButton *completedTask=new FontIconToolButton(QChar(0xe69a),tr("Completed"), 12,12,iconSpace,leftPanel);
     completedTask->setObjectName(QStringLiteral("TaskTypeToolButton"));
-    completedTask->setFixedWidth(panelWidth);
+    completedTask->setSizePolicy(btnSizePolicy);
     completedTask->setCheckable(true);
-    completedTask->setText(tr("Completed"));
 
-    btnOptions.iconChar=QChar(0xe603);
-    FontIconToolButton *allTask=new FontIconToolButton(btnOptions,leftPanel);
+    FontIconToolButton *allTask=new FontIconToolButton(QChar(0xe603),tr("All"), 12,12,iconSpace,leftPanel);
     allTask->setObjectName(QStringLiteral("TaskTypeToolButton"));
-    allTask->setFixedWidth(panelWidth);
+    allTask->setSizePolicy(btnSizePolicy);
     allTask->setCheckable(true);
-    allTask->setText(tr("All"));
 
-    btnOptions.iconChar=QChar(0xe63a);
-    FontIconToolButton *bgmList=new FontIconToolButton(btnOptions,leftPanel);
+    FontIconToolButton *bgmList=new FontIconToolButton(QChar(0xe63a),tr("BgmList"), 12,12,iconSpace,leftPanel);
     bgmList->setObjectName(QStringLiteral("TaskTypeToolButton"));
-    bgmList->setFixedWidth(panelWidth);
+    bgmList->setSizePolicy(btnSizePolicy);
     bgmList->setCheckable(true);
-    bgmList->setText(tr("BgmList"));
 
-    btnOptions.iconChar=QChar(0xe609);
-    FontIconToolButton *resSearch=new FontIconToolButton(btnOptions,leftPanel);
+    FontIconToolButton *resSearch=new FontIconToolButton(QChar(0xe609),tr("ResSearch"), 12,12,iconSpace,leftPanel);
     resSearch->setObjectName(QStringLiteral("TaskTypeToolButton"));
-    resSearch->setFixedWidth(panelWidth);
+    resSearch->setSizePolicy(btnSizePolicy);
     resSearch->setCheckable(true);
-    resSearch->setText(tr("ResSearch"));
 
-    btnOptions.iconChar=QChar(0xe610);
-    FontIconToolButton *autoDownload=new FontIconToolButton(btnOptions,leftPanel);
+    FontIconToolButton *autoDownload=new FontIconToolButton(QChar(0xe610),tr("AutoDownload"),12,12,iconSpace,leftPanel);
     autoDownload->setObjectName(QStringLiteral("TaskTypeToolButton"));
-    autoDownload->setFixedWidth(panelWidth);
+    autoDownload->setSizePolicy(btnSizePolicy);
     autoDownload->setCheckable(true);
-    autoDownload->setText(tr("AutoDownload"));
 
-    taskTypeButtonGroup=new QButtonGroup(this);
+    taskTypeButtonGroup=new QButtonGroup(parent);
     taskTypeButtonGroup->addButton(downloadingTask,1);
     taskTypeButtonGroup->addButton(completedTask,2);
     taskTypeButtonGroup->addButton(allTask,0);
@@ -494,20 +490,49 @@ QWidget *DownloadWindow::setupLeftPanel()
     });
 
     GlobalObjects::iconfont.setPointSize(12);
-    QLabel *downSpeedIconLabel=new QLabel(this);
+    downSpeedIconLabel=new QLabel(leftPanel);
     downSpeedIconLabel->setObjectName(QStringLiteral("DownSpeedIcon"));
     downSpeedIconLabel->setFont(GlobalObjects::iconfont);
     downSpeedIconLabel->setText(QChar(0xe910));
     downSpeedIconLabel->setMaximumWidth(downSpeedIconLabel->height()+4*logicalDpiX()/96);
-    QLabel *upSpeedIconLabel=new QLabel(this);
+    upSpeedIconLabel=new QLabel(leftPanel);
     upSpeedIconLabel->setObjectName(QStringLiteral("UpSpeedIcon"));
     upSpeedIconLabel->setFont(GlobalObjects::iconfont);
     upSpeedIconLabel->setText(QChar(0xe941));
     upSpeedIconLabel->setMaximumWidth(upSpeedIconLabel->height()+4*logicalDpiX()/96);
-    downSpeedLabel=new QLabel(this);
+    downSpeedLabel=new QLabel(leftPanel);
     downSpeedLabel->setObjectName(QStringLiteral("DownSpeedLabel"));
-    upSpeedLabel=new QLabel(this);
+    upSpeedLabel=new QLabel(leftPanel);
     upSpeedLabel->setObjectName(QStringLiteral("UpSpeedLabel"));
+
+    QObject::connect(downloadingTask, &FontIconToolButton::iconHidden, this, [this, completedTask,
+                     allTask, bgmList, resSearch,autoDownload,leftPanel](bool hide){
+        if(hide)
+        {
+            completedTask->hideText(true);
+            allTask->hideText(true);
+            bgmList->hideText(true);
+            resSearch->hideText(true);
+            autoDownload->hideText(true);
+            downSpeedLabel->hide();
+            downSpeedIconLabel->hide();
+            upSpeedLabel->hide();
+            upSpeedIconLabel->hide();
+            leftPanel->setMinimumWidth(completedTask->sizeHint().width());
+        }
+        else
+        {
+            completedTask->hideText(false);
+            allTask->hideText(false);
+            bgmList->hideText(false);
+            resSearch->hideText(false);
+            autoDownload->hideText(false);
+            downSpeedLabel->show();
+            downSpeedIconLabel->show();
+            upSpeedLabel->show();
+            upSpeedIconLabel->show();
+        }
+    });
 
     QVBoxLayout *leftVLayout=new QVBoxLayout(leftPanel);
     leftVLayout->setContentsMargins(0,0,0,0);
@@ -519,19 +544,27 @@ QWidget *DownloadWindow::setupLeftPanel()
     leftVLayout->addWidget(resSearch);
     leftVLayout->addWidget(autoDownload);
     leftVLayout->addStretch(1);
-    QGridLayout *speedInfoGLayout=new QGridLayout();
-    speedInfoGLayout->addWidget(downSpeedIconLabel,0,0);
-    speedInfoGLayout->addWidget(downSpeedLabel,0,1);
-    speedInfoGLayout->addWidget(upSpeedIconLabel,1,0);
-    speedInfoGLayout->addWidget(upSpeedLabel,1,1);
-    speedInfoGLayout->setContentsMargins(30*logicalDpiX()/96,0,20*logicalDpiX()/96,20*logicalDpiY()/96);
-    leftVLayout->addLayout(speedInfoGLayout);
+    QHBoxLayout *downHLayout = new QHBoxLayout(), *upHLayout = new QHBoxLayout();
+    downHLayout->addStretch(1);
+    downHLayout->addWidget(downSpeedIconLabel);
+    downHLayout->addSpacing(4*logicalDpiX()/96);
+    downHLayout->addWidget(downSpeedLabel);
+    downHLayout->addStretch(1);
+    upHLayout->addStretch(1);
+    upHLayout->addWidget(upSpeedIconLabel);
+    upHLayout->addSpacing(4*logicalDpiX()/96);
+    upHLayout->addWidget(upSpeedLabel);
+    upHLayout->addStretch(1);
+
+    leftVLayout->addLayout(downHLayout);
+    leftVLayout->addLayout(upHLayout);
+    leftVLayout->addSpacing(20*logicalDpiY()/96);
     return leftPanel;
 }
 
-QWidget *DownloadWindow::setupGeneralInfoPage()
+QWidget *DownloadWindow::setupGeneralInfoPage(QWidget *parent)
 {
-    QWidget *content=new QWidget(this);
+    QWidget *content=new QWidget(parent);
     QGridLayout *gInfoGLayout=new QGridLayout(content);
     taskTitleLabel=new QLabel(content);
     taskTitleLabel->setFont(QFont("Microsoft Yahei",12));
@@ -549,10 +582,10 @@ QWidget *DownloadWindow::setupGeneralInfoPage()
     return content;
 }
 
-QWidget *DownloadWindow::setupFileInfoPage()
+QWidget *DownloadWindow::setupFileInfoPage(QWidget *parent)
 {
     selectedTFModel=new CTorrentFileModel(this);
-    fileInfoView=new TorrentTreeView(this);
+    fileInfoView=new TorrentTreeView(parent);
     fileInfoView->setAlternatingRowColors(true);
     fileInfoView->setModel(selectedTFModel);
     fileInfoView->setObjectName(QStringLiteral("TaskFileInfoView"));
@@ -605,14 +638,13 @@ QWidget *DownloadWindow::setupFileInfoPage()
     return fileInfoView;
 }
 
-QWidget *DownloadWindow::setupGlobalLogPage()
+QWidget *DownloadWindow::setupGlobalLogPage(QWidget *parent)
 {
-    logView=new QPlainTextEdit(this);
+    logView=new QPlainTextEdit(parent);
     logView->setReadOnly(true);
     logView->setCenterOnScroll(true);
     logView->setMaximumBlockCount(50);
     logView->setObjectName(QStringLiteral("TaskLogView"));
-    //logView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
     return logView;
 }
 

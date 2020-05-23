@@ -73,6 +73,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     });
 
     splitter = new QSplitter(this);
+    splitter->setObjectName(QStringLiteral("LabelSplitter"));
     QWidget *animeContainer = new QWidget(splitter);
 
     animeListView=new CListView(animeContainer);
@@ -233,18 +234,8 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         }
 
     });
-    QPushButton *showLabelView=new QPushButton(this);
-    GlobalObjects::iconfont.setPointSize(10);
-    showLabelView->setFont(GlobalObjects::iconfont);
-    showLabelView->setText(QChar(0xe623));
-    QObject::connect(showLabelView,&QPushButton::clicked,this,[showLabelView, this](){
-        splitter->setSizes(QList<int>{width()/4, width()-width()/4});
-        showLabelView->hide();
-    });
-    showLabelView->hide();
 
     QHBoxLayout *toolbuttonHLayout=new QHBoxLayout();
-    toolbuttonHLayout->addWidget(showLabelView);
     toolbuttonHLayout->addWidget(loadingLabel);
     toolbuttonHLayout->addWidget(totalCountLabel);
     toolbuttonHLayout->addWidget(loadMore);
@@ -269,15 +260,16 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     libraryVLayout->setContentsMargins(0,0,10*logicalDpiX()/96,0);
     libraryVLayout->addWidget(splitter);
 
-    QObject::connect(splitter, &QSplitter::splitterMoved, this, [showLabelView, this](){
-        if(splitter->sizes()[0] == 0) showLabelView->show();
+    QObject::connect(splitter, &QSplitter::splitterMoved, this, [libraryVLayout, this](){
+        if(splitter->sizes()[0] == 0) libraryVLayout->setContentsMargins(5*logicalDpiX()/96,0,10*logicalDpiX()/96,0);
+        else libraryVLayout->setContentsMargins(0,0,10*logicalDpiX()/96,0);
     });
     QByteArray splitterState = GlobalObjects::appSetting->value("Library/SplitterState").toByteArray();
     if(!splitterState.isNull())
     {
         splitter->restoreState(splitterState);
     }
-    if(splitter->sizes()[0] == 0) showLabelView->show();
+    if(splitter->sizes()[0] == 0)  libraryVLayout->setContentsMargins(5*logicalDpiX()/96,0,10*logicalDpiX()/96,0);
 }
 
 void LibraryWindow::beforeClose()
