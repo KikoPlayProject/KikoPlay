@@ -18,11 +18,12 @@ FontIconToolButton::FontIconToolButton(QChar iconChar, const QString &text, int 
     textLabel->setFont(QFont("Microsoft Yahei", fontSize));
     textLabel->setAlignment(Qt::AlignLeft|Qt::AlignVCenter);
     textLabel->setText(text);
+    textLabel->setIndent(iconTextSpace);
     QHBoxLayout *btnHLayout=new QHBoxLayout(this);
     btnHLayout->setSpacing(0);
     btnHLayout->addStretch(1);
     btnHLayout->addWidget(iconLabel);
-    btnHLayout->addSpacing(iconTextSpace);
+    //btnHLayout->addSpacing(iconTextSpace);
     btnHLayout->addWidget(textLabel);
     btnHLayout->addStretch(1);
     QObject::connect(this,&FontIconToolButton::toggled,[this](bool toggled){
@@ -88,22 +89,22 @@ void FontIconToolButton::setNormColor(const QColor &color)
 void FontIconToolButton::setHoverState()
 {
     if(hoverStyleSheet.isEmpty()) return;
-    iconLabel->setStyleSheet(hoverStyleSheet);
     iconLabel->style()->unpolish(iconLabel);
+    iconLabel->setStyleSheet(hoverStyleSheet);
     iconLabel->style()->polish(iconLabel);
-    textLabel->setStyleSheet(hoverStyleSheet);
     textLabel->style()->unpolish(textLabel);
+    textLabel->setStyleSheet(hoverStyleSheet);
     textLabel->style()->polish(textLabel);
 }
 
 void FontIconToolButton::setNormalState()
 {
     if(normalStyleSheet.isEmpty()) return;
-    iconLabel->setStyleSheet(normalStyleSheet);
     iconLabel->style()->unpolish(iconLabel);
+    iconLabel->setStyleSheet(normalStyleSheet);
     iconLabel->style()->polish(iconLabel);
-    textLabel->setStyleSheet(normalStyleSheet);
     textLabel->style()->unpolish(textLabel);
+    textLabel->setStyleSheet(normalStyleSheet);
     textLabel->style()->polish(textLabel);
 }
 
