@@ -153,6 +153,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 
     downloadView=new QTreeView(this);
     downloadView->setObjectName(QStringLiteral("DownloadView"));
+    downloadView->setFont(QFont("Microsoft Yahei UI",10));
     downloadView->setRootIsDecorated(false);
     downloadView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     downloadView->setAlternatingRowColors(true);
@@ -534,8 +535,10 @@ QWidget *DownloadWindow::setupGeneralInfoPage()
     QGridLayout *gInfoGLayout=new QGridLayout(content);
     taskTitleLabel=new QLabel(content);
     taskTitleLabel->setFont(QFont("Microsoft Yahei",12));
+    taskTitleLabel->setObjectName(QStringLiteral("TaskTitleLabel"));
     taskTitleLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     taskTimeLabel=new QLabel(content);
+    taskTimeLabel->setObjectName(QStringLiteral("TaskTimeLabel"));
     taskDirLabel=new QLabel(content);
     taskDirLabel->setOpenExternalLinks(true);
     gInfoGLayout->addWidget(taskTitleLabel,0,0);
@@ -549,12 +552,15 @@ QWidget *DownloadWindow::setupGeneralInfoPage()
 QWidget *DownloadWindow::setupFileInfoPage()
 {
     selectedTFModel=new CTorrentFileModel(this);
-    fileInfoView=new QTreeView(this);
+    fileInfoView=new TorrentTreeView(this);
     fileInfoView->setAlternatingRowColors(true);
     fileInfoView->setModel(selectedTFModel);
     fileInfoView->setObjectName(QStringLiteral("TaskFileInfoView"));
     //fileInfoView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     fileInfoView->header()->resizeSection(0,300*logicalDpiX()/96);
+    fileInfoView->setFont(QFont("Microsoft Yahei UI",10));
+    QObject::connect(fileInfoView, &TorrentTreeView::ignoreColorChanged, selectedTFModel, &CTorrentFileModel::setIgnoreColor);
+    QObject::connect(fileInfoView, &TorrentTreeView::normColorChanged, selectedTFModel, &CTorrentFileModel::setNormColor);
 
     QObject::connect(fileInfoView,&QTreeView::doubleClicked,[this](const QModelIndex &index){
         TorrentFile *item = static_cast<TorrentFile*>(index.internalPointer());

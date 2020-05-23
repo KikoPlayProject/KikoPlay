@@ -2,14 +2,40 @@
 #define DOWNLOADWINDOW_H
 
 #include <QWidget>
+#include <QTreeView>
 class Aria2JsonRPC;
 class QLabel;
 class QPlainTextEdit;
-class QTreeView;
 class QStackedLayout;
 class QButtonGroup;
 struct DownloadTask;
 class CTorrentFileModel;
+class TorrentTreeView : public QTreeView
+{
+    Q_OBJECT
+    Q_PROPERTY(QColor ignoreColor READ getIgnoreColor WRITE setIgnoreColor)
+    Q_PROPERTY(QColor normColor READ getNormColor WRITE setNormColor)
+public:
+    using QTreeView::QTreeView;
+
+    QColor getIgnoreColor() const {return ignoreColor;}
+    void setIgnoreColor(const QColor& color)
+    {
+        ignoreColor =  color;
+        emit ignoreColorChanged(ignoreColor);
+    }
+    QColor getNormColor() const {return normColor;}
+    void setNormColor(const QColor& color)
+    {
+        normColor = color;
+        emit normColorChanged(normColor);
+    }
+signals:
+    void ignoreColorChanged(const QColor &color);
+    void normColorChanged(const QColor &color);
+private:
+    QColor ignoreColor, normColor;
+};
 class DownloadWindow : public QWidget
 {
     Q_OBJECT
@@ -22,7 +48,7 @@ private:
 
     QTreeView *downloadView;
     QPlainTextEdit *logView;
-    QTreeView *fileInfoView;
+    TorrentTreeView *fileInfoView;
     CTorrentFileModel *selectedTFModel;
     QLabel *taskTitleLabel,*taskTimeLabel,*taskDirLabel;
 

@@ -46,6 +46,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     ruleView->setRootIsDecorated(false);
     ruleView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ruleView->setAlternatingRowColors(true);
+    ruleView->setFont(QFont("Microsoft Yahei UI",10));
     ruleView->setModel(GlobalObjects::autoDownloadManager);
     ruleView->header()->resizeSection(1, 200 * logicalDpiX() / 96);
     ruleView->header()->resizeSection(2, 160 * logicalDpiX() / 96);
@@ -59,6 +60,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     logView->setRootIsDecorated(false);
     logView->setSelectionMode(QAbstractItemView::SingleSelection);
     logView->setAlternatingRowColors(true);
+    logView->setFont(QFont("Microsoft Yahei UI",10));
     logView->setObjectName(QStringLiteral("RuleLogView"));
     LogFilterProxyModel *logProxyModel=new LogFilterProxyModel(this);
     logProxyModel->setSourceModel(GlobalObjects::autoDownloadManager->logModel);
@@ -72,6 +74,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     urlView->setRootIsDecorated(false);
     urlView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     urlView->setAlternatingRowColors(true);
+    urlView->setFont(QFont("Microsoft Yahei UI",10));
     urlView->setObjectName(QStringLiteral("RuleURLView"));
     urlView->setModel(GlobalObjects::autoDownloadManager->urlModel);
     urlView->header()->resizeSection(0, 500 * logicalDpiX() / 96);

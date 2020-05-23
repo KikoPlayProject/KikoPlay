@@ -416,6 +416,20 @@ qint64 TorrentFileModel::getCheckedFileSize()
     return checkedFileSize;
 }
 
+void TorrentFileModel::setNormColor(const QColor &color)
+{
+    beginResetModel();
+    normColor = color;
+    endResetModel();
+}
+
+void TorrentFileModel::setIgnoreColor(const QColor &color)
+{
+    beginResetModel();
+    ignoreColor = color;
+    endResetModel();
+}
+
 void TorrentFileModel::refreshChildrenCheckStatus(const QModelIndex &index)
 {
     QList<QModelIndex> pIndexes;
@@ -514,9 +528,9 @@ QVariant TorrentFileModel::data(const QModelIndex &index, int role) const
     case Qt::ForegroundRole:
     {
         if(item->checkStatus==Qt::Unchecked)
-            return QBrush(QColor(200,200,200));
+            return ignoreColor;
         else
-            return QBrush(QColor(0,0,0));
+            return normColor;
         break;
     }
     }

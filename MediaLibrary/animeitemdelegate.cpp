@@ -25,6 +25,7 @@ public:
         titleLabel=new QLabel(this);
         titleLabel->setAlignment(Qt::AlignCenter);
         titleLabel->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
+        titleLabel->setObjectName(QStringLiteral("AnimeItemTitle"));
         QVBoxLayout *aiVLayout=new QVBoxLayout(this);
         aiVLayout->addWidget(imgLabel);
         aiVLayout->addWidget(titleLabel);

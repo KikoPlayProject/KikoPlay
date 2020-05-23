@@ -207,6 +207,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
 
     QLabel *totalCountLabel=new QLabel(animeContainer);
     totalCountLabel->setFont(QFont("Microsoft Yahei",12));
+    totalCountLabel->setObjectName(QStringLiteral("LibraryCountTip"));
     QPushButton *loadMore=new QPushButton(tr("Continue to load"),this);
     QObject::connect(loadMore,&QPushButton::clicked,[](){
         GlobalObjects::library->animeModel->fetchMore(QModelIndex());

@@ -57,7 +57,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     QMovie *downloadingIcon=new QMovie(this);
     busyLabel=new QLabel(this);
     busyLabel->setMovie(downloadingIcon);
-    downloadingIcon->setFileName(":/res/images/loading-spinner.gif");
+    downloadingIcon->setFileName(":/res/images/loading-blocks.gif");
     busyLabel->setFixedSize(24*logicalDpiX()/96,24*logicalDpiY()/96);
     busyLabel->setScaledContents(true);
     downloadingIcon->start();
@@ -100,6 +100,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     });
 
     totalPageTip=new QLabel("/0", this);
+    totalPageTip->setObjectName(QStringLiteral("ResTotalPage"));
 
     dialogTip = new DialogTip(this);
     dialogTip->hide();
@@ -110,6 +111,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     searchListView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
     searchListView->setRootIsDecorated(false);
     searchListView->setAlternatingRowColors(true);
+    searchListView->setFont(QFont("Microsoft Yahei UI",10));
     searchListView->setIndentation(0);
     searchListView->setContextMenuPolicy(Qt::ActionsContextMenu);
     QObject::connect(searchListView, &QTreeView::doubleClicked,[this,searchProxyModel](const QModelIndex &index){

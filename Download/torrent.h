@@ -2,6 +2,7 @@
 #define TORRENTDECODER_H
 #include "util.h"
 #include <QAbstractItemModel>
+#include <QColor>
 class TorrentError
 {
 public:
@@ -29,8 +30,11 @@ public:
     void checkAll(bool on);
     void checkVideoFiles(bool on);
     qint64 getCheckedFileSize();
+    void setNormColor(const QColor &color);
+    void setIgnoreColor(const QColor &color);
 protected:
     TorrentFile *root;
+    QColor normColor, ignoreColor;
     const QStringList headers={tr("Name"),tr("Format"),tr("Size")};
     void refreshChildrenCheckStatus(const QModelIndex &index);
     void refreshParentCheckStatus(const QModelIndex &index);

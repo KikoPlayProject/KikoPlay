@@ -95,6 +95,7 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     btnHLayout->addWidget(seasonIdCombo);
 
     QLabel *infoLabel=new QLabel(this);
+    infoLabel->setObjectName(QStringLiteral("BgmInfoLabel"));
     btnHLayout->addWidget(infoLabel);
     QPushButton *refreshBtn=new QPushButton(tr("Refresh"),this);
     btnHLayout->addWidget(refreshBtn);

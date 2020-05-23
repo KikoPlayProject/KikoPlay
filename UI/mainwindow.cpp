@@ -33,7 +33,7 @@ namespace
             if(img.load(path))
             {
                 QPainter p(&img);
-                p.fillRect(img.rect(), QColor(255,255,255,130));
+                p.fillRect(img.rect(), QColor(0,0,0,90));
                 p.end();
                 update();
             }

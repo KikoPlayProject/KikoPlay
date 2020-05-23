@@ -1020,7 +1020,7 @@ QPushButton:pressed{
     border-radius:0px;
     padding:5px;
     background:transparent;
-    qproperty-normColor: rgb(0,0,0);
+    qproperty-normColor: rgb(220,220,220);
     qproperty-hoverColor: rgb(69,153,247);
 }
 #DownloadToolButton:hover,
@@ -1039,6 +1039,7 @@ QPushButton:pressed{
     border-style:none;
     padding:5px;
     background:transparent;
+    color: rgb(240,240,240);
 }
 #BgmFilterBtn:hover{
     border-style:solid;
@@ -1061,7 +1062,7 @@ QToolButton#DownloadInfoPage{
     border-style:none;
     border-radius:0px;
     padding:5px;
-    color:#606060;
+    color:rgb(180,180,180);
     background:transparent;
 }
 QToolButton#DownloadInfoPage:hover,
@@ -1070,7 +1071,7 @@ QToolButton#DownloadInfoPage:checked{
     border-style:solid;
     border-width:0px 0px 5px 0px;
     border-color:#1CA0E4;
-    color:#000000;
+    color:rgb(240,240,240);
     background:transparent;
 }
 QProgressBar {
@@ -1098,10 +1099,9 @@ QTreeView#DownloadView{
     outline:0px;
     background-color: rgba(255,255,255,40);
     alternate-background-color: transparent;
+    color:rgb(240,240,240);
 }
-QTreeView#DownloadView::item:selected{
-    color: rgb(0, 0, 0);
-}
+
 #LabelView {
     border: 0px solid rgb(50, 50, 50);
     background: rgba(57, 58, 60,120);
@@ -1142,8 +1142,8 @@ QTreeView#LabelView::branch:closed:has-children {
     selection-color: rgb(0, 160, 230);
     show-decoration-selected: 1;
     outline:0px;
-    qproperty-normColor: rgb(90,90,90);
-    qproperty-hoverColor: rgb(0,155,255);
+    qproperty-normColor: rgb(220,220,220);
+    qproperty-hoverColor: rgb(64, 179, 253);
 }
 QTreeView#BgmListView::item {
     border: none;
@@ -1175,6 +1175,7 @@ QLineEdit#PageEdit{
      border-color:#1CA0E4;
      background:transparent;
      padding-bottom:-1px;
+     color: rgb(240,240,240);
 }
 #captureView,#captureImageView{
     border-style:none;
@@ -1182,24 +1183,46 @@ QLineEdit#PageEdit{
 }
 QTreeView#SearchListView {
     background-color: rgba(255,255,255,40);
+    color: rgb(240,240,240);
     alternate-background-color: transparent;
 }
 QTreeView#RuleListView {
     background-color: rgba(255,255,255,40);
+    color: rgb(240,240,240);
     alternate-background-color: transparent;
 }
 QTreeView#RuleLogView {
     background-color: rgba(255,255,255,40);
+    color: rgb(240,240,240);
     alternate-background-color: transparent;
 }
 QTreeView#RuleURLView {
     background-color: rgba(255,255,255,40);
+    color: rgb(240,240,240);
     alternate-background-color: transparent;
 }
-QTreeView#TaskFileInfoView {
+#TaskFileInfoView {
     background-color: rgba(255,255,255,40);
     alternate-background-color: transparent;
+    qproperty-normColor: rgb(240,240,240);
+    qproperty-ignoreColor: rgb(200,200,200);
 }
 #TaskLogView{
     background-color: rgba(255,255,255,40);
+    color: rgb(240,240,240);
+}
+#LibraryCountTip{
+    color: rgb(240,240,240);
+}
+#AnimeItemTitle{
+    color: rgb(250,250,250);
+}
+#BgmInfoLabel{
+    color: rgb(240,240,240);
+}
+#ResTotalPage{
+    color: rgb(240,240,240);
+}
+#TaskTitleLabel, #TaskTimeLabel{
+    color: rgb(240,240,240);
 }
