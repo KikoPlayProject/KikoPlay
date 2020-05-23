@@ -233,9 +233,18 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         }
 
     });
-
+    QPushButton *showLabelView=new QPushButton(this);
+    GlobalObjects::iconfont.setPointSize(10);
+    showLabelView->setFont(GlobalObjects::iconfont);
+    showLabelView->setText(QChar(0xe623));
+    QObject::connect(showLabelView,&QPushButton::clicked,this,[showLabelView, this](){
+        splitter->setSizes(QList<int>{width()/4, width()-width()/4});
+        showLabelView->hide();
+    });
+    showLabelView->hide();
 
     QHBoxLayout *toolbuttonHLayout=new QHBoxLayout();
+    toolbuttonHLayout->addWidget(showLabelView);
     toolbuttonHLayout->addWidget(loadingLabel);
     toolbuttonHLayout->addWidget(totalCountLabel);
     toolbuttonHLayout->addWidget(loadMore);
@@ -251,7 +260,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     splitter->addWidget(animeContainer);
     splitter->setHandleWidth(1);
 
-    splitter->setCollapsible(0,false);
+    //splitter->setCollapsible(0,false);
     splitter->setCollapsible(1,false);
     splitter->setStretchFactor(0,2);
     splitter->setStretchFactor(1,3);
@@ -260,19 +269,20 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     libraryVLayout->setContentsMargins(0,0,10*logicalDpiX()/96,0);
     libraryVLayout->addWidget(splitter);
 
-    splitterState = GlobalObjects::appSetting->value("Library/SplitterState").toByteArray();
+    QObject::connect(splitter, &QSplitter::splitterMoved, this, [showLabelView, this](){
+        if(splitter->sizes()[0] == 0) showLabelView->show();
+    });
+    QByteArray splitterState = GlobalObjects::appSetting->value("Library/SplitterState").toByteArray();
     if(!splitterState.isNull())
     {
         splitter->restoreState(splitterState);
     }
-    QObject::connect(splitter, &QSplitter::splitterMoved, this, [this](){
-        splitterState = splitter->saveState();
-    });
+    if(splitter->sizes()[0] == 0) showLabelView->show();
 }
 
 void LibraryWindow::beforeClose()
 {
-    GlobalObjects::appSetting->setValue("Library/SplitterState", splitterState);
+    GlobalObjects::appSetting->setValue("Library/SplitterState", splitter->saveState());
 }
 
 

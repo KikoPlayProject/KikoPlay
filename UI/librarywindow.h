@@ -75,7 +75,6 @@ private:
     QListView *animeListView;
     LabelTreeView *labelView;
     QSplitter *splitter;
-    QByteArray splitterState;
 signals:
     void playFile(const QString &file);
 public slots:

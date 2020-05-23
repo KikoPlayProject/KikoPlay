@@ -35,25 +35,30 @@ namespace
                 QPainter p(&img);
                 p.fillRect(img.rect(), QColor(0,0,0,90));
                 p.end();
+                bgCache = QPixmap::fromImage(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
                 update();
             }
         }
+
         // QWidget interface
     protected:
         virtual void paintEvent(QPaintEvent *e)
         {
             if(!img.isNull())
             {
-                QPixmap output = QPixmap::fromImage(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
                 QPainter painter(this);
                 painter.setRenderHint(QPainter::Antialiasing);
-                painter.setRenderHint(QPainter::SmoothPixmapTransform);
-                painter.drawPixmap(0, 0, output);
+                painter.drawPixmap(0, 0, bgCache);
                 QWidget::paintEvent(e);
             }
         }
+        virtual void resizeEvent(QResizeEvent *)
+        {
+            bgCache = QPixmap::fromImage(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+        }
     private:
         QImage img;
+        QPixmap bgCache;
     };
 }
 MainWindow::MainWindow(QWidget *parent)
