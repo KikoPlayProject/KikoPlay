@@ -44,7 +44,7 @@ namespace
         {
             if(!img.isNull())
             {
-                QPixmap output = QPixmap::fromImage(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding));
+                QPixmap output = QPixmap::fromImage(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
                 QPainter painter(this);
                 painter.setRenderHint(QPainter::Antialiasing);
                 painter.setRenderHint(QPainter::SmoothPixmapTransform);

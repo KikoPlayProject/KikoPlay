@@ -1013,7 +1013,7 @@ QPushButton:pressed{
     border-width:0px 0px 0px 4px;
     border-color:#1CA0E4;
     color:#679bcc;
-    background:rgba(45,54,65,40);
+    background:rgba(45,54,65,80);
 }
 #DownloadToolButton{
     border-style:none;
