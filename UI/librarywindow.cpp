@@ -260,12 +260,19 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     libraryVLayout->setContentsMargins(0,0,10*logicalDpiX()/96,0);
     libraryVLayout->addWidget(splitter);
 
-    QVariant splitterState(GlobalObjects::appSetting->value("Library/SplitterState"));
+    splitterState = GlobalObjects::appSetting->value("Library/SplitterState").toByteArray();
     if(!splitterState.isNull())
-        splitter->restoreState(splitterState.toByteArray());
+    {
+        splitter->restoreState(splitterState);
+    }
     QObject::connect(splitter, &QSplitter::splitterMoved, this, [this](){
-        GlobalObjects::appSetting->setValue("Library/SplitterState",splitter->saveState());
+        splitterState = splitter->saveState();
     });
+}
+
+LibraryWindow::~LibraryWindow()
+{
+    GlobalObjects::appSetting->setValue("Library/SplitterState", splitterState);
 }
 
 

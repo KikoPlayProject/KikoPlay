@@ -70,10 +70,12 @@ class LibraryWindow : public QWidget
     Q_OBJECT
 public:
     explicit LibraryWindow(QWidget *parent = nullptr);
+    virtual ~LibraryWindow();
 private:
     QListView *animeListView;
     LabelTreeView *labelView;
     QSplitter *splitter;
+    QByteArray splitterState;
 signals:
     void playFile(const QString &file);
 public slots:
