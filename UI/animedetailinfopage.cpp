@@ -147,7 +147,7 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     pageVLayout->addLayout(contentStackLayout);
 
     QGridLayout *pageGLayout=new QGridLayout(this);
-    pageGLayout->setContentsMargins(5*logicalDpiY()/96,0,0,0);
+    pageGLayout->setContentsMargins(5*logicalDpiY()/96,5*logicalDpiY()/96,0,0);
     pageGLayout->addWidget(coverLabel,0, 0);
     pageGLayout->addItem(new QSpacerItem(20*logicalDpiX()/96,1),0,1);
     pageGLayout->addLayout(textVLayout, 0, 2);
