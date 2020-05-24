@@ -12,6 +12,7 @@ class QActionGroup;
 class QButtonGroup;
 class QSplitter;
 class AnimeItemDelegate;
+class AnimeDetailInfoPage;
 class LabelTreeView : public QTreeView
 {
     Q_OBJECT
@@ -68,15 +69,22 @@ private:
 class LibraryWindow : public QWidget
 {
     Q_OBJECT
+    Q_PROPERTY(bool bgMode READ getBgMode WRITE setBgMode)
 public:
     explicit LibraryWindow(QWidget *parent = nullptr);
     void beforeClose();
+
+    bool getBgMode() const {return bgOn;}
+    void setBgMode(bool on) {bgOn = on;}
 private:
     QListView *animeListView;
     LabelTreeView *labelView;
     QSplitter *splitter;
+    AnimeDetailInfoPage *detailPage;
+    bool bgOn;
 signals:
     void playFile(const QString &file);
+    void switchBackground(const QPixmap &pixmap, bool setPixmap);
 public slots:
     // QWidget interface
 protected:

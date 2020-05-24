@@ -3,6 +3,7 @@
 #include <QTreeView>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <QStackedLayout>
 #include <QHeaderView>
 #include <QLabel>
 #include <QMovie>
@@ -24,6 +25,7 @@
 #include "bangumiupdate.h"
 #include "episodeeditor.h"
 #include "animedetailinfo.h"
+#include "animedetailinfopage.h"
 #include "MediaLibrary/animeitemdelegate.h"
 #include "MediaLibrary/animelibrary.h"
 #include "MediaLibrary/animemodel.h"
@@ -60,22 +62,16 @@ namespace
     };
 }
 
-LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
+LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
 {
+    setObjectName(QStringLiteral("LibraryWindow"));
     AnimeItemDelegate *itemDelegate=new AnimeItemDelegate(this);
-    QObject::connect(itemDelegate,&AnimeItemDelegate::ItemClicked,[this](const QModelIndex &index){
-        Anime * anime = GlobalObjects::library->animeModel->getAnime(static_cast<AnimeFilterProxyModel *>(animeListView->model())->mapToSource(index),true);
-        AnimeDetailInfo infoDialog(anime,this);
-        QObject::connect(&infoDialog,&AnimeDetailInfo::playFile,this,&LibraryWindow::playFile);
-        QRect geo(0,0,400,400);
-        geo.moveCenter(this->geometry().center());
-        infoDialog.move(geo.topLeft());
-        infoDialog.exec();
-    });
 
     splitter = new QSplitter(this);
     splitter->setObjectName(QStringLiteral("LabelSplitter"));
     QWidget *animeContainer = new QWidget(splitter);
+
+    detailPage = new AnimeDetailInfoPage(animeContainer);
 
     animeListView=new CListView(animeContainer);
     animeListView->setObjectName(QStringLiteral("AnimesContent"));
@@ -83,6 +79,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     animeListView->setUniformItemSizes(true);
     animeListView->setResizeMode(QListView::Adjust);
     animeListView->setMovement(QListView::Static);
+    animeListView->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     animeListView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     animeListView->setSelectionMode(QAbstractItemView::SingleSelection);
     animeListView->setItemDelegate(itemDelegate);
@@ -236,7 +233,15 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
 
     });
 
+    QPushButton *backButton =  new QPushButton(animeContainer);
+    backButton->setObjectName(QStringLiteral("AnimeDetailBack"));
+    GlobalObjects::iconfont.setPointSize(14);
+    backButton->setFont(GlobalObjects::iconfont);
+    backButton->setText(QChar(0xe69b));
+    backButton->hide();
+
     QHBoxLayout *toolbuttonHLayout=new QHBoxLayout();
+    toolbuttonHLayout->addWidget(backButton);
     toolbuttonHLayout->addWidget(loadingLabel);
     toolbuttonHLayout->addWidget(totalCountLabel);
     toolbuttonHLayout->addWidget(loadMore);
@@ -246,8 +251,36 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     QVBoxLayout *containerVLayout=new QVBoxLayout(animeContainer);
     containerVLayout->setContentsMargins(10*logicalDpiX()/96,10*logicalDpiY()/96,0,10*logicalDpiY()/96);
     containerVLayout->addLayout(toolbuttonHLayout);
-    containerVLayout->addWidget(animeListView);
+    QStackedLayout *viewSLayout = new QStackedLayout;
+    viewSLayout->addWidget(animeListView);
+    viewSLayout->addWidget(detailPage);
+    containerVLayout->addLayout(viewSLayout);
 
+    QObject::connect(detailPage,&AnimeDetailInfoPage::playFile,this,&LibraryWindow::playFile);
+    QObject::connect(itemDelegate,&AnimeItemDelegate::ItemClicked,[this, viewSLayout, backButton](const QModelIndex &index){
+        Anime * anime = GlobalObjects::library->animeModel->getAnime(static_cast<AnimeFilterProxyModel *>(animeListView->model())->mapToSource(index),true);
+        if(bgOn)
+        {
+            emit switchBackground(anime->coverPixmap, true);
+            detailPage->setAnime(anime);
+            backButton->show();
+            viewSLayout->setCurrentIndex(1);
+        }
+        else
+        {
+            AnimeDetailInfo infoDialog(anime,this);
+            QObject::connect(&infoDialog,&AnimeDetailInfo::playFile,this,&LibraryWindow::playFile);
+            QRect geo(0,0,400,400);
+            geo.moveCenter(this->geometry().center());
+            infoDialog.move(geo.topLeft());
+            infoDialog.exec();
+        }
+    });
+    QObject::connect(backButton, &QPushButton::clicked, this, [this, viewSLayout, backButton](){
+        emit switchBackground(QPixmap(), false);
+        backButton->hide();
+        viewSLayout->setCurrentIndex(0);
+    });
     splitter->addWidget(labelView);
     splitter->addWidget(animeContainer);
     splitter->setHandleWidth(1);

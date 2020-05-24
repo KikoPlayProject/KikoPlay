@@ -499,9 +499,9 @@ QString AnimeWorker::downloadLabelInfo(Anime *anime)
                     parser.readNext();
                     QString tagName(parser.readContentText());
                     if(yearRe.indexIn(tagName)==-1 && !trivialTags.contains(tagName)
-                            && !anime->title.contains(tagName))
+                            && !anime->title.contains(tagName) && !tagName.contains(anime->title))
                         tagList.append(tagName);
-                    if(tagList.count()>9)
+                    if(tagList.count()>12)
                         break;
                 }
                 parser.readNext();

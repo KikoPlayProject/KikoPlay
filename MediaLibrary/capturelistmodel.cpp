@@ -5,7 +5,7 @@
 CaptureListModel::CaptureListModel(const QString &anime, QObject *parent) : QAbstractListModel(parent),
     animeName(anime),currentOffset(0),hasMoreCaptures(true)
 {
-
+    if(animeName.isEmpty()) hasMoreCaptures = false;
 }
 
 CaptureListModel::~CaptureListModel()
@@ -52,6 +52,17 @@ const CaptureItem *CaptureListModel::getCaptureItem(int row)
 {
     if(row<0 || row>=captureList.count()) return nullptr;
     return captureList.at(row);
+}
+
+void CaptureListModel::setAnimeTitle(const QString &title)
+{
+    beginResetModel();
+    qDeleteAll(captureList);
+    captureList.clear();
+    animeName = title;
+    hasMoreCaptures = !title.isEmpty();
+    currentOffset = 0;
+    endResetModel();
 }
 
 QVariant CaptureListModel::data(const QModelIndex &index, int role) const

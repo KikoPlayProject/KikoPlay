@@ -41,6 +41,7 @@ signals:
     void removeTags(const QString &animeTitle, const QString &time);
     void addTimeLabel(const QString &time, const QString &oldTime);
     void downloadDetailMessage(const QString &msg);
+    void captureUpdated(const QString &animeName);
 private:
     AnimeWorker *animeWorker;
 public:

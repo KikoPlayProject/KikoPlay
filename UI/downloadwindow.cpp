@@ -36,6 +36,7 @@
 
 DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nullptr)
 {
+    setObjectName(QStringLiteral("DownLoadWindow"));
     initActions();
 
     contentSplitter = new QSplitter(this);

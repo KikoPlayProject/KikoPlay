@@ -67,6 +67,22 @@ QToolButton#ListEditButton{
        color:#989898;
        background:none;
 }
+QToolButton#AnimeInfoPage{
+    border-style:none;
+    border-radius:0px;
+    padding:5px;
+    color:rgb(152,152,152);
+    background:transparent;
+}
+QToolButton#AnimeInfoPage:hover,
+QToolButton#AnimeInfoPage:pressed,
+QToolButton#AnimeInfoPage:checked{
+    border-style:solid;
+    border-width:0px 0px 5px 0px;
+    border-color:#1CA0E4;
+    color:rgb(0,0,0);
+    background:transparent;
+}
 QToolButton#ListEditButton:hover{
        color:#FFFFFF;
        background:#666a6e;
@@ -1040,4 +1056,7 @@ QLineEdit#PageEdit{
 #TaskFileInfoView {
     qproperty-normColor: rgb(0,0,0);
     qproperty-ignoreColor: rgb(200,200,200);
+}
+#LibraryWindow{
+    qproperty-bgMode: false;
 }

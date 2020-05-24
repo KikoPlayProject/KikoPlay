@@ -29,10 +29,11 @@ class EpisodesModel : public QAbstractItemModel
     Q_OBJECT
 public:
     explicit EpisodesModel(Anime *anime, QObject *parent = nullptr);
+    void setAnime(Anime *anime);
     bool episodeChanged;
 private:
     Anime *currentAnime;
-    const QStringList headers={tr("Title"),tr("LocalFile"),tr("Last Play")};
+    const QStringList headers={tr("Title"),tr("Last Play"),tr("LocalFile")};
     void updatePath(const QString &oldPath,const QString &newPath);
     void updateTitle(const QString &path,const QString &title);
 public slots:
@@ -42,7 +43,7 @@ public slots:
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
-    inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:currentAnime->eps.count();}
+    inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:(currentAnime?currentAnime->eps.count():0);}
     inline virtual int columnCount(const QModelIndex &parent) const{return parent.isValid()?0:3;}
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);

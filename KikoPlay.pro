@@ -39,9 +39,11 @@ SOURCES += \
     Play/Video/mpvpreview.cpp \
     UI/addpool.cpp \
     UI/addrule.cpp \
+    UI/animedetailinfopage.cpp \
     UI/autodownloadwindow.cpp \
     UI/danmuview.cpp \
     UI/inputdialog.cpp \
+    UI/widgets/backgroundwidget.cpp \
     UI/widgets/clickslider.cpp \
     UI/widgets/dialogtip.cpp \
     UI/widgets/fonticontoolbutton.cpp \
@@ -138,6 +140,7 @@ HEADERS += \
     Play/Video/mpvpreview.h \
     UI/addpool.h \
     UI/addrule.h \
+    UI/animedetailinfopage.h \
     UI/autodownloadwindow.h \
     UI/danmuview.h \
     UI/inputdialog.h \
@@ -148,6 +151,7 @@ HEADERS += \
     Play/Danmu/Layouts/rolllayout.h \
     Play/Danmu/Layouts/toplayout.h \
     Play/Danmu/danmupool.h \
+    UI/widgets/backgroundwidget.h \
     UI/widgets/clickslider.h \
     UI/widgets/dialogtip.h \
     UI/widgets/fonticontoolbutton.h \

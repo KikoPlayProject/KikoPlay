@@ -174,7 +174,7 @@ QWidget *AnimeDetailInfo::setupEpisodesPage()
     EpisodesModel *epModel=new EpisodesModel(currentAnime,this);
     episodeView->setModel(epModel);
     episodeView->setAlternatingRowColors(true);
-    episodeView->hideColumn(1);
+    episodeView->hideColumn(2);
     QPushButton *add=new QPushButton(tr("Add Episode(s)"),pageWidget);
     QObject::connect(add,&QPushButton::clicked,[this,epModel](){
         QStringList files = QFileDialog::getOpenFileNames(this,tr("Select media files"),"",
@@ -509,21 +509,7 @@ QWidget *AnimeDetailInfo::setupCapturePage()
 
 LabelPanel::LabelPanel(QWidget *parent, bool allowDelete):QWidget(parent),showDelete(allowDelete)
 {
-    contentWidget=new QWidget(this);
-    contentWidget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
-   // filterPage->setObjectName(QStringLiteral("FilterPage"));
-    QScrollArea *contentScrollArea=new QScrollArea(this);
-    contentScrollArea->setObjectName(QStringLiteral("FilterContentArea"));
-    contentScrollArea->setWidget(contentWidget);
-    contentScrollArea->setWidgetResizable(true);
-    contentScrollArea->setAlignment(Qt::AlignCenter);
-    contentScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    contentScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    QHBoxLayout *filterPageHLayout=new QHBoxLayout(this);
-    filterPageHLayout->setContentsMargins(0,0,0,0);
-    filterPageHLayout->addWidget(contentScrollArea);
-    contentWidget->setLayout(new FlowLayout(contentWidget));
-    setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
+    setLayout(new FlowLayout(this));
 }
 
 void LabelPanel::addTag(const QStringList &tags)
@@ -545,7 +531,7 @@ void LabelPanel::addTag(const QStringList &tags)
             });
             tagButton->addAction(deleteAction);
         }
-        contentWidget->layout()->addWidget(tagButton);
+        layout()->addWidget(tagButton);
         tagList.insert(tag,tagButton);
     }
 }

@@ -321,6 +321,7 @@ void AnimeLibrary::saveCapture(const QString &animeName, const QString &filePath
             }
         }
     });
+    emit captureUpdated(animeName);
 
 }
 

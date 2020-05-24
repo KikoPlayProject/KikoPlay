@@ -54,6 +54,8 @@ public:
     virtual int rowCount(const QModelIndex &parent) const;
     inline virtual int columnCount(const QModelIndex &) const {return 1;}
     virtual QVariant data(const QModelIndex &index, int role) const;
+signals:
+    void removedTag(const QString &tag);
 private:
     TagNode *root;
     QMap<QString,QSet<QString> > tagMap;

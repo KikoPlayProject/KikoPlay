@@ -12,6 +12,13 @@ EpisodesModel::EpisodesModel(Anime *anime, QObject *parent) : QAbstractItemModel
 
 }
 
+void EpisodesModel::setAnime(Anime *anime)
+{
+    beginResetModel();
+    currentAnime = anime;
+    endResetModel();
+}
+
 void EpisodesModel::updatePath(const QString &oldPath, const QString &newPath)
 {
     QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
@@ -92,11 +99,11 @@ QVariant EpisodesModel::data(const QModelIndex &index, int role) const
         {
             return ep.name;
         }
-        else if(col==1)
+        else if(col==2)
         {
             return ep.localFile;
         }
-        else if(col==2)
+        else if(col==1)
         {
             return ep.lastPlayTime;
         }
@@ -120,7 +127,7 @@ bool EpisodesModel::setData(const QModelIndex &index, const QVariant &value, int
         updateTitle(ep.localFile,ep.name);
         episodeChanged=true;
         break;
-    case 1:
+    case 2:
         if(val==ep.localFile)return false;
         updatePath(ep.localFile,value.toString());
         ep.localFile=value.toString();

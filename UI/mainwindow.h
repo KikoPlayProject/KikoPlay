@@ -10,6 +10,7 @@
 #include <QHBoxLayout>
 #include <QStackedLayout>
 class QSplitter;
+class BackgroundWidget;
 class DropableWidget : public QWidget
 {
     Q_OBJECT
@@ -33,6 +34,13 @@ public:
 
 private:
     DropableWidget *widgetTitlebar;
+    BackgroundWidget *bgWidget;
+    bool hasBackground;
+    bool hasCoverBg;
+    QImage bgImg;
+    QPixmap coverPixmap;
+    int curPage;
+
     QToolButton *buttonIcon,*buttonPage_Play,*buttonPage_Library,*buttonPage_Downlaod;
     QToolButton *minButton,*maxButton,*closeButton;
     QSplitter *playSplitter;
@@ -44,8 +52,6 @@ private:
     QStackedLayout *contentStackLayout;
     QRect originalGeo;
     bool listShowState;
-    bool hasBackground;
-    QImage background;
     void setupUI();
     void switchToPlay(const QString &fileToPlay);
     void setBackground(const QString &imagePath, bool forceRefreshQSS=false);

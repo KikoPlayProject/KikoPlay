@@ -263,6 +263,7 @@ void LabelModel::removeTag(const QModelIndex &index)
     if(node->type!=LABEL_TAG) return;
     GlobalObjects::library->deleteTag(node->tagTitle);
     tagMap.remove(node->tagTitle);
+    emit removedTag(node->tagTitle);
     beginRemoveRows(index.parent(),index.row(),index.row());
     node->parent->subNodes->removeOne(node);
     delete node;

@@ -33,7 +33,6 @@ signals:
 private:
     QMap<QString,QPushButton *> tagList;
     bool showDelete;
-    QWidget *contentWidget;
 };
 class AnimeDetailInfo : public CFramelessDialog
 {

@@ -12,6 +12,7 @@ public:
     void deleteRow(int row);
     QPixmap getFullCapture(int row);
     const CaptureItem *getCaptureItem(int row);
+    void setAnimeTitle(const QString &title);
 signals:
     void fetching(bool);
 private:

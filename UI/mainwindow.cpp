@@ -12,57 +12,14 @@
 #include "serversettting.h"
 #include "checkupdate.h"
 #include "tip.h"
+#include "widgets/backgroundwidget.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/danmupool.h"
 #include "Play/Danmu/Render/danmurender.h"
-namespace
-{
-    class BackgroundWidget : public QWidget
-    {
-    public:
-        using QWidget::QWidget;
-        void setImage(const QString &path)
-        {
-            if(path.isEmpty())
-            {
-                QImage t;
-                img.swap(t);
-                return;
-            }
-            if(img.load(path))
-            {
-                QPainter p(&img);
-                p.fillRect(img.rect(), QColor(0,0,0,90));
-                p.end();
-                bgCache = QPixmap::fromImage(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-                update();
-            }
-        }
 
-        // QWidget interface
-    protected:
-        virtual void paintEvent(QPaintEvent *e)
-        {
-            if(!img.isNull())
-            {
-                QPainter painter(this);
-                painter.setRenderHint(QPainter::Antialiasing);
-                painter.drawPixmap(0, 0, bgCache);
-                QWidget::paintEvent(e);
-            }
-        }
-        virtual void resizeEvent(QResizeEvent *)
-        {
-            bgCache = QPixmap::fromImage(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-        }
-    private:
-        QImage img;
-        QPixmap bgCache;
-    };
-}
 MainWindow::MainWindow(QWidget *parent)
-    : CFramelessWindow(parent),listWindowWidth(0),hasBackground(false)
+    : CFramelessWindow(parent),hasBackground(false),hasCoverBg(false),curPage(0),listWindowWidth(0)
 {
     setupUI();
     setWindowIcon(QIcon(":/res/kikoplay.ico"));
@@ -119,13 +76,19 @@ MainWindow::~MainWindow()
 void MainWindow::setupUI()
 {
 
-    QWidget *centralWidget = new BackgroundWidget(this);
+    QWidget *centralWidget = new QWidget(this);
+    bgWidget = new BackgroundWidget(centralWidget);
+    QWidget *centralContainer = new QWidget(centralWidget);
+    QStackedLayout *centralSLayout = new QStackedLayout(centralWidget);
+    centralSLayout->setStackingMode(QStackedLayout::StackAll);
+    centralSLayout->addWidget(centralContainer);
+    centralSLayout->addWidget(bgWidget);
 
-    QVBoxLayout *verticalLayout = new QVBoxLayout(centralWidget);
+    QVBoxLayout *verticalLayout = new QVBoxLayout(centralContainer);
     verticalLayout->setContentsMargins(0, 0, 0, 0);
     verticalLayout->setSpacing(0);
 //------title bar
-    widgetTitlebar = new DropableWidget(centralWidget);
+    widgetTitlebar = new DropableWidget(centralContainer);
     widgetTitlebar->setAcceptDrops(true);
     widgetTitlebar->setObjectName(QStringLiteral("widgetTitlebar"));
 #ifdef Q_OS_WIN
@@ -225,6 +188,17 @@ void MainWindow::setupUI()
         if(checked)
         {
             contentStackLayout->setCurrentIndex(id);
+            if(id == 1 && hasCoverBg)
+            {
+                if(!coverPixmap.isNull()) bgWidget->setBackground(coverPixmap);
+                bgWidget->setBlurAnimation(20., 60.);
+            }
+            else if(curPage == 1 && hasCoverBg)
+            {
+                bgWidget->setBackground(bgImg);
+                bgWidget->setBlurAnimation(60., 0.);
+            }
+            curPage = id;
         }
     });
 
@@ -307,6 +281,7 @@ void MainWindow::setupUI()
 
     verticalLayout->addLayout(contentStackLayout);
 
+
     setCentralWidget(centralWidget);
     setTitleBar(widgetTitlebar);
 	setFocusPolicy(Qt::StrongFocus);
@@ -342,24 +317,31 @@ void MainWindow::switchToPlay(const QString &fileToPlay)
 
 void MainWindow::setBackground(const QString &imagePath, bool forceRefreshQSS)
 {
-    BackgroundWidget *centralWidget = static_cast<BackgroundWidget*>(this->centralWidget());
     bool refreshQSS = false;
     QString qssFile;
     if(!imagePath.isEmpty() && QFile::exists(imagePath))
     {
-        centralWidget->setImage(imagePath);
+        GlobalObjects::appSetting->setValue("MainWindow/Background", imagePath);
+        bgImg = QImage(imagePath);
+        if(!hasCoverBg || curPage != 1)
+        {
+            bgWidget->setBackground(bgImg);
+        }
         refreshQSS = !hasBackground;
         qssFile = ":/res/style_bg.qss";
         hasBackground = true;
-        GlobalObjects::appSetting->setValue("MainWindow/Background", imagePath);
     }
     else
     {
-        centralWidget->setImage("");
+        GlobalObjects::appSetting->setValue("MainWindow/Background", "");
+        bgImg = QImage();
+        if(!hasCoverBg || curPage != 1)
+        {
+            bgWidget->setBackground(bgImg);
+        }
         refreshQSS = hasBackground;
         hasBackground = false;
         qssFile = ":/res/style.qss";
-        GlobalObjects::appSetting->setValue("MainWindow/Background", "");
     }
     if(refreshQSS || forceRefreshQSS)
     {
@@ -500,6 +482,21 @@ QWidget *MainWindow::setupLibraryPage()
 {
     library=new LibraryWindow(this);
     QObject::connect(library,&LibraryWindow::playFile,this,&MainWindow::switchToPlay);
+    QObject::connect(library,&LibraryWindow::switchBackground,this,[this](const QPixmap &pixmap, bool setPixmap){
+        if(!setPixmap)
+        {
+            hasCoverBg = false;
+            bgWidget->setBackground(bgImg);
+            bgWidget->setBlurAnimation(60., 0.);
+        }
+        else
+        {
+            hasCoverBg = true;
+            coverPixmap = pixmap;
+            if(!pixmap.isNull()) bgWidget->setBackground(pixmap);
+            bgWidget->setBlurAnimation(20., 60.);
+        }
+    });
     return library;
 }
 
