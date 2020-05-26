@@ -37,6 +37,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
 
     ruleView = new QTreeView(this);
     ruleView->setObjectName(QStringLiteral("RuleListView"));
+    ruleView->setProperty("cScrollStyle", true);
     ruleView->setRootIsDecorated(false);
     ruleView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ruleView->setAlternatingRowColors(true);
@@ -52,6 +53,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
 
     logView = new QTreeView(this);
     logView->setRootIsDecorated(false);
+    logView->setProperty("cScrollStyle", true);
     logView->setSelectionMode(QAbstractItemView::SingleSelection);
     logView->setAlternatingRowColors(true);
     logView->setFont(QFont("Microsoft Yahei UI",10));
@@ -66,6 +68,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
 
     urlView = new QTreeView(this);
     urlView->setRootIsDecorated(false);
+    urlView->setProperty("cScrollStyle", true);
     urlView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     urlView->setAlternatingRowColors(true);
     urlView->setFont(QFont("Microsoft Yahei UI",10));

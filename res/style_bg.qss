@@ -844,72 +844,57 @@ QPushButton:pressed{
     border-color:rgb(150,150,150);
     background-color:rgba(13,189,244,200);
 }
-/* ScrollBar Setting */
-#LibraryWindow QScrollBar:horizontal,
-#DownLoadWindow QScrollBar:horizontal{
+/* ScrollBar Setting */ 
+QWidget[cScrollStyle="true"] QScrollBar:horizontal{
     background: transparent;
     height: 10px;
 }
-#LibraryWindow QScrollBar::handle:horizontal,
-#DownLoadWindow QScrollBar::handle:horizontal{
+QWidget[cScrollStyle="true"] QScrollBar::handle:horizontal{
     background: rgba(255,255,255,180);
     min-height: 70px;
     border-radius: 1px;
 }
-#LibraryWindow QScrollBar::handle:horizontal:hover,
-#DownLoadWindow QScrollBar::handle:horizontal:hover{
+QWidget[cScrollStyle="true"] QScrollBar::handle:horizontal:hover{
     background: rgba(255,255,255,255);
 }
-#LibraryWindow QScrollBar::handle:horizontal:pressed,
-#DownLoadWindow QScrollBar::handle:horizontal:pressed{
+QWidget[cScrollStyle="true"] QScrollBar::handle:horizontal:pressed{
     background: rgba(255,255,255,200);
 }
-#LibraryWindow QScrollBar::add-line:horizontal,
-#DownLoadWindow QScrollBar::add-line:horizontal{
+QWidget[cScrollStyle="true"] QScrollBar::add-line:horizontal{
     background: none;
 }
-#LibraryWindow QScrollBar::sub-line:horizontal,
-#DownLoadWindow QScrollBar::sub-line:horizontal{
+QWidget[cScrollStyle="true"] QScrollBar::sub-line:horizontal{
     background: none;
 }
-#LibraryWindow QScrollBar::add-page:horizontal,
-#LibraryWindow QScrollBar::sub-page:horizontal,
-#DownLoadWindow QScrollBar::add-page:horizontal,
-#DownLoadWindow QScrollBar::sub-page:horizontal{
+QWidget[cScrollStyle="true"] QScrollBar::add-page:horizontal,
+QWidget[cScrollStyle="true"] QScrollBar::sub-page:horizontal{
     background: none;
 }
 
-#LibraryWindow QScrollBar:vertical,
-#DownLoadWindow QScrollBar:vertical{
+
+QWidget[cScrollStyle="true"] QScrollBar:vertical{
     background: transparent;
     width: 10px;
 }
-#LibraryWindow QScrollBar::handle:vertical,
-#DownLoadWindow QScrollBar::handle:vertical{
+QWidget[cScrollStyle="true"] QScrollBar::handle:vertical{
     background: rgba(255,255,255,180);
     min-height: 70px;
     border-radius: 1px;
 }
-#LibraryWindow QScrollBar::handle:vertical:hover,
-#DownLoadWindow QScrollBar::handle:vertical:hover {
+QWidget[cScrollStyle="true"] QScrollBar::handle:vertical:hover {
     background: rgba(255,255,255,255);
 }
-#LibraryWindow QScrollBar::handle:vertical:pressed,
-#DownLoadWindow QScrollBar::handle:vertical:pressed {
+QWidget[cScrollStyle="true"] QScrollBar::handle:vertical:pressed {
     background: rgba(255,255,255,200);
 }
-#LibraryWindow QScrollBar::add-line:vertical,
-#DownLoadWindow QScrollBar::add-line:vertical{
+QWidget[cScrollStyle="true"] QScrollBar::add-line:vertical{
     background: none;
 }
-#LibraryWindow QScrollBar::sub-line:vertical,
-#DownLoadWindow QScrollBar::sub-line:vertical{
+QWidget[cScrollStyle="true"] QScrollBar::sub-line:vertical{
     background: none;
 }
-#LibraryWindow QScrollBar::add-page:vertical,
-#LibraryWindow QScrollBar::sub-page:vertical,
-#DownLoadWindow QScrollBar::add-page:vertical,
-#DownLoadWindow QScrollBar::sub-page:vertical{
+QWidget[cScrollStyle="true"] QScrollBar::add-page:vertical,
+QWidget[cScrollStyle="true"] QScrollBar::sub-page:vertical{
     background: none;
 }
 /* --ScrollBar Setting-- */

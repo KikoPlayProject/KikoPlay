@@ -32,6 +32,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     searchProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
     scriptCombo=new QComboBox(this);
+    scriptCombo->setProperty("cScrollStyle", true);
     QObject::connect(GlobalObjects::scriptManager,&ScriptManager::refreshDone,this,[this](){
         scriptCombo->clear();
         for(auto &item:GlobalObjects::scriptManager->getScriptList())
@@ -107,6 +108,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
 
     searchListView=new QTreeView(this);
     searchListView->setObjectName(QStringLiteral("SearchListView"));
+    searchListView->setProperty("cScrollStyle", true);
     searchListView->setModel(searchProxyModel);
     searchListView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
     searchListView->setRootIsDecorated(false);

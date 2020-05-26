@@ -150,6 +150,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 
     downloadView=new QTreeView(downloadContainer);
     downloadView->setObjectName(QStringLiteral("DownloadView"));
+    downloadView->setProperty("cScrollStyle", true);
     downloadView->setFont(QFont("Microsoft Yahei UI",10));
     downloadView->setRootIsDecorated(false);
     downloadView->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -242,6 +243,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 
 
     QWidget *detailInfoContent=new QWidget(downloadContainer);
+    detailInfoContent->setProperty("cScrollStyle", true);
     detailInfoContent->setContentsMargins(0,0,0,0);
     QStackedLayout *detailInfoSLayout=new QStackedLayout(detailInfoContent);
     detailInfoSLayout->addWidget(setupGeneralInfoPage(downloadContainer));
@@ -273,6 +275,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     downContainerGLayout->setRowStretch(1,1);
 
     BgmListWindow *bgmListWindow=new BgmListWindow(containerWidget);
+    bgmListWindow->setProperty("cScrollStyle", true);
     ResSearchWindow *resSearchWindow=new ResSearchWindow(containerWidget);
     QObject::connect(bgmListWindow,&BgmListWindow::searchBgm,this,[this,resSearchWindow](const QString &item){
         taskTypeButtonGroup->button(4)->setChecked(true);

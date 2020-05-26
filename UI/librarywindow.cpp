@@ -72,9 +72,11 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     QWidget *animeContainer = new QWidget(splitter);
 
     detailPage = new AnimeDetailInfoPage(animeContainer);
+    detailPage->setProperty("cScrollStyle", true);
 
     animeListView=new CListView(animeContainer);
     animeListView->setObjectName(QStringLiteral("AnimesContent"));
+    animeListView->setProperty("cScrollStyle", true);
     animeListView->setViewMode(QListView::IconMode);
     animeListView->setUniformItemSizes(true);
     animeListView->setResizeMode(QListView::Adjust);
@@ -135,7 +137,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
 
     labelView=new LabelTreeView(splitter);
     labelView->setObjectName(QStringLiteral("LabelView"));
-    //labelView->resize(width()/4,animeListView->height());
+    labelView->setProperty("cScrollStyle", true);
     labelView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
     labelView->header()->hide();
     labelView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
