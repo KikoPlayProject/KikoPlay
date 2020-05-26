@@ -167,6 +167,7 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
 {
     currentAnime = anime;
     epModel->setAnime(nullptr);
+    epNames.clear();
     characterList->clear();
     tagPanel->clear();
     captureModel->setAnimeTitle("");
