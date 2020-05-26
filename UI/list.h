@@ -11,7 +11,7 @@
 #include <QLineEdit>
 #include <QRegExp>
 #include <QStyledItemDelegate>
-class DanmuComment;
+struct DanmuComment;
 class FilterBox : public QLineEdit
 {
     Q_OBJECT

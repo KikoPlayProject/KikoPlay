@@ -949,7 +949,7 @@ QPushButton:pressed{
 #DownloadToolButton{
     border-style:none;
     border-radius:0px;
-    padding:5px;
+    /*padding:5px;*/
     background:transparent;
     qproperty-normColor: rgb(220,220,220);
     qproperty-hoverColor: rgb(69,153,247);
@@ -960,7 +960,6 @@ QPushButton:pressed{
     border-style:solid;
     border-width:1px;
     border-color:#b9b9b9;
-    color:#679bcc;
     background:#c5c7c9;
 }
 #DownloadToolButton:pressed{
@@ -1068,13 +1067,13 @@ QTreeView#LabelView::branch:closed:has-children {
 }
 #BgmListView {
     border: 1px solid #1abc9c;
-    background-color: rgba(255,255,255,40);
+    background-color: rgba(255,255,255,60);
     selection-background-color: rgba(255, 255, 255,0);
     selection-color: rgb(0, 160, 230);
     show-decoration-selected: 1;
     outline:0px;
-    qproperty-normColor: rgb(220,220,220);
-    qproperty-hoverColor: rgb(64, 179, 253);
+    qproperty-normColor: rgb(240,240,240);
+    qproperty-hoverColor: rgb(250, 222, 12);
 }
 QTreeView#BgmListView::item {
     border: none;

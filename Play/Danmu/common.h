@@ -2,9 +2,8 @@
 #define DANMUCOMMENT_H
 #include <QtCore>
 #include <QtGui>
-class DanmuComment
+struct DanmuComment
 {
-public:
     DanmuComment():time(0),originTime(0),blockBy(-1),mergedList(nullptr),m_parent(nullptr){}
     ~DanmuComment(){if(mergedList)delete mergedList;}
 

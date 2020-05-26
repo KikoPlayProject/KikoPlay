@@ -1,5 +1,5 @@
 #include "autodownloadwindow.h"
-#include "widgets/fonticontoolbutton.h"
+#include "widgets/fonticonbutton.h"
 #include "globalobjects.h"
 #include "Download/autodownloadmanager.h"
 #include <QAction>
@@ -12,12 +12,13 @@
 #include <QHeaderView>
 #include <QApplication>
 #include <QClipboard>
+#include <QToolButton>
 #include "addrule.h"
 AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
 {
-    FontIconToolButton *addRuleBtn=new FontIconToolButton(QChar(0xe600),tr("Add Rule"),12,10,2*logicalDpiX()/96,this);
+    FontIconButton *addRuleBtn=new FontIconButton(QChar(0xe600),tr("Add Rule"),12,10,2*logicalDpiX()/96,this);
     addRuleBtn->setObjectName(QStringLiteral("DownloadToolButton"));
-    QObject::connect(addRuleBtn, &FontIconToolButton::clicked, this, [this](){
+    QObject::connect(addRuleBtn, &FontIconButton::clicked, this, [this](){
         AddRule addRule(nullptr, this);
         QRect geo(0,0,300,300);
         geo.moveCenter(this->geometry().center());

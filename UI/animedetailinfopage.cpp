@@ -25,6 +25,7 @@
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Common/flowlayout.h"
+#include "Common/network.h"
 #include "captureview.h"
 #include "globalobjects.h"
 
@@ -218,6 +219,7 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
             tags<<iter.key();
     }
     tagPanel->addTag(tags);
+    tagContainerSLayout->setCurrentIndex(0);
     captureModel->setAnimeTitle(currentAnime->title);
 }
 
@@ -308,14 +310,44 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
         QProcess::startDetached(command);
     });
 
+    QAction *getEpNames=new QAction(tr("Get Epsoide Names"),this);
+    QObject::connect(getEpNames,&QAction::triggered,[this,getEpNames](){
+        if(currentAnime->bangumiID==-1)return;
+        QString epUrl(QString("https://api.bgm.tv/subject/%1/ep").arg(currentAnime->bangumiID));
+        try
+        {
+            getEpNames->setEnabled(false);
+            this->showBusyState(true);
+            QString str(Network::httpGet(epUrl,QUrlQuery(),QStringList()<<"Accept"<<"application/json"));
+            QJsonDocument document(Network::toJson(str));
+            QJsonObject obj = document.object();
+            QJsonArray epArray=obj.value("eps").toArray();
+            epNames.clear();
+            for(auto iter=epArray.begin();iter!=epArray.end();++iter)
+            {
+                QJsonObject epobj=(*iter).toObject();
+                epNames.append(tr("No.%0 %1(%2)").arg(epobj.value("sort").toInt()).arg(epobj.value("name").toString().replace("&amp;","&")).arg(epobj.value("name_cn").toString().replace("&amp;","&")));
+            }
+            this->dialogTip->showMessage(tr("Getting Down. Double-Click Title to See Epsoide Names"));
+        }
+        catch(Network::NetworkError &error)
+        {
+            this->dialogTip->showMessage(error.errorInfo,1);
+        }
+        getEpNames->setEnabled(true);
+        this->showBusyState(false);
+    });
+
+
     episodeView->setContextMenuPolicy(Qt::ActionsContextMenu);
     episodeView->addAction(playAction);
     episodeView->addAction(addAction);
 #ifdef Q_OS_WIN
     episodeView->addAction(explorerViewAction);
 #endif
-    episodeView->addAction(deleteAction);
     episodeView->addAction(addEpAction);
+    episodeView->addAction(deleteAction);
+    episodeView->addAction(getEpNames);
 
     QHeaderView *epHeader = episodeView->header();
     epHeader->setFont(font());
@@ -337,7 +369,11 @@ QWidget *AnimeDetailInfoPage::setupCharacterPage()
 
 QWidget *AnimeDetailInfoPage::setupTagPage()
 {
-    tagPanel = new TagPanel(this,true,false,true);
+    QWidget *container = new QWidget(this);
+    tagContainerSLayout = new QStackedLayout(container);
+    tagContainerSLayout->setContentsMargins(0,0,0,0);
+
+    tagPanel = new TagPanel(container,true,false,true);
     QObject::connect(GlobalObjects::library->labelModel, &LabelModel::removedTag, tagPanel, &TagPanel::removeTag);
     QObject::connect(tagPanel, &TagPanel::deleteTag, [this](const QString &tag){
         GlobalObjects::library->deleteTag(tag,currentAnime->title);
@@ -347,7 +383,57 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
         GlobalObjects::library->addTags(currentAnime,tags);
         tagPanel->addTag(tags);
     });
-    return tagPanel;
+    TagPanel *bgmTagPanel = new TagPanel(container,false,true);
+    tagContainerSLayout->addWidget(tagPanel);
+    tagContainerSLayout->addWidget(bgmTagPanel);
+
+    QAction *bgmTagAction=new QAction(tr("Tags on Bangumi"), this);
+    tagPanel->addAction(bgmTagAction);
+    QObject::connect(bgmTagAction,&QAction::triggered,this,[this, bgmTagAction, bgmTagPanel](){
+        if(currentAnime->bangumiID == -1) return;
+        showBusyState(true);
+        QStringList tags;
+        QString errorInfo;
+        bgmTagAction->setEnabled(false);
+        GlobalObjects::library->downloadTags(currentAnime,tags,&errorInfo);
+        if(!errorInfo.isEmpty())
+        {
+            this->dialogTip->showMessage(errorInfo,1);
+        }
+        else
+        {
+            this->dialogTip->showMessage(tr("Add the Selected Tags from the Right-Click Menu"));
+            bgmTagPanel->clear();
+            bgmTagPanel->addTag(tags);
+            tagContainerSLayout->setCurrentIndex(1);
+        }
+        bgmTagAction->setEnabled(true);
+        showBusyState(false);
+    });
+
+    QAction *bgmTagOKAction=new QAction(tr("Add Selected Tags"), this);
+    QObject::connect(bgmTagOKAction,&QAction::triggered,this,[this,bgmTagPanel](){
+        QStringList tags(bgmTagPanel->getSelectedTags());
+        if(tags.count()==0) return;
+        GlobalObjects::library->addTags(currentAnime,tags);
+        tagPanel->clear();
+        auto &tagMap=GlobalObjects::library->labelModel->getTags();
+        tags.clear();
+        for(auto iter=tagMap.begin();iter!=tagMap.end();++iter)
+        {
+            if(iter.value().contains(currentAnime->title))
+                tags.append(iter.key());
+        }
+        tagPanel->addTag(tags);
+        tagContainerSLayout->setCurrentIndex(0);
+    });
+    QAction *bgmTagCancelAction=new QAction(tr("Cancel"), this);
+    QObject::connect(bgmTagCancelAction,&QAction::triggered,this,[this](){
+       tagContainerSLayout->setCurrentIndex(0);
+    });
+    bgmTagPanel->addAction(bgmTagOKAction);
+    bgmTagPanel->addAction(bgmTagCancelAction);
+    return container;
 }
 
 QWidget *AnimeDetailInfoPage::setupCapturePage()
@@ -492,34 +578,47 @@ QSize CharacterWidget::sizeHint() const
     return layout()->sizeHint();
 }
 
-TagPanel::TagPanel(QWidget *parent, bool allowDelete, bool checkAble, bool allowAdd):QWidget(parent),showDelete(allowDelete), allowCheck(checkAble), adding(false)
+TagPanel::TagPanel(QWidget *parent, bool allowDelete, bool checkAble, bool allowAdd):QWidget(parent),
+    currentTagButton(nullptr), allowCheck(checkAble), adding(false)
 {
     setLayout(new FlowLayout(this));
-    if(allowAdd)
-    {
-        tagEdit = new QLineEdit(this);
-        tagEdit->setFont(QFont("Microsoft Yahei UI",14));
-        tagEdit->hide();
-        setContextMenuPolicy(Qt::ActionsContextMenu);
-        QAction *addTag=new QAction(tr("Add"),this);
-        QObject::connect(addTag,&QAction::triggered,[this](){
-            if(adding) return;
-            adding = true;
-            tagEdit->clear();
-            layout()->addWidget(tagEdit);
-            tagEdit->show();
-            tagEdit->setFocus();
-        });
-        QObject::connect(tagEdit, &QLineEdit::editingFinished, this, [this](){
-           adding = false;
-           layout()->removeWidget(tagEdit);
-           QString tag=tagEdit->text().trimmed();
-           tagEdit->hide();
-           if(tagList.contains(tag) || tag.isEmpty()) return;
-           emit tagAdded(tag);
-        });
-        addAction(addTag);
-    }
+
+    tagEdit = new QLineEdit(this);
+    tagEdit->setFont(QFont("Microsoft Yahei UI",14));
+    tagEdit->hide();
+    setContextMenuPolicy(Qt::ActionsContextMenu);
+    QAction *actAddTag=new QAction(tr("Add"),this);
+    QObject::connect(actAddTag,&QAction::triggered,[this](){
+        if(adding) return;
+        adding = true;
+        tagEdit->clear();
+        layout()->addWidget(tagEdit);
+        tagEdit->show();
+        tagEdit->setFocus();
+    });
+    QObject::connect(tagEdit, &QLineEdit::editingFinished, this, [this](){
+       adding = false;
+       layout()->removeWidget(tagEdit);
+       QString tag=tagEdit->text().trimmed();
+       tagEdit->hide();
+       if(tagList.contains(tag) || tag.isEmpty()) return;
+       emit tagAdded(tag);
+    });
+    addAction(actAddTag);
+    actAddTag->setEnabled(allowAdd);
+
+    tagContextMenu = new QMenu(this);
+    QAction *actRemoveTag=new QAction(tr("Delete"),this);
+    tagContextMenu->addAction(actRemoveTag);
+    QObject::connect(actRemoveTag,&QAction::triggered,[this](){
+        if(!currentTagButton) return;
+        emit deleteTag(currentTagButton->text());
+        tagList.remove(currentTagButton->text());
+        currentTagButton->deleteLater();
+        currentTagButton = nullptr;
+    });
+    actRemoveTag->setEnabled(allowDelete);
+
 }
 
 void TagPanel::addTag(const QStringList &tags)
@@ -531,17 +630,11 @@ void TagPanel::addTag(const QStringList &tags)
         tagButton->setObjectName(QStringLiteral("TagButton"));
         tagButton->setCheckable(allowCheck);
         tagButton->setFont(QFont("Microsoft Yahei UI",14));
-        if(showDelete)
-        {
-            tagButton->setContextMenuPolicy(Qt::ActionsContextMenu);
-            QAction *deleteAction=new QAction(tr("Delete"),tagButton);
-            QObject::connect(deleteAction,&QAction::triggered,[this,tag,tagButton](){
-                emit deleteTag(tag);
-                tagButton->deleteLater();
-                tagList.remove(tag);
-            });
-            tagButton->addAction(deleteAction);
-        }
+        tagButton->setContextMenuPolicy(Qt::CustomContextMenu);
+        QObject::connect(tagButton, &QPushButton::customContextMenuRequested,this,[this, tagButton](const QPoint &pos){
+            currentTagButton = tagButton;
+            tagContextMenu->exec(tagButton->mapToGlobal(pos));
+        });
         layout()->addWidget(tagButton);
         tagList.insert(tag,tagButton);
     }
@@ -556,6 +649,7 @@ void TagPanel::removeTag(const QString &tag)
         tagList.remove(tag);
     }
 }
+
 
 void TagPanel::clear()
 {

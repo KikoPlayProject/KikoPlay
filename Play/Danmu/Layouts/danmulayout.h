@@ -3,7 +3,7 @@
 #include <QtCore>
 #include <QtGui>
 class DanmuRender;
-class DanmuComment;
+struct DanmuComment;
 class DanmuDrawInfo;
 class DanmuLayout
 {

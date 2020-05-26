@@ -13,6 +13,9 @@ class QListWidget;
 class QPushButton;
 class QLineEdit;
 class CaptureListModel;
+class QAction;
+class QMenu;
+class QStackedLayout;
 class CharacterWidget : public QWidget
 {
      Q_OBJECT
@@ -36,6 +39,8 @@ public:
     TagPanel(QWidget *parent = nullptr, bool allowDelete=false, bool checkAble=false, bool allowAdd=false);
     void addTag(const QStringList &tags);
     void removeTag(const QString &tag);
+
+
     void clear();
     QStringList getSelectedTags();
 signals:
@@ -44,7 +49,9 @@ signals:
     void tagAdded(const QString &tag);
 private:
     QMap<QString,QPushButton *> tagList;
-    bool showDelete, allowCheck, adding;
+    QMenu *tagContextMenu;
+    QPushButton *currentTagButton;
+    bool allowCheck, adding;
     QLineEdit *tagEdit;
 };
 class AnimeDetailInfoPage : public QWidget
@@ -64,6 +71,7 @@ private:
     EpisodesModel *epModel;
     QListWidget *characterList;
     TagPanel *tagPanel;
+    QStackedLayout *tagContainerSLayout;
     CaptureListModel *captureModel;
 
     void showBusyState(bool on);

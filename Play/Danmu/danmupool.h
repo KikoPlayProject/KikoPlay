@@ -37,7 +37,7 @@ private:
     Pool *curPool,*emptyPool;
     QList<QSharedPointer<DanmuComment> > danmuPool;
     QList<QSharedPointer<DanmuComment> > finalPool;
-    QLinkedList<PrepareList *> prepareListPool;
+    QList<PrepareList *> prepareListPool;
     StatisInfo statisInfo;
     EventAnalyzer *analyzer;
     int currentPosition;

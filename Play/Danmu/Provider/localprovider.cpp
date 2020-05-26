@@ -38,6 +38,7 @@ void LocalProvider::LoadXmlDanmuFile(QString filePath, QList<DanmuComment *> &li
                     danmu->fontSizeLevel=DanmuComment::Large;
                     break;
                 default:
+                    danmu->fontSizeLevel=DanmuComment::Normal;
                     break;
                 }
                 if(danmu->type!=DanmuComment::UNKNOW)list.append(danmu);

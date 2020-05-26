@@ -275,7 +275,7 @@ void AnimeLibrary::saveCapture(const QString &animeName, const QString &filePath
         bufferImage.open(QIODevice::WriteOnly);
         image.save(&bufferImage, "JPG");
 
-        QImage &&thumb=image.scaled(200,112,Qt::AspectRatioMode::KeepAspectRatioByExpanding);
+        QImage &&thumb=image.scaled(200,112,Qt::AspectRatioMode::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
         QByteArray thumbBytes;
         QBuffer bufferThumb(&thumbBytes);
         bufferThumb.open(QIODevice::WriteOnly);

@@ -603,23 +603,25 @@ void ListWindow::initActions()
             restorePlayState = true;
             GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
         }
-        QString file = QFileDialog::getOpenFileName(this,tr("Select Xml File"),"","Xml File(*.xml) ");
-        if(!file.isNull())
+        QStringList files = QFileDialog::getOpenFileNames(this,tr("Select Xml File"),"","Xml File(*.xml) ");
+        if(!files.isEmpty())
         {
-            QList<DanmuComment *> tmplist;
-            LocalProvider::LoadXmlDanmuFile(file,tmplist);
-            DanmuSourceInfo sourceInfo;
-            sourceInfo.delay=0;
-            sourceInfo.name=file.mid(file.lastIndexOf('/')+1);
-            sourceInfo.show=true;
-            sourceInfo.url=file;
-            sourceInfo.count=tmplist.count();
-            if(GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true)==-1)
+            for(auto &file: files)
             {
-                qDeleteAll(tmplist);
-                showMessage(tr("Add Failed: Pool is busy"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+                QList<DanmuComment *> tmplist;
+                LocalProvider::LoadXmlDanmuFile(file,tmplist);
+                DanmuSourceInfo sourceInfo;
+                sourceInfo.delay=0;
+                sourceInfo.name=file.mid(file.lastIndexOf('/')+1);
+                sourceInfo.show=true;
+                sourceInfo.url=file;
+                sourceInfo.count=tmplist.count();
+                if(GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true)==-1)
+                {
+                    qDeleteAll(tmplist);
+                    showMessage(tr("Add Failed: Pool is busy"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+                }
             }
-            //GlobalObjects::danmuPool->addDanmu(sourceInfo,tmplist);
         }
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });

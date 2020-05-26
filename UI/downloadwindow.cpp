@@ -32,7 +32,7 @@
 #include "bgmlistwindow.h"
 #include "ressearchwindow.h"
 #include "autodownloadwindow.h"
-#include "widgets/fonticontoolbutton.h"
+#include "widgets/fonticonbutton.h"
 
 DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nullptr)
 {
@@ -47,9 +47,9 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 
     QWidget *downloadContainer=new QWidget(this);
 
-    FontIconToolButton *addUriTask=new FontIconToolButton(QChar(0xe604), tr("Add URI"), 12, 10, 2*logicalDpiX()/96, downloadContainer);
+    FontIconButton *addUriTask=new FontIconButton(QChar(0xe604), tr("Add URI"), 12, 10, 2*logicalDpiX()/96, downloadContainer);
     addUriTask->setObjectName(QStringLiteral("DownloadToolButton"));
-    QObject::connect(addUriTask,&FontIconToolButton::clicked,[this](){
+    QObject::connect(addUriTask,&FontIconButton::clicked,[this](){
         AddUriTask addUriTaskDialog(this);
         if(QDialog::Accepted==addUriTaskDialog.exec())
         {
@@ -62,9 +62,9 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         }
     });
 
-    FontIconToolButton *addTorrentTask=new FontIconToolButton(QChar(0xe605),tr("Add Torrent"),12, 10, 2*logicalDpiX()/96,downloadContainer);
+    FontIconButton *addTorrentTask=new FontIconButton(QChar(0xe605),tr("Add Torrent"),12, 10, 2*logicalDpiX()/96,downloadContainer);
     addTorrentTask->setObjectName(QStringLiteral("DownloadToolButton"));
-    QObject::connect(addTorrentTask,&FontIconToolButton::clicked,[this](){
+    QObject::connect(addTorrentTask,&FontIconButton::clicked,[this](){
         QString file = QFileDialog::getOpenFileName(this,tr("Select Torrent File"),"","Torrent(*.torrent) ");
         if(!file.isEmpty())
         {
@@ -89,9 +89,9 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         }
     });
 
-    FontIconToolButton *settings=new FontIconToolButton(QChar(0xe615),tr("Settings"), 12, 10, 2*logicalDpiX()/96, downloadContainer);
+    FontIconButton *settings=new FontIconButton(QChar(0xe615),tr("Settings"), 12, 10, 2*logicalDpiX()/96, downloadContainer);
     settings->setObjectName(QStringLiteral("DownloadToolButton"));
-    QObject::connect(settings,&FontIconToolButton::clicked,[this](){
+    QObject::connect(settings,&FontIconButton::clicked,[this](){
         DownloadSetting settingDialog(this);
         QRect geo(0,0,400,400);
         geo.moveCenter(this->geometry().center());
@@ -434,34 +434,34 @@ QWidget *DownloadWindow::setupLeftPanel(QWidget *parent)
 
     const int iconSpace = 8*logicalDpiX()/96;
     const QSizePolicy btnSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    FontIconToolButton *downloadingTask=new FontIconToolButton(QChar(0xe653),tr("Downloading"),12,12,iconSpace,leftPanel);
+    FontIconButton *downloadingTask=new FontIconButton(QChar(0xe653),tr("Downloading"),12,12,iconSpace,leftPanel);
     downloadingTask->setObjectName(QStringLiteral("TaskTypeToolButton"));
     downloadingTask->setSizePolicy(btnSizePolicy);
     downloadingTask->setCheckable(true);
     downloadingTask->setAutoHideText(true);
     downloadingTask->setChecked(true);
 
-    FontIconToolButton *completedTask=new FontIconToolButton(QChar(0xe69a),tr("Completed"), 12,12,iconSpace,leftPanel);
+    FontIconButton *completedTask=new FontIconButton(QChar(0xe69a),tr("Completed"), 12,12,iconSpace,leftPanel);
     completedTask->setObjectName(QStringLiteral("TaskTypeToolButton"));
     completedTask->setSizePolicy(btnSizePolicy);
     completedTask->setCheckable(true);
 
-    FontIconToolButton *allTask=new FontIconToolButton(QChar(0xe603),tr("All"), 12,12,iconSpace,leftPanel);
+    FontIconButton *allTask=new FontIconButton(QChar(0xe603),tr("All"), 12,12,iconSpace,leftPanel);
     allTask->setObjectName(QStringLiteral("TaskTypeToolButton"));
     allTask->setSizePolicy(btnSizePolicy);
     allTask->setCheckable(true);
 
-    FontIconToolButton *bgmList=new FontIconToolButton(QChar(0xe63a),tr("BgmList"), 12,12,iconSpace,leftPanel);
+    FontIconButton *bgmList=new FontIconButton(QChar(0xe63a),tr("BgmList"), 12,12,iconSpace,leftPanel);
     bgmList->setObjectName(QStringLiteral("TaskTypeToolButton"));
     bgmList->setSizePolicy(btnSizePolicy);
     bgmList->setCheckable(true);
 
-    FontIconToolButton *resSearch=new FontIconToolButton(QChar(0xe609),tr("ResSearch"), 12,12,iconSpace,leftPanel);
+    FontIconButton *resSearch=new FontIconButton(QChar(0xe609),tr("ResSearch"), 12,12,iconSpace,leftPanel);
     resSearch->setObjectName(QStringLiteral("TaskTypeToolButton"));
     resSearch->setSizePolicy(btnSizePolicy);
     resSearch->setCheckable(true);
 
-    FontIconToolButton *autoDownload=new FontIconToolButton(QChar(0xe610),tr("AutoDownload"),12,12,iconSpace,leftPanel);
+    FontIconButton *autoDownload=new FontIconButton(QChar(0xe610),tr("AutoDownload"),12,12,iconSpace,leftPanel);
     autoDownload->setObjectName(QStringLiteral("TaskTypeToolButton"));
     autoDownload->setSizePolicy(btnSizePolicy);
     autoDownload->setCheckable(true);
@@ -506,7 +506,7 @@ QWidget *DownloadWindow::setupLeftPanel(QWidget *parent)
     upSpeedLabel=new QLabel(leftPanel);
     upSpeedLabel->setObjectName(QStringLiteral("UpSpeedLabel"));
 
-    QObject::connect(downloadingTask, &FontIconToolButton::iconHidden, this, [this, completedTask,
+    QObject::connect(downloadingTask, &FontIconButton::textHidden, this, [this, completedTask,
                      allTask, bgmList, resSearch,autoDownload,leftPanel](bool hide){
         if(hide)
         {

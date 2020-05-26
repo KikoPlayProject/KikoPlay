@@ -141,9 +141,14 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
     addAction(viewDanmu);
 
     QFont normalFont("Microsoft YaHei",16);
-    QLabel *name=new QLabel(QString("%1(%2)").arg(sourceInfo->name).arg(sourceInfo->count),this);
-    name->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Minimum);
+
+    QLabel *name=new QLabel(this);
     name->setFont(normalFont);
+    QString sourceName = QString("%1(%2)").arg(sourceInfo->name).arg(sourceInfo->count);
+    QString elidedName = name->fontMetrics().elidedText(sourceName, Qt::ElideMiddle, 600*logicalDpiX()/96);
+    name->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Preferred);
+    name->setText(elidedName);
+    name->setToolTip(sourceName);
 
     QCheckBox *itemSwitch=new QCheckBox(tr("Show"),this);
     itemSwitch->setChecked(sourceInfo->show);
@@ -209,8 +214,10 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
         if(addCount>0)
         {
             editor->showMessage(tr("Add %1 New Danmu").arg(addCount));
-            //QMessageBox::information(this,tr("Update - %1").arg(sourceInfo->name),tr("Add %1 New Danmu").arg(addCount));
-            name->setText(QString("%1(%2)").arg(sourceInfo->name).arg(sourceInfo->count));
+            QString sourceName = QString("%1(%2)").arg(sourceInfo->name).arg(sourceInfo->count);
+            QString elidedName = name->fontMetrics().elidedText(sourceName, Qt::ElideMiddle, 600*logicalDpiX()/96);
+            name->setText(sourceName);
+            name->setToolTip(elidedName);
         }
         updateButton->setEnabled(true);
         deleteButton->setEnabled(true);

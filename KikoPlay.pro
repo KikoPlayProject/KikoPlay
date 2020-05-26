@@ -46,7 +46,7 @@ SOURCES += \
     UI/widgets/backgroundwidget.cpp \
     UI/widgets/clickslider.cpp \
     UI/widgets/dialogtip.cpp \
-    UI/widgets/fonticontoolbutton.cpp \
+    UI/widgets/fonticonbutton.cpp \
         main.cpp \
     UI/mainwindow.cpp \
     UI/framelesswindow.cpp \
@@ -154,7 +154,7 @@ HEADERS += \
     UI/widgets/backgroundwidget.h \
     UI/widgets/clickslider.h \
     UI/widgets/dialogtip.h \
-    UI/widgets/fonticontoolbutton.h \
+    UI/widgets/fonticonbutton.h \
     globalobjects.h \
     Play/Playlist/playlist.h \
     Play/Video/mpvplayer.h \

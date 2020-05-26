@@ -469,102 +469,137 @@
 <context>
     <name>AnimeDetailInfoPage</name>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="66"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="67"/>
         <source>Description</source>
         <translation>描述</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="73"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="74"/>
         <source>Episodes</source>
         <translation>剧集</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="80"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="81"/>
         <source>Characters</source>
         <translation>角色</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="87"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="88"/>
         <source>Tag</source>
         <translation>标签</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="94"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="95"/>
         <source>Capture</source>
         <translation>截图</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="242"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="250"/>
         <source>Add Episode(s)</source>
         <translation>添加剧集</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="244"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="252"/>
         <source>Select media files</source>
         <translation>选择媒体文件</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="257"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="265"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="263"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="271"/>
         <source>Add to Playlist</source>
         <translation>添加到播放列表</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="277"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="285"/>
         <source>Add %1 items to Playlist</source>
         <translation>已添加%1项到播放列表</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="279"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="287"/>
         <source>Play</source>
         <translation>播放</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="286"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="294"/>
         <source>File Not Exist</source>
         <translation>文件不存在</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="291"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="299"/>
         <source>Browse File</source>
         <translation>资源管理器中浏览</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="298"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="306"/>
         <source>File not Exist</source>
         <translation>文件不存在</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="362"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="313"/>
+        <source>Get Epsoide Names</source>
+        <translation>获取剧集标题</translation>
+    </message>
+    <message>
+        <location filename="../../UI/animedetailinfopage.cpp" line="329"/>
+        <source>No.%0 %1(%2)</source>
+        <translation>第%0话 %1(%2)</translation>
+    </message>
+    <message>
+        <location filename="../../UI/animedetailinfopage.cpp" line="331"/>
+        <source>Getting Down. Double-Click Title to See Epsoide Names</source>
+        <translation>获取完成，双击标题选择</translation>
+    </message>
+    <message>
+        <location filename="../../UI/animedetailinfopage.cpp" line="390"/>
+        <source>Tags on Bangumi</source>
+        <translation>Bangumi上的标签</translation>
+    </message>
+    <message>
+        <location filename="../../UI/animedetailinfopage.cpp" line="405"/>
+        <source>Add the Selected Tags from the Right-Click Menu</source>
+        <translation>选择标签后从右键菜单添加</translation>
+    </message>
+    <message>
+        <location filename="../../UI/animedetailinfopage.cpp" line="414"/>
+        <source>Add Selected Tags</source>
+        <translation>添加选择的标签</translation>
+    </message>
+    <message>
+        <location filename="../../UI/animedetailinfopage.cpp" line="430"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <location filename="../../UI/animedetailinfopage.cpp" line="454"/>
         <source>List Mode</source>
         <translation>列表模式</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="368"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="460"/>
         <source>Icon Mode</source>
         <translation>图标模式</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="374"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="466"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="382"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="474"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="389"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="481"/>
         <source>Save Capture</source>
         <translation>保存截图</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="396"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="488"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
@@ -576,27 +611,27 @@
         <translation type="vanished">动画标题</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="334"/>
+        <location filename="../../UI/librarywindow.cpp" line="335"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="340"/>
+        <location filename="../../UI/librarywindow.cpp" line="341"/>
         <source>Summary</source>
         <translation>简介</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="345"/>
+        <location filename="../../UI/librarywindow.cpp" line="346"/>
         <source>Staff</source>
         <translation>Staff</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="350"/>
+        <location filename="../../UI/librarywindow.cpp" line="351"/>
         <source>Character</source>
         <translation>角色</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="355"/>
+        <location filename="../../UI/librarywindow.cpp" line="356"/>
         <source>Tag</source>
         <translation>标签</translation>
     </message>
@@ -738,62 +773,62 @@
 <context>
     <name>AutoDownloadWindow</name>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="18"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="19"/>
         <source>Add Rule</source>
         <translation>添加规则</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="81"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="82"/>
         <source>Log</source>
         <translation>日志</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="88"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="89"/>
         <source>Staging URI</source>
         <translation>暂存URI</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="136"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="137"/>
         <source>Enable Rule(s)</source>
         <translation>启用规则</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="142"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="143"/>
         <source>Disable Rule(s)</source>
         <translation>禁用规则</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="148"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="149"/>
         <source>Check Immediately)</source>
         <translation>立即检查</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="154"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="155"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="169"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="170"/>
         <source>Remove Rule(s)</source>
         <translation>移除规则</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="204"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="205"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="214"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="215"/>
         <source>Add URI Task</source>
         <translation>添加URI任务</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="221"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="222"/>
         <source>Copy URI</source>
         <translation>复制下载链接</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="229"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="230"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
@@ -3964,7 +3999,7 @@ Date: %2
         <translation>全部：%1 最大：%2 屏蔽：%3 合并：%4</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="188"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="195"/>
         <source>Add Time: %0
 Date: %2
 Eps: %1
@@ -4224,12 +4259,12 @@ Eps: %1
 <context>
     <name>TagPanel</name>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="498"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="590"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="../../UI/animedetailinfopage.cpp" line="531"/>
+        <location filename="../../UI/animedetailinfopage.cpp" line="611"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>

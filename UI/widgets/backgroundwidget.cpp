@@ -2,7 +2,7 @@
 #include <QPainter>
 #include <QGraphicsBlurEffect>
 #include <QPropertyAnimation>
-BackgroundWidget::BackgroundWidget(QWidget *parent):BackgroundWidget(QColor(0,0,0,90), parent)
+BackgroundWidget::BackgroundWidget(QWidget *parent):BackgroundWidget(QColor(0,0,0,100), parent)
 {
 
 }
