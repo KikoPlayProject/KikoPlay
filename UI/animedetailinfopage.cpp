@@ -317,6 +317,7 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
         try
         {
             getEpNames->setEnabled(false);
+            emit setBackEnable(false);
             this->showBusyState(true);
             QString str(Network::httpGet(epUrl,QUrlQuery(),QStringList()<<"Accept"<<"application/json"));
             QJsonDocument document(Network::toJson(str));
@@ -336,6 +337,7 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
         }
         getEpNames->setEnabled(true);
         this->showBusyState(false);
+        emit setBackEnable(true);
     });
 
 
@@ -392,6 +394,7 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
     QObject::connect(bgmTagAction,&QAction::triggered,this,[this, bgmTagAction, bgmTagPanel](){
         if(currentAnime->bangumiID == -1) return;
         showBusyState(true);
+        emit setBackEnable(false);
         QStringList tags;
         QString errorInfo;
         bgmTagAction->setEnabled(false);
@@ -409,6 +412,7 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
         }
         bgmTagAction->setEnabled(true);
         showBusyState(false);
+        emit setBackEnable(true);
     });
 
     QAction *bgmTagOKAction=new QAction(tr("Add Selected Tags"), this);

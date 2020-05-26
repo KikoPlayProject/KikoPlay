@@ -62,6 +62,7 @@ public:
     void setAnime(Anime *anime);
 signals:
     void playFile(const QString &file);
+    void setBackEnable(bool enable);
 private:
     Anime *currentAnime;
     DialogTip *dialogTip;

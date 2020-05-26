@@ -276,6 +276,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
             infoDialog.exec();
         }
     });
+    QObject::connect(detailPage, &AnimeDetailInfoPage::setBackEnable, backButton, &QPushButton::setEnabled);
     QObject::connect(backButton, &QPushButton::clicked, this, [this, viewSLayout, backButton](){
         emit switchBackground(QPixmap(), false);
         backButton->hide();
