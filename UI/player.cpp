@@ -1228,7 +1228,10 @@ void PlayerWindow::setupSignals()
         process->setEventMark(QList<DanmuEvent>());
         process->setChapterMark(QList<MPVPlayer::ChapterInfo>());
         if(currentItem->animeTitle.isEmpty())
-            titleLabel->setText(currentItem->title);
+        {
+            QString mediaTitle(GlobalObjects::mpvplayer->getMediaTitle());
+            titleLabel->setText(mediaTitle.isEmpty()?currentItem->title:mediaTitle);
+        }
         else
             titleLabel->setText(QString("%1-%2").arg(currentItem->animeTitle,currentItem->title));
         if(!currentItem->poolID.isEmpty())
