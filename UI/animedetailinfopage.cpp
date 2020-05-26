@@ -188,7 +188,7 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
         else
             outlist.append(p.first+": "+p.second);
     }
-    if(currentAnime->staff.size() > 4)
+    if(outlist.size() > 0)
     {
         stafflist.append("...");
         viewInfoLabel->setToolTip(outlist.join('\n'));
@@ -409,6 +409,7 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
             this->dialogTip->showMessage(tr("Add the Selected Tags from the Right-Click Menu"));
             bgmTagPanel->clear();
             bgmTagPanel->addTag(tags);
+            bgmTagPanel->setChecked(tagPanel->tags());
             tagContainerSLayout->setCurrentIndex(1);
         }
         bgmTagAction->setEnabled(true);
@@ -652,6 +653,14 @@ void TagPanel::removeTag(const QString &tag)
         QPushButton *btn = tagList[tag];
         btn->deleteLater();
         tagList.remove(tag);
+    }
+}
+
+void TagPanel::setChecked(const QStringList &tags, bool checked)
+{
+    for(auto &tag: tags)
+    {
+        if(tagList.contains(tag)) tagList[tag]->setChecked(checked);
     }
 }
 

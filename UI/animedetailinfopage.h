@@ -39,7 +39,8 @@ public:
     TagPanel(QWidget *parent = nullptr, bool allowDelete=false, bool checkAble=false, bool allowAdd=false);
     void addTag(const QStringList &tags);
     void removeTag(const QString &tag);
-
+    void setChecked(const QStringList &tags, bool checked = true);
+    QStringList tags() const {return tagList.keys();}
 
     void clear();
     QStringList getSelectedTags();
