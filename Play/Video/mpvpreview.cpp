@@ -5,7 +5,7 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLContext>
 #include <QPixmap>
-
+#include <QDebug>
 namespace  {
 static void *get_proc_address(void *ctx, const char *name) {
     Q_UNUSED(ctx);
@@ -96,11 +96,12 @@ void MPVPreview::reset(const QString &filename)
     else if(filename != curFilename)
     {
         curFilename = filename;
+        mpv::qt::command_variant(mpv, QStringList() << "loadfile" << curFilename);
+        mpv::qt::set_property(mpv,"pause",true);
         locker.lockForWrite();
         previewCache.clear();
         locker.unlock();
-        mpv::qt::command_variant(mpv, QStringList() << "loadfile" << curFilename);
-        mpv::qt::set_property(mpv,"pause",true);
+        posSet.clear();
     }
 }
 
@@ -125,7 +126,13 @@ void MPVPreview::update()
 
     int ptime = mpv::qt::get_property(mpv, "playback-time").toInt();
     int pos = ptime / previewInterval;
-
+	QString fn = mpv::qt::get_property(mpv, "filename").toString();
+    if(!posSet.contains(ptime))
+    {
+        posSet.insert(ptime);
+        ctx->doneCurrent();
+        return;
+    }
     locker.lockForWrite();
     previewCache[pos] = QPixmap::fromImage(pFbo->toImage().scaled(previewSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     locker.unlock();

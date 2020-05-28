@@ -44,13 +44,16 @@ namespace
             QStyledItemDelegate::paint(painter, ViewOption, index);
             if(index.data(BgmCollectionRole).toBool())
             {
-                static QPixmap bgmCollectionIcon(":/res/images/bgm-collection.png");
+                static QIcon bgmCollectionIcon(":/res/images/bgm-collection.svg");
+                //static QPixmap bgmCollectionIcon(":/res/images/bgm-collection.svg");
                 QRect decoration = option.rect;
                 decoration.setHeight(decoration.height()-10);
                 decoration.setWidth(decoration.height());
                 decoration.moveCenter(option.rect.center());
                 decoration.moveRight(option.rect.width()+option.rect.x()-10);
-                painter->drawPixmap(decoration,bgmCollectionIcon);
+                bgmCollectionIcon.paint(painter, decoration);
+                //painter->drawPixmap(decoration, bgmCollectionIcon.pixmap(QSize(32)));
+                //painter->drawPixmap(decoration,bgmCollectionIcon);
             }
         }
     };

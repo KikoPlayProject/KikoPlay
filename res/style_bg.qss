@@ -288,10 +288,10 @@ QTreeView#playlist::branch {
     background-color: transparent;
 }
 QTreeView#playlist::branch:open:has-children {
-    image: url(:/res/images/branch-open.png);
+    image: url(:/res/images/branch-open.svg);
 }
 QTreeView#playlist::branch:closed:has-children {
-    image: url(:/res/images/branch-closed.png);
+    image: url(:/res/images/branch-closed.svg);
 }
 QTreeView#danmulist {
     border: 0px solid rgb(50, 50, 50);
@@ -355,13 +355,13 @@ QHeaderView::section {
 #Delay::up-button {
     subcontrol-origin:border;
     subcontrol-position:right;
-    image: url(:/res/images/border.png);
+    image: url(:/res/images/border.svg);
     width: 20px; height: 20px;
 }
 #Delay::down-button {
      subcontrol-origin:border;
      subcontrol-position:left;
-     image: url(:/res/images/border.png);
+     image: url(:/res/images/border.svg);
      width: 20px; height: 20px;
 }
 #Delay::up-button:pressed {
@@ -440,16 +440,16 @@ QMenu::item:selected:enabled {
     color:#ffffff;
 }
 QMenu::indicator:checked {
-  image: url(:/res/images/check-normal.png);
-  width:24px;
-  height:24px;
+  image: url(:/res/images/check-normal.svg);
+  width:22px;
+  height:22px;
   margin:4px;
 }
 
 QMenu::indicator:checked:selected {
-  image: url(:/res/images/check-hover.png);
-  width:24px;
-  height:24px;
+  image: url(:/res/images/check-hover.svg);
+  width:22px;
+  height:22px;
   margin:4px;
 }
 #playlist QScrollBar:vertical,#danmulist QScrollBar:vertical {
@@ -509,17 +509,25 @@ QCheckBox::indicator {
     width: 20px;
     height: 20px;
 }
-
+#BgmListView::indicator{
+    width: 32px;
+    height: 32px;
+}
+#BgmListView::indicator:unchecked {
+    image: url(:/res/images/focus-off.svg);
+}
 QCheckBox::indicator:unchecked {
-    image: url(:/res/images/check-box-uncheck.png);
+    image: url(:/res/images/checkbox-uncheck.svg);
 }
 
 QCheckBox::indicator:unchecked:hover {
-    image: url(:/res/images/check-box-hover.png);
+    image: url(:/res/images/checkbox-hover.svg);
 }
-
+#BgmListView::indicator:checked {
+    image: url(:/res/images/focus-on.svg);
+}
 QCheckBox::indicator:checked {
-    image: url(:/res/images/check-box-check.png);
+    image: url(:/res/images/checkbox-check.svg);
 }
 QLineEdit,QSpinBox {
     background-color:rgba(250,250,250,120);
@@ -539,24 +547,24 @@ QSpinBox::up-button {
     subcontrol-position: top right; /* position at the top right corner */
 
     width: 16px; /* 16 + 2*1px border-width = 15px padding + 3px parent border */
-    border-image: url(:/res/images/up-arrow.png) 1;
+    border-image: url(:/res/images/up-arrow.svg) 1;
     border-width: 1px;
 }
 
 QSpinBox::up-button:hover {
-    border-image: url(:/res/images/up-arrow-hover.png) 1;
+    border-image: url(:/res/images/up-arrow-hover.svg) 1;
 }
 QSpinBox::down-button {
     subcontrol-origin: border;
     subcontrol-position: bottom right; /* position at bottom right corner */
 
     width: 16px;
-    border-image: url(:/res/images/down-arrow.png) 1;
+    border-image: url(:/res/images/down-arrow.svg) 1;
     border-width: 1px;
     border-top-width: 0;
 }
 QSpinBox::down-button:hover {
-    border-image: url(:/res/images/down-arrow-hover.png) 1;
+    border-image: url(:/res/images/down-arrow-hover.svg) 1;
 }
 QDialog QComboBox {
     background-color:rgb(250,250,250);
@@ -573,16 +581,16 @@ QComboBox:hover {
 QComboBox::drop-down {
     subcontrol-origin: padding;
     subcontrol-position: top right;
-    width: 26px;
+    width: 28px;
     border:0px;
 }
 QComboBox::down-arrow {
-     image: url(:/res/images/down.png);
+     image: url(:/res/images/down.svg);
      width:20px;
      height:20px;
 }
 QComboBox::down-arrow:hover {
-     image: url(:/res/images/down-hover.png);
+     image: url(:/res/images/down-hover.svg);
      width:20px;
      height:20px;
 }
@@ -638,7 +646,7 @@ QPushButton:pressed{
     background-color:rgb(231,231,231);
 }
 #PopupPage QCheckBox::indicator:unchecked {
-    image: url(:/res/images/check-box-uncheck-light.png);
+    image: url(:/res/images/checkbox-uncheck-light.svg);
 }
 #PopupPage QPushButton {
     background-color: #2b3849 ;
@@ -737,7 +745,7 @@ QPushButton:pressed{
 #PopupPage QComboBox::drop-down {
     subcontrol-origin: padding;
     subcontrol-position: top right;
-    width: 20px;
+    width: 28px;
     border-left-width: 0px;
     border-left-color: #32414B;
     border-left-style: solid;
@@ -746,13 +754,13 @@ QPushButton:pressed{
 }
 
 #PopupPage QComboBox::down-arrow {
-    image: url(:/res/images/down-light.png);
+    image: url(:/res/images/down-light.svg);
     width:20px;
     height:20px;
 }
 
 #PopupPage QComboBox::down-arrow:hover {
-    image: url(:/res/images/down-hover.png);
+    image: url(:/res/images/down-hover.svg);
     width:20px;
     height:20px;
 }
@@ -1045,10 +1053,10 @@ QTreeView#LabelView::branch {
     background-color: transparent;
 }
 QTreeView#LabelView::branch:open:has-children {
-    image: url(:/res/images/branch-open-2.png);
+    image: url(:/res/images/branch-open-2.svg);
 }
 QTreeView#LabelView::branch:closed:has-children {
-    image: url(:/res/images/branch-closed-2.png);
+    image: url(:/res/images/branch-closed-2.svg);
 }
 #BgmListView {
     border: 1px solid #1abc9c;

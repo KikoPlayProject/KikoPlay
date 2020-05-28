@@ -42,7 +42,11 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
         scriptCombo->setCurrentIndex(scriptCombo->findData(GlobalObjects::scriptManager->getNormalScriptId()));
     });
 
-    QPushButton *manageScript=new QPushButton(tr("Manage Script"),this);
+    QPushButton *manageScript=new QPushButton(this);
+    manageScript->setToolTip(tr("Manage Script"));
+    GlobalObjects::iconfont.setPointSize(12);
+    manageScript->setFont(GlobalObjects::iconfont);
+    manageScript->setText(QChar(0xe607));
     QObject::connect(manageScript,&QPushButton::clicked,this,[this](){
         ManageScript manager(this);
         manager.exec();
@@ -72,7 +76,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     });
 
     prevPage=new QPushButton(this);
-    GlobalObjects::iconfont.setPointSize(11);
+    GlobalObjects::iconfont.setPointSize(10);
     prevPage->setFont(GlobalObjects::iconfont);
     prevPage->setText(QChar(0xe617));
     QObject::connect(prevPage,&QPushButton::clicked,this,[this](){

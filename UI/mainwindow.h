@@ -24,6 +24,10 @@ protected:
     virtual void dropEvent(QDropEvent *event);
     virtual void paintEvent(QPaintEvent *event);
 };
+#ifdef Q_OS_WIN
+class QWinTaskbarProgress;
+class QWinTaskbarButton;
+#endif
 class MainWindow : public CFramelessWindow
 {
     Q_OBJECT
@@ -41,6 +45,11 @@ private:
     QPixmap coverPixmap;
     int curPage;
 
+#ifdef Q_OS_WIN
+     QWinTaskbarButton *winTaskbarButton = nullptr;
+     QWinTaskbarProgress *winTaskbarProgress = nullptr;
+#endif
+
     QToolButton *buttonIcon,*buttonPage_Play,*buttonPage_Library,*buttonPage_Downlaod;
     QToolButton *minButton,*maxButton,*closeButton;
     QSplitter *playSplitter;
@@ -52,6 +61,7 @@ private:
     QStackedLayout *contentStackLayout;
     QRect originalGeo;
     bool listShowState;
+
     void setupUI();
     void switchToPlay(const QString &fileToPlay);
     void setBackground(const QString &imagePath, bool forceRefreshQSS=false);
@@ -66,6 +76,7 @@ protected:
     virtual void keyPressEvent(QKeyEvent *event);
     virtual void moveEvent(QMoveEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
+    virtual void showEvent(QShowEvent *event);
 };
 
 #endif // MAINWINDOW_H

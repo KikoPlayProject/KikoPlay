@@ -45,6 +45,7 @@ struct DownloadTask
     qint64 completedLength;
     int downloadSpeed;
     int uploadSpeed;
+    int connections;
     qint64 createTime;
     qint64 finishTime;
 

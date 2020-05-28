@@ -203,10 +203,12 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
         QObject::connect(crtItem,&CharacterWidget::updateCharacter,this,[this](CharacterWidget *crtItem){
            showBusyState(true);
            crtItem->setEnabled(false);
+           emit setBackEnable(false);
            GlobalObjects::library->updateCrtImage(currentAnime,crtItem->crt);
            crtItem->refreshIcon();
            crtItem->setEnabled(true);
            showBusyState(false);
+           emit setBackEnable(true);
         });
         QListWidgetItem *listItem=new QListWidgetItem(characterList);
         characterList->setItemWidget(listItem, crtItem);

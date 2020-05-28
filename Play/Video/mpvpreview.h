@@ -30,6 +30,7 @@ private:
     QOffscreenSurface *pSurface = nullptr;
     QOpenGLFramebufferObject *pFbo = nullptr;
     QSize previewSize;
+    QSet<int> posSet;
 
     QString curFilename;
     int previewInterval;

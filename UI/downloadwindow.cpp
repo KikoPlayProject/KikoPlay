@@ -195,6 +195,32 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 	downloadView->header()->resizeSection(1, 350 * logicalDpiX() / 96);
 	downloadView->header()->setStretchLastSection(false);
 
+    constexpr int upSpeedColumn = 6;
+    downloadView->hideColumn(upSpeedColumn);
+    QAction *actShowUpSpeed=new QAction(tr("UpSpeed"),this);
+    actShowUpSpeed->setCheckable(true);
+    QObject::connect(actShowUpSpeed,&QAction::toggled,[this, upSpeedColumn](bool checked){
+        if(checked) downloadView->showColumn(upSpeedColumn);
+        else downloadView->hideColumn(upSpeedColumn);
+        GlobalObjects::appSetting->setValue("Download/ShowUpSpeed", checked);
+    });
+    actShowUpSpeed->setChecked(GlobalObjects::appSetting->value("Download/ShowUpSpeed", false).toBool());
+
+    constexpr int connectionsColumn = 7;
+    downloadView->hideColumn(connectionsColumn);
+    QAction *actShowConnections=new QAction(tr("Connections"),this);
+    actShowConnections->setCheckable(true);
+    QObject::connect(actShowConnections,&QAction::toggled,[this, connectionsColumn](bool checked){
+        if(checked) downloadView->showColumn(connectionsColumn);
+        else downloadView->hideColumn(connectionsColumn);
+        GlobalObjects::appSetting->setValue("Download/ShowConnections", checked);
+    });
+    actShowConnections->setChecked(GlobalObjects::appSetting->value("Download/ShowConnections", false).toBool());
+
+    downloadView->header()->setContextMenuPolicy(Qt::ActionsContextMenu);
+    downloadView->header()->addAction(actShowUpSpeed);
+    downloadView->header()->addAction(actShowConnections);
+
     QObject::connect(downloadView, &QTreeView::doubleClicked,[this,proxyModel](const QModelIndex &index){
         DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(proxyModel->mapToSource(index));
         if(task->status==DownloadTask::Complete || task->status==DownloadTask::Paused || task->status==DownloadTask::Error)

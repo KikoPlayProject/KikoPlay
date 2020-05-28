@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui sql network concurrent
+win32:QT += winextras
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 

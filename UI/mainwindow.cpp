@@ -7,6 +7,10 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QButtonGroup>
+#ifdef Q_OS_WIN
+#include <QWinTaskbarProgress>
+#include <QWinTaskbarButton>
+#endif
 #include "about.h"
 #include "poolmanager.h"
 #include "serversettting.h"
@@ -36,6 +40,22 @@ MainWindow::MainWindow(QWidget *parent)
         listWindow->hide();
     listShowState=!listWindow->isHidden();
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::stateChanged,[this](MPVPlayer::PlayState state){
+#ifdef Q_OS_WIN
+        if(state==MPVPlayer::Play)
+        {
+            winTaskbarProgress->show();
+            winTaskbarProgress->resume();
+        }
+        else if(state==MPVPlayer::Pause)
+        {
+            winTaskbarProgress->show();
+            winTaskbarProgress->pause();
+        }
+        else if(state==MPVPlayer::Stop)
+        {
+            winTaskbarProgress->hide();
+        }
+#endif
         if(state==MPVPlayer::Stop)
         {
             auto geo=originalGeo;
@@ -58,6 +78,15 @@ MainWindow::MainWindow(QWidget *parent)
         setScreenSave(!(state==MPVPlayer::Play && GlobalObjects::playlist->getCurrentItem()!=nullptr));
 #endif
     });
+#ifdef Q_OS_WIN
+	QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::positionChanged, this, [this](int val) {
+        if(GlobalObjects::playlist->getCurrentItem()!=nullptr)
+            winTaskbarProgress->setValue(val);
+	});
+    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::durationChanged,this, [this](int duration){
+        winTaskbarProgress->setRange(0, duration);
+    });
+#endif
     if(GlobalObjects::appSetting->value("MainWindow/ShowTip",true).toBool())
     {
         GlobalObjects::appSetting->setValue("MainWindow/ShowTip",false);
@@ -471,8 +500,8 @@ QWidget *MainWindow::setupPlayPage()
     playSplitter->setStretchFactor(1,0);
     playSplitter->setCollapsible(0,false);
     playSplitter->setCollapsible(1,false);
-    playerWindowWidget->setMinimumSize(600*logicalDpiX()/96,350*logicalDpiY()/96);
-    listWindow->setMinimumSize(200*logicalDpiX()/96,350*logicalDpiY()/96);
+    playerWindowWidget->setMinimumSize(400*logicalDpiX()/96,300*logicalDpiY()/96);
+    //listWindow->setMinimumSize(200*logicalDpiX()/96,350*logicalDpiY()/96);
 
     return page_play;
 
@@ -566,6 +595,16 @@ void MainWindow::resizeEvent(QResizeEvent *)
 {
     if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
         originalGeo=geometry();
+}
+
+void MainWindow::showEvent(QShowEvent *event)
+{
+#ifdef Q_OS_WIN
+    winTaskbarButton = new QWinTaskbarButton(this);
+    QWindow *wh = windowHandle();
+    winTaskbarButton->setWindow(wh);
+    winTaskbarProgress = winTaskbarButton->progress();
+#endif
 }
 
 void DropableWidget::dragEnterEvent(QDragEnterEvent *event)

@@ -533,7 +533,7 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
         return brs[item->playTimeState];
     }
     case Qt::DecorationRole:
-        return item==d->currentItem?QIcon(":/res/images/playing.png"):QVariant();
+        return item==d->currentItem?QIcon(":/res/images/playing.svg"):QVariant();
     case BgmCollectionRole:
         return (item->isBgmCollection && item->children);
     default:

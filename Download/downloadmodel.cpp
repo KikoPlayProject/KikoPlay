@@ -195,6 +195,7 @@ void DownloadModel::updateItemStatus(const QJsonObject &statusObj)
     item->completedLength=statusObj.value("completedLength").toString().toLongLong();
     item->downloadSpeed=statusObj.value("downloadSpeed").toString().toInt();
     item->uploadSpeed=statusObj.value("uploadSpeed").toString().toInt();
+    item->connections=statusObj.value("connections").toString().toInt();
     if(statusObj.contains("bittorrent"))
     {
         QJsonObject btObj(statusObj.value("bittorrent").toObject());
@@ -441,6 +442,14 @@ QVariant DownloadModel::data(const QModelIndex &index, int role) const
                 return QString("%1:%2").arg(minuteLeft,2,10,QChar('0')).arg(secondLeft,2,10,QChar('0'));
             }
         }
+        break;
+    case 6:
+        if(role==Qt::DisplayRole)
+            return formatSize(true, downloadItem->uploadSpeed);
+        break;
+    case 7:
+        if(role==Qt::DisplayRole)
+            return downloadItem->connections;
         break;
     default:
         break;

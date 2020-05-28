@@ -3,20 +3,12 @@
     <qresource prefix="/">
         <file>res/iconfont.ttf</file>
         <file>res/images/sliderThumb.png</file>
-        <file>res/images/branch-closed.png</file>
-        <file>res/images/branch-open.png</file>
-        <file>res/images/playing.png</file>
         <file>res/images/info.png</file>
         <file>res/images/loading-rolling.gif</file>
         <file>res/images/ok.png</file>
         <file>res/images/loading-spinner.gif</file>
         <file>res/images/kikoplay-3.png</file>
         <file>res/images/kikoplay-4.png</file>
-        <file>res/images/check-box-check.png</file>
-        <file>res/images/check-box-uncheck.png</file>
-        <file>res/images/check-box-hover.png</file>
-        <file>res/images/down.png</file>
-        <file>res/images/down-hover.png</file>
         <file>res/images/slider-hover.png</file>
         <file>res/images/slider-normal.png</file>
         <file>res/images/slider-pressed.png</file>
@@ -30,30 +22,40 @@
         <file>res/images/paused.png</file>
         <file>res/images/seeding.png</file>
         <file>res/images/waiting.png</file>
-        <file>res/images/check-hover.png</file>
-        <file>res/images/check-normal.png</file>
         <file>res/version.json</file>
         <file>res/kikoplay.ico</file>
         <file>res/db/bangumi.sql</file>
         <file>res/db/comment.sql</file>
         <file>res/db/download.sql</file>
         <file>res/images/loading-blocks.gif</file>
-        <file>res/images/branch-closed-2.png</file>
-        <file>res/images/branch-open-2.png</file>
-        <file>res/images/down-light.png</file>
-        <file>res/images/check-box-uncheck-light.png</file>
         <file>res/onAirSites.json</file>
         <file>res/tip</file>
         <file>res/about</file>
         <file>res/images/checking.png</file>
         <file>res/images/free.png</file>
         <file>res/images/stop.png</file>
-        <file>res/images/down-arrow.png</file>
-        <file>res/images/down-arrow-hover.png</file>
-        <file>res/images/up-arrow.png</file>
-        <file>res/images/up-arrow-hover.png</file>
-        <file>res/images/bgm-collection.png</file>
-        <file>res/images/border.png</file>
         <file>res/style_bg.qss</file>
+        <file>res/images/focus-off.svg</file>
+        <file>res/images/focus-on.svg</file>
+        <file>res/images/checkbox-check.svg</file>
+        <file>res/images/checkbox-hover.svg</file>
+        <file>res/images/checkbox-uncheck.svg</file>
+        <file>res/images/checkbox-uncheck-light.svg</file>
+        <file>res/images/bgm-collection.svg</file>
+        <file>res/images/border.svg</file>
+        <file>res/images/branch-closed.svg</file>
+        <file>res/images/branch-open.svg</file>
+        <file>res/images/branch-closed-2.svg</file>
+        <file>res/images/branch-open-2.svg</file>
+        <file>res/images/check-hover.svg</file>
+        <file>res/images/check-normal.svg</file>
+        <file>res/images/down.svg</file>
+        <file>res/images/down-hover.svg</file>
+        <file>res/images/down-light.svg</file>
+        <file>res/images/down-arrow.svg</file>
+        <file>res/images/down-arrow-hover.svg</file>
+        <file>res/images/up-arrow.svg</file>
+        <file>res/images/up-arrow-hover.svg</file>
+        <file>res/images/playing.svg</file>
     </qresource>
 </RCC>

@@ -40,7 +40,7 @@ public:
 private:
     QList<DownloadTask *> downloadTasks;
     QMap<QString ,DownloadTask *> gidMap;
-    const QStringList headers={tr("Status"),tr("Title"),tr("Progress"),tr("Size"),tr("DownSpeed"),tr("Time Left")};
+    const QStringList headers={tr("Status"),tr("Title"),tr("Progress"),tr("Size"),tr("DownSpeed"),tr("Time Left"), tr("UpSpeed"), tr("Connections")};
     const QStringList status={tr("Downloading"),tr("Seeding"),tr("Waiting"),tr("Paused"),tr("Complete"),tr("Error")};
     QIcon statusIcons[6]={QIcon(":/res/images/downloading.png"),
                                     QIcon(":/res/images/seeding.png"),
@@ -79,7 +79,7 @@ public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
     inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:downloadTasks.count();}
-    inline virtual int columnCount(const QModelIndex &parent) const{return parent.isValid()?0:6;}
+    inline virtual int columnCount(const QModelIndex &parent) const{return parent.isValid()?0:headers.size();}
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     virtual void fetchMore(const QModelIndex &parent);

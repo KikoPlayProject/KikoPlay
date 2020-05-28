@@ -76,6 +76,7 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     btnHLayout->addStretch(1);
 
     QComboBox *seasonIdCombo=new QComboBox(this);
+    seasonIdCombo->setProperty("cScrollStyle", true);
     seasonIdCombo->view()->setMinimumWidth(seasonIdCombo->view()->fontMetrics().width("0000-00") +
                                            QApplication::style()->pixelMetric(QStyle::PixelMetric::PM_ScrollBarExtent) +
                                            seasonIdCombo->view()->autoScrollMargin());

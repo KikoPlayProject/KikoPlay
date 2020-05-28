@@ -1287,9 +1287,14 @@ void PlayerWindow::setupSignals()
         {
 #ifdef Q_OS_WIN
             if(state==MPVPlayer::Play)
+            {
                 SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED);
+            }
             else
+            {
                 SetThreadExecutionState(ES_CONTINUOUS);
+            }
+
 #endif
             if(onTopWhilePlaying)
             {
@@ -1337,6 +1342,7 @@ void PlayerWindow::setupSignals()
 			this->process->setRange(0, 0);
             this->process->setEventMark(QList<DanmuEvent>());
             this->process->setChapterMark(QList<MPVPlayer::ChapterInfo>());
+            previewLabel->clear();
             previewLabel->hide();
             progressInfo->adjustSize();
             this->timeLabel->setText("00:00/00:00");
@@ -1935,3 +1941,4 @@ void PlayerWindow::wheelEvent(QWheelEvent *event)
 	}
     showMessage(tr("Volume: %0").arg(volume->value()));
 }
+
