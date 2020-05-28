@@ -41,12 +41,12 @@ MainWindow::MainWindow(QWidget *parent)
     listShowState=!listWindow->isHidden();
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::stateChanged,[this](MPVPlayer::PlayState state){
 #ifdef Q_OS_WIN
-        if(state==MPVPlayer::Play)
+        if(state==MPVPlayer::Play && GlobalObjects::playlist->getCurrentItem()!=nullptr)
         {
             winTaskbarProgress->show();
             winTaskbarProgress->resume();
         }
-        else if(state==MPVPlayer::Pause)
+        else if(state==MPVPlayer::Pause && GlobalObjects::playlist->getCurrentItem()!=nullptr)
         {
             winTaskbarProgress->show();
             winTaskbarProgress->pause();
