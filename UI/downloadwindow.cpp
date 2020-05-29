@@ -401,6 +401,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         {
             selectedTFModel->updateFileProgress(statusObj.value("files").toArray());
             blockView->setBlock(currentTask->numPieces, currentTask->bitfield);
+            blockView->setToolTip(tr("Blocks: %1 Size: %2").arg(currentTask->numPieces).arg(formatSize(false, currentTask->pieceLength)));
         }
     });
     QObject::connect(rpc,&Aria2JsonRPC::refreshGlobalStatus,[this](int downSpeed,int upSpeed,int numActive){
@@ -888,6 +889,7 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
         taskDirLabel->setText(QString("<a href = \"file:///%1\">%2</a>").arg(task->dir).arg(task->dir));
         taskDirLabel->setOpenExternalLinks(true);
         blockView->setBlock(task->numPieces, task->bitfield);
+        blockView->setToolTip(tr("Blocks: %1 Size: %2").arg(task->numPieces).arg(formatSize(false, task->pieceLength)));
         if(task->torrentContentState==-1) GlobalObjects::downloadModel->tryLoadTorrentContent(task);
 		act_SaveTorrent->setEnabled(task->torrentContentState == 1);
         if(!task->torrentContent.isEmpty())
@@ -931,6 +933,7 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
         taskTimeLabel->setText(tr("Create Time: ---- \t Finish Time: ----"));
         taskDirLabel->setText(QString());
         blockView->setBlock(0, "0");
+        blockView->setToolTip("");
         selectedTFModel->setContent(nullptr);
         act_CopyURI->setEnabled(false);
         act_SaveTorrent->setEnabled(false);
@@ -991,7 +994,7 @@ void BlockWidget::paintEvent(QPaintEvent *event)
 
     QPainter painter(this);
     QPen pen(borderColor);
-    pen.setWidth(2);
+    //pen.setWidth(1);
     painter.setPen(pen);
     QVector<QRect> rects, rects2;
     for(int i=0;i<blockCount;++i)

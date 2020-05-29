@@ -236,6 +236,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     timeInfoTip->setObjectName(QStringLiteral("TimeInfoTip"));
     timeInfoTip->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     previewLabel=new QLabel(progressInfo);
+    previewLabel->setObjectName(QStringLiteral("ProgressPreview"));
     isShowPreview = GlobalObjects::appSetting->value("Play/ShowPreview",false).toBool();
     piVLayout->addStretch(1);
     piHLayout->addWidget(timeInfoTip);

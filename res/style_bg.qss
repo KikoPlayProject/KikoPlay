@@ -806,6 +806,11 @@ QPushButton:pressed{
     color:rgb(255,255,255);
     background-color:rgba(0,0,0,150);
 }
+#ProgressPreview{
+    border-color: rgb(150, 150,150);
+    border-style:solid;
+    border-width:1px;
+}
 #AnimeItemBg{
     background-color:rgba(0,0,0,0);
 }

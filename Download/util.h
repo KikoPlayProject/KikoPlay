@@ -47,6 +47,7 @@ struct DownloadTask
     int uploadSpeed;
     int connections;
     int numPieces;
+    int pieceLength;
     qint64 createTime;
     qint64 finishTime;
     QString bitfield;

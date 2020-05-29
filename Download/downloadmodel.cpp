@@ -197,6 +197,7 @@ void DownloadModel::updateItemStatus(const QJsonObject &statusObj)
     item->uploadSpeed=statusObj.value("uploadSpeed").toString().toInt();
     item->connections=statusObj.value("connections").toString().toInt();
     item->numPieces=statusObj.value("numPieces").toString().toInt();
+    item->pieceLength=statusObj.value("pieceLength").toString().toInt();
     item->bitfield=statusObj.value("bitfield").toString();
     if(statusObj.contains("bittorrent"))
     {
