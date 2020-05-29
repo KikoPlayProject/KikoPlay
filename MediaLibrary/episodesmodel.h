@@ -48,7 +48,7 @@ public:
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-    inline virtual Qt::ItemFlags flags(const QModelIndex &index) const{return (index.isValid()&&index.column()!=2)?QAbstractItemModel::flags(index)|Qt::ItemIsEditable:QAbstractItemModel::flags(index);}
+    inline virtual Qt::ItemFlags flags(const QModelIndex &index) const{return (index.isValid()&&index.column()!=1)?QAbstractItemModel::flags(index)|Qt::ItemIsEditable:QAbstractItemModel::flags(index);}
 };
 
 #endif // EPISODESMODEL_H
