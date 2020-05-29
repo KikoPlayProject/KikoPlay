@@ -18,7 +18,7 @@
 #include <QFileDialog>
 #include <QHeaderView>
 #include <QSplitter>
-#include <QDebug>
+#include <QScrollArea>
 #include "Download/aria2jsonrpc.h"
 #include "Download/downloadmodel.h"
 #include "Download/downloaditemdelegate.h"
@@ -247,6 +247,12 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     fileInfoPage->setFixedHeight(pageBtnHeight);
     fileInfoPage->setCheckable(true);
 
+    QToolButton *blockPage=new QToolButton(downloadContainer);
+    blockPage->setObjectName(QStringLiteral("DownloadInfoPage"));
+    blockPage->setText(tr("Block"));
+    blockPage->setFixedHeight(pageBtnHeight);
+    blockPage->setCheckable(true);
+
     QToolButton *logPage=new QToolButton(downloadContainer);
     logPage->setObjectName(QStringLiteral("DownloadInfoPage"));
     logPage->setFixedHeight(pageBtnHeight);
@@ -257,13 +263,15 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     pageBarHLayout->setContentsMargins(0,0,0,2*logicalDpiY()/96);
     pageBarHLayout->addWidget(generalInfoPage);
     pageBarHLayout->addWidget(fileInfoPage);
+    pageBarHLayout->addWidget(blockPage);
     pageBarHLayout->addWidget(logPage);
     pageBarHLayout->addStretch(1);
 
     QButtonGroup *pageButtonGroup=new QButtonGroup(downloadContainer);
     pageButtonGroup->addButton(generalInfoPage,0);
     pageButtonGroup->addButton(fileInfoPage,1);
-    pageButtonGroup->addButton(logPage,2);
+    pageButtonGroup->addButton(blockPage,2);
+    pageButtonGroup->addButton(logPage,3);
 
     generalInfoPage->setChecked(true);
 
@@ -272,9 +280,10 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     detailInfoContent->setProperty("cScrollStyle", true);
     detailInfoContent->setContentsMargins(0,0,0,0);
     QStackedLayout *detailInfoSLayout=new QStackedLayout(detailInfoContent);
-    detailInfoSLayout->addWidget(setupGeneralInfoPage(downloadContainer));
-    detailInfoSLayout->addWidget(setupFileInfoPage(downloadContainer));
-    detailInfoSLayout->addWidget(setupGlobalLogPage(downloadContainer));
+    detailInfoSLayout->addWidget(setupGeneralInfoPage(detailInfoContent));
+    detailInfoSLayout->addWidget(setupFileInfoPage(detailInfoContent));
+    detailInfoSLayout->addWidget(setupBlockPage(detailInfoContent));
+    detailInfoSLayout->addWidget(setupGlobalLogPage(detailInfoContent));
 
     QObject::connect(pageButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[detailInfoSLayout](int id, bool checked){
         if(checked)detailInfoSLayout->setCurrentIndex(id);
@@ -387,11 +396,12 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     });
     QObject::connect(rpc,&Aria2JsonRPC::refreshStatus,[this](const QJsonObject &statusObj){
         QString gid(statusObj.value("gid").toString());
+        GlobalObjects::downloadModel->updateItemStatus(statusObj);
         if(currentTask && currentTask->gid==gid)
         {
             selectedTFModel->updateFileProgress(statusObj.value("files").toArray());
+            blockView->setBlock(currentTask->numPieces, currentTask->bitfield);
         }
-        GlobalObjects::downloadModel->updateItemStatus(statusObj);
     });
     QObject::connect(rpc,&Aria2JsonRPC::refreshGlobalStatus,[this](int downSpeed,int upSpeed,int numActive){
         downSpeedLabel->setText(formatSize(true,downSpeed));
@@ -668,6 +678,17 @@ QWidget *DownloadWindow::setupFileInfoPage(QWidget *parent)
     return fileInfoView;
 }
 
+QWidget *DownloadWindow::setupBlockPage(QWidget *parent)
+{
+    QScrollArea *contentScrollArea=new QScrollArea(parent);
+    blockView = new BlockWidget(parent);
+    blockView->setObjectName(QStringLiteral("TaskBlockView"));
+    contentScrollArea->setWidget(blockView);
+    contentScrollArea->setWidgetResizable(true);
+    contentScrollArea->setAlignment(Qt::AlignCenter);
+    return contentScrollArea;
+}
+
 QWidget *DownloadWindow::setupGlobalLogPage(QWidget *parent)
 {
     logView=new QPlainTextEdit(parent);
@@ -866,6 +887,7 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
                                .arg(task->finishTime<task->createTime?"----":QDateTime::fromSecsSinceEpoch(task->finishTime).toString("yyyy-MM-dd hh:mm:ss")));
         taskDirLabel->setText(QString("<a href = \"file:///%1\">%2</a>").arg(task->dir).arg(task->dir));
         taskDirLabel->setOpenExternalLinks(true);
+        blockView->setBlock(task->numPieces, task->bitfield);
         if(task->torrentContentState==-1) GlobalObjects::downloadModel->tryLoadTorrentContent(task);
 		act_SaveTorrent->setEnabled(task->torrentContentState == 1);
         if(!task->torrentContent.isEmpty())
@@ -908,6 +930,7 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
         taskTitleLabel->setText(tr("<No Item has been Selected>"));
         taskTimeLabel->setText(tr("Create Time: ---- \t Finish Time: ----"));
         taskDirLabel->setText(QString());
+        blockView->setBlock(0, "0");
         selectedTFModel->setContent(nullptr);
         act_CopyURI->setEnabled(false);
         act_SaveTorrent->setEnabled(false);
@@ -925,5 +948,72 @@ void DownloadWindow::showEvent(QShowEvent *)
 void DownloadWindow::hideEvent(QHideEvent *)
 {
     refreshTimer->setInterval(backgoundRefreshInterval);
+}
+
+
+BlockWidget::BlockWidget(QWidget *parent) : QWidget(parent)
+{
+    setMinimumSize(blockWidth+2*marginX, blockHeight+2*marginY);
+    setSizePolicy(QSizePolicy::Ignored, QSizePolicy::MinimumExpanding);
+}
+
+void BlockWidget::setBlock(int count, const QString &state)
+{
+    blockCount = count;
+    blockState.resize(state.size()*4);
+    int i = 0;
+    for(QChar c: state){
+        int n = c.toLatin1();
+        if(c.isDigit()) n = n-'0';
+        else if('a'<=n && 'f'>=n) n = n-'a'+10;
+        if(n >=0 && n < 16){
+            blockState[i] = (n & 0x8)?1:0;
+            blockState[i+1] = (n & 0x4)?1:0;
+            blockState[i+2] = (n & 0x2)?1:0;
+            blockState[i+3] = (n & 0x1)?1:0;
+        }
+        i += 4;
+    }
+    int sw = blockWidth + marginX;
+    int sh = blockHeight+marginY;
+    int colCount = width() / sw;
+    int rowCount = blockCount / colCount + 1;
+    setMinimumHeight(rowCount*sh+marginY);
+    update();
+}
+
+void BlockWidget::paintEvent(QPaintEvent *event)
+{
+    int w = width();
+    int sw = blockWidth + marginX;
+    int sh = blockHeight+marginY;
+    int colCount = w / sw;
+
+    QPainter painter(this);
+    QPen pen(borderColor);
+    pen.setWidth(2);
+    painter.setPen(pen);
+    QVector<QRect> rects, rects2;
+    for(int i=0;i<blockCount;++i)
+    {
+        int cr = i/colCount, cc = i%colCount;
+        if(blockState[i]) rects.append(QRect(sw*cc+marginX,cr*sh+marginY,blockWidth,blockHeight));
+        else rects2.append(QRect(sw*cc+marginX,cr*sh+marginY,blockWidth,blockHeight));
+    }
+    painter.setBrush(QBrush(fillColorF));
+    painter.drawRects(rects);
+    painter.setBrush(QBrush(fillColorU));
+    painter.drawRects(rects2);
+    QWidget::paintEvent(event);
+}
+
+void BlockWidget::resizeEvent(QResizeEvent *)
+{
+    int sw = blockWidth + marginX;
+    int sh = blockHeight+marginY;
+    int colCount = width() / sw;
+    int rowCount = blockCount / colCount + 1;
+    int dh = rowCount*sh;
+    setMinimumHeight(dh+marginY);
 }
 

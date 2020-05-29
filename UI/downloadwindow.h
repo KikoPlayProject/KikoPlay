@@ -37,6 +37,39 @@ signals:
 private:
     QColor ignoreColor, normColor;
 };
+
+class BlockWidget : public QWidget
+{
+    Q_OBJECT
+    Q_PROPERTY(QColor borderColor READ getBorderColor WRITE setBorderColor)
+    Q_PROPERTY(QColor fColor READ getFColor WRITE setFColor)
+    Q_PROPERTY(QColor uColor READ getUColor WRITE setUColor)
+public:
+    BlockWidget(QWidget *parent = nullptr);
+
+    QColor getBorderColor() const {return borderColor;}
+    void setBorderColor(const QColor& color) { borderColor =  color; }
+    QColor getFColor() const {return fillColorF;}
+    void setFColor(const QColor& color) { fillColorF =  color; }
+    QColor getUColor() const {return fillColorU;}
+    void setUColor(const QColor& color) { fillColorU =  color; }
+
+    void setBlock(int count, const QString &state);
+
+    // QWidget interface
+protected:
+    virtual void paintEvent(QPaintEvent *event);
+    virtual void resizeEvent(QResizeEvent *event);
+private:
+    int blockWidth = 12*logicalDpiX()/96;
+    int blockHeight = 12*logicalDpiY()/96;
+    int marginX = 2*logicalDpiX()/96;
+    int marginY = 2*logicalDpiY()/96;
+    QColor borderColor, fillColorF, fillColorU;
+    int blockCount = 0;
+    QVector<int> blockState;
+};
+
 class DownloadWindow : public QWidget
 {
     Q_OBJECT
@@ -51,6 +84,7 @@ private:
     QTreeView *downloadView;
     QPlainTextEdit *logView;
     TorrentTreeView *fileInfoView;
+    BlockWidget *blockView;
     CTorrentFileModel *selectedTFModel;
     QLabel *taskTitleLabel,*taskTimeLabel,*taskDirLabel;
 
@@ -70,6 +104,7 @@ private:
     QWidget *setupLeftPanel(QWidget *parent);
     QWidget *setupGeneralInfoPage(QWidget *parent);
     QWidget *setupFileInfoPage(QWidget *parent);
+    QWidget *setupBlockPage(QWidget *parent);
     QWidget *setupGlobalLogPage(QWidget *parent);
 
     void initActions();

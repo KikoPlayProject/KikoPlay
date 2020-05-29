@@ -1187,3 +1187,8 @@ QTreeView#RuleURLView {
 #LibraryWindow{
     qproperty-bgMode: true;
 }
+#TaskBlockView{
+    qproperty-borderColor: rgb(200,200,200);
+    qproperty-fColor: rgba(12, 167, 250, 140);
+    qproperty-uColor: rgba(200,200,200, 90);
+}

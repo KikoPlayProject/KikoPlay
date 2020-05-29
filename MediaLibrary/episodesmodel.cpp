@@ -169,7 +169,7 @@ void EpItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) co
         QComboBox *combo = static_cast<QComboBox*>(editor);
         combo->setCurrentText(index.data(Qt::DisplayRole).toString());
     }
-    else if(col==1)
+    else if(col==2)
     {
         QString file = QFileDialog::getOpenFileName(nullptr,tr("Select Media File"),"",
                                                     QString("Video Files(%1);;All Files(*) ").arg(GlobalObjects::mpvplayer->videoFileFormats.join(" ")));

@@ -404,12 +404,6 @@ QScrollArea{
     background: transparent;
     border:none;
 }
-QScrollArea > QWidget > QWidget{
-    background: transparent;
-}
-QScrollArea > QWidget > QScrollBar{
-    background: palette(base);
-}
 QMenu {
     background-color: #f2f3f4;
     border: 1px solid #adbac2;
@@ -1059,4 +1053,9 @@ QLineEdit#PageEdit{
 }
 #LibraryWindow{
     qproperty-bgMode: false;
+}
+#TaskBlockView{
+    qproperty-borderColor: rgb(200,200,200);
+    qproperty-fColor: rgb(12, 167, 250);
+    qproperty-uColor: rgb(200,200,200);
 }

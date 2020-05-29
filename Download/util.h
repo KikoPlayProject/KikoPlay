@@ -46,8 +46,11 @@ struct DownloadTask
     int downloadSpeed;
     int uploadSpeed;
     int connections;
+    int numPieces;
     qint64 createTime;
     qint64 finishTime;
+    QString bitfield;
+
 
     QString uri;
     int torrentContentState; //-1:unknown 0:no torrent 1:has torrent
