@@ -5,6 +5,9 @@
 [![latest packaged version(s)](https://repology.org/badge/latest-versions/kikoplay.svg)](https://repology.org/project/kikoplay/versions)
 [![GitHub All Releases](https://img.shields.io/github/downloads/Protostars/KikoPlay/total)](https://github.com/Protostars/KikoPlay/releases)
 
+<div align=center>![](res/images/kikoplay-4.png)
+</div>
+
 ## 特性
 
  - OpenGL渲染，流畅的弹幕体验
