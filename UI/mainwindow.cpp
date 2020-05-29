@@ -45,6 +45,8 @@ MainWindow::MainWindow(QWidget *parent)
         {
             winTaskbarProgress->show();
             winTaskbarProgress->resume();
+            int t=winTaskbarProgress->maximum();
+            int tt=winTaskbarProgress->minimum();
         }
         else if(state==MPVPlayer::Pause && GlobalObjects::playlist->getCurrentItem()!=nullptr)
         {
@@ -597,13 +599,18 @@ void MainWindow::resizeEvent(QResizeEvent *)
         originalGeo=geometry();
 }
 
-void MainWindow::showEvent(QShowEvent *event)
+void MainWindow::showEvent(QShowEvent *)
 {
 #ifdef Q_OS_WIN
-    winTaskbarButton = new QWinTaskbarButton(this);
-    QWindow *wh = windowHandle();
-    winTaskbarButton->setWindow(wh);
-    winTaskbarProgress = winTaskbarButton->progress();
+    static bool taskProgressInit = false;
+    if(!taskProgressInit)
+    {
+        winTaskbarButton = new QWinTaskbarButton(this);
+        QWindow *wh = windowHandle();
+        winTaskbarButton->setWindow(wh);
+        winTaskbarProgress = winTaskbarButton->progress();
+        taskProgressInit = true;
+    }
 #endif
 }
 

@@ -76,7 +76,7 @@ protected:
     virtual void keyPressEvent(QKeyEvent *event);
     virtual void moveEvent(QMoveEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
-    virtual void showEvent(QShowEvent *event);
+    virtual void showEvent(QShowEvent *);
 };
 
 #endif // MAINWINDOW_H
