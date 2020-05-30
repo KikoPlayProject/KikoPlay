@@ -14,6 +14,7 @@ class Aria2JsonRPC : public QObject
     Q_OBJECT
 public:
     explicit Aria2JsonRPC(QObject *parent = nullptr);
+    void exit();
 
 private:
     QNetworkAccessManager manager;

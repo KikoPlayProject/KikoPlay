@@ -17,7 +17,7 @@ DownloadModel::DownloadModel(QObject *parent) : QAbstractItemModel(parent),curre
 DownloadModel::~DownloadModel()
 {
     saveItemStatus();
-    rpc->switchAllPauseStatus(true);
+    //rpc->switchAllPauseStatus(true);
     qDeleteAll(downloadTasks);
 }
 

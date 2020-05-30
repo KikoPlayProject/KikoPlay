@@ -42,6 +42,12 @@ Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent)
     aria2Process->waitForStarted(-1);
 }
 
+void Aria2JsonRPC::exit()
+{
+    QJsonArray params;
+    rpcCall("aria2.shutdown",params,"");
+}
+
 QJsonObject Aria2JsonRPC::rpcCall(const QString &method, const QJsonArray &params, const QString &id, bool async)
 {
     QJsonObject object;
