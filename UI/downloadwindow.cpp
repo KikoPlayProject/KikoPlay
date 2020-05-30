@@ -461,7 +461,6 @@ void DownloadWindow::beforeClose()
 {
     act_Pause->trigger();
     GlobalObjects::appSetting->setValue("Download/SplitterState", contentSplitter->saveState());
-
 }
 
 QWidget *DownloadWindow::setupLeftPanel(QWidget *parent)

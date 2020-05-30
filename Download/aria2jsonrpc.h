@@ -2,6 +2,7 @@
 #define ARIA2JSONRPC_H
 #include <QObject>
 #include <QNetworkAccessManager>
+class QProcess;
 class RPCError
 {
 public:
@@ -16,6 +17,7 @@ public:
 
 private:
     QNetworkAccessManager manager;
+    QProcess *aria2Process;
     QJsonObject rpcCall(const QString &method, const QJsonArray &params, const QString &id, bool async=true);
     void handleRPCReply(const QString &method, const QJsonObject &replyObj);
 signals:

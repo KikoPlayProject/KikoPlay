@@ -1,12 +1,60 @@
 #include "downloadsetting.h"
 #include <QPlainTextEdit>
 #include <QLineEdit>
+#include <QTextEdit>
 #include <QLabel>
 #include <QSettings>
 #include <QGridLayout>
 #include <QCheckBox>
 #include <QIntValidator>
+#include <QSyntaxHighlighter>
 #include "globalobjects.h"
+
+namespace
+{
+    class OptionHighLighter : public QSyntaxHighlighter
+    {
+    public:
+        OptionHighLighter(QTextDocument *parent):QSyntaxHighlighter(parent)
+        {
+            optionNameFormat.setForeground(QColor(41,133,199));
+            optionContentFormat.setForeground(QColor(245,135,31));
+            commentFormat.setForeground(QColor(142,142,142));
+            optionRe.setPattern("\\s*([^#=]+)=?(.*)\n?");
+            commentRe.setPattern("\\s*#.*\n?");
+        }
+        // QSyntaxHighlighter interface
+    protected:
+        virtual void highlightBlock(const QString &text)
+        {
+            int index= commentRe.indexIn(text);
+            if(index!=-1)
+            {
+                setFormat(index, commentRe.matchedLength(), commentFormat);
+                return;
+            }
+            index = optionRe.indexIn(text);
+            if (index>-1)
+            {
+                QStringList opList = optionRe.capturedTexts();
+                int opNamePos = optionRe.pos(1), opContentPos = optionRe.pos(2);
+                if (opNamePos>-1)
+                {
+                    setFormat(opNamePos, opList.at(1).length(), optionNameFormat);
+                }
+                if (opContentPos>-1)
+                {
+                    setFormat(opContentPos + 1, opList.at(2).length() - 1, optionContentFormat);
+                }
+            }
+        }
+    private:
+        QTextCharFormat optionNameFormat;
+        QTextCharFormat optionContentFormat;
+        QTextCharFormat commentFormat;
+        QRegExp optionRe,commentRe;
+    };
+}
 DownloadSetting::DownloadSetting(QWidget *parent) : CFramelessDialog(tr("Download Setting"),parent,true,true,false)
 {
     QLabel *maxDownSpeedLabel=new QLabel(tr("Max Download Limit(KB): "),this);
@@ -50,6 +98,15 @@ DownloadSetting::DownloadSetting(QWidget *parent) : CFramelessDialog(tr("Downloa
        btTrackerChange=true;
     });
 
+    QLabel *startupArgsLabel=new QLabel(tr("Aria2 Startup Args: "), this);
+    args = new QTextEdit(this);
+    args->setFont(QFont("Consolas",10));
+    new OptionHighLighter(args->document());
+    args->setPlainText(GlobalObjects::appSetting->value("Download/Aria2Args","").toString());
+    QObject::connect(args,&QTextEdit::textChanged,[this](){
+       argChange=true;
+    });
+
     QIntValidator *speedAndTimeValidator=new QIntValidator(this);
     speedAndTimeValidator->setBottom(0);
     maxDownSpeedLimit->setValidator(speedAndTimeValidator);
@@ -70,7 +127,10 @@ DownloadSetting::DownloadSetting(QWidget *parent) : CFramelessDialog(tr("Downloa
     settingGLayout->addWidget(autoAddtoPlaylist,4,0,1,2);
     settingGLayout->addWidget(btTrackerLabel,5,0);
     settingGLayout->addWidget(btTrackers,6,0,1,2);
+    settingGLayout->addWidget(startupArgsLabel,7,0);
+    settingGLayout->addWidget(args,8,0,1,2);
     settingGLayout->setRowStretch(6,1);
+    settingGLayout->setRowStretch(8,1);
     settingGLayout->setColumnStretch(1,1);
     resize(GlobalObjects::appSetting->value("DialogSize/DownloadSetting",QSize(300*logicalDpiX()/96,350*logicalDpiY()/96)).toSize());
 }
@@ -82,6 +142,7 @@ void DownloadSetting::onAccept()
     if(seedTimeChange)GlobalObjects::appSetting->setValue("Download/SeedTime",seedTime->text().toInt());
     if(concurrentChange)GlobalObjects::appSetting->setValue("Download/ConcurrentDownloads",maxConcurrent->text().toInt());
     if(btTrackerChange)GlobalObjects::appSetting->setValue("Download/Trackers",btTrackers->toPlainText().split('\n',QString::SkipEmptyParts));
+    if(argChange)GlobalObjects::appSetting->setValue("Download/Aria2Args",args->toPlainText());
     GlobalObjects::appSetting->setValue("DialogSize/DownloadSetting",size());
     CFramelessDialog::onAccept();
 }

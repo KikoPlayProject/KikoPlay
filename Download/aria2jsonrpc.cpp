@@ -4,32 +4,41 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QtCore>
+#include "globalobjects.h"
 
 Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent)
 {
-    QProcess *process = new QProcess(this);
+    aria2Process = new QProcess(this);
 #ifdef Q_OS_WIN
-    process->start("taskkill /im aria2c.exe /f");
+    aria2Process->start("taskkill /im aria2c.exe /f");
 #else
-    process->start("pkill -f aria2c");
+    aria2Process->start("pkill -f aria2c");
 #endif
-    process->waitForFinished(-1);
+    aria2Process->waitForFinished(-1);
+    QStringList opts=GlobalObjects::appSetting->value("Download/Aria2Args","").toString().split('\n');
     QStringList args;
+    for(const QString &option:opts)
+    {
+        QString opt(option.trimmed());
+        if(opt.startsWith('#'))continue;
+        if(!opt.startsWith("--")) opt = "--"+opt;
+        args<<opt;
+    }
     args << "--enable-rpc=true";
     args << "--rpc-listen-port=6800";
 #ifdef Q_OS_WIN
-    process->start(QCoreApplication::applicationDirPath()+"\\aria2c.exe", args);
+    aria2Process->start(QCoreApplication::applicationDirPath()+"\\aria2c.exe", args);
 #else
     QFileInfo check_file(QCoreApplication::applicationDirPath()+"/aria2c");
     /* check if file exists and if yes: Is it really a file and no directory? */
     if (check_file.exists() && check_file.isFile()) {
-        process->start(QCoreApplication::applicationDirPath()+"/aria2c", args);
+        aria2Process->start(QCoreApplication::applicationDirPath()+"/aria2c", args);
     } else {
-        process->start("aria2c", args);
+        aria2Process->start("aria2c", args);
     }
 
 #endif
-    process->waitForStarted(-1);
+    aria2Process->waitForStarted(-1);
 }
 
 QJsonObject Aria2JsonRPC::rpcCall(const QString &method, const QJsonArray &params, const QString &id, bool async)

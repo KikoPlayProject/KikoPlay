@@ -59,7 +59,7 @@ MPVParameterSetting::MPVParameterSetting(QWidget *parent) :
     parameterEdit=new QTextEdit(this);
     QFont paramFont("Consolas",10);
 	parameterEdit->setFont(paramFont);
-    OptionHighLighter *highLighter=new OptionHighLighter(parameterEdit->document());
+    new OptionHighLighter(parameterEdit->document());
     parameterEdit->setPlainText(GlobalObjects::appSetting->value("Play/MPVParameters",
                                                                  "#Make sure the danmu is smooth\n"
                                                                  "vf=lavfi=\"fps=fps=60:round=down\"\n"
