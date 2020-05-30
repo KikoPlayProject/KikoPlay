@@ -517,7 +517,7 @@ QWidget *AnimeDetailInfoPage::setupCapturePage()
         contexMenu->exec(QCursor::pos());
     });
     QObject::connect(captureView,&QListView::doubleClicked,[this](const QModelIndex &index){
-        CaptureView view(captureModel,index.row(),this);
+        CaptureView view(captureModel,index.row(),this->parentWidget());
         view.exec();
     });
     return captureView;
