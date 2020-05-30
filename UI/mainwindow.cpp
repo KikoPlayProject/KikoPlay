@@ -45,8 +45,6 @@ MainWindow::MainWindow(QWidget *parent)
         {
             winTaskbarProgress->show();
             winTaskbarProgress->resume();
-            int t=winTaskbarProgress->maximum();
-            int tt=winTaskbarProgress->minimum();
         }
         else if(state==MPVPlayer::Pause && GlobalObjects::playlist->getCurrentItem()!=nullptr)
         {

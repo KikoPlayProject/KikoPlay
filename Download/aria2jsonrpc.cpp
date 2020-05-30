@@ -20,6 +20,7 @@ Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent)
     for(const QString &option:opts)
     {
         QString opt(option.trimmed());
+		if (opt.isEmpty()) continue;
         if(opt.startsWith('#'))continue;
         if(!opt.startsWith("--")) opt = "--"+opt;
         args<<opt;
