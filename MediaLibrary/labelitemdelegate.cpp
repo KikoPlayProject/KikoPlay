@@ -1,6 +1,9 @@
-#include "labelitemdelegate.h"
 #include <QPainter>
+#include <QPainterPath>
+
 #include "globalobjects.h"
+#include "labelitemdelegate.h"
+
 #define TYPELEVEL 1
 #define LABEL_YEAR 2
 #define LABEL_MONTH 3
