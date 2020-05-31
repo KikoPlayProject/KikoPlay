@@ -141,7 +141,8 @@ QString AcfunProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
 
 QString AcfunProvider::downloadBySourceURL(const QString &url, QList<DanmuComment *> &danmuList)
 {
-    QString videoId=url.mid(url.lastIndexOf(':')+1);
+    QString vid = url.split(';',QString::SkipEmptyParts)[0];
+    QString videoId=vid.mid(vid.lastIndexOf(':')+1);
     downloadAllDanmu(danmuList,videoId.toInt());
     return QString();
 }
@@ -332,7 +333,7 @@ void AcfunProvider::downloadAllDanmu(QList<DanmuComment *> &danmuList, int video
             danmu->originTime=danmu->time;
             danmu->color=dmObj.value("color").toInt();
             danmu->setType(dmObj.value("mode").toInt());
-            danmu->date = 0;
+            danmu->date = dmObj.value("createTime").toDouble()/1000;
             danmu->sender="[Acfun]"+QString::number(dmObj.value("userId").toInt());
             switch (dmObj.value("size").toInt())
             {
