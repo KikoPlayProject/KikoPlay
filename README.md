@@ -1,7 +1,7 @@
 # KikoPlay - NOT ONLY A Full-Featured Danmu Player
 
 ---
-全功能弹幕播放器
+不仅仅是全功能弹幕播放器
 [![latest packaged version(s)](https://repology.org/badge/latest-versions/kikoplay.svg)](https://repology.org/project/kikoplay/versions)
 [![GitHub All Releases](https://img.shields.io/github/downloads/Protostars/KikoPlay/total)](https://github.com/Protostars/KikoPlay/releases)
 
