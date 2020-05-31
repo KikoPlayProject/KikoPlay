@@ -1,11 +1,15 @@
 #ifndef MPVPREVIEW_H
 #define MPVPREVIEW_H
-#include <QObject>
+
 #include <QHash>
+#include <QObject>
 #include <QReadWriteLock>
+#include <QSet>
+#include <QSize>
 #include <mpv/client.h>
 #include <mpv/render_gl.h>
 #include <mpv/qthelper.hpp>
+
 class QOpenGLFramebufferObject;
 class QOffscreenSurface;
 class QOpenGLContext;

@@ -15,11 +15,6 @@ RC_FILE += kikoplay.rc
 RC_ICONS = kikoplay.ico
 
 TRANSLATIONS += res/lang/zh_CN.ts
-win32{
-    QMAKE_LFLAGS_RELEASE += /MAP
-    QMAKE_CFLAGS_RELEASE += /Zi
-    QMAKE_LFLAGS_RELEASE += /debug /opt:ref
-}
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -247,33 +242,50 @@ INCLUDEPATH += \
 RESOURCES += \
     res.qrc
 
-contains(QT_ARCH, i386){
-    win32: LIBS += -L$$PWD/lib/ -llibmpv.dll
-    win32: LIBS += -L$$PWD/lib/ -lzlibstat
-    win32: LIBS += -L$$PWD/lib/ -lqhttpengine
-}else{
-    win32: LIBS += -L$$PWD/lib/x64/ -llibmpv.dll
-    win32: LIBS += -L$$PWD/lib/x64/ -lzlibstat
-    win32: LIBS += -L$$PWD/lib/x64/ -lqhttpengine
-    win32: LIBS += -L$$PWD/lib/x64/ -llua53
-    unix{
-        LIBS += -L/usr/lib/x86_64-linux-gnu/ -lmpv
-        LIBS += -L/usr/lib/x86_64-linux-gnu/ -lz
-        LIBS += -L/usr/lib/x86_64-linux-gnu/ -lm
-        LIBS += -L$$PWD/lib/x64/linux/ -llua5.3
-        LIBS += -L/usr/local/lib/ -lqhttpengine
-        LIBS += -L/usr/lib/x86_64-linux-gnu/ -ldl
+# Windows related settings
+win32 {
+    QMAKE_LFLAGS_RELEASE += /MAP
+    QMAKE_CFLAGS_RELEASE += /Zi
+    QMAKE_LFLAGS_RELEASE += /debug /opt:ref
 
-        target.path += /usr/bin
-        unix:icons.path = /usr/share/pixmaps
-        unix:desktop.path = /usr/share/applications
-        unix:icons.files = kikoplay.png kikoplay.xpm
-        unix:desktop.files = kikoplay.desktop
-        unix:web.path = /usr/share/kikoplay/web
-        unix:web.files = web/*
-
-        INSTALLS += target icons desktop web
-        DEFINES += CONFIG_UNIX_DATA
+    # Link library settings by ARCH
+    contains(QT_ARCH, i386) {
+        LIBS += -L$$PWD/lib/ -llibmpv.dll
+        LIBS += -L$$PWD/lib/ -lzlibstat
+        LIBS += -L$$PWD/lib/ -lqhttpengine
+    } else {
+        LIBS += -L$$PWD/lib/x64/ -llibmpv.dll
+        LIBS += -L$$PWD/lib/x64/ -lzlibstat
+        LIBS += -L$$PWD/lib/x64/ -lqhttpengine
+        LIBS += -L$$PWD/lib/x64/ -llua53
     }
 }
 
+# UNIX related settings
+unix {
+    # Install settings
+    target.path += /usr/bin
+    unix:icons.path = /usr/share/pixmaps
+    unix:desktop.path = /usr/share/applications
+    unix:icons.files = kikoplay.png kikoplay.xpm
+    unix:desktop.files = kikoplay.desktop
+    unix:web.path = /usr/share/kikoplay/web
+    unix:web.files = web/*
+
+    INSTALLS += target icons desktop web
+    DEFINES += CONFIG_UNIX_DATA
+
+    # Link library settings by ARCH
+    contains(QT_ARCH, i386) {
+        LIBS += -L/usr/lib/ -L$$PWD/lib/linux
+    } else {
+        LIBS += -L/usr/lib64/ -L$$PWD/lib/x64/linux -L$$PWD/lib64/linux
+    }
+
+    LIBS += -lmpv
+    LIBS += -lz
+    LIBS += -lm
+    LIBS += -llua5.3
+    LIBS += -lqhttpengine
+    LIBS += -ldl
+}
