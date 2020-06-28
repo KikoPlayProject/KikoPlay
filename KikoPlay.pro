@@ -31,6 +31,7 @@ CONFIG += C++11
 
 SOURCES += \
     Download/autodownloadmanager.cpp \
+    LANServer/mediahandler.cpp \
     Play/Danmu/eventanalyzer.cpp \
     Play/Video/mpvpreview.cpp \
     UI/addpool.cpp \
@@ -41,6 +42,7 @@ SOURCES += \
     UI/inputdialog.cpp \
     UI/widgets/backgroundwidget.cpp \
     UI/widgets/clickslider.cpp \
+    UI/widgets/danmustatiswidget.cpp \
     UI/widgets/dialogtip.cpp \
     UI/widgets/fonticonbutton.cpp \
         main.cpp \
@@ -131,6 +133,7 @@ SOURCES += \
 HEADERS += \
     Common/kcache.h \
     Download/autodownloadmanager.h \
+    LANServer/mediahandler.h \
     Play/Danmu/danmuviewmodel.h \
     Play/Danmu/eventanalyzer.h \
     Play/Video/mpvpreview.h \
@@ -149,6 +152,7 @@ HEADERS += \
     Play/Danmu/danmupool.h \
     UI/widgets/backgroundwidget.h \
     UI/widgets/clickslider.h \
+    UI/widgets/danmustatiswidget.h \
     UI/widgets/dialogtip.h \
     UI/widgets/fonticonbutton.h \
     globalobjects.h \

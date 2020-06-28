@@ -4,13 +4,14 @@
 #include "../Layouts/bottomlayout.h"
 #include <QPair>
 #include <QRandomGenerator>
+#include <QOffscreenSurface>
 #include "globalobjects.h"
 #include "Play/Danmu/danmupool.h"
 #include "Play/Playlist/playlist.h"
 
 
 QOpenGLContext *danmuTextureContext=nullptr;
-QSurface *surface=nullptr;
+QOffscreenSurface *surface=nullptr;
 
 DanmuRender::DanmuRender()
 {
@@ -45,22 +46,24 @@ DanmuRender::DanmuRender()
     });
     QObject::connect(cacheWorker,&CacheWorker::cacheDone,this,&DanmuRender::addDanmu);
     QObject::connect(this,&DanmuRender::danmuStyleChanged,cacheWorker,&CacheWorker::changeDanmuStyle);
-    cacheThread.setObjectName(QStringLiteral("cacheThread"));
-    cacheThread.start(QThread::NormalPriority);
 
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::initContext,[this](){
         QOpenGLContext *sharectx = GlobalObjects::mpvplayer->context();
-        surface = sharectx->surface();
-
         danmuTextureContext = new QOpenGLContext();
         danmuTextureContext->setFormat(sharectx->format());
         danmuTextureContext->setShareContext(sharectx);
         danmuTextureContext->create();
+        surface = new QOffscreenSurface();
+        surface->setFormat(sharectx->format());
+        surface->create();
 #ifndef TEXTURE_MAIN_THREAD
         danmuTextureContext->moveToThread(&cacheThread);
 #endif
     });
     currentDrList=nullptr;
+
+    cacheThread.setObjectName(QStringLiteral("cacheThread"));
+    cacheThread.start(QThread::NormalPriority);
 }
 
 DanmuRender::~DanmuRender()

@@ -461,6 +461,8 @@ void MPVPlayer::screenshot(QString filename)
 
 void MPVPlayer::initializeGL()
 {
+    QOpenGLFunctions *glFuns=context()->functions();
+    glFuns->initializeOpenGLFunctions();
     mpv_opengl_init_params gl_init_params{get_proc_address, nullptr, nullptr};
     mpv_render_param params[]{
         {MPV_RENDER_PARAM_API_TYPE, const_cast<char *>(MPV_RENDER_API_TYPE_OPENGL)},
@@ -472,11 +474,6 @@ void MPVPlayer::initializeGL()
         throw std::runtime_error("failed to initialize mpv GL context");
     mpv_render_context_set_update_callback(mpv_gl, MPVPlayer::on_update, reinterpret_cast<void *>(this));
 
-    //int r = mpv_opengl_cb_init_gl(mpv_gl, nullptr, MPVPlayer::get_proc_address, nullptr);
-    //if (r < 0)
-    //    throw std::runtime_error("could not initialize OpenGL");
-
-    QOpenGLFunctions *glFuns=context()->functions();
     const char *version = reinterpret_cast<const char*>(glFuns->glGetString(GL_VERSION));
     qDebug()<<"OpenGL Version:"<<version;
     int mainVersion=0;
@@ -508,6 +505,7 @@ void MPVPlayer::initializeGL()
         danmuShader.bindAttributeLocation("a_TexCoord", 1);
         danmuShader.bindAttributeLocation("a_Tex", 2);
     }
+    doneCurrent();
     emit initContext();
 }
 

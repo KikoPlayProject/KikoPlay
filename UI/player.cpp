@@ -14,6 +14,7 @@
 #include <QButtonGroup>
 
 #include "widgets/clickslider.h"
+#include "widgets/danmustatiswidget.h"
 #include "capture.h"
 #include "mediainfo.h"
 #include "mpvparametersetting.h"
@@ -78,7 +79,10 @@ public:
         deleteItem=new QPushButton(this);
         deleteItem->setObjectName(QStringLiteral("RecentItemDeleteButton"));
         QObject::connect(deleteItem,&QPushButton::clicked,[this](){
-            GlobalObjects::playlist->recent().removeAt(index);
+            int i = 0;
+            auto &r = GlobalObjects::playlist->recent();
+            while(i<r.size() && r[i].first!=path) ++i;
+            if(r[i].first==path) r.removeAt(i);
             hide();
         });
         GlobalObjects::iconfont.setPointSize(10);
@@ -90,9 +94,8 @@ public:
         itemHLayout->addWidget(deleteItem);
         setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
     }
-    void setData(QPair<QString,QString> &pair,int index)
+    void setData(QPair<QString,QString> &pair)
     {
-        this->index=index;
         path=pair.first;
         titleLabel->setText(pair.second);
         titleLabel->adjustSize();
@@ -102,7 +105,6 @@ public:
 private:
     QLabel *titleLabel;
     QPushButton *deleteItem;
-    int index;
     QString path;
 protected:
     virtual void mousePressEvent(QMouseEvent *event)
@@ -159,54 +161,17 @@ public:
         const int maxRecentCount=GlobalObjects::playlist->maxRecentItems;
         auto &recent=GlobalObjects::playlist->recent();
         for(;i<maxRecentCount && i<recent.count();++i)
-            items[i]->setData(recent[i],i);
+            items[i]->setData(recent[i]);
         while(i<maxRecentCount)
             items[i++]->hide();
     }
 private:
     QList<RecentItem *> items;
 };
-class DanmuStatisInfo : public QWidget
-{
-public:
-    explicit DanmuStatisInfo(QWidget *parent=nullptr):QWidget(parent),duration(0)
-    {
-        QObject::connect(GlobalObjects::danmuPool,&DanmuPool::statisInfoChange,this,(void (DanmuStatisInfo:: *)())&DanmuStatisInfo::update);
-        setObjectName(QStringLiteral("DanmuStatisBar"));
-    }
-    int duration;
-protected:
-    virtual void paintEvent(QPaintEvent *)
-    {
-        static QColor bgColor(0,0,0,150),barColor(51,168,255,200),penColor(255,255,255);
-        static QRect bRect;
-        bRect=rect();
-        QPainter painter(this);
-        painter.fillRect(bRect,bgColor);
-        if(duration==0)return;
-        bRect.adjust(1, 0, -1, 0);
-        auto &statisInfo=GlobalObjects::danmuPool->getStatisInfo();
-        float hRatio=(float)bRect.height()/statisInfo.maxCountOfMinute;
-        float margin=8*logicalDpiX()/96;
-        float wRatio=(float)(bRect.width()-margin*2)/duration;
-        float bHeight=bRect.height();
-        for(auto iter=statisInfo.countOfMinute.cbegin();iter!=statisInfo.countOfMinute.cend();++iter)
-        {
-            float l((*iter).first*wRatio);
-            float h(floor((*iter).second*hRatio));
-            painter.fillRect(l+margin,bHeight-h,wRatio<1.f?1.f:wRatio,h,barColor);
-        }
-        painter.setPen(penColor);
-        painter.drawText(bRect,Qt::AlignLeft|Qt::AlignTop,QObject::tr("Total:%1 Max:%2 Block:%3 Merge:%4")
-                         .arg(QString::number(statisInfo.totalCount),
-                              QString::number(statisInfo.maxCountOfMinute),
-                              QString::number(statisInfo.blockCount),
-                              QString::number(statisInfo.mergeCount)));
-    }
-};
 }
-PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideControlPanel(true),
-    onTopWhilePlaying(false),updatingTrack(false),isFullscreen(false),resizePercent(-1),jumpForwardTime(5),jumpBackwardTime(5)
+PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPanel(true),
+    onTopWhilePlaying(false),updatingTrack(false),isFullscreen(false),resizePercent(-1),jumpForwardTime(5),jumpBackwardTime(5),
+    miniModeOn(false), mouseLPressed(false), moving(false)
 {
     setWindowFlags(Qt::FramelessWindowHint);
     QWidget *centralWidget = new QWidget(this);
@@ -264,7 +229,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     });
 
     playerContent=new PlayerContent(contralContainer);
-    playerContent->show();
+    //playerContent->show();
     playerContent->raise();
 
     playInfoPanel=new QWidget(contralContainer);
@@ -278,7 +243,11 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QMainWindow(parent),autoHideContro
     playListCollapseButton->setText(QChar(GlobalObjects::appSetting->value("MainWindow/ListVisibility",true).toBool()?0xe945:0xe946));
     playListCollapseButton->hide();
 
-    danmuStatisBar=new DanmuStatisInfo(contralContainer);
+    //danmuStatisBar=new DanmuStatisInfo(contralContainer);
+    DanmuStatisWidget *statWidget = new DanmuStatisWidget(contralContainer);
+    statWidget->setObjectName(QStringLiteral("DanmuStatisBar"));
+    QObject::connect(GlobalObjects::danmuPool,&DanmuPool::statisInfoChange,statWidget,&DanmuStatisWidget::refreshStatis);
+    danmuStatisBar = statWidget;
     danmuStatisBar->setMinimumHeight(statisBarHeight);
     danmuStatisBar->hide();
 
@@ -533,7 +502,19 @@ void PlayerWindow::initActions()
         adjustPlayerSize(resizePercent);
     });
     windowSizeGroup->actions().at(GlobalObjects::appSetting->value("Play/WindowSize",2).toInt())->trigger();
+    QAction *act_MiniMode = new QAction(tr("Mini Mode"),this);
+    QObject::connect(act_MiniMode, &QAction::triggered, this, [this](){
+        if(GlobalObjects::playlist->getCurrentItem() != nullptr)
+        {
+            miniModeOn = true;
+            playInfoPanel->hide();
+            playControlPanel->hide();
+            danmuStatisBar->hide();
+            emit miniMode(true);
+        }
+    });
     windowSize->addActions(windowSizeGroup->actions());
+    windowSize->addAction(act_MiniMode);
 
     act_screenshotSrc = new QAction(tr("Original Video"),this);
     QObject::connect(act_screenshotSrc,&QAction::triggered,[this](){
@@ -1213,7 +1194,7 @@ void PlayerWindow::setupSignals()
         process->setSingleStep(1);
         totalTimeStr=QString("/%1:%2").arg(lmin,2,10,QChar('0')).arg(ls,2,10,QChar('0'));
         timeLabel->setText("00:00"+this->totalTimeStr);
-        static_cast<DanmuStatisInfo *>(danmuStatisBar)->duration=ts;
+        static_cast<DanmuStatisWidget *>(danmuStatisBar)->setDuration(ts);
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
         if(currentItem->playTime>15 && currentItem->playTime<ts-15)
         {
@@ -1395,7 +1376,7 @@ void PlayerWindow::setupSignals()
     QObject::connect(process,&ClickSlider::sliderReleased,[this](){
         this->processPressed=false;
     });
-    QObject::connect(process,&ClickSlider::mouseMove,[this](int x,int ,int pos, const QString &desc){
+    QObject::connect(process,&ClickSlider::mouseMove,[this](int, int ,int pos, const QString &desc){
         int cs=pos/1000;
         int cmin=cs/60;
         int cls=cs-cmin*60;
@@ -1560,15 +1541,33 @@ void PlayerWindow::switchItem(bool prev, const QString &nullMsg)
 void PlayerWindow::adjustProgressInfoPos()
 {
     int ty=danmuStatisBar->isHidden()?height()-playControlPanel->height()-progressInfo->height():
-                                      height()-playControlPanel->height()-progressInfo->height()-statisBarHeight-1;
+                                      height()-playControlPanel->height()-progressInfo->height()-statisBarHeight;
     int nx = process->curMouseX()-progressInfo->width()/3;
     if(nx+progressInfo->width()>width()) nx = width()-progressInfo->width();
     progressInfo->move(nx<0?0:nx,ty);
 }
 
+void PlayerWindow::setCentralWidget(QWidget *widget)
+{
+    QHBoxLayout *cHBoxLayout = new QHBoxLayout(this);
+    cHBoxLayout->setContentsMargins(0,0,0,0);
+    cHBoxLayout->addWidget(widget);
+    cWidget = widget;
+}
+
 void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
 {
-    if(!autoHideControlPanel)return;
+    if(miniModeOn)
+    {
+        if(mouseLPressed)
+        {
+            emit moveWindow(event->globalPos());
+            event->accept();
+            moving = true;
+        }
+        return;
+    }
+    if(!autoHideControlPanel) return;
     if(isFullscreen)
     {
         setCursor(Qt::ArrowCursor);
@@ -1606,14 +1605,35 @@ void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
 
 void PlayerWindow::mouseDoubleClickEvent(QMouseEvent *)
 {
-    if(dbClickBehaivior==0)
-        actFullscreen->trigger();
-    else
-        actPlayPause->trigger();
+    if(miniModeOn)
+    {
+        miniModeOn = false;
+        emit miniMode(false);
+        return;
+    }
+    dbClickBehaivior==0?actFullscreen->trigger():actPlayPause->trigger();
 }
 
 void PlayerWindow::mousePressEvent(QMouseEvent *event)
 {
+    mouseLPressed = miniModeOn && event->button()==Qt::LeftButton;
+    if(mouseLPressed)
+    {
+        emit beforeMove(event->globalPos());
+    }
+}
+
+void PlayerWindow::mouseReleaseEvent(QMouseEvent *event)
+{
+    if(miniModeOn && event->button()==Qt::LeftButton)
+    {
+        if(mouseLPressed && moving)
+            moving = false;
+        else
+            actPlayPause->trigger();
+        mouseLPressed = false;
+        return;
+    }
     if(event->button()==Qt::LeftButton)
     {
         if(!danmuSettingPage->isHidden()||!playSettingPage->isHidden())
@@ -1674,6 +1694,7 @@ void PlayerWindow::leaveEvent(QEvent *)
             this->playControlPanel->hide();
             this->playInfoPanel->hide();
             this->playListCollapseButton->hide();
+            this->danmuStatisBar->hide();
         });
     }
 }
@@ -1694,7 +1715,7 @@ bool PlayerWindow::eventFilter(QObject *watched, QEvent *event)
         }
         return false;
     }
-    return QMainWindow::eventFilter(watched,event);
+    return QWidget::eventFilter(watched,event);
 }
 
 void PlayerWindow::keyPressEvent(QKeyEvent *event)
@@ -1766,7 +1787,13 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
 		break;
 	case Qt::Key_Enter:
 	case Qt::Key_Return:
-		actFullscreen->trigger();
+        if(miniModeOn)
+        {
+            miniModeOn = false;
+            emit miniMode(false);
+            break;
+        }
+        actFullscreen->trigger();
         break;
     case Qt::Key_Escape:
         if(isFullscreen)
@@ -1802,7 +1829,7 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
         actNext->trigger();
         break;
 	default:
-		QMainWindow::keyPressEvent(event);
+		QWidget::keyPressEvent(event);
     }
 }
 

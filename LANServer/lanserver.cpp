@@ -8,12 +8,8 @@ LANServer::LANServer(QObject *parent) : QObject(parent)
     httpThread=new QThread();
     httpThread->setObjectName(QStringLiteral("httpThread"));
     httpThread->start(QThread::NormalPriority);
-    QObject workObj;
-    workObj.moveToThread(httpThread);
-    QMetaObject::invokeMethod(&workObj,[this](){
-        this->server=new HttpServer();
-    },Qt::BlockingQueuedConnection);
-	
+    server=new HttpServer();
+    server->moveToThread(httpThread);
     QObject::connect(server,&HttpServer::showLog,this,[this](const QString &log){
         if(logs.size()>99)logs.pop_front();
         logs.append(log);

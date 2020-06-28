@@ -15,7 +15,7 @@ class CFramelessDialog;
 class QSpinBox;
 class QSlider;
 class ClickSlider;
-class PlayerWindow : public QMainWindow
+class PlayerWindow : public QWidget
 {
     Q_OBJECT
 public:
@@ -87,33 +87,43 @@ private:
      void switchItem(bool prev,const QString &nullMsg);
      void adjustProgressInfoPos();
 
+     QWidget *centralWidget() {return  cWidget;}
+     void setCentralWidget(QWidget *widget);
+     QWidget *cWidget;
+
+     bool miniModeOn, mouseLPressed, moving;
+
 signals:
     void toggleListVisibility();
     void showFullScreen(bool on);
     void setStayOnTop(bool on);
     void resizePlayer(double w,double h,double aspectRatio);
+    void beforeMove(const QPoint &pressPos);
+    void moveWindow(const QPoint &pos);
+    void miniMode(bool on);
 
      // QWidget interface
 protected:
-     virtual void mouseMoveEvent(QMouseEvent *event);
-     virtual void mouseDoubleClickEvent(QMouseEvent *event);
-     virtual void mousePressEvent(QMouseEvent *event);
-     virtual void resizeEvent(QResizeEvent *event);
-     virtual void leaveEvent(QEvent *event);
+    virtual void mouseMoveEvent(QMouseEvent *event) override;
+    virtual void mouseDoubleClickEvent(QMouseEvent *event) override;
+    virtual void mousePressEvent(QMouseEvent *event) override;
+    virtual void mouseReleaseEvent(QMouseEvent *event) override;
+    virtual void resizeEvent(QResizeEvent *event) override;
+    virtual void leaveEvent(QEvent *event) override;
 
      // QObject interface
 public:
-     virtual bool eventFilter(QObject *watched, QEvent *event);
+     virtual bool eventFilter(QObject *watched, QEvent *event) override;
 
 
     // QWidget interface
 protected:
-    virtual void keyPressEvent(QKeyEvent *event);
-    virtual void contextMenuEvent(QContextMenuEvent *event);
-    virtual void closeEvent(QCloseEvent *event);
-    virtual void dragEnterEvent(QDragEnterEvent *event);
-    virtual void dropEvent(QDropEvent *event);
-    virtual void wheelEvent(QWheelEvent *event);
+    virtual void keyPressEvent(QKeyEvent *event) override;
+    virtual void contextMenuEvent(QContextMenuEvent *event) override;
+    virtual void closeEvent(QCloseEvent *event) override;
+    virtual void dragEnterEvent(QDragEnterEvent *event) override;
+    virtual void dropEvent(QDropEvent *event) override;
+    virtual void wheelEvent(QWheelEvent *event) override;
 };
 
 #endif // PLAYERWINDOW_H

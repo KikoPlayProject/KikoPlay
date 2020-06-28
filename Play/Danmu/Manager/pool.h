@@ -20,7 +20,7 @@ public:
     int addSource(const DanmuSourceInfo &sourceInfo, QList<DanmuComment *> &danmuList, bool reset=false);
     bool deleteSource(int sourceId, bool applyDB=true);
     bool deleteDanmu(int pos);
-    bool setTimeline(int sourceId, const QList<QPair<int,int> > timelineInfo);
+    bool setTimeline(int sourceId, const QList<QPair<int, int>> &timelineInfo);
     bool setDelay(int sourceId, int delay);
     void setUsed(bool on);
     void setSourceVisibility(int srcId, bool show);

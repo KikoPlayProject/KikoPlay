@@ -371,7 +371,7 @@ void DanmuPool::mediaTimeElapsed(int newTime)
             auto dm=finalPool.at(currentPosition);
             if (dm->blockBy == -1 && curPool->sources()[dm->source].show)
 			{
-                prepareList->append(QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*>(dm,nullptr));
+				prepareList->append({ dm,nullptr });
                 if(prepareList->size()>=bundleSize)
                 {
                     GlobalObjects::danmuRender->prepareDanmu(prepareList);

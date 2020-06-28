@@ -188,12 +188,13 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
         else
             outlist.append(p.first+": "+p.second);
     }
+    viewInfoLabel->setToolTip("");
     if(outlist.size() > 0)
     {
         stafflist.append("...");
         viewInfoLabel->setToolTip(outlist.join('\n'));
     }
-    viewInfoLabel->setText(QObject::tr("Add Time: %0\nDate: %2\nEps: %1\n%3").arg(addTime).arg(currentAnime->epCount).
+    viewInfoLabel->setText(QObject::tr("Add Time: %1\nDate: %3\nEps: %2\n%4").arg(addTime).arg(currentAnime->epCount).
                            arg(currentAnime->date).arg(stafflist.join('\n')));
     descInfo->setText(currentAnime->summary);
     epModel->setAnime(currentAnime);
@@ -612,6 +613,7 @@ TagPanel::TagPanel(QWidget *parent, bool allowDelete, bool checkAble, bool allow
        if(tagList.contains(tag) || tag.isEmpty()) return;
        emit tagAdded(tag);
     });
+
     addAction(actAddTag);
     actAddTag->setEnabled(allowAdd);
 
@@ -631,6 +633,9 @@ TagPanel::TagPanel(QWidget *parent, bool allowDelete, bool checkAble, bool allow
 
 void TagPanel::addTag(const QStringList &tags)
 {
+    layout()->removeWidget(tagEdit);
+    tagEdit->hide();
+    adding = false;
     for(const QString &tag:tags)
     {
         if(tagList.contains(tag))continue;

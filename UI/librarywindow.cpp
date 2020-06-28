@@ -82,7 +82,6 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     animeListView->setResizeMode(QListView::Adjust);
     animeListView->setMovement(QListView::Static);
     animeListView->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
-    animeListView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     animeListView->setSelectionMode(QAbstractItemView::SingleSelection);
     animeListView->setItemDelegate(itemDelegate);
     animeListView->setMouseTracking(true);
@@ -163,7 +162,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
 
 
     AnimeFilterBox *filterBox=new AnimeFilterBox(this);
-    filterBox->setMinimumWidth(240*logicalDpiX()/96);
+    filterBox->resize(240*logicalDpiX()/96, filterBox->height());
     QObject::connect(filterBox,&AnimeFilterBox::filterChanged,[proxyModel,labelProxyModel](int type,const QString &str){
         if(type==4)
         {

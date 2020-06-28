@@ -81,11 +81,14 @@ QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QS
                     QUrl redirectUrl(location);
                     if (redirectUrl.isRelative())
                     {
-                        QString host(queryUrl.host());
+						QString host(redirectUrl.host());
+						if (host.isEmpty()) host = queryUrl.host();
                         QString scheme(queryUrl.scheme());
-                        if (!location.startsWith('/'))
-                            location.push_front('/');
-                        location = QString("%1://%2%3").arg(scheme,host,location);
+						int i = 0;
+						while (i < location.length() && location[i] == '/') ++i;
+						location = location.mid(i);
+						if (!location.startsWith(host)) location = QString("%1/%2").arg(host, location);
+						if(!scheme.isEmpty()) location = QString("%1://%2").arg(scheme,location);
                     }
                     replyBytes=httpGet(location,QUrlQuery(),header);
                 }

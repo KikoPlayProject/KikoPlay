@@ -28,6 +28,7 @@ public:
     explicit CacheWorker(const DanmuStyle *style);
 private:
     const int max_cache=512;
+    bool init = false;
     QHash<QString,DanmuDrawInfo *> danmuCache;
     QHash<GLuint,int> textureRef;
     const DanmuStyle *danmuStyle;

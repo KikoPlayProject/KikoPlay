@@ -81,17 +81,17 @@ MatchEditor::MatchEditor(const PlayListItem *item, MatchInfo *matchInfo, QWidget
 
     if(!item->animeTitle.isEmpty())
     {
-        MatchInfo *match=GlobalObjects::kCache->get<MatchInfo>(QString::number(searchLocation)+item->animeTitle);
+        QScopedPointer<MatchInfo> match(GlobalObjects::kCache->get<MatchInfo>(QString::number(searchLocation)+item->animeTitle));
         if(match)
         {
             for(MatchInfo::DetailInfo &detailInfo:match->matches)
             {
                 new QTreeWidgetItem(searchResult,QStringList()<<detailInfo.animeTitle<<detailInfo.title);
             }
-            delete match;
         }
     }
     resize(GlobalObjects::appSetting->value("DialogSize/MatchEditor",QSize(400*logicalDpiX()/96,400*logicalDpiY()/96)).toSize());
+    hitWords.clear();
 
 }
 
@@ -180,8 +180,7 @@ QWidget *MatchEditor::setupCustomPage()
     customVLayout->addWidget(animeEdit);
     customVLayout->addWidget(subtitleTip);
     customVLayout->addWidget(subtitleEdit);
-    QSpacerItem *vSpacer = new QSpacerItem(1, 0, QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
-    customVLayout->addItem(vSpacer);
+    customVLayout->addStretch(1);
 
     return customPage;
 }
@@ -192,7 +191,7 @@ void MatchEditor::search()
     if(keyword.isEmpty())return;
     if(!hitWords.contains(keyword))
     {
-        MatchInfo *match=GlobalObjects::kCache->get<MatchInfo>(QString::number(searchLocation)+keyword);
+        QScopedPointer<MatchInfo> match(GlobalObjects::kCache->get<MatchInfo>(QString::number(searchLocation)+keyword));
         if(match)
         {
             searchResult->clear();
@@ -200,7 +199,6 @@ void MatchEditor::search()
             {
                 new QTreeWidgetItem(searchResult,QStringList()<<detailInfo.animeTitle<<detailInfo.title);
             }
-            delete match;
             hitWords<<keyword;
             return;
         }

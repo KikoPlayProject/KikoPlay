@@ -23,20 +23,21 @@
 #include "Play/Danmu/Render/danmurender.h"
 
 MainWindow::MainWindow(QWidget *parent)
-    : CFramelessWindow(parent),hasBackground(false),hasCoverBg(false),curPage(0),listWindowWidth(0)
+    : CFramelessWindow(parent),hasBackground(false),hasCoverBg(false),curPage(0),listWindowWidth(0),isMini(false)
 {
     setupUI();
     setWindowIcon(QIcon(":/res/kikoplay.ico"));
-    QRect defaultGeo(0,0,800,600);
+    QRect defaultGeo(0,0,800*logicalDpiX()/96,600*logicalDpiX()/96), defaultMiniGeo(0,0,200*logicalDpiX()/96, 200*logicalDpiY()/96);
     defaultGeo.moveCenter(QApplication::desktop()->geometry().center());
+	defaultMiniGeo.moveCenter(QApplication::desktop()->geometry().center());
     setGeometry(GlobalObjects::appSetting->value("MainWindow/Geometry",defaultGeo).toRect());
+    setMinimumSize(120*logicalDpiX()/96, 100*logicalDpiY()/96);
+    miniGeo = GlobalObjects::appSetting->value("MainWindow/miniGeometry", defaultMiniGeo).toRect();
     originalGeo=geometry();
     QVariant splitterState(GlobalObjects::appSetting->value("MainWindow/SplitterState"));
     if(!splitterState.isNull())
         playSplitter->restoreState(splitterState.toByteArray());
-    if(GlobalObjects::appSetting->value("MainWindow/ListVisibility",true).toBool())
-        listWindow->show();
-    else
+    if(!GlobalObjects::appSetting->value("MainWindow/ListVisibility",true).toBool())
         listWindow->hide();
     listShowState=!listWindow->isHidden();
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::stateChanged,[this](MPVPlayer::PlayState state){
@@ -120,6 +121,7 @@ void MainWindow::setupUI()
     widgetTitlebar = new DropableWidget(centralContainer);
     widgetTitlebar->setAcceptDrops(true);
     widgetTitlebar->setObjectName(QStringLiteral("widgetTitlebar"));
+    widgetTitlebar->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
 #ifdef Q_OS_WIN
     widgetTitlebar->setFixedHeight(40*logicalDpiY()/96);
 #endif
@@ -307,6 +309,7 @@ void MainWindow::setupUI()
     contentStackLayout->addWidget(setupPlayPage());
     contentStackLayout->addWidget(setupLibraryPage());
     contentStackLayout->addWidget(setupDownloadPage());
+    listWindow->show();
 
     verticalLayout->addLayout(contentStackLayout);
 
@@ -388,14 +391,13 @@ QWidget *MainWindow::setupPlayPage()
 {
     QWidget *page_play=new QWidget(centralWidget());
     page_play->setObjectName(QStringLiteral("widgetPagePlay"));
-    page_play->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
+    page_play->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Ignored);
 
     playSplitter = new QSplitter(page_play);
     QVBoxLayout *playVerticalLayout=new QVBoxLayout(page_play);
     playVerticalLayout->setContentsMargins(1,0,1,1);
     playVerticalLayout->addWidget(playSplitter);
     playSplitter->setHandleWidth(1);
-    //QObject::connect(playSplitter,&QSplitter::splitterMoved,)
 
     playerWindow=new PlayerWindow();
     playerWindow->setMouseTracking(true);
@@ -493,14 +495,47 @@ QWidget *MainWindow::setupPlayPage()
             setGeometry(windowGeo);
         }
     });
+    QObject::connect(playerWindow, &PlayerWindow::miniMode, this, [this, playVerticalLayout](bool on){
+        static bool isMax, isShowPlaylist;
+        static QRect geo;
+        if(on)
+        {
+            geo = geometry();
+            isShowPlaylist=!listWindow->isHidden();
+            isMax=isMaximized();
+            widgetTitlebar->hide();
+            listWindow->hide();
+            playerWindow->toggleListCollapseState(false);
+            setGeometry(miniGeo);
+            playVerticalLayout->setContentsMargins(2,2,2,2);
+            isMini = true;
+        }
+        else
+        {
+			isMini = false;
+            widgetTitlebar->show();
+            isShowPlaylist?listWindow->show():listWindow->hide();
+            playerWindow->toggleListCollapseState(isShowPlaylist);
+            isMax?showMaximized():showNormal();
+            setGeometry(geo);
+            playVerticalLayout->setContentsMargins(1,0,1,1);
+        }
+    });
 
+    QObject::connect(playerWindow, &PlayerWindow::beforeMove, this, [this](const QPoint &pressPos){
+        miniPressPos = pressPos - pos();
+    });
+    QObject::connect(playerWindow, &PlayerWindow::moveWindow, this, [this](const QPoint &cpos){
+        move(cpos-miniPressPos);
+    });
     playSplitter->addWidget(playerWindowWidget);
     playSplitter->addWidget(listWindow);
     playSplitter->setStretchFactor(0,1);
     playSplitter->setStretchFactor(1,0);
     playSplitter->setCollapsible(0,false);
     playSplitter->setCollapsible(1,false);
-    playerWindowWidget->setMinimumSize(400*logicalDpiX()/96,300*logicalDpiY()/96);
+    listWindow->hide();
+    //playerWindowWidget->setMinimumSize(100*logicalDpiX()/96,100*logicalDpiY()/96);
     //listWindow->setMinimumSize(200*logicalDpiX()/96,350*logicalDpiY()/96);
 
     return page_play;
@@ -510,6 +545,7 @@ QWidget *MainWindow::setupPlayPage()
 QWidget *MainWindow::setupLibraryPage()
 {
     library=new LibraryWindow(this);
+    library->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     QObject::connect(library,&LibraryWindow::playFile,this,&MainWindow::switchToPlay);
     QObject::connect(library,&LibraryWindow::switchBackground,this,[this](const QPixmap &pixmap, bool setPixmap){
         if(!setPixmap)
@@ -532,16 +568,18 @@ QWidget *MainWindow::setupLibraryPage()
 QWidget *MainWindow::setupDownloadPage()
 {
     download=new DownloadWindow(this);
+    download->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     QObject::connect(download,&DownloadWindow::playFile,this,&MainWindow::switchToPlay);
     return download;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+	GlobalObjects::appSetting->setValue("MainWindow/miniGeometry", miniGeo);
     if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
     {
         GlobalObjects::appSetting->beginGroup("MainWindow");
-        GlobalObjects::appSetting->setValue("Geometry",geometry());
+        GlobalObjects::appSetting->setValue("Geometry",originalGeo);
         GlobalObjects::appSetting->setValue("SplitterState",playSplitter->saveState());
         GlobalObjects::appSetting->setValue("ListVisibility",!listWindow->isHidden());
         GlobalObjects::appSetting->endGroup();
@@ -587,14 +625,18 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
 void MainWindow::moveEvent(QMoveEvent *)
 {
-    if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
+    if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen() && !isMini)
         originalGeo=geometry();
+    if(isMini)
+        miniGeo=geometry();
 }
 
 void MainWindow::resizeEvent(QResizeEvent *)
 {
-    if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
+    if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen() && !isMini)
         originalGeo=geometry();
+    if(isMini)
+        miniGeo=geometry();
 }
 
 void MainWindow::showEvent(QShowEvent *)

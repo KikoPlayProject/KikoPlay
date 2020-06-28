@@ -59,8 +59,10 @@ private:
     DownloadWindow *download;
     int listWindowWidth;
     QStackedLayout *contentStackLayout;
-    QRect originalGeo;
+    QRect originalGeo, miniGeo;
     bool listShowState;
+    bool isMini;
+    QPoint miniPressPos;
 
     void setupUI();
     void switchToPlay(const QString &fileToPlay);

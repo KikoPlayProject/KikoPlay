@@ -59,7 +59,7 @@ void DanmuManager::loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList)
             QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
             for (int i = 0; i < DanmuTableCount; ++i)
             {
-                query.exec(QString("select PoolID,Source,count(*) as DanmuCount from danmu_%1 group by PoolID,Source").arg(i));
+                query.exec(QString("select PoolID,Source,count(PoolID) as DanmuCount from danmu_%1 group by PoolID,Source").arg(i));
                 int pidNo = query.record().indexOf("PoolID"),
                     srcNo = query.record().indexOf("Source"),
                     countNo=query.record().indexOf("DanmuCount");

@@ -1,9 +1,7 @@
 #include "httpserver.h"
-#include "qhttpengine/filesystemhandler.h"
 #include "qhttpengine/qobjecthandler.h"
 #include "qhttpengine/handler.h"
-#include "qhttpengine/qiodevicecopier.h"
-#include "qhttpengine/range.h"
+#include "mediahandler.h"
 
 #include "Common/network.h"
 #include "Play/Playlist/playlist.h"
@@ -16,120 +14,12 @@
 #include <QMimeDatabase>
 #include <QFileInfo>
 
-namespace
-{
-    class MediaFileHandler : public QHttpEngine::FilesystemHandler
-    {
-    public:
-        explicit MediaFileHandler(const QHash<QString,QString> *mediaHash,QObject *parent = nullptr):
-            FilesystemHandler(parent),mediaHashTable(mediaHash){}
 
-        // FilesystemHandler interface
-    protected:
-        virtual void process(QHttpEngine::Socket *socket, const QString &path)
-        {
-            if(path.startsWith("media/"))
-            {
-                QString mediaId(path.mid(6).trimmed());
-                QString mediaPath(mediaHashTable->value(mediaId,""));
-                if(mediaPath.isEmpty())
-                {
-                    socket->writeError(QHttpEngine::Socket::NotFound);
-                }
-                else
-                {
-                    processFile(socket, mediaPath);
-                }
-            }
-            else if(path.startsWith("sub/")) // eg. sub/ass/...
-            {
-                QStringList infoList(path.split('/',QString::SkipEmptyParts));
-                if(infoList.count()<3)
-                {
-                    socket->writeError(QHttpEngine::Socket::BadRequest);
-                    return;
-                }
-                QString mediaPath(mediaHashTable->value(infoList[2],""));
-                QFileInfo fi(mediaPath);
-                QString subPath=QString("%1/%2.%3").arg(fi.absolutePath(),fi.baseName(),infoList[1]);
-                processFile(socket, subPath);
-            }
-            else
-            {
-                FilesystemHandler::process(socket,path);
-            }
-        }
-    private:
-        const QHash<QString,QString> *mediaHashTable;
-        QMimeDatabase database;
-        void processFile(QHttpEngine::Socket *socket, const QString &absolutePath)
-        {
-            // Attempt to open the file for reading
-            QFile *file = new QFile(absolutePath);
-            if (!file->open(QIODevice::ReadOnly)) {
-                delete file;
-
-                socket->writeError(QHttpEngine::Socket::Forbidden);
-                return;
-            }
-
-            // Create a QIODeviceCopier to copy the file contents to the socket
-            QHttpEngine::QIODeviceCopier *copier = new QHttpEngine::QIODeviceCopier(file, socket);
-            connect(copier, &QHttpEngine::QIODeviceCopier::finished, copier, &QHttpEngine::QIODeviceCopier::deleteLater);
-            connect(copier, &QHttpEngine::QIODeviceCopier::finished, file, &QFile::deleteLater);
-            connect(copier, &QHttpEngine::QIODeviceCopier::finished, [socket]() {
-                socket->close();
-            });
-
-            // Stop the copier if the socket is disconnected
-            connect(socket, &QHttpEngine::Socket::disconnected, copier, &QHttpEngine::QIODeviceCopier::stop);
-
-            qint64 fileSize = file->size();
-
-            // Checking for partial content request
-            QByteArray rangeHeader = socket->headers().value("Range");
-            QHttpEngine::Range range;
-
-            if (!rangeHeader.isEmpty() && rangeHeader.startsWith("bytes=")) {
-                // Skiping 'bytes=' - first 6 chars and spliting ranges by comma
-                QList<QByteArray> rangeList = rangeHeader.mid(6).split(',');
-
-                // Taking only first range, as multiple ranges require multipart
-                // reply support
-                range = QHttpEngine::Range(QString(rangeList.at(0)), fileSize);
-            }
-
-            // If range is valid, send partial content
-            if (range.isValid()) {
-                socket->setStatusCode(QHttpEngine::Socket::PartialContent);
-                socket->setHeader("Content-Length", QByteArray::number(range.length()));
-                socket->setHeader("Content-Range", QByteArray("bytes ") + range.contentRange().toLatin1());
-                copier->setRange(range.from(), range.to());
-            } else {
-                // If range is invalid or if it is not a partial content request,
-                // send full file
-                socket->setHeader("Content-Length", QByteArray::number(fileSize));
-            }
-
-            // Set the mimetype and content length
-            socket->setHeader("Content-Type", mimeType(absolutePath));
-            socket->writeHeaders();
-
-            // Start the copy
-            copier->start();
-        }
-
-        QByteArray mimeType(const QString &absolutePath)
-        {
-            // Query the MIME database based on the filename and its contents
-            return database.mimeTypeForFile(absolutePath).name().toUtf8();
-        }
-    };
-}
 HttpServer::HttpServer(QObject *parent) : QObject(parent)
 {
-    MediaFileHandler *handler=new MediaFileHandler(&mediaHash,this);
+    MediaHandler *handler=new MediaHandler(&mediaHash,this);
     const QString strApp(QCoreApplication::applicationDirPath()+"/web");
+    QObject::connect(handler, &MediaHandler::requestMedia, this, &HttpServer::genLog);
 #ifdef CONFIG_UNIX_DATA
     const QString strHome(QDir::homePath()+"/.config/kikoplay/web");
     const QString strSys("/usr/share/kikoplay/web");

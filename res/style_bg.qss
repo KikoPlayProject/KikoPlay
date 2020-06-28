@@ -421,14 +421,14 @@ QScrollArea > QWidget > QWidget{
 QScrollArea > QWidget > QScrollBar{
     background: palette(base);
 }
+
 QMenu {
     background-color: #f2f3f4;
     border: 1px solid #adbac2;
 }
 QMenu::item {
     background-color: transparent;
-    padding: 5px 35px 5px 35px;
-    margin:1px;
+    padding: 5px 35px 5px 25px;
 }
 QMenu::separator {
      height: 1px;
@@ -439,19 +439,20 @@ QMenu::item:selected:enabled {
     background-color: #32a7fe;
     color:#ffffff;
 }
+QMenu::indicator {
+    width:20px;
+    height:20px;
+    margin:1px;
+    padding:2px 0px 2px 4px;
+}
 QMenu::indicator:checked {
   image: url(:/res/images/check-normal.svg);
-  width:22px;
-  height:22px;
-  margin:4px;
 }
-
 QMenu::indicator:checked:selected {
   image: url(:/res/images/check-hover.svg);
-  width:22px;
-  height:22px;
-  margin:4px;
 }
+
+
 #playlist QScrollBar:vertical,#danmulist QScrollBar:vertical {
     background: transparent;
     width: 10px;
@@ -796,20 +797,20 @@ QPushButton:pressed{
        border:1px solid #fcfcfc;
 }
 #DanmuStatisBar{
-    border:1px solid #fcfcfc;
-    padding:1px;
+    qproperty-barColor: rgba(51,168,255,200);
 }
 #TimeInfoTip{
     border-color: rgb(150, 150,150);
     border-style:solid;
-    border-width:1px;
+    border-width:0px;
     color:rgb(255,255,255);
     background-color:rgba(0,0,0,150);
+    padding: 1px;
 }
 #ProgressPreview{
     border-color: rgb(150, 150,150);
     border-style:solid;
-    border-width:1px;
+    border-width:0px;
 }
 #AnimeItemBg{
     background-color:rgba(0,0,0,0);
@@ -922,7 +923,7 @@ QWidget[cScrollStyle="true"] QScrollBar::sub-page:vertical{
       width:0px;
 }
 #DownloadLeftPanel{
-    background-color: rgb(60, 73,82,120);
+    background-color: rgba(60, 73,82,120);
 }
 #TaskTypeToolButton QLabel{
     color:rgb(240,240,240);

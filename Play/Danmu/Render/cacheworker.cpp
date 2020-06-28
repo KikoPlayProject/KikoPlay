@@ -5,8 +5,21 @@
 #include "Play/Video/mpvplayer.h"
 #endif
 extern QOpenGLContext *danmuTextureContext;
-extern QSurface *surface;
+extern QOffscreenSurface *surface;
 
+namespace
+{
+    int powerOf2GE(int x)
+    {
+        --x;
+        x = x | (x >> 1);
+        x = x | (x >> 2);
+        x = x | (x >> 4);
+        x = x | (x >> 8);
+        x = x | (x >> 16);
+        return x + 1;
+    }
+}
 CacheWorker::CacheWorker(const DanmuStyle *style):danmuStyle(style)
 {
     danmuFont.setFamily(danmuStyle->fontFamily);
@@ -173,15 +186,7 @@ void CacheWorker::createTexture(QList<CacheMiddleInfo> &midInfo)
     {
         if(mInfo.drawInfo->width>textureWidth) textureWidth=mInfo.drawInfo->width;
     }
-    for(int i=1;i<12;++i)
-    {
-        if(textureWidth<(1<<i))
-        {
-            textureWidth=(1<<i);
-            break;
-        }
-    }
-    if(textureWidth>2048) textureWidth=2048;
+    textureWidth = textureWidth>2048?2048:powerOf2GE(textureWidth);
     int x=0,y=0,rowHeight=0;
     for(auto &mInfo:midInfo)
     {
@@ -203,20 +208,17 @@ void CacheWorker::createTexture(QList<CacheMiddleInfo> &midInfo)
         }
     }
     textureHeight=y+rowHeight;
-    for(int i=1;i<12;++i)
-    {
-        if(textureHeight<(1<<i))
-        {
-            textureHeight=(1<<i);
-            break;
-        }
-    }
-    if(textureHeight>2048) textureHeight=2048;
+    textureHeight = textureHeight>2048?2048:powerOf2GE(textureHeight);
 #ifdef TEXTURE_MAIN_THREAD
     QMetaObject::invokeMethod(GlobalObjects::mpvplayer,[this,&midInfo,textureWidth,textureHeight](){
 #endif
     danmuTextureContext->makeCurrent(surface);
     QOpenGLFunctions *glFuns=danmuTextureContext->functions();
+    if(!init)
+    {
+        glFuns->initializeOpenGLFunctions();
+        init = true;
+    }
     GLuint texture;
     glFuns->glGenTextures(1, &texture);
     glFuns->glBindTexture(GL_TEXTURE_2D, texture);

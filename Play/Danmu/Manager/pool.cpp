@@ -192,7 +192,7 @@ bool Pool::deleteDanmu(int pos)
     return false;
 }
 
-bool Pool::setTimeline(int sourceId, const QList<QPair<int, int> > timelineInfo)
+bool Pool::setTimeline(int sourceId, const QList<QPair<int, int>> &timelineInfo)
 {
     if(!sourcesTable.contains(sourceId)) return false;
     PoolStateLock locker;

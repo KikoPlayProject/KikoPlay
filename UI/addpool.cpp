@@ -73,14 +73,13 @@ AddPool::AddPool(QWidget *parent, const QString &srcAnime, const QString &srcEp)
 
     if(!srcAnime.isEmpty())
     {
-        MatchInfo *match=GlobalObjects::kCache->get<MatchInfo>(QString::number(searchLocation)+srcAnime);
+        QScopedPointer<MatchInfo> match(GlobalObjects::kCache->get<MatchInfo>(QString::number(searchLocation)+srcAnime));
         if(match)
         {
             for(MatchInfo::DetailInfo &detailInfo:match->matches)
             {
                 new QTreeWidgetItem(searchResult,QStringList()<<detailInfo.animeTitle<<detailInfo.title);
             }
-            delete match;
         }
     }
     resize(GlobalObjects::appSetting->value("DialogSize/AddPool",QSize(400*logicalDpiX()/96,400*logicalDpiY()/96)).toSize());
@@ -127,7 +126,7 @@ QWidget *AddPool::setupSearchPage()
         if(keyword.isEmpty())return;
         if(!hitWords.contains(keyword))
         {
-            MatchInfo *match=GlobalObjects::kCache->get<MatchInfo>(QString::number(searchLocation)+keyword);
+            QScopedPointer<MatchInfo> match(GlobalObjects::kCache->get<MatchInfo>(QString::number(searchLocation)+keyword));
             if(match)
             {
                 searchResult->clear();
@@ -135,7 +134,6 @@ QWidget *AddPool::setupSearchPage()
                 {
                     new QTreeWidgetItem(searchResult,QStringList()<<detailInfo.animeTitle<<detailInfo.title);
                 }
-                delete match;
                 hitWords<<keyword;
                 return;
             }

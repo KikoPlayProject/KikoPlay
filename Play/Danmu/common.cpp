@@ -8,7 +8,7 @@ int DanmuObject::poolCount=0;
 bool BlockRule::blockTest(DanmuComment *comment)
 {
     if(!enable)return false;
-    QString *testStr;
+    QString *testStr(nullptr);
     bool testResult(false);
     switch (blockField)
     {
