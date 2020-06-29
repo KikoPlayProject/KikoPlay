@@ -33,7 +33,7 @@ void PlayListItem::setLevel(int newLevel)
     level=newLevel;
     if(children)
     {
-        for(PlayListItem *child:*children)
+        for(PlayListItem *child: qAsConst(*children))
         {
             child->setLevel(newLevel+1);
         }

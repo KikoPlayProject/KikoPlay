@@ -186,13 +186,12 @@ void AddDanmu::search()
             SearchItemWidget *itemWidget=new SearchItemWidget(&item);
             QObject::connect(itemWidget, &SearchItemWidget::addSearchItem, itemWidget, [this](DanmuSourceItem *item){
                 beginProcrss();
-                DanmuAccessResult *result=GlobalObjects::providerManager->getEpInfo(providerId,item);
-                addSearchItem(result);
+                QScopedPointer<DanmuAccessResult> result(GlobalObjects::providerManager->getEpInfo(providerId,item));
+                addSearchItem(result.data());
                 if(result->providerId=="Bilibili" || result->providerId=="AcFun" || result->providerId=="Gamer")
                 {
                     if(item->title!=themeWord) relCache->put(themeWord, item->title);
                 }
-                delete result;
                 endProcess();
             });
             QListWidgetItem *listItem=new QListWidgetItem(searchResultWidget);

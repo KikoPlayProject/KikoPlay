@@ -19,13 +19,12 @@ void ClickSlider::mousePressEvent(QMouseEvent *event)
     if(!isSliderDown() && event->button() == Qt::LeftButton)
     {
         int dur = maximum()-minimum();
-        double x=event->x();
-        if(x<0)x=0;
-        if(x>maximum())x=maximum();
+        double x=qBound<double>(0., event->x(), width());
         int pos = minimum() + dur * (x /width());
         emit sliderClick(pos);
         setValue(pos);
     }
+    event->accept();
 
 }
 
@@ -34,22 +33,19 @@ void ClickSlider::mouseReleaseEvent(QMouseEvent *event)
     if(isSliderDown())
     {
         int dur = maximum()-minimum();
-        double x=event->x();
-        if(x<0)x=0;
-        if(x>maximum())x=maximum();
+        double x=qBound<double>(0., event->x(), width());
         int pos = minimum() + dur * (x /width());
         emit sliderUp(pos);
         setValue(pos);
     }
     QSlider::mouseReleaseEvent(event);
+    event->accept();
 }
 
 void ClickSlider::mouseMoveEvent(QMouseEvent *event)
 {
     int dur = maximum()-minimum();
-    double x=event->x();
-    if(x<0)x=0;
-    if(x>maximum())x=maximum();
+    double x=qBound<double>(0., event->x(), width());
     mousePos = minimum() + dur * (x /width());
     QString desc;
     if(!chapters.isEmpty())
@@ -94,11 +90,9 @@ void ClickSlider::paintEvent(QPaintEvent *event)
     QStylePainter painter(this);
     QStyleOptionSlider opt;
     initStyleOption(&opt);
-    static QColor eColor1(255,117,0),eColor2(0xff,0xff,0x00), cColor1(0xbc,0xbc,0xbc), cColor2(0x43,0x9c,0xf3);
-    int h = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove,this).height();
-    int y =height()-h;
-    y=(y&1)?y/2+1:y/2;
-
+    QRect grooveRect(style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove,this));
+    int h = grooveRect.height();
+    int y = grooveRect.y();
     for(auto &e:eventList)
     {
         int left = QStyle::sliderPositionFromValue(minimum(), maximum(), qBound(minimum(), e.start, maximum()), width());
@@ -110,5 +104,4 @@ void ClickSlider::paintEvent(QPaintEvent *event)
         int left = QStyle::sliderPositionFromValue(minimum(), maximum(), qBound(minimum(), c.position, maximum()), width());
         painter.fillRect(left,y/2,2,y-y/2+1,c.position<value()?cColor2:cColor1);
     }
-
 }

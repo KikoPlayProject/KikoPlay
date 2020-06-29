@@ -40,6 +40,8 @@ SOURCES += \
     UI/autodownloadwindow.cpp \
     UI/danmuview.cpp \
     UI/inputdialog.cpp \
+    UI/styleeditor.cpp \
+    UI/stylemanager.cpp \
     UI/widgets/backgroundwidget.cpp \
     UI/widgets/clickslider.cpp \
     UI/widgets/danmustatiswidget.cpp \
@@ -150,6 +152,8 @@ HEADERS += \
     Play/Danmu/Layouts/rolllayout.h \
     Play/Danmu/Layouts/toplayout.h \
     Play/Danmu/danmupool.h \
+    UI/styleeditor.h \
+    UI/stylemanager.h \
     UI/widgets/backgroundwidget.h \
     UI/widgets/clickslider.h \
     UI/widgets/danmustatiswidget.h \

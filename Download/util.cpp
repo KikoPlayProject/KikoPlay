@@ -29,7 +29,7 @@ void TorrentFile::setChildrenCheckStatus()
 {
     if(checkStatus!=Qt::PartiallyChecked)
     {
-        for(TorrentFile *child:children)
+        for(TorrentFile *child:qAsConst(children))
         {
             child->checkStatus=checkStatus;
             child->setChildrenCheckStatus();
@@ -42,7 +42,7 @@ void TorrentFile::setParentCheckStatus()
     if(parent)
     {
         int checkStatusStatis[3]={0,0,0};
-        for(TorrentFile *child:parent->children)
+        for(TorrentFile *child:qAsConst(parent->children))
         {
             checkStatusStatis[child->checkStatus]++;
         }
@@ -75,7 +75,7 @@ void TorrentFileInfo::setIndexMap()
     while(!items.empty())
     {
         TorrentFile *currentItem=items.takeFirst();
-        for(TorrentFile *child:currentItem->children)
+        for(TorrentFile *child:qAsConst(currentItem->children))
         {
             if(child->children.count()>0)
                 items.push_back(child);

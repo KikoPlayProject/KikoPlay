@@ -16,6 +16,8 @@
 #include "serversettting.h"
 #include "checkupdate.h"
 #include "tip.h"
+#include "stylemanager.h"
+#include "styleeditor.h"
 #include "widgets/backgroundwidget.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
@@ -151,6 +153,31 @@ void MainWindow::setupUI()
         serverSetting.exec();
     });
     buttonIcon->addAction(act_lanServer);
+
+    QAction *act_EditStyle=new QAction(tr("Edit Style"), this);
+    QObject::connect(act_EditStyle,&QAction::triggered,[this](){
+        StyleEditor styleEditor(buttonIcon);
+        QRect geo(0,0,400,400);
+        geo.moveCenter(this->geometry().center());
+        styleEditor.move(geo.topLeft());
+        QObject::connect(&styleEditor, &StyleEditor::setBackground, this, [this](const QString &path, const QColor &color){
+            themeColor = color;
+            setBackground(path);
+        });
+        QObject::connect(&styleEditor, &StyleEditor::setBgDarkness,bgWidget, &BackgroundWidget::setBgDarkness);
+        QObject::connect(&styleEditor, &StyleEditor::setThemeColor, this, [this](const QColor &color){
+            themeColor = color;
+            if(themeColor.isValid() && hasBackground)
+                GlobalObjects::styleManager->setQSS(StyleManager::BG_COLOR, themeColor);
+            else if(hasBackground)
+                GlobalObjects::styleManager->setQSS(StyleManager::DEFAULT_BG);
+            else
+                GlobalObjects::styleManager->setQSS(StyleManager::NO_BG);
+
+        });
+        styleEditor.exec();
+    });
+    buttonIcon->addAction(act_EditStyle);
 
     QAction *act_checkUpdate=new QAction(tr("Check For Updates"), this);
     QObject::connect(act_checkUpdate,&QAction::triggered,[this](){
@@ -322,14 +349,22 @@ void MainWindow::setupUI()
        QFileInfo fi(url);
        const QStringList imageFormats{"jpg", "png"};
        if(imageFormats.contains(fi.suffix().toLower())){
+           QStringList historyBgs = GlobalObjects::appSetting->value("MainWindow/HistoryBackgrounds").toStringList();
+           historyBgs.removeOne(url);
+           historyBgs.insert(0, url);
+           if(historyBgs.count()>6) historyBgs.removeLast();
+           GlobalObjects::appSetting->setValue("MainWindow/HistoryBackgrounds", historyBgs);
            setBackground(url);
        }
        else {
            setBackground("");
        }
     });
-    setBackground(GlobalObjects::appSetting->value("MainWindow/Background", "").toString(), true);
-
+    if(GlobalObjects::appSetting->value("MainWindow/CustomColor", false).toBool())
+    {
+        themeColor = GlobalObjects::appSetting->value("MainWindow/CustomColorHSV", QColor::fromHsv(180, 255, 100)).value<QColor>();
+    }
+    setBackground(GlobalObjects::appSetting->value("MainWindow/Background", "").toString(), true, false);
 }
 
 void MainWindow::switchToPlay(const QString &fileToPlay)
@@ -347,10 +382,9 @@ void MainWindow::switchToPlay(const QString &fileToPlay)
     }
 }
 
-void MainWindow::setBackground(const QString &imagePath, bool forceRefreshQSS)
+void MainWindow::setBackground(const QString &imagePath, bool forceRefreshQSS, bool showAnimation)
 {
     bool refreshQSS = false;
-    QString qssFile;
     if(!imagePath.isEmpty() && QFile::exists(imagePath))
     {
         GlobalObjects::appSetting->setValue("MainWindow/Background", imagePath);
@@ -358,9 +392,9 @@ void MainWindow::setBackground(const QString &imagePath, bool forceRefreshQSS)
         if(!hasCoverBg || curPage != 1)
         {
             bgWidget->setBackground(bgImg);
+            if(showAnimation) bgWidget->setBlurAnimation(60., 0., 800);
         }
         refreshQSS = !hasBackground;
-        qssFile = ":/res/style_bg.qss";
         hasBackground = true;
     }
     else
@@ -373,16 +407,15 @@ void MainWindow::setBackground(const QString &imagePath, bool forceRefreshQSS)
         }
         refreshQSS = hasBackground;
         hasBackground = false;
-        qssFile = ":/res/style.qss";
     }
     if(refreshQSS || forceRefreshQSS)
     {
-        QFile qss(qssFile);
-        if(qss.open(QFile::ReadOnly))
-        {
-            QString qssContent = QLatin1String(qss.readAll());
-            qApp->setStyleSheet(qssContent);
-        }
+        if(themeColor.isValid() && hasBackground)
+            GlobalObjects::styleManager->setQSS(StyleManager::BG_COLOR, themeColor);
+        else if(hasBackground)
+            GlobalObjects::styleManager->setQSS(StyleManager::DEFAULT_BG);
+        else
+            GlobalObjects::styleManager->setQSS(StyleManager::NO_BG);
     }
 
 }

@@ -46,7 +46,7 @@ void DanmuStatisWidget::setDuration(int duration)
     refreshStatis();
 }
 
-void DanmuStatisWidget::paintEvent(QPaintEvent *event)
+void DanmuStatisWidget::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);

@@ -66,7 +66,7 @@ public slots :
     const PlayListItem *setCurrentItem(const QString &path);
 	void cleanCurrentItem();
     const PlayListItem *playPrevOrNext(bool prev);
-    void setLoopMode(LoopMode newMode);
+    void setLoopMode(PlayList::LoopMode newMode);
     void checkCurrentItem(PlayListItem *itemDeleted);
     void setAutoMatch(bool on);
     void matchItems(const QModelIndexList &matchIndexes);

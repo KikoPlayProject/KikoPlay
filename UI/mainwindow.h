@@ -44,6 +44,7 @@ private:
     QImage bgImg;
     QPixmap coverPixmap;
     int curPage;
+    QColor themeColor;
 
 #ifdef Q_OS_WIN
      QWinTaskbarButton *winTaskbarButton = nullptr;
@@ -66,7 +67,7 @@ private:
 
     void setupUI();
     void switchToPlay(const QString &fileToPlay);
-    void setBackground(const QString &imagePath, bool forceRefreshQSS=false);
+    void setBackground(const QString &imagePath, bool forceRefreshQSS=false, bool showAnimation = true);
 
     QWidget *setupPlayPage();
     QWidget *setupLibraryPage();

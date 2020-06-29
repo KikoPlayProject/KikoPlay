@@ -12,8 +12,10 @@ public:
     void setBackground(const QImage &image);
     void setBackground(const QPixmap &pixmap);
 
+    void setBgDarkness(int val);
+
     void setBlur(bool on, qreal blurRadius = 0);
-    void setBlurAnimation(qreal s, qreal e);
+    void setBlurAnimation(qreal s, qreal e, int duration = 500);
 private:
     QImage img;
     QPixmap bgCache;

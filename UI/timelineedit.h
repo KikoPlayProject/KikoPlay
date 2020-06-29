@@ -75,7 +75,7 @@ class TimelineEdit : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo> &simpleDanmuList, QWidget *parent = nullptr,int curTime=-1);
+    TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo> &simpleDanmuList, QWidget *parent = nullptr,int curTime=-1);
 private:
     DanmuSourceInfo *currentSource;
     TimeLineInfoModel *timelineModel;

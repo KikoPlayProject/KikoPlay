@@ -12,6 +12,7 @@
 #include "Download/Script/scriptmanager.h"
 #include "Download/autodownloadmanager.h"
 #include "Common/kcache.h"
+#include "UI/stylemanager.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -34,6 +35,7 @@ LANServer *GlobalObjects::lanServer=nullptr;
 ScriptManager *GlobalObjects::scriptManager=nullptr;
 AutoDownloadManager *GlobalObjects::autoDownloadManager=nullptr;
 KCache *GlobalObjects::kCache=nullptr;
+StyleManager *GlobalObjects::styleManager=nullptr;
 QFont GlobalObjects::iconfont;
 QString GlobalObjects::dataPath;
 namespace  {
@@ -84,6 +86,7 @@ void GlobalObjects::init()
     scriptManager=new ScriptManager();
     autoDownloadManager=new AutoDownloadManager();
     kCache=new KCache(128);
+    styleManager=new StyleManager();
 
     int fontId = QFontDatabase::addApplicationFont(":/res/iconfont.ttf");
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
@@ -109,6 +112,7 @@ void GlobalObjects::clear()
     autoDownloadManager->deleteLater();
     appSetting->deleteLater();
     delete kCache;
+    delete styleManager;
 }
 
 QSqlDatabase GlobalObjects::getDB(int db)

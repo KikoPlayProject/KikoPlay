@@ -4,7 +4,7 @@
 #include <QNetworkCookieJar>
 namespace
 {
-    QMap<QThread *,QNetworkAccessManager *> managerMap;
+    QHash<QThread *,QNetworkAccessManager *> managerMap;
     QNetworkAccessManager *getManager()
     {
         QNetworkAccessManager *manager=managerMap.value(QThread::currentThread());

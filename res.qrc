@@ -57,5 +57,6 @@
         <file>res/images/up-arrow.svg</file>
         <file>res/images/up-arrow-hover.svg</file>
         <file>res/images/playing.svg</file>
+        <file>res/style_bg_default.qss</file>
     </qresource>
 </RCC>

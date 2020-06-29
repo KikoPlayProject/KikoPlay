@@ -2,6 +2,9 @@
 #include <QPainter>
 #include <QGraphicsBlurEffect>
 #include <QPropertyAnimation>
+#include "globalobjects.h"
+#include <QSettings>
+
 BackgroundWidget::BackgroundWidget(QWidget *parent):BackgroundWidget(QColor(0,0,0,100), parent)
 {
 
@@ -9,7 +12,7 @@ BackgroundWidget::BackgroundWidget(QWidget *parent):BackgroundWidget(QColor(0,0,
 
 BackgroundWidget::BackgroundWidget(const QColor &opactiyColor, QWidget *parent) : QWidget(parent), opColor(opactiyColor)
 {
-
+    opColor.setAlpha(GlobalObjects::appSetting->value("MainWindow/BackgroundDarkness", 100).toInt());
 }
 
 void BackgroundWidget::setBackground(const QImage &image)
@@ -20,6 +23,12 @@ void BackgroundWidget::setBackground(const QImage &image)
 void BackgroundWidget::setBackground(const QPixmap &pixmap)
 {
     setImg(pixmap.toImage());
+}
+
+void BackgroundWidget::setBgDarkness(int val)
+{
+    opColor.setAlpha(val);
+    update();
 }
 
 
@@ -38,7 +47,7 @@ void BackgroundWidget::setBlur(bool on, qreal blurRadius)
     }
 }
 
-void BackgroundWidget::setBlurAnimation(qreal s, qreal e)
+void BackgroundWidget::setBlurAnimation(qreal s, qreal e, int duration)
 {
     static QPropertyAnimation *lastAnime = nullptr;
     if(lastAnime)
@@ -52,7 +61,7 @@ void BackgroundWidget::setBlurAnimation(qreal s, qreal e)
     setGraphicsEffect(bgBlur);
     QPropertyAnimation *blurAnime = new QPropertyAnimation(bgBlur, "blurRadius");
     lastAnime = blurAnime;
-    blurAnime->setDuration(500);
+    blurAnime->setDuration(duration);
     blurAnime->setEasingCurve(QEasingCurve::OutExpo);
     blurAnime->setStartValue(s);
     blurAnime->setEndValue(e);
@@ -66,10 +75,11 @@ void BackgroundWidget::setBlurAnimation(qreal s, qreal e)
 void BackgroundWidget::setImg(const QImage &nImg)
 {
     img = nImg;
-    QPainter p(&img);
-    p.fillRect(img.rect(), opColor);
-    p.end();
-    bgCache = QPixmap::fromImage(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+    if(!img.isNull())
+    {
+        QImage s(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+        bgCache = QPixmap::fromImage(s);
+    }
     update();
 }
 
@@ -81,10 +91,12 @@ void BackgroundWidget::paintEvent(QPaintEvent *e)
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
         painter.drawPixmap(0, 0, bgCache);
+        painter.fillRect(rect(), opColor);
         QWidget::paintEvent(e);
     }
 }
  void BackgroundWidget::resizeEvent(QResizeEvent *)
 {
-    bgCache = QPixmap::fromImage(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+    QImage s(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+    bgCache = QPixmap::fromImage(s);
 }

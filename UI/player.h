@@ -37,7 +37,7 @@ private:
      const int playlistCollapseWidth=25*logicalDpiX()/96;
      const int playlistCollapseHeight=80*logicalDpiX()/96;
 
-     ClickSlider *process;
+     ClickSlider *progress, *miniProgress;
      QSlider *volume;
      QLabel *timeLabel;
 
@@ -92,6 +92,7 @@ private:
      QWidget *cWidget;
 
      bool miniModeOn, mouseLPressed, moving;
+     QPoint pressPos;
 
 signals:
     void toggleListVisibility();

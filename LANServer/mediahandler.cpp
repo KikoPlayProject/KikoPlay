@@ -173,7 +173,7 @@ void MediaHandler::processFile(QHttpEngine::Socket *socket, const QString &absol
     IODeviceCopier *copier = new IODeviceCopier(file, socket);
     connect(copier, &IODeviceCopier::finished, copier, &IODeviceCopier::deleteLater);
     connect(copier, &IODeviceCopier::finished, file, &QFile::deleteLater);
-    connect(copier, &IODeviceCopier::finished, [socket]() {
+    connect(copier, &IODeviceCopier::finished, copier, [socket]() {
         socket->close();
     });
 

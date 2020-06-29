@@ -768,6 +768,8 @@ void ListWindow::updateDanmuActions()
 QWidget *ListWindow::setupPlaylistPage()
 {
     QWidget *playlistPage=new QWidget(this);
+    playlistPage->setObjectName(QStringLiteral("playlistPage"));
+
     QVBoxLayout *playlistPageVLayout=new QVBoxLayout(playlistPage);
     playlistPageVLayout->setContentsMargins(0,0,0,0);
     playlistPageVLayout->setSpacing(0);
@@ -919,6 +921,7 @@ QWidget *ListWindow::setupPlaylistPage()
 QWidget *ListWindow::setupDanmulistPage()
 {
     QWidget *danmulistPage=new QWidget(this);
+    danmulistPage->setObjectName(QStringLiteral("danmulistPage"));
     QVBoxLayout *danmulistPageVLayout=new QVBoxLayout(danmulistPage);
     danmulistPageVLayout->setContentsMargins(0,0,0,0);
     danmulistPageVLayout->setSpacing(0);

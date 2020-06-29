@@ -152,7 +152,7 @@ struct BlockRule
     QScopedPointer<QRegExp> re;
     bool blockTest(DanmuComment *comment);
 };
-typedef QLinkedList<QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo *> > PrepareList;
+typedef QList<QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo *> > PrepareList;
 struct DanmuEvent
 {
     int start;

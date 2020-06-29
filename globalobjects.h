@@ -20,21 +20,10 @@ class LANServer;
 class ScriptManager;
 class AutoDownloadManager;
 class KCache;
+class StyleManager;
 class GlobalObjects
 {
 public:
-    enum Color
-    {
-        Label_TopLevel,
-        Label_CLevel,
-        Label_CountTip_B,
-        Label_CountTip_F,
-        Download_LeftItem_Norm,
-        Download_LeftItem_Hover,
-        Download_ToolBtn_Norm,
-        Download_ToolBtn_Hover,
-        Color_Max
-    };
     static void init();
     static void clear();
     static MPVPlayer *mpvplayer;
@@ -53,6 +42,7 @@ public:
     static ScriptManager *scriptManager;
     static AutoDownloadManager *autoDownloadManager;
     static KCache *kCache;
+    static StyleManager *styleManager;
     static QString dataPath;
 
     static const int Comment_DB=0;
