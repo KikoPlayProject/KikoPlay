@@ -3,7 +3,7 @@
 #include <QApplication>
 #include "globalobjects.h"
 
-StyleManager::StyleManager():mode(NO_BG)
+StyleManager::StyleManager():mode(UNKNOWN)
 {
     normalQSS = loadQSS(":/res/style.qss");
     bgQSS = loadQSS(":/res/style_bg.qss");

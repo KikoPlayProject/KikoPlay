@@ -10,7 +10,8 @@ public:
     {
         NO_BG,
         DEFAULT_BG,
-        BG_COLOR
+        BG_COLOR,
+        UNKNOWN
     };
     StyleManager();
     StyleManager(const StyleManager &)=delete;
