@@ -21,6 +21,7 @@ class ScriptManager;
 class AutoDownloadManager;
 class KCache;
 class StyleManager;
+class QMainWindow;
 class GlobalObjects
 {
 public:
@@ -43,6 +44,7 @@ public:
     static AutoDownloadManager *autoDownloadManager;
     static KCache *kCache;
     static StyleManager *styleManager;
+    static QMainWindow *mainWindow;
     static QString dataPath;
 
     static const int Comment_DB=0;

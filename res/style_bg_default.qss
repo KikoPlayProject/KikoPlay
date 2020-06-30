@@ -1183,3 +1183,19 @@ QWidget#TaskBlockView{
     qproperty-fColor: rgba(12, 167, 250, 140);
     qproperty-uColor: rgba(200,200,200, 90);
 }
+QListWidget#SettingPageList {
+    show-decoration-selected: 1;
+    outline:0px;
+}
+QListWidget#SettingPageList::item {
+    border: none;
+    background-color: transparent;
+    padding: 6px;
+}
+QListWidget#SettingPageList::item:hover {
+    background: #1CA0E4;
+}
+QListWidget#SettingPageList::item:selected{
+    background: #1CA0E4;
+    color: #ffffff;
+}

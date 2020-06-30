@@ -26,7 +26,7 @@
 #include "Play/Playlist/playlist.h"
 #include "Play/Video/mpvplayer.h"
 #include "adduritask.h"
-#include "downloadsetting.h"
+#include "settings.h"
 #include "selecttorrentfile.h"
 #include "globalobjects.h"
 #include "bgmlistwindow.h"
@@ -92,32 +92,31 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     FontIconButton *settings=new FontIconButton(QChar(0xe615),tr("Settings"), 12, 10, 2*logicalDpiX()/96, downloadContainer);
     settings->setObjectName(QStringLiteral("DownloadToolButton"));
     QObject::connect(settings,&FontIconButton::clicked,[this](){
-        DownloadSetting settingDialog(this);
-        QRect geo(0,0,400,400);
-        geo.moveCenter(this->geometry().center());
-        settingDialog.move(geo.topLeft());
-        if(QDialog::Accepted==settingDialog.exec())
+        Settings settings(Settings::PAGE_DOWN, this);
+        const SettingPage *downPage = settings.getPage(Settings::PAGE_DOWN);
+        if(QDialog::Accepted==settings.exec())
         {
             QJsonObject globalOptions,taskOptions;
-            if(settingDialog.downSpeedChange)
+            const auto &changedValues = downPage->getChangedValues();
+            if(changedValues.contains("downSpeed"))
             {
-                globalOptions.insert("max-overall-download-limit",QString::number(GlobalObjects::appSetting->value("Download/MaxDownloadLimit",0).toInt())+"K");
+                globalOptions.insert("max-overall-download-limit",QString::number(changedValues["downSpeed"].toInt())+"K");
             }
-            if(settingDialog.upSpeedChange)
+            if(changedValues.contains("upSpeed"))
             {
-                globalOptions.insert("max-overall-upload-limit",QString::number(GlobalObjects::appSetting->value("Download/MaxUploadLimit",0).toInt())+"K");
+                globalOptions.insert("max-overall-upload-limit",QString::number(changedValues["upSpeed"].toInt())+"K");
             }
-            if(settingDialog.concurrentChange)
+            if(changedValues.contains("concurrent"))
             {
-                globalOptions.insert("max-concurrent-downloads",QString::number(GlobalObjects::appSetting->value("Download/ConcurrentDownloads",5).toInt()));
+                globalOptions.insert("max-concurrent-downloads",QString::number(changedValues["concurrent"].toInt()));
             }
-            if(settingDialog.seedTimeChange)
+            if(changedValues.contains("seedTime"))
             {
-                taskOptions.insert("seed-time",QString::number(GlobalObjects::appSetting->value("Download/SeedTime",5).toInt()));
+                taskOptions.insert("seed-time",QString::number(changedValues["seedTime"].toInt()));
             }
-            if(settingDialog.btTrackerChange)
+            if(changedValues.contains("btTracker"))
             {
-                taskOptions.insert("bt-tracker",GlobalObjects::appSetting->value("Download/Trackers",QStringList()).toStringList().join(','));
+                taskOptions.insert("bt-tracker",changedValues["btTracker"].toStringList().join(','));
             }
             if(globalOptions.count()>0)
             {

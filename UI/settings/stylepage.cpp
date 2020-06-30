@@ -1,4 +1,4 @@
-#include "styleeditor.h"
+#include "stylepage.h"
 #include <QListWidget>
 #include <QLabel>
 #include <QSlider>
@@ -8,12 +8,13 @@
 #include <QAction>
 #include <QFileDialog>
 #include <QPainter>
-#include <QEvent>
 #include <QHoverEvent>
 #include <QStylePainter>
+#include "../mainwindow.h"
 #include "globalobjects.h"
+#include "../widgets/colorslider.h"
 
-QHash<QString, QPixmap> StyleEditor::bgThumb;
+QHash<QString, QPixmap> StylePage::bgThumb;
 namespace  {
     class ColorPreview : public QWidget
     {
@@ -35,7 +36,7 @@ namespace  {
         QColor color;
     };
 }
-StyleEditor::StyleEditor(QWidget *parent):CFramelessDialog(tr("Edit Style"), parent)
+StylePage::StylePage(QWidget *parent) : SettingPage(parent)
 {
     thumbSize = QSize(120*logicalDpiX()/96,120*logicalDpiY()/96);
     historyBgs = GlobalObjects::appSetting->value("MainWindow/HistoryBackgrounds").toStringList();
@@ -57,6 +58,7 @@ StyleEditor::StyleEditor(QWidget *parent):CFramelessDialog(tr("Edit Style"), par
     QLabel *bgLightnessTip = new QLabel(tr("Background Darkness"), this);
 
     QGridLayout *styleGLayout = new QGridLayout(this);
+    styleGLayout->setContentsMargins(0, 0, 0, 0);
     styleGLayout->addWidget(enableBg, 0, 0, 1, 3);
     styleGLayout->addWidget(bgLightnessTip, 1, 0);
     styleGLayout->addWidget(sliderBgDarkness, 1, 1, 1, 2);
@@ -100,7 +102,7 @@ StyleEditor::StyleEditor(QWidget *parent):CFramelessDialog(tr("Edit Style"), par
             sliderLightness->setEnabled(false);
         }
     });
-    QObject::connect(sliderBgDarkness, &QSlider::valueChanged, this, &StyleEditor::setBgDarkness);
+    QObject::connect(sliderBgDarkness, &QSlider::valueChanged, this, &StylePage::setBgDarkness);
     QObject::connect(customColor, &QCheckBox::stateChanged, this, [this](int state){
         if(state==Qt::Checked)
         {
@@ -115,10 +117,24 @@ StyleEditor::StyleEditor(QWidget *parent):CFramelessDialog(tr("Edit Style"), par
             emit setThemeColor(QColor());
         }
     });
-    resize(GlobalObjects::appSetting->value("DialogSize/StyleEdit",QSize(400*logicalDpiX()/96,300*logicalDpiY()/96)).toSize());
+
+    MainWindow *mW = static_cast<MainWindow *>(GlobalObjects::mainWindow);
+    QObject::connect(this, &StylePage::setBackground, mW, (void (MainWindow::*)(const QString &, const QColor &))&MainWindow::setBackground);
+    QObject::connect(this, &StylePage::setBgDarkness, mW, &MainWindow::setBgDarkness);
+    QObject::connect(this, &StylePage::setThemeColor, mW, &MainWindow::setThemeColor);
+
 }
 
-void StyleEditor::setBgList(QListWidget *bgImgView)
+void StylePage::onClose()
+{
+    GlobalObjects::appSetting->setValue("DialogSize/StyleEdit",size());
+    GlobalObjects::appSetting->setValue("MainWindow/BackgroundDarkness", sliderBgDarkness->value());
+    GlobalObjects::appSetting->setValue("MainWindow/HistoryBackgrounds", historyBgs);
+    GlobalObjects::appSetting->setValue("MainWindow/CustomColorHSV", QColor::fromHsv(sliderHue->value(), 255, sliderLightness->value()));
+    GlobalObjects::appSetting->setValue("MainWindow/CustomColor", customColor->isChecked());
+}
+
+void StylePage::setBgList(QListWidget *bgImgView)
 {
     QStringList historyBgs = GlobalObjects::appSetting->value("MainWindow/HistoryBackgrounds").toStringList();
     for(auto &path : historyBgs)
@@ -179,14 +195,14 @@ void StyleEditor::setBgList(QListWidget *bgImgView)
     bgImgView->addAction(actRemove);
 }
 
-void StyleEditor::updateSetting(const QString &path, bool add)
+void StylePage::updateSetting(const QString &path, bool add)
 {
     historyBgs.removeOne(path);
     if(add) historyBgs.insert(0, path);
     if(historyBgs.count()>maxBgCount) historyBgs.removeLast();
 }
 
-QPixmap StyleEditor::getThumb(const QString &path)
+QPixmap StylePage::getThumb(const QString &path)
 {
     if(bgThumb.contains(path)) return bgThumb[path];
     QImage img(path);
@@ -200,7 +216,7 @@ QPixmap StyleEditor::getThumb(const QString &path)
     return bgThumb[path];
 }
 
-void StyleEditor::setSlide()
+void StylePage::setSlide()
 {
     colorPreview = new ColorPreview(this);
     colorPreview->setFixedSize(40*logicalDpiX()/96, 40*logicalDpiX()/96);
@@ -251,115 +267,4 @@ void StyleEditor::setSlide()
     darknessGradient.setColorAt(0, Qt::white);
     darknessGradient.setColorAt(1, Qt::black);
     sliderBgDarkness->setGradient(darknessGradient);
-}
-
-void StyleEditor::onClose()
-{
-    GlobalObjects::appSetting->setValue("DialogSize/StyleEdit",size());
-    GlobalObjects::appSetting->setValue("MainWindow/BackgroundDarkness", sliderBgDarkness->value());
-    GlobalObjects::appSetting->setValue("MainWindow/HistoryBackgrounds", historyBgs);
-    GlobalObjects::appSetting->setValue("MainWindow/CustomColorHSV", QColor::fromHsv(sliderHue->value(), 255, sliderLightness->value()));
-    GlobalObjects::appSetting->setValue("MainWindow/CustomColor", customColor->isChecked());
-    CFramelessDialog::onClose();
-}
-
-void ColorSlider::setEnabled(bool on)
-{
-    QSlider::setEnabled(on);
-    update();
-}
-
-void ColorSlider::paintEvent(QPaintEvent *)
-{
-    QStylePainter painter(this);
-    QStyleOptionSlider opt;
-    initStyleOption(&opt);
-    QRect grooveRect(style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove,this));
-    fillGradient.setStart(0, 0);
-    fillGradient.setFinalStop(grooveRect.width(), 0);
-    painter.fillRect(grooveRect, QBrush(fillGradient));
-    if(!isEnabled()) painter.fillRect(grooveRect, QColor(255,255,255,200));
-    opt.subControls = QStyle::SC_SliderHandle | QStyle::SC_SliderGroove;
-    if (pressedControl)
-    {
-        opt.activeSubControls = pressedControl;
-        opt.state |= QStyle::State_Sunken;
-    }
-    else
-    {
-        opt.activeSubControls = hoverControl;
-    }
-    painter.drawComplexControl(QStyle::CC_Slider, opt);
-}
-
-void ColorSlider::mousePressEvent(QMouseEvent *ev)
-{
-    if ((ev->button() & style()->styleHint(QStyle::SH_Slider_AbsoluteSetButtons)) == ev->button())
-    {
-        pressedControl = QStyle::SC_SliderHandle;
-    }
-    else if ((ev->button() & style()->styleHint(QStyle::SH_Slider_PageSetButtons)) == ev->button())
-    {
-        QStyleOptionSlider opt;
-        initStyleOption(&opt);
-        pressedControl = style()->hitTestComplexControl(QStyle::CC_Slider, &opt, ev->pos(), this);
-    }
-    QSlider::mousePressEvent(ev);
-    if(!isSliderDown() && ev->button() == Qt::LeftButton)
-    {
-        int dur = maximum()-minimum();
-        double x=qBound<double>(0., ev->x(), width());
-        int pos = minimum() + dur * (x /width());
-        emit sliderClick(pos);
-        setValue(pos);
-    }
-    ev->accept();
-}
-
-void ColorSlider::mouseReleaseEvent(QMouseEvent *ev)
-{
-    pressedControl = QStyle::SC_None;
-
-    int dur = maximum()-minimum();
-    double x=qBound<double>(0., ev->x(), width());
-    int pos = minimum() + dur * (x /width());
-    emit sliderUp(pos);
-
-    QSlider::mouseReleaseEvent(ev);
-    ev->accept();
-}
-
-bool ColorSlider::event(QEvent *event)
-{
-    switch(event->type())
-    {
-       case QEvent::HoverEnter:
-       case QEvent::HoverLeave:
-       case QEvent::HoverMove:
-           if (const QHoverEvent *he = static_cast<const QHoverEvent *>(event))
-               updateHoverControl(he->pos());
-           break;
-
-    }
-    return QSlider::event(event);
-}
-
-void ColorSlider::updateHoverControl(const QPoint &pos)
-{
-    QStyleOptionSlider opt;
-    initStyleOption(&opt);
-    opt.subControls = QStyle::SC_All;
-    QRect handleRect = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
-    QRect grooveRect = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove, this);
-    if (handleRect.contains(pos))
-    {
-        hoverControl = QStyle::SC_SliderHandle;
-    } else if (grooveRect.contains(pos))
-    {
-        hoverControl = QStyle::SC_SliderGroove;
-    } else
-    {
-        hoverControl = QStyle::SC_None;
-    }
-
 }

@@ -58,7 +58,7 @@ HttpServer::~HttpServer()
     server->close();
 }
 
-QString HttpServer::startServer(qint64 port)
+QString HttpServer::startServer(quint16 port)
 {
 
    if(server->isListening())return QString();

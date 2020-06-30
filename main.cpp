@@ -106,6 +106,7 @@ int main(int argc, char *argv[])
 
     GlobalObjects::init();
     MainWindow w;
+    GlobalObjects::mainWindow = &w;
     decodeParam();
     QLocalServer *singleServer=new QLocalServer(&a);
     QObject::connect(singleServer, &QLocalServer::newConnection, [singleServer,&w](){

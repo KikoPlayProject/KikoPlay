@@ -13,11 +13,10 @@
 #endif
 #include "about.h"
 #include "poolmanager.h"
-#include "serversettting.h"
 #include "checkupdate.h"
 #include "tip.h"
 #include "stylemanager.h"
-#include "styleeditor.h"
+#include "settings.h"
 #include "widgets/backgroundwidget.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
@@ -105,6 +104,28 @@ MainWindow::~MainWindow()
     delete playerWindow;
 }
 
+void MainWindow::setBackground(const QString &path, const QColor &color)
+{
+    themeColor = color;
+    setBackground(path);
+}
+
+void MainWindow::setBgDarkness(int val)
+{
+    bgWidget->setBgDarkness(val);
+}
+
+void MainWindow::setThemeColor(const QColor &color)
+{
+    themeColor = color;
+    if(themeColor.isValid() && hasBackground)
+        GlobalObjects::styleManager->setQSS(StyleManager::BG_COLOR, themeColor);
+    else if(hasBackground)
+        GlobalObjects::styleManager->setQSS(StyleManager::DEFAULT_BG);
+    else
+        GlobalObjects::styleManager->setQSS(StyleManager::NO_BG);
+}
+
 void MainWindow::setupUI()
 {
 
@@ -147,37 +168,12 @@ void MainWindow::setupUI()
     });
     buttonIcon->addAction(act_poolManager);
 
-    QAction *act_lanServer=new QAction(tr("LAN Server"), this);
-    QObject::connect(act_lanServer,&QAction::triggered,[this](){
-        ServerSettting serverSetting(buttonIcon);
-        serverSetting.exec();
+    QAction *act_Settingse=new QAction(tr("Settings"), this);
+    QObject::connect(act_Settingse,&QAction::triggered,[this](){
+        Settings settings(Settings::PAGE_UI, buttonIcon);
+        settings.exec();
     });
-    buttonIcon->addAction(act_lanServer);
-
-    QAction *act_EditStyle=new QAction(tr("Edit Style"), this);
-    QObject::connect(act_EditStyle,&QAction::triggered,[this](){
-        StyleEditor styleEditor(buttonIcon);
-        QRect geo(0,0,400,400);
-        geo.moveCenter(this->geometry().center());
-        styleEditor.move(geo.topLeft());
-        QObject::connect(&styleEditor, &StyleEditor::setBackground, this, [this](const QString &path, const QColor &color){
-            themeColor = color;
-            setBackground(path);
-        });
-        QObject::connect(&styleEditor, &StyleEditor::setBgDarkness,bgWidget, &BackgroundWidget::setBgDarkness);
-        QObject::connect(&styleEditor, &StyleEditor::setThemeColor, this, [this](const QColor &color){
-            themeColor = color;
-            if(themeColor.isValid() && hasBackground)
-                GlobalObjects::styleManager->setQSS(StyleManager::BG_COLOR, themeColor);
-            else if(hasBackground)
-                GlobalObjects::styleManager->setQSS(StyleManager::DEFAULT_BG);
-            else
-                GlobalObjects::styleManager->setQSS(StyleManager::NO_BG);
-
-        });
-        styleEditor.exec();
-    });
-    buttonIcon->addAction(act_EditStyle);
+    buttonIcon->addAction(act_Settingse);
 
     QAction *act_checkUpdate=new QAction(tr("Check For Updates"), this);
     QObject::connect(act_checkUpdate,&QAction::triggered,[this](){

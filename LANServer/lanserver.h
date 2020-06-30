@@ -9,7 +9,7 @@ class LANServer : public QObject
 public:
     explicit LANServer(QObject *parent = nullptr);
     ~LANServer();
-    QString startServer(qint64 port);
+    QString startServer(quint16 port);
     void stopServer();
     const QStringList &getLog() const{return logs;}
     bool isStart() const;

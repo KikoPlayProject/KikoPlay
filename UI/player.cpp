@@ -17,7 +17,7 @@
 #include "widgets/danmustatiswidget.h"
 #include "capture.h"
 #include "mediainfo.h"
-#include "mpvparametersetting.h"
+#include "settings.h"
 #include "mpvlog.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/Render/danmurender.h"
@@ -1058,8 +1058,8 @@ void PlayerWindow::setupPlaySettingPage()
 
     QPushButton *editMpvOptions=new QPushButton(tr("MPV Parameter Settings"), playSettingPage);
     QObject::connect(editMpvOptions,&QPushButton::clicked,[this](){
-        MPVParameterSetting mpvParameterDialog(this);
-        mpvParameterDialog.exec();
+        Settings settings(Settings::PAGE_MPV, this);
+        settings.exec();
     });
 
     QPushButton *showMpvLog=new QPushButton(tr("Show Mpv Log"), playSettingPage);

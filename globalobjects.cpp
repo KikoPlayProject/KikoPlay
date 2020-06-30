@@ -36,6 +36,7 @@ ScriptManager *GlobalObjects::scriptManager=nullptr;
 AutoDownloadManager *GlobalObjects::autoDownloadManager=nullptr;
 KCache *GlobalObjects::kCache=nullptr;
 StyleManager *GlobalObjects::styleManager=nullptr;
+QMainWindow *GlobalObjects::mainWindow=nullptr;
 QFont GlobalObjects::iconfont;
 QString GlobalObjects::dataPath;
 namespace  {

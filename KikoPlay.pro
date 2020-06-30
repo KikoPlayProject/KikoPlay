@@ -40,10 +40,15 @@ SOURCES += \
     UI/autodownloadwindow.cpp \
     UI/danmuview.cpp \
     UI/inputdialog.cpp \
-    UI/styleeditor.cpp \
+    UI/settings.cpp \
+    UI/settings/downloadpage.cpp \
+    UI/settings/lanserverpage.cpp \
+    UI/settings/mpvpage.cpp \
+    UI/settings/stylepage.cpp \
     UI/stylemanager.cpp \
     UI/widgets/backgroundwidget.cpp \
     UI/widgets/clickslider.cpp \
+    UI/widgets/colorslider.cpp \
     UI/widgets/danmustatiswidget.cpp \
     UI/widgets/dialogtip.cpp \
     UI/widgets/fonticonbutton.cpp \
@@ -101,11 +106,9 @@ SOURCES += \
     UI/animedetailinfo.cpp \
     UI/timelineedit.cpp \
     Play/Danmu/Provider/acfunprovider.cpp \
-    UI/mpvparametersetting.cpp \
     UI/mpvlog.cpp \
     LANServer/lanserver.cpp \
     LANServer/httpserver.cpp \
-    UI/serversettting.cpp \
     Play/Playlist/playlistitem.cpp \
     Play/Playlist/playlistprivate.cpp \
     Play/Danmu/Render/cacheworker.cpp \
@@ -152,10 +155,16 @@ HEADERS += \
     Play/Danmu/Layouts/rolllayout.h \
     Play/Danmu/Layouts/toplayout.h \
     Play/Danmu/danmupool.h \
-    UI/styleeditor.h \
+    UI/settings.h \
+    UI/settings/downloadpage.h \
+    UI/settings/lanserverpage.h \
+    UI/settings/mpvpage.h \
+    UI/settings/settingpage.h \
+    UI/settings/stylepage.h \
     UI/stylemanager.h \
     UI/widgets/backgroundwidget.h \
     UI/widgets/clickslider.h \
+    UI/widgets/colorslider.h \
     UI/widgets/danmustatiswidget.h \
     UI/widgets/dialogtip.h \
     UI/widgets/fonticonbutton.h \
@@ -201,7 +210,6 @@ HEADERS += \
     UI/downloadwindow.h \
     UI/adduritask.h \
     UI/selecttorrentfile.h \
-    UI/downloadsetting.h \
     UI/poolmanager.h \
     UI/checkupdate.h \
     Play/Danmu/Provider/iqiyiprovider.h \
@@ -211,11 +219,9 @@ HEADERS += \
     UI/animedetailinfo.h \
     UI/timelineedit.h \
     Play/Danmu/Provider/acfunprovider.h \
-    UI/mpvparametersetting.h \
     UI/mpvlog.h \
     LANServer/lanserver.h \
     LANServer/httpserver.h \
-    UI/serversettting.h \
     Play/Playlist/playlistitem.h \
     Play/Playlist/playlistprivate.h \
     Play/Danmu/Render/cacheworker.h \

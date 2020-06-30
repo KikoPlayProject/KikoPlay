@@ -1,4 +1,4 @@
-#include "downloadsetting.h"
+#include "downloadpage.h"
 #include <QPlainTextEdit>
 #include <QLineEdit>
 #include <QTextEdit>
@@ -9,7 +9,6 @@
 #include <QIntValidator>
 #include <QSyntaxHighlighter>
 #include "globalobjects.h"
-
 namespace
 {
     class OptionHighLighter : public QSyntaxHighlighter
@@ -55,7 +54,9 @@ namespace
         QRegExp optionRe,commentRe;
     };
 }
-DownloadSetting::DownloadSetting(QWidget *parent) : CFramelessDialog(tr("Download Setting"),parent,true,true,false)
+
+
+DownloadPage::DownloadPage(QWidget *parent) : SettingPage(parent)
 {
     QLabel *maxDownSpeedLabel=new QLabel(tr("Max Download Limit(KB): "),this);
     maxDownSpeedLimit=new QLineEdit(this);
@@ -107,15 +108,8 @@ DownloadSetting::DownloadSetting(QWidget *parent) : CFramelessDialog(tr("Downloa
        argChange=true;
     });
 
-    QIntValidator *speedAndTimeValidator=new QIntValidator(this);
-    speedAndTimeValidator->setBottom(0);
-    maxDownSpeedLimit->setValidator(speedAndTimeValidator);
-    maxUpSpeedLimit->setValidator(speedAndTimeValidator);
-    seedTime->setValidator(speedAndTimeValidator);
-    QIntValidator *concurrentValidator=new QIntValidator(1,10,this);
-    maxConcurrent->setValidator(concurrentValidator);
-
     QGridLayout *settingGLayout=new QGridLayout(this);
+    settingGLayout->setContentsMargins(0, 0, 0, 0);
     settingGLayout->addWidget(maxDownSpeedLabel,0,0);
     settingGLayout->addWidget(maxDownSpeedLimit,0,1);
     settingGLayout->addWidget(maxUpSpeedLabel,1,0);
@@ -132,23 +126,43 @@ DownloadSetting::DownloadSetting(QWidget *parent) : CFramelessDialog(tr("Downloa
     settingGLayout->setRowStretch(6,1);
     settingGLayout->setRowStretch(8,1);
     settingGLayout->setColumnStretch(1,1);
-    resize(GlobalObjects::appSetting->value("DialogSize/DownloadSetting",QSize(300*logicalDpiX()/96,350*logicalDpiY()/96)).toSize());
+
 }
 
-void DownloadSetting::onAccept()
+void DownloadPage::onClose()
 {
-    if(downSpeedChange)GlobalObjects::appSetting->setValue("Download/MaxDownloadLimit",maxDownSpeedLimit->text().toInt());
-    if(upSpeedChange)GlobalObjects::appSetting->setValue("Download/MaxUploadLimit",maxUpSpeedLimit->text().toInt());
-    if(seedTimeChange)GlobalObjects::appSetting->setValue("Download/SeedTime",seedTime->text().toInt());
-    if(concurrentChange)GlobalObjects::appSetting->setValue("Download/ConcurrentDownloads",maxConcurrent->text().toInt());
-    if(btTrackerChange)GlobalObjects::appSetting->setValue("Download/Trackers",btTrackers->toPlainText().split('\n',QString::SkipEmptyParts));
-    if(argChange)GlobalObjects::appSetting->setValue("Download/Aria2Args",args->toPlainText());
-    GlobalObjects::appSetting->setValue("DialogSize/DownloadSetting",size());
-    CFramelessDialog::onAccept();
-}
-
-void DownloadSetting::onClose()
-{
-    GlobalObjects::appSetting->setValue("DialogSize/DownloadSetting",size());
-    CFramelessDialog::onClose();
+    if(downSpeedChange)
+    {
+        int mdSpeed = maxDownSpeedLimit->text().toInt();
+        changedValues["downSpeed"] = mdSpeed;
+        GlobalObjects::appSetting->setValue("Download/MaxDownloadLimit", mdSpeed);
+    }
+    if(upSpeedChange)
+    {
+        int muSpeed = maxUpSpeedLimit->text().toInt();
+        changedValues["upSpeed"] = muSpeed;
+        GlobalObjects::appSetting->setValue("Download/MaxUploadLimit", muSpeed);
+    }
+    if(seedTimeChange)
+    {
+        int sTime = seedTime->text().toInt();
+        changedValues["seedTime"] = sTime;
+        GlobalObjects::appSetting->setValue("Download/SeedTime", sTime);
+    }
+    if(concurrentChange)
+    {
+        int mConcurrent = maxConcurrent->text().toInt();
+        changedValues["concurrent"] = mConcurrent;
+        GlobalObjects::appSetting->setValue("Download/ConcurrentDownloads", mConcurrent);
+    }
+    if(btTrackerChange)
+    {
+        QStringList trackers = btTrackers->toPlainText().split('\n',QString::SkipEmptyParts);
+        changedValues["btTracker"] = trackers;
+        GlobalObjects::appSetting->setValue("Download/Trackers", trackers);
+    }
+    if(argChange)
+    {
+        GlobalObjects::appSetting->setValue("Download/Aria2Args",args->toPlainText());
+    }
 }

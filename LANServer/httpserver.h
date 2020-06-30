@@ -21,7 +21,7 @@ private:
 signals:
     void showLog(const QString &logInfo);
 public slots:
-    QString startServer(qint64 port);
+    QString startServer(quint16 port);
     void stopServer();
 
     void api_Playlist(QHttpEngine::Socket *socket);

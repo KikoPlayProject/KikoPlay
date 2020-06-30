@@ -18,7 +18,7 @@ LANServer::LANServer(QObject *parent) : QObject(parent)
     bool start=GlobalObjects::appSetting->value("Server/AutoStart",false).toBool();
     if(start)
     {
-        qint64 port=GlobalObjects::appSetting->value("Server/Port",8000).toLongLong();
+        quint16 port=GlobalObjects::appSetting->value("Server/Port",8000).toUInt();
         if(!startServer(port).isEmpty())
         {
             GlobalObjects::appSetting->setValue("Server/AutoStart",false);
@@ -34,11 +34,11 @@ LANServer::~LANServer()
     server->deleteLater();
 }
 
-QString LANServer::startServer(qint64 port)
+QString LANServer::startServer(quint16 port)
 {
     QString retVal;
     QMetaObject::invokeMethod(server,"startServer",Qt::BlockingQueuedConnection,
-                              Q_RETURN_ARG(QString,retVal),Q_ARG(qint64,port));
+                              Q_RETURN_ARG(QString,retVal),Q_ARG(quint16,port));
     return retVal;
 }
 

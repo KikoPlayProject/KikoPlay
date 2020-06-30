@@ -36,6 +36,10 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void setBackground(const QString &path, const QColor &color);
+    void setBgDarkness(int val);
+    void setThemeColor(const QColor &color);
+
 private:
     DropableWidget *widgetTitlebar;
     BackgroundWidget *bgWidget;

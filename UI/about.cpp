@@ -3,6 +3,7 @@
 #include <QPlainTextEdit>
 #include <QVBoxLayout>
 #include <QtCore>
+#include <QScrollBar>
 About::About(QWidget *parent) : CFramelessDialog("",parent)
 {
     QLabel *logo=new QLabel(this);
@@ -12,7 +13,7 @@ About::About(QWidget *parent) : CFramelessDialog("",parent)
     version.open(QIODevice::ReadOnly);
     QJsonObject curVersionObj = QJsonDocument::fromJson(version.readAll()).object();
     QString versionStr=curVersionObj.value("Version").toString();
-    QLabel *info=new QLabel(tr("KikoPlay - NOT ONLY A Full-featured Danmu Player<br/>"
+    QLabel *info=new QLabel(tr("KikoPlay - NOT ONLY A Full-Featured Danmu Player<br/>"
                                "%1 (C) 2020 Kikyou <a href=\"https://protostars.github.io/KikoPlay/\">homepage</a> <a href=\"https://github.com/Protostars/KikoPlay\">github</a><br/>"
                                "Exchange & BUG Report: 874761809(QQ Group)").arg(versionStr),this);
     info->setOpenExternalLinks(true);
@@ -25,6 +26,9 @@ About::About(QWidget *parent) : CFramelessDialog("",parent)
     {
         libsInfo->appendPlainText(aboutFile.readAll());
     }
+    QTextCursor cursor = libsInfo->textCursor();
+    cursor.movePosition(QTextCursor::Start);
+    libsInfo->setTextCursor(cursor);
     QVBoxLayout *abVLayout=new QVBoxLayout(this);
     abVLayout->addWidget(logo);
     abVLayout->addWidget(info);
