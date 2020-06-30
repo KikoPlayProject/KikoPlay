@@ -7,7 +7,8 @@ class MPVPage : public SettingPage
     Q_OBJECT
 public:
     MPVPage(QWidget *parent = nullptr);
-    virtual void onClose();
+    virtual void onAccept() override;
+    virtual void onClose() override;
 private:
     QTextEdit *parameterEdit;
     bool paramChange = false;

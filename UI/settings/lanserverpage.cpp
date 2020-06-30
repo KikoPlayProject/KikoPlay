@@ -77,11 +77,16 @@ LANServerPage::LANServerPage(QWidget *parent) : SettingPage(parent)
     pGLayout->setColumnStretch(1,1);
 }
 
-void LANServerPage::onClose()
+void LANServerPage::onAccept()
 {
     if(serverStateChanged) GlobalObjects::appSetting->setValue("Server/AutoStart",startServer->isChecked());
     if(syncTimeChanged) GlobalObjects::appSetting->setValue("Server/SyncPlayTime",syncUpdateTime->isChecked());
     if(portChanged) GlobalObjects::appSetting->setValue("Server/Port",portEdit->text().toUInt());
+}
+
+void LANServerPage::onClose()
+{
+
 }
 
 void LANServerPage::printLog(const QString &log)

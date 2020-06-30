@@ -9,6 +9,7 @@ class LANServerPage: public SettingPage
     Q_OBJECT
 public:
     LANServerPage(QWidget *parent = nullptr);
+    virtual void onAccept() override;
     virtual void onClose() override;
 private:
     QCheckBox *startServer, *syncUpdateTime;

@@ -9,6 +9,7 @@ class StylePage : public SettingPage
     Q_OBJECT
 public:
     StylePage(QWidget *parent = nullptr);
+    virtual void onAccept() override;
     virtual void onClose() override;
 signals:
     void setBackground(const QString &path, const QColor &color=QColor());
@@ -20,6 +21,7 @@ private:
     QPixmap getThumb(const QString &path);
     void setSlide();
     static QHash<QString, QPixmap> bgThumb;
+    bool bgChanged = false, bgDarknessChanged = false, colorChanged = false;
     const int maxBgCount = 6;
     QStringList historyBgs;
     QSize thumbSize;

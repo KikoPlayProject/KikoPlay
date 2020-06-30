@@ -102,8 +102,12 @@ StylePage::StylePage(QWidget *parent) : SettingPage(parent)
             sliderLightness->setEnabled(false);
         }
     });
-    QObject::connect(sliderBgDarkness, &QSlider::valueChanged, this, &StylePage::setBgDarkness);
+    QObject::connect(sliderBgDarkness, &QSlider::valueChanged, this, [this](int val){
+        bgDarknessChanged = true;
+        emit setBgDarkness(val);
+    });
     QObject::connect(customColor, &QCheckBox::stateChanged, this, [this](int state){
+        colorChanged = true;
         if(state==Qt::Checked)
         {
             sliderHue->setEnabled(true);
@@ -125,13 +129,20 @@ StylePage::StylePage(QWidget *parent) : SettingPage(parent)
 
 }
 
+void StylePage::onAccept()
+{
+    if(bgDarknessChanged) GlobalObjects::appSetting->setValue("MainWindow/BackgroundDarkness", sliderBgDarkness->value());
+    if(bgChanged) GlobalObjects::appSetting->setValue("MainWindow/HistoryBackgrounds", historyBgs);
+    if(colorChanged)
+    {
+        GlobalObjects::appSetting->setValue("MainWindow/CustomColorHSV", QColor::fromHsv(sliderHue->value(), 255, sliderLightness->value()));
+        GlobalObjects::appSetting->setValue("MainWindow/CustomColor", customColor->isChecked());
+    }
+}
+
 void StylePage::onClose()
 {
-    GlobalObjects::appSetting->setValue("DialogSize/StyleEdit",size());
-    GlobalObjects::appSetting->setValue("MainWindow/BackgroundDarkness", sliderBgDarkness->value());
-    GlobalObjects::appSetting->setValue("MainWindow/HistoryBackgrounds", historyBgs);
-    GlobalObjects::appSetting->setValue("MainWindow/CustomColorHSV", QColor::fromHsv(sliderHue->value(), 255, sliderLightness->value()));
-    GlobalObjects::appSetting->setValue("MainWindow/CustomColor", customColor->isChecked());
+    onAccept();
 }
 
 void StylePage::setBgList(QListWidget *bgImgView)
@@ -200,6 +211,7 @@ void StylePage::updateSetting(const QString &path, bool add)
     historyBgs.removeOne(path);
     if(add) historyBgs.insert(0, path);
     if(historyBgs.count()>maxBgCount) historyBgs.removeLast();
+    bgChanged = true;
 }
 
 QPixmap StylePage::getThumb(const QString &path)
@@ -247,6 +259,7 @@ void StylePage::setSlide()
         lightnessGradient.setColorAt(1, QColor::fromHsv(val,255,255));
         sliderLightness->setGradient(lightnessGradient);
         static_cast<ColorPreview *>(colorPreview)->setColor(QColor::fromHsv(sliderHue->value(),255,sliderLightness->value()));
+        colorChanged = true;
     });
     QObject::connect(sliderHue, &ColorSlider::sliderUp, this, [this](int ){
         emit setThemeColor(QColor::fromHsv(sliderHue->value(),255,sliderLightness->value()));
@@ -254,6 +267,7 @@ void StylePage::setSlide()
 
     QObject::connect(sliderLightness, &ColorSlider::valueChanged, this, [this](){
         static_cast<ColorPreview *>(colorPreview)->setColor(QColor::fromHsv(sliderHue->value(),255,sliderLightness->value()));
+        colorChanged = true;
     });
     QObject::connect(sliderLightness, &ColorSlider::sliderUp, this, [this](int ){
         emit setThemeColor(QColor::fromHsv(sliderHue->value(),255,sliderLightness->value()));

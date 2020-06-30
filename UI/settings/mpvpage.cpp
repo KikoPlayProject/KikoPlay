@@ -73,7 +73,12 @@ MPVPage::MPVPage(QWidget *parent) : SettingPage(parent)
     dialogVLayout->addWidget(parameterEdit);
 }
 
-void MPVPage::onClose()
+void MPVPage::onAccept()
 {
     if(paramChange) GlobalObjects::appSetting->setValue("Play/MPVParameters",parameterEdit->toPlainText());
+}
+
+void MPVPage::onClose()
+{
+
 }

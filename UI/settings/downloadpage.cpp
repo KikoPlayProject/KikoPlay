@@ -129,7 +129,7 @@ DownloadPage::DownloadPage(QWidget *parent) : SettingPage(parent)
 
 }
 
-void DownloadPage::onClose()
+void DownloadPage::onAccept()
 {
     if(downSpeedChange)
     {
@@ -165,4 +165,9 @@ void DownloadPage::onClose()
     {
         GlobalObjects::appSetting->setValue("Download/Aria2Args",args->toPlainText());
     }
+}
+
+void DownloadPage::onClose()
+{
+
 }

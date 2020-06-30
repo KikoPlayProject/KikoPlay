@@ -53,7 +53,7 @@ void Settings::onAccept()
 {
     for(auto &p : pages)
     {
-        if(p) p->onClose();
+        if(p) p->onAccept();
     }
     GlobalObjects::appSetting->setValue("DialogSize/Setting",size());
     CFramelessDialog::onAccept();
@@ -61,6 +61,10 @@ void Settings::onAccept()
 
 void Settings::onClose()
 {
+    for(auto &p : pages)
+    {
+        if(p) p->onClose();
+    }
     GlobalObjects::appSetting->setValue("DialogSize/Setting",size());
     CFramelessDialog::onClose();
 }

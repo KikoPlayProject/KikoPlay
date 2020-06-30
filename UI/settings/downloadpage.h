@@ -10,6 +10,7 @@ class DownloadPage : public SettingPage
     Q_OBJECT
 public:
     DownloadPage(QWidget *parent = nullptr);
+    virtual void onAccept() override;
     virtual void onClose() override;
 private:
     QLineEdit *maxDownSpeedLimit,*maxUpSpeedLimit,*seedTime,*maxConcurrent;
