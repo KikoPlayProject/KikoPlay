@@ -36,12 +36,13 @@ void FontIconButton::hideText(bool on)
 void FontIconButton::setNormColor(const QColor &color)
 {
     normColor = color;
-    fontColor = color;
+    if(!isChecked()) fontColor = color;
 }
 
 void FontIconButton::setHoverColor(const QColor &color)
 {
     hoverColor = color;
+    if(isChecked()) fontColor = color;
 }
 
 QSize FontIconButton::sizeHint() const

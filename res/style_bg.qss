@@ -920,14 +920,14 @@ QPushButton#TaskTypeToolButton{
     padding:5px;
     background:transparent;
     qproperty-normColor: rgb(240,240,240);
-    qproperty-hoverColor: rgb(@ThemeColor);
+    qproperty-hoverColor: rgb(@ThemeColorL1);
 }
 QPushButton#TaskTypeToolButton:hover,
 QPushButton#TaskTypeToolButton:pressed,
 QPushButton#TaskTypeToolButton:checked{
     border-style:solid;
     border-width:0px 0px 0px 4px;
-    border-color:rgb(@ThemeColor);
+    border-color:rgb(@ThemeColorL1);
     color:#679bcc;
     background:rgba(255,255,255,80);
 }
@@ -960,11 +960,11 @@ QPushButton#BgmFilterBtn:hover{
     border-style:solid;
     border-width:1px;
     border-color:#b9b9b9;
-    color:rgb(@ThemeColor);
+    color:rgb(@ThemeColorL1);
 }
 QPushButton#BgmFilterBtn:checked{
     border-style:none;
-    color:rgb(@ThemeColor);
+    color:rgb(@ThemeColorL1);
     background: rgba(255,255,255,80);
 }
 
@@ -1019,7 +1019,7 @@ QTreeView#LabelView {
     selection-color: rgb(0, 160, 230);
     show-decoration-selected: 1;
     outline:0px;
-    qproperty-topLevelColor: rgb(@ThemeColor);
+    qproperty-topLevelColor: rgb(@ThemeColorL2);
     qproperty-childLevelColor: rgb(240,240,240);
     qproperty-countFColor: rgb(240,240,240);
     qproperty-countBColor: rgba(@ThemeColorL3, 160);
@@ -1176,7 +1176,7 @@ QPushButton#AnimeDetailBack{
     background: transparent;
 }
 QPushButton#AnimeDetailBack:hover{
-    color:rgb(255,255,255);
+    color:rgb(@ThemeColorL1);
 }
 QPushButton#AnimeDetailBack:pressed{
     color:rgb(@ThemeColorL1);

@@ -185,6 +185,7 @@ void StylePage::setBgList(QListWidget *bgImgView)
                 QScopedPointer<QListWidgetItem> last(bgImgView->item(bgImgView->count()-1));
                 bgThumb.remove(last->data(Qt::UserRole).toString());
             }
+            emit setBackground(fileName);
         }
     });
     QAction* actRemove = new QAction(tr("Remove"), this);
