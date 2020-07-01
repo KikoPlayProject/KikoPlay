@@ -528,10 +528,6 @@ QWidget *MainWindow::setupPlayPage()
         static QRect geo;
         if(on)
         {
-#ifndef Q_OS_WIN
-            setWindowFlags (Qt::CustomizeWindowHint);
-            show();
-#endif
             geo = geometry();
             isShowPlaylist=!listWindow->isHidden();
             isMax=isMaximized();
@@ -544,10 +540,6 @@ QWidget *MainWindow::setupPlayPage()
         }
         else
         {
-#ifndef Q_OS_WIN
-            setWindowFlags (windowFlags() & ~Qt::CustomizeWindowHint);
-            show();
-#endif
 			isMini = false;
             widgetTitlebar->show();
             isShowPlaylist?listWindow->show():listWindow->hide();
