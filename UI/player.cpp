@@ -506,9 +506,9 @@ void PlayerWindow::initActions()
         adjustPlayerSize(resizePercent);
     });
     windowSizeGroup->actions().at(GlobalObjects::appSetting->value("Play/WindowSize",2).toInt())->trigger();
-    QAction *act_MiniMode = new QAction(tr("Mini Mode"),this);
+    act_MiniMode = new QAction(tr("Mini Mode"),this);
     QObject::connect(act_MiniMode, &QAction::triggered, this, [this](){
-        if(GlobalObjects::playlist->getCurrentItem() != nullptr)
+        if(GlobalObjects::playlist->getCurrentItem() != nullptr && !miniModeOn)
         {
             if(isFullscreen)
             {
@@ -1577,6 +1577,13 @@ void PlayerWindow::adjustProgressInfoPos()
     progressInfo->move(nx<0?0:nx,ty);
 }
 
+void PlayerWindow::exitMiniMode()
+{
+    miniModeOn = false;
+    miniProgress->hide();
+    emit miniMode(false);
+}
+
 void PlayerWindow::setCentralWidget(QWidget *widget)
 {
     QHBoxLayout *cHBoxLayout = new QHBoxLayout(this);
@@ -1648,9 +1655,7 @@ void PlayerWindow::mouseDoubleClickEvent(QMouseEvent *)
 {
     if(miniModeOn)
     {
-        miniModeOn = false;
-        miniProgress->hide();
-        emit miniMode(false);
+        exitMiniMode();
         return;
     }
     dbClickBehaivior==0?actFullscreen->trigger():actPlayPause->trigger();
@@ -1838,9 +1843,7 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
 	case Qt::Key_Return:
         if(miniModeOn)
         {
-            miniModeOn = false;
-            miniProgress->hide();
-            emit miniMode(false);
+            exitMiniMode();
             break;
         }
         actFullscreen->trigger();
@@ -1848,6 +1851,8 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Escape:
         if(isFullscreen)
             actFullscreen->trigger();
+        else
+            miniModeOn?exitMiniMode():act_MiniMode->trigger();
         break;
 	case Qt::Key_Down:
 	case Qt::Key_Up:

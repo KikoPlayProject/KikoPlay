@@ -42,7 +42,7 @@ private:
      QLabel *timeLabel;
 
      QPushButton *play_pause,*prev,*next,*stop,*mute,*setting, *danmu,*fullscreen;
-     QAction *actPlayPause,*actPrev,*actNext,*actFullscreen,*act_screenshotSrc,*act_screenshotAct;
+     QAction *actPlayPause,*actPrev,*actNext,*actFullscreen,*act_screenshotSrc,*act_screenshotAct, *act_MiniMode;
      QTimer doublePressTimer,hideCursorTimer;
      const int hideCursorTimeout=3000;
      int ctrlPressCount,altPressCount;
@@ -86,6 +86,7 @@ private:
      void showMessage(const QString &msg);
      void switchItem(bool prev,const QString &nullMsg);
      void adjustProgressInfoPos();
+     void exitMiniMode();
 
      QWidget *centralWidget() {return  cWidget;}
      void setCentralWidget(QWidget *widget);
