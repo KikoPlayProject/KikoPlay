@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setupUI();
     setWindowIcon(QIcon(":/res/kikoplay.ico"));
-    QRect defaultGeo(0,0,800*logicalDpiX()/96,600*logicalDpiX()/96), defaultMiniGeo(0,0,200*logicalDpiX()/96, 200*logicalDpiY()/96);
+    QRect defaultGeo(0,0,800*logicalDpiX()/96,480*logicalDpiX()/96), defaultMiniGeo(0,0,200*logicalDpiX()/96, 200*logicalDpiY()/96);
     defaultGeo.moveCenter(QApplication::desktop()->geometry().center());
 	defaultMiniGeo.moveCenter(QApplication::desktop()->geometry().center());
     setGeometry(GlobalObjects::appSetting->value("MainWindow/Geometry",defaultGeo).toRect());
@@ -528,6 +528,10 @@ QWidget *MainWindow::setupPlayPage()
         static QRect geo;
         if(on)
         {
+#ifndef Q_OS_WIN
+            setWindowFlags (windowFlags() | Qt::CustomizeWindowHint);
+            show();
+#endif
             geo = geometry();
             isShowPlaylist=!listWindow->isHidden();
             isMax=isMaximized();
@@ -540,6 +544,10 @@ QWidget *MainWindow::setupPlayPage()
         }
         else
         {
+#ifndef Q_OS_WIN
+            setWindowFlags (windowFlags() & ~Qt::CustomizeWindowHint);
+            show();
+#endif
 			isMini = false;
             widgetTitlebar->show();
             isShowPlaylist?listWindow->show():listWindow->hide();

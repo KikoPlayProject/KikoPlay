@@ -1056,6 +1056,7 @@ void PlayList::renameItemPoolId(const QString &opid, const QString &npid, const 
             }
             d->playListChanged=true;
             d->needRefresh=true;
+            GlobalObjects::library->addToLibrary(item->animeTitle,item->title,item->path);
         }
     }
 }

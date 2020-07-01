@@ -304,8 +304,8 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     if(!splitterState.isNull())
     {
         splitter->restoreState(splitterState);
+        if(splitter->sizes()[0] == 0)  libraryVLayout->setContentsMargins(5*logicalDpiX()/96,0,10*logicalDpiX()/96,0);
     }
-    if(splitter->sizes()[0] == 0)  libraryVLayout->setContentsMargins(5*logicalDpiX()/96,0,10*logicalDpiX()/96,0);
 }
 
 void LibraryWindow::beforeClose()

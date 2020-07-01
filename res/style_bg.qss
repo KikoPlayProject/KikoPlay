@@ -973,7 +973,7 @@ QToolButton#DownloadInfoPage{
     border-style:none;
     border-radius:0px;
     padding:5px;
-    color:rgb(180,180,180);
+    color:#c5c5c5;
     background:transparent;
 }
 QToolButton#DownloadInfoPage:hover,
