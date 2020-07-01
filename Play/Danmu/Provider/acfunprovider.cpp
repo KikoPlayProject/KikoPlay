@@ -128,7 +128,7 @@ QString AcfunProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
             {
                 item->extra=reDuration.capturedTexts()[1].toInt()/1000;
             }
-            QRegExp reTitle("videoId\":\\d+,\"title\":\"(.+)\",");
+            QRegExp reTitle("\"showTitle\":\"(.+)\"");
             reTitle.setMinimal(true);
             pos = reTitle.indexIn(replyStr);
             if (pos != -1)
