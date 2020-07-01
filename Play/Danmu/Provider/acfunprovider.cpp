@@ -2,13 +2,14 @@
 #include "Common/network.h"
 namespace
 {
-    const char *supportedUrlRe[]={"(http://)?www\\.acfun\\.cn/v/ac[0-9]+(_[0-9]+)?/?",
-                                  "(http://)?www\\.acfun\\.cn/bangumi/ab[0-9]+_[0-9]+_[0-9]+/?"};
+    const char *supportedUrlRe[]={"(https?://)?www\\.acfun\\.cn/v/ac[0-9]+(_[0-9]+)?/?",
+                                  "(https?://)?www\\.acfun\\.cn/bangumi/a(a|b)[0-9]+(_[0-9]+_[0-9]+)?/?"};
 }
 QStringList AcfunProvider::supportedURLs()
 {
     return QStringList({"http://www.acfun.cn/v/ac4471456",
-                        "http://www.acfun.cn/bangumi/ab5020318_29434_234123"});
+                        "http://www.acfun.cn/bangumi/ab5020318_29434_234123",
+                        "https://www.acfun.cn/bangumi/aa6000896"});
 }
 
 DanmuAccessResult *AcfunProvider::search(const QString &keyword)
@@ -76,7 +77,7 @@ DanmuAccessResult *AcfunProvider::getURLInfo(const QString &url)
         return nullptr;
     }
     DanmuSourceItem item;
-    QRegExp re(matchIndex==0?"ac[0-9]+(_[0-9]+)?":"ab[0-9]+_[0-9]+_[0-9]+");
+    QRegExp re(matchIndex==0?"ac[0-9]+(_[0-9]+)?":"a(a|b)[0-9]+(_[0-9]+_[0-9]+)?");
     re.indexIn(url);
     item.subId=matchIndex==0?3:4;
     item.strId=re.capturedTexts()[0];
@@ -127,7 +128,13 @@ QString AcfunProvider::downloadDanmu(DanmuSourceItem *item, QList<DanmuComment *
             {
                 item->extra=reDuration.capturedTexts()[1].toInt()/1000;
             }
-
+            QRegExp reTitle("videoId\":\\d+,\"title\":\"(.+)\",");
+            reTitle.setMinimal(true);
+            pos = reTitle.indexIn(replyStr);
+            if (pos != -1)
+            {
+                item->title=reTitle.capturedTexts()[1];
+            }
 
 		}
 	}
