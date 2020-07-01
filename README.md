@@ -29,7 +29,7 @@
 
 KikoPlay基于以下项目：
 
- - Qt 5.12.3
+ - Qt 5.15.0
  - [libmpv](https://github.com/mpv-player/mpv)
  - [aria2](https://github.com/aria2/aria2)
  - [Qt-Nice-Frameless-Window](https://github.com/Bringer-of-Light/Qt-Nice-Frameless-Window)
@@ -59,6 +59,7 @@ dx_8820832#yeah.net（#→@），或者加QQ群874761809反馈
 ## 截图
 
 ![](screenshot/KikoPlay1.jpg)
+![](screenshot/KikoPlay1-2.jpg)
 ![](screenshot/KikoPlay-Ubuntu.png)
 ![](screenshot/KikoPlay2.jpg)
 ![](screenshot/KikoPlay3.jpg)

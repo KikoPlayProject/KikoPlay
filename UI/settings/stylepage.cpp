@@ -185,7 +185,9 @@ void StylePage::setBgList(QListWidget *bgImgView)
                 QScopedPointer<QListWidgetItem> last(bgImgView->item(bgImgView->count()-1));
                 bgThumb.remove(last->data(Qt::UserRole).toString());
             }
-            emit setBackground(fileName);
+            QColor color;
+            if(customColor->isChecked()) color=QColor::fromHsv(sliderHue->value(),255,sliderLightness->value());
+            emit setBackground(fileName, color);
         }
     });
     QAction* actRemove = new QAction(tr("Remove"), this);
@@ -198,8 +200,10 @@ void StylePage::setBgList(QListWidget *bgImgView)
         bgThumb.remove(path);
         if(path == GlobalObjects::appSetting->value("MainWindow/Background").toString())
         {
+            QColor color;
+            if(customColor->isChecked()) color=QColor::fromHsv(sliderHue->value(),255,sliderLightness->value());
             emit setBackground(bgImgView->count()>1?
-                                   bgImgView->item(1)->data(Qt::UserRole).toString():"");
+                                   bgImgView->item(1)->data(Qt::UserRole).toString():"", color);
         }
     });
     bgImgView->setContextMenuPolicy(Qt::ActionsContextMenu);

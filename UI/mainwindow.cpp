@@ -529,7 +529,7 @@ QWidget *MainWindow::setupPlayPage()
         if(on)
         {
 #ifndef Q_OS_WIN
-            setWindowFlags (windowFlags() | Qt::CustomizeWindowHint);
+            setWindowFlags (Qt::CustomizeWindowHint);
             show();
 #endif
             geo = geometry();
