@@ -98,7 +98,6 @@ SOURCES += \
     UI/downloadwindow.cpp \
     UI/adduritask.cpp \
     UI/selecttorrentfile.cpp \
-    UI/downloadsetting.cpp \
     UI/poolmanager.cpp \
     UI/checkupdate.cpp \
     Play/Danmu/Provider/iqiyiprovider.cpp \
