@@ -144,7 +144,6 @@ void MainWindow::setupUI()
     widgetTitlebar = new DropableWidget(centralContainer);
     widgetTitlebar->setAcceptDrops(true);
     widgetTitlebar->setObjectName(QStringLiteral("widgetTitlebar"));
-    widgetTitlebar->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
 #ifdef Q_OS_WIN
     widgetTitlebar->setFixedHeight(40*logicalDpiY()/96);
 #endif
@@ -260,7 +259,7 @@ void MainWindow::setupUI()
     QVBoxLayout *pageVerticalLayout = new QVBoxLayout();
     pageVerticalLayout->setContentsMargins(0,0,0,0);
 #ifdef Q_OS_WIN
-    pageVerticalLayout->addSpacerItem(new QSpacerItem(1,10,QSizePolicy::Minimum,QSizePolicy::MinimumExpanding));
+    pageVerticalLayout->addStretch(1);
 #endif
     QHBoxLayout *pageHLayout = new QHBoxLayout();
     pageHLayout->setContentsMargins(0,0,0,0);
@@ -308,9 +307,9 @@ void MainWindow::setupUI()
     QHBoxLayout *layout = new QHBoxLayout(widgetTitlebar);
     layout->setSpacing(0);
 #ifdef Q_OS_WIN
-    layout->setContentsMargins(8*logicalDpiY()/96,0,8*logicalDpiY()/96,0);
+    layout->setContentsMargins(8*logicalDpiX()/96,0,8*logicalDpiY()/96,0);
     layout->addWidget(buttonIcon);
-    layout->addSpacing(20*logicalDpiY()/96);
+    layout->addSpacing(20*logicalDpiX()/96);
     layout->addLayout(pageVerticalLayout);
     layout->addStretch(1);
     layout->addWidget(minButton);

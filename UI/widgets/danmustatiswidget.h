@@ -7,6 +7,7 @@ class DanmuStatisWidget : public QWidget
 {
     Q_OBJECT
     Q_PROPERTY(QColor barColor READ getBarColor WRITE setBarColor)
+    Q_PROPERTY(QColor bgColor READ getBgColor WRITE setBgColor)
 public:
     explicit DanmuStatisWidget(QWidget *parent = nullptr);
     void refreshStatis();
@@ -14,6 +15,8 @@ public:
 
     QColor getBarColor() const {return barColor;}
     void setBarColor(const QColor& color) { barColor =  color; refreshStatis(); }
+    QColor getBgColor() const {return bgColor;}
+    void setBgColor(const QColor& color) { bgColor =  color; refreshStatis(); }
 
     // QWidget interface
 protected:

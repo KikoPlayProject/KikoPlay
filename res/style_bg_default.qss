@@ -1194,6 +1194,7 @@ QListWidget#SettingPageList::item {
 }
 QListWidget#SettingPageList::item:hover {
     background: #1CA0E4;
+    color: #ffffff;
 }
 QListWidget#SettingPageList::item:selected{
     background: #1CA0E4;

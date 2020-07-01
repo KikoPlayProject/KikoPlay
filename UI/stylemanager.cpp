@@ -49,9 +49,13 @@ void StyleManager::setColorHash()
     colorHash["ThemeColorL1"] = toString(getColorPalette(themeColor, 5));
     colorHash["ThemeColorL2"] = toString(getColorPalette(themeColor, 4));
     colorHash["ThemeColorL3"] = toString(getColorPalette(themeColor, 3));
+    colorHash["ThemeColorL4"] = toString(getColorPalette(themeColor, 2));
+    colorHash["ThemeColorL5"] = toString(getColorPalette(themeColor, 1));
     colorHash["ThemeColorD1"] = toString(getColorPalette(themeColor, 7));
     colorHash["ThemeColorD2"] = toString(getColorPalette(themeColor, 8));
     colorHash["ThemeColorD3"] = toString(getColorPalette(themeColor, 9));
+    colorHash["ThemeColorD4"] = toString(getColorPalette(themeColor, 10));
+    colorHash["ThemeColorD5"] = toString(getColorPalette(themeColor, 11));
 }
 
 QColor StyleManager::getColorPalette(const QColor &color, int index)

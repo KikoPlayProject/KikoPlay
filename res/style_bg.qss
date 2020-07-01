@@ -98,10 +98,10 @@ QWidget#widgetPagePlay{
     background-color: rgba(@ThemeColorD2,80);
 }
 QWidget#widgetPlayControl{
-    background-color: rgba(0,0,0,150);
+    background-color: rgba(@ThemeColorD5,120);
 }
 QWidget#widgetPlayInfo{
-    background-color: rgba(0,0,0,150);
+    background-color: rgba(@ThemeColorD5,120);
 }
 QWidget#playlistPage{
     background-color: rgba(100, 100,100, 80);
@@ -283,7 +283,7 @@ QPushButton#widgetPlayControlButtons:checked{
 }
 QPushButton#widgetPlayListCollapse{
     border-style:none;
-    background-color: rgba(0, 0,0,150);
+    background-color: rgba(@ThemeColorD5,120);
     color:#989898;
 }
 QPushButton#widgetPlayListCollapse:hover,
@@ -293,7 +293,7 @@ QPushButton#widgetPlayListCollapse:checked{
     background: #666a6e;
 }
 QWidget#PopupPage{
-    background-color: rgba(0, 0,0,150);;
+    background-color: rgba(@ThemeColorD5,120);
     border:1px solid #9d9d9d;
 }
 QTreeView#playlist {
@@ -704,7 +704,7 @@ QWidget#PopupPage QToolButton#DialogPageButton{
        border-style:none;
        border-radius:0px;
        padding:5px;
-       color:#989898;
+       color:#c5c5c5;
        background:transparent;
 }
 QWidget#PopupPage QToolButton#DialogPageButton:hover,
@@ -728,7 +728,7 @@ QWidget#PopupPage QComboBox {
     padding-left: 4px;
     padding-right: 4px;
 
-    background-color: rgba(0,0,0,150);
+    background-color: rgba(@ThemeColorD5,150);
     color: #F0F0F0;
 }
 
@@ -809,13 +809,14 @@ QWidget#RecentItem:checked{
 }
 QWidget#DanmuStatisBar{
     qproperty-barColor: rgba(@ThemeColorL1,200);
+    qproperty-bgColor: rgba(@ThemeColorD5, 120);
 }
 QLabel#TimeInfoTip{
     border-color: rgb(150, 150,150);
     border-style:solid;
     border-width:0px;
     color:rgb(255,255,255);
-    background-color:rgba(0,0,0,150);
+    background-color:rgba(@ThemeColorD5, 120);
     padding: 1px;
 }
 QLabel#ProgressPreview{
@@ -1200,6 +1201,7 @@ QListWidget#SettingPageList::item {
 }
 QListWidget#SettingPageList::item:hover {
     background: rgb(@ThemeColorL1);
+    color: #ffffff;
 }
 QListWidget#SettingPageList::item:selected{
     background: rgb(@ThemeColorL1);
