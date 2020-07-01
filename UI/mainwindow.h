@@ -84,6 +84,9 @@ protected:
     virtual void moveEvent(QMoveEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
     virtual void showEvent(QShowEvent *);
+#ifndef Q_OS_WIN
+    virtual bool eventFilter(QObject *object, QEvent *event);
+#endif /* Q_OS_WIN */
 };
 
 #endif // MAINWINDOW_H

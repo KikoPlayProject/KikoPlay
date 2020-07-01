@@ -7,6 +7,8 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QButtonGroup>
+#include <QHoverEvent>
+#include <QMouseEvent>
 #ifdef Q_OS_WIN
 #include <QWinTaskbarProgress>
 #include <QWinTaskbarButton>
@@ -528,6 +530,13 @@ QWidget *MainWindow::setupPlayPage()
         static QRect geo;
         if(on)
         {
+#ifndef Q_OS_WIN
+            setWindowFlags(Qt::CustomizeWindowHint);
+            setAttribute(Qt::WA_Hover);
+            setMouseTracking(true);
+            installEventFilter(this);
+            show();
+#endif
             geo = geometry();
             isShowPlaylist=!listWindow->isHidden();
             isMax=isMaximized();
@@ -540,6 +549,10 @@ QWidget *MainWindow::setupPlayPage()
         }
         else
         {
+#ifndef Q_OS_WIN
+            setWindowFlags (windowFlags() & ~Qt::CustomizeWindowHint);
+            show();
+#endif
 			isMini = false;
             widgetTitlebar->show();
             isShowPlaylist?listWindow->show():listWindow->hide();
@@ -681,6 +694,151 @@ void MainWindow::showEvent(QShowEvent *)
     }
 #endif
 }
+
+#ifndef Q_OS_WIN
+bool MainWindow::eventFilter(QObject *object, QEvent *event) {
+    static bool resize = false;
+    static bool edge_top = false;
+    static bool edge_bottom = false;
+    static bool edge_left = false;
+    static bool edge_right = false;
+
+    static int left = -1;
+    static int right = -1;
+    static int top = -1;
+    static int bottom = -1;
+
+    if (object && event && isMini) {
+        if (event->type() == QEvent::MouseMove ||
+            event->type() == QEvent::HoverMove ||
+            event->type() == QEvent::Leave ||
+            event->type() == QEvent::MouseButtonPress ||
+            event->type() == QEvent::MouseButtonRelease)
+        {
+            switch (event->type())
+            {
+            default:
+                break;
+            case QEvent::MouseMove:
+                qInfo() << "Move";
+                do {
+                    QMouseEvent *e = static_cast<QMouseEvent*>(event);
+                    qInfo()<< "Move" << e->pos()<< this->size() << frameGeometry();
+                    setCursor(Qt::SizeVerCursor);
+                    if (resize) {
+
+                        if (edge_left) {
+                            left = e->globalPos().x();
+                        }
+                        if (edge_right) {
+                            right = e->globalPos().x();
+                        }
+                        if (edge_top) {
+                            top = e->globalPos().y();
+                        }
+                        if (edge_bottom) {
+                            bottom = e->globalPos().y();
+                        }
+                        QRect newRect(QPoint(left, top), QPoint(right, bottom));
+                        qInfo()<< "Move to" << newRect;
+
+                        this->setGeometry(QRect(QPoint(left, top), QPoint(right, bottom)));
+                    }
+                } while (0);
+                break;
+            case QEvent::HoverMove:
+                do {
+                    QHoverEvent *e = static_cast<QHoverEvent*>(event);
+                    qInfo()<< "Hover" << e->pos()<< this->size() << frameGeometry();
+
+                    bool hover_edge_top = false;
+                    bool hover_edge_bottom = false;
+                    bool hover_edge_left = false;
+                    bool hover_edge_right = false;
+
+                    if (e->pos().x() < this->size().width() / 10) {
+                        hover_edge_left = true;
+                    }
+                    if (e->pos().x() > this->size().width() - this->size().width() / 10) {
+                        hover_edge_right = true;
+                    }
+                    if (e->pos().y() < this->size().height() / 10) {
+                        hover_edge_top = true;
+                    }
+                    if (e->pos().y() > this->size().height() - this->size().height() / 10) {
+                        hover_edge_bottom = true;
+                    }
+
+                    if ((hover_edge_right && hover_edge_top) || (hover_edge_left && hover_edge_bottom)) {
+                        setCursor(Qt::SizeBDiagCursor);
+                    } else if ((hover_edge_right && hover_edge_bottom) || (hover_edge_left && hover_edge_top)) {
+                        setCursor(Qt::SizeFDiagCursor);
+                    } else if (hover_edge_left || hover_edge_right) {
+                        setCursor(Qt::SizeHorCursor);
+                    } else if (hover_edge_top || hover_edge_bottom) {
+                        setCursor(Qt::SizeVerCursor);
+                    } else {
+                        setCursor(Qt::ArrowCursor);
+                    }
+
+                } while (0);
+                break;
+            case QEvent::Leave:
+                qInfo() << "Leave";
+                setCursor(Qt::ArrowCursor);
+                break;
+            case QEvent::MouseButtonPress:
+                do {
+                    resize = true;
+
+                    left = this->frameGeometry().left();
+                    right = this->frameGeometry().right();
+                    top = this->frameGeometry().top();
+                    bottom = this->frameGeometry().bottom();
+
+                    QMouseEvent *e = static_cast<QMouseEvent*>(event);
+                    qInfo()<< "Press"<<e->pos()<< this->size();
+                    if (e->pos().x() < this->size().width() / 10) {
+                        edge_left = true;
+                        edge_right = false;
+                        qInfo() << "Left edge";
+                    } else if (e->pos().x() > this->size().width() - this->size().width() / 10) {
+                        edge_right = true;
+                        edge_left = false;
+                        qInfo() << "Right edge";
+                    }
+
+                    if (e->pos().y() < this->size().height() / 10) {
+                        edge_top = true;
+                        edge_bottom = false;
+                        qInfo() << "Top edge";
+                    } else if (e->pos().y() > this->size().height() - this->size().height() / 10) {
+                        edge_bottom = true;
+                        edge_top = false;
+                        qInfo() << "Bottom edge";
+                    }
+
+                } while (0);
+                break;
+            case QEvent::MouseButtonRelease:
+                do {
+                    resize = false;
+                    edge_left = false;
+                    edge_right = false;
+                    edge_top = false;
+                    edge_bottom = false;
+
+                    QMouseEvent *e = static_cast<QMouseEvent*>(event);
+                    qInfo()<< "Release"<<e->pos()<< this->size();
+                } while (0);
+                break;
+            }
+        }
+    }
+    return false;
+}
+
+#endif /* Q_OS_WIN */
 
 void DropableWidget::dragEnterEvent(QDragEnterEvent *event)
 {
