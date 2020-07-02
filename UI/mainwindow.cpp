@@ -96,6 +96,9 @@ MainWindow::MainWindow(QWidget *parent)
         GlobalObjects::appSetting->setValue("MainWindow/ShowTip",false);
         QTimer::singleShot(0,[this](){
             Tip tip(buttonIcon);
+            QRect geo(0,0,400,400);
+            geo.moveCenter(this->geometry().center());
+            tip.move(geo.topLeft());
             tip.exec();
         });
     }
@@ -186,6 +189,9 @@ void MainWindow::setupUI()
     QAction *act_useTip=new QAction(tr("Useage Tip"), this);
     QObject::connect(act_useTip,&QAction::triggered,[this](){
         Tip tip(buttonIcon);
+        QRect geo(0,0,400,400);
+        geo.moveCenter(this->geometry().center());
+        tip.move(geo.topLeft());
         tip.exec();
     });
     buttonIcon->addAction(act_useTip);
@@ -349,7 +355,7 @@ void MainWindow::setupUI()
            QStringList historyBgs = GlobalObjects::appSetting->value("MainWindow/HistoryBackgrounds").toStringList();
            historyBgs.removeOne(url);
            historyBgs.insert(0, url);
-           if(historyBgs.count()>6) historyBgs.removeLast();
+           if(historyBgs.count()>10) historyBgs.removeLast();
            GlobalObjects::appSetting->setValue("MainWindow/HistoryBackgrounds", historyBgs);
            setBackground(url);
        }
@@ -569,6 +575,18 @@ QWidget *MainWindow::setupPlayPage()
     QObject::connect(playerWindow, &PlayerWindow::moveWindow, this, [this](const QPoint &cpos){
         move(cpos-miniPressPos);
     });
+    QObject::connect(playerWindow, &PlayerWindow::refreshPool, this, [this](){
+        if(listWindow->isHidden())
+        {
+            playerWindow->showMessage(tr("Updating..."));
+        }
+        int c = listWindow->updateCurrentPool();
+        if(listWindow->isHidden())
+        {
+            playerWindow->showMessage(tr("Add %1 Danmu").arg(c));
+        }
+    });
+
     playSplitter->addWidget(playerWindowWidget);
     playSplitter->addWidget(listWindow);
     playSplitter->setStretchFactor(0,1);
@@ -657,6 +675,20 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Escape:
         if(buttonPage_Play->isChecked())
             QApplication::sendEvent(playerWindow,event);
+        break;
+    case Qt::Key_F5:
+        if(buttonPage_Play->isChecked())
+        {
+            if(listWindow->isHidden())
+            {
+                playerWindow->showMessage(tr("Updating..."));
+            }
+            int c = listWindow->updateCurrentPool();
+            if(listWindow->isHidden())
+            {
+                playerWindow->showMessage(tr("Add %1 Danmu").arg(c));
+            }
+        }
         break;
     default:
         break;

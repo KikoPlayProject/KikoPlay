@@ -9,6 +9,7 @@
 #include "settings/mpvpage.h"
 #include "settings/downloadpage.h"
 #include "settings/lanserverpage.h"
+#include "settings/scriptpage.h"
 
 
 Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings"), parent, true)
@@ -21,7 +22,7 @@ Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings")
     pageSLayout = new QStackedLayout;
     pageSLayout->setContentsMargins(0, 0, 0, 0);
 
-    QStringList pageNames{tr("Appearance"), tr("MPV Param"), tr("Download"), tr("LAN Server")};
+    QStringList pageNames{tr("Appearance"), tr("MPV Param"), tr("Download"), tr("LAN Server"), tr("Res Script")};
 
     for(int i=PAGE_UI;i<PAGE_STOP;++i)
     {
@@ -87,9 +88,14 @@ SettingPage *Settings::getOrCreatePage(Page p)
         case PAGE_LAN:
             pages[p] = new LANServerPage(this);
             break;
+        case PAGE_SCRIPT:
+            pages[p] = new ScriptPage(this);
+            break;
         default:
             return nullptr;
         }
+        QObject::connect(pages[p], &SettingPage::showBusyState, this, &Settings::showBusyState);
+        QObject::connect(pages[p], &SettingPage::showMessage, this, &Settings::showMessage);
         QScopedPointer<QLayoutItem>(pageSLayout->replaceWidget(pageSLayout->widget(p), pages[p]));
     }
     return pages[p];

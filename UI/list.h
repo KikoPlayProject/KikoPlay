@@ -67,6 +67,7 @@ private:
             *act_blockText,*act_blockColor,*act_blockSender,
             *act_jumpToTime, *act_deleteDanmu;
 
+
 protected:
     virtual void resizeEvent(QResizeEvent *event);
     virtual void dragEnterEvent(QDragEnterEvent *event);
@@ -80,6 +81,7 @@ public slots:
     void showMessage(const QString &msg, int flag);
     void updatePlaylistActions();
     void updateDanmuActions();
+    int updateCurrentPool();
 
 };
 

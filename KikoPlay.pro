@@ -44,6 +44,7 @@ SOURCES += \
     UI/settings/downloadpage.cpp \
     UI/settings/lanserverpage.cpp \
     UI/settings/mpvpage.cpp \
+    UI/settings/scriptpage.cpp \
     UI/settings/stylepage.cpp \
     UI/stylemanager.cpp \
     UI/widgets/backgroundwidget.cpp \
@@ -127,7 +128,6 @@ SOURCES += \
     UI/bgmlistwindow.cpp \
     Download/Script/scriptmanager.cpp \
     UI/ressearchwindow.cpp \
-    UI/managescript.cpp \
     Play/Danmu/Provider/pptvprovider.cpp \
     Play/Danmu/Manager/pool.cpp \
     MediaLibrary/capturelistmodel.cpp \
@@ -158,6 +158,7 @@ HEADERS += \
     UI/settings/downloadpage.h \
     UI/settings/lanserverpage.h \
     UI/settings/mpvpage.h \
+    UI/settings/scriptpage.h \
     UI/settings/settingpage.h \
     UI/settings/stylepage.h \
     UI/stylemanager.h \
@@ -240,7 +241,6 @@ HEADERS += \
     UI/bgmlistwindow.h \
     Download/Script/scriptmanager.h \
     UI/ressearchwindow.h \
-    UI/managescript.h \
     Play/Danmu/Provider/pptvprovider.h \
     Play/Danmu/Manager/pool.h \
     Common/threadtask.h \

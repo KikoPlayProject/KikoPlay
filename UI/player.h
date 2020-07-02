@@ -22,6 +22,7 @@ public:
     explicit PlayerWindow(QWidget *parent = nullptr);
     void toggleListCollapseState(bool on);
     void toggleFullScreenState(bool on);
+    void showMessage(const QString &msg);
 
 private:
      QWidget *playControlPanel,*playInfoPanel;
@@ -83,7 +84,6 @@ private:
      void setupSignals();
      void adjustPlayerSize(int percent);
      void setPlayTime();
-     void showMessage(const QString &msg);
      void switchItem(bool prev,const QString &nullMsg);
      void adjustProgressInfoPos();
      void exitMiniMode();
@@ -103,6 +103,7 @@ signals:
     void beforeMove(const QPoint &pressPos);
     void moveWindow(const QPoint &pos);
     void miniMode(bool on);
+    void refreshPool();
 
      // QWidget interface
 protected:

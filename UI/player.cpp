@@ -1883,6 +1883,9 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_PageDown:
         actNext->trigger();
         break;
+    case Qt::Key_F5:
+        emit refreshPool();
+        break;
 	default:
 		QWidget::keyPressEvent(event);
     }

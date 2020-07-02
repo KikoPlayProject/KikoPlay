@@ -13,6 +13,7 @@ public:
         PAGE_MPV,
         PAGE_DOWN,
         PAGE_LAN,
+        PAGE_SCRIPT,
         PAGE_STOP
     };
     Settings(Page page=PAGE_UI, QWidget *parent = nullptr);

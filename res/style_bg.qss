@@ -560,7 +560,7 @@ QLineEdit,QSpinBox {
 }
 QLineEdit:hover,QSpinBox:hover {
     background-color:rgba(250,250,250,160);
-    border: 1px solid #bcbcbc;
+    border: 1px solid rgb(@ThemeColorL1);
 }
 QLineEdit:focus,QSpinBox:focus,QPlainTextEdit:focus,QTextEdit:focus {
     background-color: #ffffff;
@@ -598,9 +598,13 @@ QComboBox {
     border: 1px solid #dddddd;
     padding: 2px 2px 2px 2px;
 }
-QComboBox:hover {
+QComboBox:hover{
+    background-color: rgba(250,250,250,220);
+    border: 1px solid rgb(@ThemeColorL1);
+}
+QComboBox:focus{
     background-color:#fdfdfd;
-    border: 1px solid #bcbcbc;
+    border: 1px solid rgb(@ThemeColorL1);
 }
 QComboBox::drop-down {
     subcontrol-origin: padding;
@@ -628,9 +632,6 @@ QPushButton{
     background-color:rgba(250,250,250,180);
     padding:4px 4px 4px 4px;
 }
-QPushButton:hover{
-    color: rgb(@ThemeColorL1);
-}
 QDialog QPushButton{
     border:1px solid;
     border-color:rgb(221,221,221);
@@ -638,8 +639,12 @@ QDialog QPushButton{
     padding:4px 4px 4px 4px;
 }
 QPushButton:hover{
-    border-color:rgb(150,150,150);
-    background-color:rgb(255,255,255);
+    border-color:rgb(@ThemeColorL1);
+    background-color:rgba(250,250,250,240);
+}
+QDialog QPushButton:hover{
+    border-color:rgb(@ThemeColorL1);
+    background-color:rgb(255, 255, 255);
 }
 QPushButton:pressed{
     border-color:rgb(150,150,150);
@@ -1136,7 +1141,7 @@ QPlainTextEdit#TaskLogView{
     background-color: rgba(255,255,255,40);
     color: rgb(240,240,240);
 }
-QLabel#LibraryCountTip{
+QLabel#LibraryCountTip, QLabel#SelectedLabelTip{
     color: rgb(240,240,240);
 }
 QLabel#AnimeItemTitle{

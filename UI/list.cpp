@@ -974,23 +974,7 @@ QWidget *ListWindow::setupDanmulistPage()
     updatePool->setObjectName(QStringLiteral("ListEditButton"));
     updatePool->setToolButtonStyle(Qt::ToolButtonTextOnly);
     updatePool->setToolTip(tr("Update Danmu Pool"));
-    QObject::connect(updatePool,&QToolButton::clicked,[this](){
-        act_autoAssociate->setEnabled(false);
-        act_addOnlineDanmu->setEnabled(false);
-        act_addLocalDanmu->setEnabled(false);
-        const auto &sources =  GlobalObjects::danmuPool->getPool()->sources();
-        int count=0;
-        for(auto iter=sources.cbegin();iter!=sources.cend();++iter)
-        {
-            QList<DanmuComment *> tmpList;
-            showMessage(tr("Updating: %1").arg(iter.value().url),PopMessageFlag::PM_PROCESS);
-            count+=GlobalObjects::danmuPool->getPool()->update(iter.key());
-        }
-        showMessage(tr("Add %1 Danmu").arg(count),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
-        act_autoAssociate->setEnabled(true);
-        act_addOnlineDanmu->setEnabled(true);
-        act_addLocalDanmu->setEnabled(true);
-    });
+    QObject::connect(updatePool,&QToolButton::clicked, this, &ListWindow::updateCurrentPool);
 
     QToolButton *addDanmu=new QToolButton(danmulistPage);
     addDanmu->setFont(GlobalObjects::iconfont);
@@ -1034,6 +1018,26 @@ QWidget *ListWindow::setupDanmulistPage()
     danmulistPageVLayout->addLayout(poolEditHLayout);
 
     return danmulistPage;
+}
+
+int ListWindow::updateCurrentPool()
+{
+    act_autoAssociate->setEnabled(false);
+    act_addOnlineDanmu->setEnabled(false);
+    act_addLocalDanmu->setEnabled(false);
+    const auto &sources =  GlobalObjects::danmuPool->getPool()->sources();
+    int count=0;
+    for(auto iter=sources.cbegin();iter!=sources.cend();++iter)
+    {
+        QList<DanmuComment *> tmpList;
+        showMessage(tr("Updating: %1").arg(iter.value().url),PopMessageFlag::PM_PROCESS);
+        count+=GlobalObjects::danmuPool->getPool()->update(iter.key());
+    }
+    showMessage(tr("Add %1 Danmu").arg(count),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+    act_autoAssociate->setEnabled(true);
+    act_addOnlineDanmu->setEnabled(true);
+    act_addLocalDanmu->setEnabled(true);
+    return count;
 }
 
 void ListWindow::resizeEvent(QResizeEvent *)

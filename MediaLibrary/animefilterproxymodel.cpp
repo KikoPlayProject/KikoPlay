@@ -32,8 +32,16 @@ void AnimeFilterProxyModel::setTime(const QSet<QString> &timeSet)
 
 void AnimeFilterProxyModel::refreshAnimeCount(int cur, int total)
 {
-    emit animeMessage(tr("Current: %1/%2 Loaded: %2/%3").arg(rowCount()).arg(cur).arg(total),
-                      total==cur?PopMessageFlag::PM_OK:PopMessageFlag::PM_INFO,total!=cur);
+    if(cur<total)
+    {
+        emit animeMessage(tr("Current: %1/%2 Loaded: %2/%3").arg(rowCount()).arg(cur).arg(total),
+                          PopMessageFlag::PM_INFO, true);
+    }
+    else
+    {
+        emit animeMessage(tr("Current: %1/%2").arg(rowCount()).arg(cur).arg(total),
+                          PopMessageFlag::PM_OK, false);
+    }
 }
 
 bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const

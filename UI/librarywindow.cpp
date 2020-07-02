@@ -151,11 +151,15 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     labelProxyModel->sort(0, Qt::AscendingOrder);
     labelProxyModel->setFilterKeyColumn(0);
     labelView->setContextMenuPolicy(Qt::ActionsContextMenu);
-    QObject::connect(labelView, &LabelTreeView::topLevelColorChanged, [](const QColor &color){
+    QObject::connect(labelView, &LabelTreeView::topLevelColorChanged, [this, labelProxyModel](const QColor &color){
         GlobalObjects::library->labelModel->setBrushColor(LabelModel::BrushType::TopLevel, color);
+        labelView->expand(labelProxyModel->index(0,0,QModelIndex()));
+        labelView->expand(labelProxyModel->index(1,0,QModelIndex()));
     });
-    QObject::connect(labelView, &LabelTreeView::childLevelColorChanged, [](const QColor &color){
+    QObject::connect(labelView, &LabelTreeView::childLevelColorChanged, [this, labelProxyModel](const QColor &color){
         GlobalObjects::library->labelModel->setBrushColor(LabelModel::BrushType::ChildLevel, color);
+        labelView->expand(labelProxyModel->index(0,0,QModelIndex()));
+        labelView->expand(labelProxyModel->index(1,0,QModelIndex()));
     });
     QObject::connect(labelView, &LabelTreeView::countFColorChanged, labelItemDelegate, &LabelItemDelegate::setPenColor);
     QObject::connect(labelView, &LabelTreeView::countBColorChanged, labelItemDelegate, &LabelItemDelegate::setBrushColor);
@@ -183,19 +187,6 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     });
     labelView->addAction(act_deleteTag);
 
-    QObject::connect(labelView->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this,proxyModel,labelProxyModel](){
-        QStringList tags;
-        QSet<QString> times;
-        GlobalObjects::library->labelModel->selLabelList(labelProxyModel->mapSelectionToSource(labelView->selectionModel()->selection()).indexes(),tags,times);
-        proxyModel->setTags(tags);
-        proxyModel->setTime(times);
-    });
-    QTimer::singleShot(0,[labelProxyModel,this](){
-        GlobalObjects::library->labelModel->refreshLabel();
-        labelView->expand(labelProxyModel->index(0,0,QModelIndex()));
-        labelView->expand(labelProxyModel->index(1,0,QModelIndex()));
-    });
-
     QMovie *loadingIcon=new QMovie(animeContainer);
     QLabel *loadingLabel=new QLabel(animeContainer);
     loadingLabel->setMovie(loadingIcon);
@@ -215,23 +206,8 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     QObject::connect(proxyModel,&AnimeFilterProxyModel::animeMessage,this,
                      [totalCountLabel,loadMore,loadingLabel](const QString &msg, int flag,bool hasMore){
         totalCountLabel->setText(msg);
-        if(hasMore)
-        {
-            loadMore->show();
-        }
-        else
-        {
-            loadMore->hide();
-        }
-        if(flag&PopMessageFlag::PM_PROCESS)
-        {
-            loadingLabel->show();
-        }
-        else
-        {
-            loadingLabel->hide();
-        }
-
+        hasMore? loadMore->show():loadMore->hide();
+        flag&PopMessageFlag::PM_PROCESS? loadingLabel->show():loadingLabel->hide();
     });
 
     QPushButton *backButton =  new QPushButton(animeContainer);
@@ -241,11 +217,17 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     backButton->setText(QChar(0xe69b));
     backButton->hide();
 
+    QLabel *selectedLabelTip = new QLabel(animeContainer);
+    selectedLabelTip->setFont(QFont("Microsoft Yahei",12));
+    selectedLabelTip->setObjectName(QStringLiteral("SelectedLabelTip"));
+
     QHBoxLayout *toolbuttonHLayout=new QHBoxLayout();
     toolbuttonHLayout->addWidget(backButton);
     toolbuttonHLayout->addWidget(loadingLabel);
     toolbuttonHLayout->addWidget(totalCountLabel);
     toolbuttonHLayout->addWidget(loadMore);
+    toolbuttonHLayout->addSpacing(5*logicalDpiX()/96);
+    toolbuttonHLayout->addWidget(selectedLabelTip);
     toolbuttonHLayout->addStretch(1);
     toolbuttonHLayout->addWidget(filterBox);
 
@@ -256,6 +238,26 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     viewSLayout->addWidget(animeListView);
     viewSLayout->addWidget(detailPage);
     containerVLayout->addLayout(viewSLayout);
+
+    QObject::connect(labelView->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=](){
+        QStringList tags;
+        QSet<QString> times;
+        GlobalObjects::library->labelModel->selLabelList(labelProxyModel->mapSelectionToSource(labelView->selectionModel()->selection()).indexes(),tags,times);
+        proxyModel->setTags(tags);
+        proxyModel->setTime(times);
+        QStringList totalTag(times.begin(), times.end());
+        totalTag.append(tags);
+        QString tagStr(totalTag.join(','));
+        QString elidedLastLine = selectedLabelTip->fontMetrics().
+                elidedText(tagStr, Qt::ElideRight, animeListView->width()-filterBox->width()-totalCountLabel->width()-10*logicalDpiX()/96);
+        selectedLabelTip->setText(elidedLastLine);
+    });
+
+    QTimer::singleShot(0,[labelProxyModel,this](){
+        GlobalObjects::library->labelModel->refreshLabel();
+        labelView->expand(labelProxyModel->index(0,0,QModelIndex()));
+        labelView->expand(labelProxyModel->index(1,0,QModelIndex()));
+    });
 
     QObject::connect(detailPage,&AnimeDetailInfoPage::playFile,this,&LibraryWindow::playFile);
     QObject::connect(itemDelegate,&AnimeItemDelegate::ItemClicked,[this, viewSLayout, backButton](const QModelIndex &index){

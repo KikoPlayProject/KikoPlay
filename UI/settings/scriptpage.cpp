@@ -1,12 +1,13 @@
-#include "managescript.h"
+#include "scriptpage.h"
 #include <QTreeView>
 #include <QLabel>
 #include <QPushButton>
 #include <QGridLayout>
 #include <QMessageBox>
+#include <QHeaderView>
 #include "Download/Script/scriptmanager.h"
 #include "globalobjects.h"
-ManageScript::ManageScript(QWidget *parent):CFramelessDialog(tr("Manage Script"),parent)
+ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
 {
     QTreeView *scriptView=new QTreeView(this);
     scriptView->setRootIsDecorated(false);
@@ -14,6 +15,8 @@ ManageScript::ManageScript(QWidget *parent):CFramelessDialog(tr("Manage Script")
     scriptView->setModel(GlobalObjects::scriptManager);
     scriptView->setAlternatingRowColors(true);
     QObject::connect(scriptView, &QTreeView::doubleClicked,GlobalObjects::scriptManager,&ScriptManager::setNormalScript);
+    scriptView->setColumnWidth(1, 60*logicalDpiX()/96);
+    scriptView->setColumnWidth(2, 60*logicalDpiX()/96);
 
     QPushButton *refresh=new QPushButton(tr("Refresh"),this);
     QPushButton *remove=new QPushButton(tr("Remove"),this);
@@ -25,13 +28,13 @@ ManageScript::ManageScript(QWidget *parent):CFramelessDialog(tr("Manage Script")
             GlobalObjects::scriptManager->removeScript(selection.last());
     });
     QObject::connect(refresh,&QPushButton::clicked,this,[this,remove,scriptView](){
-        showBusyState(true);
+        emit showBusyState(true);
         remove->setEnabled(false);
         scriptView->setEnabled(false);
         GlobalObjects::scriptManager->refresh();
     });
     QObject::connect(GlobalObjects::scriptManager,&ScriptManager::refreshDone,this,[this,remove,scriptView](){
-        showBusyState(false);
+        emit showBusyState(false);
         remove->setEnabled(true);
         scriptView->setEnabled(true);
     });
@@ -46,6 +49,14 @@ ManageScript::ManageScript(QWidget *parent):CFramelessDialog(tr("Manage Script")
     scriptGLayout->setRowStretch(1,1);
     scriptGLayout->setColumnStretch(2,1);
     scriptGLayout->setContentsMargins(0, 0, 0, 0);
-    resize(QSize(400*logicalDpiX()/96,300*logicalDpiY()/96));
+}
+
+void ScriptPage::onAccept()
+{
+
+}
+
+void ScriptPage::onClose()
+{
 
 }

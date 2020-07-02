@@ -1,6 +1,6 @@
 #include "ressearchwindow.h"
 #include "Download/Script/scriptmanager.h"
-#include "managescript.h"
+#include "settings.h"
 #include <QPushButton>
 #include <QComboBox>
 #include <QLineEdit>
@@ -48,8 +48,8 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     manageScript->setFont(GlobalObjects::iconfont);
     manageScript->setText(QChar(0xe607));
     QObject::connect(manageScript,&QPushButton::clicked,this,[this](){
-        ManageScript manager(this);
-        manager.exec();
+        Settings settings(Settings::PAGE_SCRIPT, this);
+        settings.exec();
     });
 
     searchEdit=new QLineEdit(this);

@@ -13,6 +13,8 @@
 #include "../mainwindow.h"
 #include "globalobjects.h"
 #include "../widgets/colorslider.h"
+#include "Common/threadtask.h"
+#include <algorithm>
 
 QHash<QString, QPixmap> StylePage::bgThumb;
 namespace  {
@@ -126,7 +128,6 @@ StylePage::StylePage(QWidget *parent) : SettingPage(parent)
     QObject::connect(this, &StylePage::setBackground, mW, (void (MainWindow::*)(const QString &, const QColor &))&MainWindow::setBackground);
     QObject::connect(this, &StylePage::setBgDarkness, mW, &MainWindow::setBgDarkness);
     QObject::connect(this, &StylePage::setThemeColor, mW, &MainWindow::setThemeColor);
-
 }
 
 void StylePage::onAccept()
@@ -147,16 +148,6 @@ void StylePage::onClose()
 
 void StylePage::setBgList(QListWidget *bgImgView)
 {
-    QStringList historyBgs = GlobalObjects::appSetting->value("MainWindow/HistoryBackgrounds").toStringList();
-    for(auto &path : historyBgs)
-    {
-        QPixmap thumb(getThumb(path));
-        if(thumb.isNull()) continue;
-        QListWidgetItem *item = new QListWidgetItem(QIcon(thumb), nullptr);
-        item->setData(Qt::UserRole, path);
-        item->setToolTip(path);
-        bgImgView->addItem(item);
-    }
     QObject::connect(bgImgView, &QListWidget::itemDoubleClicked, this, [this, bgImgView](QListWidgetItem *item){
         QString path(item->data(Qt::UserRole).toString());
         if(path != GlobalObjects::appSetting->value("MainWindow/Background").toString())
@@ -209,6 +200,27 @@ void StylePage::setBgList(QListWidget *bgImgView)
     bgImgView->setContextMenuPolicy(Qt::ActionsContextMenu);
     bgImgView->addAction(actAdd);
     bgImgView->addAction(actRemove);
+
+    QTimer::singleShot(0, this, [this, bgImgView](){
+        ThreadTask t(GlobalObjects::workThread);
+        showBusyState(true);
+        t.Run([this](){
+            QStringList historyBgs = GlobalObjects::appSetting->value("MainWindow/HistoryBackgrounds").toStringList();
+            for_each(historyBgs.begin(), historyBgs.end(), std::bind(&StylePage::getThumb, this, std::placeholders::_1));
+            return 0;
+        });
+        QStringList historyBgs = GlobalObjects::appSetting->value("MainWindow/HistoryBackgrounds").toStringList();
+        for(auto &path : historyBgs)
+        {
+            QPixmap thumb(getThumb(path));
+            if(thumb.isNull()) continue;
+            QListWidgetItem *item = new QListWidgetItem(QIcon(thumb), nullptr);
+            item->setData(Qt::UserRole, path);
+            item->setToolTip(path);
+            bgImgView->addItem(item);
+        }
+        showBusyState(false);
+    });
 }
 
 void StylePage::updateSetting(const QString &path, bool add)
