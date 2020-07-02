@@ -58,13 +58,14 @@ HttpServer::~HttpServer()
     server->close();
 }
 
-QString HttpServer::startServer(quint16 port)
+bool HttpServer::startServer(quint16 port)
 {
 
-   if(server->isListening())return QString();
-   server->listen(QHostAddress::AnyIPv4,port);
-   genLog(server->errorString().isEmpty()?"Server start":server->errorString());
-   return server->errorString();
+   if(server->isListening())return true;
+   bool r = server->listen(QHostAddress::AnyIPv4,port);
+   genLog(r?"Server start":server->errorString());
+   if(!r) server->close();
+   return r;
 }
 
 void HttpServer::stopServer()

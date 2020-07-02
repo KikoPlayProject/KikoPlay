@@ -43,13 +43,14 @@ LANServerPage::LANServerPage(QWidget *parent) : SettingPage(parent)
         logInfo->appendPlainText(log);
     }
 
-    QObject::connect(startServer,&QCheckBox::stateChanged,[this](bool checked){
+    QObject::connect(startServer,&QCheckBox::clicked,[this](bool checked){
         serverStateChanged = true;
         if(checked)
         {
             quint16 port=qBound<quint16>(1,portEdit->text().toUInt(), 65535);
             portEdit->setText(QString::number(port));
-            startServer->setChecked(GlobalObjects::lanServer->startServer(port).isEmpty());
+            startServer->setChecked(GlobalObjects::lanServer->startServer(port));
+            portEdit->setEnabled(!startServer->isChecked());
         }
         else
         {
