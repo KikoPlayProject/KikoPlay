@@ -97,6 +97,9 @@ void BackgroundWidget::paintEvent(QPaintEvent *e)
 }
  void BackgroundWidget::resizeEvent(QResizeEvent *)
 {
-    QImage s(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-    bgCache = QPixmap::fromImage(s);
+    if(!img.isNull())
+    {
+        QImage s(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+        bgCache = QPixmap::fromImage(s);
+    }
 }
