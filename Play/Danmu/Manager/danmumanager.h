@@ -34,6 +34,7 @@ public:
     MatchInfo *searchMatch(MatchProvider from, const QString &keyword);
     MatchInfo *matchFrom(MatchProvider from, const QString &fileName);
     QString updateMatch(const QString &fileName,const MatchInfo *newMatchInfo);
+    void removeMatch(const QString &fileName);
 private:
     MatchInfo *ddSearch(const QString &keyword);
     MatchInfo *bgmSearch(const QString &keyword);

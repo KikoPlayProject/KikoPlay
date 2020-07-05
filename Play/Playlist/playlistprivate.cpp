@@ -30,7 +30,7 @@ void PlayListPrivate::loadPlaylist()
     if(!ret) return;
     QXmlStreamReader reader(&playlistFile);
     QList<PlayListItem *> parents;
-    QMap<QString,int> nodeNameMap = {
+    QHash<QString,int> nodeNameHash = {
         {"playlist",0},
         {"collection",1},
         {"item",2}
@@ -39,7 +39,7 @@ void PlayListPrivate::loadPlaylist()
     {
         if(reader.isStartElement())
         {
-            switch (nodeNameMap.value(reader.name().toString()))
+            switch (nodeNameHash.value(reader.name().toString()))
             {
             case 0:
             {
@@ -52,6 +52,7 @@ void PlayListPrivate::loadPlaylist()
                 collection->title=reader.attributes().value("title").toString();
                 collection->isBgmCollection=(reader.attributes().value("bgmCollection")=="true");
                 if(collection->isBgmCollection) bgmCollectionItems.insert(collection->title, collection);
+                collection->folderPath=reader.attributes().value("folderPath").toString();
                 parents.push_back(collection);
                 break;
             }
@@ -93,7 +94,7 @@ void PlayListPrivate::loadPlaylist()
         }
         if(reader.isEndElement())
         {
-            int type = nodeNameMap.value(reader.name().toString());
+            int type = nodeNameHash.value(reader.name().toString());
             if(type==0)
                 break;
             else if(type==1)
@@ -136,6 +137,8 @@ void PlayListPrivate::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
         writer.writeStartElement("collection");
         writer.writeAttribute("title",item->title);
         writer.writeAttribute("bgmCollection",item->isBgmCollection?"true":"false");
+        if(!item->folderPath.isEmpty())
+            writer.writeAttribute("folderPath",item->folderPath);
     }
     for(PlayListItem *child : *item->children)
     {
@@ -292,6 +295,7 @@ bool PlayListPrivate::addSubFolder(QString folderStr, PlayListItem *parent, int 
     bool containsVideoFile = false;
     PlayListItem *folderCollection = new PlayListItem();
     folderCollection->title = folder.dirName();
+    folderCollection->folderPath = folderStr;
     for (QFileInfo fileInfo : folder.entryInfoList())
     {
         QString fileName = fileInfo.fileName();
@@ -323,6 +327,67 @@ bool PlayListPrivate::addSubFolder(QString folderStr, PlayListItem *parent, int 
     else
         delete folderCollection;
     return containsVideoFile;
+}
+
+int PlayListPrivate::refreshFolder(PlayListItem *folderItem, QList<PlayListItem *> &nItems)
+{
+    int nCount = 0;
+    QSet<QString> currentPaths;
+    for(PlayListItem *item : *folderItem->children)
+    {
+        if(item->children)
+        {
+            if(!item->folderPath.isEmpty()) currentPaths<<item->folderPath;
+            nCount += refreshFolder(item, nItems);
+        }
+    }
+    if(folderItem->folderPath.isEmpty()) return nCount;
+
+    QDir folder(folderItem->folderPath);
+    bool oFolder(folderItem->parent);
+    QModelIndex fIndex;
+    if(oFolder) fIndex = q_ptr->createIndex(folderItem->parent->children->indexOf(folderItem),0,folderItem);
+    for (QFileInfo fileInfo : folder.entryInfoList())
+    {
+        QString fileName(fileInfo.fileName()), filePath(fileInfo.filePath());
+        if (fileInfo.isFile())
+        {
+            if(GlobalObjects::mpvplayer->videoFileFormats.contains("*."+fileInfo.suffix().toLower())
+                    && !fileItems.contains(filePath))
+            {
+                if(oFolder) q_ptr->beginInsertRows(fIndex, folderItem->children->size(), folderItem->children->size());
+                PlayListItem *newItem = new PlayListItem(folderItem, true);
+                int suffixPos = fileName.lastIndexOf('.'), pathPos = fileName.lastIndexOf('/') + 1;
+                newItem->title = fileName.mid(pathPos, suffixPos - pathPos);
+                newItem->path = filePath;
+                fileItems.insert(newItem->path,newItem);
+                nItems<<newItem;
+                ++nCount;
+                if(oFolder) q_ptr->endInsertRows();
+
+            }
+        }
+        else
+        {
+            if (fileName == "." || fileName == "..")continue;
+            if(!currentPaths.contains(filePath))
+            {
+                PlayListItem *folderCollection = new PlayListItem();
+                folderCollection->title = fileName;
+                folderCollection->folderPath = filePath;
+                int c = refreshFolder(folderCollection, nItems);
+                if(c>0)
+                {
+                    if(oFolder) q_ptr->beginInsertRows(fIndex, folderItem->children->size(), folderItem->children->size());
+                    folderCollection->moveTo(folderItem);
+                    if(oFolder) q_ptr->endInsertRows();
+                }
+                else delete folderCollection;
+                nCount += c;
+            }
+        }
+    }
+    return nCount;
 }
 
 void PlayListPrivate::autoLocalMatch(PlayListItem *item)

@@ -318,6 +318,12 @@ QString DanmuManager::updateMatch(const QString &fileName, const MatchInfo *newM
     return createPool(detailInfo.animeTitle,detailInfo.title,getFileHash(fileName));
 }
 
+void DanmuManager::removeMatch(const QString &fileName)
+{
+    QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
+    query.exec(QString("delete from match where MD5='%1'").arg(getFileHash(fileName)));
+}
+
 MatchInfo *DanmuManager::ddSearch(const QString &keyword)
 {
     ThreadTask task(GlobalObjects::workThread);

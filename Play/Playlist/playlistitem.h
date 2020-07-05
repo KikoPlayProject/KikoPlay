@@ -24,7 +24,7 @@ public:
 
     QString title;
     QString animeTitle;
-    QString path;
+    QString path, folderPath;
     QString poolID;
 };
 

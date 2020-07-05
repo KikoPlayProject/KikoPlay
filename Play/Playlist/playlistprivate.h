@@ -28,6 +28,7 @@ public:
 
     PlayListItem *getPrevOrNextItem(bool prev);
     bool addSubFolder(QString folderStr, PlayListItem *parent, int &itemCount);
+    int refreshFolder(PlayListItem *folderItem, QList<PlayListItem *> &nItems);
 
     void autoLocalMatch(PlayListItem *item);
     QString setCollectionTitle(QList<PlayListItem *> &list);

@@ -23,6 +23,7 @@
 #include "Play/Danmu/Manager/pool.h"
 #include "Download/downloadmodel.h"
 #define BgmCollectionRole Qt::UserRole+1
+#define FolderCollectionRole Qt::UserRole+2
 namespace
 {
     class TextColorDelegate: public QStyledItemDelegate
@@ -42,18 +43,28 @@ namespace
 
             }
             QStyledItemDelegate::paint(painter, ViewOption, index);
+
+            static QIcon bgmCollectionIcon(":/res/images/bgm-collection.svg");
+            static QIcon folderIcon(":/res/images/folder.svg");
+
+            QIcon *marker(nullptr);
             if(index.data(BgmCollectionRole).toBool())
             {
-                static QIcon bgmCollectionIcon(":/res/images/bgm-collection.svg");
-                //static QPixmap bgmCollectionIcon(":/res/images/bgm-collection.svg");
+                marker = &bgmCollectionIcon;
+
+            }
+            else if(index.data(FolderCollectionRole).toBool())
+            {
+                marker = &folderIcon;
+            }
+            if(marker)
+            {
                 QRect decoration = option.rect;
                 decoration.setHeight(decoration.height()-10);
                 decoration.setWidth(decoration.height());
                 decoration.moveCenter(option.rect.center());
                 decoration.moveRight(option.rect.width()+option.rect.x()-10);
-                bgmCollectionIcon.paint(painter, decoration);
-                //painter->drawPixmap(decoration, bgmCollectionIcon.pixmap(QSize(32)));
-                //painter->drawPixmap(decoration,bgmCollectionIcon);
+                marker->paint(painter, decoration);
             }
         }
     };
@@ -242,6 +253,10 @@ void ListWindow::initActions()
                         showMessage(tr("Match Done"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
                 }
             }
+            else
+            {
+                GlobalObjects::playlist->matchItems(indexes);
+            }
             return;
         }
         GlobalObjects::playlist->matchItems(indexes);
@@ -270,6 +285,15 @@ void ListWindow::initActions()
         if (selection.size() == 0)return;
         QModelIndex selIndex(selection.indexes().first());
         GlobalObjects::playlist->switchBgmCollection(selIndex);
+    });
+
+    act_updateFolder=new QAction(tr("Scan Folder Changes"),this);
+    QObject::connect(act_updateFolder,&QAction::triggered,[this](){
+        QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
+        QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
+        if (selection.size() == 0)return;
+        QModelIndex selIndex(selection.indexes().first());
+        GlobalObjects::playlist->refreshFolder(selIndex);
     });
 
     act_addWebDanmuSource=new QAction(tr("Add Danmu Source"),this);
@@ -524,8 +548,8 @@ void ListWindow::initActions()
         if (selection.size() == 0)return;
         QModelIndexList indexes(selection.indexes());
         const PlayListItem *item=GlobalObjects::playlist->getItem(indexes.last());
-        if(item->path.isEmpty())return;
-        QString command("Explorer /select," + QDir::toNativeSeparators(item->path));
+        if(item->path.isEmpty() && item->folderPath.isEmpty())return;
+        QString command("Explorer /select," + QDir::toNativeSeparators(item->path.isEmpty()?item->folderPath:item->path));
         QProcess::startDetached(command);
     });
 
@@ -749,6 +773,7 @@ void ListWindow::updatePlaylistActions()
     act_merge->setEnabled(hasPlaylistSelection);
     act_browseFile->setEnabled(hasPlaylistSelection);
     act_exportDanmu->setEnabled(hasPlaylistSelection);
+    act_updateFolder->setEnabled(hasPlaylistSelection);
     act_paste->setEnabled(GlobalObjects::playlist->canPaste());  
 }
 
@@ -812,8 +837,10 @@ QWidget *ListWindow::setupPlaylistPage()
 
     QMenu *playlistContextMenu=new QMenu(playlistView);
     playlistContextMenu->addAction(act_play);
-    playlistContextMenu->addAction(act_autoAssociate);
-    playlistContextMenu->addAction(act_removeMatch);
+    QMenu *matchSubMenu=new QMenu(tr("Match"),playlistContextMenu);
+    matchSubMenu->addAction(act_autoAssociate);
+    matchSubMenu->addAction(act_removeMatch);
+    playlistContextMenu->addMenu(matchSubMenu);
     QMenu *danmuSubMenu=new QMenu(tr("Danmu"),playlistContextMenu);
     danmuSubMenu->addAction(act_addWebDanmuSource);
     danmuSubMenu->addAction(act_updateDanmu);
@@ -849,6 +876,7 @@ QWidget *ListWindow::setupPlaylistPage()
     shareSubMenu->addAction(act_sharePoolCode);
     shareSubMenu->addAction(act_shareResourceCode);
     playlistContextMenu->addMenu(shareSubMenu);
+    playlistContextMenu->addAction(act_updateFolder);
     playlistContextMenu->addAction(act_browseFile);
     playlistContextMenu->addSeparator();
     playlistContextMenu->addAction(act_autoMatchMode);

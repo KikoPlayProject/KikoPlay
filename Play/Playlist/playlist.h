@@ -20,6 +20,7 @@ signals:
 class PlayList : public QAbstractItemModel
 {
     Q_OBJECT
+    friend class PlayListPrivate;
 public:
     explicit PlayList(QObject *parent = nullptr);
     ~PlayList();
@@ -49,6 +50,7 @@ public slots :
     int addItems(QStringList &items, QModelIndex parent);
     int addFolder(QString folderStr, QModelIndex parent);
     QModelIndex addCollection(QModelIndex parent,QString title);
+    int refreshFolder(const QModelIndex &index);
 
     void deleteItems(const QModelIndexList &deleteIndexes);
     void clear();

@@ -16,6 +16,7 @@
 #include "MediaLibrary/animelibrary.h"
 
 #define BgmCollectionRole Qt::UserRole+1
+#define FolderCollectionRole Qt::UserRole+2
 
 namespace
 {
@@ -333,6 +334,31 @@ QModelIndex PlayList::addCollection(QModelIndex parent, QString title)
     return this->index(insertPosition,0,parent);
 }
 
+int PlayList::refreshFolder(const QModelIndex &index)
+{
+    Q_D(PlayList);
+    if(!index.isValid())return 0;
+    PlayListItem *item= static_cast<PlayListItem*>(index.internalPointer());
+    if(!item->children) return 0;
+    QList<PlayListItem *> nItems;
+    int c = d->refreshFolder(item, nItems);
+    emit message(tr("Add %1 item(s)").arg(c),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
+    if(c>0)
+    {
+        d->playListChanged=true;
+        d->needRefresh = true;
+        if(d->autoMatch)
+        {
+            emit matchStatusChanged(true);
+            QMetaObject::invokeMethod(matchWorker, [this, nItems](){
+                matchWorker->match(nItems);
+            },Qt::QueuedConnection);
+        }
+        d->savePlaylist();
+    }
+    return c;
+}
+
 void PlayList::cutItems(const QModelIndexList &cutIndexes)
 {
     Q_D(PlayList);
@@ -409,7 +435,7 @@ void PlayList::switchBgmCollection(const QModelIndex &index)
     Q_D(PlayList);
     if(!index.isValid())return;
     PlayListItem *item= static_cast<PlayListItem*>(index.internalPointer());
-    if(!item->children) return;
+    if(!item->children || !item->folderPath.isEmpty()) return;
     item->isBgmCollection=!item->isBgmCollection;
     if(item->isBgmCollection)
     {
@@ -502,6 +528,7 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
         if(item->children)
         {
             if(item->isBgmCollection) return tr("%1\nBangumi Collection").arg(item->title);
+            if(!item->folderPath.isEmpty()) return tr("%1\nFolder Collection\n%2").arg(item->title, item->folderPath);
             return item->title;
         }
 
@@ -536,6 +563,8 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
         return item==d->currentItem?QIcon(":/res/images/playing.svg"):QVariant();
     case BgmCollectionRole:
         return (item->isBgmCollection && item->children);
+    case FolderCollectionRole:
+        return !item->folderPath.isEmpty();
     default:
         return QVariant();
     }
@@ -848,9 +877,11 @@ void PlayList::removeMatch(const QModelIndexList &matchIndexes)
                 items.push_back(child);
             }
         }
-        else
+        else if(!currentItem->poolID.isEmpty())
         {
+            GlobalObjects::danmuManager->removeMatch(currentItem->path);
             currentItem->poolID = "";
+            currentItem->animeTitle = "";
             int suffixPos = currentItem->path.lastIndexOf('.'), pathPos = currentItem->path.lastIndexOf('/') + 1;
             currentItem->title = currentItem->path.mid(pathPos, suffixPos - pathPos);
             if (currentItem == d->currentItem) emit currentMatchChanged(currentItem->poolID);
