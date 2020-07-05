@@ -21,7 +21,7 @@ DanmuAccessResult *IqiyiProvider::search(const QString &keyword)
     searchResult->providerId=id();
     try
     {
-        QString str(Network::httpGet(baseUrl,QUrlQuery()));
+        QString str(Network::httpGet(baseUrl,QUrlQuery(), {"Accept","*/*"}));
         handleSearchReply(str,searchResult);
     }
     catch(Network::NetworkError &error)
