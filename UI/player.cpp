@@ -119,7 +119,7 @@ protected:
                 GlobalObjects::mpvplayer->setMedia(curItem->path);
             }
         }
-        QWidget::mousePressEvent(event);
+        event->accept();
     }
     virtual void enterEvent(QEvent *event)
     {
