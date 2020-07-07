@@ -111,12 +111,13 @@ QString TucaoProvider::downloadBySourceURL(const QString &url, QList<DanmuCommen
 
 void TucaoProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
 {
-    QRegExp re("(<div class=\"search_list\" style=\"border-top:1px solid #eee;\">)(.*)(<div id=\"float_show\">)");
+    QRegExp re("(<div class=\"search_list\" style=\"border-top:1px solid #eee;\">)");
     int pos=re.indexIn(reply);
     if(pos!=-1)
     {
         QStringList list = re.capturedTexts();
-        HTMLParserSax parser(list.at(2));
+        HTMLParserSax parser(reply);
+		parser.seekTo(pos);
         DanmuSourceItem item;
         //item.source=DanmuSource::Tucao;
         bool itemStart=false;
