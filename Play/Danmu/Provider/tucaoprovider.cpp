@@ -115,11 +115,9 @@ void TucaoProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
     int pos=re.indexIn(reply);
     if(pos!=-1)
     {
-        QStringList list = re.capturedTexts();
         HTMLParserSax parser(reply);
 		parser.seekTo(pos);
         DanmuSourceItem item;
-        //item.source=DanmuSource::Tucao;
         bool itemStart=false;
         while(!parser.atEnd())
         {
