@@ -204,6 +204,7 @@ void MatchEditor::search()
         }
     }
     searchButton->setEnabled(false);
+    keywordEdit->setEnabled(false);
     searchButton->setText(tr("Searching"));
     showBusyState(true);
     MatchInfo *sInfo=nullptr;
@@ -226,6 +227,7 @@ void MatchEditor::search()
     }
     showBusyState(false);
     searchButton->setEnabled(true);
+    keywordEdit->setEnabled(true);
     searchButton->setText(tr("Search"));
 }
 

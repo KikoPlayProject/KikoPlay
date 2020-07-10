@@ -994,13 +994,15 @@ QToolButton#DownloadInfoPage:checked{
     background:transparent;
 }
 QProgressBar {
-    border: 1px solid #5ca3b7;
+    /*border: 1px solid #5ca3b7;*/
+    border: 1px solid rgb(@ThemeColorL3);
     text-align: center;
-    border-radius:2px;
+    border-radius:0px;
+    background-color: rgba(255,255,255,120);
 }
 
 QProgressBar::chunk {
-    background-color: rgb(@ThemeColor);
+    background-color: rgba(@ThemeColor, 160);
 }
 QLabel#SpaceTip{
     color:rgb(@ThemeColor);

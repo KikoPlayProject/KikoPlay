@@ -1,6 +1,7 @@
 #include "downloaditemdelegate.h"
 #include <QApplication>
 #include <QProgressBar>
+#include <QPainter>
 #include "downloadmodel.h"
 DownloadItemDelegate::DownloadItemDelegate(QObject *parent) : QStyledItemDelegate(parent)
 {
@@ -9,6 +10,7 @@ DownloadItemDelegate::DownloadItemDelegate(QObject *parent) : QStyledItemDelegat
 
 void DownloadItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
+    painter->save();
 	QStyleOptionViewItem viewOption(option);
 	initStyleOption(&viewOption, index);
 	if (option.state.testFlag(QStyle::State_HasFocus))
@@ -19,7 +21,7 @@ void DownloadItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &
     {
         QStyleOptionProgressBar progressBarOption;
 		progressBarOption.rect = viewOption.rect.adjusted(0,1,0,-1);
-        progressBarOption.fontMetrics = QApplication::fontMetrics();
+        progressBarOption.fontMetrics = painter->fontMetrics();
         progressBarOption.minimum = 0;
         progressBarOption.maximum = 100;
         qint64 totalLength=index.data(DownloadModel::DataRole::TotalLengthRole).toLongLong(),
@@ -35,5 +37,6 @@ void DownloadItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &
         QProgressBar progressBar;
         QApplication::style()->drawControl(QStyle::CE_ProgressBar, &progressBarOption, painter, &progressBar);
     }
+    painter->restore();
 }
 
