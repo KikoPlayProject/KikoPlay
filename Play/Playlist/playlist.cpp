@@ -155,6 +155,7 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
 	endInsertRows();
     d->playListChanged=true;
     d->needRefresh = true;
+    d->incModifyCounter();
     emit message(tr("Add %1 item(s)").arg(tmpItems.size()),PM_HIDE|PM_OK);
     if(d->autoMatch && matchItems.count()>0)
     {
@@ -194,6 +195,7 @@ int PlayList::addFolder(QString folderStr, QModelIndex parent)
 		endInsertRows();
         d->playListChanged=true;
         d->needRefresh = true;
+        d->incModifyCounter();
         if(d->autoMatch)
         {
             QList<PlayListItem *> items({folderRoot});
@@ -250,6 +252,7 @@ void PlayList::deleteItems(const QModelIndexList &deleteIndexes)
     Q_D(PlayList);
     d->playListChanged=true;
     d->needRefresh = true;
+    d->incModifyCounter();
 }
 
 void PlayList::clear()
@@ -284,6 +287,7 @@ void PlayList::sortItems(const QModelIndex &parent, bool ascendingOrder)
     }
     d->playListChanged=true;
     d->needRefresh = true;
+    d->incModifyCounter();
 }
 
 void PlayList::sortAllItems(bool ascendingOrder)
@@ -331,6 +335,7 @@ QModelIndex PlayList::addCollection(QModelIndex parent, QString title)
 	endInsertRows();
     d->playListChanged=true;
     d->needRefresh = true;
+    d->incModifyCounter();
     return this->index(insertPosition,0,parent);
 }
 
@@ -347,6 +352,7 @@ int PlayList::refreshFolder(const QModelIndex &index)
     {
         d->playListChanged=true;
         d->needRefresh = true;
+        d->incModifyCounter();
         if(d->autoMatch)
         {
             emit matchStatusChanged(true);
@@ -428,6 +434,7 @@ void PlayList::moveUpDown(QModelIndex index, bool up)
     Q_D(PlayList);
     d->playListChanged=true;
     d->needRefresh = true;
+    d->incModifyCounter();
 }
 
 void PlayList::switchBgmCollection(const QModelIndex &index)
@@ -949,6 +956,7 @@ void PlayList::setCurrentPlayTime(int playTime)
     }
     d->playListChanged=true;
     d->needRefresh=true;
+    d->incModifyCounter();
 }
 
 QModelIndex PlayList::mergeItems(const QModelIndexList &mergeIndexes)
@@ -1068,6 +1076,7 @@ void PlayList::updatePlayTime(const QString &path, int time, int state)
         d->needRefresh=true;
         d->updateLibItemInfo(item);
         d->updateRecentlist(item);
+        d->incModifyCounter();
     }
 }
 
@@ -1087,6 +1096,7 @@ void PlayList::renameItemPoolId(const QString &opid, const QString &npid, const 
             }
             d->playListChanged=true;
             d->needRefresh=true;
+            d->incModifyCounter();
             GlobalObjects::library->addToLibrary(item->animeTitle,item->title,item->path);
         }
     }

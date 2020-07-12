@@ -11,7 +11,7 @@
 #include "Play/Danmu/Manager/danmumanager.h"
 
 PlayListPrivate::PlayListPrivate(PlayList *pl) : root(new PlayListItem), currentItem(nullptr), playListChanged(false),
-    needRefresh(true), loopMode(PlayList::NO_Loop_All), autoMatch(true), q_ptr(pl)
+    needRefresh(true), loopMode(PlayList::NO_Loop_All), autoMatch(true), modifyCounter(0), q_ptr(pl)
 {
     PlayListItem::playlist = pl;
     plPath = GlobalObjects::dataPath + "playlist.xml";
@@ -123,6 +123,16 @@ void PlayListPrivate::savePlaylist()
     saveItem(writer, root);
     writer.writeEndDocument();
     playListChanged=false;
+}
+
+void PlayListPrivate::incModifyCounter()
+{
+    const int maxModifyCount = 5;
+    if(++modifyCounter>=maxModifyCount)
+    {
+        savePlaylist();
+        modifyCounter=0;
+    }
 }
 
 void PlayListPrivate::saveItem(QXmlStreamWriter &writer, PlayListItem *item)

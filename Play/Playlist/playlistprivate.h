@@ -13,6 +13,7 @@ public:
     bool playListChanged, needRefresh;
     PlayList::LoopMode loopMode;
     bool autoMatch;
+    int modifyCounter;
 
     QList<PlayListItem *> itemsClipboard;
     QList<QPair<QString,QString> > recentList;
@@ -21,6 +22,7 @@ public:
 public:
     void loadPlaylist();
     void savePlaylist();
+    void incModifyCounter();
 
     void loadRecentlist();
     void saveRecentlist();
