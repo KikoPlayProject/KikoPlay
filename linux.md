@@ -1,5 +1,6 @@
 Linux上我测试了Ubuntu 18.04 x64，Manjaro 18.0.4 x64，其他系统可自行编译
 
+## Ubuntu 18.04
 Ubuntu 18.04 x64上编译的大概流程：
 
  1. 安装Qt(测试安装的是Qt 5.12.3) 
@@ -43,14 +44,30 @@ Ubuntu 18.04 x64上编译的大概流程：
      make
      ```
 
-Manjaro上的编译更为简单：
- 1. 安装mpv
- 2. 下载编译安装[QHttpEngine](https://github.com/nitroshare/qhttpengine)
- 3. 开始编译，进入KikoPlay工程目录：
+## ArchLinux/Manjaro
+
+### 从 [AUR](https://aur.archlinux.org/packages/kikoplay/) 安装
+
+ArchLinux 可以直接通过支持 AUR 的包管理工具安装（具体命令格式参照相应包管理工具），如：
+
+  ```bash
+  yay -S kikoplay
+  ```
+
+### 手动编译安装
+
+ 1. 安装 mpv
+     ```bash
+     pacman -S mpv
      ```
+ 2. 下载编译安装 [QHttpEngine](https://github.com/nitroshare/qhttpengine)（请参考官方文档）
+ 3. 开始编译，进入 KikoPlay 工程目录：
+     ```bash
      qmake
      make
      ```
+
+## Gentoo
 
 Gentoo上的编译安装流程：
 
@@ -61,5 +78,6 @@ Gentoo上的编译安装流程：
     sudo layman -a guru
     sudo emerge media-video/kikoplay
     ```
+## 备注
 
-编译成功后得到KikoPlay文件，可直接运行./KikoPlay，如果提示缺少libqhttpengine等库，可尝试将编译QHttpEngine得到的库放到/usr/lib目录下，也可以将/usr/local/lib加入LD_LIBRARY_PATH环境变量中。下载功能需要aria2c，可自行编译或者下载后放到KikoPlay同一目录下
+编译成功后得到 `KikoPlay` 文件，可直接运行 `./KikoPlay`，如果提示缺少 libqhttpengine 等库，可尝试将编译 QHttpEngine 得到的库放到 `/usr/lib` 目录下，也可以将 `/usr/local/lib` 加入 `LD_LIBRARY_PATH` 环境变量中。下载功能需要 `aria2c`，可自行编译或者下载后放到 `KikoPlay` 同一目录下。
