@@ -16,7 +16,7 @@ QStringList IqiyiProvider::supportedURLs()
 
 DanmuAccessResult *IqiyiProvider::search(const QString &keyword)
 {
-    QString baseUrl = QString("https://so.iqiyi.com/so/q_%1_site_iqiyi_m_").arg(keyword);
+    QString baseUrl = QString("https://so.iqiyi.com/so/q_%1").arg(keyword);
     DanmuAccessResult *searchResult=new DanmuAccessResult;
     searchResult->providerId=id();
     try
