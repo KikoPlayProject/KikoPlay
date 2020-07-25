@@ -14,6 +14,8 @@
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "MediaLibrary/animelibrary.h"
+#include "UI/list.h"
+#include "UI/mainwindow.h"
 
 #define BgmCollectionRole Qt::UserRole+1
 #define FolderCollectionRole Qt::UserRole+2
@@ -911,9 +913,13 @@ void PlayList::updateItemsDanmu(const QModelIndexList &itemIndexes)
             items.append(item);
         }
     }
-    emit message(tr("Update Start"),PopMessageFlag::PM_PROCESS);
+    bool cancel = false;
+    ListWindow *list = static_cast<MainWindow *>(GlobalObjects::mainWindow)->getList();
+    QObject::connect(list, &ListWindow::infoCancelClicked, this, [&](){ cancel = true;});
+    emit message(tr("Update Start"),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
     while(!items.empty())
     {
+        if(cancel) break;
         PlayListItem *currentItem=items.takeFirst();
         if(currentItem->children)
         {
@@ -926,7 +932,7 @@ void PlayList::updateItemsDanmu(const QModelIndexList &itemIndexes)
         {
             Pool *pool=GlobalObjects::danmuManager->getPool(currentItem->poolID);
             if(!pool) continue;
-            emit message(tr("Updating: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS);
+            emit message(tr("Updating: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
             pool->update();
         }
     }
@@ -1106,12 +1112,16 @@ void PlayList::renameItemPoolId(const QString &opid, const QString &npid, const 
 void MatchWorker::match(const QList<PlayListItem *> &items)
 {
     QList<PlayListItem *> matchedItems;
-    emit message(tr("Match Start"),PopMessageFlag::PM_PROCESS);
+    emit message(tr("Match Start"),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
+    bool cancel = false;
+    ListWindow *list = static_cast<MainWindow *>(GlobalObjects::mainWindow)->getList();
+    QObject::connect(list, &ListWindow::infoCancelClicked, this, [&](){ cancel = true;});
     for(auto currentItem: items)
     {
+        if(cancel) break;
         if(!currentItem->poolID.isEmpty()) continue;
         if (!QFile::exists(currentItem->path))continue;
-        MatchInfo *matchInfo=GlobalObjects::danmuManager->matchFrom(DanmuManager::DanDan,currentItem->path);
+        QScopedPointer<MatchInfo> matchInfo(GlobalObjects::danmuManager->matchFrom(DanmuManager::DanDan,currentItem->path));
         if(!matchInfo) continue;
         if(matchInfo->error)
         {
@@ -1123,7 +1133,7 @@ void MatchWorker::match(const QList<PlayListItem *> &items)
             if(matchInfo->success && matchList.count()>0)
             {
                 MatchInfo::DetailInfo &bestMatch=matchList.first();
-                emit message(tr("Success: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS);
+                emit message(tr("Success: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
                 currentItem->animeTitle=bestMatch.animeTitle;
                 currentItem->title=bestMatch.title;
                 currentItem->poolID=matchInfo->poolID;
@@ -1132,10 +1142,9 @@ void MatchWorker::match(const QList<PlayListItem *> &items)
             }
             else
             {
-                emit message(tr("Need manually: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS);
+                emit message(tr("Need manually: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
             }
         }
-        delete matchInfo;
     }
     emit matchDown(matchedItems);
     emit message(tr("Match Done"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);

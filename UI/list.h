@@ -37,7 +37,8 @@ class ListWindow : public QWidget
     Q_OBJECT
 public:
     explicit ListWindow(QWidget *parent = nullptr);
-
+signals:
+    void infoCancelClicked();
 private:
     void initActions();
     inline QModelIndex getPSParentIndex();

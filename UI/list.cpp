@@ -77,17 +77,22 @@ namespace
             infoIcon=new QMovie(this);
             QLabel *movieLabel=new QLabel(this);
             movieLabel->setMovie(infoIcon);
-            movieLabel->setFixedSize(32,32);
-            movieLabel->setScaledContents(true);
+            movieLabel->setFixedSize(32, 32);
+            //movieLabel->setScaledContents(true);
             infoText=new QLabel(this);
             infoText->setObjectName(QStringLiteral("labelListInfo"));
             infoText->setFont(QFont("Microsoft YaHei UI",10));
             infoText->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
+            cancelBtn = new QPushButton(QObject::tr("Cancel"), this);
             QHBoxLayout *infoBarHLayout=new QHBoxLayout(this);
             infoBarHLayout->setContentsMargins(5,0,5,0);
             infoBarHLayout->setSpacing(4);
             infoBarHLayout->addWidget(movieLabel);
             infoBarHLayout->addWidget(infoText);
+            infoBarHLayout->addWidget(cancelBtn);
+            cancelBtn->hide();
+            ListWindow *list = static_cast<ListWindow *>(parent);
+            QObject::connect(cancelBtn, &QPushButton::clicked, list, &ListWindow::infoCancelClicked);
             QObject::connect(&hideTimer,&QTimer::timeout,[this](){
                 infoText->setText("");
                 hide();
@@ -109,6 +114,8 @@ namespace
                 icon=":/res/images/ok.png";
             else if(flag&PopMessageFlag::PM_PROCESS)
                 icon=":/res/images/loading-rolling.gif";
+            if(flag&PopMessageFlag::PM_SHOWCANCEL) cancelBtn->show();
+            else cancelBtn->hide();
             if(icon!=infoIcon->fileName())
             {
                 infoIcon->stop();
@@ -121,6 +128,7 @@ namespace
         QMovie *infoIcon;
         QLabel *infoText;
         QTimer hideTimer;
+        QPushButton *cancelBtn;
     };
 }
 ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),matchStatus(0)

@@ -477,6 +477,7 @@ QWidget *MainWindow::setupPlayPage()
             listWindow->hide();
             playerWindow->toggleListCollapseState(false);
             playVerticalLayout->setContentsMargins(0,0,0,0);
+            playerWindow->activateWindow();
         }
         else
         {
@@ -485,6 +486,7 @@ QWidget *MainWindow::setupPlayPage()
             playerWindow->toggleListCollapseState(isShowPlaylist);
             isMax?showMaximized():showNormal();
             playVerticalLayout->setContentsMargins(1,0,1,1);
+            playerWindow->activateWindow();
         }
     });
     QObject::connect(playerWindow, &PlayerWindow::setStayOnTop, this, &CFramelessWindow::setOnTop);
@@ -674,7 +676,10 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Space:
     case Qt::Key_Escape:
         if(buttonPage_Play->isChecked())
+        {
             QApplication::sendEvent(playerWindow,event);
+            playerWindow->activateWindow();
+        }
         break;
     case Qt::Key_F5:
         if(buttonPage_Play->isChecked())

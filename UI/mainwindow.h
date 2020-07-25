@@ -40,6 +40,7 @@ public:
     void setBgDarkness(int val);
     void setThemeColor(const QColor &color);
 
+    ListWindow *getList() const {return listWindow;}
 private:
     DropableWidget *widgetTitlebar;
     BackgroundWidget *bgWidget;

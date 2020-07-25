@@ -60,6 +60,7 @@ enum PopMessageFlag
     PM_HIDE=1,
     PM_PROCESS=2,
     PM_INFO=4,
-    PM_OK=8
+    PM_OK=8,
+    PM_SHOWCANCEL = 16
 };
 #endif // GLOBALOBJECTS_H
