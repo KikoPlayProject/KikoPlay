@@ -643,7 +643,7 @@ void PlayerWindow::initActions()
         if(currentDanmu.isNull())return;
         BlockRule *rule = new BlockRule(currentDanmu->text, BlockRule::Field::DanmuText, BlockRule::Relation::Contain);
         rule->name = tr("Text Rule");
-        GlobalObjects::blocker->addBlockRule();
+        GlobalObjects::blocker->addBlockRule(rule);
         currentDanmu=nullptr;
         showMessage(tr("Block Rule Added"));
     });
