@@ -91,6 +91,7 @@ Blocker::Blocker(QObject *parent):QAbstractItemModel(parent),maxId(1)
                 rule->enable=(reader.attributes().value("enable")=="true");
                 rule->usePreFilter=(reader.attributes().value("preFilter")=="true");
                 rule->content=reader.readElementText().trimmed();
+                rule->blockCount = 0;
                 blockList.append(rule);
             }
         }
@@ -104,16 +105,17 @@ Blocker::~Blocker()
     qDeleteAll(blockList);
 }
 
-void Blocker::addBlockRule()
+void Blocker::addBlockRule(BlockRule::Field field)
 {
     BlockRule *rule=new BlockRule;
     rule->id=maxId++;
     rule->name=tr("New Rule");
-    rule->blockField=BlockRule::Field::DanmuText;
+    rule->blockField=field;
     rule->relation=BlockRule::Relation::Contain;
     rule->isRegExp=true;
     rule->enable=true;
     rule->usePreFilter=false;
+    rule->blockCount=0;
 	int insertPosition = blockList.count();
     beginInsertRows(QModelIndex(), insertPosition, insertPosition);
     blockList.append(rule);
@@ -131,10 +133,18 @@ void Blocker::addBlockRule(BlockRule *rule)
     GlobalObjects::danmuPool->testBlockRule(rule);
 }
 
+void Blocker::resetBlockCount()
+{
+    for(BlockRule *rule:blockList)
+    {
+        rule->blockCount = 0;
+    }
+}
+
 void Blocker::removeBlockRule(const QModelIndexList &deleteIndexes)
 {
     QList<int> rows;
-    foreach (const QModelIndex &index, deleteIndexes)
+    for (const QModelIndex &index : deleteIndexes)
     {
         if (index.isValid())
         {
@@ -335,7 +345,7 @@ QVariant Blocker::data(const QModelIndex &index, int role) const
     {
         if(col==0)
         {
-            return QString("%1 - %2").arg(rule->id).arg(rule->name);
+            return QString("%1 - %2 - %3").arg(rule->id).arg(rule->name).arg(rule->blockCount);
         }
         else if(col==2)
         {
@@ -419,7 +429,8 @@ bool Blocker::setData(const QModelIndex &index, const QVariant &value, int)
         return false;
     }
     emit dataChanged(index,index);
-    GlobalObjects::danmuPool->testBlockRule(rule);
+    if(col != 0 && col != 5)
+        GlobalObjects::danmuPool->testBlockRule(rule);
     ruleChanged=true;
     return true;
 }
@@ -448,4 +459,14 @@ Qt::ItemFlags Blocker::flags(const QModelIndex &index) const
 }
 
 
+void BlockProxyModel::setField(BlockRule::Field field)
+{
+    this->field = field;
+    invalidateFilter();
+}
 
+bool BlockProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
+{
+    QModelIndex index = sourceModel()->index(source_row, 2, source_parent);
+    return field == GlobalObjects::blocker->fields.indexOf(index.data(Qt::DisplayRole).toString());
+}

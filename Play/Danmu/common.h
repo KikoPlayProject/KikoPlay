@@ -142,6 +142,7 @@ struct BlockRule
         NotEqual
     };
     int id;
+    int blockCount;
     Field blockField;
     Relation relation;
     bool isRegExp;
@@ -151,6 +152,8 @@ struct BlockRule
     QString content;
     QScopedPointer<QRegExp> re;
     bool blockTest(DanmuComment *comment);
+    BlockRule(const QString &ruleContent, Field field, Relation r);
+    BlockRule() = default;
 };
 typedef QList<QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo *> > PrepareList;
 struct DanmuEvent

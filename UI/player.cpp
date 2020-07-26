@@ -641,27 +641,17 @@ void PlayerWindow::initActions()
     ctx_BlockText=contexMenu->addAction(tr("Block Text"));
     QObject::connect(ctx_BlockText,&QAction::triggered,[this](){
         if(currentDanmu.isNull())return;
-        BlockRule *rule=new BlockRule;
-        rule->blockField=BlockRule::Field::DanmuText;
-        rule->relation=BlockRule::Relation::Contain;
-        rule->enable=true;
-        rule->isRegExp=false;
-        rule->content=currentDanmu->text;
-        rule->usePreFilter=false;
-        GlobalObjects::blocker->addBlockRule(rule);
+        BlockRule *rule = new BlockRule(currentDanmu->text, BlockRule::Field::DanmuText, BlockRule::Relation::Contain);
+        rule->name = tr("Text Rule");
+        GlobalObjects::blocker->addBlockRule();
         currentDanmu=nullptr;
         showMessage(tr("Block Rule Added"));
     });
     ctx_BlockUser=contexMenu->addAction(tr("Block User"));
     QObject::connect(ctx_BlockUser,&QAction::triggered,[this](){
         if(currentDanmu.isNull())return;
-        BlockRule *rule=new BlockRule;
-        rule->blockField=BlockRule::Field::DanmuSender;
-        rule->relation=BlockRule::Relation::Equal;
-        rule->enable=true;
-        rule->isRegExp=false;
-        rule->usePreFilter=false;
-        rule->content=currentDanmu->sender;
+        BlockRule *rule = new BlockRule(currentDanmu->sender, BlockRule::Field::DanmuSender, BlockRule::Relation::Equal);
+        rule->name = tr("User Rule");
         GlobalObjects::blocker->addBlockRule(rule);
         currentDanmu=nullptr;
         showMessage(tr("Block Rule Added"));
@@ -669,13 +659,8 @@ void PlayerWindow::initActions()
     ctx_BlockColor=contexMenu->addAction(tr("Block Color"));
     QObject::connect(ctx_BlockColor,&QAction::triggered,[this](){
         if(currentDanmu.isNull())return;
-        BlockRule *rule=new BlockRule;
-        rule->blockField=BlockRule::Field::DanmuColor;
-        rule->relation=BlockRule::Relation::Equal;
-        rule->enable=true;
-        rule->isRegExp=false;
-        rule->usePreFilter=false;
-        rule->content=QString::number(currentDanmu->color,16);
+        BlockRule *rule = new BlockRule(QString::number(currentDanmu->color,16), BlockRule::Field::DanmuColor, BlockRule::Relation::Equal);
+        rule->name = tr("Color Rule");
         GlobalObjects::blocker->addBlockRule(rule);
         currentDanmu=nullptr;
         showMessage(tr("Block Rule Added"));

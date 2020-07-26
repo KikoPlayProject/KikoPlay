@@ -9,7 +9,7 @@ class BlockEditor : public CFramelessDialog
     Q_OBJECT
 public:
     explicit BlockEditor(QWidget *parent = nullptr);
-    ~BlockEditor();
+    virtual void onClose() override;
 };
 
 #endif // BLOCKEDITOR_H

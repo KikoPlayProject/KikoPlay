@@ -32,11 +32,12 @@ public:
 
     const QStringList fields={tr("Text"),tr("Color"),tr("User")};
     const QStringList relations={tr("Contain"),tr("Equal"),tr("NotEqual")};
-    const QStringList headers={tr("Id&Title"),tr("Enable"),tr("Field"),tr("Relation"),tr("RegExp"),tr("PreFilter"),tr("Content")};
+    const QStringList headers={tr("Id-Title-Blocked"),tr("Enable"),tr("Field"),tr("Relation"),tr("RegExp"),tr("PreFilter"),tr("Content")};
     
 public slots:
-	void addBlockRule();
+    void addBlockRule(BlockRule::Field field = BlockRule::Field::DanmuText);
     void addBlockRule(BlockRule *rule);
+    void resetBlockCount();
     void removeBlockRule(const QModelIndexList &deleteIndexes);
 	void checkDanmu(QList<DanmuComment *> &danmuList);
 	void checkDanmu(QList<QSharedPointer<DanmuComment> > &danmuList);
@@ -62,5 +63,14 @@ public:
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
 };
-
+class BlockProxyModel : public QSortFilterProxyModel
+{
+    Q_OBJECT
+    BlockRule::Field field;
+public:
+    explicit BlockProxyModel(QObject *parent=nullptr):QSortFilterProxyModel(parent), field(BlockRule::Field::DanmuText){}
+    void setField(BlockRule::Field field);
+public:
+    virtual bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
+};
 #endif // BLOCKER_H

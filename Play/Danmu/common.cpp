@@ -59,7 +59,14 @@ bool BlockRule::blockTest(DanmuComment *comment)
         break;
     }
     if(blockField==DanmuColor)delete testStr;
+    if(testResult) ++blockCount;
     return testResult;
+}
+
+BlockRule::BlockRule(const QString &ruleContent, BlockRule::Field field, BlockRule::Relation r) :
+    blockCount(0), blockField(field), relation(r), isRegExp(false), enable(true), usePreFilter(false), content(ruleContent)
+{
+
 }
 
 DanmuObject::~DanmuObject()

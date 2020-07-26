@@ -60,6 +60,7 @@ void DanmuPool::cleanUp()
     if(curPool!=emptyPool)
     {
         setConnect(emptyPool);
+        GlobalObjects::blocker->resetBlockCount();
     }
 }
 
@@ -81,6 +82,7 @@ void DanmuPool::testBlockRule(BlockRule *rule)
         statisInfo.blockCount+=(danmu->blockBy==-1?0:1);
     }
     GlobalObjects::danmuRender->removeBlocked();
+    setStatisInfo();
 }
 
 void DanmuPool::deleteDanmu(QSharedPointer<DanmuComment> danmu)
@@ -344,6 +346,7 @@ void DanmuPool::setMinMergeCount(int val)
 void DanmuPool::setPoolID(const QString &pid)
 {
     if(pid==curPool->id()) return;
+    GlobalObjects::blocker->resetBlockCount();
     Pool *pool = GlobalObjects::danmuManager->getPool(pid);
     if(pool) setConnect(pool);
     else if(curPool!=emptyPool) setConnect(emptyPool);
