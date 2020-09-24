@@ -173,6 +173,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     onTopWhilePlaying(false),updatingTrack(false),isFullscreen(false),resizePercent(-1),jumpForwardTime(5),jumpBackwardTime(5),
     miniModeOn(false), mouseLPressed(false), moving(false)
 {
+    Notifier::getNotifier()->addNotify(Notifier::PLAYER_NOTIFY, this);
     setWindowFlags(Qt::FramelessWindowHint);
     QWidget *centralWidget = new QWidget(this);
     centralWidget->setMouseTracking(true);
@@ -1512,8 +1513,9 @@ void PlayerWindow::setPlayTime()
     GlobalObjects::playlist->setCurrentPlayTime(playTime);
 }
 
-void PlayerWindow::showMessage(const QString &msg)
+void PlayerWindow::showMessage(const QString &msg, int flag)
 {
+    Q_UNUSED(flag)
     static_cast<InfoTip *>(playInfo)->showMessage(msg);
     int x = (width()-playInfo->width())/2, y;
     if(miniModeOn) y = height()-miniProgress->height()-playInfo->height()-20;

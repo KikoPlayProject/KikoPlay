@@ -30,6 +30,7 @@ DEFINES += ZLIB_WINAPI
 CONFIG += C++11
 
 SOURCES += \
+    Common/notifier.cpp \
     Download/autodownloadmanager.cpp \
     LANServer/mediahandler.cpp \
     Play/Danmu/eventanalyzer.cpp \
@@ -136,6 +137,7 @@ SOURCES += \
 
 HEADERS += \
     Common/kcache.h \
+    Common/notifier.h \
     Download/autodownloadmanager.h \
     LANServer/mediahandler.h \
     Play/Danmu/danmuviewmodel.h \

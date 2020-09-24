@@ -14,7 +14,6 @@ public:
     void match(const QList<PlayListItem *> &items);
 signals:
     void matchDown(const QList<PlayListItem *> &matchedItems);
-    void message(const QString &msg,int flag);
 };
 
 class PlayList : public QAbstractItemModel
@@ -43,7 +42,6 @@ public:
 signals:
     void currentInvaild();
     void currentMatchChanged(const QString &pid);
-    void message(const QString &msg,int flag);
     void recentItemsUpdated();
     void matchStatusChanged(bool on);
 public slots :

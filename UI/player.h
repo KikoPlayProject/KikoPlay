@@ -6,6 +6,7 @@
 #include <QToolButton>
 #include <QLabel>
 #include "Play/Danmu/common.h"
+#include "Common/notifier.h"
 class QAction;
 class QCheckBox;
 class QFontComboBox;
@@ -15,14 +16,14 @@ class CFramelessDialog;
 class QSpinBox;
 class QSlider;
 class ClickSlider;
-class PlayerWindow : public QWidget
+class PlayerWindow : public QWidget, public NotifyInterface
 {
     Q_OBJECT
 public:
     explicit PlayerWindow(QWidget *parent = nullptr);
     void toggleListCollapseState(bool on);
     void toggleFullScreenState(bool on);
-    void showMessage(const QString &msg);
+    virtual void showMessage(const QString &msg, int flag = 0) override;
 
 private:
      QWidget *playControlPanel,*playInfoPanel;

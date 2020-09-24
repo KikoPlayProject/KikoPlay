@@ -11,6 +11,7 @@
 #include <QLineEdit>
 #include <QRegExp>
 #include <QStyledItemDelegate>
+#include "Common/notifier.h"
 struct DanmuComment;
 class FilterBox : public QLineEdit
 {
@@ -32,13 +33,11 @@ private:
     QAction *m_caseSensitivityAction;
     QActionGroup *m_patternGroup;
 };
-class ListWindow : public QWidget
+class ListWindow : public QWidget, public NotifyInterface
 {
     Q_OBJECT
 public:
-    explicit ListWindow(QWidget *parent = nullptr);
-signals:
-    void infoCancelClicked();
+    explicit ListWindow(QWidget *parent = nullptr);    
 private:
     void initActions();
     inline QModelIndex getPSParentIndex();
@@ -79,11 +78,11 @@ public slots:
     void sortSelection(bool allItem,bool ascending);
     void playItem(const QModelIndex &index,bool playChild=true);
 
-    void showMessage(const QString &msg, int flag);
+    virtual void showMessage(const QString &msg, int flag);
     void updatePlaylistActions();
     void updateDanmuActions();
     int updateCurrentPool();
-
+    void infoCancelClicked();
 };
 
 #endif // LISTWINDOW_H

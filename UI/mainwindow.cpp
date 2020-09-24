@@ -578,14 +578,15 @@ QWidget *MainWindow::setupPlayPage()
         move(cpos-miniPressPos);
     });
     QObject::connect(playerWindow, &PlayerWindow::refreshPool, this, [this](){
+        Notifier *notifier = Notifier::getNotifier();
         if(listWindow->isHidden())
         {
-            playerWindow->showMessage(tr("Updating..."));
+            notifier->showMessage(Notifier::PLAYER_NOTIFY, tr("Updating..."));
         }
         int c = listWindow->updateCurrentPool();
         if(listWindow->isHidden())
         {
-            playerWindow->showMessage(tr("Add %1 Danmu").arg(c));
+            notifier->showMessage(Notifier::PLAYER_NOTIFY, tr("Add %1 Danmu").arg(c));
         }
     });
 
@@ -684,14 +685,16 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_F5:
         if(buttonPage_Play->isChecked())
         {
+            Notifier *notifier = Notifier::getNotifier();
             if(listWindow->isHidden())
             {
-                playerWindow->showMessage(tr("Updating..."));
+
+                notifier->showMessage(Notifier::PLAYER_NOTIFY, tr("Updating..."));
             }
             int c = listWindow->updateCurrentPool();
             if(listWindow->isHidden())
             {
-                playerWindow->showMessage(tr("Add %1 Danmu").arg(c));
+                notifier->showMessage(Notifier::PLAYER_NOTIFY, tr("Add %1 Danmu").arg(c));
             }
         }
         break;

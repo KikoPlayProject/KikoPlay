@@ -133,6 +133,7 @@ namespace
 }
 ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),matchStatus(0)
 {
+    Notifier::getNotifier()->addNotify(Notifier::LIST_NOTIFY, this);
     initActions();
 
     QVBoxLayout *listVLayout=new QVBoxLayout(this);
@@ -189,7 +190,7 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
     infoTip=new InfoTip(this);
     infoTip->hide();
     infoTip->setWindowFlag(Qt::WindowStaysOnTopHint);
-    QObject::connect(GlobalObjects::playlist,&PlayList::message,this,&ListWindow::showMessage);
+    //QObject::connect(GlobalObjects::playlist,&PlayList::message,this,&ListWindow::showMessage);
 
     QObject::connect(GlobalObjects::playlist,&PlayList::matchStatusChanged, this, [this](bool on){
         matchStatus+=(on?1:-1);
@@ -1074,6 +1075,14 @@ int ListWindow::updateCurrentPool()
     act_addOnlineDanmu->setEnabled(true);
     act_addLocalDanmu->setEnabled(true);
     return count;
+}
+
+void ListWindow::infoCancelClicked()
+{
+    if(ccb)
+    {
+        ccb(this);
+    }
 }
 
 void ListWindow::resizeEvent(QResizeEvent *)
