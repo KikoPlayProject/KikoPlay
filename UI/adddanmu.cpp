@@ -15,6 +15,8 @@
 #include <QAction>
 
 #include "Play/Danmu/providermanager.h"
+#include "Play/Danmu/Manager/danmumanager.h"
+#include "Play/Danmu/Manager/pool.h"
 #include "Play/Playlist/playlist.h"
 #include "selectepisode.h"
 #include "danmuview.h"
@@ -83,7 +85,9 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,
     danmuPools(poolList),processCounter(0)
 {
     if(!relCache) relCache=new RelWordCache();
-    danmuItemModel=new DanmuItemModel(this,!danmuPools.isEmpty(),item?item->title:"",this);
+    Pool *pool = nullptr;
+    if(item) pool=GlobalObjects::danmuManager->getPool(item->poolID, false);
+    danmuItemModel=new DanmuItemModel(this,!danmuPools.isEmpty(),pool?pool->epTitle():(item?item->title:""),this);
 
     QVBoxLayout *danmuVLayout=new QVBoxLayout(this);
     danmuVLayout->setContentsMargins(0,0,0,0);
@@ -359,6 +363,11 @@ QWidget *AddDanmu::setupSelectedPage()
     selectedDanmuView->setRootIsDecorated(false);
     selectedDanmuView->setFont(selectedPage->font());
     selectedDanmuView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
+    selectedDanmuView->setDragEnabled(true);
+    selectedDanmuView->setAcceptDrops(true);
+    selectedDanmuView->setDragDropMode(QAbstractItemView::InternalMove);
+    selectedDanmuView->setDropIndicatorShown(true);
+    selectedDanmuView->setSelectionMode(QTreeView::SingleSelection);
     selectedDanmuView->setModel(danmuItemModel);
     selectedDanmuView->setItemDelegate(new PoolComboDelegate(danmuPools,this));
     QHeaderView *selectedHeader = selectedDanmuView->header();
@@ -377,8 +386,27 @@ QWidget *AddDanmu::setupSelectedPage()
         DanmuView view(&selectedDanmuList.at(row).second,this);
         view.exec();
     });
+    QAction *actAutoSetPoolID=new QAction(tr("Set DanmuPool Sequentially From Current"),this);
+    QObject::connect(actAutoSetPoolID,&QAction::triggered,this,[this](){
+        if(danmuPools.size()<=1) return;
+        auto selection = selectedDanmuView->selectionModel()->selectedRows();
+        if (selection.size() == 0) return;
+        int selectedIndex=selection.first().row();
+        int poolIndex = danmuPools.indexOf(danmuToPoolList[selectedIndex]);
+        for(++selectedIndex; selectedIndex<danmuToPoolList.size();++selectedIndex)
+        {
+            if(danmuCheckedList[selectedIndex])
+            {
+                if(++poolIndex >= danmuPools.size()) break;
+                danmuItemModel->setData(danmuItemModel->index(selectedIndex, static_cast<int>(DanmuItemModel::Columns::DANMUPOOL), QModelIndex()),
+                                        danmuPools.value(poolIndex),Qt::EditRole);
+            }
+        }
+    });
+
     selectedDanmuView->setContextMenuPolicy(Qt::ContextMenuPolicy::ActionsContextMenu);
     selectedDanmuView->addAction(actView);
+    selectedDanmuView->addAction(actAutoSetPoolID);
     return selectedPage;
 }
 
@@ -487,7 +515,8 @@ QSize SearchItemWidget::sizeHint() const
 }
 
 DanmuItemModel::DanmuItemModel(AddDanmu *dmDialog, bool hasPool, const QString &normalPool, QObject *parent) : QAbstractItemModel (parent),
-    danmuToPoolList(&dmDialog->danmuToPoolList),danmuCheckedList(&dmDialog->danmuCheckedList),hasPoolInfo(hasPool),nPool(normalPool)
+    danmuToPoolList(&dmDialog->danmuToPoolList),danmuCheckedList(&dmDialog->danmuCheckedList),selectedDanmuList(&dmDialog->selectedDanmuList),
+    hasPoolInfo(hasPool),nPool(normalPool)
 {
 
 }
@@ -512,26 +541,26 @@ QVariant DanmuItemModel::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid()) return QVariant();
     const ItemInfo &info=items.at(index.row());
-    int col=index.column();
+    Columns col=static_cast<Columns>(index.column());
     if(role==Qt::DisplayRole)
     {
         switch (col)
         {
-        case 0:
+        case Columns::TITLE:
             return info.title;
-        case 1:
+        case Columns::COUNT:
             return info.count;
-        case 2:
+        case Columns::PROVIDER:
             return info.provider;
-        case 3:
+        case Columns::DURATION:
             return info.duration;
-        case 4:
+        case Columns::DANMUPOOL:
             return danmuToPoolList->at(index.row());
         }
     }
     else if(role==Qt::CheckStateRole)
     {
-        if(col==0)
+        if(col==Columns::TITLE)
             return danmuCheckedList->at(index.row())?Qt::Checked:Qt::Unchecked;
     }
     return QVariant();
@@ -539,13 +568,14 @@ QVariant DanmuItemModel::data(const QModelIndex &index, int role) const
 
 bool DanmuItemModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    int row=index.row(),col=index.column();
+    int row=index.row();
+    Columns col=static_cast<Columns>(index.column());
     switch (col)
     {
-    case 0:
+    case Columns::TITLE:
         (*danmuCheckedList)[row]=(value==Qt::Checked);
         break;
-    case 4:
+    case Columns::DANMUPOOL:
         (*danmuToPoolList)[row]=value.toString();
         break;
     default:
@@ -560,7 +590,7 @@ QVariant DanmuItemModel::headerData(int section, Qt::Orientation orientation, in
     static QStringList headers={tr("Title"),tr("DanmuCount"),tr("Source"),tr("Duration"),tr("DanmuPool")};
     if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
     {
-        if(section<5)return headers.at(section);
+        if(section<headers.size())return headers.at(section);
     }
     return QVariant();
 }
@@ -568,20 +598,50 @@ QVariant DanmuItemModel::headerData(int section, Qt::Orientation orientation, in
 Qt::ItemFlags DanmuItemModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index);
-    int col = index.column();
-    if (index.isValid())
-    {
-        if(col==0)
-            return  Qt::ItemIsUserCheckable | defaultFlags;
-        else if(col==4)
-            return  Qt::ItemIsEditable | defaultFlags;
-    }
-    return defaultFlags;
+    if(!index.isValid()) return defaultFlags;
+    Columns col = static_cast<Columns>(index.column());
+    if(col==Columns::TITLE)
+        defaultFlags |= Qt::ItemIsUserCheckable;
+    else if(col==Columns::DANMUPOOL)
+        defaultFlags |= Qt::ItemIsEditable;
+
+    return defaultFlags | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+}
+
+QMimeData *DanmuItemModel::mimeData(const QModelIndexList &indexes) const
+{
+    int sr = indexes.first().row();
+    QMimeData *mimeData = new QMimeData();
+    QByteArray data;
+    QDataStream ds(&data, QIODevice::WriteOnly);
+    ds<<sr;
+    mimeData->setData("application/x-kikoplayitem", data);
+    return mimeData;
+}
+
+bool DanmuItemModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+{
+    if (!data->hasFormat("application/x-kikoplayitem")) return false;
+    if (action == Qt::IgnoreAction) return true;
+    QByteArray encodedData = data->data("application/x-kikoplayitem");
+    QDataStream stream(&encodedData, QIODevice::ReadOnly);
+    int sr = -1;
+    if(!stream.atEnd()) stream>>sr;
+    if(sr == -1) return false;
+    int dr = row==-1?parent.row():row;
+
+    beginMoveRows(QModelIndex(),sr,sr,QModelIndex(),dr>sr?dr+1:dr);
+    items.move(sr, dr);
+    danmuToPoolList->move(sr, dr);
+    danmuCheckedList->move(sr, dr);
+    selectedDanmuList->move(sr, dr);
+    endMoveRows();
+    return true;
 }
 
 QWidget *PoolComboDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    if(index.column()==4)
+    if(index.column()==static_cast<int>(DanmuItemModel::Columns::DANMUPOOL))
     {
         QComboBox *combo=new QComboBox(parent);
         combo->setFrame(false);
@@ -593,7 +653,7 @@ QWidget *PoolComboDelegate::createEditor(QWidget *parent, const QStyleOptionView
 
 void PoolComboDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
-    if(index.column()==4)
+    if(index.column()==static_cast<int>(DanmuItemModel::Columns::DANMUPOOL))
     {
         QComboBox *combo = static_cast<QComboBox*>(editor);
         combo->setCurrentIndex(poolList.indexOf(index.data(Qt::DisplayRole).toString()));
@@ -604,7 +664,7 @@ void PoolComboDelegate::setEditorData(QWidget *editor, const QModelIndex &index)
 
 void PoolComboDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
-    if(index.column()==4)
+    if(index.column()==static_cast<int>(DanmuItemModel::Columns::DANMUPOOL))
     {
         QComboBox *combo = static_cast<QComboBox*>(editor);
         model->setData(index,poolList.value(combo->currentIndex()),Qt::EditRole);

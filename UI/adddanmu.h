@@ -49,6 +49,15 @@ class DanmuItemModel : public QAbstractItemModel
 public:
     explicit DanmuItemModel(AddDanmu *dmDialog, bool hasPool, const QString &normalPool, QObject *parent = nullptr);
     void addItem(const QString &title, int duration, const QString &provider, int count);
+    enum class Columns
+    {
+        TITLE,
+        COUNT,
+        PROVIDER,
+        DURATION,
+        DANMUPOOL
+    };
+
 private:
     struct ItemInfo
     {
@@ -60,6 +69,7 @@ private:
     QList<ItemInfo> items;
     QStringList *danmuToPoolList;
     QList<bool> *danmuCheckedList;
+    QList<QPair<DanmuSourceInfo,QList<DanmuComment *>>> *selectedDanmuList;
     bool hasPoolInfo;
     QString nPool;
 public:
@@ -67,10 +77,15 @@ public:
     inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
     inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:items.count();}
     inline virtual int columnCount(const QModelIndex &) const{return hasPoolInfo?5:4;}
+    virtual Qt::DropActions supportedDropActions() const{return Qt::MoveAction;}
+    virtual QStringList mimeTypes() const { return QStringList()<<"application/x-kikoplayitem"; }
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
+    virtual QMimeData *mimeData(const QModelIndexList &indexes) const;
+    virtual bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent);
+
 };
 class RelWordWidget : public QWidget
 {
@@ -93,7 +108,7 @@ class AddDanmu : public CFramelessDialog
     Q_OBJECT
 public:
     explicit AddDanmu(const PlayListItem *item, QWidget *parent = nullptr, bool autoPauseVideo=true, const QStringList &poolList=QStringList());
-    QList<QPair<DanmuSourceInfo,QList<DanmuComment *> > > selectedDanmuList;
+    QList<QPair<DanmuSourceInfo,QList<DanmuComment *>>> selectedDanmuList;
     QList<bool> danmuCheckedList;
     QStringList danmuToPoolList;
 private:

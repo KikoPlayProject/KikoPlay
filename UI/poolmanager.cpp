@@ -24,9 +24,20 @@
 #include "danmuview.h"
 #include "inputdialog.h"
 #include "globalobjects.h"
-
+namespace
+{
+    static QCollator comparer;
+    struct
+    {
+        inline bool operator()(const QString &s1, const QString &s2) const
+        {
+            return comparer.compare(s1, s2)>=0?false:true;
+        }
+    } titleCompareAscending;
+}
 PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Manager"),parent)
 {
+    comparer.setNumericMode(true);
     setFont(QFont("Microsoft Yahei UI",10));
     QTreeView *poolView=new QTreeView(this);
     poolView->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -88,7 +99,9 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
             poolNodeMap.insert(node->title,node);
             poolTitles<<node->title;
         }
-        std::sort(poolTitles.begin(),poolTitles.end());
+        std::sort(poolTitles.begin(),poolTitles.end(), [&](const QString &s1, const QString &s2){
+            return comparer.compare(s1, s2)>=0?false:true;
+        });
         AddDanmu addDanmuDialog(&item, this,false,poolTitles);
         if(QDialog::Accepted==addDanmuDialog.exec())
         {
