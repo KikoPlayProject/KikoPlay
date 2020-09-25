@@ -29,18 +29,42 @@ class Blocker : public QAbstractItemModel
 public:
     explicit Blocker(QObject *parent = nullptr);
     ~Blocker();
-
+    enum struct Columns
+    {
+        ID,
+        BLOCKED,
+        ENABLE,
+        FIELD,
+        RELATION,
+        REGEXP,
+        PREFILTER,
+        CONTENT
+    };
     const QStringList fields={tr("Text"),tr("Color"),tr("User")};
     const QStringList relations={tr("Contain"),tr("Equal"),tr("NotEqual")};
-    const QStringList headers={tr("Id-Title-Blocked"),tr("Enable"),tr("Field"),tr("Relation"),tr("RegExp"),tr("PreFilter"),tr("Content")};
+    const QStringList headers={tr("Id-Title"),tr("Blocked"),tr("Enable"),tr("Field"),tr("Relation"),tr("RegExp"),tr("PreFilter"),tr("Content")};
     
-public slots:
+public:
     void addBlockRule(BlockRule::Field field = BlockRule::Field::DanmuText);
     void addBlockRule(BlockRule *rule);
     void resetBlockCount();
     void removeBlockRule(const QModelIndexList &deleteIndexes);
-	void checkDanmu(QList<DanmuComment *> &danmuList);
-	void checkDanmu(QList<QSharedPointer<DanmuComment> > &danmuList);
+    template<typename T>
+    void checkDanmu(QList<T> &danmuList)
+    {
+        for(T &danmu:danmuList)
+        {
+            for(BlockRule *rule:blockList)
+            {
+                if(rule->blockTest(&(*danmu)))
+                {
+                    danmu->blockBy=rule->id;
+                    break;
+                }
+            }
+        }
+    }
+
     bool isBlocked(DanmuComment *danmu);
     void save();
     void preFilter(QList<DanmuComment *> &danmuList);
@@ -52,12 +76,14 @@ private:
     bool ruleChanged;
     QString blockFileName;
     void saveBlockRules();
+
+
     // QAbstractItemModel interface
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
     inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:blockList.count();}
-    inline virtual int columnCount(const QModelIndex &parent) const{return parent.isValid()?0:7;}
+    inline virtual int columnCount(const QModelIndex &parent) const{return parent.isValid()?0:headers.size();}
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;

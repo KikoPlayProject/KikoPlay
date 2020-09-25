@@ -22,7 +22,7 @@ BlockEditor::BlockEditor(QWidget *parent) : CFramelessDialog(tr("Block Rules"),p
     blockView->setModel(proxyModel);
     blockView->setAlternatingRowColors(true);
     blockView->setContextMenuPolicy(Qt::ActionsContextMenu);
-    blockView->hideColumn(2);
+    blockView->hideColumn(3);
     QPushButton *add=new QPushButton(tr("Add Rule"),this);
 
     QAction *actRemove = new QAction(tr("Remove Rule(s)"),this);
@@ -82,11 +82,12 @@ BlockEditor::BlockEditor(QWidget *parent) : CFramelessDialog(tr("Block Rules"),p
     QHeaderView *blockHeader = blockView->header();
     blockHeader->setFont(this->font());
     blockHeader->resizeSection(0, 140*logicalDpiX()/96); //ID
-    blockHeader->resizeSection(1, 60*logicalDpiX()/96); //Enable
+    blockHeader->resizeSection(1, 80*logicalDpiX()/96); //BLOCKED
+    blockHeader->resizeSection(2, 60*logicalDpiX()/96); //Enable
     //blockHeader->resizeSection(2, 80*logicalDpiX()/96); //Field
-    blockHeader->resizeSection(3, 80*logicalDpiX()/96); //Relation
-    blockHeader->resizeSection(4, 100*logicalDpiX()/96); //RegExp
-    blockHeader->resizeSection(5, 80*logicalDpiX()/96); //UsePreFilter
+    blockHeader->resizeSection(4, 80*logicalDpiX()/96); //Relation
+    blockHeader->resizeSection(5, 100*logicalDpiX()/96); //RegExp
+    blockHeader->resizeSection(6, 80*logicalDpiX()/96); //UsePreFilter
     resize(GlobalObjects::appSetting->value("DialogSize/BlockEditor",QSize(700*logicalDpiX()/96,320*logicalDpiY()/96)).toSize());
 
 }

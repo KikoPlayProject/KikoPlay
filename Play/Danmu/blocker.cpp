@@ -8,15 +8,15 @@
 #define BlockNameRole Qt::UserRole+1
 QWidget *ComboBoxDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    int col=index.column();
+    Blocker::Columns col=static_cast<Blocker::Columns>(index.column());
     switch (col)
     {
-    case 2:
-    case 3:
+    case Blocker::Columns::FIELD:
+    case Blocker::Columns::RELATION:
     {
         QComboBox *combo=new QComboBox(parent);
         combo->setFrame(false);
-        combo->addItems(col==2?GlobalObjects::blocker->fields:GlobalObjects::blocker->relations);
+        combo->addItems(col==Blocker::Columns::FIELD?GlobalObjects::blocker->fields:GlobalObjects::blocker->relations);
         return combo;
     }
     default:
@@ -28,22 +28,22 @@ QWidget *ComboBoxDelegate::createEditor(QWidget *parent, const QStyleOptionViewI
 
 void ComboBoxDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
-    int col=index.column();
+    Blocker::Columns col=static_cast<Blocker::Columns>(index.column());
     switch (col)
     {
-    case 2:
-    case 3:
+    case Blocker::Columns::FIELD:
+    case Blocker::Columns::RELATION:
     {
         QComboBox *combo = static_cast<QComboBox*>(editor);
-        combo->setCurrentIndex(col==2?GlobalObjects::blocker->fields.indexOf(index.data(Qt::DisplayRole).toString()):
+        combo->setCurrentIndex(col==Blocker::Columns::FIELD?GlobalObjects::blocker->fields.indexOf(index.data(Qt::DisplayRole).toString()):
                                       GlobalObjects::blocker->relations.indexOf(index.data(Qt::DisplayRole).toString()));
         break;
     }
-    case 0:
-    case 6:
+    case Blocker::Columns::ID:
+    case Blocker::Columns::CONTENT:
     {
         QLineEdit *lineEdit=static_cast<QLineEdit *>(editor);
-        lineEdit->setText(index.data(col==0?BlockNameRole:Qt::DisplayRole).toString());
+        lineEdit->setText(index.data(col==Blocker::Columns::ID?BlockNameRole:Qt::DisplayRole).toString());
         break;
     }
     default:
@@ -56,8 +56,8 @@ void ComboBoxDelegate::setEditorData(QWidget *editor, const QModelIndex &index) 
 
 void ComboBoxDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
-    int col=index.column();
-    if(col!=2 && col!=3)
+    Blocker::Columns col=static_cast<Blocker::Columns>(index.column());
+    if(col!=Blocker::Columns::FIELD && col!=Blocker::Columns::RELATION)
     {
         QStyledItemDelegate::setModelData(editor,model,index);
         return;
@@ -164,36 +164,6 @@ void Blocker::removeBlockRule(const QModelIndexList &deleteIndexes)
 		delete rule;
     }
     saveBlockRules();
-}
-
-void Blocker::checkDanmu(QList<DanmuComment *> &danmuList)
-{
-    for(DanmuComment *danmu:danmuList)
-    {
-        for(BlockRule *rule:blockList)
-        {
-            if(rule->blockTest(danmu))
-            {
-                danmu->blockBy=rule->id;
-                break;
-            }
-        }
-    }
-}
-
-void Blocker::checkDanmu(QList<QSharedPointer<DanmuComment> > &danmuList)
-{
-    for(QSharedPointer<DanmuComment> &danmu:danmuList)
-    {
-        for(BlockRule *rule:blockList)
-        {
-            if(rule->blockTest(danmu.data()))
-            {
-                danmu->blockBy=rule->id;
-                break;
-            }
-        }
-    }
 }
 
 bool Blocker::isBlocked(DanmuComment *danmu)
@@ -338,41 +308,40 @@ QVariant Blocker::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid()) return QVariant();
     BlockRule *rule=blockList.at(index.row());
-    int col=index.column();
+    Columns col=static_cast<Columns>(index.column());
     switch (role)
     {
     case Qt::DisplayRole:
     {
-        if(col==0)
+        switch (col)
         {
-            return QString("%1 - %2 - %3").arg(rule->id).arg(rule->name).arg(rule->blockCount);
-        }
-        else if(col==2)
-        {
+        case Columns::ID:
+            return QString("%1 - %2").arg(rule->id).arg(rule->name);
+        case Columns::BLOCKED:
+            return QString::number(rule->blockCount);
+        case Columns::FIELD:
             return fields.at(rule->blockField);
-        }
-        else if(col==3)
-        {
-            return relations.at(rule->relation);
-        }
-        else if(col==6)
-        {
+        case Columns::RELATION:
+             return relations.at(rule->relation);
+        case Columns::CONTENT:
             return rule->content;
+        default:
+            break;
         }
     }
         break;
     case Qt::CheckStateRole:
     {
-        if(col==1)
+        if(col==Columns::ENABLE)
             return rule->enable?Qt::Checked:Qt::Unchecked;
-        else if(col==4)
+        else if(col==Columns::REGEXP)
             return rule->isRegExp?Qt::Checked:Qt::Unchecked;
-        else if(col==5)
+        else if(col==Columns::PREFILTER)
             return rule->usePreFilter?Qt::Checked:Qt::Unchecked;
     }
         break;
     case Qt::DecorationRole:
-        if(rule->blockField==BlockRule::Field::DanmuColor && col==6)
+        if(rule->blockField==BlockRule::Field::DanmuColor && col==Columns::CONTENT)
         {
             bool ok;
             int color=rule->content.toInt(&ok,16);
@@ -381,8 +350,8 @@ QVariant Blocker::data(const QModelIndex &index, int role) const
         }
         break;
     case Qt::ToolTipRole:
-        if(col==5) return tr("After pre-filtering is enabled, block rules will be applied when downloading danmu, which will not be added to the database");
-        else if(col==6) return rule->content;
+        if(col==Columns::PREFILTER) return tr("After pre-filtering is enabled, block rules will be applied when downloading danmu, which will not be added to the database");
+        else if(col==Columns::CONTENT) return rule->content;
         break;
     case BlockNameRole:
         return rule->name;
@@ -393,34 +362,36 @@ QVariant Blocker::data(const QModelIndex &index, int role) const
 
 bool Blocker::setData(const QModelIndex &index, const QVariant &value, int)
 {
-    int row=index.row(),col=index.column();
+    int row=index.row();
+    Columns col=static_cast<Columns>(index.column());
     BlockRule *rule=blockList.at(row);
     switch (col)
     {
-    case 0:
+    case Columns::ID:
         rule->name=value.toString();
         break;
-    case 1:
+    case Columns::ENABLE:
         if(rule->enable==(value==Qt::Checked))return false;
         rule->enable=(value==Qt::Checked);
+        if(rule->enable) rule->blockCount = 0;
         break;
-    case 2:
+    case Columns::FIELD:
         if(rule->blockField==BlockRule::Field(value.toInt()))return false;
         rule->blockField=BlockRule::Field(value.toInt());
         break;
-    case 3:
+    case Columns::RELATION:
         if(rule->relation==BlockRule::Relation(value.toInt()))return false;
         rule->relation=BlockRule::Relation(value.toInt());
         break;
-    case 4:
+    case Columns::REGEXP:
         if(rule->isRegExp==(value==Qt::Checked))return false;
         rule->isRegExp=(value==Qt::Checked);
         break;
-    case 5:
+    case Columns::PREFILTER:
         if(rule->usePreFilter==(value==Qt::Checked))return false;
         rule->usePreFilter=(value==Qt::Checked);
         break;
-    case 6:
+    case Columns::CONTENT:
         if(rule->content==value.toString())return false;
         rule->content=value.toString();
         rule->re.reset();
@@ -429,7 +400,7 @@ bool Blocker::setData(const QModelIndex &index, const QVariant &value, int)
         return false;
     }
     emit dataChanged(index,index);
-    if(col != 0 && col != 5)
+    if(col != Columns::ID && col != Columns::PREFILTER)
         GlobalObjects::danmuPool->testBlockRule(rule);
     ruleChanged=true;
     return true;
@@ -439,7 +410,7 @@ QVariant Blocker::headerData(int section, Qt::Orientation orientation, int role)
 {
     if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
     {
-        if(section<7)return headers.at(section);
+        if(section < headers.size())return headers.at(section);
     }
     return QVariant();
 }
@@ -447,11 +418,13 @@ QVariant Blocker::headerData(int section, Qt::Orientation orientation, int role)
 Qt::ItemFlags Blocker::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index);
-	int col = index.column();
+    Columns col=static_cast<Columns>(index.column());
     if (index.isValid())
 	{
-        if(col==1||col==4||col==5)
+        if(col==Columns::ENABLE||col==Columns::REGEXP||col==Columns::PREFILTER)
 			return  Qt::ItemIsUserCheckable | defaultFlags;
+        else if(col == Columns::BLOCKED)
+            return defaultFlags;
         else
 			return  Qt::ItemIsEditable | defaultFlags;
 	}  
@@ -467,6 +440,6 @@ void BlockProxyModel::setField(BlockRule::Field field)
 
 bool BlockProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
-    QModelIndex index = sourceModel()->index(source_row, 2, source_parent);
+    QModelIndex index = sourceModel()->index(source_row, static_cast<int>(Blocker::Columns::FIELD), source_parent);
     return field == GlobalObjects::blocker->fields.indexOf(index.data(Qt::DisplayRole).toString());
 }
