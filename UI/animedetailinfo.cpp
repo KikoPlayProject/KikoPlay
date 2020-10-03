@@ -23,10 +23,10 @@
 #include "MediaLibrary/episodesmodel.h"
 #include "MediaLibrary/labelmodel.h"
 #include "MediaLibrary/capturelistmodel.h"
+#include "MediaLibrary/Service/bangumi.h"
 #include "globalobjects.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
-#include "Common/network.h"
 #include "Common/flowlayout.h"
 #include "captureview.h"
 
@@ -192,27 +192,22 @@ QWidget *AnimeDetailInfo::setupEpisodesPage()
     QPushButton *getEpNames=new QPushButton(tr("Get Epsoide Names"),pageWidget);
     QObject::connect(getEpNames,&QPushButton::clicked,[this,getEpNames](){
         if(currentAnime->bangumiID==-1)return;
-        QString epUrl(QString("https://api.bgm.tv/subject/%1/ep").arg(currentAnime->bangumiID));
-        try
+        QList<Bangumi::EpInfo> eps;
+        getEpNames->setText(tr("Getting..."));
+        getEpNames->setEnabled(false);
+        this->showBusyState(true);
+        QString err(Bangumi::getEp(currentAnime->bangumiID, eps));
+        if(err.isEmpty())
         {
-            getEpNames->setText(tr("Getting..."));
-            getEpNames->setEnabled(false);
-            this->showBusyState(true);
-            QString str(Network::httpGet(epUrl,QUrlQuery(),QStringList()<<"Accept"<<"application/json"));
-            QJsonDocument document(Network::toJson(str));
-            QJsonObject obj = document.object();
-            QJsonArray epArray=obj.value("eps").toArray();
-            for(auto iter=epArray.begin();iter!=epArray.end();++iter)
+            for(auto &ep : eps)
             {
-                QJsonObject epobj=(*iter).toObject();
-                epNames.append(tr("No.%0 %1(%2)").arg(epobj.value("sort").toInt()).arg(epobj.value("name").toString().replace("&amp;","&")).arg(epobj.value("name_cn").toString().replace("&amp;","&")));
+                epNames.append(tr("No.%0 %1(%2)").arg(ep.index).arg(ep.name, ep.name_cn));
             }
             getEpNames->setText(tr("Getting Done"));
-
         }
-        catch(Network::NetworkError &error)
+        else
         {
-            showMessage(error.errorInfo,1);
+            showMessage(err,1);
             getEpNames->setEnabled(true);
             getEpNames->setText(tr("Get Epsoide Names"));
         }

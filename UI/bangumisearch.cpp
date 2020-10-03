@@ -7,7 +7,7 @@
 #include <QLabel>
 #include <QComboBox>
 #include <QCheckBox>
-#include "Common/network.h"
+#include "MediaLibrary/Service/bangumi.h"
 #include "MediaLibrary/animeinfo.h"
 #include "globalobjects.h"
 #include "MediaLibrary/animelibrary.h"
@@ -72,28 +72,20 @@ void BangumiSearch::search()
     if(keyword.isEmpty())return;
     searchButton->setEnabled(false);
     searchWordEdit->setEnabled(false);
-
-    QString baseUrl("https://api.bgm.tv/search/subject/"+keyword);
-    QUrlQuery query;
-    query.addQueryItem("type","2");
-    query.addQueryItem("responseGroup","small");
-    query.addQueryItem("start","0");
-    query.addQueryItem("max_results","25");
     showBusyState(true);
-    try
+    QList<Bangumi::BangumiInfo> bgms;
+    QString err(Bangumi::animeSearch(keyword, bgms));
+    if(err.isEmpty())
     {
-        QJsonDocument document(Network::toJson(Network::httpGet(baseUrl,query,QStringList()<<"Accept"<<"application/json")));
-        QJsonArray results=document.object().value("list").toArray();
         bangumiList->clear();
-        for(auto iter=results.begin();iter!=results.end();++iter)
+        for(auto &bgm : bgms)
         {
-            QJsonObject searchObj=(*iter).toObject();
-            new QTreeWidgetItem(bangumiList,QStringList()<<searchObj.value("name").toString().replace("&amp;","&")<<searchObj.value("name_cn").toString().replace("&amp;","&")<<QString::number(searchObj.value("id").toInt()));
+            new QTreeWidgetItem(bangumiList, {bgm.name, bgm.name_cn, QString::number(bgm.bgmID)});
         }
     }
-    catch(Network::NetworkError &error)
+    else
     {
-        showMessage(error.errorInfo,1);
+        showMessage(err, 1);
     }
     searchButton->setEnabled(true);
     searchWordEdit->setEnabled(true);

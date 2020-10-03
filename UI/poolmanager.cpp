@@ -27,13 +27,6 @@
 namespace
 {
     static QCollator comparer;
-    struct
-    {
-        inline bool operator()(const QString &s1, const QString &s2) const
-        {
-            return comparer.compare(s1, s2)>=0?false:true;
-        }
-    } titleCompareAscending;
 }
 PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Manager"),parent)
 {

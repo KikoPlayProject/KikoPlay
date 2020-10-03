@@ -33,6 +33,7 @@ SOURCES += \
     Common/notifier.cpp \
     Download/autodownloadmanager.cpp \
     LANServer/mediahandler.cpp \
+    MediaLibrary/Service/bangumi.cpp \
     Play/Danmu/eventanalyzer.cpp \
     Play/Video/mpvpreview.cpp \
     UI/addpool.cpp \
@@ -140,6 +141,7 @@ HEADERS += \
     Common/notifier.h \
     Download/autodownloadmanager.h \
     LANServer/mediahandler.h \
+    MediaLibrary/Service/bangumi.h \
     Play/Danmu/danmuviewmodel.h \
     Play/Danmu/eventanalyzer.h \
     Play/Video/mpvpreview.h \

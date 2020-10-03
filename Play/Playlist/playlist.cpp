@@ -867,6 +867,19 @@ void PlayList::matchIndex(QModelIndex &index, MatchInfo *matchInfo)
 
 }
 
+void PlayList::matchItems(const QList<const PlayListItem *> &items, const QString &title,  const QStringList &eps)
+{
+    QList<PlayListItem *> ncItems;
+    for(auto i : items)
+    {
+        ncItems.append(const_cast<PlayListItem *>(i));
+    }
+    emit matchStatusChanged(true);
+    QMetaObject::invokeMethod(matchWorker, [=](){
+        matchWorker->match(ncItems, title, eps);
+    },Qt::QueuedConnection);
+}
+
 void PlayList::removeMatch(const QModelIndexList &matchIndexes)
 {
     Q_D(PlayList);
@@ -1151,6 +1164,38 @@ void MatchWorker::match(const QList<PlayListItem *> &items)
                 //emit message(tr("Need manually: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
             }
         }
+    }
+    QObject::disconnect(conn);
+    emit matchDown(matchedItems);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Done"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
+}
+
+void MatchWorker::match(const QList<PlayListItem *> &items, const QString &animeTitle, const QStringList &eps)
+{
+    Q_ASSERT(items.size()==eps.size());
+    QList<PlayListItem *> matchedItems;
+    auto notifier = Notifier::getNotifier();
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Start"),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
+    bool cancel = false;
+    auto conn = QObject::connect(notifier, &Notifier::cancelTrigger, [&](int nType){ if(nType & Notifier::LIST_NOTIFY) cancel=true;});
+    for(int i=0; i<items.size(); ++i)
+    {
+        if(cancel) break;
+        notifier->showMessage(Notifier::LIST_NOTIFY, tr("Success: %1").arg(eps[i]),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
+
+        MatchInfo matchInfo;
+        matchInfo.error=false;
+        MatchInfo::DetailInfo detailInfo;
+        detailInfo.animeTitle=animeTitle;
+        detailInfo.title=eps[i];
+        matchInfo.matches.append(detailInfo);
+
+        items[i]->animeTitle=animeTitle;
+        items[i]->title=eps[i];
+        items[i]->poolID=GlobalObjects::danmuManager->updateMatch(items[i]->path, &matchInfo);
+
+        matchedItems<<items[i];
+        GlobalObjects::library->addToLibrary(items[i]->animeTitle,items[i]->title,items[i]->path);
     }
     QObject::disconnect(conn);
     emit matchDown(matchedItems);

@@ -22,10 +22,10 @@
 #include "MediaLibrary/animelibrary.h"
 #include "MediaLibrary/labelmodel.h"
 #include "MediaLibrary/capturelistmodel.h"
+#include "MediaLibrary/Service/bangumi.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Common/flowlayout.h"
-#include "Common/network.h"
 #include "captureview.h"
 #include "globalobjects.h"
 
@@ -317,28 +317,25 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
     QAction *getEpNames=new QAction(tr("Get Epsoide Names"),this);
     QObject::connect(getEpNames,&QAction::triggered,[this,getEpNames](){
         if(currentAnime->bangumiID==-1)return;
-        QString epUrl(QString("https://api.bgm.tv/subject/%1/ep").arg(currentAnime->bangumiID));
-        try
+        QList<Bangumi::EpInfo> eps;
+        emit setBackEnable(false);
+        getEpNames->setEnabled(false);
+        this->showBusyState(true);
+        QString err(Bangumi::getEp(currentAnime->bangumiID, eps));
+        if(err.isEmpty())
         {
-            getEpNames->setEnabled(false);
-            emit setBackEnable(false);
-            this->showBusyState(true);
-            QString str(Network::httpGet(epUrl,QUrlQuery(),QStringList()<<"Accept"<<"application/json"));
-            QJsonDocument document(Network::toJson(str));
-            QJsonObject obj = document.object();
-            QJsonArray epArray=obj.value("eps").toArray();
             epNames.clear();
-            for(auto iter=epArray.begin();iter!=epArray.end();++iter)
+            for(auto &ep : eps)
             {
-                QJsonObject epobj=(*iter).toObject();
-                epNames.append(tr("No.%0 %1(%2)").arg(epobj.value("sort").toInt()).arg(epobj.value("name").toString().replace("&amp;","&")).arg(epobj.value("name_cn").toString().replace("&amp;","&")));
+                epNames.append(tr("No.%0 %1(%2)").arg(ep.index).arg(ep.name, ep.name_cn));
             }
             this->dialogTip->showMessage(tr("Getting Down. Double-Click Title to See Epsoide Names"));
         }
-        catch(Network::NetworkError &error)
+        else
         {
-            this->dialogTip->showMessage(error.errorInfo,1);
+            this->dialogTip->showMessage(err,1);
         }
+        this->showBusyState(false);
         getEpNames->setEnabled(true);
         this->showBusyState(false);
         emit setBackEnable(true);

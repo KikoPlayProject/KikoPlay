@@ -64,12 +64,12 @@ void PlayListPrivate::loadPlaylist()
                 int playTime=reader.attributes().value("playTime").toInt();
                 int playTimeState=reader.attributes().value("playTimeState").toInt();
                 QString path = reader.readElementText().trimmed();
-                QFileInfo fileInfo(path);
+                /*QFileInfo fileInfo(path);
                 if(!fileInfo.exists())
                 {
                     playListChanged=true;
                     break;
-                }
+                }*/
 
                 PlayListItem *item=new PlayListItem(parents.last(),true);
                 item->title=title;

@@ -12,6 +12,7 @@ class MatchWorker : public QObject
 public:
     explicit MatchWorker(QObject *parent = nullptr):QObject(parent){}
     void match(const QList<PlayListItem *> &items);
+    void match(const QList<PlayListItem *> &items, const QString &animeTitle, const QStringList &eps);
 signals:
     void matchDown(const QList<PlayListItem *> &matchedItems);
 };
@@ -71,6 +72,7 @@ public slots :
     void setAutoMatch(bool on);
     void matchItems(const QModelIndexList &matchIndexes);
     void matchIndex(QModelIndex &index,MatchInfo *matchInfo);
+    void matchItems(const QList<const PlayListItem *> &items, const QString &title, const QStringList &eps);
     void removeMatch(const QModelIndexList &matchIndexes);
     void updateItemsDanmu(const QModelIndexList &itemIndexes);
     void setCurrentPlayTime(int playTime);

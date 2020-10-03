@@ -130,10 +130,12 @@ namespace
         QTimer hideTimer;
         QPushButton *cancelBtn;
     };
+    static QCollator comparer;
 }
 ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),matchStatus(0)
 {
     Notifier::getNotifier()->addNotify(Notifier::LIST_NOTIFY, this);
+    comparer.setNumericMode(true);
     initActions();
 
     QVBoxLayout *listVLayout=new QVBoxLayout(this);
@@ -240,9 +242,29 @@ void ListWindow::initActions()
             const PlayListItem *item=GlobalObjects::playlist->getItem(indexes.first());
             if(!item->poolID.isEmpty())
             {
-                MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),nullptr,this);
+                QList<const PlayListItem *> &&siblings=GlobalObjects::playlist->getSiblings(item);
+                MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),&siblings,this);
                 if(QDialog::Accepted==matchEditor.exec())
-                    GlobalObjects::playlist->matchIndex(indexes.first(),matchEditor.getMatchInfo());
+                {
+                    if(matchEditor.batchAnime.isEmpty())
+                    {
+                        GlobalObjects::playlist->matchIndex(indexes.first(),matchEditor.matchInfo);
+                    }
+                    else
+                    {
+                         QList<const PlayListItem *> items;
+                         QStringList eps;
+                         for(int i=0;i<siblings.size();++i)
+                         {
+                             if(matchEditor.epCheckedList[i])
+                             {
+                                 items.append(siblings[i]);
+                                 eps.append(matchEditor.batchEp[i]);
+                             }
+                         }
+                         GlobalObjects::playlist->matchItems(items, matchEditor.batchAnime, eps);
+                    }
+                }
             }
             else if(!item->children)
             {
@@ -257,7 +279,7 @@ void ListWindow::initActions()
                 {
                     MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),nullptr,this);
                     if(QDialog::Accepted==matchEditor.exec())
-                        GlobalObjects::playlist->matchIndex(indexes.first(),matchEditor.getMatchInfo());
+                        GlobalObjects::playlist->matchIndex(indexes.first(),matchEditor.matchInfo);
                     else
                         showMessage(tr("Match Done"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
                 }
@@ -329,6 +351,9 @@ void ListWindow::initActions()
                 poolTitles<<pool->epTitle();
             }
         }
+        std::sort(poolTitles.begin(),poolTitles.end(), [&](const QString &s1, const QString &s2){
+            return comparer.compare(s1, s2)>=0?false:true;
+        });
         AddDanmu addDanmuDialog(item, this,true,poolTitles);
         if(QDialog::Accepted==addDanmuDialog.exec())
         {

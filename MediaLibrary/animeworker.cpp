@@ -2,6 +2,7 @@
 #include "globalobjects.h"
 #include "Common/network.h"
 #include "Common/htmlparsersax.h"
+#include "Service/bangumi.h"
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QSqlError>
@@ -216,31 +217,7 @@ void AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId)
 
 void AnimeWorker::downloadTags(int bangumiID, QStringList &tags)
 {
-    QString bgmPageUrl(QString("http://bgm.tv/subject/%1").arg(bangumiID));
-    QString errInfo;
-    try
-    {
-        QString pageContent(Network::httpGet(bgmPageUrl,QUrlQuery()));
-        QRegExp re("<div class=\"subject_tag_section\">(.*)<div id=\"panelInterestWrapper\">");
-        int pos=re.indexIn(pageContent);
-        if(pos!=-1)
-        {
-            HTMLParserSax parser(re.capturedTexts().at(1));
-            while(!parser.atEnd())
-            {
-                if(parser.currentNode()=="a" && parser.isStartNode())
-                {
-                    parser.readNext();
-                    tags.append(parser.readContentText());
-                }
-                parser.readNext();
-            }
-        }
-    }
-    catch(Network::NetworkError &error)
-    {
-        errInfo=error.errorInfo;
-    }
+    QString errInfo(Bangumi::getTags(bangumiID, tags));
     emit downloadTagDone(errInfo);
 }
 
@@ -479,41 +456,24 @@ void AnimeWorker::updateAnimeInfo(Anime *anime)
 
 QString AnimeWorker::downloadLabelInfo(Anime *anime)
 {
-    QString bgmPageUrl(QString("http://bgm.tv/subject/%1").arg(anime->bangumiID));
-    QString errInfo;
-    try
+    QStringList tags;
+    QString err(Bangumi::getTags(anime->bangumiID, tags));
+    if(err.isEmpty())
     {
-        QString pageContent(Network::httpGet(bgmPageUrl,QUrlQuery()));
-        QRegExp re("<div class=\"subject_tag_section\">(.*)<div id=\"panelInterestWrapper\">");
-        int pos=re.indexIn(pageContent);
-        if(pos!=-1)
+        QRegExp yearRe("(19|20)\\d{2}");
+        QStringList trivialTags={"TV","OVA","WEB"};
+        QStringList tagList;
+        for(auto &tagName : tags)
         {
-            HTMLParserSax parser(re.capturedTexts().at(1));
-            QRegExp yearRe("(19|20)\\d{2}");
-            QStringList trivialTags={"TV","OVA","WEB"};
-            QStringList tagList;
-            while(!parser.atEnd())
-            {
-                if(parser.currentNode()=="a" && parser.isStartNode())
-                {
-                    parser.readNext();
-                    QString tagName(parser.readContentText());
-                    if(yearRe.indexIn(tagName)==-1 && !trivialTags.contains(tagName)
-                            && !anime->title.contains(tagName) && !tagName.contains(anime->title))
-                        tagList.append(tagName);
-                    if(tagList.count()>12)
-                        break;
-                }
-                parser.readNext();
-            }
-            emit newTagDownloaded(anime->title, tagList);
+            if(yearRe.indexIn(tagName)==-1 && !trivialTags.contains(tagName)
+                    && !anime->title.contains(tagName) && !tagName.contains(anime->title))
+                tagList.append(tagName);
+            if(tagList.count()>12)
+                break;
         }
+        emit newTagDownloaded(anime->title, tagList);
     }
-    catch(Network::NetworkError &error)
-    {
-        errInfo=error.errorInfo;
-    }
-    return errInfo;
+    return err;
 }
 
 QString AnimeWorker::isAlias(const QString &animeName)
