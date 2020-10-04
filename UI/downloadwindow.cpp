@@ -23,6 +23,7 @@
 #include "Download/downloadmodel.h"
 #include "Download/downloaditemdelegate.h"
 #include "Download/torrent.h"
+#include "Download/peermodel.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Video/mpvplayer.h"
 #include "adduritask.h"
@@ -252,6 +253,12 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     blockPage->setFixedHeight(pageBtnHeight);
     blockPage->setCheckable(true);
 
+    QToolButton *connectionPage=new QToolButton(downloadContainer);
+    connectionPage->setObjectName(QStringLiteral("DownloadInfoPage"));
+    connectionPage->setText(tr("Connection"));
+    connectionPage->setFixedHeight(pageBtnHeight);
+    connectionPage->setCheckable(true);
+
     QToolButton *logPage=new QToolButton(downloadContainer);
     logPage->setObjectName(QStringLiteral("DownloadInfoPage"));
     logPage->setFixedHeight(pageBtnHeight);
@@ -263,6 +270,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     pageBarHLayout->addWidget(generalInfoPage);
     pageBarHLayout->addWidget(fileInfoPage);
     pageBarHLayout->addWidget(blockPage);
+    pageBarHLayout->addWidget(connectionPage);
     pageBarHLayout->addWidget(logPage);
     pageBarHLayout->addStretch(1);
 
@@ -270,7 +278,8 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     pageButtonGroup->addButton(generalInfoPage,0);
     pageButtonGroup->addButton(fileInfoPage,1);
     pageButtonGroup->addButton(blockPage,2);
-    pageButtonGroup->addButton(logPage,3);
+    pageButtonGroup->addButton(connectionPage,3);
+    pageButtonGroup->addButton(logPage,4);
 
     generalInfoPage->setChecked(true);
 
@@ -282,6 +291,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     detailInfoSLayout->addWidget(setupGeneralInfoPage(detailInfoContent));
     detailInfoSLayout->addWidget(setupFileInfoPage(detailInfoContent));
     detailInfoSLayout->addWidget(setupBlockPage(detailInfoContent));
+    detailInfoSLayout->addWidget(setupConnectionPage(detailInfoContent));
     detailInfoSLayout->addWidget(setupGlobalLogPage(detailInfoContent));
 
     QObject::connect(pageButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[detailInfoSLayout](int id, bool checked){
@@ -392,6 +402,10 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
             rpc->tellStatus(iter.key());
         }
         rpc->tellGlobalStatus();
+        if(currentTask)
+        {
+            rpc->getPeers(currentTask->gid);
+        }
     });
     QObject::connect(rpc,&Aria2JsonRPC::refreshStatus,[this](const QJsonObject &statusObj){
         QString gid(statusObj.value("gid").toString());
@@ -406,6 +420,14 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     QObject::connect(rpc,&Aria2JsonRPC::refreshGlobalStatus,[this](int downSpeed,int upSpeed,int numActive){
         downSpeedLabel->setText(formatSize(true,downSpeed));
         upSpeedLabel->setText(formatSize(true,upSpeed));
+    });
+    QObject::connect(rpc,&Aria2JsonRPC::refreshPeerStatus,[this](const QJsonArray &peerArray){
+       if(currentTask)
+       {           
+           //auto doc = QJsonDocument::fromJson("[{\"amChoking\":\"true\",\"bitfield\":\"fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe\",\"downloadSpeed\":\"0\",\"ip\":\"166.48.23.23\",\"peerChoking\":\"true\",\"peerId\":\"%2DBC0170%2D%9C%0B%9C%3B%98%40%C0%CC%2F%DE%FA%1C\",\"port\":\"13967\",\"seeder\":\"true\",\"uploadSpeed\":\"0\"},{\"amChoking\":\"true\",\"bitfield\":\"0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"downloadSpeed\":\"0\",\"ip\":\"88.198.2.44\",\"peerChoking\":\"true\",\"peerId\":\"%2DqB4250%2DX%29TngFeK%7EIL%5F\",\"port\":\"9002\",\"seeder\":\"false\",\"uploadSpeed\":\"0\"},{\"amChoking\":\"true\",\"bitfield\":\"fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe\",\"downloadSpeed\":\"29227\",\"ip\":\"8.210.27.105\",\"peerChoking\":\"false\",\"peerId\":\"%2DqB4250%2DocyrUwnkQY%28w\",\"port\":\"6881\",\"seeder\":\"true\",\"uploadSpeed\":\"0\"}]");
+           peerModel->setPeers(peerArray, currentTask->numPieces);
+           //peerModel->setPeers(doc.array(), 999);
+       }
     });
 
     QObject::connect(rpc,&Aria2JsonRPC::showLog,logView,&QPlainTextEdit::appendPlainText);
@@ -689,6 +711,22 @@ QWidget *DownloadWindow::setupBlockPage(QWidget *parent)
     return contentScrollArea;
 }
 
+QWidget *DownloadWindow::setupConnectionPage(QWidget *parent)
+{
+    peerModel = new PeerModel(this);
+    PeerTreeView *peerView = new PeerTreeView(parent);
+    peerView->setModel(peerModel);
+    peerView->setObjectName(QStringLiteral("TaskPeerView"));
+    peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::PROGRESS), 300*logicalDpiX()/96);
+    peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::CLIENT), 180*logicalDpiX()/96);
+    peerView->setFont(QFont("Microsoft Yahei UI",10));
+    PeerDelegate *peerDelegate = new PeerDelegate(this);
+    QObject::connect(peerView, &PeerTreeView::barColorChanged, [=](const QColor &c){peerDelegate->barColor=c;});
+    QObject::connect(peerView, &PeerTreeView::borderColorChanged, [=](const QColor &c){peerDelegate->borderColor=c;});
+    peerView->setItemDelegate(peerDelegate);
+    return peerView;
+}
+
 QWidget *DownloadWindow::setupGlobalLogPage(QWidget *parent)
 {
     logView=new QPlainTextEdit(parent);
@@ -928,6 +966,7 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
     else
     {
         currentTask=nullptr;
+        peerModel->clear();
         taskTitleLabel->setText(tr("<No Item has been Selected>"));
         taskTimeLabel->setText(tr("Create Time: ---- \t Finish Time: ----"));
         taskDirLabel->setText(QString());

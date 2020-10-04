@@ -32,6 +32,7 @@ CONFIG += C++11
 SOURCES += \
     Common/notifier.cpp \
     Download/autodownloadmanager.cpp \
+    Download/peermodel.cpp \
     LANServer/mediahandler.cpp \
     MediaLibrary/Service/bangumi.cpp \
     Play/Danmu/eventanalyzer.cpp \
@@ -140,6 +141,7 @@ HEADERS += \
     Common/kcache.h \
     Common/notifier.h \
     Download/autodownloadmanager.h \
+    Download/peermodel.h \
     LANServer/mediahandler.h \
     MediaLibrary/Service/bangumi.h \
     Play/Danmu/danmuviewmodel.h \

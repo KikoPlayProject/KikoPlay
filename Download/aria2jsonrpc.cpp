@@ -127,6 +127,11 @@ void Aria2JsonRPC::handleRPCReply(const QString &method, const QJsonObject &repl
                                  resultObj.value("uploadSpeed").toString().toInt(),
                                  resultObj.value("numActive").toString().toInt());
     }
+    else if(method=="aria2.getPeers")
+    {
+        QJsonArray resultArray(replyObj.value("result").toArray());
+        emit refreshPeerStatus(resultArray);
+    }
 }
 
 QString Aria2JsonRPC::addUri(const QString &uri, const QJsonObject &options)
@@ -154,6 +159,13 @@ void Aria2JsonRPC::tellStatus(const QString &gid)
     QJsonArray params;
     params.append(gid);
     rpcCall("aria2.tellStatus",params,"");
+}
+
+void Aria2JsonRPC::getPeers(const QString &gid)
+{
+    QJsonArray params;
+    params.append(gid);
+    rpcCall("aria2.getPeers",params,"");
 }
 
 void Aria2JsonRPC::switchPauseStatus(const QString &gid, bool pause)

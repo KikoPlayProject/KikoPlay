@@ -11,6 +11,7 @@ class QButtonGroup;
 class QSplitter;
 struct DownloadTask;
 class CTorrentFileModel;
+class PeerModel;
 class TorrentTreeView : public QTreeView
 {
     Q_OBJECT
@@ -36,6 +37,24 @@ signals:
     void normColorChanged(const QColor &color);
 private:
     QColor ignoreColor, normColor;
+};
+class PeerTreeView : public QTreeView
+{
+    Q_OBJECT
+    Q_PROPERTY(QColor barColor READ getBarColor WRITE setBarColor)
+    Q_PROPERTY(QColor borderColor READ getBorderColor WRITE setBorderColor)
+public:
+    using QTreeView::QTreeView;
+
+    QColor getBarColor() const {return barColor;}
+    void setBarColor(const QColor& color) { barColor =  color; emit barColorChanged(barColor);}
+    QColor getBorderColor() const {return borderColor;}
+    void setBorderColor(const QColor& color) { borderColor =  color;  emit borderColorChanged(borderColor);}
+signals:
+    void borderColorChanged(const QColor &color);
+    void barColorChanged(const QColor &color);
+private:
+    QColor borderColor, barColor;
 };
 
 class BlockWidget : public QWidget
@@ -88,6 +107,8 @@ private:
     CTorrentFileModel *selectedTFModel;
     QLabel *taskTitleLabel,*taskTimeLabel,*taskDirLabel;
 
+    PeerModel *peerModel;
+
     QAction *act_Pause,*act_Start,*act_Remove,*act_addToPlayList,
             *act_PauseAll,*act_StartAll,*act_BrowseFile,
             *act_CopyURI,*act_SaveTorrent;
@@ -105,6 +126,7 @@ private:
     QWidget *setupGeneralInfoPage(QWidget *parent);
     QWidget *setupFileInfoPage(QWidget *parent);
     QWidget *setupBlockPage(QWidget *parent);
+    QWidget *setupConnectionPage(QWidget *parent);
     QWidget *setupGlobalLogPage(QWidget *parent);
 
     void initActions();

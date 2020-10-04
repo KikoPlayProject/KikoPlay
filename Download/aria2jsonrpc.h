@@ -24,12 +24,14 @@ private:
 signals:
     void addNewTask(const QString &id, const QString &gid);
     void refreshStatus(const QJsonObject &statusObj);
+    void refreshPeerStatus(const QJsonArray &peerArray);
     void refreshGlobalStatus(int downSpeed,int upSpeed,int numActive);
     void showLog(const QString &logInfo);
 public slots:
     QString addUri(const QString &uri, const QJsonObject &options);
     QString addTorrent(const QString &base64Str, const QJsonObject &options);
     void tellStatus(const QString &gid);
+    void getPeers(const QString &gid);
     void switchPauseStatus(const QString &gid, bool pause);
     void tellGlobalStatus();
     void removeTask(const QString &gid);
