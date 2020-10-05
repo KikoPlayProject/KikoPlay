@@ -46,6 +46,7 @@ struct DownloadTask
     int downloadSpeed;
     int uploadSpeed;
     int connections;
+    int seeders;
     int numPieces;
     int pieceLength;
     qint64 createTime;

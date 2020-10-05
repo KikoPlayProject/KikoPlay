@@ -2,6 +2,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QPainter>
+#include "peerid.h"
 #include "util.h"
 PeerModel::PeerModel(QObject *parent) : QAbstractItemModel(parent)
 {
@@ -10,20 +11,57 @@ PeerModel::PeerModel(QObject *parent) : QAbstractItemModel(parent)
 
 void PeerModel::setPeers(const QJsonArray &peerArray, int numPieces)
 {
-    beginResetModel();
-    peers.clear();
+    static QSet<QByteArray> curPeerIds;
+    static QHash<QByteArray, int> peerRow;
+    curPeerIds.clear();
+    peerRow.clear();
+    int curPeerCount = peers.size();
+    for(int i=0;i<curPeerCount;++i)
+    {
+        peerRow[peers.at(i)->peerId] = i;
+    }
     for(auto iter=peerArray.begin();iter!=peerArray.end();++iter)
     {
-        PeerInfo peer;
         QJsonObject peerObj=(*iter).toObject();
-        peer.ip = peerObj.value("ip").toString();
-        peer.client = QByteArray::fromPercentEncoding(peerObj.value("peerId").toString().toLatin1());
-        peer.downspeed = peerObj.value("downloadSpeed").toString().toInt();
-        peer.upspeed = peerObj.value("uploadSpeed").toString().toInt();
-        setProgress(peer, peerObj.value("bitfield").toString(), numPieces);
-        peers.append(peer);
+        QByteArray peerId(QByteArray::fromPercentEncoding(peerObj.value("peerId").toString().toLatin1()));
+        curPeerIds.insert(peerId);
+        if(peerRow.contains(peerId))
+        {
+            int row = peerRow[peerId];
+            auto peer = peers[row];
+            peer->downspeed = peerObj.value("downloadSpeed").toString().toInt();
+            peer->upspeed = peerObj.value("uploadSpeed").toString().toInt();
+            setProgress(*peer, peerObj.value("bitfield").toString(), numPieces);
+            emit dataChanged(index(row, static_cast<int>(Columns::CLIENT),QModelIndex()),
+                             index(row, static_cast<int>(Columns::UPSPEED),QModelIndex()));
+        }
+        else
+        {
+            PeerInfo *peer = new PeerInfo;
+            peer->ip = peerObj.value("ip").toString();
+            peer->peerId = peerId;
+            peer->client = PeerId::convertPeerId(peerId);
+            peer->downspeed = peerObj.value("downloadSpeed").toString().toInt();
+            peer->upspeed = peerObj.value("uploadSpeed").toString().toInt();
+            setProgress(*peer, peerObj.value("bitfield").toString(), numPieces);
+
+            int insertPosition = peers.count();
+            beginInsertRows(QModelIndex(), insertPosition, insertPosition);
+            peers.append(QSharedPointer<PeerInfo>(peer));
+            endInsertRows();
+        }
     }
-    endResetModel();
+    for(int i=curPeerCount-1;i>=0;--i)
+    {
+        auto peer = peers[i];
+        if(!curPeerIds.contains(peer->peerId))
+        {
+            beginRemoveRows(QModelIndex(), i, i);
+            peers.removeAt(i);
+            endRemoveRows();
+        }
+    }
+
 }
 
 void PeerModel::clear()
@@ -62,22 +100,22 @@ void PeerModel::setProgress(PeerModel::PeerInfo &peer, const QString &progressSt
 QVariant PeerModel::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid()) return QVariant();
-    const PeerInfo &peer=peers.at(index.row());
+    const auto &peer=peers.at(index.row());
     Columns col=static_cast<Columns>(index.column());
     if(role==Qt::DisplayRole)
     {
     switch (col)
     {
     case Columns::CLIENT:
-        return peer.client;
+        return peer->client;
     case Columns::IP:
-        return peer.ip;
+        return peer->ip;
     case Columns::PROGRESS:
-        return QVariant::fromValue((void *)&peer);
+        return QVariant::fromValue((void *)peer.data());
     case Columns::DOWNSPEED:
-        return formatSize(true, peer.downspeed);
+        return formatSize(true, peer->downspeed);
     case Columns::UPSPEED:
-        return formatSize(true, peer.upspeed);
+        return formatSize(true, peer->upspeed);
     default:
         break;
     }

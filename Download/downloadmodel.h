@@ -34,13 +34,18 @@ public:
         DownSpeedRole,
         UpSpeedRole
     };
+    enum class Columns
+    {
+        STATUS, TITLE, PROGRESS, SIZE, DOWNSPEED, TIMELEFT, UPSPEED, CONNECTION, SEEDER
+    };
+
     void setRPC(Aria2JsonRPC *aria2RPC);
     const QMap<QString, DownloadTask *> &getItems() const{return gidMap;}
     QList<DownloadTask *> &getAllTask() {return downloadTasks;}
 private:
     QList<DownloadTask *> downloadTasks;
     QMap<QString ,DownloadTask *> gidMap;
-    const QStringList headers={tr("Status"),tr("Title"),tr("Progress"),tr("Size"),tr("DownSpeed"),tr("Time Left"), tr("UpSpeed"), tr("Connections")};
+    const QStringList headers={tr("Status"),tr("Title"),tr("Progress"),tr("Size"),tr("DownSpeed"),tr("Time Left"), tr("UpSpeed"), tr("Connections"), tr("Seeders")};
     const QStringList status={tr("Downloading"),tr("Seeding"),tr("Waiting"),tr("Paused"),tr("Complete"),tr("Error")};
     QIcon statusIcons[6]={QIcon(":/res/images/downloading.png"),
                                     QIcon(":/res/images/seeding.png"),

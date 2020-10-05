@@ -14,6 +14,7 @@ public:
     struct PeerInfo
     {
         QString client, ip;
+        QByteArray peerId;
         float progressPercent;
         unsigned char progress[PeerModel::ProgressCluster/8];
         unsigned downspeed, upspeed;
@@ -26,7 +27,7 @@ private:
     const QStringList headers={tr("Client"),tr("IP"),tr("Progress"),tr("DownSpeed"), tr("UpSpeed")};
 
 
-    QList<PeerInfo> peers;
+    QList<QSharedPointer<PeerInfo>> peers;
     void setProgress(PeerInfo &peer, const QString &progressStr, int blockCount);
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}

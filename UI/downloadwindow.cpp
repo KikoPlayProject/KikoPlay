@@ -172,7 +172,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     downloadView->setModel(proxyModel);
     downloadView->setSortingEnabled(true);
     proxyModel->setTaskStatus(1);
-    proxyModel->setFilterKeyColumn(1);
+    proxyModel->setFilterKeyColumn(static_cast<int>(DownloadModel::Columns::TITLE));
 
     downloadView->addAction(act_addToPlayList);
     QAction *act_separator0=new QAction(this);
@@ -192,34 +192,44 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     downloadView->addAction(act_separator2);
     downloadView->addAction(act_PauseAll);
     downloadView->addAction(act_StartAll);
-	downloadView->header()->resizeSection(1, 350 * logicalDpiX() / 96);
-	downloadView->header()->setStretchLastSection(false);
+    downloadView->header()->resizeSection(static_cast<int>(DownloadModel::Columns::TITLE), 350 * logicalDpiX() / 96);
+    //downloadView->header()->setStretchLastSection(false);
 
-    constexpr int upSpeedColumn = 6;
-    downloadView->hideColumn(upSpeedColumn);
+    downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::UPSPEED));
     QAction *actShowUpSpeed=new QAction(tr("UpSpeed"),this);
     actShowUpSpeed->setCheckable(true);
-    QObject::connect(actShowUpSpeed,&QAction::toggled,[this, upSpeedColumn](bool checked){
-        if(checked) downloadView->showColumn(upSpeedColumn);
-        else downloadView->hideColumn(upSpeedColumn);
+    QObject::connect(actShowUpSpeed,&QAction::toggled,[this](bool checked){
+        if(checked) downloadView->showColumn(static_cast<int>(DownloadModel::Columns::UPSPEED));
+        else downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::UPSPEED));
         GlobalObjects::appSetting->setValue("Download/ShowUpSpeed", checked);
     });
     actShowUpSpeed->setChecked(GlobalObjects::appSetting->value("Download/ShowUpSpeed", false).toBool());
 
-    constexpr int connectionsColumn = 7;
-    downloadView->hideColumn(connectionsColumn);
+    downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::CONNECTION));
     QAction *actShowConnections=new QAction(tr("Connections"),this);
     actShowConnections->setCheckable(true);
-    QObject::connect(actShowConnections,&QAction::toggled,[this, connectionsColumn](bool checked){
-        if(checked) downloadView->showColumn(connectionsColumn);
-        else downloadView->hideColumn(connectionsColumn);
+    QObject::connect(actShowConnections,&QAction::toggled,[this](bool checked){
+        if(checked) downloadView->showColumn(static_cast<int>(DownloadModel::Columns::CONNECTION));
+        else downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::CONNECTION));
         GlobalObjects::appSetting->setValue("Download/ShowConnections", checked);
     });
     actShowConnections->setChecked(GlobalObjects::appSetting->value("Download/ShowConnections", false).toBool());
 
+    downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::SEEDER));
+    QAction *actShowSeeders=new QAction(tr("Seeders"),this);
+    actShowSeeders->setCheckable(true);
+    QObject::connect(actShowSeeders,&QAction::toggled,[this](bool checked){
+        if(checked) downloadView->showColumn(static_cast<int>(DownloadModel::Columns::SEEDER));
+        else downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::SEEDER));
+        GlobalObjects::appSetting->setValue("Download/ShowSeeders", checked);
+    });
+    actShowSeeders->setChecked(GlobalObjects::appSetting->value("Download/ShowSeeders", false).toBool());
+
+
     downloadView->header()->setContextMenuPolicy(Qt::ActionsContextMenu);
     downloadView->header()->addAction(actShowUpSpeed);
     downloadView->header()->addAction(actShowConnections);
+    downloadView->header()->addAction(actShowSeeders);
 
     QObject::connect(downloadView, &QTreeView::doubleClicked,[this,proxyModel](const QModelIndex &index){
         DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(proxyModel->mapToSource(index));
@@ -402,7 +412,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
             rpc->tellStatus(iter.key());
         }
         rpc->tellGlobalStatus();
-        if(currentTask)
+        if(currentTask && !this->isHidden())
         {
             rpc->getPeers(currentTask->gid);
         }
@@ -422,11 +432,9 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         upSpeedLabel->setText(formatSize(true,upSpeed));
     });
     QObject::connect(rpc,&Aria2JsonRPC::refreshPeerStatus,[this](const QJsonArray &peerArray){
-       if(currentTask)
+       if(currentTask && !this->isHidden())
        {           
-           //auto doc = QJsonDocument::fromJson("[{\"amChoking\":\"true\",\"bitfield\":\"fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe\",\"downloadSpeed\":\"0\",\"ip\":\"166.48.23.23\",\"peerChoking\":\"true\",\"peerId\":\"%2DBC0170%2D%9C%0B%9C%3B%98%40%C0%CC%2F%DE%FA%1C\",\"port\":\"13967\",\"seeder\":\"true\",\"uploadSpeed\":\"0\"},{\"amChoking\":\"true\",\"bitfield\":\"0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"downloadSpeed\":\"0\",\"ip\":\"88.198.2.44\",\"peerChoking\":\"true\",\"peerId\":\"%2DqB4250%2DX%29TngFeK%7EIL%5F\",\"port\":\"9002\",\"seeder\":\"false\",\"uploadSpeed\":\"0\"},{\"amChoking\":\"true\",\"bitfield\":\"fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe\",\"downloadSpeed\":\"29227\",\"ip\":\"8.210.27.105\",\"peerChoking\":\"false\",\"peerId\":\"%2DqB4250%2DocyrUwnkQY%28w\",\"port\":\"6881\",\"seeder\":\"true\",\"uploadSpeed\":\"0\"}]");
            peerModel->setPeers(peerArray, currentTask->numPieces);
-           //peerModel->setPeers(doc.array(), 999);
        }
     });
 
@@ -716,6 +724,7 @@ QWidget *DownloadWindow::setupConnectionPage(QWidget *parent)
     peerModel = new PeerModel(this);
     PeerTreeView *peerView = new PeerTreeView(parent);
     peerView->setModel(peerModel);
+    peerView->setRootIsDecorated(false);
     peerView->setObjectName(QStringLiteral("TaskPeerView"));
     peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::PROGRESS), 300*logicalDpiX()/96);
     peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::CLIENT), 180*logicalDpiX()/96);

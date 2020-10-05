@@ -199,6 +199,10 @@ void DownloadModel::updateItemStatus(const QJsonObject &statusObj)
     item->numPieces=statusObj.value("numPieces").toString().toInt();
     item->pieceLength=statusObj.value("pieceLength").toString().toInt();
     item->bitfield=statusObj.value("bitfield").toString();
+    if(statusObj.contains("numSeeders"))
+    {
+        item->seeders=statusObj.value("numSeeders").toString().toInt();
+    }
     if(statusObj.contains("bittorrent"))
     {
         QJsonObject btObj(statusObj.value("bittorrent").toObject());
@@ -404,28 +408,28 @@ QVariant DownloadModel::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid()) return QVariant();
     const DownloadTask *downloadItem=downloadTasks.at(index.row());
-    int col=index.column();
+    Columns col=static_cast<Columns>(index.column());
     switch (col)
     {
-    case 0:
+    case Columns::STATUS:
         if(role==Qt::DisplayRole)
             return status.at(downloadItem->status);
         else if(role==Qt::DecorationRole)
             return statusIcons[downloadItem->status];
         break;
-    case 1:
+    case Columns::TITLE:
         if(role==Qt::DisplayRole || role==Qt::ToolTipRole)
             return downloadItem->title;
         break;
-    case 3:
+    case Columns::SIZE:
         if(role==Qt::DisplayRole)
             return formatSize(false,downloadItem->totalLength);
         break;
-    case 4:
+    case Columns::DOWNSPEED:
         if(role==Qt::DisplayRole)
             return formatSize(true,downloadItem->downloadSpeed);
         break;
-    case 5:
+    case Columns::TIMELEFT:
         if(role==Qt::DisplayRole)
         {
             if(downloadItem->downloadSpeed==0)return "--";
@@ -446,13 +450,17 @@ QVariant DownloadModel::data(const QModelIndex &index, int role) const
             }
         }
         break;
-    case 6:
+    case Columns::UPSPEED:
         if(role==Qt::DisplayRole)
             return formatSize(true, downloadItem->uploadSpeed);
         break;
-    case 7:
+    case Columns::CONNECTION:
         if(role==Qt::DisplayRole)
             return downloadItem->connections;
+        break;
+    case Columns::SEEDER:
+        if(role==Qt::DisplayRole)
+            return downloadItem->seeders;
         break;
     default:
         break;
@@ -620,16 +628,22 @@ bool TaskFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &s
 bool TaskFilterProxyModel::lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const
 {
     int col=source_left.column();
-    if(col==3)
+    if(col==static_cast<int>(DownloadModel::Columns::SIZE))
     {
         qint64 ltotalLength=sourceModel()->data(source_left,DownloadModel::DataRole::TotalLengthRole).toLongLong(),
                rtotalLength=sourceModel()->data(source_right,DownloadModel::DataRole::TotalLengthRole).toLongLong();
         return ltotalLength<rtotalLength;
     }
-    else if(col==4)
+    else if(col==static_cast<int>(DownloadModel::Columns::DOWNSPEED))
     {
         int lspeed=sourceModel()->data(source_left,DownloadModel::DataRole::DownSpeedRole).toLongLong(),
                rspeed=sourceModel()->data(source_right,DownloadModel::DataRole::DownSpeedRole).toLongLong();
+        return lspeed<rspeed;
+    }
+    else if(col==static_cast<int>(DownloadModel::Columns::UPSPEED))
+    {
+        int lspeed=sourceModel()->data(source_left,DownloadModel::DataRole::UpSpeedRole).toLongLong(),
+               rspeed=sourceModel()->data(source_right,DownloadModel::DataRole::UpSpeedRole).toLongLong();
         return lspeed<rspeed;
     }
     return QSortFilterProxyModel::lessThan(source_left,source_right);

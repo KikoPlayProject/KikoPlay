@@ -17,7 +17,7 @@ void DownloadItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &
 		viewOption.state = viewOption.state ^ QStyle::State_HasFocus;
 
 	QStyledItemDelegate::paint(painter, viewOption, index);
-    if(index.column()==2)
+    if(index.column()==static_cast<int>(DownloadModel::Columns::PROGRESS))
     {
         QStyleOptionProgressBar progressBarOption;
 		progressBarOption.rect = viewOption.rect.adjusted(0,1,0,-1);

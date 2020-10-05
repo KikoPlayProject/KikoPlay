@@ -141,6 +141,7 @@ HEADERS += \
     Common/kcache.h \
     Common/notifier.h \
     Download/autodownloadmanager.h \
+    Download/peerid.h \
     Download/peermodel.h \
     LANServer/mediahandler.h \
     MediaLibrary/Service/bangumi.h \
