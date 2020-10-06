@@ -94,17 +94,17 @@ void PeerModel::setProgress(PeerModel::PeerInfo &peer, const QString &progressSt
     float percent = 1.0 / currentPiecesNum;
     static int bucket[ProgressCluster*2] = {};
     memset(bucket, 0, sizeof bucket);
-    for(int i=0;i<currentPiecesNum;++i)  ++bucket[int(i*percent*clusters)];
+    for(int i=0;i<currentPiecesNum;++i)  ++bucket[int(percent*clusters*i)];
 
     for(QChar c: progressStr){
         int n = c.toLatin1();
         if(c.isDigit()) n = n-'0';
         else if('a'<=n && 'f'>=n) n = n-'a'+10;
-        if(n >=0 && n < 16){
-            if(n & 0x8) { ++count; ++bucket[int(pos * percent * clusters)+ProgressCluster]; }
-            if(n & 0x4) { ++count; ++bucket[int((pos+1) * percent * clusters)+ProgressCluster]; }
-            if(n & 0x2) { ++count; ++bucket[int((pos+2) * percent * clusters)+ProgressCluster]; }
-            if(n & 0x1) { ++count; ++bucket[int((pos+3) * percent * clusters)+ProgressCluster]; }
+        if(n > 0 && n < 16){
+            if (n & 0x8) { ++count; ++bucket[int(percent * clusters * pos) + ProgressCluster]; }
+            if (n & 0x4) { ++count; ++bucket[int(percent * clusters * (pos + 1)) + ProgressCluster]; }
+            if (n & 0x2) { ++count; ++bucket[int(percent * clusters  * (pos + 2)) + ProgressCluster]; }
+            if (n & 0x1) { ++count; ++bucket[int(percent * clusters * (pos + 3)) + ProgressCluster]; }
         }
         pos += 4;
     }

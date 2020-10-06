@@ -1,11 +1,11 @@
 {
   "acfun": {
     "title": "AcFun",
-    "urlTemplate": "http://www.acfun.cn/"
+    "urlTemplate": "https://www.acfun.cn/"
   },
   "bilibili": {
     "title": "哔哩哔哩",
-    "urlTemplate": "https://bangumi.bilibili.com/"
+    "urlTemplate": "https://www.bilibili.com"
   },
   "tucao": {
     "title": "TUCAO",
