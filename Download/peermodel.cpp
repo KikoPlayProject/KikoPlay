@@ -79,9 +79,14 @@ void PeerModel::clear()
 void PeerModel::setProgress(PeerModel::PeerInfo &peer, const QString &progressStr)
 {
     int pos = 0, count = 0;
-    float percent = 1.0 / currentPiecesNum;
     const int clusters = qMin(currentPiecesNum, PeerModel::ProgressCluster);
     memset(peer.progress, 0, sizeof peer.progress);
+    if(clusters==0)
+    {
+        peer.progressPercent = 0;
+        return;
+    }
+    float percent = 1.0 / currentPiecesNum;
     auto bitSet = [&](int p){
         peer.progress[p/8] |= (1<<(7-p%8));
     };
