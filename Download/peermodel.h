@@ -28,7 +28,8 @@ private:
 
 
     QList<QSharedPointer<PeerInfo>> peers;
-    void setProgress(PeerInfo &peer, const QString &progressStr, int blockCount);
+    int currentPiecesNum = 0;
+    void setProgress(PeerInfo &peer, const QString &progressStr);
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}

@@ -14,7 +14,7 @@ DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent), dirChanged(
     dirEdit=new QComboBox(this);
     dirEdit->setEditable(true);
     dirEdit->setObjectName(QStringLiteral("DirEdit"));
-    dirEdit->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Minimum);
+    dirEdit->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     dirEdit->addItems(dirList);
     dirEdit->setCurrentIndex(0);
     dirEdit->setFont(QFont("Microsoft Yahei",13));
