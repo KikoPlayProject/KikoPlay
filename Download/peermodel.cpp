@@ -160,7 +160,7 @@ void PeerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
         QRect bRect = viewOption.rect;
         bRect.adjust(1, 1, -1, -1);
         painter->setPen(borderColor);
-        painter->setBrush(QBrush(QColor(0, 0, 0, 0)));
+        painter->setBrush(QBrush(backgroundcolor));
         painter->drawRect(bRect);
         float wRatio = (bRect.width() - painter->pen().widthF()) / clusters;
         float h = bRect.height() - painter->pen().widthF();

@@ -732,6 +732,7 @@ QWidget *DownloadWindow::setupConnectionPage(QWidget *parent)
     PeerDelegate *peerDelegate = new PeerDelegate(this);
     QObject::connect(peerView, &PeerTreeView::barColorChanged, [=](const QColor &c){peerDelegate->barColor=c;});
     QObject::connect(peerView, &PeerTreeView::borderColorChanged, [=](const QColor &c){peerDelegate->borderColor=c;});
+    QObject::connect(peerView, &PeerTreeView::backgroundColorChanged, [=](const QColor &c){peerDelegate->backgroundcolor=c;});
     peerView->setItemDelegate(peerDelegate);
     return peerView;
 }

@@ -1205,6 +1205,7 @@ QWidget#TaskPeerView{
     background-color: rgba(255,255,255,40);
     qproperty-borderColor: rgb(200,200,200);
     qproperty-barColor: rgba(@ThemeColor, 140);
+    qproperty-backgroundColor: rgba(255,255,255,120);
 }
 QListWidget#SettingPageList {
     show-decoration-selected: 1;

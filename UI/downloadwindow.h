@@ -43,6 +43,7 @@ class PeerTreeView : public QTreeView
     Q_OBJECT
     Q_PROPERTY(QColor barColor READ getBarColor WRITE setBarColor)
     Q_PROPERTY(QColor borderColor READ getBorderColor WRITE setBorderColor)
+    Q_PROPERTY(QColor backgroundColor READ getBackgroundColor WRITE setBackgroundColor)
 public:
     using QTreeView::QTreeView;
 
@@ -50,11 +51,14 @@ public:
     void setBarColor(const QColor& color) { barColor =  color; emit barColorChanged(barColor);}
     QColor getBorderColor() const {return borderColor;}
     void setBorderColor(const QColor& color) { borderColor =  color;  emit borderColorChanged(borderColor);}
+    QColor getBackgroundColor() const {return backgroundColor;}
+    void setBackgroundColor(const QColor& color) { backgroundColor =  color;  emit backgroundColorChanged(backgroundColor);}
 signals:
     void borderColorChanged(const QColor &color);
     void barColorChanged(const QColor &color);
+    void backgroundColorChanged(const QColor &color);
 private:
-    QColor borderColor, barColor;
+    QColor borderColor, barColor, backgroundColor;
 };
 
 class BlockWidget : public QWidget

@@ -10,7 +10,7 @@ public:
     PeerModel(QObject *parent = nullptr);
     void setPeers(const QJsonArray &statusObj, int numPieces);
     void clear();
-    static const int ProgressCluster = 128;
+    static const int ProgressCluster = 1024;
     struct PeerInfo
     {
         QString client, ip;
@@ -44,7 +44,7 @@ class PeerDelegate : public QStyledItemDelegate
 public:
     PeerDelegate(QObject *parent = nullptr) : QStyledItemDelegate(parent) {}
     virtual void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
-    QColor barColor = QColor(51,168,255,200), borderColor = QColor(200, 200, 200);
+    QColor barColor = QColor(51,168,255,200), borderColor = QColor(200, 200, 200), backgroundcolor = QColor(255,255,255,120);
 };
 
 #endif // PEERMODEL_H
