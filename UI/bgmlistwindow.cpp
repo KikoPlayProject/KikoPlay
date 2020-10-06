@@ -75,20 +75,20 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     filterButtonGroup->button(weekDay)->setChecked(true);
     btnHLayout->addStretch(1);
 
-    QComboBox *seasonIdCombo=new QComboBox(this);
+    seasonIdCombo=new QComboBox(this);
     seasonIdCombo->setProperty("cScrollStyle", true);
     seasonIdCombo->view()->setMinimumWidth(seasonIdCombo->view()->fontMetrics().width("0000-00") +
                                            QApplication::style()->pixelMetric(QStyle::PixelMetric::PM_ScrollBarExtent) +
                                            seasonIdCombo->view()->autoScrollMargin());
     seasonIdCombo->addItems(bgmList->seasonList());
-    QObject::connect(seasonIdCombo, (void (QComboBox::*)(const QString &))&QComboBox::currentIndexChanged,this,[this,seasonIdCombo](const QString &id){
+    QObject::connect(seasonIdCombo, (void (QComboBox::*)(const QString &))&QComboBox::currentIndexChanged,this,[this](const QString &id){
         seasonIdCombo->setEnabled(false);
         bgmListView->setEnabled(false);
         bgmList->setSeason(id);
         seasonIdCombo->setEnabled(true);
         bgmListView->setEnabled(true);
     });
-    QObject::connect(bgmList, &BgmList::seasonsUpdated, this, [this,seasonIdCombo](){
+    QObject::connect(bgmList, &BgmList::seasonsUpdated, this, [this](){
        seasonIdCombo->clear();
        seasonIdCombo->addItems(bgmList->seasonList());
        seasonIdCombo->setCurrentIndex(seasonIdCombo->count()-1);
@@ -101,7 +101,7 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     QPushButton *refreshBtn=new QPushButton(tr("Refresh"),this);
     btnHLayout->addWidget(refreshBtn);
 
-    QObject::connect(refreshBtn,&QPushButton::clicked,this,[this,bgmListProxyModel,seasonIdCombo](){
+    QObject::connect(refreshBtn,&QPushButton::clicked,this,[this,bgmListProxyModel](){
         seasonIdCombo->setEnabled(false);
         bgmList->refresh();
         bgmListProxyModel->invalidate();
@@ -177,8 +177,15 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
 
 void BgmListWindow::showEvent(QShowEvent *)
 {
+    static bool firstShow = true;
     QTimer::singleShot(0,[this](){
+        if(firstShow)
+        {
+            seasonIdCombo->setEnabled(false);
+            firstShow = false;
+        }
         bgmList->init();
+        seasonIdCombo->setEnabled(true);
         int cWeekDay=QDate::currentDate().dayOfWeek()%7;
         if(weekDay!=cWeekDay)
         {

@@ -1045,6 +1045,9 @@ void PlayerWindow::setupPlaySettingPage()
     QPushButton *editMpvOptions=new QPushButton(tr("MPV Parameter Settings"), playSettingPage);
     QObject::connect(editMpvOptions,&QPushButton::clicked,[this](){
         Settings settings(Settings::PAGE_MPV, this);
+        QRect geo(0,0,400*logicalDpiX()/96,600*logicalDpiY()/96);
+        geo.moveCenter(this->geometry().center());
+        settings.move(mapToGlobal(geo.topLeft()));
         settings.exec();
     });
 

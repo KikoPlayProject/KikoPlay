@@ -5,6 +5,7 @@
 #include <QTreeView>
 class BgmList;
 class QPushButton;
+class QComboBox;
 class BgmTreeView : public QTreeView
 {
     Q_OBJECT
@@ -39,6 +40,7 @@ public:
     explicit BgmListWindow(QWidget *parent = nullptr);
 private:
     BgmTreeView *bgmListView;
+    QComboBox *seasonIdCombo;
     BgmList *bgmList;
     QList<QPushButton *> weekDayBtnList;
     QStringList btnTitles={tr("Sun"),tr("Mon"),tr("Tue"),tr("Wed"),tr("Thu"),tr("Fri"),tr("Sat"),tr("All")};

@@ -273,9 +273,9 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
         {
             AnimeDetailInfo infoDialog(anime,this);
             QObject::connect(&infoDialog,&AnimeDetailInfo::playFile,this,&LibraryWindow::playFile);
-            QRect geo(0,0,400,400);
+            QRect geo(0,0,400*logicalDpiX()/96,600*logicalDpiY()/96);
             geo.moveCenter(this->geometry().center());
-            infoDialog.move(geo.topLeft());
+            infoDialog.move(mapToGlobal(geo.topLeft()));
             infoDialog.exec();
         }
     });

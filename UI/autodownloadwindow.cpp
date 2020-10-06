@@ -20,9 +20,6 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     addRuleBtn->setObjectName(QStringLiteral("DownloadToolButton"));
     QObject::connect(addRuleBtn, &FontIconButton::clicked, this, [this](){
         AddRule addRule(nullptr, this);
-        QRect geo(0,0,300,300);
-        geo.moveCenter(this->geometry().center());
-        addRule.move(geo.topLeft());
         if(QDialog::Accepted==addRule.exec())
         {
             DownloadRule *rule=addRule.curRule;

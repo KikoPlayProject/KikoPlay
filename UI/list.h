@@ -53,7 +53,7 @@ private:
             *act_remove,*act_clear, *act_removeMatch,
             *act_sortSelectionAscending,*act_sortSelectionDescending,*act_sortAllAscending,*act_sortAllDescending,
             *act_noLoopOne,*act_noLoopAll,*act_loopOne,*act_loopAll,*act_random,
-            *act_browseFile,*act_autoAssociate,*act_exportDanmu,*act_addWebDanmuSource,*act_updateDanmu,
+            *act_browseFile,*act_autoAssociate,*act_exportDanmu,*act_addWebDanmuSource, *act_addLocalDanmuSource, *act_updateDanmu,
             *act_sharePoolCode, *act_shareResourceCode, *act_autoMatchMode, *act_markBgmCollection, *act_updateFolder;
     bool actionDisable;
     QActionGroup *loopModeGroup;
