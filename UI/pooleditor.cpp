@@ -140,7 +140,7 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
     addAction(pasteTimeline);
     addAction(viewDanmu);
 
-    QFont normalFont("Microsoft YaHei",16);
+    QFont normalFont(GlobalObjects::normalFont,16);
 
     QLabel *name=new QLabel(this);
     name->setFont(normalFont);

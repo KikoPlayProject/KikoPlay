@@ -43,14 +43,14 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
 
     titleLabel=new QLabel(this);
     titleLabel->setObjectName(QStringLiteral("AnimeDetailTitle"));
-    titleLabel->setFont(QFont("Microsoft Yahei",20));
+    titleLabel->setFont(QFont(GlobalObjects::normalFont,20));
     titleLabel->setWordWrap(true);
     titleLabel->setOpenExternalLinks(true);
     titleLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
 
     viewInfoLabel=new QLabel(this);
     viewInfoLabel->setObjectName(QStringLiteral("AnimeDetailViewInfo"));
-    viewInfoLabel->setFont(QFont("Microsoft Yahei",12));
+    viewInfoLabel->setFont(QFont(GlobalObjects::normalFont,12));
     viewInfoLabel->setWordWrap(true);
     viewInfoLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
     viewInfoLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
@@ -590,7 +590,7 @@ TagPanel::TagPanel(QWidget *parent, bool allowDelete, bool checkAble, bool allow
     setLayout(new FlowLayout(this));
 
     tagEdit = new QLineEdit(this);
-    tagEdit->setFont(QFont("Microsoft Yahei UI",14));
+    tagEdit->setFont(QFont(GlobalObjects::normalFont,14));
     tagEdit->hide();
     setContextMenuPolicy(Qt::ActionsContextMenu);
     QAction *actAddTag=new QAction(tr("Add"),this);
@@ -639,7 +639,7 @@ void TagPanel::addTag(const QStringList &tags)
         QPushButton *tagButton=new QPushButton(tag,this);
         tagButton->setObjectName(QStringLiteral("TagButton"));
         tagButton->setCheckable(allowCheck);
-        tagButton->setFont(QFont("Microsoft Yahei UI",14));
+        tagButton->setFont(QFont(GlobalObjects::normalFont,14));
         tagButton->setContextMenuPolicy(Qt::CustomContextMenu);
         QObject::connect(tagButton, &QPushButton::customContextMenuRequested,this,[this, tagButton](const QPoint &pos){
             currentTagButton = tagButton;

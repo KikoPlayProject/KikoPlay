@@ -17,7 +17,7 @@ DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent), dirChanged(
     dirEdit->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     dirEdit->addItems(dirList);
     dirEdit->setCurrentIndex(0);
-    dirEdit->setFont(QFont("Microsoft Yahei",13));
+    dirEdit->setFont(QFont(GlobalObjects::normalFont,13));
 
     QLabel *spaceTip=new QLabel(this);
     spaceTip->setObjectName(QStringLiteral("SpaceTip"));
@@ -25,7 +25,7 @@ DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent), dirChanged(
     dirHLayout->addStretch(1);
     dirHLayout->addWidget(spaceTip);
     dirHLayout->addSpacing(20*logicalDpiX()/96);
-    spaceTip->setFont(QFont("Microsoft Yahei",8));
+    spaceTip->setFont(QFont(GlobalObjects::normalFont,8));
     dirEdit->setLayout(dirHLayout);
     freeSpace=getAvailableBytes(getDir());
     spaceTip->setText(formatSize(false,freeSpace));

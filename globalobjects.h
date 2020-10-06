@@ -19,7 +19,6 @@ class DanmuManager;
 class LANServer;
 class ScriptManager;
 class AutoDownloadManager;
-class KCache;
 class StyleManager;
 class QMainWindow;
 class GlobalObjects
@@ -42,7 +41,6 @@ public:
     static LANServer *lanServer;    
     static ScriptManager *scriptManager;
     static AutoDownloadManager *autoDownloadManager;
-    static KCache *kCache;
     static StyleManager *styleManager;
     static QMainWindow *mainWindow;
     static QString dataPath;
@@ -51,6 +49,8 @@ public:
     static const int Bangumi_DB=1;
     static const int Download_DB=2;
     static QSqlDatabase getDB(int db);
+
+    static constexpr const char *normalFont = "Microsoft Yahei UI";
 private:
     static void initDatabase(const char *db_names[]);
     static void setDatabase(const char *name, const char *file);

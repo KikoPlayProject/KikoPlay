@@ -93,7 +93,7 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,
     danmuVLayout->setContentsMargins(0,0,0,0);
     danmuVLayout->setSpacing(0);
 
-    QFont normalFont("Microsoft YaHei UI",12);
+    QFont normalFont(GlobalObjects::normalFont,12);
     QSize pageButtonSize(90 *logicalDpiX()/96,36*logicalDpiY()/96);
     onlineDanmuPage=new QToolButton(this);
     onlineDanmuPage->setFont(normalFont);
@@ -149,7 +149,7 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,
 	});
     QString itemInfo(item?(item->animeTitle.isEmpty()?item->title:QString("%1-%2").arg(item->animeTitle).arg(item->title)):"");
     QLabel *itemInfoLabel=new QLabel(itemInfo,this);
-    itemInfoLabel->setFont(QFont("Microsoft YaHei UI",10,QFont::Bold));
+    itemInfoLabel->setFont(QFont(GlobalObjects::normalFont,10,QFont::Bold));
     itemInfoLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     danmuVLayout->addWidget(itemInfoLabel);
 
@@ -297,7 +297,7 @@ void AddDanmu::addURL()
 QWidget *AddDanmu::setupSearchPage()
 {
     QWidget *searchPage=new QWidget(this);
-    searchPage->setFont(QFont("Microsoft Yahei UI",10));
+    searchPage->setFont(QFont(GlobalObjects::normalFont,10));
     sourceCombo=new QComboBox(searchPage);
     sourceCombo->addItems(GlobalObjects::providerManager->getSearchProviders());
     keywordEdit=new QLineEdit(searchPage);
@@ -324,10 +324,10 @@ QWidget *AddDanmu::setupSearchPage()
 QWidget *AddDanmu::setupURLPage()
 {
     QWidget *urlPage=new QWidget(this);
-    urlPage->setFont(QFont("Microsoft Yahei UI",10));
+    urlPage->setFont(QFont(GlobalObjects::normalFont,10));
 
     QLabel *tipLabel=new QLabel(tr("Input URL:"),urlPage);
-    tipLabel->setFont(QFont("Microsoft Yahei UI",12,QFont::Medium));
+    tipLabel->setFont(QFont(GlobalObjects::normalFont,12,QFont::Medium));
 
     urlEdit=new QLineEdit(urlPage);
 
@@ -339,7 +339,7 @@ QWidget *AddDanmu::setupURLPage()
     QLabel *urlTipLabel=new QLabel(tr("Supported URL:"),urlPage);
     QTextEdit *supportUrlInfo=new QTextEdit(urlPage);
     supportUrlInfo->setText(GlobalObjects::providerManager->getSupportedURLs().join('\n'));
-    supportUrlInfo->setFont(QFont("Microsoft Yahei UI",10));
+    supportUrlInfo->setFont(QFont(GlobalObjects::normalFont,10));
     supportUrlInfo->setReadOnly(true);
 
 
@@ -357,7 +357,7 @@ QWidget *AddDanmu::setupURLPage()
 QWidget *AddDanmu::setupSelectedPage()
 {
     QWidget *selectedPage=new QWidget(this);
-    selectedPage->setFont(QFont("Microsoft Yahei UI",12));
+    selectedPage->setFont(QFont(GlobalObjects::normalFont,12));
     QLabel *tipLabel=new QLabel(tr("Select danmu you want to add:"),selectedPage);
     selectedDanmuView=new QTreeView(selectedPage);
     selectedDanmuView->setRootIsDecorated(false);

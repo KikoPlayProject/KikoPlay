@@ -67,7 +67,7 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
 
 
     title=new QLabel(titleStr, titleBar);
-    title->setFont(QFont("Microsoft YaHei",10));
+    title->setFont(QFont(GlobalObjects::normalFont,10));
     title->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
     title->setGeometry(10,10,title->width(),title->height());
     title->setOpenExternalLinks(true);
@@ -394,7 +394,7 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
 
 
     title=new QLabel(titleStr, titleBar);
-    title->setFont(QFont("Microsoft YaHei",10));
+    title->setFont(QFont(GlobalObjects::normalFont,10));
     title->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
     title->setGeometry(10,10,title->width(),title->height());
     title->setOpenExternalLinks(true);

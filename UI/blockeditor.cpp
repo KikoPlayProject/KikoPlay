@@ -13,7 +13,7 @@ BlockEditor::BlockEditor(QWidget *parent) : CFramelessDialog(tr("Block Rules"),p
 {
     BlockProxyModel *proxyModel = new BlockProxyModel(this);
     proxyModel->setSourceModel(GlobalObjects::blocker);
-    setFont(QFont("Microsoft Yahei UI",10));
+    setFont(QFont(GlobalObjects::normalFont,10));
     QTreeView *blockView=new QTreeView(this);
     blockView->setRootIsDecorated(false);
     blockView->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -81,13 +81,13 @@ BlockEditor::BlockEditor(QWidget *parent) : CFramelessDialog(tr("Block Rules"),p
 	blockGLayout->setContentsMargins(0, 0, 0, 0);
     QHeaderView *blockHeader = blockView->header();
     blockHeader->setFont(this->font());
-    blockHeader->resizeSection(0, 140*logicalDpiX()/96); //ID
-    blockHeader->resizeSection(1, 80*logicalDpiX()/96); //BLOCKED
-    blockHeader->resizeSection(2, 60*logicalDpiX()/96); //Enable
+    blockHeader->resizeSection(static_cast<int>(Blocker::Columns::ID), 140*logicalDpiX()/96); //ID
+    blockHeader->resizeSection(static_cast<int>(Blocker::Columns::BLOCKED), 80*logicalDpiX()/96); //BLOCKED
+    blockHeader->resizeSection(static_cast<int>(Blocker::Columns::ENABLE), 60*logicalDpiX()/96); //Enable
     //blockHeader->resizeSection(2, 80*logicalDpiX()/96); //Field
-    blockHeader->resizeSection(4, 80*logicalDpiX()/96); //Relation
-    blockHeader->resizeSection(5, 100*logicalDpiX()/96); //RegExp
-    blockHeader->resizeSection(6, 80*logicalDpiX()/96); //UsePreFilter
+    blockHeader->resizeSection(static_cast<int>(Blocker::Columns::RELATION), 80*logicalDpiX()/96); //Relation
+    blockHeader->resizeSection(static_cast<int>(Blocker::Columns::REGEXP), 100*logicalDpiX()/96); //RegExp
+    blockHeader->resizeSection(static_cast<int>(Blocker::Columns::PREFILTER), 80*logicalDpiX()/96); //UsePreFilter
     resize(GlobalObjects::appSetting->value("DialogSize/BlockEditor",QSize(700*logicalDpiX()/96,320*logicalDpiY()/96)).toSize());
 
 }

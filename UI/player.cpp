@@ -37,7 +37,7 @@ public:
         setObjectName(QStringLiteral("PlayInfoBar"));
         infoText=new QLabel(this);
         infoText->setObjectName(QStringLiteral("labelPlayInfo"));
-        infoText->setFont(QFont("Microsoft YaHei UI",10));
+        infoText->setFont(QFont(GlobalObjects::normalFont,10));
         infoText->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
         QHBoxLayout *infoBarHLayout=new QHBoxLayout(this);
         infoBarHLayout->addWidget(infoText);
@@ -252,7 +252,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     danmuStatisBar->hide();
 
     QFont normalFont;
-    normalFont.setFamily("Microsoft YaHei");
+    normalFont.setFamily(GlobalObjects::normalFont);
     normalFont.setPointSize(12);
 
     titleLabel=new QLabel(playInfoPanel);

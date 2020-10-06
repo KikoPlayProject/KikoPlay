@@ -150,10 +150,10 @@ void MainWindow::setupUI()
     widgetTitlebar->setAcceptDrops(true);
     widgetTitlebar->setObjectName(QStringLiteral("widgetTitlebar"));
 #ifdef Q_OS_WIN
-    widgetTitlebar->setFixedHeight(40*logicalDpiY()/96);
+    widgetTitlebar->setFixedHeight(36*logicalDpiY()/96);
 #endif
 
-    QFont normalFont("Microsoft YaHei",12);
+    QFont normalFont(GlobalObjects::normalFont,12);
     buttonIcon = new QToolButton(widgetTitlebar);
     buttonIcon->setFont(normalFont);
 #ifdef Q_OS_WIN
@@ -210,7 +210,7 @@ void MainWindow::setupUI()
         close();
     });
     buttonIcon->addAction(act_exit);
-    QSize pageButtonSize(100*logicalDpiX()/96,32*logicalDpiY()/96);
+    QSize pageButtonSize(100*logicalDpiX()/96,30*logicalDpiY()/96);
 #ifdef Q_OS_WIN
     #define pageBtnObjName "PageButton"
 #else
@@ -278,19 +278,19 @@ void MainWindow::setupUI()
 
 
     GlobalObjects::iconfont.setPointSize(10);
-    int cbHeight=24*logicalDpiY()/96;
+    const QSize controlButtonSize(34*logicalDpiX()/96,32*logicalDpiY()/96);
     minButton=new QToolButton(widgetTitlebar);
     minButton->setFont(GlobalObjects::iconfont);
     minButton->setText(QChar(0xe651));
     minButton->setObjectName(QStringLiteral("ControlButton"));
-    minButton->setMinimumHeight(cbHeight);
+    minButton->setMinimumSize(controlButtonSize);
     QObject::connect(minButton,&QToolButton::clicked,this,&MainWindow::showMinimized);
 
     maxButton=new QToolButton(widgetTitlebar);
     maxButton->setFont(GlobalObjects::iconfont);
     maxButton->setText(QChar(0xe93c));
     maxButton->setObjectName(QStringLiteral("ControlButton"));
-    maxButton->setMinimumHeight(cbHeight);
+    maxButton->setMinimumSize(controlButtonSize);
     QObject::connect(maxButton,&QToolButton::clicked,[this](){
        if(this->isMaximized())
        {
@@ -308,14 +308,14 @@ void MainWindow::setupUI()
     closeButton->setFont(GlobalObjects::iconfont);
     closeButton->setText(QChar(0xe60b));
     closeButton->setObjectName(QStringLiteral("closelButton"));
-    closeButton->setMinimumHeight(cbHeight);
+    closeButton->setMinimumSize(controlButtonSize);
     QObject::connect(closeButton,&QToolButton::clicked,[this](){
        this->close();
     });
     QHBoxLayout *layout = new QHBoxLayout(widgetTitlebar);
     layout->setSpacing(0);
 #ifdef Q_OS_WIN
-    layout->setContentsMargins(8*logicalDpiX()/96,0,8*logicalDpiY()/96,0);
+    layout->setContentsMargins(8*logicalDpiX()/96,0,2*logicalDpiY()/96,0);
     layout->addWidget(buttonIcon);
     layout->addSpacing(20*logicalDpiX()/96);
     layout->addLayout(pageVerticalLayout);

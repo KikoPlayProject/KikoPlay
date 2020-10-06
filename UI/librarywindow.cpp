@@ -140,7 +140,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     labelView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
     labelView->header()->hide();
     labelView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    labelView->setFont(QFont("Microsoft YaHei UI",12));
+    labelView->setFont(QFont(GlobalObjects::normalFont,12));
     labelView->setIndentation(16*logicalDpiX()/96);
     LabelItemDelegate *labelItemDelegate = new LabelItemDelegate(this);
     labelView->setItemDelegate(labelItemDelegate);
@@ -197,7 +197,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     loadingLabel->hide();
 
     QLabel *totalCountLabel=new QLabel(animeContainer);
-    totalCountLabel->setFont(QFont("Microsoft Yahei",12));
+    totalCountLabel->setFont(QFont(GlobalObjects::normalFont,12));
     totalCountLabel->setObjectName(QStringLiteral("LibraryCountTip"));
     QPushButton *loadMore=new QPushButton(tr("Continue to load"),this);
     QObject::connect(loadMore,&QPushButton::clicked,[](){
@@ -218,7 +218,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     backButton->hide();
 
     QLabel *selectedLabelTip = new QLabel(animeContainer);
-    selectedLabelTip->setFont(QFont("Microsoft Yahei",12));
+    selectedLabelTip->setFont(QFont(GlobalObjects::normalFont,12));
     selectedLabelTip->setObjectName(QStringLiteral("SelectedLabelTip"));
 
     QHBoxLayout *toolbuttonHLayout=new QHBoxLayout();
@@ -331,7 +331,7 @@ AnimeFilterBox::AnimeFilterBox(QWidget *parent)
     , filterTypeGroup(new QActionGroup(this))
 {
     setClearButtonEnabled(true);
-    setFont(QFont("Microsoft YaHei",12));
+    setFont(QFont(GlobalObjects::normalFont,12));
 
     QMenu *menu = new QMenu(this);
 

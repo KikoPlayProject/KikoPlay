@@ -32,7 +32,7 @@ MatchEditor::MatchEditor(const PlayListItem *item, QList<const PlayListItem *> *
     matchVLayout->setContentsMargins(0,0,0,0);
     matchVLayout->setSpacing(0);
 
-    setFont(QFont("Microsoft YaHei UI",12));
+    setFont(QFont(GlobalObjects::normalFont,12));
 
     QSize pageButtonSize(90 *logicalDpiX()/96,36*logicalDpiY()/96);
 
@@ -89,7 +89,7 @@ MatchEditor::MatchEditor(const PlayListItem *item, QList<const PlayListItem *> *
 
     QString matchStr=item->poolID.isEmpty()?tr("No Match Info"):QString("%1-%2").arg(item->animeTitle).arg(item->title);
     QLabel *matchInfoLabel=new QLabel(matchStr,this);
-    matchInfoLabel->setFont(QFont("Microsoft YaHei UI",10,QFont::Bold));
+    matchInfoLabel->setFont(QFont(GlobalObjects::normalFont,10,QFont::Bold));
     matchInfoLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     matchVLayout->addWidget(matchInfoLabel);
     animeEdit->setText(item->animeTitle);
@@ -108,7 +108,7 @@ MatchEditor::~MatchEditor()
 
 QWidget *MatchEditor::setupSearchPage()
 {
-    QFont normalFont("Microsoft Yahei UI",10);
+    QFont normalFont(GlobalObjects::normalFont,10);
     QWidget *searchPage=new QWidget(this);
     searchPage->setFont(normalFont);
 
@@ -126,7 +126,7 @@ QWidget *MatchEditor::setupSearchPage()
         if(keyword.isEmpty())return;
         if(!hitWords.contains(keyword))
         {
-            QScopedPointer<MatchInfo> match(GlobalObjects::kCache->get<MatchInfo>(QString("match_s_%1_%2").arg(searchLocationCombo->currentIndex()).arg(keyword)));
+            QScopedPointer<MatchInfo> match(KCache::getInstance()->get<MatchInfo>(QString("matcheditor/match_s_%1_%2").arg(searchLocationCombo->currentIndex()).arg(keyword)));
             if(match)
             {
                 searchResult->clear();
@@ -156,7 +156,7 @@ QWidget *MatchEditor::setupSearchPage()
                 {
                     new QTreeWidgetItem(searchResult,QStringList()<<detailInfo.animeTitle<<detailInfo.title);
                 }
-                GlobalObjects::kCache->put(QString("match_s_%1_%2").arg(searchLocationCombo->currentIndex()).arg(keyword), *sInfo);
+                KCache::getInstance()->put(QString("matcheditor/match_s_%1_%2").arg(searchLocationCombo->currentIndex()).arg(keyword), *sInfo);
                 hitWords.remove(keyword);
             }
         }
@@ -179,7 +179,7 @@ QWidget *MatchEditor::setupSearchPage()
 
     if(!curItem->animeTitle.isEmpty())
     {
-        QScopedPointer<MatchInfo> match(GlobalObjects::kCache->get<MatchInfo>(QString("match_s_%1_%2").arg(searchLocationCombo->currentIndex()).arg(curItem->animeTitle)));
+        QScopedPointer<MatchInfo> match(KCache::getInstance()->get<MatchInfo>(QString("matcheditor/match_s_%1_%2").arg(searchLocationCombo->currentIndex()).arg(curItem->animeTitle)));
         if(match)
         {
             for(MatchInfo::DetailInfo &detailInfo:match->matches)
@@ -211,7 +211,7 @@ QWidget *MatchEditor::setupSearchPage()
 QWidget *MatchEditor::setupCustomPage()
 {
     QWidget *customPage=new QWidget(this);
-    QFont normalFont("Microsoft Yahei UI",10);
+    QFont normalFont(GlobalObjects::normalFont,10);
     customPage->setFont(normalFont);
 
     QLabel *animeTip=new QLabel(tr("Anime Title"),customPage);
@@ -232,7 +232,7 @@ QWidget *MatchEditor::setupCustomPage()
 QWidget *MatchEditor::setupBatchPage()
 {
     QWidget *pageContainer = new QWidget(this);
-    QFont normalFont("Microsoft Yahei UI",10);
+    QFont normalFont(GlobalObjects::normalFont,10);
     pageContainer->setFont(normalFont);
 
     QWidget *searchSubPage = new QWidget(pageContainer);
@@ -254,7 +254,7 @@ QWidget *MatchEditor::setupBatchPage()
         if(keyword.isEmpty())return;
         if(!hitWords.contains(keyword+"_b"))
         {
-            QScopedPointer<QStringList> animes(GlobalObjects::kCache->get<QStringList>(QString("matcheditor/batch_%1").arg(keyword)));
+            QScopedPointer<QStringList> animes(KCache::getInstance()->get<QStringList>(QString("matcheditor/batch_%1").arg(keyword)));
             if(animes)
             {
                 animeList->clear();
@@ -284,7 +284,7 @@ QWidget *MatchEditor::setupBatchPage()
                 new QTreeWidgetItem(animeList, {QString::number(bgm.bgmID), bgm.name_cn.isEmpty()?bgm.name:bgm.name_cn});
                 animes<<QString::number(bgm.bgmID)<<(bgm.name_cn.isEmpty()?bgm.name:bgm.name_cn);
             }
-            GlobalObjects::kCache->put(QString("matcheditor/batch_%1").arg(keyword), animes);
+            KCache::getInstance()->put(QString("matcheditor/batch_%1").arg(keyword), animes);
             hitWords.remove(keyword+"_b");
         }
         else
@@ -322,13 +322,15 @@ QWidget *MatchEditor::setupBatchPage()
     QObject::connect(animeList, &QTreeWidget::itemClicked, this, [=](QTreeWidgetItem *item){
        int bgmId = item->text(0).toInt();
        QString animeTitle = item->text(1);
-       QScopedPointer<QStringList> epCache(GlobalObjects::kCache->get<QStringList>(QString("matcheditor/batch_ep_%1").arg(animeTitle)));
+       QScopedPointer<QStringList> epCache(KCache::getInstance()->get<QStringList>(QString("matcheditor/batch_ep_%1").arg(animeTitle)));
        if(!epCache)
        {
            QList<Bangumi::EpInfo> eps;
            customPage->setEnabled(false);
            searchPage->setEnabled(false);
            matchView->setEnabled(false);
+           searchBtn->setEnabled(false);
+           searchKeyword->setEnabled(false);
            showBusyState(true);
            QString err(Bangumi::getEp(bgmId, eps));
            if(!err.isEmpty())
@@ -342,11 +344,13 @@ QWidget *MatchEditor::setupBatchPage()
                {
                    epCache->push_back(tr("No.%0 %1").arg(ep.index).arg(ep.name_cn.isEmpty()?ep.name:ep.name_cn));
                }
-               GlobalObjects::kCache->put(QString("matcheditor/batch_ep_%1").arg(animeTitle), *epCache);
+               KCache::getInstance()->put(QString("matcheditor/batch_ep_%1").arg(animeTitle), *epCache);
            }
            customPage->setEnabled(true);
            searchPage->setEnabled(true);
            matchView->setEnabled(true);
+           searchBtn->setEnabled(true);
+           searchKeyword->setEnabled(true);
            showBusyState(false);
            if(!err.isEmpty()) return;
        }

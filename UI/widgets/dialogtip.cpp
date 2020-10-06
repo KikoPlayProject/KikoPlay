@@ -2,11 +2,12 @@
 #include <QLabel>
 #include <QHBoxLayout>
 #include <QPropertyAnimation>
+#include "globalobjects.h"
 DialogTip::DialogTip(QWidget *parent):QWidget(parent)
 {
     infoText=new QLabel(this);
     infoText->setObjectName(QStringLiteral("DialogTipLabel"));
-    infoText->setFont(QFont("Microsoft YaHei UI",10));
+    infoText->setFont(QFont(GlobalObjects::normalFont,10));
     infoText->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
     QHBoxLayout *infoBarHLayout=new QHBoxLayout(this);
     infoBarHLayout->addWidget(infoText);

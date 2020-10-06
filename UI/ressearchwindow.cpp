@@ -117,7 +117,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     searchListView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
     searchListView->setRootIsDecorated(false);
     searchListView->setAlternatingRowColors(true);
-    searchListView->setFont(QFont("Microsoft Yahei UI",10));
+    searchListView->setFont(QFont(GlobalObjects::normalFont,10));
     searchListView->setIndentation(0);
     searchListView->setContextMenuPolicy(Qt::ActionsContextMenu);
     QObject::connect(searchListView, &QTreeView::doubleClicked,[this,searchProxyModel](const QModelIndex &index){

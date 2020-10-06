@@ -23,7 +23,7 @@ AddPool::AddPool(QWidget *parent, const QString &srcAnime, const QString &srcEp)
     QVBoxLayout *addPoolVLayout=new QVBoxLayout(this);
     addPoolVLayout->setContentsMargins(0,0,0,0);
     addPoolVLayout->setSpacing(0);
-    setFont(QFont("Microsoft YaHei UI",12));
+    setFont(QFont(GlobalObjects::normalFont,12));
     QSize pageButtonSize(90 *logicalDpiX()/96,36*logicalDpiY()/96);
 
     searchPage=new QToolButton(this);
@@ -73,7 +73,7 @@ AddPool::AddPool(QWidget *parent, const QString &srcAnime, const QString &srcEp)
 
     if(!srcAnime.isEmpty())
     {
-        QScopedPointer<MatchInfo> match(GlobalObjects::kCache->get<MatchInfo>(QString::number(searchLocation)+srcAnime));
+        QScopedPointer<MatchInfo> match(KCache::getInstance()->get<MatchInfo>(QString("addpool/%1_%2").arg(searchLocation).arg(srcAnime)));
         if(match)
         {
             for(MatchInfo::DetailInfo &detailInfo:match->matches)
@@ -87,7 +87,7 @@ AddPool::AddPool(QWidget *parent, const QString &srcAnime, const QString &srcEp)
 
 QWidget *AddPool::setupSearchPage()
 {
-    QFont normalFont("Microsoft Yahei UI",10);
+    QFont normalFont(GlobalObjects::normalFont,10);
     QWidget *searchPage=new QWidget(this);
     searchPage->setFont(normalFont);
 
@@ -126,7 +126,7 @@ QWidget *AddPool::setupSearchPage()
         if(keyword.isEmpty())return;
         if(!hitWords.contains(keyword))
         {
-            QScopedPointer<MatchInfo> match(GlobalObjects::kCache->get<MatchInfo>(QString::number(searchLocation)+keyword));
+            QScopedPointer<MatchInfo> match(KCache::getInstance()->get<MatchInfo>(QString("addpool/%1_%2").arg(searchLocation).arg(keyword)));
             if(match)
             {
                 searchResult->clear();
@@ -155,7 +155,7 @@ QWidget *AddPool::setupSearchPage()
                 {
                     new QTreeWidgetItem(searchResult,QStringList()<<detailInfo.animeTitle<<detailInfo.title);
                 }
-                GlobalObjects::kCache->put(QString::number(searchLocation)+keyword, *sInfo);
+                KCache::getInstance()->put(QString("addpool/%1_%2").arg(searchLocation).arg(keyword), *sInfo);
                 hitWords.remove(keyword);
             }
             delete sInfo;
@@ -182,7 +182,7 @@ QWidget *AddPool::setupSearchPage()
 QWidget *AddPool::setupCustomPage()
 {
     QWidget *customPage=new QWidget(this);
-    QFont normalFont("Microsoft Yahei UI",10);
+    QFont normalFont(GlobalObjects::normalFont,10);
     customPage->setFont(normalFont);
 
     QLabel *animeTip=new QLabel(tr("Anime Title"),customPage);

@@ -15,7 +15,7 @@
 Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings"), parent, true)
 {    
     QListWidget *pageList = new QListWidget(this);
-    pageList->setFont(QFont("Microsoft YaHei UI",10));
+    pageList->setFont(QFont(GlobalObjects::normalFont,10));
     pageList->setObjectName(QStringLiteral("SettingPageList"));
     pageList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 

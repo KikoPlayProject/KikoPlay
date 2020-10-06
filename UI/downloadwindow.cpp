@@ -151,7 +151,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     downloadView=new QTreeView(downloadContainer);
     downloadView->setObjectName(QStringLiteral("DownloadView"));
     downloadView->setProperty("cScrollStyle", true);
-    downloadView->setFont(QFont("Microsoft Yahei UI",10));
+    downloadView->setFont(QFont(GlobalObjects::normalFont,10));
     downloadView->setRootIsDecorated(false);
     downloadView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     downloadView->setAlternatingRowColors(true);
@@ -637,7 +637,7 @@ QWidget *DownloadWindow::setupGeneralInfoPage(QWidget *parent)
     QWidget *content=new QWidget(parent);
     QGridLayout *gInfoGLayout=new QGridLayout(content);
     taskTitleLabel=new QLabel(content);
-    taskTitleLabel->setFont(QFont("Microsoft Yahei",12));
+    taskTitleLabel->setFont(QFont(GlobalObjects::normalFont,12));
     taskTitleLabel->setObjectName(QStringLiteral("TaskTitleLabel"));
     taskTitleLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     taskTimeLabel=new QLabel(content);
@@ -661,7 +661,7 @@ QWidget *DownloadWindow::setupFileInfoPage(QWidget *parent)
     fileInfoView->setObjectName(QStringLiteral("TaskFileInfoView"));
     //fileInfoView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     fileInfoView->header()->resizeSection(0,300*logicalDpiX()/96);
-    fileInfoView->setFont(QFont("Microsoft Yahei UI",10));
+    fileInfoView->setFont(QFont(GlobalObjects::normalFont,10));
     QObject::connect(fileInfoView, &TorrentTreeView::ignoreColorChanged, selectedTFModel, &CTorrentFileModel::setIgnoreColor);
     QObject::connect(fileInfoView, &TorrentTreeView::normColorChanged, selectedTFModel, &CTorrentFileModel::setNormColor);
 
@@ -726,9 +726,10 @@ QWidget *DownloadWindow::setupConnectionPage(QWidget *parent)
     peerView->setModel(peerModel);
     peerView->setRootIsDecorated(false);
     peerView->setObjectName(QStringLiteral("TaskPeerView"));
-    peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::PROGRESS), 300*logicalDpiX()/96);
+    peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::PROGRESS), 280*logicalDpiX()/96);
     peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::CLIENT), 180*logicalDpiX()/96);
-    peerView->setFont(QFont("Microsoft Yahei UI",10));
+     peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::IP), 160*logicalDpiX()/96);
+    peerView->setFont(QFont(GlobalObjects::normalFont,10));
     PeerDelegate *peerDelegate = new PeerDelegate(this);
     QObject::connect(peerView, &PeerTreeView::barColorChanged, [=](const QColor &c){peerDelegate->barColor=c;});
     QObject::connect(peerView, &PeerTreeView::borderColorChanged, [=](const QColor &c){peerDelegate->borderColor=c;});

@@ -120,7 +120,7 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     bgmListView->header()->setObjectName(QStringLiteral("BgmListHeader"));
     bgmListView->header()->setDefaultAlignment(Qt::AlignCenter);
     bgmListView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    bgmListView->setFont(QFont("Microsoft YaHei UI",12));
+    bgmListView->setFont(QFont(GlobalObjects::normalFont,12));
     bgmListView->setIndentation(0);
     bgmListView->setContextMenuPolicy(Qt::CustomContextMenu);
     QObject::connect(bgmListView, &QTreeView::doubleClicked,[this,bgmListProxyModel](const QModelIndex &index){

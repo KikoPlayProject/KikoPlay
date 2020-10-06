@@ -49,7 +49,7 @@ QSize FontIconButton::sizeHint() const
 {
     if(sHint.isValid()) return sHint;
     ensurePolished();
-    QFontMetrics fmIcon(font()), fmText(QFont("Microsoft Yahei", textFontSize));
+    QFontMetrics fmIcon(font()), fmText(QFont(GlobalObjects::normalFont, textFontSize));
     QSize iconSize = fmIcon.size(Qt::TextShowMnemonic, icon);
     QSize textSize = fmText.size(Qt::TextShowMnemonic, text);
     int w = 0, h = 0;
@@ -88,7 +88,7 @@ void FontIconButton::paintEvent(QPaintEvent *event)
         painter.drawText(textRect,Qt::AlignVCenter|Qt::AlignLeft,icon);
         x += t + iconSpace;
         textRect.setRect(x,0, width()-x,height());
-        painter.setFont(QFont("Microsoft Yahei", textFontSize));
+        painter.setFont(QFont(GlobalObjects::normalFont, textFontSize));
         painter.drawText(textRect,Qt::AlignVCenter|Qt::AlignLeft,text);
     }
 

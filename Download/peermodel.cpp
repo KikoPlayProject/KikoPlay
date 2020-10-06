@@ -12,27 +12,32 @@ PeerModel::PeerModel(QObject *parent) : QAbstractItemModel(parent)
 
 void PeerModel::setPeers(const QJsonArray &peerArray, int numPieces)
 {
-    static QSet<QByteArray> curPeerIds;
-    static QHash<QByteArray, int> peerRow;
+    static QSet<QString> curPeerIds;
+    static QHash<QString, int> peerRow;
     curPeerIds.clear();
     peerRow.clear();
     int curPeerCount = peers.size();
     for(int i=0;i<curPeerCount;++i)
     {
-        peerRow[peers.at(i)->peerId] = i;
+        peerRow[peers.at(i)->ip] = i;
     }
     currentPiecesNum = numPieces;
     for(auto iter=peerArray.begin();iter!=peerArray.end();++iter)
     {
         QJsonObject peerObj=(*iter).toObject();
-        QByteArray peerId(QByteArray::fromPercentEncoding(peerObj.value("peerId").toString().toLatin1()));
-        curPeerIds.insert(peerId);
-        if(peerRow.contains(peerId))
+        QString ip(QString("%1:%2").arg(peerObj.value("ip").toString(), peerObj.value("port").toString()));
+        curPeerIds.insert(ip);
+        if(peerRow.contains(ip))
         {
-            int row = peerRow[peerId];
+            int row = peerRow[ip];
             auto peer = peers[row];
             peer->downspeed = peerObj.value("downloadSpeed").toString().toInt();
             peer->upspeed = peerObj.value("uploadSpeed").toString().toInt();
+            if(peer->client.isEmpty())
+            {
+                peer->peerId = QByteArray::fromPercentEncoding(peerObj.value("peerId").toString().toLatin1());
+                peer->client = PeerId::convertPeerId(peer->peerId);
+            }
             setProgress(*peer, peerObj.value("bitfield").toString());
             emit dataChanged(index(row, static_cast<int>(Columns::CLIENT),QModelIndex()),
                              index(row, static_cast<int>(Columns::UPSPEED),QModelIndex()));
@@ -40,9 +45,9 @@ void PeerModel::setPeers(const QJsonArray &peerArray, int numPieces)
         else
         {
             PeerInfo *peer = new PeerInfo;
-            peer->ip = peerObj.value("ip").toString();
-            peer->peerId = peerId;
-            peer->client = PeerId::convertPeerId(peerId);
+            peer->ip = ip;
+            peer->peerId = QByteArray::fromPercentEncoding(peerObj.value("peerId").toString().toLatin1());
+            peer->client = PeerId::convertPeerId(peer->peerId);
             peer->downspeed = peerObj.value("downloadSpeed").toString().toInt();
             peer->upspeed = peerObj.value("uploadSpeed").toString().toInt();
             setProgress(*peer, peerObj.value("bitfield").toString());
@@ -56,7 +61,7 @@ void PeerModel::setPeers(const QJsonArray &peerArray, int numPieces)
     for(int i=curPeerCount-1;i>=0;--i)
     {
         auto peer = peers[i];
-        if(!curPeerIds.contains(peer->peerId))
+        if(!curPeerIds.contains(peer->ip))
         {
             beginRemoveRows(QModelIndex(), i, i);
             peers.removeAt(i);
@@ -78,7 +83,6 @@ void PeerModel::clear()
 
 void PeerModel::setProgress(PeerModel::PeerInfo &peer, const QString &progressStr)
 {
-    int pos = 0, count = 0;
     const int clusters = qMin(currentPiecesNum, PeerModel::ProgressCluster);
     memset(peer.progress, 0, sizeof peer.progress);
     if(clusters==0)
@@ -86,21 +90,30 @@ void PeerModel::setProgress(PeerModel::PeerInfo &peer, const QString &progressSt
         peer.progressPercent = 0;
         return;
     }
+    int pos = 0, count = 0;
     float percent = 1.0 / currentPiecesNum;
-    auto bitSet = [&](int p){
-        peer.progress[p/8] |= (1<<(7-p%8));
-    };
+    static int bucket[ProgressCluster*2] = {};
+    memset(bucket, 0, sizeof bucket);
+    for(int i=0;i<currentPiecesNum;++i)  ++bucket[int(i*percent*clusters)];
+
     for(QChar c: progressStr){
         int n = c.toLatin1();
         if(c.isDigit()) n = n-'0';
         else if('a'<=n && 'f'>=n) n = n-'a'+10;
         if(n >=0 && n < 16){
-            if(n & 0x8) { ++count; bitSet(pos * percent * clusters);}
-            if(n & 0x4) { ++count; bitSet((pos+1) * percent * clusters);}
-            if(n & 0x2) { ++count; bitSet((pos+2) * percent * clusters);}
-            if(n & 0x1) { ++count; bitSet((pos+3) * percent * clusters);}
+            if(n & 0x8) { ++count; ++bucket[int(pos * percent * clusters)+ProgressCluster]; }
+            if(n & 0x4) { ++count; ++bucket[int((pos+1) * percent * clusters)+ProgressCluster]; }
+            if(n & 0x2) { ++count; ++bucket[int((pos+2) * percent * clusters)+ProgressCluster]; }
+            if(n & 0x1) { ++count; ++bucket[int((pos+3) * percent * clusters)+ProgressCluster]; }
         }
         pos += 4;
+    }
+    for(int i = 0;i<clusters;++i)
+    {
+        if(bucket[i+ProgressCluster]*2>bucket[i])
+        {
+            peer.progress[i/8] |= (1<<(7-i%8));
+        }
     }
     peer.progressPercent = count * percent * 100;
 }
@@ -166,14 +179,21 @@ void PeerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
         float h = bRect.height() - painter->pen().widthF();
         float x = bRect.x()+painter->pen().widthF();
         float y = bRect.y()+painter->pen().widthF();
+        float cx = x, cw = 0;
         for(int i=0;i<clusters;++i)
         {
             if(peer->progress[i/8] & (1<<(7-i%8)))
             {
-                painter->fillRect(QRectF(x, y, wRatio,h), barColor);
+                cw += wRatio;
             }
-            x += wRatio;
+            else
+            {
+                if(cw > 0) painter->fillRect(QRectF(cx, y, cw, h), barColor);
+                cx = qMax(x+(i+1)*wRatio, cx+cw);
+                cw = 0;
+            }
         }
+        if(cw > 0) painter->fillRect(QRectF(cx, y, cw, h), barColor);
         painter->setPen(Qt::black);
         painter->drawText(bRect, Qt::AlignCenter, QString("%1%").arg(peer->progressPercent,0,'g',3));
     }

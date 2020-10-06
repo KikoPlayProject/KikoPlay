@@ -469,7 +469,7 @@ QTreeView#playlist QScrollBar:vertical,QTreeView#danmulist QScrollBar:vertical {
 QTreeView#playlist QScrollBar::handle:vertical,QTreeView#danmulist QScrollBar::handle:vertical {
     background: rgba(255,255,255,180);
     min-height: 70px;
-    border-radius: 4px;
+    border-radius: 1px;
 }
 QTreeView#playlist QScrollBar::handle:vertical:hover,QTreeView#danmulist QScrollBar::handle:vertical:hover {
     background: rgba(255,255,255,255);

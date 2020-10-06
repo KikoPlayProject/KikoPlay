@@ -31,7 +31,7 @@ namespace
 PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Manager"),parent)
 {
     comparer.setNumericMode(true);
-    setFont(QFont("Microsoft Yahei UI",10));
+    setFont(QFont(GlobalObjects::normalFont,10));
     QTreeView *poolView=new QTreeView(this);
     poolView->setSelectionMode(QAbstractItemView::SingleSelection);
     poolView->setFont(this->font());

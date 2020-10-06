@@ -129,14 +129,14 @@ QWidget *AnimeDetailInfo::setupOverviewPage()
     }
 
     QLabel *titleLabel=new QLabel(pageWidget);
-    titleLabel->setFont(QFont("Microsoft Yahei",16));
+    titleLabel->setFont(QFont(GlobalObjects::normalFont,16));
     titleLabel->setWordWrap(true);
     titleLabel->setOpenExternalLinks(true);
     titleLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
     titleLabel->setText(QString("<a href = \"http://bgm.tv/subject/%1\">%2</a>").arg(currentAnime->bangumiID).arg(currentAnime->title));
 
     QLabel *dateStaffLabel=new QLabel(pageWidget);
-    dateStaffLabel->setFont(QFont("Microsoft Yahei",12));
+    dateStaffLabel->setFont(QFont(GlobalObjects::normalFont,12));
     dateStaffLabel->setWordWrap(true);
     dateStaffLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
     dateStaffLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);

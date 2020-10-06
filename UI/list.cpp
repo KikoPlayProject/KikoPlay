@@ -81,7 +81,7 @@ namespace
             //movieLabel->setScaledContents(true);
             infoText=new QLabel(this);
             infoText->setObjectName(QStringLiteral("labelListInfo"));
-            infoText->setFont(QFont("Microsoft YaHei UI",10));
+            infoText->setFont(QFont(GlobalObjects::normalFont,10));
             infoText->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
             cancelBtn = new QPushButton(QObject::tr("Cancel"), this);
             QHBoxLayout *infoBarHLayout=new QHBoxLayout(this);
@@ -142,7 +142,7 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
     listVLayout->setContentsMargins(0,0,0,0);
     listVLayout->setSpacing(0);
 
-    QFont normalFont("Microsoft YaHei UI",11);
+    QFont normalFont(GlobalObjects::normalFont,11);
     QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
     pageButtonHLayout->setContentsMargins(0,0,0,0);
     pageButtonHLayout->setSpacing(0);
@@ -849,7 +849,7 @@ QWidget *ListWindow::setupPlaylistPage()
     playlistView->header()->hide();
     playlistView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     playlistView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    playlistView->setFont(QFont("Microsoft YaHei UI",12));
+    playlistView->setFont(QFont(GlobalObjects::normalFont,12));
     playlistView->setContextMenuPolicy(Qt::CustomContextMenu);
     playlistView->setIndentation(12*logicalDpiX()/96);
     playlistView->setItemDelegate(new TextColorDelegate(this));
@@ -988,7 +988,7 @@ QWidget *ListWindow::setupDanmulistPage()
     danmulistPageVLayout->setContentsMargins(0,0,0,0);
     danmulistPageVLayout->setSpacing(0);
 
-    QFont normalFont("Microsoft YaHei UI",11);
+    QFont normalFont(GlobalObjects::normalFont,11);
 
     danmulistView=new QTreeView(danmulistPage);
     danmulistView->setObjectName(QStringLiteral("danmulist"));
@@ -1253,7 +1253,7 @@ FilterBox::FilterBox(QWidget *parent)
     , m_patternGroup(new QActionGroup(this))
 {
     setClearButtonEnabled(true);
-    setFont(QFont("Microsoft YaHei",12));
+    setFont(QFont(GlobalObjects::normalFont,12));
     connect(this, &QLineEdit::textChanged, this, &FilterBox::filterChanged);
 
     QMenu *menu = new QMenu(this);

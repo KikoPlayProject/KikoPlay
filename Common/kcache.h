@@ -7,7 +7,11 @@ class KCache
 {
 public:
     explicit KCache(int mSize = 128):maxSize(mSize), h(nullptr), t(nullptr){}
-
+    static KCache *getInstance()
+    {
+        static KCache kCache;
+        return &kCache;
+    }
     template<typename T>
     void put(const QString &key, const T &value)
     {
