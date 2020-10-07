@@ -181,61 +181,6 @@ MPVPlayer::VideoSizeInfo MPVPlayer::getVideoSizeInfo()
     return sizeInfo;
 }
 
-QMap<QString, QMap<QString, QString> > MPVPlayer::getMediaInfo()
-{
-    QMap<QString, QMap<QString, QString> > mediaInfo;
-    if(currentFile.isEmpty())return mediaInfo;
-    QFileInfo fi(currentFile);
-
-    QMap<QString,QString> fileInfo;
-    fileInfo.insert(tr("General"),fi.fileName());
-    fileInfo.insert(tr("Title"),mpv::qt::get_property(mpv,"media-title").toString());
-    float fileSize=fi.size();
-    QStringList units={"B","KB","MB","GB","TB"};
-    for(int i=0;i<units.size();++i)
-    {
-        if(fileSize<1024.f)
-        {
-            fileInfo.insert(tr("File Size"),QString().setNum(fileSize,'f',2)+units[i]);
-            break;
-        }
-        fileSize/=1024.f;
-    }
-    fileInfo.insert(tr("Date created"),fi.birthTime().toString());
-    int duration=mpv::qt::get_property(mpv,"duration").toDouble() * 1000;
-    QTime time = QTime::fromMSecsSinceStartOfDay(duration);
-    fileInfo.insert(tr("Media length"),duration>=3600000?time.toString("h:mm:ss"):duration>=60000?time.toString("mm:ss"):time.toString("00:ss"));
-    mediaInfo.insert(tr("File"),fileInfo);
-
-    QMap<QString,QString> videoInfo;
-    videoInfo.insert(tr("General"),mpv::qt::get_property(mpv,"video-codec").toString());
-    videoInfo.insert(tr("Video Output"),QString("%0 (hwdec %1)").arg(mpv::qt::get_property(mpv,"current-vo").toString())
-                                                                .arg(mpv::qt::get_property(mpv,"hwdec-current").toString()));
-    videoInfo.insert(tr("Resolution"),QString("%0 x %1").arg(mpv::qt::get_property(mpv,"width").toInt())
-                                                      .arg(mpv::qt::get_property(mpv,"height").toInt()));
-    videoInfo.insert(tr("Actual FPS"),QString().setNum(mpv::qt::get_property(mpv,"estimated-vf-fps").toDouble()));
-    videoInfo.insert(tr("A/V Sync"),QString().setNum(mpv::qt::get_property(mpv,"avsync").toDouble(),'f',2));
-    videoInfo.insert(tr("Bitrate"),QString("%0 bps").arg(mpv::qt::get_property(mpv,"video-bitrate").toDouble()));
-    mediaInfo.insert(tr("Video"),videoInfo);
-
-    QMap<QString,QString> audioInfo;
-    audioInfo.insert(tr("General"),QString("%0 track(s) %1").arg(audioTrack.ids.count()).arg(mpv::qt::get_property(mpv,"audio-codec").toString()));
-    audioInfo.insert(tr("Audio Output"),mpv::qt::get_property(mpv,"current-ao").toString());
-    QMap<QString,QVariant> audioParameters=mpv::qt::get_property(mpv,"audio-params").toMap();
-    audioInfo.insert(tr("Sample Rate"),audioParameters["samplerate"].toString());
-    audioInfo.insert(tr("Channels"),audioParameters["channel-count"].toString());
-    audioInfo.insert(tr("Bitrate"),QString("%0 bps").arg(mpv::qt::get_property(mpv,"audio-bitrate").toDouble()));
-    mediaInfo.insert(tr("Audio"),audioInfo);
-
-    QMap<QString,QString> metaInfo;
-    QMap<QString,QVariant> metadata=mpv::qt::get_property(mpv,"metadata").toMap();
-    for(auto iter=metadata.begin();iter!=metadata.end();++iter)
-		metaInfo.insert(iter.key(),iter.value().toString());
-    mediaInfo.insert(tr("Meta Data"),metaInfo);
-
-    return mediaInfo;
-}
-
 QString MPVPlayer::expandMediaInfo(const QString &text)
 {
     return mpv::qt::command(mpv, QVariantList() << "expand-text" << text).toString();
@@ -382,6 +327,7 @@ void MPVPlayer::setState(MPVPlayer::PlayState newState)
         setMPVCommand(QVariantList()<<"stop");
         refreshTimer.stop();
         state=PlayState::Stop;
+        currentFile = "";
         if(mpvPreview) mpvPreview->reset();
         update();
         emit stateChanged(state);

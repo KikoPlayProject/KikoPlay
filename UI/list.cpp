@@ -522,7 +522,7 @@ void ListWindow::initActions()
     act_addCollection=new QAction(tr("Add Collection"),this);
     QObject::connect(act_addCollection,&QAction::triggered,[this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
-        QModelIndex newIndex = model->mapFromSource(GlobalObjects::playlist->addCollection(getPSParentIndex(),"new collection"));
+        QModelIndex newIndex = model->mapFromSource(GlobalObjects::playlist->addCollection(getPSParentIndex(),QObject::tr("new collection")));
         playlistView->scrollTo(newIndex, QAbstractItemView::PositionAtCenter);
         playlistView->edit(newIndex);
     });

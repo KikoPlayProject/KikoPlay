@@ -179,6 +179,7 @@ QToolButton#closelButton:checked{
 
 QSlider#widgetProcessSlider{
     border-color: #bcbcbc;
+    qproperty-cColor2: rgb(67,156,243);
 }
 QSlider#widgetProcessSlider::groove:horizontal {
      border: 1px solid #999999;
@@ -777,6 +778,7 @@ QWidget#RecentItem:checked{
 }
 QWidget#DanmuStatisBar{
     qproperty-barColor: rgba(51,168,255,200);
+    qproperty-bgColor: rgba(0,0,0,150);
 }
 QLabel#TimeInfoTip{
     border-color: rgb(150, 150,150);

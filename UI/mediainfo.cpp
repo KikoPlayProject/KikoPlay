@@ -3,32 +3,10 @@
 #include <QHBoxLayout>
 #include "globalobjects.h"
 #include "Play/Video/mpvplayer.h"
-namespace  {
-    QHash<QString, QString> kikoCommand({
-        {"normalfont", GlobalObjects::normalFont}
-    });
-}
 MediaInfo::MediaInfo(QWidget *parent) : CFramelessDialog(tr("Media Info"),parent)
 {
     QTextEdit *infoText=new QTextEdit(this);
-    /*
-    QMap<QString,QMap<QString,QString> > info=GlobalObjects::mpvplayer->getMediaInfo();
-    QString displayText;
-    for(auto iter=info.begin();iter!=info.end();++iter)
-    {
-        displayText+=QString("<font size=\"4\" face=\"Microsoft Yahei\" color=\"#18C0F1\">%0</font><br /><font size=\"3\" face=\"Microsoft Yahei\">%1</font>").arg(iter.key()).arg(iter.value().contains("General")?iter.value()["General"]+"<br />":"");
-        QMap<QString,QString> &subInfo=iter.value();
-        for(auto iter=subInfo.begin();iter!=subInfo.end();++iter)
-        {
-            if(iter.key()!="General")
-            {
-                displayText+=QString("<font size=\"3\" face=\"Microsoft Yahei\" color=\"#ECCC1E\">%0</font> :<font size=\"3\" face=\"Microsoft Yahei\"> %1</font><br />").arg(iter.key()).arg(iter.value());
-            }
-        }
-    }
-    */
     infoText->setReadOnly(true);
-    //infoText->setText(displayText);
     infoText->setText(expandMediaInfo());
     QHBoxLayout *infoHLayout=new QHBoxLayout(this);
     infoHLayout->setContentsMargins(0,0,0,0);
@@ -107,6 +85,39 @@ QString MediaInfo::expandMediaInfo()
 
 void MediaInfo::evalCommand(QList<QString> &commandStack, QList<TextBlock> &textStack)
 {
+    static QHash<QString, QString> kikoCommand({
+        {"normalfont", GlobalObjects::normalFont},
+        {"tr:title", tr("Title")},
+        {"tr:file-size", tr("File Size")},
+        {"tr:date-created", tr("Date Created")},
+        {"tr:file", tr("File")},
+        {"tr:file-format", tr("File Format")},
+        {"tr:duration", tr("Duration")},
+        {"tr:video-output", tr("Video Output")},
+        {"tr:demuxer", tr("Demuxer")},
+        {"tr:bitrate", tr("Bitrate")},
+        {"tr:video", tr("Video")},
+        {"tr:audio-output", tr("Audio Output")},
+        {"tr:sample-rate", tr("Sample Rate")},
+        {"tr:channels", tr("Channels")},
+        {"tr:audio", tr("Audio")},
+        {"tr:meta-data", tr("Meta Data")},
+        {"tr:video-format", tr("Video Format")},
+        {"tr:video-size", tr("Video Size")},
+        {"tr:display-size", tr("Display Size")},
+        {"tr:audio-format", tr("Audio Format")},
+        {"tr:channel-count", tr("Channel Count")},
+        {"tr:chapters", tr("Chapters")},
+        {"tr:tracks", tr("Tracks")},
+        {"tr:language", tr("Language")},
+        {"tr:selected", tr("Selected")}
+    });
+    QFileInfo fi(GlobalObjects::mpvplayer->getCurrentFile());
+    kikoCommand["date-created"] = fi.birthTime().toString();
+    kikoCommand["audio-trackcount"] = QString::number(GlobalObjects::mpvplayer->getTrackList(0).size());
+    kikoCommand["dwidth"] = QString::number(GlobalObjects::mpvplayer->width());
+    kikoCommand["dheight"] = QString::number(GlobalObjects::mpvplayer->height());
+
     QString command = commandStack.back();
     commandStack.pop_back();
     QString commandResult;
