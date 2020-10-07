@@ -412,7 +412,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
             rpc->tellStatus(iter.key());
         }
         rpc->tellGlobalStatus();
-        if(currentTask && !this->isHidden())
+        if(currentTask && !this->isHidden() && !currentTask->gid.isEmpty())
         {
             rpc->getPeers(currentTask->gid);
         }
