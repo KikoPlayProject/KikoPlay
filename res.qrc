@@ -59,5 +59,6 @@
         <file>res/images/playing.svg</file>
         <file>res/style_bg_default.qss</file>
         <file>res/images/folder.svg</file>
+        <file>res/mediainfo</file>
     </qresource>
 </RCC>

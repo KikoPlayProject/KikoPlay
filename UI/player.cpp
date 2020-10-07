@@ -1493,6 +1493,9 @@ void PlayerWindow::setupSignals()
     QObject::connect(mediaInfo,&QToolButton::clicked,[this](){
 		if (GlobalObjects::playlist->getCurrentItem() == nullptr)return;
         MediaInfo mediaInfoDialog(this);
+        QRect geo(0,0,400*logicalDpiX()/96,600*logicalDpiY()/96);
+        geo.moveCenter(this->geometry().center());
+        mediaInfoDialog.move(mapToGlobal(geo.topLeft()));
         mediaInfoDialog.exec();
     });
 }

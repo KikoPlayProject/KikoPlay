@@ -1,0 +1,70 @@
+<font size=4 face="${kiko:normalfont}" color="#18C0F1">File</font><br />
+    <font size="3" face="${kiko:normalfont}">${filename}</font> <br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Title</font>
+    :<font size="3" face="${kiko:normalfont}"> ${media-title}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">File Size</font>
+    :<font size="3" face="${kiko:normalfont}"> ${file-size}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">File Format</font>
+    :<font size="3" face="${kiko:normalfont}"> ${file-format}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Date Created</font>
+    :<font size="3" face="${kiko:normalfont}"> ${date-created}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Duration</font>
+    :<font size="3" face="${kiko:normalfont}"> ${duration}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Demuxer</font>
+    :<font size="3" face="${kiko:normalfont}"> ${current-demuxer}</font><br />
+<font size=4 face="${kiko:normalfont}" color="#18C0F1">Video</font><br />
+    <font size="3" face="${kiko:normalfont}">${video-codec}</font> <br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Video Output</font>
+    :<font size="3" face="${kiko:normalfont}"> ${current-vo} (hwdec ${hwdec-current})</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Video Format</font>
+    :<font size="3" face="${kiko:normalfont}"> ${video-format}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Video Size</font>
+    :<font size="3" face="${kiko:normalfont}"> ${width} x ${height}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Display Size</font>
+    :<font size="3" face="${kiko:normalfont}"> ${dwidth} x ${dheight}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Video FPS</font>
+    :<font size="3" face="${kiko:normalfont}"> ${container-fps}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Estimated FPS</font>
+    :<font size="3" face="${kiko:normalfont}"> ${estimated-vf-fps}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Display FPS</font>
+    :<font size="3" face="${kiko:normalfont}"> ${display-fps}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">A/V Sync</font>
+    :<font size="3" face="${kiko:normalfont}"> ${avsync}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Bitrate</font>
+    :<font size="3" face="${kiko:normalfont}"> ${video-bitrate}</font><br />
+<font size=4 face="${kiko:normalfont}" color="#18C0F1">Audio</font><br />
+    <font size="3" face="${kiko:normalfont}"> ${kiko:audio-trackcount} track(s) ${audio-codec}</font> <br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Audio Output</font>
+    :<font size="3" face="${kiko:normalfont}"> ${current-ao}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Audio Format</font>
+    :<font size="3" face="${kiko:normalfont}"> ${audio-params/format}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Sample Rate</font>
+    :<font size="3" face="${kiko:normalfont}"> ${audio-params/samplerate}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Channel Count</font>
+    :<font size="3" face="${kiko:normalfont}"> ${audio-params/channel-count}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Channels</font>
+    :<font size="3" face="${kiko:normalfont}"> ${audio-params/channels}</font><br />
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">Bitrate</font>
+    :<font size="3" face="${kiko:normalfont}"> ${audio-bitrate}</font><br />
+<font size=4 face="${kiko:normalfont}" color="#18C0F1">Meta Data</font><br />
+    ${loop:i=0,${mpv:metadata/list/count},1}
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">${metadata/list/${var:i}/key}</font>
+    :<font size="3" face="${kiko:normalfont}"> ${metadata/list/${var:i}/value}</font><br />
+    ${endloop}
+<font size=4 face="${kiko:normalfont}" color="#18C0F1">Chapters</font><br />
+    ${loop:i=0,${mpv:chapter-list/count},1}
+    <font size="3" face="${kiko:normalfont}" color="#ECCC1E">chapter ${var:i}</font>
+    :<font size="3" face="${kiko:normalfont}"> ${chapter-list/${var:i}/title}, ${chapter-list/${var:i}/time}</font><br />
+    ${endloop}
+<font size=4 face="${kiko:normalfont}" color="#18C0F1">Tracks</font><br />
+    ${loop:i=0,${mpv:track-list/count},1}
+        <font size="3" color="#6A5ACD" face="${kiko:normalfont}"> ${track-list/${var:i}/id} - ${track-list/${var:i}/type}</font> <br />
+        <font size="3" face="${kiko:normalfont}" color="#ECCC1E">&nbsp;&nbsp; Title</font>
+        :<font size="3" face="${kiko:normalfont}"> ${track-list/${var:i}/title}</font><br />
+        <font size="3" face="${kiko:normalfont}" color="#ECCC1E">&nbsp;&nbsp; Language</font>
+        :<font size="3" face="${kiko:normalfont}"> ${track-list/${var:i}/lang}</font><br />
+        <font size="3" face="${kiko:normalfont}" color="#ECCC1E">&nbsp;&nbsp; Codec</font>
+        :<font size="3" face="${kiko:normalfont}"> ${track-list/${var:i}/codec}</font><br />
+        <font size="3" face="${kiko:normalfont}" color="#ECCC1E">&nbsp;&nbsp; Selected</font>
+        :<font size="3" face="${kiko:normalfont}"> ${track-list/${var:i}/selected}</font><br />
+    ${endloop}

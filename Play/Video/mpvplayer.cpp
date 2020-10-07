@@ -162,6 +162,15 @@ MPVPlayer::~MPVPlayer()
     }
 }
 
+QString MPVPlayer::getMPVProperty(const QString &property, bool &hasError)
+{
+     auto ret = mpv::qt::get_property(mpv, property);
+     hasError = true;
+     if(mpv::qt::is_error(ret)) return "";
+     hasError = false;
+     return ret.toString();
+}
+
 MPVPlayer::VideoSizeInfo MPVPlayer::getVideoSizeInfo()
 {
     VideoSizeInfo sizeInfo;
@@ -225,6 +234,11 @@ QMap<QString, QMap<QString, QString> > MPVPlayer::getMediaInfo()
     mediaInfo.insert(tr("Meta Data"),metaInfo);
 
     return mediaInfo;
+}
+
+QString MPVPlayer::expandMediaInfo(const QString &text)
+{
+    return mpv::qt::command(mpv, QVariantList() << "expand-text" << text).toString();
 }
 
 void MPVPlayer::setOptions()

@@ -54,9 +54,11 @@ public:
     inline QString getMediaTitle() const {return mpv::qt::get_property(mpv,"media-title").toString();}
     inline const QList<ChapterInfo> &getChapters() const {return chapters;}
     inline QPixmap *getPreview(int timePos, bool refresh=true) { if(!mpvPreview) return nullptr; return mpvPreview->getPreview(timePos, refresh);}
+    QString getMPVProperty(const QString &property, bool &hasError);
 
     VideoSizeInfo getVideoSizeInfo();
     QMap<QString,QMap<QString,QString> > getMediaInfo();
+    QString expandMediaInfo(const QString &text);
     void setOptions();
     void drawTexture(QList<const DanmuObject *> &objList, float alpha);
 signals:
