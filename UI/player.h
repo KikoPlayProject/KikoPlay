@@ -67,7 +67,8 @@ private:
      QFontComboBox *fontFamilyCombo;
      QComboBox *aspectRatioCombo,*playSpeedCombo,*clickBehaviorCombo,*dbClickBehaviorCombo,
                 *denseLevel,*mergeCountTipPos;
-     QSlider *speedSlider,*alphaSlider,*strokeWidthSlider,*fontSizeSlider,*maxDanmuCount;
+     QSlider *speedSlider,*alphaSlider,*strokeWidthSlider,*fontSizeSlider,*maxDanmuCount,
+             *brightnessSlider, *contrastSlider, *saturationSlider, *gammaSlider, *hueSlider, *sharpenSlider;
      bool updatingTrack;
      bool isFullscreen;
      int resizePercent;

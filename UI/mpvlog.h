@@ -8,7 +8,6 @@ class MPVLog : public CFramelessDialog
     Q_OBJECT
 public:
     explicit MPVLog(QWidget *parent = nullptr);
-
 };
 
 #endif // MPVLOG_H

@@ -101,9 +101,13 @@ void PeerModel::setProgress(PeerModel::PeerInfo &peer, const QString &progressSt
         if(c.isDigit()) n = n-'0';
         else if('a'<=n && 'f'>=n) n = n-'a'+10;
         if(n > 0 && n < 16){
+            if(pos>=currentPiecesNum) break;
             if (n & 0x8) { ++count; ++bucket[int(percent * clusters * pos) + ProgressCluster]; }
+            if(pos+1>=currentPiecesNum) break;
             if (n & 0x4) { ++count; ++bucket[int(percent * clusters * (pos + 1)) + ProgressCluster]; }
+            if(pos+2>=currentPiecesNum) break;
             if (n & 0x2) { ++count; ++bucket[int(percent * clusters  * (pos + 2)) + ProgressCluster]; }
+            if(pos+3>=currentPiecesNum) break;
             if (n & 0x1) { ++count; ++bucket[int(percent * clusters * (pos + 3)) + ProgressCluster]; }
         }
         pos += 4;

@@ -86,6 +86,12 @@ public slots:
     void setSpeed(int index);
     void setVideoAspect(int index);
     void screenshot(QString filename);
+    void setBrightness(int val);
+    void setContrast(int val);
+    void setSaturation(int val);
+    void setGamma(int val);
+    void setHue(int val);
+    void setSharpen(int val);
 
 protected:
     void initializeGL() override;

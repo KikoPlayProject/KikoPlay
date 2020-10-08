@@ -23,5 +23,4 @@ MPVLog::MPVLog(QWidget *parent) : CFramelessDialog(tr("MPV Log"),parent,false,tr
     QVBoxLayout *logVLayout=new QVBoxLayout(this);
     logVLayout->addWidget(cleanLog);
     logVLayout->addWidget(logView);
-    resize(400*logicalDpiX()/96,200*logicalDpiY()/96);
 }

@@ -419,6 +419,36 @@ void MPVPlayer::screenshot(QString filename)
     setMPVCommand(QVariantList() << "screenshot-to-file" << filename);
 }
 
+void MPVPlayer::setBrightness(int val)
+{
+    mpv::qt::set_option_variant(mpv, "brightness", qBound(-100, val, 100));
+}
+
+void MPVPlayer::setContrast(int val)
+{
+    mpv::qt::set_option_variant(mpv, "contrast", qBound(-100, val, 100));
+}
+
+void MPVPlayer::setSaturation(int val)
+{
+    mpv::qt::set_option_variant(mpv, "saturation", qBound(-100, val, 100));
+}
+
+void MPVPlayer::setGamma(int val)
+{
+    mpv::qt::set_option_variant(mpv, "gamma", qBound(-100, val, 100));
+}
+
+void MPVPlayer::setHue(int val)
+{
+    mpv::qt::set_option_variant(mpv, "hue", qBound(-100, val, 100));
+}
+
+void MPVPlayer::setSharpen(int val)
+{
+    mpv::qt::set_option_variant(mpv, "sharpen", qBound(-4.0, val / 100.0, 4.0));
+}
+
 void MPVPlayer::initializeGL()
 {
     QOpenGLFunctions *glFuns=context()->functions();
@@ -435,7 +465,7 @@ void MPVPlayer::initializeGL()
     mpv_render_context_set_update_callback(mpv_gl, MPVPlayer::on_update, reinterpret_cast<void *>(this));
 
     const char *version = reinterpret_cast<const char*>(glFuns->glGetString(GL_VERSION));
-    qDebug()<<"OpenGL Version:"<<version;
+    qInfo()<<"OpenGL Version:"<<version;
     int mainVersion=0;
 	while (version && *version >= '0' && *version <= '9')
 	{
@@ -443,7 +473,7 @@ void MPVPlayer::initializeGL()
 		++version;
 	}
     oldOpenGLVersion = mainVersion<4;
-    if(oldOpenGLVersion)qDebug()<<"Unsupport sampler2D Array";
+    if(oldOpenGLVersion) qInfo()<<"Unsupport sampler2D Array";
     bool useSample2DArray = GlobalObjects::appSetting->value("Play/Sampler2DArray",true).toBool();
 	if (!oldOpenGLVersion && !useSample2DArray) oldOpenGLVersion = true;
     if(oldOpenGLVersion)

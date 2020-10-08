@@ -39,7 +39,7 @@ void AnimeFilterProxyModel::refreshAnimeCount(int cur, int total)
     }
     else
     {
-        emit animeMessage(tr("Current: %1/%2").arg(rowCount()).arg(cur).arg(total),
+        emit animeMessage(tr("Current: %1/%2").arg(rowCount()).arg(cur),
                           PopMessageFlag::PM_OK, false);
     }
 }
