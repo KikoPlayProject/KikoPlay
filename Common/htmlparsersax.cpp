@@ -28,15 +28,18 @@ void HTMLParserSax::parseNode()
         else if(*iter!='>')
         {
             QString propertyName,propertyVal;
-            while (iter!=end && *iter!='=') propertyName+=*iter++;
-            iter++;
-            QChar q(*iter++);
-            while (iter!=end && *iter!=q) propertyVal+=*iter++;
-            propertyMap.insert(propertyName,propertyVal);
-            iter++;
+            while (iter!=end && *iter!='=' && *iter!='>') propertyName+=*iter++;
+            if(iter!=end && *iter!='>')
+            {
+                iter++;
+                QChar q(*iter++);
+                while (iter!=end && *iter!=q) propertyVal+=*iter++;
+                propertyMap.insert(propertyName,propertyVal);
+                if(iter!=end) iter++;
+            }
         }
     }
-    if(*iter=='>')iter++;
+    if(iter!=end && *iter=='>')iter++;
     begin=iter;
 }
 

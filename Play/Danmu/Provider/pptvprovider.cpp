@@ -160,7 +160,7 @@ void PPTVProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
 {
     HTMLParserSax parser(reply);
     int pos=0;
-    while((pos = reply.indexOf("<div class=\"positive-box clearfix\">",pos)) != -1)
+    while((pos = reply.indexOf("<div class=\"positive-box clearfix\"",pos)) != -1)
     {
         parser.seekTo(pos);
         do

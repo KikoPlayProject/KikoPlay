@@ -227,7 +227,7 @@ void YoukuProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
         {
             while(parser.curPos() < marginPos)
             {
-                if(parser.currentNodeProperty("class").startsWith("box-item"))
+                if(parser.currentNodeProperty("class").trimmed().startsWith("box-item"))
                 {
                     if(!parser.currentNodeProperty("title").isEmpty())
                     {

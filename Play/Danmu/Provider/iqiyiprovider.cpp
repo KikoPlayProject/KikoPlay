@@ -115,7 +115,7 @@ QString IqiyiProvider::downloadBySourceURL(const QString &url, QList<DanmuCommen
 
 void IqiyiProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
 {
-    QRegExp re("<div class=\"layout-main\">(.*)<div class=\"layout-side\">");
+    QRegExp re("<div class=\"layout-main\"(.*)<div class=\"layout-side\"");
     int pos=re.indexIn(reply);
     if(pos!=-1)
     {
@@ -126,14 +126,15 @@ void IqiyiProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
         bool itemStart=false;
         while(!parser.atEnd())
         {
-            if(parser.currentNodeProperty("class")=="qy-search-result-tit")
+            if(parser.currentNodeProperty("class").startsWith("qy-search-result-tit"))
             {
                 do{
                     parser.readNext();
                 }while(parser.currentNodeProperty("class")!="main-tit");
                 if(itemStart)
 				{
-                    result->list.append(item);
+                    if(item.strId.startsWith("http://www.iqiyi.com") || item.strId.startsWith("https://www.iqiyi.com"))
+                        result->list.append(item);
 				}
                 itemStart=true;
                 item.title=parser.currentNodeProperty("title");
@@ -153,7 +154,8 @@ void IqiyiProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
                         epItem.strId=parser.currentNodeProperty("href");
                         if(epItem.strId.startsWith("//")) epItem.strId.push_front("http:");
                         epItem.extra=0;
-                        result->list.append(epItem);
+                        if(epItem.strId.startsWith("http://www.iqiyi.com") || epItem.strId.startsWith("https://www.iqiyi.com"))
+                            result->list.append(epItem);
                     }
                 }
                 itemStart = false;
@@ -171,14 +173,19 @@ void IqiyiProvider::handleSearchReply(QString &reply, DanmuAccessResult *result)
                         epItem.strId=parser.currentNodeProperty("href");
                         if(epItem.strId.startsWith("//")) epItem.strId.push_front("http:");
                         epItem.extra=0;
-                        result->list.append(epItem);
+                        if(epItem.strId.startsWith("http://www.iqiyi.com") || epItem.strId.startsWith("https://www.iqiyi.com"))
+                            result->list.append(epItem);
                     }
                 }
                 itemStart = false;
             }
             parser.readNext();
         }
-        if(itemStart && !item.title.trimmed().isEmpty())result->list.append(item);
+        if(itemStart && !item.title.trimmed().isEmpty())
+        {
+            if(item.strId.startsWith("http://www.iqiyi.com") || item.strId.startsWith("https://www.iqiyi.com"))
+                result->list.append(item);
+        }
     }
     result->error = false;
 }
