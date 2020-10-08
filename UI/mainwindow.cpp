@@ -124,11 +124,11 @@ void MainWindow::setThemeColor(const QColor &color)
 {
     themeColor = color;
     if(themeColor.isValid() && hasBackground)
-        GlobalObjects::styleManager->setQSS(StyleManager::BG_COLOR, themeColor);
+        StyleManager::getStyleManager()->setQSS(StyleManager::BG_COLOR, themeColor);
     else if(hasBackground)
-        GlobalObjects::styleManager->setQSS(StyleManager::DEFAULT_BG);
+        StyleManager::getStyleManager()->setQSS(StyleManager::DEFAULT_BG);
     else
-        GlobalObjects::styleManager->setQSS(StyleManager::NO_BG);
+        StyleManager::getStyleManager()->setQSS(StyleManager::NO_BG);
 }
 
 void MainWindow::setupUI()
@@ -414,11 +414,11 @@ void MainWindow::setBackground(const QString &imagePath, bool forceRefreshQSS, b
     if(refreshQSS || forceRefreshQSS)
     {
         if(themeColor.isValid() && hasBackground)
-            GlobalObjects::styleManager->setQSS(StyleManager::BG_COLOR, themeColor);
+            StyleManager::getStyleManager()->setQSS(StyleManager::BG_COLOR, themeColor);
         else if(hasBackground)
-            GlobalObjects::styleManager->setQSS(StyleManager::DEFAULT_BG);
+            StyleManager::getStyleManager()->setQSS(StyleManager::DEFAULT_BG);
         else
-            GlobalObjects::styleManager->setQSS(StyleManager::NO_BG);
+            StyleManager::getStyleManager()->setQSS(StyleManager::NO_BG);
     }
 
 }

@@ -111,10 +111,23 @@ bool PlayList::canPaste() const
     return d->itemsClipboard.count()>0;
 }
 
-QList<QPair<QString, QString> > &PlayList::recent()
+const QList<QPair<QString, QString> > &PlayList::recent()
 {
     Q_D(PlayList);
     return d->recentList;
+}
+
+void PlayList::removeRecentItem(const QString &path)
+{
+    Q_D(PlayList);
+    for(auto iter= d->recentList.begin();iter!=d->recentList.end();)
+    {
+        if((*iter).first==path)
+            iter=d->recentList.erase(iter);
+        else
+            iter++;
+    }
+    emit recentItemsUpdated();
 }
 
 int PlayList::addItems(QStringList &items, QModelIndex parent)
@@ -716,7 +729,7 @@ const PlayListItem *PlayList::setCurrentItem(const QModelIndex &index,bool playC
         notifier->showMessage(Notifier::LIST_NOTIFY, tr("File Not Exist"),PM_INFO|PM_HIDE);
         return nullptr;
     }
-    d->autoLocalMatch(cur);
+    //d->autoLocalMatch(cur);
     PlayListItem *tmp = d->currentItem;
     d->currentItem = cur;
 	if (tmp)
@@ -735,7 +748,7 @@ const PlayListItem *PlayList::setCurrentItem(const QString &path)
     PlayListItem *curItem=d->fileItems.value(path,nullptr);
     if(curItem && d->currentItem!=curItem)
     {
-        d->autoLocalMatch(curItem);
+        //d->autoLocalMatch(curItem);
         PlayListItem *tmp = d->currentItem;
         d->currentItem = curItem;
         if (tmp)
@@ -771,7 +784,7 @@ const PlayListItem *PlayList::playPrevOrNext(bool prev)
     {
         PlayListItem *tmp = d->currentItem;
         d->currentItem = item;
-        d->autoLocalMatch(item);
+        //d->autoLocalMatch(item);
         if (tmp)
         {
             QModelIndex nIndex(createIndex(tmp->parent->children->indexOf(tmp), 0, tmp));
@@ -1139,7 +1152,8 @@ void MatchWorker::match(const QList<PlayListItem *> &items)
         if(cancel) break;
         if(!currentItem->poolID.isEmpty()) continue;
         if (!QFile::exists(currentItem->path))continue;
-        QScopedPointer<MatchInfo> matchInfo(GlobalObjects::danmuManager->matchFrom(DanmuManager::DanDan,currentItem->path));
+        QScopedPointer<MatchInfo> matchInfo(GlobalObjects::danmuManager->matchFrom(DanmuManager::Local,currentItem->path));
+        if(!matchInfo) matchInfo.reset(GlobalObjects::danmuManager->matchFrom(DanmuManager::DanDan,currentItem->path));
         if(!matchInfo) continue;
         if(matchInfo->error)
         {

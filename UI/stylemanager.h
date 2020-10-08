@@ -13,10 +13,12 @@ public:
         BG_COLOR,
         UNKNOWN
     };
-    StyleManager();
-    StyleManager(const StyleManager &)=delete;
+    static StyleManager *getStyleManager();
     void setQSS(StyleMode mode, const QColor &color=QColor());
 private:
+    StyleManager();
+    StyleManager(const StyleManager &)=delete;
+
     QString normalQSS, bgQSS, defaultBgQSS;
     QString loadQSS(const QString &fn);
 

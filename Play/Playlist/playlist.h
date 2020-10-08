@@ -39,7 +39,8 @@ public:
     QList<const PlayListItem *> getSiblings(const PlayListItem *item);
     LoopMode getLoopMode() const;
     bool canPaste() const;
-    QList<QPair<QString,QString> > &recent();
+    const QList<QPair<QString,QString> > &recent();
+    void removeRecentItem(const QString &path);
 signals:
     void currentInvaild();
     void currentMatchChanged(const QString &pid);

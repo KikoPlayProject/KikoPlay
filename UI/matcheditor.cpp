@@ -379,7 +379,7 @@ QWidget *MatchEditor::setupBatchPage()
         {
             if(epCheckedList[selectedIndex])
             {
-                if(++epIndex >= batchEp.size()) break;
+                if(++epIndex >= animeEps.size()) break;
                 epModel->setData(epModel->index(selectedIndex, static_cast<int>(EpModel::Columns::EPNAME), QModelIndex()),
                                         animeEps.value(epIndex),Qt::EditRole);
             }

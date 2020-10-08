@@ -19,7 +19,6 @@ class DanmuManager;
 class LANServer;
 class ScriptManager;
 class AutoDownloadManager;
-class StyleManager;
 class QMainWindow;
 class GlobalObjects
 {
@@ -41,7 +40,6 @@ public:
     static LANServer *lanServer;    
     static ScriptManager *scriptManager;
     static AutoDownloadManager *autoDownloadManager;
-    static StyleManager *styleManager;
     static QMainWindow *mainWindow;
     static QString dataPath;
 

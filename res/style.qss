@@ -776,6 +776,7 @@ QWidget#RecentItem:checked{
        border-radius:2px;
        border:1px solid #fcfcfc;
 }
+
 QWidget#DanmuStatisBar{
     qproperty-barColor: rgba(51,168,255,200);
     qproperty-bgColor: rgba(0,0,0,150);

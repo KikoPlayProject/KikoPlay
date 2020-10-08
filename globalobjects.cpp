@@ -33,7 +33,6 @@ DanmuManager *GlobalObjects::danmuManager=nullptr;
 LANServer *GlobalObjects::lanServer=nullptr;
 ScriptManager *GlobalObjects::scriptManager=nullptr;
 AutoDownloadManager *GlobalObjects::autoDownloadManager=nullptr;
-StyleManager *GlobalObjects::styleManager=nullptr;
 QMainWindow *GlobalObjects::mainWindow=nullptr;
 QFont GlobalObjects::iconfont;
 QString GlobalObjects::dataPath;
@@ -84,7 +83,6 @@ void GlobalObjects::init()
     lanServer=new LANServer();
     scriptManager=new ScriptManager();
     autoDownloadManager=new AutoDownloadManager();
-    styleManager=new StyleManager();
 
     int fontId = QFontDatabase::addApplicationFont(":/res/iconfont.ttf");
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
@@ -109,7 +107,6 @@ void GlobalObjects::clear()
     scriptManager->deleteLater();
     autoDownloadManager->deleteLater();
     appSetting->deleteLater();
-    delete styleManager;
 }
 
 QSqlDatabase GlobalObjects::getDB(int db)

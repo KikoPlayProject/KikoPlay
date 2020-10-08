@@ -79,22 +79,20 @@ public:
         deleteItem=new QPushButton(this);
         deleteItem->setObjectName(QStringLiteral("RecentItemDeleteButton"));
         QObject::connect(deleteItem,&QPushButton::clicked,[this](){
-            int i = 0;
-            auto &r = GlobalObjects::playlist->recent();
-            while(i<r.size() && r[i].first!=path) ++i;
-            if(r[i].first==path) r.removeAt(i);
-            hide();
+            GlobalObjects::playlist->removeRecentItem(path);
         });
         GlobalObjects::iconfont.setPointSize(10);
         deleteItem->setFont(GlobalObjects::iconfont);
         deleteItem->setText(QChar(0xe60b));
         deleteItem->hide();
         QHBoxLayout *itemHLayout=new QHBoxLayout(this);
+        itemHLayout->addStretch(1);
         itemHLayout->addWidget(titleLabel);
+        itemHLayout->addStretch(1);
         itemHLayout->addWidget(deleteItem);
         setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
     }
-    void setData(QPair<QString,QString> &pair)
+    void setData(const QPair<QString,QString> &pair)
     {
         path=pair.first;
         titleLabel->setText(pair.second);
@@ -107,7 +105,7 @@ private:
     QPushButton *deleteItem;
     QString path;
 protected:
-    virtual void mousePressEvent(QMouseEvent *event)
+    virtual void mouseReleaseEvent(QMouseEvent *event)
     {
         if(event->button()==Qt::LeftButton)
         {
@@ -119,10 +117,6 @@ protected:
                 GlobalObjects::mpvplayer->setMedia(curItem->path);
             }
         }
-        event->accept();
-    }
-    virtual void mouseReleaseEvent(QMouseEvent *event)
-    {
         event->accept();
     }
     virtual void enterEvent(QEvent *event)
@@ -142,22 +136,23 @@ public:
     explicit PlayerContent(QWidget *parent=nullptr):QWidget(parent)
     {
         setObjectName(QStringLiteral("PlayerContent"));
-        QLabel *logo=new QLabel(this);
+        logo=new QLabel(this);
         logo->setPixmap(QPixmap(":/res/images/kikoplay-5.png"));
         logo->setAlignment(Qt::AlignCenter);
         QVBoxLayout *pcVLayout=new QVBoxLayout(this);
-		pcVLayout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::MinimumExpanding));
+        pcVLayout->addStretch(1);
         pcVLayout->addWidget(logo);
+        pcVLayout->addSpacing(10);
         for(int i=0;i<GlobalObjects::playlist->maxRecentItems;++i)
         {
             RecentItem *recentItem=new RecentItem(this);
             pcVLayout->addWidget(recentItem);
             items.append(recentItem);
         }
-		pcVLayout->addSpacing(20);
-		pcVLayout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::MinimumExpanding));
+        pcVLayout->addStretch(1);
         refreshItems();
         resize(400*logicalDpiX()/96, 400*logicalDpiY()/96);
+        logo->installEventFilter(this);
     }
     void refreshItems()
     {
@@ -169,8 +164,32 @@ public:
         while(i<maxRecentCount)
             items[i++]->hide();
     }
+    bool eventFilter(QObject *watched, QEvent *event)
+    {
+        if(watched==logo && event->type() == QEvent::MouseButtonRelease)
+        {
+            QStringList files = QFileDialog::getOpenFileNames(this,tr("Select one or more media files"),"",
+                                                             QString("Video Files(%1);;All Files(*) ").arg(GlobalObjects::mpvplayer->videoFileFormats.join(" ")));
+            if(!files.isEmpty())
+            {
+                GlobalObjects::playlist->addItems(files,QModelIndex());
+                const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(files.first());
+                if (curItem)
+                {
+                    GlobalObjects::danmuPool->reset();
+                    GlobalObjects::danmuRender->cleanup();
+                    GlobalObjects::mpvplayer->setMedia(curItem->path);
+                }
+
+            }
+
+            return true;
+        }
+        return QWidget::eventFilter(watched,event);
+    }
 private:
     QList<RecentItem *> items;
+    QLabel *logo;
 };
 }
 PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPanel(true),
@@ -2119,16 +2138,14 @@ void PlayerWindow::dropEvent(QDropEvent *event)
     if(!fileList.isEmpty())
     {
         GlobalObjects::playlist->addItems(fileList,QModelIndex());
-        if(fileList.size()==1)
+        const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(fileList.first());
+        if (curItem)
         {
-            const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(fileList.first());
-            if (curItem)
-            {
-                GlobalObjects::danmuPool->reset();
-                GlobalObjects::danmuRender->cleanup();
-                GlobalObjects::mpvplayer->setMedia(curItem->path);
-            }
+            GlobalObjects::danmuPool->reset();
+            GlobalObjects::danmuRender->cleanup();
+            GlobalObjects::mpvplayer->setMedia(curItem->path);
         }
+
     }
     for(QString dir:dirList)
     {

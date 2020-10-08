@@ -10,6 +10,12 @@ StyleManager::StyleManager():mode(UNKNOWN)
     defaultBgQSS = loadQSS(":/res/style_bg_default.qss");
 }
 
+StyleManager *StyleManager::getStyleManager()
+{
+    static StyleManager styleManager;
+    return &styleManager;
+}
+
 void StyleManager::setQSS(StyleMode mode, const QColor &color)
 {
     if(mode == this->mode && color == themeColor) return;
