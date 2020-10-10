@@ -132,6 +132,8 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     mpv_observe_property(mpv, 0, "playback-time", MPV_FORMAT_DOUBLE);
     mpv_observe_property(mpv, 0, "pause", MPV_FORMAT_FLAG);
     mpv_observe_property(mpv, 0, "eof-reached", MPV_FORMAT_FLAG);
+    mpv_observe_property(mpv, 0, "track-list", MPV_FORMAT_NODE);
+    mpv_observe_property(mpv, 0, "chapter-list", MPV_FORMAT_NODE);
 
     mpv_set_wakeup_callback(mpv, MPVPlayer::wakeup, this);
     QObject::connect(&refreshTimer,&QTimer::timeout,[this](){
@@ -299,8 +301,11 @@ void MPVPlayer::setMedia(QString file)
     if(!setMPVCommand(QStringList() << "loadfile" << file))
     {
         currentFile=file;
-		state = PlayState::Play;
+		state = PlayState::Play;      
         refreshTimer.start(timeRefreshInterval);
+        setMPVProperty("pause",false);
+        setMPVProperty("ao-volume",volume);
+        setMPVProperty("ao-mute", mute);
         if(mpvPreview) mpvPreview->reset(file);
         QCoreApplication::processEvents();
 		emit stateChanged(state);
@@ -619,18 +624,51 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
                 }
             }
         }
+        else if (strcmp(prop->name, "chapter-list") == 0)
+        {
+            if (prop->format == MPV_FORMAT_NODE) {
+                QVariantList chapters=mpv::qt::node_to_variant((mpv_node *)prop->data).toList();
+                this->chapters.clear();
+                for(auto &cp : chapters)
+                {
+                    auto mp = cp.toMap();
+                    this->chapters.append(ChapterInfo({mp["title"].toString(), static_cast<int>(mp["time"].toInt()*1000)}));
+                }
+                emit chapterChanged();
+            }
+        }
+        else if (strcmp(prop->name, "track-list") == 0)
+        {
+            QVariantList allTracks=mpv::qt::node_to_variant((mpv_node *)prop->data).toList();
+            audioTrack.desc_str.clear();
+            audioTrack.ids.clear();
+            subtitleTrack.desc_str.clear();
+            subtitleTrack.ids.clear();
+            for (QVariant &track : allTracks)
+            {
+                QMap<QString, QVariant> trackMap = track.toMap();
+                QString type(trackMap["type"].toString());
+                if (type == "audio")
+                {
+                    QString title(trackMap["title"].toString());
+                    audioTrack.desc_str.append(title.isEmpty()? trackMap["id"].toString():title);
+                    audioTrack.ids.append(trackMap["id"].toInt());
+                }
+                else if (type == "sub")
+                {
+                    QString title(trackMap["title"].toString());
+                    subtitleTrack.desc_str.append(title.isEmpty() ? trackMap["id"].toString() : title);
+                    subtitleTrack.ids.append(trackMap["id"].toInt());
+                }
+            }
+            emit trackInfoChange(0); //audio
+            emit trackInfoChange(1); //subtitle
+        }
         break;
     }
     case MPV_EVENT_FILE_LOADED:
-    {
-        setMPVProperty("pause", false);
-        setMPVProperty("ao-volume",volume);
-		setMPVProperty("ao-mute", mute);
-		loadTracks();
-        loadChapters();
+    {        
         emit fileChanged();
-		emit trackInfoChange(0);
-		emit trackInfoChange(1);
         break;
     }
     case MPV_EVENT_END_FILE:

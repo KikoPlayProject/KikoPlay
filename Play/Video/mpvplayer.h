@@ -68,6 +68,7 @@ signals:
     void positionJumped(int value);
     void stateChanged(PlayState state);
     void trackInfoChange(int type);
+    void chapterChanged();
     void initContext();
     void showLog(const QString &log);
     void refreshPreview(int time, QPixmap *pixmap);

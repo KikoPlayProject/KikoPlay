@@ -1371,12 +1371,13 @@ void PlayerWindow::setupSignals()
                 GlobalObjects::danmuPool->setPoolID("");
             }
         }
-        progress->setChapterMark(GlobalObjects::mpvplayer->getChapters());
 #ifdef QT_DEBUG
         qDebug()<<"File Changed,Current Item: "<<currentItem->title;
 #endif
     });
-
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::chapterChanged, [this](){
+        progress->setChapterMark(GlobalObjects::mpvplayer->getChapters());
+    });
     QObject::connect(GlobalObjects::playlist,&PlayList::currentMatchChanged,[this](){
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
         if(currentItem->animeTitle.isEmpty())
@@ -2021,6 +2022,9 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
         break;
     case Qt::Key_F5:
         emit refreshPool();
+        break;
+    case Qt::Key_I:
+        mediaInfo->click();
         break;
 	default:
 		QWidget::keyPressEvent(event);
