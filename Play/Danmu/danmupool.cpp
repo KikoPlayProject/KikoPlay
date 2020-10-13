@@ -258,7 +258,7 @@ void DanmuPool::setConnect(Pool *pool)
 
 void DanmuPool::setStatisInfo()
 {
-    statisInfo.countOfMinute.clear();
+    statisInfo.countOfSecond.clear();
     statisInfo.maxCountOfMinute=0;
     statisInfo.blockCount=0;
     statisInfo.mergeCount=0;
@@ -275,7 +275,7 @@ void DanmuPool::setStatisInfo()
             curMinuteCount++;
         else
         {
-            statisInfo.countOfMinute.append(QPair<int,int>(startTime/1000,curMinuteCount));
+            statisInfo.countOfSecond.append(QPair<int,int>(startTime/1000,curMinuteCount));
             if(curMinuteCount>statisInfo.maxCountOfMinute)
                 statisInfo.maxCountOfMinute=curMinuteCount;
             curMinuteCount=1;
@@ -286,7 +286,7 @@ void DanmuPool::setStatisInfo()
         if((*iter)->mergedList)
             statisInfo.mergeCount+=(*iter)->mergedList->count();
     }
-	statisInfo.countOfMinute.append(QPair<int, int>(startTime / 1000, curMinuteCount));
+    statisInfo.countOfSecond.append(QPair<int, int>(startTime / 1000, curMinuteCount));
 	if (curMinuteCount>statisInfo.maxCountOfMinute)
 		statisInfo.maxCountOfMinute = curMinuteCount;
     emit statisInfoChange();

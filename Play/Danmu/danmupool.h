@@ -5,7 +5,7 @@
 #include "common.h"
 struct StatisInfo
 {
-    QList<QPair<int,int> > countOfMinute;
+    QList<QPair<int,int> > countOfSecond;
     int maxCountOfMinute;
     int totalCount;
     int blockCount;

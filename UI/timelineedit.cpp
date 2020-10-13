@@ -174,7 +174,7 @@ void TimeLineBar::updateInfo()
 
 void TimeLineBar::refreshStatisInfo()
 {
-    statisInfo.countOfMinute.clear();
+    statisInfo.countOfSecond.clear();
     statisInfo.maxCountOfMinute=0;
     int curMinuteCount=0;
     int startTime=0;
@@ -188,14 +188,14 @@ void TimeLineBar::refreshStatisInfo()
             curMinuteCount++;
         else
         {
-            statisInfo.countOfMinute.append(QPair<int,int>(startTime/1000,curMinuteCount));
+            statisInfo.countOfSecond.append(QPair<int,int>(startTime/1000,curMinuteCount));
             if(curMinuteCount>statisInfo.maxCountOfMinute)
                 statisInfo.maxCountOfMinute=curMinuteCount;
             curMinuteCount=1;
             startTime=(*iter).originTime;
         }
     }
-    statisInfo.countOfMinute.append(QPair<int, int>(startTime / 1000, curMinuteCount));
+    statisInfo.countOfSecond.append(QPair<int, int>(startTime / 1000, curMinuteCount));
     if (curMinuteCount>statisInfo.maxCountOfMinute)
         statisInfo.maxCountOfMinute = curMinuteCount;
 }
@@ -213,7 +213,7 @@ void TimeLineBar::paintEvent(QPaintEvent *event)
     float bHeight=bRect.height();
 
     static QColor barColor(51,168,255,200);
-    for(auto iter=statisInfo.countOfMinute.cbegin();iter!=statisInfo.countOfMinute.cend();++iter)
+    for(auto iter=statisInfo.countOfSecond.cbegin();iter!=statisInfo.countOfSecond.cend();++iter)
     {
         float l((*iter).first*wRatio);
         float h(floor((*iter).second*hRatio));
