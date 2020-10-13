@@ -36,7 +36,7 @@ public:
     const PlayListItem *getCurrentItem() const;
     QModelIndex getCurrentIndex() const;
     inline const PlayListItem *getItem(const QModelIndex &index){return index.isValid()?static_cast<PlayListItem*>(index.internalPointer()):nullptr; }
-    QList<const PlayListItem *> getSiblings(const PlayListItem *item);
+    QList<const PlayListItem *> getSiblings(const PlayListItem *item, bool sameAnime=true);
     LoopMode getLoopMode() const;
     bool canPaste() const;
     const QList<QPair<QString,QString> > &recent();

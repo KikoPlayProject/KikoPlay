@@ -86,14 +86,14 @@ QModelIndex PlayList::getCurrentIndex() const
     return currentItem?createIndex(currentItem->parent->children->indexOf(currentItem),0,currentItem):QModelIndex();
 }
 
-QList<const PlayListItem *> PlayList::getSiblings(const PlayListItem *item)
+QList<const PlayListItem *> PlayList::getSiblings(const PlayListItem *item, bool sameAnime)
 {
     QList<const PlayListItem *> siblings;
     if(item->parent)
     {
         for(PlayListItem *sibling:*item->parent->children)
         {
-            if(sibling->animeTitle==item->animeTitle) siblings<<sibling;
+            if(!sameAnime || sibling->animeTitle==item->animeTitle) siblings<<sibling;
         }
     }
     return siblings;

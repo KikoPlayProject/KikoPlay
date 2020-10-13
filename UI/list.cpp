@@ -236,52 +236,48 @@ void ListWindow::initActions()
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
         QModelIndexList indexes(selection.indexes());
-
         if(indexes.size()==1)
         {    
             const PlayListItem *item=GlobalObjects::playlist->getItem(indexes.first());
-            if(!item->poolID.isEmpty())
+            if(!item->children)
             {
-                QList<const PlayListItem *> &&siblings=GlobalObjects::playlist->getSiblings(item);
-                MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),&siblings,this);
-                if(QDialog::Accepted==matchEditor.exec())
+                bool matchSuccess = false;
+                if(item->poolID.isEmpty())
                 {
-                    if(matchEditor.batchAnime.isEmpty())
+                    showMessage(tr("Match Start"),PopMessageFlag::PM_PROCESS);
+                    MatchInfo *matchInfo=GlobalObjects::danmuManager->matchFrom(DanmuManager::DanDan,item->path);
+                    matchSuccess=(matchInfo && !matchInfo->error && matchInfo->success && matchInfo->matches.count()>0);
+                    if(matchSuccess)
                     {
-                        GlobalObjects::playlist->matchIndex(indexes.first(),matchEditor.matchInfo);
-                    }
-                    else
-                    {
-                         QList<const PlayListItem *> items;
-                         QStringList eps;
-                         for(int i=0;i<siblings.size();++i)
-                         {
-                             if(matchEditor.epCheckedList[i])
-                             {
-                                 items.append(siblings[i]);
-                                 eps.append(matchEditor.batchEp[i]);
-                             }
-                         }
-                         GlobalObjects::playlist->matchItems(items, matchEditor.batchAnime, eps);
-                    }
-                }
-            }
-            else if(!item->children)
-            {
-                showMessage(tr("Match Start"),PopMessageFlag::PM_PROCESS);
-                MatchInfo *matchInfo=GlobalObjects::danmuManager->matchFrom(DanmuManager::DanDan,item->path);
-                bool matchSuccess=(matchInfo && !matchInfo->error && matchInfo->success && matchInfo->matches.count()>0);
-                if(matchSuccess)
-                {
-                    GlobalObjects::playlist->matchIndex(indexes.first(),matchInfo);
-                }
-                else
-                {
-                    MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),nullptr,this);
-                    if(QDialog::Accepted==matchEditor.exec())
-                        GlobalObjects::playlist->matchIndex(indexes.first(),matchEditor.matchInfo);
-                    else
+                        GlobalObjects::playlist->matchIndex(indexes.first(),matchInfo);
                         showMessage(tr("Match Done"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
+                    }
+                }
+                if(!matchSuccess)
+                {
+                    QList<const PlayListItem *> &&siblings=GlobalObjects::playlist->getSiblings(item, false);
+                    MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),&siblings,this);
+                    if(QDialog::Accepted==matchEditor.exec())
+                    {
+                        if(matchEditor.batchAnime.isEmpty())
+                        {
+                            GlobalObjects::playlist->matchIndex(indexes.first(),matchEditor.matchInfo);
+                        }
+                        else
+                        {
+                             QList<const PlayListItem *> items;
+                             QStringList eps;
+                             for(int i=0;i<siblings.size();++i)
+                             {
+                                 if(matchEditor.epCheckedList[i])
+                                 {
+                                     items.append(siblings[i]);
+                                     eps.append(matchEditor.batchEp[i]);
+                                 }
+                             }
+                             GlobalObjects::playlist->matchItems(items, matchEditor.batchAnime, eps);
+                        }
+                    }
                 }
             }
             else
