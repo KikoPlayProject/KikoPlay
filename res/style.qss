@@ -532,6 +532,9 @@ QCheckBox::indicator:unchecked:hover {
 QCheckBox::indicator:checked {
     image: url(:/res/images/checkbox-check.svg);
 }
+QPlainTextEdit,QTextEdit {
+    border: 1px solid #dcdcdc;
+}
 QLineEdit,QSpinBox {
     background-color:#fafafa;
     border: 1px solid #dddddd;
@@ -541,10 +544,11 @@ QLineEdit:hover,QSpinBox:hover {
     background-color:#fdfdfd;
     border: 1px solid #bcbcbc;
 }
-QLineEdit:focus,QSpinBox:focus {
+QLineEdit:focus,QSpinBox:focus,QPlainTextEdit:focus,QTextEdit:focus {
     background-color: #ffffff;
     border: 1px solid #2BA9EC;
 }
+
 QSpinBox::up-button {
     subcontrol-origin: border;
     subcontrol-position: top right; /* position at the top right corner */
