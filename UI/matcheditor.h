@@ -4,6 +4,7 @@
 #include "framelessdialog.h"
 #include <QAbstractItemModel>
 #include <QStyledItemDelegate>
+#include "MediaLibrary/Service/bangumi.h"
 
 class PlayListItem;
 struct MatchInfo;
@@ -12,13 +13,21 @@ class QToolButton;
 class QLineEdit;
 class QTreeWidget;
 class MatchEditor;
+class QComboBox;
+class EpComboItemDelegate : public QStyledItemDelegate
+{
+    Q_OBJECT
+public:
+    using QStyledItemDelegate::QStyledItemDelegate;
+    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+};
 class EpComboDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 
 public:
     EpComboDelegate(QObject *parent = nullptr):QStyledItemDelegate(parent){}
-    void setEpList(const QStringList &eps) {epList = eps;}
+    void setEpList(const QList<Bangumi::EpInfo> &eps) {epList = eps;}
 
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
     void setEditorData(QWidget *editor, const QModelIndex &index) const override;
@@ -29,14 +38,16 @@ public:
         editor->setGeometry(option.rect);
     }
 private:
-    QStringList epList;
+    QList<Bangumi::EpInfo> epList;
+    void addParentItem(QComboBox *combo, const QString& text) const;
+    void addChildItem(QComboBox *combo, const QString& text) const;
 };
 class EpModel : public QAbstractItemModel
 {
     Q_OBJECT
 public:
     EpModel(MatchEditor *matchEditor, QObject *parent = nullptr);
-    void resetEpList(const QStringList &eps);
+    void resetEpList(const QList<Bangumi::EpInfo> &eps);
     void toggleCheckAll();
     enum class Columns
     {

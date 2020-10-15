@@ -16,7 +16,6 @@
 #include <QApplication>
 #include <QHeaderView>
 #include "Common/kcache.h"
-#include "MediaLibrary/Service/bangumi.h"
 #include "globalobjects.h"
 namespace
 {
@@ -254,13 +253,13 @@ QWidget *MatchEditor::setupBatchPage()
         if(keyword.isEmpty())return;
         if(!hitWords.contains(keyword+"_b"))
         {
-            QScopedPointer<QStringList> animes(KCache::getInstance()->get<QStringList>(QString("matcheditor/batch_%1").arg(keyword)));
+            QScopedPointer<QList<Bangumi::BangumiInfo>> animes(KCache::getInstance()->get<QList<Bangumi::BangumiInfo>>(QString("matcheditor/batch_%1").arg(keyword)));
             if(animes)
             {
                 animeList->clear();
-                for(int i=0;i<animes->size();i+=2)
+                for(auto &bgm : *animes)
                 {
-                    new QTreeWidgetItem(animeList,{(*animes)[i], (*animes)[i+1]});
+                    new QTreeWidgetItem(animeList, {QString::number(bgm.bgmID), bgm.name_cn.isEmpty()?bgm.name:bgm.name_cn});
                 }
                 hitWords<<keyword+"_b";
                 return;
@@ -278,13 +277,11 @@ QWidget *MatchEditor::setupBatchPage()
         if(err.isEmpty())
         {
             animeList->clear();
-            QStringList animes;
             for(auto &bgm : bgms)
             {
                 new QTreeWidgetItem(animeList, {QString::number(bgm.bgmID), bgm.name_cn.isEmpty()?bgm.name:bgm.name_cn});
-                animes<<QString::number(bgm.bgmID)<<(bgm.name_cn.isEmpty()?bgm.name:bgm.name_cn);
             }
-            KCache::getInstance()->put(QString("matcheditor/batch_%1").arg(keyword), animes);
+            KCache::getInstance()->put(QString("matcheditor/batch_%1").arg(keyword), bgms);
             hitWords.remove(keyword+"_b");
         }
         else
@@ -322,7 +319,7 @@ QWidget *MatchEditor::setupBatchPage()
     QObject::connect(animeList, &QTreeWidget::itemClicked, this, [=](QTreeWidgetItem *item){
        int bgmId = item->text(0).toInt();
        QString animeTitle = item->text(1);
-       QScopedPointer<QStringList> epCache(KCache::getInstance()->get<QStringList>(QString("matcheditor/batch_ep_%1").arg(animeTitle)));
+       QScopedPointer<QList<Bangumi::EpInfo>> epCache(KCache::getInstance()->get<QList<Bangumi::EpInfo>>(QString("matcheditor/batch_ep_%1").arg(animeTitle)));
        if(!epCache)
        {
            QList<Bangumi::EpInfo> eps;
@@ -339,11 +336,10 @@ QWidget *MatchEditor::setupBatchPage()
            }
            else
            {
-               epCache.reset(new QStringList);
-               for(auto &ep : eps)
-               {
-                   epCache->push_back(tr("No.%0 %1").arg(ep.index).arg(ep.name_cn.isEmpty()?ep.name:ep.name_cn));
-               }
+               std::sort(eps.begin(), eps.end(), [](const Bangumi::EpInfo &ep1, const Bangumi::EpInfo &ep2){
+                  return ep1.type==ep2.type?(ep1.index<ep2.index):(ep1.type<ep2.type);
+               });
+               epCache.reset(new QList<Bangumi::EpInfo>(eps));
                KCache::getInstance()->put(QString("matcheditor/batch_ep_%1").arg(animeTitle), *epCache);
            }
            customPage->setEnabled(true);
@@ -354,9 +350,13 @@ QWidget *MatchEditor::setupBatchPage()
            showBusyState(false);
            if(!err.isEmpty()) return;
        }
+       animeEps.clear();
+       for(auto &ep: *epCache)
+       {
+           animeEps.append(ep.toString());
+       }
        epModel->resetEpList(*epCache);
        epDelegate->setEpList(*epCache);
-       animeEps = *epCache;
        batchAnime = animeTitle;
        animeLabel->setText(batchAnime);
        batchSLayout->setCurrentIndex(1);
@@ -456,7 +456,18 @@ QWidget *EpComboDelegate::createEditor(QWidget *parent, const QStyleOptionViewIt
     {
         QComboBox *combo=new QComboBox(parent);
         combo->setFrame(false);
-        combo->addItems(epList);
+        int lastType = -1;
+        static QStringList epTypes({tr("EP"), tr("SP"),  tr("OP"), tr("ED"), tr("Trailer"), tr("MAD"), tr("Other")});
+        for(auto &ep : epList)
+        {
+            if(static_cast<int>(ep.type)!=lastType)
+            {
+                addParentItem(combo, epTypes[static_cast<int>(ep.type)]);
+            }
+            addChildItem(combo, ep.toString());
+            lastType = static_cast<int>(ep.type);
+        }
+        combo->view()->setItemDelegate(new EpComboItemDelegate(combo));
         combo->setEditable(true);
         return combo;
     }
@@ -485,6 +496,26 @@ void EpComboDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, c
     QStyledItemDelegate::setModelData(editor,model,index);
 }
 
+void EpComboDelegate::addParentItem(QComboBox *combo, const QString &text) const
+{
+    QStandardItem* item = new QStandardItem(text);
+    item->setFlags(item->flags() & ~(Qt::ItemIsEnabled | Qt::ItemIsSelectable));
+    item->setData( "parent", Qt::AccessibleDescriptionRole );
+    QFont font = item->font();
+    font.setItalic(true);
+    item->setFont(font);
+    QStandardItemModel* itemModel = (QStandardItemModel*)combo->model();
+    itemModel->appendRow(item);
+}
+
+void EpComboDelegate::addChildItem(QComboBox *combo, const QString &text) const
+{
+    QStandardItem* item = new QStandardItem(text);
+    item->setData("child", Qt::AccessibleDescriptionRole );
+    QStandardItemModel* itemModel = (QStandardItemModel*)combo->model();
+    itemModel->appendRow(item);
+}
+
 EpModel::EpModel(MatchEditor *matchEditor, QObject *parent) : QAbstractItemModel(parent)
 {
     batchEp = &matchEditor->batchEp;
@@ -510,7 +541,7 @@ EpModel::EpModel(MatchEditor *matchEditor, QObject *parent) : QAbstractItemModel
     }
 }
 
-void EpModel::resetEpList(const QStringList &eps)
+void EpModel::resetEpList(const QList<Bangumi::EpInfo> &eps)
 {
     beginResetModel();
     int pEp = -1;
@@ -521,7 +552,7 @@ void EpModel::resetEpList(const QStringList &eps)
         {
             if(++pEp<eps.size())
             {
-                epLast = eps[pEp];
+                epLast = eps[pEp].toString();
             }
             (*batchEp)[i] = epLast;
         }
@@ -602,4 +633,21 @@ Qt::ItemFlags EpModel::flags(const QModelIndex &index) const
     else if(col==Columns::EPNAME)
         defaultFlags |= Qt::ItemIsEditable;
     return defaultFlags;
+}
+
+void EpComboItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    QString type = index.data( Qt::AccessibleDescriptionRole ).toString();
+    if ( type == QLatin1String("child"))
+    {
+        QStyleOptionViewItem childOption = option;
+        int indent = option.fontMetrics.horizontalAdvance(QString(4, QChar(' ')));
+        childOption.rect.adjust(indent, 0, 0, 0);
+        childOption.textElideMode = Qt::ElideNone;
+        QStyledItemDelegate::paint(painter, childOption, index);
+    }
+    else
+    {
+        QStyledItemDelegate::paint(painter, option, index);
+    }
 }

@@ -43,7 +43,8 @@ QString Bangumi::getEp(int bgmID, QList<EpInfo> &ret)
         for(auto iter=epArray.begin();iter!=epArray.end();++iter)
         {
             QJsonObject epobj=(*iter).toObject();
-            ret.append({epobj.value("sort").toInt(),
+            ret.append({static_cast<EpInfo::EpType>(epobj.value("type").toInt()),
+                        epobj.value("sort").toInt(),
                         epobj.value("name").toString().replace("&amp;","&"),
                         epobj.value("name_cn").toString().replace("&amp;","&")});
         }
@@ -83,4 +84,27 @@ QString Bangumi::getTags(int bgmID, QStringList &ret)
     {
         return error.errorInfo;
     }
+}
+
+QDataStream &operator<<(QDataStream &stream, const Bangumi::EpInfo &ep)
+{
+    return stream<<static_cast<int>(ep.type)<<ep.index<<ep.name<<ep.name_cn;
+}
+
+QDataStream &operator>>(QDataStream &stream, Bangumi::EpInfo &ep)
+{
+    int type;
+    stream>>type;
+    ep.type = static_cast<Bangumi::EpInfo::EpType>(type);
+    return stream>>ep.index>>ep.name>>ep.name_cn;
+}
+
+QDataStream &operator<<(QDataStream &stream, const Bangumi::BangumiInfo &bgm)
+{
+    return stream<<bgm.bgmID<<bgm.name<<bgm.name_cn;
+}
+
+QDataStream &operator>>(QDataStream &stream, Bangumi::BangumiInfo &bgm)
+{
+    return stream>>bgm.bgmID>>bgm.name>>bgm.name_cn;
 }
