@@ -92,6 +92,14 @@ bool isRunning()
     }
     return false;
 }
+void setLanguage()
+{
+    QString transFile = GlobalObjects::appSetting->value("KikoPlay/Language", "").toString();
+    transFile = QString(":/res/lang/%1.qm").arg(transFile.isEmpty()?QLocale::system().name().toLower():transFile);
+    static QTranslator translator;
+    if(translator.load(transFile))
+        qApp->installTranslator(&translator);
+}
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -99,12 +107,9 @@ int main(int argc, char *argv[])
     SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)AppCrashHandler);
 #endif
     if(isRunning()) return 0;
-    QString trans(QString(":/res/lang/%1.qm").arg(QLocale::system().name().toLower()));
-    QTranslator translator;
-    if(translator.load(trans))
-        a.installTranslator(&translator);
-
     GlobalObjects::init();
+    setLanguage();
+
     MainWindow w;
     GlobalObjects::mainWindow = &w;
     decodeParam();
