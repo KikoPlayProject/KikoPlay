@@ -37,6 +37,7 @@ SOURCES += \
     MediaLibrary/Service/bangumi.cpp \
     Play/Danmu/eventanalyzer.cpp \
     Play/Video/mpvpreview.cpp \
+    Script/scriptbase.cpp \
     UI/addpool.cpp \
     UI/addrule.cpp \
     UI/animedetailinfopage.cpp \
@@ -148,6 +149,7 @@ HEADERS += \
     Play/Danmu/danmuviewmodel.h \
     Play/Danmu/eventanalyzer.h \
     Play/Video/mpvpreview.h \
+    Script/scriptbase.h \
     UI/addpool.h \
     UI/addrule.h \
     UI/animedetailinfopage.h \
