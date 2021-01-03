@@ -84,11 +84,11 @@ namespace
         lua_pushnil(L);
         while (lua_next(L, tablePos))
         {
-            lua_pushnil(L);
+            lua_pushnil(L);  // k item nil
             QMap<QString,QString> item;
             while (lua_next(L, -2))
             {
-                lua_pushvalue(L, -2);
+                lua_pushvalue(L, -2); // k item kk vv kk
                 const char* key = lua_tostring(L, -1);
                 const char* value = lua_tostring(L, -2);
                 if(key && value) item[key]=value;
