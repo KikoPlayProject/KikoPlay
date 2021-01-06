@@ -121,12 +121,24 @@ void ScriptBase::set(const char *name, const QVariant &val)
 
 int ScriptBase::setTable(const char *tname, const QVariant &key, const QVariant &val)
 {
-    if(lua_getglobal(L, tname) != LUA_TTABLE) return -1;
-    pushValue(key);
-    pushValue(val);
-    lua_settable(L, -3);
+    int type = lua_getglobal(L, tname);
+    if(type == LUA_TTABLE)
+    {
+        pushValue(key);
+        pushValue(val);
+        lua_settable(L, -3);
+        lua_pop(L, 1);
+        return 0;
+    }
     lua_pop(L, 1);
-    return 0;
+    return -1;
+}
+
+bool ScriptBase::checkType(const char *name, int type)
+{
+    int ct = lua_getglobal(L, name);
+    lua_pop(L, 1);
+    return ct == type;
 }
 
 void ScriptBase::pushValue(const QVariant &val)

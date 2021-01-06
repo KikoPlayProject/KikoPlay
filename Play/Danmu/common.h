@@ -162,4 +162,21 @@ struct DanmuEvent
     int duration;
     QString description;
 };
+struct DanmuSource
+{
+    QString title;
+    QString desc;
+    QString idInfo;
+    QString scriptId;
+    int danmuCount;
+    int delay;
+};
+Q_DECLARE_OPAQUE_POINTER(DanmuSource *)
+struct SourceCollection
+{
+    QString errorInfo;
+    QString providerId;
+    QList<DanmuSource> list;
+};
+
 #endif // DANMUCOMMENT_H

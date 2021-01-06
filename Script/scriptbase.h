@@ -2,8 +2,19 @@
 #define SCRIPTBASE_H
 #include <QObject>
 #include <QHash>
+#include <QMutex>
 #include "lua.hpp"
-
+class MutexLocker
+{
+    QMutex &m;
+    bool locked;
+public:
+    MutexLocker(QMutex &mutex):m(mutex), locked(false){}
+    ~MutexLocker() { if(locked) m.unlock(); }
+    bool tryLock() { if(m.tryLock()) locked = true; return locked; }
+private:
+    MutexLocker(MutexLocker &);
+};
 class ScriptBase
 {
 public:
@@ -36,6 +47,7 @@ protected:
     QVariant get(const char *name);
     void set(const char *name, const QVariant &val);
     int setTable(const char *tname, const QVariant &key, const QVariant &val);
+    bool checkType(const char *name, int type);
 
     void pushValue(const QVariant &val);
     QVariant getValue();
