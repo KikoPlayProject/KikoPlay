@@ -47,7 +47,10 @@ public:
     const QList<ScriptSettingItem> &settings() const {return scriptSettings;}
     virtual QString setOption(int index, const QString &value);
     virtual QString id() const {return scriptMeta.value("id");}
+    virtual QString name() const {return scriptMeta.value("name");}
+    virtual QString desc() const {return scriptMeta.value("desc");}
     virtual QString version() const {return scriptMeta.value("version");}
+    virtual QString getValue(const QString &key) const {return scriptMeta.value(key);}
 protected:
     lua_State *L;
     QMutex scriptLock;
@@ -64,7 +67,7 @@ protected:
     void pushValue(const QVariant &val);
     QVariant getValue();
     size_t getTableLength(int pos);
-    QString getMeta();
+    QString getMeta(const QString &scriptPath);
     void loadSettings();
 };
 

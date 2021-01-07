@@ -52,10 +52,8 @@ QString ScriptBase::loadScript(const QString &path)
         return errInfo;
     }
     //get script meta info
-    errInfo = getMeta();
+    errInfo = getMeta(path);
     if(!errInfo.isEmpty()) return errInfo;
-    scriptMeta["path"] = path;
-    if(!scriptMeta.contains("id")) scriptMeta["id"] = QFileInfo(path).baseName();
     //get script settings
     loadSettings();
     int suffixPos = path.lastIndexOf('.');
@@ -269,7 +267,7 @@ size_t ScriptBase::getTableLength(int pos)
     return length;
 }
 
-QString ScriptBase::getMeta()
+QString ScriptBase::getMeta(const QString &scriptPath)
 {
     QString errInfo;
     QVariant scriptInfo = get("info");
@@ -287,6 +285,9 @@ QString ScriptBase::getMeta()
             scriptMeta[iter.key()] = iter.value().toString();
         }
     }
+    scriptMeta["path"] = scriptPath;
+    if(!scriptMeta.contains("id")) scriptMeta["id"] = QFileInfo(scriptPath).baseName();
+    if(!scriptMeta.contains("name")) scriptMeta["name"] = scriptMeta["id"];
     return errInfo;
 }
 
