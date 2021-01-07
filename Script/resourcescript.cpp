@@ -1,0 +1,59 @@
+#include "resourcescript.h"
+
+ResourceScript::ResourceScript() : ScriptBase()
+{
+
+}
+
+ScriptState ResourceScript::load(const QString &scriptPath)
+{
+    MutexLocker locker(scriptLock);
+    if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
+    QString errInfo = loadScript(scriptPath);
+    if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
+    hasDetailFunc = checkType("getdetail", LUA_TFUNCTION);
+    bool hasSearchFunc = checkType("search", LUA_TFUNCTION);
+    if(!hasSearchFunc) return ScriptState(ScriptState::S_ERROR, "Search function is not found");
+    return ScriptState(ScriptState::S_NORM);
+}
+
+ScriptState ResourceScript::search(const QString &keyword, int page, int &totalPage, QList<ResourceItem> &results)
+{
+    MutexLocker locker(scriptLock);
+    if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
+    QString errInfo;
+    QVariantList rets = call("search", {keyword, page}, 2, errInfo);
+    if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
+    if(rets[0].type()!=QVariant::List || !rets[1].canConvert(QVariant::Int)) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
+    totalPage = rets[1].toInt();
+    if(totalPage <= 0) totalPage = 1;
+    auto robjs = rets[0].toList(); //[{title=xx, <magnet=xx>, <time=xx>, <size=xx>, <url=xx>},...]
+    for(auto &r : robjs)
+    {
+        auto robj = r.toMap();
+        QString title = robj.value("title").toString();
+        if(title.isEmpty()) continue;
+        results.append({title, robj.value("time").toString(), robj.value("size").toString(), robj.value("magnet").toString(), robj.value("url").toString()});
+    }
+    return ScriptState(ScriptState::S_NORM);
+}
+
+ScriptState ResourceScript::getDetail(const ResourceItem &oldItem, ResourceItem &newItem)
+{
+    if(!hasDetailFunc) return ScriptState(ScriptState::S_ERROR, "No getdetail Function");
+    MutexLocker locker(scriptLock);
+    if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
+    QString errInfo;
+    QVariantList rets = call("getdetail", {oldItem.toMap()}, 1, errInfo);
+    if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
+    if(rets[0].type() != QVariant::Map) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
+    auto robj = rets[0].toMap();
+    newItem = {
+        robj.value("title").toString(),
+        robj.value("time").toString(),
+        robj.value("size").toString(),
+        robj.value("magnet").toString(),
+        robj.value("url").toString()
+    };
+    return ScriptState(ScriptState::S_NORM);
+}

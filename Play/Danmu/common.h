@@ -170,6 +170,7 @@ struct DanmuSource
     QString scriptId;
     int danmuCount;
     int delay;
+    QVariantMap toMap() const {return {{"title", title}, {"desc", desc}, {"idinfo", idInfo}, {"delay", delay}, {"count", danmuCount}};}
 };
 Q_DECLARE_OPAQUE_POINTER(DanmuSource *)
 struct SourceCollection

@@ -38,6 +38,8 @@ SOURCES += \
     Play/Danmu/eventanalyzer.cpp \
     Play/Video/mpvpreview.cpp \
     Script/danmuscript.cpp \
+    Script/libraryscript.cpp \
+    Script/resourcescript.cpp \
     Script/scriptbase.cpp \
     UI/addpool.cpp \
     UI/addrule.cpp \
@@ -151,6 +153,8 @@ HEADERS += \
     Play/Danmu/eventanalyzer.h \
     Play/Video/mpvpreview.h \
     Script/danmuscript.h \
+    Script/libraryscript.h \
+    Script/resourcescript.h \
     Script/scriptbase.h \
     UI/addpool.h \
     UI/addrule.h \

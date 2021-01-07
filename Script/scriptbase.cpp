@@ -23,18 +23,15 @@ ScriptBase::ScriptBase() : L(nullptr)
 
 ScriptBase::~ScriptBase()
 {
-    if(L)
-    {
-        lua_close(L);
-    }
+    if(L) lua_close(L);
 }
 
-QString ScriptBase::setSetting(int index, const QString &value)
+QString ScriptBase::setOption(int index, const QString &value)
 {
     if(scriptSettings.size()<=index) return "OutRange";
     scriptSettings[index].value = value;
     QString errInfo;
-    call("setSetting", {scriptSettings[index].title, value}, 0, errInfo);
+    call("setoption", {scriptSettings[index].title, value}, 0, errInfo);
     return errInfo;
 }
 
@@ -58,6 +55,7 @@ QString ScriptBase::loadScript(const QString &path)
     errInfo = getMeta();
     if(!errInfo.isEmpty()) return errInfo;
     scriptMeta["path"] = path;
+    if(!scriptMeta.contains("id")) scriptMeta["id"] = QFileInfo(path).baseName();
     //get script settings
     loadSettings();
     int suffixPos = path.lastIndexOf('.');

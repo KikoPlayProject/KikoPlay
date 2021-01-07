@@ -15,6 +15,16 @@ public:
 private:
     MutexLocker(MutexLocker &);
 };
+struct ScriptState
+{
+    enum StateCode
+    {
+         S_NORM, S_BUSY, S_ERROR
+    };
+    StateCode state;
+    QString info;
+    ScriptState(StateCode c, const QString &i=""):state(c), info(i) {}
+};
 class ScriptBase
 {
 public:
@@ -35,7 +45,9 @@ public:
         QString value;
     };
     const QList<ScriptSettingItem> &settings() const {return scriptSettings;}
-    virtual QString setSetting(int index, const QString &value);
+    virtual QString setOption(int index, const QString &value);
+    virtual QString id() const {return scriptMeta.value("id");}
+    virtual QString version() const {return scriptMeta.value("version");}
 protected:
     lua_State *L;
     QMutex scriptLock;
