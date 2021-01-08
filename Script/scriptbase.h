@@ -64,11 +64,13 @@ protected:
     int setTable(const char *tname, const QVariant &key, const QVariant &val);
     bool checkType(const char *name, int type);
 
-    void pushValue(const QVariant &val);
-    QVariant getValue();
-    size_t getTableLength(int pos);
     QString getMeta(const QString &scriptPath);
     void loadSettings();
+    void registerFuncs(const char *tname, const luaL_Reg *funcs);
+public:
+    static void pushValue(lua_State *L, const QVariant &val);
+    static QVariant getValue(lua_State *L);
+    static size_t getTableLength(lua_State *L, int pos);
 };
 
 #endif // SCRIPTBASE_H

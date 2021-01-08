@@ -16,7 +16,7 @@ namespace
         return manager;
     }
 }
-QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QStringList &header)
+QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QStringList &header, int ttl)
 {
     QUrl queryUrl(url);
     if(!query.isEmpty())
@@ -73,6 +73,10 @@ QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QS
             int nStatusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
             if(nStatusCode==301 || nStatusCode==302)
             {
+                if(ttl<=0)
+                {
+                    throw NetworkError(QObject::tr("Too many redirects"));
+                }
                 try
                 {
                     QString location(reply->header(QNetworkRequest::LocationHeader).toString());
@@ -90,7 +94,7 @@ QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QS
 						if (!location.startsWith(host)) location = QString("%1/%2").arg(host, location);
 						if(!scheme.isEmpty()) location = QString("%1://%2").arg(scheme,location);
                     }
-                    replyBytes=httpGet(location,QUrlQuery(),header);
+                    replyBytes=httpGet(location,QUrlQuery(),header,ttl-1);
                 }
                 catch(NetworkError &error)
                 {
@@ -132,7 +136,7 @@ QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QS
     }
 }
 
-QByteArray Network::httpPost(const QString &url, QByteArray &data, const QStringList &header)
+QByteArray Network::httpPost(const QString &url, const QByteArray &data, const QStringList &header)
 {
     QUrl queryUrl(url);
     QNetworkRequest request;

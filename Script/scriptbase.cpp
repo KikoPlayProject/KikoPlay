@@ -4,8 +4,102 @@
 #include "Common/network.h"
 namespace
 {
+static int httpget(lua_State *L)
+{
+    do
+    {
+        int params = lua_gettop(L);  //url <query> <header>
+        if(params==0 || params>3) break;
+        if(lua_type(L, 1)!=LUA_TSTRING) break;
+        const char *curl = luaL_checkstring(L,1);
+        QUrlQuery query;
+        QStringList headers;
+        if(params > 1)  //has query
+        {
+            lua_pushvalue(L, 2);
+            auto q = ScriptBase::getValue(L);
+            lua_pop(L, 1);
+            if(q.type()!=QVariant::Map) break;
+            auto qmap = q.toMap();
+            for(auto iter=qmap.constBegin(); iter!=qmap.constEnd(); ++iter)
+            {
+                query.addQueryItem(iter.key(),iter.value().toString());
+            }
+        }
+        if(params > 2)  //has header
+        {
+            auto h = ScriptBase::getValue(L);
+            if(h.type()!=QVariant::Map) break;
+            auto hmap = h.toMap();
+            for(auto iter=hmap.constBegin(); iter!=hmap.constEnd(); ++iter)
+            {
+                headers<<iter.key()<<iter.value().toString();
+            }
+        }
+        QString errInfo;
+        QString content;
+        try
+        {
+            content=Network::httpGet(curl,query,headers);
+        }
+        catch(Network::NetworkError &err)
+        {
+            errInfo=err.errorInfo;
+        }
+        if(errInfo.isEmpty()) lua_pushnil(L);
+        else lua_pushstring(L,errInfo.toStdString().c_str());
+        lua_pushstring(L,content.toStdString().c_str());
+        return 2;
+    }while(false);
+    lua_pushstring(L, "httpget: param error");
+    lua_pushnil(L);
+    return 2;
+}
+static int httppost(lua_State *L)
+{
+    do
+    {
+        int params = lua_gettop(L);  //url <data> <header>
+        if(params<2 || params>3) break;
+        if(lua_type(L, 1)!=LUA_TSTRING) break;
+        if(lua_type(L, 2)!=LUA_TSTRING) break;
+        const char *curl = luaL_checkstring(L,1);
+        size_t dataLength = 0;
+        const char *data = lua_tolstring(L, 2, &dataLength);
+        QByteArray cdata(data, dataLength);
+        QStringList headers;
+        if(params > 2)  //has header
+        {
+            auto h = ScriptBase::getValue(L);
+            if(h.type()!=QVariant::Map) break;
+            auto hmap = h.toMap();
+            for(auto iter=hmap.constBegin(); iter!=hmap.constEnd(); ++iter)
+            {
+                headers<<iter.key()<<iter.value().toString();
+            }
+        }
+        QString errInfo;
+        QString content;
+        try
+        {
+            content=Network::httpPost(curl,cdata,headers);
+        }
+        catch(Network::NetworkError &err)
+        {
+            errInfo=err.errorInfo;
+        }
+        if(errInfo.isEmpty()) lua_pushnil(L);
+        else lua_pushstring(L,errInfo.toStdString().c_str());
+        lua_pushstring(L,content.toStdString().c_str());
+        return 2;
+    }while(false);
+    lua_pushstring(L, "httppost: param error");
+    lua_pushnil(L);
+    return 2;
+}
 static const luaL_Reg kikoFuncs[] = {
-    {"", nullptr}
+    {"httpget", httpget},
+    {"httppost", httppost}
 };
 }
 
@@ -15,15 +109,18 @@ ScriptBase::ScriptBase() : L(nullptr)
     if(L)
     {
         luaL_openlibs(L);
-        lua_newtable(L);
-        luaL_setfuncs(L, kikoFuncs, 0);
-        lua_setglobal(L, "kiko");
+        registerFuncs("kiko", kikoFuncs);
     }
 }
 
 ScriptBase::~ScriptBase()
 {
-    if(L) lua_close(L);
+    if(L)
+    {
+        QMutexLocker locker(&scriptLock);
+        lua_close(L);
+        L = nullptr;
+    }
 }
 
 QString ScriptBase::setOption(int index, const QString &value)
@@ -37,6 +134,7 @@ QString ScriptBase::setOption(int index, const QString &value)
 
 QString ScriptBase::loadScript(const QString &path)
 {
+    if(!L) return "Script Error: Wrong Lua State";
     QFile luaFile(path);
     luaFile.open(QFile::ReadOnly);
     if(!luaFile.isOpen())
@@ -80,10 +178,19 @@ QString ScriptBase::loadScript(const QString &path)
 
 QVariantList ScriptBase::call(const char *fname, const QVariantList &params, int nRet, QString &errInfo)
 {
-    if(lua_getglobal(L, fname) != LUA_TFUNCTION) return QVariantList();
+    if(!L)
+    {
+        errInfo = "Wrong Lua State";
+        return QVariantList();
+    }
+    if(lua_getglobal(L, fname) != LUA_TFUNCTION)
+    {
+        errInfo = QString("%1 is not founded").arg(fname);
+        return QVariantList();
+    }
     for(auto &p : params)
     {
-        pushValue(p);
+        pushValue(L, p);
     }
     if(lua_pcall(L, params.size(), nRet, 0))
     {
@@ -94,7 +201,7 @@ QVariantList ScriptBase::call(const char *fname, const QVariantList &params, int
     QVariantList rets;
     for(int i=0; i<nRet; ++i)
     {
-        rets.append(getValue());
+        rets.append(getValue(L));
         lua_pop(L, 1);
     }
     std::reverse(rets.begin(), rets.end());
@@ -103,20 +210,23 @@ QVariantList ScriptBase::call(const char *fname, const QVariantList &params, int
 
 QVariant ScriptBase::get(const char *name)
 {
+    if(!L) return QVariant();
     lua_getglobal(L, name);
-    QVariant val = getValue();
+    QVariant val = getValue(L);
     lua_pop(L, 1);
     return val;
 }
 
 void ScriptBase::set(const char *name, const QVariant &val)
 {
-    pushValue(val);
+    if(!L) return;
+    pushValue(L, val);
     lua_setglobal(L, name);
 }
 
 int ScriptBase::setTable(const char *tname, const QVariant &key, const QVariant &val)
 {
+    if(!L) return -1;
     int type = lua_getglobal(L, tname);
     if(type == LUA_TTABLE)
     {
@@ -132,13 +242,15 @@ int ScriptBase::setTable(const char *tname, const QVariant &key, const QVariant 
 
 bool ScriptBase::checkType(const char *name, int type)
 {
+    if(!L) return false;
     int ct = lua_getglobal(L, name);
     lua_pop(L, 1);
     return ct == type;
 }
 
-void ScriptBase::pushValue(const QVariant &val)
+void ScriptBase::pushValue(lua_State *L, const QVariant &val)
 {
+    if(!L) return;
     switch (val.type())
     {
     case QVariant::Int:
@@ -183,8 +295,9 @@ void ScriptBase::pushValue(const QVariant &val)
     }
 }
 
-QVariant ScriptBase::getValue()
+QVariant ScriptBase::getValue(lua_State *L)
 {
+    if(!L) return QVariant();
     if(lua_gettop(L)==0) return QVariant();
     switch (lua_type(L, -1))
     {
@@ -219,7 +332,7 @@ QVariant ScriptBase::getValue()
                 break;
             }
         }
-        size_t length = getTableLength(-1);
+        size_t length = getTableLength(L, -1);
         if(count < 0 || count != length) // map
         {
             QVariantMap map;
@@ -230,7 +343,7 @@ QVariant ScriptBase::getValue()
                     luaL_error(L, "key must be a string, but got %s",
                                lua_typename(L, lua_type(L, -2)));
                 }
-                map[lua_tostring(L, -2)] = getValue();
+                map[lua_tostring(L, -2)] = getValue(L);
                 lua_pop(L, 1); // key
             }
             return map;
@@ -243,7 +356,7 @@ QVariant ScriptBase::getValue()
                 lua_gettable(L, -2); //t t[n1]
                 if (lua_isnil(L, -1))
                     break;
-                list.append(getValue());
+                list.append(getValue(L));
                 lua_pop(L, 1); // -
             }
             return list;
@@ -254,8 +367,9 @@ QVariant ScriptBase::getValue()
     }
 }
 
-size_t ScriptBase::getTableLength(int pos)
+size_t ScriptBase::getTableLength(lua_State *L, int pos)
 {
+    if(!L) return 0;
     if (pos < 0)  pos = lua_gettop(L) + (pos + 1);
     lua_pushnil(L); // nil
     size_t length = 0;
@@ -314,4 +428,16 @@ void ScriptBase::loadSettings()
             });
         }
     }
+}
+
+void ScriptBase::registerFuncs(const char *tname, const luaL_Reg *funcs)
+{
+    if(!L) return;
+    lua_getglobal(L, tname);
+    if (lua_isnil(L, -1)) {
+      lua_pop(L, 1);
+      lua_newtable(L);
+    }
+    luaL_setfuncs(L, funcs, 0);
+    lua_setglobal(L, tname);
 }
