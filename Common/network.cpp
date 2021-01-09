@@ -5,8 +5,10 @@
 namespace
 {
     QHash<QThread *,QNetworkAccessManager *> managerMap;
+    QMutex locker;
     QNetworkAccessManager *getManager()
     {
+        QMutexLocker lock(&locker);
         QNetworkAccessManager *manager=managerMap.value(QThread::currentThread());
         if(!manager)
         {

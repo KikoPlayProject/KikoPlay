@@ -97,12 +97,164 @@ static int httppost(lua_State *L)
     lua_pushnil(L);
     return 2;
 }
+static int json2table(lua_State *L)
+{
+    int params = lua_gettop(L);  //jsonstr
+    if(params!=1 || lua_type(L, 1)!=LUA_TSTRING)
+    {
+        lua_pushstring(L, "json2table: param error");
+        lua_pushnil(L);
+        return 2;
+    }
+    size_t dataLength = 0;
+    const char *data = lua_tolstring(L, 2, &dataLength);
+    QByteArray cdata(data, dataLength);
+    try {
+       auto jdoc = Network::toJson(cdata);
+       lua_pushnil(L);
+       if(jdoc.isArray())
+       {
+           ScriptBase::pushValue(L, jdoc.array().toVariantList());
+       }
+       else if(jdoc.isObject())
+       {
+           ScriptBase::pushValue(L, jdoc.object().toVariantMap());
+       }
+       else
+       {
+           lua_newtable(L);
+       }
+       return 2;
+    } catch (Network::NetworkError &err) {
+        lua_pushstring(L,err.errorInfo.toStdString().c_str());
+        lua_pushnil(L);
+        return 2;
+    }
+}
+// XmlReader-------------
+static int xmlreader (lua_State *L)
+{
+    int n = lua_gettop(L);
+    const char *data = nullptr;
+    if(n > 0 && lua_type(L, 1)==LUA_TSTRING)
+    {
+        data = lua_tostring(L, -1);
+    }
+    QXmlStreamReader **reader = (QXmlStreamReader **)lua_newuserdata(L, sizeof(QXmlStreamReader *));
+    luaL_getmetatable(L, "meta.kiko.xmlreader");
+    lua_setmetatable(L, -2);  // reader meta
+    *reader = new QXmlStreamReader(data); //meta
+    return 1;
+}
+static QXmlStreamReader *checkXmlReader(lua_State *L)
+{
+    void *ud = luaL_checkudata(L, 1, "meta.kiko.xmlreader");
+    luaL_argcheck(L, ud != NULL, 1, "`kiko.xmlreader' expected");
+    return *(QXmlStreamReader **)ud;
+}
+static int xrAddData(lua_State *L)
+{
+    QXmlStreamReader *reader = checkXmlReader(L);
+    if(lua_type(L, 2)==LUA_TSTRING)
+    {
+        const char *data = lua_tostring(L, 2);
+        reader->addData(data);
+    }
+    return 0;
+}
+static int xrClear(lua_State *L)
+{
+    QXmlStreamReader *reader = checkXmlReader(L);
+    reader->clear();
+    return 0;
+}
+static int xrEnd(lua_State *L)
+{
+    QXmlStreamReader *reader = checkXmlReader(L);
+    bool atEnd = reader->atEnd();
+    lua_pushboolean(L, atEnd);
+    return 1;
+}
+static int xrReadNext(lua_State *L)
+{
+    QXmlStreamReader *reader = checkXmlReader(L);
+    reader->readNext();
+    return 0;
+}
+static int xrStartElem(lua_State *L)
+{
+    QXmlStreamReader *reader = checkXmlReader(L);
+    bool isStartElem = reader->isStartElement();
+    lua_pushboolean(L, isStartElem);
+    return 1;
+}
+static int xrEndElem(lua_State *L)
+{
+    QXmlStreamReader *reader = checkXmlReader(L);
+    bool isEndElem = reader->isEndElement();
+    lua_pushboolean(L, isEndElem);
+    return 1;
+}
+static int xrName(lua_State *L)
+{
+    QXmlStreamReader *reader = checkXmlReader(L);
+    lua_pushstring(L, reader->name().toString().toStdString().c_str());
+    return 1;
+}
+static int xrAttr(lua_State *L)
+{
+    QXmlStreamReader *reader = checkXmlReader(L);
+    if(lua_gettop(L) == 0 || lua_type(L, -1)!=LUA_TSTRING)
+    {
+        lua_pushnil(L);
+        return 1;
+    }
+    const char *attrName = lua_tostring(L, -1);
+    lua_pushstring(L, reader->attributes().value(attrName).toString().toStdString().c_str());
+    return 1;
+}
+static int xrReadElemText(lua_State *L)
+{
+    QXmlStreamReader *reader = checkXmlReader(L);
+    lua_pushstring(L, reader->readElementText().toStdString().c_str());
+    return 1;
+}
+static int xrError(lua_State *L)
+{
+    QXmlStreamReader *reader = checkXmlReader(L);
+    QString errInfo = reader->errorString();
+    if(errInfo.isEmpty()) lua_pushnil(L);
+    else lua_pushstring(L, errInfo.toStdString().c_str());
+    return 1;
+}
+static int xmlreaderGC (lua_State *L) {
+    QXmlStreamReader *reader = checkXmlReader(L);
+    if(reader) delete reader;
+    return 0;
+}
+//XmlReader End------------------
 static const luaL_Reg kikoFuncs[] = {
     {"httpget", httpget},
-    {"httppost", httppost}
+    {"httppost", httppost},
+    {"json2table", json2table},
+    {"xmlreader", xmlreader},
+    {nullptr, nullptr}
+};
+static const luaL_Reg xmlreaderFuncs[] = {
+    {"adddata", xrAddData},
+    {"clear", xrClear},
+    {"end", xrEnd},
+    {"readnext", xrReadNext},
+    {"startelem", xrStartElem},
+    {"endelem", xrEndElem},
+    {"name", xrName},
+    {"attr", xrAttr},
+    {"elemtext", xrReadElemText},
+    {"error", xrError},
+    {"__gc", xmlreaderGC},
+    {nullptr, nullptr}
 };
 }
-
 ScriptBase::ScriptBase() : L(nullptr)
 {
     L = luaL_newstate();
@@ -110,6 +262,13 @@ ScriptBase::ScriptBase() : L(nullptr)
     {
         luaL_openlibs(L);
         registerFuncs("kiko", kikoFuncs);
+
+        luaL_newmetatable(L, "meta.kiko.xmlreader");
+        lua_pushstring(L, "__index");
+        lua_pushvalue(L, -2); /* pushes the metatable */
+        lua_rawset(L, -3); /* metatable.__index = metatable */
+        luaL_setfuncs(L, xmlreaderFuncs, 0);
+        lua_pop(L, 1);
     }
 }
 
@@ -230,8 +389,8 @@ int ScriptBase::setTable(const char *tname, const QVariant &key, const QVariant 
     int type = lua_getglobal(L, tname);
     if(type == LUA_TTABLE)
     {
-        pushValue(key);
-        pushValue(val);
+        pushValue(L, key);
+        pushValue(L, val);
         lua_settable(L, -3);
         lua_pop(L, 1);
         return 0;
@@ -272,7 +431,7 @@ void ScriptBase::pushValue(lua_State *L, const QVariant &val)
         const auto &l = val.toList();
         for(int i=0; i<l.size(); ++i)
         {
-            pushValue(l.value(i));
+            pushValue(L, l.value(i));
             lua_rawseti(L, -2, i+1);
         }
         break;
@@ -284,7 +443,7 @@ void ScriptBase::pushValue(lua_State *L, const QVariant &val)
         for(auto i = m.constBegin(); i!=m.constEnd(); ++i)
         {
             lua_pushstring(L, i.key().toStdString().c_str()); // table key
-            pushValue(i.value()); // table key value
+            pushValue(L, i.value()); // table key value
             lua_rawset(L, -3);
         }
         break;
