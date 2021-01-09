@@ -131,6 +131,139 @@ static int json2table(lua_State *L)
         return 2;
     }
 }
+static int httpgetbatch(lua_State *L)
+{
+    do
+    {
+        int params = lua_gettop(L);  //urls([u1,u2,...]) <querys([{xx=xx,...},{xx=xx,...},...])> <headers([{xx=xx,..},{xx=xx,..},...])>
+        if(params==0 || params>3) break;
+        if(lua_type(L, 1)!=LUA_TTABLE) break;
+        lua_pushvalue(L, 1);
+        auto us = ScriptBase::getValue(L);
+        lua_pop(L, 1);
+        if(!us.canConvert(QVariant::StringList)) break;
+        auto urls = us.toStringList();
+        QList<QUrlQuery> querys;
+        QList<QStringList> headers;
+        if(params > 1)  //has query
+        {
+            lua_pushvalue(L, 2);
+            auto q = ScriptBase::getValue(L);
+            lua_pop(L, 1);
+            if(q.type()!=QVariant::List) break;
+            auto qs = q.toList();
+            if(qs.size()>0 && qs.size()!=urls.size()) break;
+            for(auto &qobj : qs)
+            {
+                auto qmap = qobj.toMap();
+                QUrlQuery query;
+                for(auto iter=qmap.constBegin(); iter!=qmap.constEnd(); ++iter)
+                {
+                    query.addQueryItem(iter.key(),iter.value().toString());
+                }
+                querys.append(query);
+            }
+        }
+        if(params > 2)  //has header
+        {
+            auto h = ScriptBase::getValue(L);
+            if(h.type()!=QVariant::List) break;
+            auto hs = h.toList();
+            if(hs.size()>0 && hs.size()!=urls.size()) break;
+            for(auto &hobj : hs)
+            {
+                auto hmap = hobj.toMap();
+                QStringList header;
+                for(auto iter=hmap.constBegin(); iter!=hmap.constEnd(); ++iter)
+                {
+                    header<<iter.key()<<iter.value().toString();
+                }
+                headers.append(headers);
+            }
+        }
+        QList<QPair<QString, QByteArray>> content = Network::httpGetBatch(urls,querys,headers); //[[hasError, content], [], ...]
+        lua_pushnil(L);
+        lua_newtable(L); // table
+        for(int i=0; i<content.size(); ++i)
+        {
+            lua_newtable(L); // table table
+            if(content[i].first.isEmpty())
+                lua_pushnil(L);  // table table nil
+            else
+                lua_pushstring(L, content[i].first.toStdString().c_str()); // table table errStr
+            lua_rawseti(L, -2, 1); // table table
+            lua_pushstring(L, content[i].second.constData()); //table table data
+            lua_rawseti(L, -2, 2); // table table
+            lua_rawseti(L, -2, i+1); //table
+        }
+        return 2;
+    }while(false);
+    lua_pushstring(L, "httpget: param error");
+    lua_pushnil(L);
+    return 2;
+}
+static int compress(lua_State *L)
+{
+    int params = lua_gettop(L);  //jsonstr
+    if(params==0 || params > 2 || lua_type(L, 1)!=LUA_TSTRING)
+    {
+        lua_pushstring(L, "decompress: param error");
+        lua_pushnil(L);
+        return 2;
+    }
+    bool useGzip = false;
+    if(params == 2 && lua_type(L, 2)==LUA_TSTRING)
+    {
+        const char *method = lua_tostring(L, 2);
+        if(strcmp(method, "gzip")==0) useGzip = true;
+    }
+    size_t dataLength = 0;
+    const char *data = lua_tolstring(L, 2, &dataLength);
+    QByteArray cdata(data, dataLength), outdata;
+    int ret = 0;
+    if(useGzip) ret = Network::gzipCompress(cdata, outdata);
+    else ret = Network::gzipCompress(cdata, outdata);
+    if(ret!=0)
+    {
+        lua_pushstring(L, "compress: data error");
+        lua_pushnil(L);
+        return 2;
+    }
+    lua_pushnil(L);
+    lua_pushlstring(L, outdata.constData(), outdata.size());
+    return 2;
+}
+static int decompress(lua_State *L)
+{
+    int params = lua_gettop(L);  //jsonstr
+    if(params==0 || params > 2 || lua_type(L, 1)!=LUA_TSTRING)
+    {
+        lua_pushstring(L, "decompress: param error");
+        lua_pushnil(L);
+        return 2;
+    }
+    bool useGzip = false;
+    if(params == 2 && lua_type(L, 2)==LUA_TSTRING)
+    {
+        const char *method = lua_tostring(L, 2);
+        if(strcmp(method, "gzip")==0) useGzip = true;
+    }
+    size_t dataLength = 0;
+    const char *data = lua_tolstring(L, 2, &dataLength);
+    QByteArray cdata(data, dataLength), outdata;
+    int ret = 0;
+    if(useGzip) ret = Network::gzipDecompress(cdata, outdata);
+    else ret = Network::decompress(cdata, outdata);
+    if(ret!=0)
+    {
+        lua_pushstring(L, "decompress: data error");
+        lua_pushnil(L);
+        return 2;
+    }
+    lua_pushnil(L);
+    lua_pushlstring(L, outdata.constData(), outdata.size());
+    return 2;
+}
 // XmlReader-------------
 static int xmlreader (lua_State *L)
 {
@@ -235,8 +368,11 @@ static int xmlreaderGC (lua_State *L) {
 //XmlReader End------------------
 static const luaL_Reg kikoFuncs[] = {
     {"httpget", httpget},
+    {"httpgetbatch", httpgetbatch},
     {"httppost", httppost},
     {"json2table", json2table},
+    {"compress", compress},
+    {"decompress", decompress},
     {"xmlreader", xmlreader},
     {nullptr, nullptr}
 };
@@ -265,8 +401,8 @@ ScriptBase::ScriptBase() : L(nullptr)
 
         luaL_newmetatable(L, "meta.kiko.xmlreader");
         lua_pushstring(L, "__index");
-        lua_pushvalue(L, -2); /* pushes the metatable */
-        lua_rawset(L, -3); /* metatable.__index = metatable */
+        lua_pushvalue(L, -2); // pushes the metatable
+        lua_rawset(L, -3); // metatable.__index = metatable
         luaL_setfuncs(L, xmlreaderFuncs, 0);
         lua_pop(L, 1);
     }

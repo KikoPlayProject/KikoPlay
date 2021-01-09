@@ -13,12 +13,12 @@ ScriptState DanmuScript::load(const QString &scriptPath)
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     canSearch = checkType("search", LUA_TFUNCTION);
     QVariant res = get("supportedURLsRe");
-    if(res.type() == QVariant::StringList)
+    if(res.canConvert(QVariant::StringList))
     {
         supportedURLsRe = res.toStringList();
     }
     QVariant urlSamples = get("sampleSupporedURLs");
-    if(urlSamples.type() == QVariant::StringList)
+    if(urlSamples.canConvert(QVariant::StringList))
     {
         sampleSupporedURLs = urlSamples.toStringList();
     }

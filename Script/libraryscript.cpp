@@ -118,7 +118,7 @@ ScriptState LibraryScript::getDetail(const QString &id, Anime &anime, QStringLis
             anime.characters.append(crt);
         }
     }
-    if(aobj.contains("posters") && aobj.value("posters").type() == QVariant::StringList)
+    if(aobj.contains("posters") && aobj.value("posters").canConvert(QVariant::StringList))
     {
         posters = aobj.value("posters").toStringList();
     }
@@ -155,7 +155,7 @@ ScriptState LibraryScript::getTags(const QString &id, QStringList &results)
     QString errInfo;
     QVariantList rets = call("gettags", {id}, 1, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
-    if(rets[0].type()!=QVariant::StringList) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
+    if(!rets[0].canConvert(QVariant::StringList)) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
     results = rets[0].toStringList();
     return ScriptState(ScriptState::S_NORM);
 }

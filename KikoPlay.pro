@@ -41,6 +41,7 @@ SOURCES += \
     Script/libraryscript.cpp \
     Script/resourcescript.cpp \
     Script/scriptbase.cpp \
+    Script/scriptmanager.cpp \
     UI/addpool.cpp \
     UI/addrule.cpp \
     UI/animedetailinfopage.cpp \
@@ -156,6 +157,7 @@ HEADERS += \
     Script/libraryscript.h \
     Script/resourcescript.h \
     Script/scriptbase.h \
+    Script/scriptmanager.h \
     UI/addpool.h \
     UI/addrule.h \
     UI/animedetailinfopage.h \

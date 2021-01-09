@@ -258,9 +258,10 @@ QJsonValue Network::getValue(QJsonObject &obj, const QString &path)
     return value;
 }
 
-QList<QPair<QString, QByteArray> > Network::httpGetBatch(const QStringList &urls, const QList<QUrlQuery> &querys, const QStringList &header)
+QList<QPair<QString, QByteArray>> Network::httpGetBatch(const QStringList &urls, const QList<QUrlQuery> &querys, const QList<QStringList> &headers)
 {
     Q_ASSERT(urls.size()==querys.size() || querys.size()==0);
+    Q_ASSERT(urls.size()==headers.size() || headers.size()==0);
     QList<QPair<QString, QByteArray> > results;
     int finishCount=0;
     QEventLoop eventLoop;
@@ -272,7 +273,11 @@ QList<QPair<QString, QByteArray> > Network::httpGetBatch(const QStringList &urls
         if(!querys.isEmpty()) queryUrl.setQuery(querys.at(i));
         QNetworkRequest request;
         request.setUrl(queryUrl);
-        for(int j=0;i<header.size();j+=2) request.setRawHeader(header[j].toUtf8(),header[j+1].toUtf8());
+        if(!headers.isEmpty())
+        {
+            for(int j=0;i<headers[i].size();j+=2)
+                request.setRawHeader(headers[i][j].toUtf8(),headers[i][j+1].toUtf8());
+        }
         QNetworkReply *reply = manager->get(request);
         QTimer *timer=new QTimer;
         timer->setInterval(timeout*2);
@@ -390,6 +395,50 @@ int Network::gzipDecompress(const QByteArray &input, QByteArray &output)
                 stream.avail_in = sizeof(dummy_head);
                 if((ret = inflate(&stream, Z_NO_FLUSH)) == Z_OK)
                     break;
+            case Z_MEM_ERROR:
+                (void)inflateEnd(&stream);
+                return ret;
+            }
+            have = chunkSize - stream.avail_out;
+            output.append((const char *)outBuf,have);
+        } while (stream.avail_out == 0);
+    }
+    (void)inflateEnd(&stream);
+    return Z_OK ;
+}
+
+int Network::decompress(const QByteArray &input, QByteArray &output)
+{
+    int ret;
+    unsigned have;
+    const int chunkSize=16384;
+    z_stream stream;
+    stream.zalloc = Z_NULL;
+    stream.zfree = Z_NULL;
+    stream.opaque = Z_NULL;
+    stream.avail_in = 0;
+    stream.next_in = Z_NULL;
+    ret = inflateInit(&stream);
+    if (ret != Z_OK) return ret;
+    unsigned char inBuf[chunkSize];
+    unsigned char outBuf[chunkSize];
+    QDataStream inStream(input);
+    while(!inStream.atEnd())
+    {
+        stream.avail_in=inStream.readRawData((char *)&inBuf,chunkSize);
+        if (stream.avail_in == 0)
+            break;
+        stream.next_in = inBuf;
+        do
+        {
+            stream.avail_out = chunkSize;
+            stream.next_out = outBuf;
+            ret = inflate(&stream, Z_NO_FLUSH);
+            switch (ret)
+            {
+            case Z_NEED_DICT:
+                ret = Z_DATA_ERROR;
+            case Z_DATA_ERROR:
             case Z_MEM_ERROR:
                 (void)inflateEnd(&stream);
                 return ret;
