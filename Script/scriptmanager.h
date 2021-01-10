@@ -2,6 +2,7 @@
 #define SCRIPTMANAGER_H
 #include <QList>
 #include <QHash>
+#include <QSet>
 #include <QObject>
 #include <QSharedPointer>
 #include "scriptbase.h"
@@ -15,13 +16,13 @@ class ScriptManager : public QObject
 public:
     enum ScriptType
     {
-        DANMU, LIBRARY, RESOURCE, UNKNOWN
+        DANMU, LIBRARY, RESOURCE, UNKNOWN_STYPE
     };
     enum EventType
     {
-        KEY_PRESS
+        KEY_PRESS, UNKNOWN_ETYPE
     };
-    enum ScriptChangeState
+    enum class ScriptChangeState
     {
         ADD, REMOVE
     };
@@ -38,7 +39,9 @@ public:
 signals:
     void scriptChanged(ScriptType type, const QString &id, ScriptChangeState state);
 private:
-    QList<QSharedPointer<ScriptBase>> scriptLists[ScriptType::UNKNOWN];
+    QList<QSharedPointer<ScriptBase>> scriptLists[ScriptType::UNKNOWN_STYPE];
+    QHash<QString, QSharedPointer<ScriptBase>> id2script;
+    QHash<QString, QSet<QString>> keys2scriptIds;
     QString getScriptPath();
 };
 

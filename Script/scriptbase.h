@@ -66,6 +66,7 @@ protected:
     QMutex scriptLock;
     QHash<QString, QString> scriptMeta;
     QList<ScriptSettingItem> scriptSettings;
+    bool settingsUpdated;
 
     QVariantList call(const char *fname, const QVariantList &params, int nRet, QString &errInfo);
     QVariant get(const char *name);
@@ -73,7 +74,7 @@ protected:
     ScriptState setTable(const char *tname, const QVariant &key, const QVariant &val);
     bool checkType(const char *name, int type);
 
-    QString getMeta(const QString &scriptPath);
+    QString loadMeta(const QString &scriptPath);
     void loadSettings(const QString &scriptPath);
     void registerFuncs(const char *tname, const luaL_Reg *funcs);
 public:

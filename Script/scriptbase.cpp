@@ -409,7 +409,7 @@ static const luaL_Reg xmlreaderFuncs[] = {
     {nullptr, nullptr}
 };
 }
-ScriptBase::ScriptBase() : L(nullptr)
+ScriptBase::ScriptBase() : L(nullptr), settingsUpdated(false)
 {
     L = luaL_newstate();
     if(L)
@@ -438,12 +438,28 @@ ScriptBase::~ScriptBase()
         lua_close(L);
         L = nullptr;
     }
+    if(settingsUpdated)
+    {
+        QString scriptPath(scriptMeta["path"]);
+        int suffixPos = scriptPath.lastIndexOf('.');
+        QFile settingSaved(scriptPath.mid(0,suffixPos)+".json");
+        if(settingSaved.open(QFile::WriteOnly))
+        {
+            QMap<QString, QVariant> settingMap;
+            for(const auto &item : scriptSettings)
+                settingMap[item.key] = item.value;
+            QJsonDocument doc(QJsonObject::fromVariantMap(settingMap));
+            settingSaved.write(doc.toJson(QJsonDocument::Indented));
+        }
+        settingsUpdated = false;
+    }
 }
 
 ScriptState ScriptBase::setOption(int index, const QString &value, bool callLua)
 {
     if(scriptSettings.size()<=index) return "OutRange";
     scriptSettings[index].value = value;
+    settingsUpdated = true;
     QString errInfo;
     if(callLua)
     {
@@ -461,6 +477,7 @@ ScriptState ScriptBase::setOption(const QString &key, const QString &value, bool
         if(item.key == key)
         {
             item.value = value;
+            settingsUpdated = true;
             if(callLua)
             {
                 setTable(luaSettingsTable, key, value);
@@ -486,7 +503,7 @@ ScriptState ScriptBase::loadScript(const QString &path)
         lua_pop(L,1);
         return errInfo;
     }
-    errInfo = getMeta(path);
+    errInfo = loadMeta(path);
     if(!errInfo.isEmpty()) return errInfo;
     loadSettings(path);
     return errInfo;
@@ -705,13 +722,13 @@ size_t ScriptBase::getTableLength(lua_State *L, int pos)
     return length;
 }
 
-QString ScriptBase::getMeta(const QString &scriptPath)
+QString ScriptBase::loadMeta(const QString &scriptPath)
 {
     QString errInfo;
     QVariant scriptInfo = get(luaMetaTable);
     if(!scriptInfo.canConvert(QVariant::Map))
     {
-        errInfo = "Script Error: no info";
+        errInfo = "Script Error: no info table";
         return errInfo;
     }
     QVariantMap scriptInfoMap = scriptInfo.toMap();
@@ -726,8 +743,8 @@ QString ScriptBase::getMeta(const QString &scriptPath)
     QFileInfo scriptFileInfo(scriptPath);
     scriptMeta["path"] = scriptFileInfo.absoluteFilePath();
     scriptMeta["time"] = QString::number(scriptFileInfo.fileTime(QFile::FileModificationTime).toSecsSinceEpoch());
-    if(!scriptMeta.contains("id")) scriptMeta["id"] = scriptFileInfo.baseName();
-    if(!scriptMeta.contains("name")) scriptMeta["name"] = scriptMeta["id"];
+    if(!scriptMeta.contains("id")) scriptMeta["id"] = scriptMeta["path"];
+    if(!scriptMeta.contains("name")) scriptMeta["name"] = scriptFileInfo.baseName();
     return errInfo;
 }
 

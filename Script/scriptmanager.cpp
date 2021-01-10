@@ -13,7 +13,7 @@ ScriptManager::ScriptManager()
 
 void ScriptManager::refreshScripts(ScriptManager::ScriptType type)
 {
-    if(type == ScriptType::UNKNOWN) return;
+    if(type == ScriptType::UNKNOWN_STYPE) return;
     QString scriptPath(getScriptPath());
     const char *subDirs[] = {"/danmu/", "/library/", "/resource/"};
     scriptPath += subDirs[type];
@@ -38,6 +38,7 @@ void ScriptManager::refreshScripts(ScriptManager::ScriptType type)
                     QString id = curScripts[path]->id();
                     scriptLists[type].removeAll(curScripts[path]);
                     curScripts.remove(path);
+                    id2script.remove(id);
                     add = true;
                     emit scriptChanged(type, id, ScriptChangeState::REMOVE);
                 }
