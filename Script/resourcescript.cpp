@@ -5,11 +5,11 @@ ResourceScript::ResourceScript() : ScriptBase()
 
 }
 
-ScriptState ResourceScript::load(const QString &scriptPath)
+ScriptState ResourceScript::loadScript(const QString &scriptPath)
 {
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
-    QString errInfo = loadScript(scriptPath);
+    QString errInfo = ScriptBase::loadScript(scriptPath);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     hasDetailFunc = checkType("getdetail", LUA_TFUNCTION);
     bool hasSearchFunc = checkType("search", LUA_TFUNCTION);

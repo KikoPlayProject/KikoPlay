@@ -21,9 +21,13 @@ struct ScriptState
     {
          S_NORM, S_BUSY, S_ERROR
     };
+    ScriptState(const QString &e):info(e) {state = (info.isEmpty()?S_NORM:S_ERROR);}
+    ScriptState(const char *e) {ScriptState(QString(e));}
+    ScriptState(StateCode c, const QString &i=""):state(c), info(i) {}
+    operator QString() {return info;}
+
     StateCode state;
     QString info;
-    ScriptState(StateCode c, const QString &i=""):state(c), info(i) {}
 };
 class ScriptBase
 {
@@ -34,38 +38,43 @@ public:
 public:
     struct ScriptSettingItem
     {
-        enum class ValueType
-        {
-            SS_STRING, SS_STRINGLIST
-        };
-        ValueType vtype;
         QString title;
         QString description;
         QString choices;
+        QString key;
         QString value;
     };
     const QList<ScriptSettingItem> &settings() const {return scriptSettings;}
-    virtual QString setOption(int index, const QString &value);
+    virtual ScriptState setOption(int index, const QString &value, bool callLua=true);
+    virtual ScriptState setOption(const QString &key, const QString &value, bool callLua=true);
     virtual QString id() const {return scriptMeta.value("id");}
     virtual QString name() const {return scriptMeta.value("name");}
     virtual QString desc() const {return scriptMeta.value("desc");}
     virtual QString version() const {return scriptMeta.value("version");}
     virtual QString getValue(const QString &key) const {return scriptMeta.value(key);}
+
+    virtual ScriptState loadScript(const QString &path);
+    virtual void init();
+
 protected:
+    const char *luaSettingsTable = "settings";
+    const char *luaMetaTable = "info";
+    const char *luaInitFunc = "loaded";
+    const char *luaSetOptionFunc = "setoption";
+
     lua_State *L;
     QMutex scriptLock;
     QHash<QString, QString> scriptMeta;
     QList<ScriptSettingItem> scriptSettings;
 
-    QString loadScript(const QString &path);
     QVariantList call(const char *fname, const QVariantList &params, int nRet, QString &errInfo);
     QVariant get(const char *name);
     void set(const char *name, const QVariant &val);
-    int setTable(const char *tname, const QVariant &key, const QVariant &val);
+    ScriptState setTable(const char *tname, const QVariant &key, const QVariant &val);
     bool checkType(const char *name, int type);
 
     QString getMeta(const QString &scriptPath);
-    void loadSettings();
+    void loadSettings(const QString &scriptPath);
     void registerFuncs(const char *tname, const luaL_Reg *funcs);
 public:
     static void pushValue(lua_State *L, const QVariant &val);

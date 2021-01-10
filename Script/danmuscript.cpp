@@ -5,11 +5,11 @@ DanmuScript::DanmuScript() : ScriptBase()
 
 }
 
-ScriptState DanmuScript::load(const QString &scriptPath)
+ScriptState DanmuScript::loadScript(const QString &scriptPath)
 {
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
-    QString errInfo = loadScript(scriptPath);
+    QString errInfo = ScriptBase::loadScript(scriptPath);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     canSearch = checkType("search", LUA_TFUNCTION);
     QVariant res = get("supportedURLsRe");

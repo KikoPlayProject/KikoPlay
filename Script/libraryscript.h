@@ -73,7 +73,7 @@ class LibraryScript  : public ScriptBase
 {
 public:
     LibraryScript();
-    ScriptState load(const QString &scriptPath);
+    ScriptState loadScript(const QString &scriptPath);
 public:
     bool supportMatch() const {return matchSupported;}
     const QList<QPair<QString, QString>> &getMenuItems() const {return menuItems;}

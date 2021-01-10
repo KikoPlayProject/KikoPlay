@@ -131,7 +131,7 @@ static int json2table(lua_State *L)
         return 2;
     }
 }
-static int httpgetbatch(lua_State *L)
+static int httpGetBatch(lua_State *L)
 {
     do
     {
@@ -264,6 +264,23 @@ static int decompress(lua_State *L)
     lua_pushlstring(L, outdata.constData(), outdata.size());
     return 2;
 }
+static int writeSetting(lua_State *L)
+{
+    int params = lua_gettop(L);  //key value
+    if(params!=2 || lua_type(L, 1)!=LUA_TSTRING || lua_type(L, 2)!=LUA_TSTRING)
+    {
+        lua_pushstring(L, "writesetting: param error");
+        return 1;
+    }
+    lua_pushstring(L, "kiko_scriptobj");
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    ScriptBase *script = (ScriptBase *)lua_topointer(L, -1);
+    lua_pop(L, 1);
+    QString errInfo = script->setOption(lua_tostring(L, 1), lua_tostring(L, 2), false);
+    if(errInfo.isEmpty()) lua_pushnil(L);
+    else lua_pushstring(L, errInfo.toStdString().c_str());
+    return 1;
+}
 // XmlReader-------------
 static int xmlreader (lua_State *L)
 {
@@ -368,11 +385,12 @@ static int xmlreaderGC (lua_State *L) {
 //XmlReader End------------------
 static const luaL_Reg kikoFuncs[] = {
     {"httpget", httpget},
-    {"httpgetbatch", httpgetbatch},
+    {"httpgetbatch", httpGetBatch},
     {"httppost", httppost},
     {"json2table", json2table},
     {"compress", compress},
     {"decompress", decompress},
+    {"writesetting", writeSetting},
     {"xmlreader", xmlreader},
     {nullptr, nullptr}
 };
@@ -405,6 +423,10 @@ ScriptBase::ScriptBase() : L(nullptr)
         lua_rawset(L, -3); // metatable.__index = metatable
         luaL_setfuncs(L, xmlreaderFuncs, 0);
         lua_pop(L, 1);
+
+        lua_pushstring(L, "kiko_scriptobj");
+        lua_pushlightuserdata(L, (void *)this);
+        lua_settable(L, LUA_REGISTRYINDEX);
     }
 }
 
@@ -418,24 +440,44 @@ ScriptBase::~ScriptBase()
     }
 }
 
-QString ScriptBase::setOption(int index, const QString &value)
+ScriptState ScriptBase::setOption(int index, const QString &value, bool callLua)
 {
     if(scriptSettings.size()<=index) return "OutRange";
     scriptSettings[index].value = value;
     QString errInfo;
-    call("setoption", {scriptSettings[index].title, value}, 0, errInfo);
+    if(callLua)
+    {
+        setTable(luaSettingsTable, scriptSettings[index].key, value);
+        call(luaSetOptionFunc, {scriptSettings[index].key, value}, 0, errInfo);
+    }
     return errInfo;
 }
 
-QString ScriptBase::loadScript(const QString &path)
+ScriptState ScriptBase::setOption(const QString &key, const QString &value, bool callLua)
+{
+    QString errInfo;
+    for(auto &item : scriptSettings)
+    {
+        if(item.key == key)
+        {
+            item.value = value;
+            if(callLua)
+            {
+                setTable(luaSettingsTable, key, value);
+                call(luaSetOptionFunc, {key, value}, 0, errInfo);
+            }
+            break;
+        }
+    }
+    return errInfo;
+}
+
+ScriptState ScriptBase::loadScript(const QString &path)
 {
     if(!L) return "Script Error: Wrong Lua State";
     QFile luaFile(path);
     luaFile.open(QFile::ReadOnly);
-    if(!luaFile.isOpen())
-    {
-        return QObject::tr("Open Script File Failed");
-    }
+    if(!luaFile.isOpen()) return "Open Script File Failed";
     QString luaScript(luaFile.readAll());
     QString errInfo;
     if(luaL_loadstring(L,luaScript.toStdString().c_str()) || lua_pcall(L,0,0,0))
@@ -444,31 +486,18 @@ QString ScriptBase::loadScript(const QString &path)
         lua_pop(L,1);
         return errInfo;
     }
-    //get script meta info
     errInfo = getMeta(path);
     if(!errInfo.isEmpty()) return errInfo;
-    //get script settings
-    loadSettings();
-    int suffixPos = path.lastIndexOf('.');
-    QFile settingSaved(path.mid(0,suffixPos)+".json");
-    if(settingSaved.open(QFile::ReadOnly))
-    {
-        QJsonObject sObj(Network::toJson(settingSaved.readAll()).object());
-        QHash<QString, ScriptSettingItem *> itemHash;
-        for(auto &item: scriptSettings)
-        {
-            itemHash[item.title] = &item;
-        }
-        for(auto iter = sObj.constBegin(); iter != sObj.constEnd(); ++iter)
-        {
-            ScriptSettingItem *item = itemHash.value(iter.key(), nullptr);
-            if(item)
-            {
-                item->value = iter.value().toString("");
-            }
-        }
-    }
+    loadSettings(path);
     return errInfo;
+}
+
+void ScriptBase::init()
+{
+    if(lua_getglobal(L, luaInitFunc) != LUA_TFUNCTION) return;
+    lua_pop(L, 1);
+    QString errInfo;
+    call(luaInitFunc, {}, 0, errInfo);
 }
 
 QVariantList ScriptBase::call(const char *fname, const QVariantList &params, int nRet, QString &errInfo)
@@ -519,9 +548,9 @@ void ScriptBase::set(const char *name, const QVariant &val)
     lua_setglobal(L, name);
 }
 
-int ScriptBase::setTable(const char *tname, const QVariant &key, const QVariant &val)
+ScriptState ScriptBase::setTable(const char *tname, const QVariant &key, const QVariant &val)
 {
-    if(!L) return -1;
+    if(!L) return "Script Error: Wrong Lua State";
     int type = lua_getglobal(L, tname);
     if(type == LUA_TTABLE)
     {
@@ -529,10 +558,10 @@ int ScriptBase::setTable(const char *tname, const QVariant &key, const QVariant 
         pushValue(L, val);
         lua_settable(L, -3);
         lua_pop(L, 1);
-        return 0;
+        return "";
     }
     lua_pop(L, 1);
-    return -1;
+    return QString("No table with name %1").arg(tname);
 }
 
 bool ScriptBase::checkType(const char *name, int type)
@@ -679,7 +708,7 @@ size_t ScriptBase::getTableLength(lua_State *L, int pos)
 QString ScriptBase::getMeta(const QString &scriptPath)
 {
     QString errInfo;
-    QVariant scriptInfo = get("info");
+    QVariant scriptInfo = get(luaMetaTable);
     if(!scriptInfo.canConvert(QVariant::Map))
     {
         errInfo = "Script Error: no info";
@@ -694,17 +723,19 @@ QString ScriptBase::getMeta(const QString &scriptPath)
             scriptMeta[iter.key()] = iter.value().toString();
         }
     }
-    scriptMeta["path"] = scriptPath;
-    if(!scriptMeta.contains("id")) scriptMeta["id"] = QFileInfo(scriptPath).baseName();
+    QFileInfo scriptFileInfo(scriptPath);
+    scriptMeta["path"] = scriptFileInfo.absoluteFilePath();
+    scriptMeta["time"] = QString::number(scriptFileInfo.fileTime(QFile::FileModificationTime).toSecsSinceEpoch());
+    if(!scriptMeta.contains("id")) scriptMeta["id"] = scriptFileInfo.baseName();
     if(!scriptMeta.contains("name")) scriptMeta["name"] = scriptMeta["id"];
     return errInfo;
 }
 
-void ScriptBase::loadSettings()
+void ScriptBase::loadSettings(const QString &scriptPath)
 {
-    //settings = {key = {type = str/strlist, default='', desc='', choices=',..,'},...}
+    //settings = {key = {title = 'xx', default='', desc='', choices=',..,'},...}
     QString errInfo;
-    QVariant settings = get("settings");
+    QVariant settings = get(luaSettingsTable);
     if(!settings.canConvert(QVariant::Map)) return;
     QVariantMap settingMap = settings.toMap();
     scriptSettings.clear();
@@ -715,14 +746,43 @@ void ScriptBase::loadSettings()
             QVariantMap settingItemMap = iter.value().toMap();
             scriptSettings.append(
             {
-                settingItemMap.value("type", "str").toString() == "str"?ScriptSettingItem::ValueType::SS_STRING :  ScriptSettingItem::ValueType::SS_STRINGLIST,
-                iter.key(),
+                settingItemMap.value("title").toString(),
                 settingItemMap.value("desc", "").toString(),
                 settingItemMap.value("choices", "").toString(),
+                iter.key(),
                 settingItemMap.value("default", "").toString()
             });
         }
     }
+
+    int suffixPos = scriptPath.lastIndexOf('.');
+    QFile settingSaved(scriptPath.mid(0,suffixPos)+".json");
+    if(settingSaved.open(QFile::ReadOnly))
+    {
+        QJsonObject sObj(Network::toJson(settingSaved.readAll()).object());
+        QHash<QString, ScriptSettingItem *> itemHash;
+        for(auto &item: scriptSettings)
+        {
+            itemHash[item.title] = &item;
+        }
+        for(auto iter = sObj.constBegin(); iter != sObj.constEnd(); ++iter)
+        {
+            ScriptSettingItem *item = itemHash.value(iter.key(), nullptr);
+            if(item)
+            {
+                item->value = iter.value().toString("");
+            }
+        }
+    }
+
+    lua_newtable(L);
+    for(const auto &item: scriptSettings)
+    {
+        lua_pushstring(L, item.key.toStdString().c_str());
+        lua_pushstring(L, item.value.toStdString().c_str());
+        lua_settable(L, -3);
+    }
+    lua_setglobal(L, luaSettingsTable);
 }
 
 void ScriptBase::registerFuncs(const char *tname, const luaL_Reg *funcs)

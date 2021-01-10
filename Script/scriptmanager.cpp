@@ -1,55 +1,71 @@
 #include "scriptmanager.h"
-#include "scriptbase.h"
 #include <QCoreApplication>
 #include <QDir>
 #include <QDateTime>
+#include "danmuscript.h"
+#include "libraryscript.h"
+#include "resourcescript.h"
 
 ScriptManager::ScriptManager()
 {
 
 }
 
-void ScriptManager::refreshScripts(int types)
+void ScriptManager::refreshScripts(ScriptManager::ScriptType type)
 {
+    if(type == ScriptType::UNKNOWN) return;
     QString scriptPath(getScriptPath());
-    QList<QPair<ScriptType, QString>> paths;
-    if(types & ScriptType::DANMU) paths.append({ScriptType::DANMU, scriptPath + "/danmu/"});
-    if(types & ScriptType::LIBRARY) paths.append({ScriptType::LIBRARY, scriptPath + "/library/"});
-    if(types & ScriptType::RESOURCE) paths.append({ScriptType::RESOURCE, scriptPath + "/resource/"});
-    for(const auto &p : paths)
+    const char *subDirs[] = {"/danmu/", "/library/", "/resource/"};
+    scriptPath += subDirs[type];
+
+    QHash<QString, QSharedPointer<ScriptBase>> curScripts;
+    for(auto &s : scriptLists[type])
     {
-        QHash<QString, ScriptBase *> curScripts;
-        for(ScriptBase *s : scriptHash[p.first])
+        curScripts.insert(s->getValue("path"), s);
+    }
+    QDir folder(scriptPath);
+    for (QFileInfo fileInfo : folder.entryInfoList())
+    {
+        if (fileInfo.isFile() && fileInfo.suffix().toLower()=="lua")
         {
-            curScripts.insert(s->getValue("path"), s);
-        }
-        QDir folder(p.second);
-        for (QFileInfo fileInfo : folder.entryInfoList())
-        {
-            if (fileInfo.isFile() && fileInfo.suffix().toLower()=="lua")
+            QString path(fileInfo.absoluteFilePath());
+            qint64 modifyTime = fileInfo.fileTime(QFile::FileModificationTime).toSecsSinceEpoch();
+            bool add = curScripts.contains(path);
+            if(!add)
             {
-                QString path(fileInfo.absoluteFilePath());
-                qint64 modifyTime = fileInfo.fileTime(QFile::FileModificationTime).toSecsSinceEpoch();
-                bool add = curScripts.contains(path);
-                if(!add)
+                if(curScripts[path]->getValue("time").toLongLong() < modifyTime)
                 {
-                    if(curScripts[path]->getValue("time").toLongLong() < modifyTime)
-                    {
-                        scriptHash[p.first].removeAll(curScripts[path]);
-                        delete curScripts[path];
-                        curScripts.remove(path);
-                        add = true;
-                    }
+                    QString id = curScripts[path]->id();
+                    scriptLists[type].removeAll(curScripts[path]);
+                    curScripts.remove(path);
+                    add = true;
+                    emit scriptChanged(type, id, ScriptChangeState::REMOVE);
                 }
-                if(add)
+            }
+            if(add)
+            {
+                QSharedPointer<ScriptBase> cs;
+                if(type == ScriptType::DANMU) cs.reset(new DanmuScript);
+                else if(type == ScriptType::LIBRARY) cs.reset(new LibraryScript);
+                else if(type == ScriptType::RESOURCE) cs.reset(new ResourceScript);
+                if(cs)
                 {
-                    ScriptBase *cs = nullptr;
-                    if(p.first == ScriptType::DANMU) cs = new DanmuScript();
+                    ScriptState state = cs->loadScript(path);
+                    if(state == ScriptState::S_NORM)
+                    {
+                        scriptLists[type].append(cs);
+                        emit scriptChanged(type, cs->id(), ScriptChangeState::ADD);
+                    }
                 }
 
             }
         }
     }
+}
+
+void ScriptManager::sendEvent(ScriptManager::EventType type, const QVariantList &params)
+{
+
 }
 
 QString ScriptManager::getScriptPath()

@@ -8,7 +8,7 @@ class DanmuScript : public ScriptBase
 {
 public:
     DanmuScript();
-    ScriptState load(const QString &scriptPath);
+    ScriptState loadScript(const QString &scriptPath);
 public:
     bool supportSearch() const {return canSearch;}
     const QStringList &sampleURLs() const {return sampleSupporedURLs;}

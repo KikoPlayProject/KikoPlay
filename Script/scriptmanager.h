@@ -3,6 +3,8 @@
 #include <QList>
 #include <QHash>
 #include <QObject>
+#include <QSharedPointer>
+#include "scriptbase.h"
 class DanmuScript;
 class LibraryScript;
 class ResourceScript;
@@ -13,25 +15,30 @@ class ScriptManager : public QObject
 public:
     enum ScriptType
     {
-        DANMU=1, LIBRARY=2, RESOURCE=4
+        DANMU, LIBRARY, RESOURCE, UNKNOWN
     };
     enum EventType
     {
-        KEY_PRESS, LIBRARY_ITEM_MENU
+        KEY_PRESS
+    };
+    enum ScriptChangeState
+    {
+        ADD, REMOVE
     };
 
 public:
     ScriptManager();
     ~ScriptManager();
-    void refreshScripts(int types = DANMU|LIBRARY|RESOURCE);
+    void refreshScripts(ScriptType type);
+    void registerEvent(ScriptType sType, const QString &id, EventType eType, const QVariantList &eventParams);
     void sendEvent(EventType type, const QVariantList &params);
 
-    const QList<ScriptBase *> &scripts(ScriptType type)  {return scriptHash[type]; }
+    const QList<QSharedPointer<ScriptBase>> &scripts(ScriptType type)  {return scriptLists[type]; }
 
 signals:
-    void scriptChanged(const QString &id, bool removed);
+    void scriptChanged(ScriptType type, const QString &id, ScriptChangeState state);
 private:
-    QHash<ScriptType, QList<ScriptBase *>> scriptHash;
+    QList<QSharedPointer<ScriptBase>> scriptLists[ScriptType::UNKNOWN];
     QString getScriptPath();
 };
 

@@ -5,11 +5,11 @@ LibraryScript::LibraryScript() : ScriptBase()
 
 }
 
-ScriptState LibraryScript::load(const QString &scriptPath)
+ScriptState LibraryScript::loadScript(const QString &scriptPath)
 {
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
-    QString errInfo = loadScript(scriptPath);
+    QString errInfo = ScriptBase::loadScript(scriptPath);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     matchSupported = checkType("match", LUA_TFUNCTION);
     bool hasSearchFunc = checkType("search", LUA_TFUNCTION);

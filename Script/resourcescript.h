@@ -15,7 +15,7 @@ class ResourceScript : public ScriptBase
 {
 public:
     ResourceScript();
-    ScriptState load(const QString &scriptPath);
+    ScriptState loadScript(const QString &scriptPath);
 public:
     bool needGetDetail() const {return hasDetailFunc;}
 public:
