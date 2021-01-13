@@ -51,7 +51,7 @@ static int httpget(lua_State *L)
         lua_pushstring(L,content.toStdString().c_str());
         return 2;
     }while(false);
-    lua_pushstring(L, "httpget: param error");
+    lua_pushstring(L, "httpget: param error, expect: url(string), <query(table)>, <header(table)>");
     lua_pushnil(L);
     return 2;
 }
@@ -93,7 +93,7 @@ static int httppost(lua_State *L)
         lua_pushstring(L,content.toStdString().c_str());
         return 2;
     }while(false);
-    lua_pushstring(L, "httppost: param error");
+    lua_pushstring(L, "httppost: param error, expect: url(string), <data(string)>, <header(table)>");
     lua_pushnil(L);
     return 2;
 }
@@ -102,7 +102,7 @@ static int json2table(lua_State *L)
     int params = lua_gettop(L);  //jsonstr
     if(params!=1 || lua_type(L, 1)!=LUA_TSTRING)
     {
-        lua_pushstring(L, "json2table: param error");
+        lua_pushstring(L, "json2table: param error, expect: jsonstr(string)");
         lua_pushnil(L);
         return 2;
     }
@@ -130,6 +130,21 @@ static int json2table(lua_State *L)
         lua_pushnil(L);
         return 2;
     }
+}
+static int table2json(lua_State *L)
+{
+    int params = lua_gettop(L);
+    if(params!=1 || lua_type(L, 1)!=LUA_TTABLE)
+    {
+        lua_pushstring(L, "table2json: param error, expect: table");
+        lua_pushnil(L);
+        return 2;
+    }
+    QVariant table = ScriptBase::getValue(L);
+    QByteArray json = QJsonDocument::fromVariant(table).toJson(QJsonDocument::JsonFormat::Indented);
+    lua_pushnil(L);
+    lua_pushstring(L, json.constData());
+    return 2;
 }
 static int httpGetBatch(lua_State *L)
 {
@@ -198,16 +213,16 @@ static int httpGetBatch(lua_State *L)
         }
         return 2;
     }while(false);
-    lua_pushstring(L, "httpget: param error");
+    lua_pushstring(L, "httpget: param error, expect: urls(string array), <querys(table array)>, <headers(table array)>");
     lua_pushnil(L);
     return 2;
 }
 static int compress(lua_State *L)
 {
-    int params = lua_gettop(L);  //jsonstr
+    int params = lua_gettop(L);
     if(params==0 || params > 2 || lua_type(L, 1)!=LUA_TSTRING)
     {
-        lua_pushstring(L, "decompress: param error");
+        lua_pushstring(L, "decompress: param error, expect: content(string), <type(gzip)>");
         lua_pushnil(L);
         return 2;
     }
@@ -235,10 +250,10 @@ static int compress(lua_State *L)
 }
 static int decompress(lua_State *L)
 {
-    int params = lua_gettop(L);  //jsonstr
+    int params = lua_gettop(L);
     if(params==0 || params > 2 || lua_type(L, 1)!=LUA_TSTRING)
     {
-        lua_pushstring(L, "decompress: param error");
+        lua_pushstring(L, "decompress: param error, expect: content(string), <type(inflate(default)/gzip)>");
         lua_pushnil(L);
         return 2;
     }
@@ -269,7 +284,7 @@ static int writeSetting(lua_State *L)
     int params = lua_gettop(L);  //key value
     if(params!=2 || lua_type(L, 1)!=LUA_TSTRING || lua_type(L, 2)!=LUA_TSTRING)
     {
-        lua_pushstring(L, "writesetting: param error");
+        lua_pushstring(L, "writesetting: param error, expect: key(string), value(string)");
         return 1;
     }
     lua_pushstring(L, "kiko_scriptobj");
@@ -279,6 +294,29 @@ static int writeSetting(lua_State *L)
     QString errInfo = script->setOption(lua_tostring(L, 1), lua_tostring(L, 2), false);
     if(errInfo.isEmpty()) lua_pushnil(L);
     else lua_pushstring(L, errInfo.toStdString().c_str());
+    return 1;
+}
+static int execute(lua_State *L)
+{
+    int params = lua_gettop(L);  // detached(bool) program(string) args(array)
+    if(params!=3 || lua_type(L, 1)!=LUA_TBOOLEAN || lua_type(L, 2)!=LUA_TSTRING || lua_type(L, 3)!=LUA_TTABLE)
+    {
+        lua_pushstring(L, "execute: param error, expect: detached(bool), program(string), args(array)");
+        return 1;
+    }
+    bool detached = lua_toboolean(L, 1);
+    QString program = lua_tostring(L, 2);
+    QStringList args = ScriptBase::getValue(L).toStringList();
+    if(detached)
+    {
+        bool ret = QProcess::startDetached(program, args);
+        lua_pushboolean(L, ret);
+    }
+    else
+    {
+        int ret = QProcess::execute(program, args);
+        lua_pushinteger(L, ret);
+    }
     return 1;
 }
 // XmlReader-------------
@@ -388,10 +426,12 @@ static const luaL_Reg kikoFuncs[] = {
     {"httpgetbatch", httpGetBatch},
     {"httppost", httppost},
     {"json2table", json2table},
+    {"table2json", table2json},
     {"compress", compress},
     {"decompress", decompress},
     {"writesetting", writeSetting},
     {"xmlreader", xmlreader},
+    {"execute", execute},
     {nullptr, nullptr}
 };
 static const luaL_Reg xmlreaderFuncs[] = {
@@ -507,14 +547,6 @@ ScriptState ScriptBase::loadScript(const QString &path)
     if(!errInfo.isEmpty()) return errInfo;
     loadSettings(path);
     return errInfo;
-}
-
-void ScriptBase::init()
-{
-    if(lua_getglobal(L, luaInitFunc) != LUA_TFUNCTION) return;
-    lua_pop(L, 1);
-    QString errInfo;
-    call(luaInitFunc, {}, 0, errInfo);
 }
 
 QVariantList ScriptBase::call(const char *fname, const QVariantList &params, int nRet, QString &errInfo)

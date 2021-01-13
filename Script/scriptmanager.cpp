@@ -8,7 +8,9 @@
 
 ScriptManager::ScriptManager()
 {
-
+    refreshScripts(ScriptType::DANMU);
+    refreshScripts(ScriptType::LIBRARY);
+    refreshScripts(ScriptType::RESOURCE);
 }
 
 void ScriptManager::refreshScripts(ScriptManager::ScriptType type)
@@ -38,7 +40,6 @@ void ScriptManager::refreshScripts(ScriptManager::ScriptType type)
                     QString id = curScripts[path]->id();
                     scriptLists[type].removeAll(curScripts[path]);
                     curScripts.remove(path);
-                    id2script.remove(id);
                     add = true;
                     emit scriptChanged(type, id, ScriptChangeState::REMOVE);
                 }
@@ -64,10 +65,6 @@ void ScriptManager::refreshScripts(ScriptManager::ScriptType type)
     }
 }
 
-void ScriptManager::sendEvent(ScriptManager::EventType type, const QVariantList &params)
-{
-
-}
 
 QString ScriptManager::getScriptPath()
 {

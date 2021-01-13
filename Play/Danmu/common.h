@@ -36,7 +36,7 @@ struct DanmuComment
             type=Top;
             break;
         default:
-            type=UNKNOW;
+            type=Rolling;
             break;
         }
     }
@@ -53,6 +53,7 @@ struct DanmuComment
 
     QList<QSharedPointer<DanmuComment> > *mergedList;
     DanmuComment *m_parent;
+    QVariantMap toMap() const {return {{"text", text}, {"time", originTime}, {"color", color}, {"fontsize", fontSizeLevel}, {"date", date}, {"type", type}};}
 };
 QDataStream &operator<<(QDataStream &stream, const DanmuComment &danmu);
 QDataStream &operator>>(QDataStream &stream, DanmuComment &danmu);
@@ -164,13 +165,19 @@ struct DanmuEvent
 };
 struct DanmuSource
 {
+    // from script----
     QString title;
     QString desc;
-    QString idInfo;
+    QString scriptData;
     QString scriptId;
-    int danmuCount;
+    //---------
+    int id;
     int delay;
-    QVariantMap toMap() const {return {{"title", title}, {"desc", desc}, {"idinfo", idInfo}, {"delay", delay}, {"count", danmuCount}};}
+    int count;
+    int duration;
+    bool show;
+
+    QVariantMap toMap() const {return {{"title", title}, {"desc", desc}, {"data", scriptData}, {"duration", duration}, {"delay", delay}};}
 };
 Q_DECLARE_OPAQUE_POINTER(DanmuSource *)
 struct SourceCollection

@@ -54,12 +54,11 @@ public:
     virtual QString getValue(const QString &key) const {return scriptMeta.value(key);}
 
     virtual ScriptState loadScript(const QString &path);
-    virtual void init();
+    virtual void onEvent(int type, const QVariantList &params) {}
 
 protected:
     const char *luaSettingsTable = "settings";
     const char *luaMetaTable = "info";
-    const char *luaInitFunc = "loaded";
     const char *luaSetOptionFunc = "setoption";
 
     lua_State *L;

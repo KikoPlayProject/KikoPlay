@@ -1,4 +1,5 @@
 #include "danmuscript.h"
+#include "Common/threadtask.h"
 
 DanmuScript::DanmuScript() : ScriptBase()
 {
@@ -12,6 +13,7 @@ ScriptState DanmuScript::loadScript(const QString &scriptPath)
     QString errInfo = ScriptBase::loadScript(scriptPath);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     canSearch = checkType("search", LUA_TFUNCTION);
+    canLaunch = checkType("launch", LUA_TFUNCTION);
     QVariant res = get("supportedURLsRe");
     if(res.canConvert(QVariant::StringList))
     {
@@ -30,7 +32,7 @@ ScriptState DanmuScript::search(const QString &keyword, QList<DanmuSource> &resu
     if(!canSearch) return ScriptState(ScriptState::S_ERROR, "Search not supported");
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
-    QString errInfo(callGetSources("search", keyword, results));
+    QString errInfo(callGetSources(luaSearchFunc, keyword, results));
     return ScriptState(errInfo.isEmpty()?ScriptState::S_NORM:ScriptState::S_ERROR, errInfo);
 }
 
@@ -38,7 +40,7 @@ ScriptState DanmuScript::getEpInfo(const DanmuSource *source, QList<DanmuSource>
 {
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
-    QString errInfo(callGetSources("epinfo", source->toMap(), results));
+    QString errInfo(callGetSources(luaEpFunc, source->toMap(), results));
     return ScriptState(errInfo.isEmpty()?ScriptState::S_NORM:ScriptState::S_ERROR, errInfo);
 }
 
@@ -46,7 +48,7 @@ ScriptState DanmuScript::getURLInfo(const QString &url, QList<DanmuSource> &resu
 {
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
-    QString errInfo(callGetSources("urlinfo", url, results));
+    QString errInfo(callGetSources(luaURLFunc, url, results));
     return ScriptState(errInfo.isEmpty()?ScriptState::S_NORM:ScriptState::S_ERROR, errInfo);
 }
 
@@ -55,15 +57,15 @@ ScriptState DanmuScript::getDanmu(const DanmuSource *item, DanmuSource &nItem, Q
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo;
-    QVariantList rets = call("danmu", {item->toMap()}, 2, errInfo);
+    QVariantList rets = call(luaDanmuFunc, {item->toMap()}, 2, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(rets[0].type()!=QVariant::Map || rets[1].type()!=QVariant::List) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
     auto itemObj = rets[0].toMap();
-    QString title(itemObj.value("title").toString());
-    QString idInfo(itemObj.value("idinfo").toString());
-    nItem = {title, itemObj.value("desc").toString(), idInfo, id(),
-                    itemObj.value("delay", 0).toInt(),
-                    itemObj.value("count", 0).toInt()};
+    nItem = *item;
+    nItem.title = itemObj.value("title").toString();
+    nItem.desc = itemObj.value("desc").toString();
+    nItem.scriptData = itemObj.value("data").toString();
+    nItem.duration = itemObj.value("count", 0).toInt();
     auto dobjs = rets[1].toList();  //[{text=xx, time=xx(number, ms), <color=xx(int)>, <fontsize=xx(int, 1=normal, 2=small, 3=large)> <type=xx(int, 1=roll,2=top,3=bottom)>, <date=xx(str)>, <sender=xx>},....]
     for(auto &d : dobjs)
     {
@@ -75,14 +77,50 @@ ScriptState DanmuScript::getDanmu(const DanmuSource *item, DanmuSource &nItem, Q
         comment->text = text;
         comment->time = comment->originTime = time;
         comment->color = dobj.value("color", 0xFFFFFF).toInt();
-        int fontsize = dobj.value("fontsize", 1).toInt();
-        comment->fontSizeLevel = (fontsize == 2? DanmuComment::Small:(fontsize == 3? DanmuComment::Large : DanmuComment::Normal));
+        int fontsize = dobj.value("fontsize", 0).toInt();
+        comment->fontSizeLevel = (fontsize == 1? DanmuComment::Small:(fontsize == 2? DanmuComment::Large : DanmuComment::Normal));
         int type = dobj.value("type", 1).toInt();
-        comment->type = (type == 2? DanmuComment::Top:(type == 3? DanmuComment::Bottom : DanmuComment::Rolling));
+        comment->setType(type);
         comment->date = dobj.value("date", 0).toLongLong();
         comment->sender = dobj.value("sender").toString();
         danmuList.append(comment);
     }
+    return ScriptState(ScriptState::S_NORM);
+}
+
+ScriptState DanmuScript::hasSourceToLaunch(const QList<DanmuSource> &sources, bool &result)
+{
+    if(!canLaunch)
+    {
+        result = false;
+        return ScriptState(ScriptState::S_NORM);
+    }
+    MutexLocker locker(scriptLock);
+    if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
+    QVariantList params;
+    for(auto &src: sources)
+        params.append(src.toMap());
+    QString errInfo;
+    QVariantList rets = call(luaLaunchCheckFunc, params, 1, errInfo);
+    if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
+    if(rets[0].type()!=QVariant::Bool) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
+    result = rets[0].toBool();
+    return ScriptState(ScriptState::S_NORM);
+}
+
+ScriptState DanmuScript::launch(const QList<DanmuSource> &sources, const DanmuComment *comment)
+{
+    if(!comment) return ScriptState(ScriptState::S_NORM);
+    if(!canLaunch) return ScriptState(ScriptState::S_ERROR, "Not Support: Launch");
+    MutexLocker locker(scriptLock);
+    if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
+    QVariantList srcs;
+    for(auto &src: sources)
+        srcs.append(src.toMap());
+    QString errInfo;
+    QVariantList rets = call(luaLaunchFunc, {srcs, comment->toMap()}, 1, errInfo);
+    if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
+    if(rets[0].type()==QVariant::String) return ScriptState(ScriptState::S_ERROR, rets[0].toString());
     return ScriptState(ScriptState::S_NORM);
 }
 
@@ -91,7 +129,7 @@ QString DanmuScript::callGetSources(const char *fname, const QVariant &param, QL
     QString errInfo;
     QVariantList rets = call(fname, {param}, 1, errInfo);
     if(!errInfo.isEmpty()) return errInfo;
-    QVariant ret = rets.first();  // array, [{title='', <desc>='', idinfo='', <delay>=xx, <count>=''},{}...]
+    QVariant ret = rets.first();  // array, [{title='', <desc>='', data='', <delay>=xx, <count>=''},{}...]
     if(ret.type() != QVariant::List) return "Wrong Return Value Type";
     QVariantList sourceList = ret.toList();
     results.clear();
@@ -101,11 +139,16 @@ QString DanmuScript::callGetSources(const char *fname, const QVariant &param, QL
         {
             auto itemObj = item.toMap();
             QString title(itemObj.value("title").toString());
-            QString idInfo(itemObj.value("idinfo").toString());
-            if(title.isEmpty() || idInfo.isEmpty()) continue;
-            results.append({title, itemObj.value("desc").toString(), idInfo, id(),
-                            itemObj.value("delay", 0).toInt(),
-                            itemObj.value("count", 0).toInt()});
+            QString data(itemObj.value("data").toString());
+            if(title.isEmpty() || data.isEmpty()) continue;
+            DanmuSource src;
+            src.title = title;
+            src.desc = itemObj.value("desc").toString();
+            src.scriptData = data;
+            src.scriptId = id();
+            src.delay = itemObj.value("delay", 0).toInt();
+            src.duration = itemObj.value("duration", 0).toInt();
+            results.append(src);
         }
     }
     return errInfo;

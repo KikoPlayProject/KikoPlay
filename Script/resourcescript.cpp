@@ -1,4 +1,5 @@
 #include "resourcescript.h"
+#include "Common/threadtask.h"
 
 ResourceScript::ResourceScript() : ScriptBase()
 {
