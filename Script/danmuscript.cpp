@@ -52,20 +52,29 @@ ScriptState DanmuScript::getURLInfo(const QString &url, QList<DanmuSource> &resu
     return ScriptState(errInfo.isEmpty()?ScriptState::S_NORM:ScriptState::S_ERROR, errInfo);
 }
 
-ScriptState DanmuScript::getDanmu(const DanmuSource *item, DanmuSource &nItem, QList<DanmuComment *> &danmuList)
+ScriptState DanmuScript::getDanmu(const DanmuSource *item, DanmuSource **nItem, QList<DanmuComment *> &danmuList)
 {
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo;
     QVariantList rets = call(luaDanmuFunc, {item->toMap()}, 2, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
-    if(rets[0].type()!=QVariant::Map || rets[1].type()!=QVariant::List) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
-    auto itemObj = rets[0].toMap();
-    nItem = *item;
-    nItem.title = itemObj.value("title").toString();
-    nItem.desc = itemObj.value("desc").toString();
-    nItem.scriptData = itemObj.value("data").toString();
-    nItem.duration = itemObj.value("count", 0).toInt();
+    if((rets[0].type()!=QVariant::Map && rets[0].type()!=QVariant::Invalid) || rets[1].type()!=QVariant::List) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
+    if(rets[0].type() == QVariant::Invalid)
+    {
+        *nItem = nullptr;
+    }
+    else if(rets[0].type() == QVariant::Map)
+    {
+        DanmuSource *nSrc = new DanmuSource;
+        auto itemObj = rets[0].toMap();
+        *nSrc = *item;
+        nSrc->title = itemObj.value("title").toString();
+        nSrc->desc = itemObj.value("desc").toString();
+        nSrc->scriptData = itemObj.value("data").toString();
+        nSrc->duration = itemObj.value("count", 0).toInt();
+        *nItem = nSrc;
+    }
     auto dobjs = rets[1].toList();  //[{text=xx, time=xx(number, ms), <color=xx(int)>, <fontsize=xx(int, 1=normal, 2=small, 3=large)> <type=xx(int, 1=roll,2=top,3=bottom)>, <date=xx(str)>, <sender=xx>},....]
     for(auto &d : dobjs)
     {

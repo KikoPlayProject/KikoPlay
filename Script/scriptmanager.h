@@ -29,11 +29,13 @@ public:
 
     void refreshScripts(ScriptType type);
     const QList<QSharedPointer<ScriptBase>> &scripts(ScriptType type)  {return scriptLists[type]; }
+    QSharedPointer<ScriptBase> getScript(const QString &id) {return id2scriptHash.value(id);}
 
 signals:
     void scriptChanged(ScriptType type, const QString &id, ScriptChangeState state);
 private:
     QList<QSharedPointer<ScriptBase>> scriptLists[ScriptType::UNKNOWN_STYPE];
+    QHash<QString, QSharedPointer<ScriptBase>> id2scriptHash;
 
     QString getScriptPath();
 };

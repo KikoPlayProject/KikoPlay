@@ -54,7 +54,6 @@ public:
     virtual QString getValue(const QString &key) const {return scriptMeta.value(key);}
 
     virtual ScriptState loadScript(const QString &path);
-    virtual void onEvent(int type, const QVariantList &params) {}
 
 protected:
     const char *luaSettingsTable = "settings";

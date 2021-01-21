@@ -40,6 +40,7 @@ void ScriptManager::refreshScripts(ScriptManager::ScriptType type)
                     QString id = curScripts[path]->id();
                     scriptLists[type].removeAll(curScripts[path]);
                     curScripts.remove(path);
+                    id2scriptHash.remove(id);
                     add = true;
                     emit scriptChanged(type, id, ScriptChangeState::REMOVE);
                 }
@@ -56,6 +57,7 @@ void ScriptManager::refreshScripts(ScriptManager::ScriptType type)
                     if(state == ScriptState::S_NORM)
                     {
                         scriptLists[type].append(cs);
+                        id2scriptHash[cs->id()] = cs;
                         emit scriptChanged(type, cs->id(), ScriptChangeState::ADD);
                     }
                 }

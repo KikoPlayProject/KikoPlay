@@ -2,6 +2,8 @@
 #define PROVIDERMANAGER_H
 
 #include <QObject>
+#include <search.h>
+#include "Script/scriptbase.h"
 #include "common.h"
 #include "Provider/info.h"
 #ifndef Q_OS_WIN
@@ -13,19 +15,28 @@ class ProviderManager : public QObject
     Q_OBJECT
 public:
     explicit ProviderManager(QObject *parent = nullptr);
-    QStringList getSearchProviders();
-    QStringList getSupportedURLs();
-    QString getSourceURL(const QString &providerId,DanmuSourceItem *item);
-    DanmuAccessResult *search(const QString &providerId,QString keyword);
-    DanmuAccessResult *getEpInfo(const QString &providerId,DanmuSourceItem *item);
-    DanmuAccessResult *getURLInfo(QString &url);
-    QString downloadDanmu(QString &providerId,DanmuSourceItem *item,QList<DanmuComment *> &danmuList);
-    QString downloadBySourceURL(const QString &url,QList<DanmuComment *> &danmuList);
-    QString getProviderIdByURL(const QString &url);
-private:
-    QMap<QString,ProviderBase *> providers;
-    QList<ProviderBase *> orderedProviders;
 
+    QList<QPair<QString, QString>> getSearchProviders();
+    QStringList getSampleURLs();
+
+    ScriptState search(const QString &id, const QString &keyword, QList<DanmuSource> &results);
+    ScriptState getEpInfo(const QString &id, const DanmuSource *source, QList<DanmuSource> &results);
+    ScriptState getURLInfo(const QString &id, const QString &url, QList<DanmuSource> &results);
+    ScriptState downloadDanmu(const QString &id, DanmuSource *item, QList<DanmuComment *> &danmuList, DanmuSource **nItem=nullptr);
+    void checkSourceToLaunch(const QString &poolId, const QList<DanmuSource> &sources);
+    void launch(const QStringList &ids, const QString &poolId, const QList<DanmuSource> &sources, DanmuComment *comment);
+
+    //DanmuAccessResult *getURLInfo(QString &url);
+    //QString downloadDanmu(QString &providerId,DanmuSourceItem *item,QList<DanmuComment *> &danmuList);
+    //QString downloadBySourceURL(const QString &url,QList<DanmuComment *> &danmuList);
+    //QString getProviderIdByURL(const QString &url);
+signals:
+    void sourceCheckDown(const QString &poolId, const QStringList &supportedScripts);
+    void danmuLaunchStatus(const QString &poolId, const QStringList &scriptIds, const QStringList &status, DanmuComment *comment);
+private:
+    //QMap<QString,ProviderBase *> providers;
+    //QList<ProviderBase *> orderedProviders;
+    /*
     template<typename T>
     void registerProvider()
     {
@@ -34,6 +45,7 @@ private:
         providers.insert(provider->id(),provider);
         orderedProviders.append(provider);
     }
+    */
 };
 
 #endif // PROVIDERMANAGER_H

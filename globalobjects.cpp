@@ -9,7 +9,7 @@
 #include "LANServer/lanserver.h"
 #include "Download/downloadmodel.h"
 #include "Play/Danmu/Manager/danmumanager.h"
-#include "Download/Script/scriptmanager.h"
+#include "Script/scriptmanager.h"
 #include "Download/autodownloadmanager.h"
 #include "UI/stylemanager.h"
 
@@ -53,12 +53,17 @@ void GlobalObjects::init()
 #endif
     QDir dir;
     if(!dir.exists(dataPath))
-    {
         dir.mkpath(dataPath);
-    }
 
     initDatabase(mt_db_names);
+
     appSetting=new QSettings(dataPath+"settings.ini",QSettings::IniFormat);
+    QString transFile = GlobalObjects::appSetting->value("KikoPlay/Language", "").toString();
+    transFile = QString(":/res/lang/%1.qm").arg(transFile.isEmpty()?QLocale::system().name().toLower():transFile);
+    static QTranslator translator;
+    if(translator.load(transFile))
+        qApp->installTranslator(&translator);
+
     workThread=new QThread();
     workThread->setObjectName(QStringLiteral("workThread"));
     workThread->start(QThread::NormalPriority);
@@ -76,12 +81,12 @@ void GlobalObjects::init()
         initDatabase(wt_db_names);
         workObj->deleteLater();
     },Qt::QueuedConnection);
+    scriptManager=new ScriptManager();
     providerManager=new ProviderManager();
     library=new AnimeLibrary();
     downloadModel=new DownloadModel();
     danmuManager=new DanmuManager();
     lanServer=new LANServer();
-    scriptManager=new ScriptManager();
     autoDownloadManager=new AutoDownloadManager();
 
     int fontId = QFontDatabase::addApplicationFont(":/res/iconfont.ttf");

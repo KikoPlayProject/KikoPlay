@@ -1,60 +1,116 @@
 #include "providermanager.h"
-#include "Provider/providerbase.h"
-#include "Provider/bilibiliprovider.h"
-#include "Provider/acfunprovider.h"
-#include "Provider/tucaoprovider.h"
-#include "Provider/dililiprovider.h"
-#include "Provider/dandanprovider.h"
-#include "Provider/bahamutprovider.h"
-#include "Provider/iqiyiprovider.h"
-#include "Provider/youkuprovider.h"
-#include "Provider/tencentprovider.h"
-#include "Provider/pptvprovider.h"
+#include "Common/threadtask.h"
+#include "Script/scriptmanager.h"
+#include "Script/danmuscript.h"
 #include "globalobjects.h"
 
 ProviderManager::ProviderManager(QObject *parent) : QObject(parent)
 {
-    qRegisterMetaType<DanmuSourceItem *>("DanmuSourceItem*");
 
-	registerProvider<BilibiliProvider>();
-    registerProvider<AcfunProvider>();
-	registerProvider<TucaoProvider>();
-    registerProvider<DililiProvider>();
-	registerProvider<DandanProvider>();
-	registerProvider<BahamutProvider>();
-    registerProvider<IqiyiProvider>();
-    registerProvider<YoukuProvider>();
-    registerProvider<TencentProvider>();
-    registerProvider<PPTVProvider>();
 }
 
-QStringList ProviderManager::getSearchProviders()
+QList<QPair<QString, QString>> ProviderManager::getSearchProviders()
 {
-    QStringList searchProviders;
-    for(ProviderBase *provider:orderedProviders)
+    QList<QPair<QString, QString>> searchProviders;
+    for(auto &script : GlobalObjects::scriptManager->scripts(ScriptManager::DANMU))
     {
-        if(provider->supportSearch())
-            searchProviders.append(provider->id());
+        DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
+        if(dmScript->supportSearch())
+        {
+            searchProviders.append({dmScript->id(), dmScript->name()});
+        }
     }
     return searchProviders;
 }
 
-QStringList ProviderManager::getSupportedURLs()
+QStringList ProviderManager::getSampleURLs()
 {
-    QStringList supportedURLs;
-    for(ProviderBase *provider:orderedProviders)
+    QStringList sampledURLs;
+    for(auto &script : GlobalObjects::scriptManager->scripts(ScriptManager::DANMU))
     {
-        supportedURLs+=provider->supportedURLs();
+        DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
+        sampledURLs.append(dmScript->sampleURLs());
     }
-    return supportedURLs;
+    return sampledURLs;
 }
 
-QString ProviderManager::getSourceURL(const QString &providerId, DanmuSourceItem *item)
+ScriptState ProviderManager::search(const QString &id, const QString &keyword, QList<DanmuSource> &results)
 {
-    ProviderBase *provider=providers.value(providerId,nullptr);
-    return provider?provider->sourceURL(item):QString();
+    auto script = GlobalObjects::scriptManager->getScript(id).staticCast<DanmuScript>();
+    if(!script || !script->supportSearch()) return "Script invalid or Unsupport search";
+    ThreadTask task(GlobalObjects::workThread);
+    return task.Run([&](){
+        return script->search(keyword, results);
+    }).value<ScriptState>();
 }
 
+ScriptState ProviderManager::getEpInfo(const QString &id, const DanmuSource *source, QList<DanmuSource> &results)
+{
+    auto script = GlobalObjects::scriptManager->getScript(id).staticCast<DanmuScript>();
+    if(!script) return "Script invalid";
+    ThreadTask task(GlobalObjects::workThread);
+    return task.Run([&](){
+        return script->getEpInfo(source, results);
+    }).value<ScriptState>();
+}
+
+ScriptState ProviderManager::getURLInfo(const QString &id, const QString &url, QList<DanmuSource> &results)
+{
+    auto script = GlobalObjects::scriptManager->getScript(id).staticCast<DanmuScript>();
+    if(!script) return "Script invalid";
+    ThreadTask task(GlobalObjects::workThread);
+    return task.Run([&](){
+        return script->getURLInfo(url, results);
+    }).value<ScriptState>();
+}
+
+ScriptState ProviderManager::downloadDanmu(const QString &id, DanmuSource *item, QList<DanmuComment *> &danmuList, DanmuSource **nItem)
+{
+    auto script = GlobalObjects::scriptManager->getScript(id).staticCast<DanmuScript>();
+    if(!script) return "Script invalid";
+    ThreadTask task(GlobalObjects::workThread);
+    return task.Run([&](){
+        DanmuSource *retItem = nullptr;
+        ScriptState state = script->getDanmu(item, &retItem, danmuList);
+        if(nItem) *nItem = retItem;
+        return state;
+    }).value<ScriptState>();
+}
+
+void ProviderManager::checkSourceToLaunch(const QString &poolId, const QList<DanmuSource> &sources)
+{
+    ThreadTask task(GlobalObjects::workThread);
+    task.RunOnce([=](){
+        QStringList supportedScripts;
+        for(auto &script : GlobalObjects::scriptManager->scripts(ScriptManager::DANMU))
+        {
+            DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
+            bool ret = false;
+            dmScript->hasSourceToLaunch(sources, ret);
+            if(ret) supportedScripts.append(dmScript->id());
+        }
+        emit sourceCheckDown(poolId, supportedScripts);
+    });
+}
+
+void ProviderManager::launch(const QStringList &ids, const QString &poolId, const QList<DanmuSource> &sources, DanmuComment *comment)
+{
+    ThreadTask task(GlobalObjects::workThread);
+    task.RunOnce([=](){
+        QStringList status;
+        for(auto &id : ids)
+        {
+            auto script =  GlobalObjects::scriptManager->getScript(id);
+            DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
+            ScriptState state = dmScript->launch(sources, comment);
+            status.append(state.info);
+        }
+        emit danmuLaunchStatus(poolId, ids, status, comment);
+    });
+}
+
+
+/*
 DanmuAccessResult *ProviderManager::search(const QString &providerId, QString keyword)
 {
     ProviderBase *provider=providers.value(providerId,nullptr);
@@ -171,3 +227,4 @@ QString ProviderManager::getProviderIdByURL(const QString &url)
     }
     return QString();
 }
+*/
