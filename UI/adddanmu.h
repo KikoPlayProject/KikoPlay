@@ -3,7 +3,6 @@
 
 #include "framelessdialog.h"
 #include <QStyledItemDelegate>
-#include "Play/Danmu/Provider/info.h"
 #include "Play/Danmu/common.h"
 
 class QStackedLayout;
@@ -17,14 +16,14 @@ class SearchItemWidget:public QWidget
 {
     Q_OBJECT
 public:
-    SearchItemWidget(DanmuSourceItem *item);
+    SearchItemWidget(const DanmuSource &item);
+    DanmuSource source;
 signals:
-    void addSearchItem(DanmuSourceItem *item);
-private:
-    DanmuSourceItem searchItem;
+    void addSearchItem(SearchItemWidget *widgetItem);
 public:
     virtual QSize sizeHint() const;
 };
+
 class PoolComboDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
@@ -48,7 +47,7 @@ class DanmuItemModel : public QAbstractItemModel
     Q_OBJECT
 public:
     explicit DanmuItemModel(AddDanmu *dmDialog, bool hasPool, const QString &normalPool, QObject *parent = nullptr);
-    void addItem(const QString &title, int duration, const QString &provider, int count);
+    void addItem(const DanmuSource &src);
     enum class Columns
     {
         TITLE,
@@ -69,7 +68,7 @@ private:
     QList<ItemInfo> items;
     QStringList *danmuToPoolList;
     QList<bool> *danmuCheckedList;
-    QList<QPair<DanmuSourceInfo,QList<DanmuComment *>>> *selectedDanmuList;
+    QList<QPair<DanmuSource,QList<DanmuComment *>>> *selectedDanmuList;
     bool hasPoolInfo;
     QString nPool;
 public:
@@ -108,7 +107,7 @@ class AddDanmu : public CFramelessDialog
     Q_OBJECT
 public:
     explicit AddDanmu(const PlayListItem *item, QWidget *parent = nullptr, bool autoPauseVideo=true, const QStringList &poolList=QStringList());
-    QList<QPair<DanmuSourceInfo,QList<DanmuComment *>>> selectedDanmuList;
+    QList<QPair<DanmuSource,QList<DanmuComment *>>> selectedDanmuList;
     QList<bool> danmuCheckedList;
     QStringList danmuToPoolList;
 private:
@@ -125,7 +124,7 @@ private:
     QString themeWord;
 
     void search();
-    void addSearchItem(DanmuAccessResult *result);
+    void addSearchItem(QList<DanmuSource> &sources);
     void addURL();
     QWidget *setupSearchPage();
     QWidget *setupURLPage();

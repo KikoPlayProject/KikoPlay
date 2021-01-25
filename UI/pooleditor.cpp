@@ -38,8 +38,6 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),paren
     poolItemVLayout=new QVBoxLayout(contentWidget);
     poolItemVLayout->addStretch(1);
     refreshItems();
-   // poolItemVLayout->addItem(new QSpacerItem(1, 0, QSizePolicy::Minimum, QSizePolicy::MinimumExpanding));
-
 
     QPushButton *shareCodeButton=new QPushButton(tr("Share Pool Code"),this);
     QObject::connect(shareCodeButton,&QPushButton::clicked,this,[this](){
@@ -106,12 +104,12 @@ void PoolEditor::onClose()
      CFramelessDialog::onClose();
 }
 
-PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(parent)
+PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent)
 {
     QAction *viewDanmu=new QAction(tr("View Danmu"),this);
     QObject::connect(viewDanmu,&QAction::triggered,this,[sourceInfo](){
         DanmuView view(&GlobalObjects::danmuPool->getPool()->comments(),editor,
-                       GlobalObjects::providerManager->getProviderIdByURL(sourceInfo->url));
+                       sourceInfo->scriptId);
         view.exec();
     });
     QAction *copyTimeline=new QAction(tr("Copy TimeLine Info"), this);
@@ -144,7 +142,7 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
 
     QLabel *name=new QLabel(this);
     name->setFont(normalFont);
-    QString sourceName = QString("%1(%2)").arg(sourceInfo->name).arg(sourceInfo->count);
+    QString sourceName = QString("%1(%2)").arg(sourceInfo->title).arg(sourceInfo->count);
     QString elidedName = name->fontMetrics().elidedText(sourceName, Qt::ElideMiddle, 600*logicalDpiX()/96);
     name->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Preferred);
     name->setText(elidedName);
@@ -160,7 +158,7 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
     itemControlHLayout1->addStretch(1);
     itemControlHLayout1->addWidget(itemSwitch);
 
-    QLabel *url=new QLabel(tr("Source: <a href = %1>%1</a>").arg(sourceInfo->url),this);
+    QLabel *url=new QLabel(tr("Source: <a href = %1>%1</a>").arg(sourceInfo->scriptId),this);
     url->setOpenExternalLinks(true);
     url->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
 
@@ -178,13 +176,12 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
     //editTimeline->setFixedWidth(80*logicalDpiX()/96);
     QObject::connect(editTimeline,&QPushButton::clicked,[sourceInfo,this](){
         int curTime=GlobalObjects::mpvplayer->getTime();
-        DanmuSourceInfo srcInfo(*sourceInfo);
         QList<SimpleDanmuInfo> list;
-        GlobalObjects::danmuPool->getPool()->exportSimpleInfo(srcInfo.id,list);
-        TimelineEdit timelineEdit(&srcInfo,list,this,curTime);
+        GlobalObjects::danmuPool->getPool()->exportSimpleInfo(sourceInfo->id,list);
+        TimelineEdit timelineEdit(sourceInfo,list,this,curTime);
         if(QDialog::Accepted==timelineEdit.exec())
         {
-            GlobalObjects::danmuPool->getPool()->setTimeline(srcInfo.id,srcInfo.timelineInfo);
+            GlobalObjects::danmuPool->getPool()->setTimeline(sourceInfo->id, timelineEdit.timelineInfo);
         }
     });
 
@@ -200,9 +197,9 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
     QPushButton *updateButton=new QPushButton(tr("Update"),this);
     updateButton->setFixedWidth(80*logicalDpiX()/96);
     updateButton->setObjectName(QStringLiteral("DialogButton"));
-	QFileInfo fi(sourceInfo->url);
-    if(fi.exists())
-		updateButton->setEnabled(false);
+    //QFileInfo fi(sourceInfo->url);
+    //if(fi.exists())
+    //	updateButton->setEnabled(false);
     QObject::connect(updateButton,&QPushButton::clicked,[this,sourceInfo,updateButton,deleteButton,
                      editTimeline,delaySpinBox,name](){
         QList<DanmuComment *> tmpList;
@@ -214,7 +211,7 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
         if(addCount>0)
         {
             editor->showMessage(tr("Add %1 New Danmu").arg(addCount));
-            QString sourceName = QString("%1(%2)").arg(sourceInfo->name).arg(sourceInfo->count);
+            QString sourceName = QString("%1(%2)").arg(sourceInfo->title).arg(sourceInfo->count);
             QString elidedName = name->fontMetrics().elidedText(sourceName, Qt::ElideMiddle, 600*logicalDpiX()/96);
             name->setText(sourceName);
             name->setToolTip(elidedName);
@@ -229,7 +226,7 @@ PoolItem::PoolItem(const DanmuSourceInfo *sourceInfo, QWidget *parent):QFrame(pa
     exportButton->setFixedWidth(80*logicalDpiX()/96);
     exportButton->setObjectName(QStringLiteral("DialogButton"));
     QObject::connect(exportButton,&QPushButton::clicked,[this,sourceInfo](){
-        QString fileName = QFileDialog::getSaveFileName(this, tr("Save Danmu"),sourceInfo->name,tr("Xml File (*.xml)"));
+        QString fileName = QFileDialog::getSaveFileName(this, tr("Save Danmu"),sourceInfo->title,tr("Xml File (*.xml)"));
         if(!fileName.isEmpty())
         {
             GlobalObjects::danmuPool->getPool()->exportPool(fileName,true,true,QList<int>()<<sourceInfo->id);

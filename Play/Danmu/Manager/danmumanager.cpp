@@ -18,28 +18,24 @@
 DanmuManager *PoolStateLock::manager=nullptr;
 DanmuManager::DanmuManager(QObject *parent) : QObject(parent),countInited(false)
 {
-    cacheLock = new QMutex(QMutex::Recursive);
-    removeLock = new QMutex(QMutex::Recursive);
+    poolCache.reset(new LRUCache<QString, Pool *>([](Pool *p){return !p->used && p->clean();}));
     PoolStateLock::manager=this;
     loadAllPool();
 }
 
 DanmuManager::~DanmuManager()
 {
-    //poolWorker->deleteLater();
     for(auto pool:pools) pool->deleteLater();
-    delete cacheLock;
-    delete removeLock;
 }
 
 Pool *DanmuManager::getPool(const QString &pid, bool loadDanmu)
 {
-    QMutexLocker locker(removeLock);
+    QMutexLocker locker(&poolsLock);
     Pool *pool=pools.value(pid,nullptr);
     if(pool && loadDanmu)
     {
         pool->load();
-        refreshCache(pool);
+        poolCache->put(pool->pid, pool);
     }
     return pool;
 }
@@ -97,13 +93,7 @@ void DanmuManager::loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList)
         epNode->idInfo=pool->pid;
         for(const auto &src:pool->sourcesTable)
         {
-            DanmuPoolSourceNode *sourceNode=new DanmuPoolSourceNode(epNode);
-            sourceNode->title=src.name;
-            sourceNode->idInfo=src.url;
-            sourceNode->srcId=src.id;
-            sourceNode->delay=src.delay;
-            sourceNode->setTimeline(src);
-			sourceNode->danmuCount = src.count;
+            new DanmuPoolSourceNode(src, epNode);
         }
     }
     for(DanmuPoolNode *animeNode:poolNodeList)
@@ -233,8 +223,8 @@ int DanmuManager::importKdFile(const QString &fileName, QWidget *parent)
             if(poolFlag!=0x23) break;
 
             QString curAnime,curEp,file16MD5;
-            QList<DanmuSourceInfo> srcInfoList;
-            QHash<int, QPair<DanmuSourceInfo,QList<DanmuComment *> > > danmuInfo;
+            QList<DanmuSource> srcInfoList;
+            QHash<int, QPair<DanmuSource,QList<DanmuComment *>>> danmuInfo;
             int danmuConut=0;
 
             ds>>curAnime>>curEp>>file16MD5>>srcInfoList>>danmuConut;
@@ -578,7 +568,7 @@ QString DanmuManager::createPool(const QString &animeTitle, const QString &title
         query.bindValue(1,animeTitle);
         query.bindValue(2,title);
         query.exec();
-        QMutexLocker locker(removeLock);
+        QMutexLocker locker(&poolsLock);
         pools.insert(poolId,new Pool(poolId,animeTitle,title));
     }
     if(!fileHash.isEmpty())
@@ -617,12 +607,9 @@ QString DanmuManager::renamePool(const QString &pid, const QString &nAnimeTitle,
 
     if(!db.commit()) return QString();
 
-    QMutexLocker locker(removeLock);
-    if(poolDanmuCacheInfo.contains(pid))
-    {
-        QMutexLocker locker(cacheLock);
-        poolDanmuCacheInfo.remove(pid);
-    }
+    QMutexLocker locker(&poolsLock);
+    poolCache->remove(pid, false);
+
     pools.remove(pid);
     pool->pid=npid;
     pool->anime=nAnimeTitle;
@@ -772,7 +759,7 @@ void DanmuManager::updatePool(QList<DanmuPoolNode *> &updateList)
     });
 }
 
-void DanmuManager::updateSourceDelay(const QString &pid, const DanmuSourceInfo *sourceInfo)
+void DanmuManager::updateSourceDelay(const QString &pid, const DanmuSource *sourceInfo)
 {
     ThreadTask task(GlobalObjects::workThread);
     int delay=sourceInfo->delay,id=sourceInfo->id;
@@ -786,11 +773,11 @@ void DanmuManager::updateSourceDelay(const QString &pid, const DanmuSourceInfo *
     });
 }
 
-QList<DanmuComment *> DanmuManager::updateSource(const DanmuSourceInfo *sourceInfo, const QSet<QString> &danmuHashSet)
+QList<DanmuComment *> DanmuManager::updateSource(const DanmuSource *sourceInfo, const QSet<QString> &danmuHashSet)
 {
     QList<DanmuComment *> tmpList;
-    QString errInfo = GlobalObjects::providerManager->downloadBySourceURL(sourceInfo->url,tmpList);
-    if(!errInfo.isEmpty())return tmpList;
+    auto ret = GlobalObjects::providerManager->downloadDanmu(sourceInfo, tmpList);
+    if(!ret)return tmpList;
     GlobalObjects::blocker->preFilter(tmpList);
     for(auto iter=tmpList.begin();iter!=tmpList.end();)
     {
@@ -826,85 +813,56 @@ void DanmuManager::loadAllPool()
     query.exec("select * from source");
     int s_pidNo = query.record().indexOf("PoolID"),
         s_idNo = query.record().indexOf("ID"),
-        s_nameNo = query.record().indexOf("Name"),
-        s_urlNo=query.record().indexOf("URL"),
+        s_titleNo = query.record().indexOf("Title"),
+        s_descNo = query.record().indexOf("Desc"),
+        s_scriptIdNo = query.record().indexOf("ScriptId"),
+        s_scriptDataNo = query.record().indexOf("ScriptData"),
         s_delayNo=query.record().indexOf("Delay"),
+        s_durationNo=query.record().indexOf("Duration"),
         s_timelineNo=query.record().indexOf("TimeLine");
     while (query.next())
     {
         Pool *pool = pools.value(query.value(s_pidNo).toString(),nullptr);
         Q_ASSERT(pool);
-        DanmuSourceInfo srcInfo;
+        DanmuSource srcInfo;
         srcInfo.id=query.value(s_idNo).toInt();
-        srcInfo.url=query.value(s_urlNo).toString();
-        srcInfo.name=query.value(s_nameNo).toString();
-        srcInfo.count=0;
+        srcInfo.title = query.value(s_titleNo).toString();
+        srcInfo.desc = query.value(s_descNo).toString();
+        srcInfo.scriptId = query.value(s_scriptIdNo).toString();
+        srcInfo.scriptData = query.value(s_scriptDataNo).toString();
         srcInfo.delay=query.value(s_delayNo).toInt();
+        srcInfo.duration=query.value(s_durationNo).toInt();
+        srcInfo.count=0;
         srcInfo.show=true;
         srcInfo.setTimeline(query.value(s_timelineNo).toString());
         pool->sourcesTable.insert(srcInfo.id, srcInfo);
     }
 }
 
-void DanmuManager::refreshCache(Pool *newPool)
-{
-    QMutexLocker locker(cacheLock);
-    if(newPool)
-    {
-        if(poolDanmuCacheInfo.contains(newPool->pid))
-        {
-            if(poolDanmuCacheInfo.value(newPool->pid)<8)
-                ++poolDanmuCacheInfo[newPool->pid];
-        }
-        else
-        {
-            poolDanmuCacheInfo[newPool->pid]=4;
-        }
-    }
-    for(auto iter=poolDanmuCacheInfo.begin();iter!=poolDanmuCacheInfo.end();)
-    {
-        if(iter.value()==0)
-        {
-            Pool *pool=pools.value(iter.key(),nullptr);
-            Q_ASSERT(pool);
-            if(!pool->used && pool->clean()) iter=poolDanmuCacheInfo.erase(iter);
-			else ++iter;
-        }
-        else
-        {
-            --iter.value();
-            ++iter;
-        }
-    }
-}
-
 void DanmuManager::deletePool(const QString &pid)
 {
-    QMutexLocker locker(removeLock);
+    QMutexLocker locker(&poolsLock);
     Pool *pool=pools.value(pid,nullptr);
     if(pool)
     {
-        if(poolDanmuCacheInfo.contains(pid))
-        {
-            QMutexLocker locker(cacheLock);
-            poolDanmuCacheInfo.remove(pid);
-        }
+        poolCache->remove(pid);
         pools.remove(pid);
         delete pool;
     }
 
 }
 
-void DanmuManager::updateSourceTimeline(const QString &pid, const DanmuSourceInfo *sourceInfo)
+void DanmuManager::updateSourceTimeline(const QString &pid, const DanmuSource *sourceInfo)
 {
     ThreadTask task(GlobalObjects::workThread);
-    DanmuSourceInfo srcInfo(*sourceInfo);
-    task.RunOnce([pid, srcInfo](){
+    QString timeline(sourceInfo->timelineStr());
+    int id = sourceInfo->id;
+    task.RunOnce([=](){
         QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
         query.prepare("update source set TimeLine= ? where PoolID=? and ID=?");
-        query.bindValue(0,srcInfo.getTimelineStr());
+        query.bindValue(0,timeline);
         query.bindValue(1,pid);
-        query.bindValue(2,srcInfo.id);
+        query.bindValue(2,id);
         query.exec();
     });
 
@@ -974,10 +932,10 @@ void DanmuManager::updatePool(Pool *pool, QList<DanmuComment *> &outList, int so
     });
 }
 
-void DanmuManager::saveSource(const QString &pid, const DanmuSourceInfo *source, const QList<QSharedPointer<DanmuComment> > &danmuList)
+void DanmuManager::saveSource(const QString &pid, const DanmuSource *source, const QList<QSharedPointer<DanmuComment> > &danmuList)
 {
     ThreadTask task(GlobalObjects::workThread);
-    DanmuSourceInfo src;
+    DanmuSource src;
     if(source!=nullptr) src=*source;
     task.RunOnce([pid,src,source,danmuList](){
         QSqlDatabase db = GlobalObjects::getDB(GlobalObjects::Comment_DB);
@@ -985,13 +943,16 @@ void DanmuManager::saveSource(const QString &pid, const DanmuSourceInfo *source,
         db.transaction();
         if(source)
         {
-            query.prepare("insert into source(PoolID,ID,Name,Delay,URL,TimeLine) values(?,?,?,?,?,?)");
+            query.prepare("insert into source(PoolID,ID,Title,Desc,ScriptId,ScriptData,Delay,Duration,TimeLine) values(?,?,?,?,?,?)");
             query.bindValue(0,pid);
             query.bindValue(1,src.id);
-            query.bindValue(2,src.name);
-            query.bindValue(3,src.delay);
-            query.bindValue(4,src.url);
-            query.bindValue(5,src.getTimelineStr());
+            query.bindValue(2,src.title);
+            query.bindValue(3,src.desc);
+            query.bindValue(4,src.scriptId);
+            query.bindValue(5,src.scriptData);
+            query.bindValue(6,src.delay);
+            query.bindValue(7,src.duration);
+            query.bindValue(8,src.timelineStr());
             query.exec();
         }
         int tableId=DanmuPoolNode::idHash(pid);

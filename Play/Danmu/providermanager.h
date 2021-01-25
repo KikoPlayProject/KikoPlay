@@ -20,9 +20,9 @@ public:
     QStringList getSampleURLs();
 
     ScriptState search(const QString &id, const QString &keyword, QList<DanmuSource> &results);
-    ScriptState getEpInfo(const QString &id, const DanmuSource *source, QList<DanmuSource> &results);
-    ScriptState getURLInfo(const QString &id, const QString &url, QList<DanmuSource> &results);
-    ScriptState downloadDanmu(const QString &id, DanmuSource *item, QList<DanmuComment *> &danmuList, DanmuSource **nItem=nullptr);
+    ScriptState getEpInfo(const DanmuSource *source, QList<DanmuSource> &results);
+    ScriptState getURLInfo(const QString &url, QList<DanmuSource> &results);
+    ScriptState downloadDanmu(const DanmuSource *item, QList<DanmuComment *> &danmuList, DanmuSource **nItem=nullptr);
     void checkSourceToLaunch(const QString &poolId, const QList<DanmuSource> &sources);
     void launch(const QStringList &ids, const QString &poolId, const QList<DanmuSource> &sources, DanmuComment *comment);
 

@@ -117,35 +117,6 @@ void DanmuObject::DeleteObjPool()
     poolCount=0;
 }
 
-void DanmuSourceInfo::setTimeline(const QString &timelineStr)
-{
-    QStringList timelineList(timelineStr.split(';',QString::SkipEmptyParts));
-    QTextStream ts;
-    timelineInfo.clear();
-    for(QString &spaceInfo:timelineList)
-    {
-        ts.setString(&spaceInfo,QIODevice::ReadOnly);
-        int start,duration;
-        ts>>start>>duration;
-        timelineInfo.append(QPair<int,int>(start,duration));
-    }
-    std::sort(timelineInfo.begin(),timelineInfo.end(),[](const QPair<int,int> &s1,const QPair<int,int> &s2){
-        return s1.first<s2.first;
-    });
-}
-
-QString DanmuSourceInfo::getTimelineStr() const
-{
-    QString timelineStr;
-    QTextStream ts(&timelineStr);
-    for(auto &spaceItem:timelineInfo)
-    {
-        ts<<spaceItem.first<<' '<<spaceItem.second<<';';
-    }
-    ts.flush();
-    return timelineStr;
-}
-
 QDataStream &operator<<(QDataStream &stream, const DanmuComment &danmu)
 {
     static int type[3]={1,5,4};
@@ -171,19 +142,6 @@ QDataStream &operator>>(QDataStream &stream, DanmuComment &danmu)
     return stream;
 }
 
-QDataStream &operator<<(QDataStream &stream, const DanmuSourceInfo &src)
-{
-    stream<<src.id<<src.name<<src.url<<src.delay<<src.getTimelineStr();
-    return stream;
-}
-
-QDataStream &operator>>(QDataStream &stream, DanmuSourceInfo &src)
-{
-    QString timeline;
-    stream>>src.id>>src.name>>src.url>>src.delay>>timeline;
-    if(!timeline.isEmpty()) src.setTimeline(timeline);
-    return stream;
-}
 
 QDataStream &operator<<(QDataStream &stream, const MatchInfo &match)
 {
@@ -203,4 +161,46 @@ QDataStream &operator<<(QDataStream &stream, const MatchInfo::DetailInfo &md)
 QDataStream &operator>>(QDataStream &stream, MatchInfo::DetailInfo &md)
 {
     return stream>>md.title>>md.animeTitle;
+}
+
+void DanmuSource::setTimeline(const QString &timelineStr)
+{
+    QStringList timelineList(timelineStr.split(';',QString::SkipEmptyParts));
+    QTextStream ts;
+    timelineInfo.clear();
+    for(QString &spaceInfo:timelineList)
+    {
+        ts.setString(&spaceInfo,QIODevice::ReadOnly);
+        int start,duration;
+        ts>>start>>duration;
+        timelineInfo.append(QPair<int,int>(start,duration));
+    }
+    std::sort(timelineInfo.begin(),timelineInfo.end(),[](const QPair<int,int> &s1,const QPair<int,int> &s2){
+        return s1.first<s2.first;
+    });
+}
+
+QString DanmuSource::timelineStr() const
+{
+    QString timelineStr;
+    QTextStream ts(&timelineStr);
+    for(auto &spaceItem:timelineInfo)
+    {
+        ts<<spaceItem.first<<' '<<spaceItem.second<<';';
+    }
+    ts.flush();
+    return timelineStr;
+}
+
+QDataStream &operator<<(QDataStream &stream, const DanmuSource &src)
+{
+    return stream<<src.title<<src.desc<<src.scriptId<<src.scriptData<<src.id<<src.duration<<src.delay<<src.timelineStr();
+}
+
+QDataStream &operator>>(QDataStream &stream, DanmuSource &src)
+{
+    QString timeline;
+    stream>>src.title>>src.desc>>src.scriptId>>src.scriptData>>src.id>>src.duration>>src.delay>>timeline;
+    if(!timeline.isEmpty()) src.setTimeline(timeline);
+    return stream;
 }

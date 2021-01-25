@@ -87,15 +87,15 @@ int Pool::update(int sourceId, QList<QSharedPointer<DanmuComment> > *incList)
     return tList.count();
 }
 
-int Pool::addSource(const DanmuSourceInfo &sourceInfo, QList<DanmuComment *> &danmuList, bool reset)
+int Pool::addSource(const DanmuSource &sourceInfo, QList<DanmuComment *> &danmuList, bool reset)
 {
     PoolStateLock locker;
     if(!locker.tryLock(pid)) return -1;
-    DanmuSourceInfo *source(nullptr);
+    DanmuSource *source(nullptr);
     bool containSource=false;
     for(auto iter=sourcesTable.begin();iter!=sourcesTable.end();++iter)
     {
-        if(iter.value().url==sourceInfo.url)
+        if(iter->scriptId == sourceInfo.scriptId && iter.value().scriptData==sourceInfo.scriptData)
         {
             source=&iter.value();
             containSource=true;
@@ -127,14 +127,9 @@ int Pool::addSource(const DanmuSourceInfo &sourceInfo, QList<DanmuComment *> &da
     }
     else
     {
-        DanmuSourceInfo newSource;
+        DanmuSource newSource(sourceInfo);
         newSource.id=sourcesTable.isEmpty()?0:sourcesTable.lastKey()+1;
-        newSource.delay=sourceInfo.delay;
         newSource.count=danmuList.count();
-        newSource.url=sourceInfo.url;
-        newSource.name=sourceInfo.name;
-        newSource.timelineInfo=sourceInfo.timelineInfo;
-        newSource.show=true;
         sourcesTable.insert(newSource.id,newSource);
         source = &sourcesTable[newSource.id];
     }
@@ -197,7 +192,7 @@ bool Pool::setTimeline(int sourceId, const QList<QPair<int, int>> &timelineInfo)
     if(!sourcesTable.contains(sourceId)) return false;
     PoolStateLock locker;
     if(!locker.tryLock(pid)) return false;
-    DanmuSourceInfo *srcInfo=&sourcesTable[sourceId];
+    DanmuSource *srcInfo=&sourcesTable[sourceId];
     srcInfo->timelineInfo=timelineInfo;
     for(auto iter=commentList.cbegin();iter!=commentList.cend();++iter)
     {
@@ -216,7 +211,7 @@ bool Pool::setTimeline(int sourceId, const QList<QPair<int, int>> &timelineInfo)
 bool Pool::setDelay(int sourceId, int delay)
 {
     if(!sourcesTable.contains(sourceId)) return false;
-    DanmuSourceInfo *srcInfo=&sourcesTable[sourceId];
+    DanmuSource *srcInfo=&sourcesTable[sourceId];
     if(srcInfo->delay==delay)return true;
     PoolStateLock locker;
     if(!locker.tryLock(pid)) return false;
@@ -394,11 +389,11 @@ QString Pool::getPoolCode(const QStringList &addition) const
     //addition: magnet,animeName,epName,file16MBHash
     for(const QString &item:addition)
         poolArray.append(QJsonValue(item));
-    for(const DanmuSourceInfo &src:sourcesTable)
+    for(const auto &src:sourcesTable)
     {
-        QFileInfo fi(src.url);
+        QFileInfo fi(src.scriptData);
         if(fi.exists()) continue;
-        poolArray.append(QJsonArray({src.name,src.url,src.delay,src.getTimelineStr()}));
+        poolArray.append(QJsonArray({src.title,src.scriptId,src.scriptData,src.delay,src.timelineStr()}));
     }
     if(poolArray.isEmpty()) return QString();
     QByteArray compressedBytes;
@@ -469,11 +464,12 @@ QSet<QString> Pool::getDanmuHashSet(int sourceId)
 
 void Pool::addSourceJson(const QJsonArray &array)
 {
-    if(array.count()!=4) return;
-    DanmuSourceInfo srcInfo;
-    srcInfo.name=array[0].toString();
-    srcInfo.url=array[1].toString();
-    srcInfo.delay=array[2].toInt();
+    if(array.count()!=5) return;
+    DanmuSource srcInfo;
+    srcInfo.title=array[0].toString();
+    srcInfo.scriptId = array[1].toString();
+    srcInfo.scriptData = array[2].toString();
+    srcInfo.delay=array[3].toInt();
     srcInfo.count=0;
     srcInfo.setTimeline(array[3].toString());
     QList<DanmuComment *> emptyList;
@@ -482,7 +478,7 @@ void Pool::addSourceJson(const QJsonArray &array)
 
 void Pool::setDelay(DanmuComment *danmu)
 {
-    DanmuSourceInfo *srcInfo=&sourcesTable[danmu->source];
+    auto srcInfo=&sourcesTable[danmu->source];
     int delay=0;
     for(auto &spaceItem:srcInfo->timelineInfo)
     {

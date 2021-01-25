@@ -71,7 +71,7 @@ int DanmuPoolNode::idHash(const QString &str)
     }
     return hash % 5;
 }
-
+/*
 DanmuSourceInfo DanmuPoolSourceNode::toSourceInfo()
 {
     DanmuSourceInfo srcInfo;
@@ -88,3 +88,4 @@ void DanmuPoolSourceNode::setTimeline(const DanmuSourceInfo &srcInfo)
 {
     timeline=srcInfo.getTimelineStr();
 }
+*/

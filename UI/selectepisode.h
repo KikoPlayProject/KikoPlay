@@ -2,17 +2,17 @@
 #define SELECTEPISODE_H
 
 #include "framelessdialog.h"
-#include "Play/Danmu/Provider/info.h"
+#include "Play/Danmu/common.h"
 class QTreeWidget;
 class SelectEpisode : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit SelectEpisode(DanmuAccessResult *episodeResult,QWidget *parent = nullptr);
+    explicit SelectEpisode(QList<DanmuSource> &epResults,QWidget *parent = nullptr);
 
 private:
     QTreeWidget *episodeWidget;
-    DanmuAccessResult *episodeResult;
+    QList<DanmuSource> &episodeResult;
     bool autoSetDelay;
 signals:
 

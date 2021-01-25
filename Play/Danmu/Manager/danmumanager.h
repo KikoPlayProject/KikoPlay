@@ -3,6 +3,7 @@
 
 #include <QAbstractItemModel>
 #include "../common.h"
+#include "Common/lrucache.h"
 #include "nodeinfo.h"
 class Pool;
 class DanmuManager : public QObject
@@ -50,12 +51,12 @@ private:
     void loadPool(Pool *pool);
     void updatePool(Pool *pool, QList<DanmuComment *> &outList, int sourceId=-1);
     QString getPoolId(const QString &animeTitle, const QString &title);
-    void saveSource(const QString &pid, const DanmuSourceInfo *source, const QList<QSharedPointer<DanmuComment> > &danmuList);
+    void saveSource(const QString &pid, const DanmuSource *source, const QList<QSharedPointer<DanmuComment> > &danmuList);
     void deleteSource(const QString &pid, int sourceId);
     void deleteDanmu(const QString &pid, const QSharedPointer<DanmuComment> danmu);
-    void updateSourceTimeline(const QString &pid, const DanmuSourceInfo *sourceInfo);
-    void updateSourceDelay(const QString &pid, const DanmuSourceInfo *sourceInfo);
-    QList<DanmuComment *> updateSource(const DanmuSourceInfo *sourceInfo, const QSet<QString> &danmuHashSet);
+    void updateSourceTimeline(const QString &pid, const DanmuSource *sourceInfo);
+    void updateSourceDelay(const QString &pid, const DanmuSource *sourceInfo);
+    QList<DanmuComment *> updateSource(const DanmuSource *sourceInfo, const QSet<QString> &danmuHashSet);
 
 private:
     void loadAllPool();
@@ -64,8 +65,9 @@ private:
 
 private:
     QMap<QString,int> poolDanmuCacheInfo;
+    QSharedPointer<LRUCache<QString, Pool *>> poolCache;
     QMap<QString,Pool *> pools;
-    QMutex *cacheLock,*removeLock;
+    QMutex poolsLock{QMutex::Recursive};
     QReadWriteLock poolStateLock;
     QSet<QString> busyPoolSet;
     bool countInited;

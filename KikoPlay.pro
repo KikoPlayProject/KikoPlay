@@ -42,6 +42,7 @@ SOURCES += \
     Script/resourcescript.cpp \
     Script/scriptbase.cpp \
     Script/scriptmanager.cpp \
+    Script/scriptmodel.cpp \
     UI/addpool.cpp \
     UI/addrule.cpp \
     UI/animedetailinfopage.cpp \
@@ -144,6 +145,7 @@ SOURCES += \
 
 HEADERS += \
     Common/kcache.h \
+    Common/lrucache.h \
     Common/notifier.h \
     Download/autodownloadmanager.h \
     Download/peerid.h \
@@ -158,6 +160,7 @@ HEADERS += \
     Script/resourcescript.h \
     Script/scriptbase.h \
     Script/scriptmanager.h \
+    Script/scriptmodel.h \
     UI/addpool.h \
     UI/addrule.h \
     UI/animedetailinfopage.h \

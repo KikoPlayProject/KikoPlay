@@ -357,7 +357,7 @@ void ListWindow::initActions()
             for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
             {
                 Pool *pool=GlobalObjects::danmuManager->getPool(poolIdMap.value(addDanmuDialog.danmuToPoolList.at(i++)));
-                DanmuSourceInfo &sourceInfo=(*iter).first;
+                DanmuSource &sourceInfo=(*iter).first;
                 QList<DanmuComment *> &danmuList=(*iter).second;
                 if(pool)
                 {
@@ -401,11 +401,8 @@ void ListWindow::initActions()
             {
                 QList<DanmuComment *> tmplist;
                 LocalProvider::LoadXmlDanmuFile(file,tmplist);
-                DanmuSourceInfo sourceInfo;
-                sourceInfo.delay=0;
-                sourceInfo.name=file.mid(file.lastIndexOf('/')+1);
-                sourceInfo.show=true;
-                sourceInfo.url=file;
+                DanmuSource sourceInfo;
+                sourceInfo.title=file.mid(file.lastIndexOf('/')+1);
                 sourceInfo.count=tmplist.count();
                 if(GlobalObjects::danmuManager->getPool(item->poolID)->addSource(sourceInfo,tmplist,true)==-1)
                 {
@@ -683,7 +680,7 @@ void ListWindow::initActions()
             Pool *pool=GlobalObjects::danmuPool->getPool();
             for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
             {
-                DanmuSourceInfo &sourceInfo=(*iter).first;
+                DanmuSource &sourceInfo=(*iter).first;
                 QList<DanmuComment *> &danmuList=(*iter).second;
                 if(pool->addSource(sourceInfo,danmuList,iter==addDanmuDialog.selectedDanmuList.end()-1)<0)
                 {
@@ -708,11 +705,9 @@ void ListWindow::initActions()
             {
                 QList<DanmuComment *> tmplist;
                 LocalProvider::LoadXmlDanmuFile(file,tmplist);
-                DanmuSourceInfo sourceInfo;
-                sourceInfo.delay=0;
-                sourceInfo.name=file.mid(file.lastIndexOf('/')+1);
+                DanmuSource sourceInfo;
+                sourceInfo.title=file.mid(file.lastIndexOf('/')+1);
                 sourceInfo.show=true;
-                sourceInfo.url=file;
                 sourceInfo.count=tmplist.count();
                 if(GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true)==-1)
                 {
@@ -1206,23 +1201,17 @@ void ListWindow::dropEvent(QDropEvent *event)
             if(url.isLocalFile())
             {
                 QFileInfo fi(url.toLocalFile());
-                if(fi.isFile())
+                if(fi.isFile() && "xml"==fi.suffix())
                 {
-                    if("xml"==fi.suffix())
+                    QList<DanmuComment *> tmplist;
+                    LocalProvider::LoadXmlDanmuFile(fi.filePath(),tmplist);
+                    DanmuSource sourceInfo;
+                    sourceInfo.title=fi.fileName();
+                    sourceInfo.count=tmplist.count();
+                    if(GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true)==-1)
                     {
-                        QList<DanmuComment *> tmplist;
-                        LocalProvider::LoadXmlDanmuFile(fi.filePath(),tmplist);
-                        DanmuSourceInfo sourceInfo;
-                        sourceInfo.delay=0;
-                        sourceInfo.name=fi.fileName();
-                        sourceInfo.show=true;
-                        sourceInfo.url=fi.filePath();
-                        sourceInfo.count=tmplist.count();
-                        if(GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true)==-1)
-                        {
-                            qDeleteAll(tmplist);
-                            showMessage(tr("Add Failed: Pool is busy"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
-                        }
+                        qDeleteAll(tmplist);
+                        showMessage(tr("Add Failed: Pool is busy"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
                     }
                 }
             }

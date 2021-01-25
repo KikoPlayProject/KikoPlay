@@ -113,20 +113,6 @@ QDataStream &operator<<(QDataStream &stream, const MatchInfo &match);
 QDataStream &operator>>(QDataStream &stream, MatchInfo &match);
 QDataStream &operator<<(QDataStream &stream, const MatchInfo::DetailInfo &md);
 QDataStream &operator>>(QDataStream &stream, MatchInfo::DetailInfo &md);
-struct DanmuSourceInfo
-{
-    int id;
-    int delay;
-    int count;
-    QString name;
-    QString url;
-    bool show;
-    QList<QPair<int,int> >timelineInfo;
-    void setTimeline(const QString &timelineStr);
-    QString getTimelineStr() const;
-};
-QDataStream &operator<<(QDataStream &stream, const DanmuSourceInfo &src);
-QDataStream &operator>>(QDataStream &stream, DanmuSourceInfo &src);
 
 struct BlockRule
 {
@@ -171,20 +157,26 @@ struct DanmuSource
     QString scriptData;
     QString scriptId;
     //---------
-    int id;
-    int delay;
-    int count;
-    int duration;
-    bool show;
+    int id = 0;
+    int delay = 0;
+    int count = 0;
+    int duration = 0;
+    bool show = true;
+
+    QList<QPair<int,int> >timelineInfo;
+    void setTimeline(const QString &timelineStr);
+    QString timelineStr() const;
 
     QVariantMap toMap() const {return {{"title", title}, {"desc", desc}, {"data", scriptData}, {"duration", duration}, {"delay", delay}};}
+    QString durationStr() const
+    {
+        int min=duration/60;
+        int sec=duration-min*60;
+        return QString("%1:%2").arg(min, 2, 10, QChar('0')).arg(sec, 2, 10, QChar('0'));
+    }
 };
+QDataStream &operator<<(QDataStream &stream, const DanmuSource &src);
+QDataStream &operator>>(QDataStream &stream, DanmuSource &src);
 Q_DECLARE_OPAQUE_POINTER(DanmuSource *)
-struct SourceCollection
-{
-    QString errorInfo;
-    QString providerId;
-    QList<DanmuSource> list;
-};
 
 #endif // DANMUCOMMENT_H

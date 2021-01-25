@@ -44,9 +44,9 @@ ScriptState ProviderManager::search(const QString &id, const QString &keyword, Q
     }).value<ScriptState>();
 }
 
-ScriptState ProviderManager::getEpInfo(const QString &id, const DanmuSource *source, QList<DanmuSource> &results)
+ScriptState ProviderManager::getEpInfo(const DanmuSource *source, QList<DanmuSource> &results)
 {
-    auto script = GlobalObjects::scriptManager->getScript(id).staticCast<DanmuScript>();
+    auto script = GlobalObjects::scriptManager->getScript(source->scriptId).staticCast<DanmuScript>();
     if(!script) return "Script invalid";
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([&](){
@@ -54,19 +54,25 @@ ScriptState ProviderManager::getEpInfo(const QString &id, const DanmuSource *sou
     }).value<ScriptState>();
 }
 
-ScriptState ProviderManager::getURLInfo(const QString &id, const QString &url, QList<DanmuSource> &results)
+ScriptState ProviderManager::getURLInfo(const QString &url, QList<DanmuSource> &results)
 {
-    auto script = GlobalObjects::scriptManager->getScript(id).staticCast<DanmuScript>();
-    if(!script) return "Script invalid";
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([&](){
-        return script->getURLInfo(url, results);
+        for(auto &script : GlobalObjects::scriptManager->scripts(ScriptManager::DANMU))
+        {
+            DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
+            if(dmScript->supportURL(url))
+            {
+                return dmScript->getURLInfo(url, results);
+            }
+        }
+        return ScriptState(ScriptState::S_ERROR, "Unsupported URL");
     }).value<ScriptState>();
 }
 
-ScriptState ProviderManager::downloadDanmu(const QString &id, DanmuSource *item, QList<DanmuComment *> &danmuList, DanmuSource **nItem)
+ScriptState ProviderManager::downloadDanmu(const DanmuSource *item, QList<DanmuComment *> &danmuList, DanmuSource **nItem)
 {
-    auto script = GlobalObjects::scriptManager->getScript(id).staticCast<DanmuScript>();
+    auto script = GlobalObjects::scriptManager->getScript(item->scriptId).staticCast<DanmuScript>();
     if(!script) return "Script invalid";
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([&](){

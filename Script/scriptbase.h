@@ -25,6 +25,7 @@ struct ScriptState
     ScriptState(const char *e) {ScriptState(QString(e));}
     ScriptState(StateCode c, const QString &i=""):state(c), info(i) {}
     operator QString() {return info;}
+    operator bool() {return state==S_NORM;}
 
     StateCode state;
     QString info;

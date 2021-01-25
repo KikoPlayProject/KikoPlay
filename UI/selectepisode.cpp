@@ -5,10 +5,8 @@
 #include <QLabel>
 #include <QCheckBox>
 #include <QHeaderView>
-SelectEpisode::SelectEpisode(DanmuAccessResult *episodeResult,QWidget *parent):CFramelessDialog(tr("Select Episode"),parent,true),autoSetDelay(false)
+SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent):CFramelessDialog(tr("Select Episode"),parent,true),episodeResult(epResults),autoSetDelay(false)
 {
-    this->episodeResult=episodeResult;
-    //setFont(QFont("Microsoft Yahei UI",10));
     episodeWidget=new QTreeWidget(this);
     episodeWidget->setRootIsDecorated(false);
     episodeWidget->setFont(font());
@@ -20,10 +18,10 @@ SelectEpisode::SelectEpisode(DanmuAccessResult *episodeResult,QWidget *parent):C
         {
             QVariant data=item->data(column,0);
             if(data.canConvert(QMetaType::Int))
-                this->episodeResult->list[index].delay=data.toInt();
+                this->episodeResult[index].delay=data.toInt();
         }
     });
-    QObject::connect(episodeWidget,&QTreeWidget::itemDoubleClicked,[this](QTreeWidgetItem *item, int column){
+    QObject::connect(episodeWidget,&QTreeWidget::itemDoubleClicked,[](QTreeWidgetItem *item, int column){
         if(column==2)
             item->setFlags(item->flags()|Qt::ItemIsEditable);
         else
@@ -42,10 +40,10 @@ SelectEpisode::SelectEpisode(DanmuAccessResult *episodeResult,QWidget *parent):C
         int timeSum=0;
         int i=0;
         autoSetDelay=true;
-        for(DanmuSourceItem &item:this->episodeResult->list)
+        for(auto &item:episodeResult)
         {
             item.delay=timeSum;
-            timeSum+=item.extra;
+            timeSum+=item.duration;
             episodeWidget->topLevelItem(i++)->setData(2,0,QString::number(item.delay));
         }
         autoSetDelay=false;
@@ -54,7 +52,7 @@ SelectEpisode::SelectEpisode(DanmuAccessResult *episodeResult,QWidget *parent):C
     QObject::connect(resetDelay,&QPushButton::clicked,[this](){
         autoSetDelay=true;
         int i=0;
-        for(DanmuSourceItem &item:this->episodeResult->list)
+        for(auto &item:episodeResult)
         {
             item.delay=0;
             episodeWidget->topLevelItem(i++)->setData(2,0,QString("0"));
@@ -69,10 +67,10 @@ SelectEpisode::SelectEpisode(DanmuAccessResult *episodeResult,QWidget *parent):C
     episodeGLayout->setColumnStretch(0,1);
     episodeGLayout->setRowStretch(1,1);
 
-    for(DanmuSourceItem &item:episodeResult->list)
+    for(auto &item:episodeResult)
     {
-        int min=item.extra/60;
-        int sec=item.extra-min*60;
+        int min=item.duration/60;
+        int sec=item.duration-min*60;
         QString duration=QString("%1:%2").arg(min, 2, 10, QChar('0')).arg(sec, 2, 10, QChar('0'));
         QTreeWidgetItem *widgetItem=new QTreeWidgetItem(episodeWidget,QStringList()<<item.title<<duration<<"0");
         widgetItem->setCheckState(0,Qt::Unchecked);
@@ -92,7 +90,7 @@ void SelectEpisode::onAccept()
     for(int i=count-1;i>=0;i--)
     {
         if(episodeWidget->topLevelItem(i)->checkState(0)!=Qt::Checked)
-            episodeResult->list.removeAt(i);
+            episodeResult.removeAt(i);
     }
     CFramelessDialog::onAccept();
 }

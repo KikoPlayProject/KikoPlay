@@ -85,8 +85,12 @@ ON "danmu_4" ("PoolID" ASC, "Source" ASC);
 CREATE TABLE "source" (
 "PoolID"  TEXT(32),
 "ID"  INTEGER,
-"Name"  TEXT,
+"Title"  TEXT,
+"Desc"  TEXT,
+"ScriptId"  TEXT,
+"ScriptData"  TEXT,
 "Delay"  INTEGER,
+"Duration"  INTEGER,
 "URL"  TEXT,
 "TimeLine"  TEXT,
 CONSTRAINT "PoolID" FOREIGN KEY ("PoolID") REFERENCES "pool" ("PoolID") ON DELETE CASCADE ON UPDATE CASCADE

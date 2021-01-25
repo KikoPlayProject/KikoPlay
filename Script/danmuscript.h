@@ -20,6 +20,7 @@ public:
     ScriptState getDanmu(const DanmuSource *item, DanmuSource **nItem, QList<DanmuComment *> &danmuList);
     ScriptState hasSourceToLaunch(const QList<DanmuSource> &sources, bool &result);
     ScriptState launch(const QList<DanmuSource> &sources, const DanmuComment *comment);
+    bool supportURL(const QString &url);
 
 private:
     const char *luaSearchFunc = "search";

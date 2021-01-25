@@ -223,7 +223,7 @@ void HttpServer::api_UpdateTimeline(QHttpEngine::Socket *socket)
         int sourceId=data.value("source").toInt();
         genLog(QString("[%1]Request:UpdateTimeline, SourceId: %2").arg(socket->peerAddress().toString(),QString::number(sourceId)));
         Pool *pool=GlobalObjects::danmuManager->getPool(poolId,false);
-        DanmuSourceInfo srcInfo;
+        DanmuSource srcInfo;
         srcInfo.setTimeline(timelineStr);
         if(pool) pool->setTimeline(sourceId, srcInfo.timelineInfo);
     }

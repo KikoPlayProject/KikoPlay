@@ -29,10 +29,22 @@ struct DanmuPoolNode
 struct DanmuPoolSourceNode : public DanmuPoolNode
 {
     DanmuPoolSourceNode(DanmuPoolNode *pNode = nullptr):DanmuPoolNode(DanmuPoolNode::SourecNode,pNode){}
-    int srcId;
-    int delay;
-    QString timeline;
-    DanmuSourceInfo toSourceInfo();
-    void setTimeline(const DanmuSourceInfo &srcInfo);
+    DanmuPoolSourceNode(const DanmuSource &src, DanmuPoolNode *pNode = nullptr):DanmuPoolNode(DanmuPoolNode::SourecNode,pNode)
+    {
+        title=src.title;
+        idInfo=src.scriptId;
+        srcId=src.id;
+        delay=src.delay;
+        scriptData=src.scriptData;
+        danmuCount = src.count;
+
+    }
+    bool isSameSource(const DanmuSource &src) const { return idInfo==src.scriptId && scriptData==src.scriptData; }
+    int srcId, delay;
+    QString scriptData;
+
+    //QString timeline;
+   // DanmuSourceInfo toSourceInfo();
+   //void setTimeline(const DanmuSourceInfo &srcInfo);
 };
 #endif // NODEINFO_H

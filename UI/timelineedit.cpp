@@ -18,10 +18,11 @@ namespace
         return QString("%0%1:%2").arg(mSec<0?"-":"").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0'));
     }
 }
-TimelineEdit::TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo> &simpleDanmuList, QWidget *parent, int curTime):
-    CFramelessDialog(tr("Timeline Edit"),parent,true),currentSource(source)
+TimelineEdit::TimelineEdit(const DanmuSource *source, const QList<SimpleDanmuInfo> &simpleDanmuList, QWidget *parent, int curTime):
+    CFramelessDialog(tr("Timeline Edit"),parent,true)
 {
-    timelineModel=new TimeLineInfoModel(source,this);
+    timelineInfo = source->timelineInfo;
+    timelineModel=new TimeLineInfoModel(&timelineInfo, this);
     SimpleDanumPool *simpleDanmuPool=new SimpleDanumPool(simpleDanmuList,this);
     simpleDanmuPool->refreshTimeline(timelineModel->getTimeLine());
     TimeLineBar *timelineBar=new TimeLineBar(simpleDanmuPool->getDanmuList(),timelineModel,this);
@@ -60,7 +61,7 @@ TimelineEdit::TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo>
         if(startList.count()==2) start+=startList.first().toInt()*60;
         start*=1000;
         timelineModel->addSpace(start,duration);
-        simpleDanmuPool->refreshTimeline(timelineModel->getTimeLine());
+        simpleDanmuPool->refreshTimeline(timelineInfo);
         timelineBar->updateInfo();
     });
 
@@ -124,7 +125,7 @@ TimelineEdit::TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo>
     });
     QObject::connect(timelineBar,&TimeLineBar::addSpace,[this,simpleDanmuPool,timelineBar](int start,int duration){
         timelineModel->addSpace(start,duration);
-        simpleDanmuPool->refreshTimeline(timelineModel->getTimeLine());
+        simpleDanmuPool->refreshTimeline(timelineInfo);
         timelineBar->updateInfo();
     });
     QAction *deleteAction=new QAction(tr("Delete"),this);
@@ -133,7 +134,7 @@ TimelineEdit::TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo>
         QItemSelection selection=timelineView->selectionModel()->selection();
         if(selection.size()==0)return;
         timelineModel->removeSpace(selection.indexes().first());
-        simpleDanmuPool->refreshTimeline(timelineModel->getTimeLine());
+        simpleDanmuPool->refreshTimeline(timelineInfo);
         timelineBar->updateInfo();
     });
 
@@ -148,7 +149,6 @@ TimelineEdit::TimelineEdit(DanmuSourceInfo *source, const QList<SimpleDanmuInfo>
 
 void TimelineEdit::onAccept()
 {
-    currentSource->timelineInfo=timelineModel->getTimeLine();
     CFramelessDialog::onAccept();
 }
 
@@ -325,18 +325,18 @@ void TimeLineBar::keyPressEvent(QKeyEvent *event)
     update();
 }
 
-TimeLineInfoModel::TimeLineInfoModel(DanmuSourceInfo *source, QObject *parent):QAbstractItemModel(parent)
+TimeLineInfoModel::TimeLineInfoModel(QList<QPair<int, int> > *timelines, QObject *parent):QAbstractItemModel(parent), timelineInfo(timelines)
 {
-    timelineInfo=source->timelineInfo;
+
 }
 
 void TimeLineInfoModel::addSpace(int start, int duration)
 {
     int i=0;
-    while(i<timelineInfo.count() && timelineInfo.at(i).first<start) i++;
-    if(i<timelineInfo.count() && timelineInfo.at(i).first==start)return;
+    while(i<timelineInfo->count() && timelineInfo->at(i).first<start) i++;
+    if(i<timelineInfo->count() && timelineInfo->at(i).first==start)return;
     beginInsertRows(QModelIndex(),i,i);
-    timelineInfo.insert(i,QPair<int,int>(start,duration));
+    timelineInfo->insert(i,QPair<int,int>(start,duration));
     endInsertRows();
 }
 
@@ -344,14 +344,14 @@ void TimeLineInfoModel::removeSpace(const QModelIndex &index)
 {
     if(!index.isValid())return;
     beginRemoveRows(QModelIndex(),index.row(),index.row());
-    timelineInfo.removeAt(index.row());
+    timelineInfo->removeAt(index.row());
     endRemoveRows();
 }
 
 QVariant TimeLineInfoModel::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid()) return QVariant();
-    auto &space=timelineInfo.at(index.row());
+    auto &space=timelineInfo->at(index.row());
     int col=index.column();
     if(role==Qt::DisplayRole && col<3)
     {
@@ -383,7 +383,7 @@ QModelIndex SimpleDanumPool::getIndex(int time)
     return createIndex(pos,0);
 }
 
-void SimpleDanumPool::refreshTimeline(const QList<QPair<int, int> > &timelineInfo)
+void SimpleDanumPool::refreshTimeline(const QList<QPair<int, int>> &timelineInfo)
 {
     beginResetModel();
     int timelinePos=0,currentDelay=0;

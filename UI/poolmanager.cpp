@@ -66,11 +66,10 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         if(pool)
         {
             pool->exportSimpleInfo(srcNode->srcId,simpleDanmuList);
-            DanmuSourceInfo srcInfo(pool->sources()[srcNode->srcId]);
+            DanmuSource srcInfo(pool->sources()[srcNode->srcId]);
             TimelineEdit timeLineEdit(&srcInfo,simpleDanmuList,this);
             if(QDialog::Accepted==timeLineEdit.exec())
             {
-                srcNode->setTimeline(srcInfo);
                 pool->setTimeline(srcNode->srcId,srcInfo.timelineInfo);
             }
         }
@@ -108,12 +107,12 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                 Q_ASSERT(curNode);
                 Pool *pool=GlobalObjects::danmuManager->getPool(curNode->idInfo);
                 Q_ASSERT(pool);
-                DanmuSourceInfo &sourceInfo=(*iter).first;
+                DanmuSource &sourceInfo=(*iter).first;
                 QList<DanmuComment *> &danmuList=(*iter).second;
                 int srcId=pool->addSource(sourceInfo,danmuList,true);
                 if(srcId<0)
                 {
-                    showMessage(tr("Add %1 Failed").arg(sourceInfo.name),1);
+                    showMessage(tr("Add %1 Failed").arg(sourceInfo.title),1);
                     qDeleteAll(danmuList);
                     continue;
                 }
@@ -121,26 +120,13 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                 for(auto n:*curNode->children)
                 {
                     DanmuPoolSourceNode *srcNode=static_cast<DanmuPoolSourceNode *>(n);
-                    if(srcNode->idInfo==sourceInfo.url)
+                    if(srcNode->idInfo==sourceInfo.scriptId && srcNode->scriptData==sourceInfo.scriptData)
                     {
                         sourceNode=srcNode;
                         break;
                     }
                 }
-                if(sourceNode)
-                {
-                    managerModel->addSrcNode(curNode,nullptr);
-                }
-                else
-                {
-                    sourceNode=new DanmuPoolSourceNode();
-                    sourceNode->title=sourceInfo.name;
-                    sourceNode->srcId=srcId;
-                    sourceNode->delay=sourceInfo.delay;
-                    sourceNode->idInfo=sourceInfo.url;
-                    sourceNode->danmuCount=sourceInfo.count;
-                    managerModel->addSrcNode(curNode,sourceNode);
-                }
+                managerModel->addSrcNode(curNode,sourceNode?nullptr:new DanmuPoolSourceNode(sourceInfo));
             }
             //if(hasCurPlaying) GlobalObjects::danmuPool->resetModel();
             stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
@@ -168,13 +154,13 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                     code.startsWith("kikoplay:anime="));
         if(ret)
         {
-            for(const DanmuSourceInfo &sourceInfo:pool->sources())
+            for(const DanmuSource &sourceInfo:pool->sources())
             {
                 bool isNewSource=true;
                 for(auto n:*poolNode->children)
                 {
                     DanmuPoolSourceNode *srcNode=static_cast<DanmuPoolSourceNode *>(n);
-                    if(srcNode->idInfo==sourceInfo.url)
+                    if(srcNode->isSameSource(sourceInfo))
                     {
                         isNewSource=false;
                         break;
@@ -182,12 +168,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                 }
                 if(isNewSource)
                 {
-                    DanmuPoolSourceNode *sourceNode=new DanmuPoolSourceNode();
-                    sourceNode->title=sourceInfo.name;
-                    sourceNode->srcId=sourceInfo.id;
-                    sourceNode->delay=sourceInfo.delay;
-                    sourceNode->idInfo=sourceInfo.url;
-                    sourceNode->danmuCount=sourceInfo.count;
+                    DanmuPoolSourceNode *sourceNode=new DanmuPoolSourceNode(sourceInfo);
                     managerModel->addSrcNode(poolNode,sourceNode);
                 }
             }
@@ -260,7 +241,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         if(!poolNode)return;
         Pool *pool=GlobalObjects::danmuManager->getPool(poolNode->idInfo);
         DanmuPoolNode *sourceNode=managerModel->getSourceNode(proxyModel->mapToSource(indexList.first()));
-        DanmuView view(&pool->comments(),this, sourceNode?GlobalObjects::providerManager->getProviderIdByURL(sourceNode->idInfo):"");
+        DanmuView view(&pool->comments(),this, sourceNode?sourceNode->idInfo:"");
         view.exec();
     });
 

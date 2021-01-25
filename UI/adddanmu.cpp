@@ -21,6 +21,7 @@
 #include "selectepisode.h"
 #include "danmuview.h"
 #include "Play/Danmu/blocker.h"
+#include "Script/scriptmanager.h"
 #include "globalobjects.h"
 namespace
 {
@@ -172,11 +173,10 @@ void AddDanmu::search()
     beginProcrss();
     if(searchResultWidget->count()>0)
         searchResultWidget->setEnabled(false);
-    QString tmpProviderId=sourceCombo->currentText();
-    DanmuAccessResult *searchResult=GlobalObjects::providerManager->search(tmpProviderId,keyword);
-    if(searchResult->error)
-        showMessage(searchResult->errorInfo,1);
-    else
+    QString tmpProviderId=sourceCombo->currentData().toString();
+    QList<DanmuSource> results;
+    auto ret = GlobalObjects::providerManager->search(tmpProviderId, keyword, results);
+    if(ret)
     {
         if(!themeWord.isEmpty() && themeWord!=keyword)
         {
@@ -185,17 +185,14 @@ void AddDanmu::search()
         providerId=tmpProviderId;
         searchResultWidget->clear();
         searchResultWidget->setEnabled(true);
-        for(DanmuSourceItem &item:searchResult->list)
+        for(auto &item: results)
         {
-            SearchItemWidget *itemWidget=new SearchItemWidget(&item);
-            QObject::connect(itemWidget, &SearchItemWidget::addSearchItem, itemWidget, [this](DanmuSourceItem *item){
+            SearchItemWidget *itemWidget=new SearchItemWidget(item);
+            QObject::connect(itemWidget, &SearchItemWidget::addSearchItem, itemWidget, [this](SearchItemWidget *item){
                 beginProcrss();
-                QScopedPointer<DanmuAccessResult> result(GlobalObjects::providerManager->getEpInfo(providerId,item));
-                addSearchItem(result.data());
-                if(result->providerId=="Bilibili" || result->providerId=="AcFun" || result->providerId=="Gamer")
-                {
-                    if(item->title!=themeWord) relCache->put(themeWord, item->title);
-                }
+                QList<DanmuSource> results;
+                auto ret = GlobalObjects::providerManager->getEpInfo(&item->source, results);
+                if(ret) addSearchItem(results);
                 endProcess();
             });
             QListWidgetItem *listItem=new QListWidgetItem(searchResultWidget);
@@ -203,72 +200,63 @@ void AddDanmu::search()
             listItem->setSizeHint(itemWidget->sizeHint());
             QCoreApplication::processEvents();
         }
-        //searchResultWidget->update();
+    } else {
+        showMessage(ret.info, 1);
     }
-    delete searchResult;
     searchResultWidget->setEnabled(true);
     endProcess();
 }
 
-void AddDanmu::addSearchItem(DanmuAccessResult *result)
+
+void AddDanmu::addSearchItem(QList<DanmuSource> &sources)
 {
-    QString errorInfo;
-    if(result->error)
-    {
-        errorInfo=result->errorInfo;
-    }
-    else if(result->list.count()==1)
+    if(sources.empty()) return;
+    ScriptState retState(ScriptState::S_NORM);
+    if(sources.size() == 1)
     {
         QList<DanmuComment *> tmplist;
-        DanmuSourceItem &sourceItem=result->list.first();
-        errorInfo = GlobalObjects::providerManager->downloadDanmu(result->providerId,&sourceItem,tmplist);
-        if(errorInfo.isEmpty())
+        DanmuSource *nSrc = nullptr;
+        auto ret = GlobalObjects::providerManager->downloadDanmu(&sources.first(), tmplist, &nSrc);
+        if(ret)
         {
             int srcCount=tmplist.count();
             GlobalObjects::blocker->preFilter(tmplist);
             int filterCount=srcCount - tmplist.count();
             if(filterCount>0) showMessage(tr("Pre-filter %1 Danmu").arg(filterCount));
-            DanmuSourceInfo sourceInfo;
-            sourceInfo.count=tmplist.count();
-            sourceInfo.name=sourceItem.title;
-            sourceInfo.url=GlobalObjects::providerManager->getSourceURL(result->providerId,&sourceItem);
-            sourceInfo.delay=0;
-            sourceInfo.show=true;
-            selectedDanmuList.append(QPair<DanmuSourceInfo,QList<DanmuComment *> >(sourceInfo,tmplist));
-            danmuItemModel->addItem(sourceItem.title,sourceItem.extra,result->providerId,sourceInfo.count);
+            DanmuSource src = nSrc? *nSrc:sources.first();
+            src.count = tmplist.count();
+            selectedDanmuList.append({src, tmplist});
+            danmuItemModel->addItem(src);
+        } else {
+            showMessage(ret.info, 1);
         }
+        if(nSrc) delete nSrc;
     }
     else
     {
-        SelectEpisode selectEpisode(result,this);
+        SelectEpisode selectEpisode(sources, this);
         if(QDialog::Accepted==selectEpisode.exec())
         {
-            for(DanmuSourceItem &sourceItem:result->list)
+            for(auto &sourceItem:sources)
             {
                 QList<DanmuComment *> tmplist;
-                errorInfo = GlobalObjects::providerManager->downloadDanmu(result->providerId,&sourceItem,tmplist);
-                if(errorInfo.isEmpty())
+                DanmuSource *nSrc = nullptr;
+                auto ret = GlobalObjects::providerManager->downloadDanmu(&sourceItem,tmplist, &nSrc);
+                if(ret)
                 {
                     int srcCount=tmplist.count();
                     GlobalObjects::blocker->preFilter(tmplist);
                     int filterCount=srcCount - tmplist.count();
                     if(filterCount>0) showMessage(tr("Pre-filter %1 Danmu").arg(filterCount));
-                    DanmuSourceInfo sourceInfo;
-                    sourceInfo.count=tmplist.count();
-                    sourceInfo.name=sourceItem.title;
-                    sourceInfo.url=GlobalObjects::providerManager->getSourceURL(result->providerId,&sourceItem);
-                    sourceInfo.delay=sourceItem.delay*1000;
-                    sourceInfo.show=true;
-                    selectedDanmuList.append(QPair<DanmuSourceInfo,QList<DanmuComment *> >(sourceInfo,tmplist));
-                    danmuItemModel->addItem(sourceItem.title,sourceItem.extra,result->providerId,sourceInfo.count);
-
+                    DanmuSource src = nSrc? *nSrc:sourceItem;
+                    src.count = tmplist.count();
+                    selectedDanmuList.append({src, tmplist});
+                    danmuItemModel->addItem(src);
                     selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuList.count()));
                 }
             }
         }
     }
-    if(!errorInfo.isEmpty())
-        showMessage(errorInfo,1);
     selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuList.count()));
 }
 
@@ -279,16 +267,12 @@ void AddDanmu::addURL()
     addUrlButton->setEnabled(false);
     urlEdit->setEnabled(false);
     beginProcrss();
-    DanmuAccessResult *result=GlobalObjects::providerManager->getURLInfo(url);
-    if(result->error)
-    {
-        showMessage(result->errorInfo,1);
-    }
+    QList<DanmuSource> results;
+    auto ret = GlobalObjects::providerManager->getURLInfo(url, results);
+    if(!ret)
+        showMessage(ret.info, 1);
     else
-    {
-        addSearchItem(result);
-    }
-    delete result;
+        addSearchItem(results);
     addUrlButton->setEnabled(true);
     urlEdit->setEnabled(true);
     endProcess();
@@ -299,7 +283,10 @@ QWidget *AddDanmu::setupSearchPage()
     QWidget *searchPage=new QWidget(this);
     searchPage->setFont(QFont(GlobalObjects::normalFont,10));
     sourceCombo=new QComboBox(searchPage);
-    sourceCombo->addItems(GlobalObjects::providerManager->getSearchProviders());
+    for(const auto &p : GlobalObjects::providerManager->getSearchProviders())
+    {
+        sourceCombo->addItem(p.second, p.first);  //p: <id, name>
+    }
     keywordEdit=new QLineEdit(searchPage);
     searchButton=new QPushButton(tr("Search"),searchPage);
     QObject::connect(searchButton,&QPushButton::clicked,this,&AddDanmu::search);
@@ -338,7 +325,7 @@ QWidget *AddDanmu::setupURLPage()
 
     QLabel *urlTipLabel=new QLabel(tr("Supported URL:"),urlPage);
     QTextEdit *supportUrlInfo=new QTextEdit(urlPage);
-    supportUrlInfo->setText(GlobalObjects::providerManager->getSupportedURLs().join('\n'));
+    supportUrlInfo->setText(GlobalObjects::providerManager->getSampleURLs().join('\n'));
     supportUrlInfo->setFont(QFont(GlobalObjects::normalFont,10));
     supportUrlInfo->setReadOnly(true);
 
@@ -481,23 +468,22 @@ bool AddDanmu::eventFilter(QObject *watched, QEvent *event)
     return CFramelessDialog::eventFilter(watched, event);
 }
 
-
-SearchItemWidget::SearchItemWidget(DanmuSourceItem *item):searchItem(*item)
+SearchItemWidget::SearchItemWidget(const DanmuSource &item):source(item)
 {
 	setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
     QLabel *titleLabel=new QLabel(this);
 	QLabel *descLabel = new QLabel(this);
-    titleLabel->setToolTip(item->title);
+    titleLabel->setToolTip(item.title);
 	titleLabel->adjustSize();
-	titleLabel->setText(QString("<font size=\"5\" face=\"Microsoft Yahei\" color=\"#f33aa0\">%1</font>").arg(item->title));
+    titleLabel->setText(QString("<font size=\"5\" face=\"Microsoft Yahei\" color=\"#f33aa0\">%1</font>").arg(item.title));
     titleLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
     descLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
-	descLabel->setText(QString("<font size=\"3\" face=\"Microsoft Yahei\">%1</font>").arg(item->description.trimmed()));
-	descLabel->setToolTip(item->description);
+    descLabel->setText(QString("<font size=\"3\" face=\"Microsoft Yahei\">%1</font>").arg(item.desc.trimmed()));
+    descLabel->setToolTip(item.desc);
     QPushButton *addItemButton=new QPushButton(tr("Add"),this);
     QObject::connect(addItemButton,&QPushButton::clicked,this,[this,addItemButton](){
 		addItemButton->setEnabled(false);
-		emit addSearchItem(&searchItem);
+        emit addSearchItem(this);
 		addItemButton->setEnabled(true);
 	});
     QGridLayout *searchPageGLayout=new QGridLayout(this);
@@ -521,17 +507,10 @@ DanmuItemModel::DanmuItemModel(AddDanmu *dmDialog, bool hasPool, const QString &
 
 }
 
-void DanmuItemModel::addItem(const QString &title, int duration, const QString &provider, int count)
+void DanmuItemModel::addItem(const DanmuSource &src)
 {
-    ItemInfo newItem;
-    newItem.title=title;
-    newItem.count=count;
-    newItem.provider=provider;
-    int min=duration/60;
-    int sec=duration-min*60;
-    newItem.duration=QString("%1:%2").arg(min, 2, 10, QChar('0')).arg(sec, 2, 10, QChar('0'));
     beginInsertRows(QModelIndex(),items.count(),items.count());
-    items.append(newItem);
+    items.append({src.title, src.durationStr(), GlobalObjects::scriptManager->getScript(src.scriptId)->name(), src.count});
     danmuCheckedList->append(true);
     danmuToPoolList->append(nPool);
     endInsertRows();

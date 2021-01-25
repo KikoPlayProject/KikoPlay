@@ -133,6 +133,22 @@ ScriptState DanmuScript::launch(const QList<DanmuSource> &sources, const DanmuCo
     return ScriptState(ScriptState::S_NORM);
 }
 
+bool DanmuScript::supportURL(const QString &url)
+{
+    bool supported = false;
+    for(const QString &s : supportedURLsRe)
+    {
+        QRegExp re(s);
+        re.indexIn(url);
+        if(re.matchedLength()==url.length())
+        {
+            supported = true;
+            break;
+        }
+    }
+    return supported;
+}
+
 QString DanmuScript::callGetSources(const char *fname, const QVariant &param, QList<DanmuSource> &results)
 {
     QString errInfo;

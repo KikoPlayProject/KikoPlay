@@ -25,6 +25,7 @@ void ScriptManager::refreshScripts(ScriptManager::ScriptType type)
     {
         curScripts.insert(s->getValue("path"), s);
     }
+    QSet<QString> existPaths;
     QDir folder(scriptPath);
     for (QFileInfo fileInfo : folder.entryInfoList())
     {
@@ -32,7 +33,8 @@ void ScriptManager::refreshScripts(ScriptManager::ScriptType type)
         {
             QString path(fileInfo.absoluteFilePath());
             qint64 modifyTime = fileInfo.fileTime(QFile::FileModificationTime).toSecsSinceEpoch();
-            bool add = curScripts.contains(path);
+            bool add = !curScripts.contains(path);
+            existPaths.insert(path);
             if(!add)
             {
                 if(curScripts[path]->getValue("time").toLongLong() < modifyTime)
@@ -63,6 +65,19 @@ void ScriptManager::refreshScripts(ScriptManager::ScriptType type)
                 }
 
             }
+        }
+    }
+    auto &scripts = scriptLists[type];
+    for(auto iter=scripts.begin(); iter!=scripts.end();)
+    {
+        if(!existPaths.contains((*iter)->getValue("path")))
+        {
+            QString id((*iter)->id());
+            id2scriptHash.remove(id);
+            iter = scripts.erase(iter);
+            emit scriptChanged(type, id, ScriptChangeState::REMOVE);
+        } else {
+            ++iter;
         }
     }
 }

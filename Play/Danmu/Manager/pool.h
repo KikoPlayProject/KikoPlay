@@ -10,14 +10,14 @@ class Pool : public QObject
 public:
     explicit Pool(const QString &id, const QString &animeTitle, const QString &epTitle, QObject *parent = nullptr);
     inline const QList<QSharedPointer<DanmuComment> > &comments(){return commentList;}
-    inline const QMap<int,DanmuSourceInfo> &sources(){return sourcesTable;}
+    inline const QMap<int,DanmuSource> &sources(){return sourcesTable;}
     inline const QString &id() const {return pid;}
     inline bool isUsed() const {return used;}
     inline const QString &animeTitle() const {return anime;}
     inline const QString &epTitle() const {return ep;}
 public:
     int update(int sourceId=-1, QList<QSharedPointer<DanmuComment> > *incList=nullptr);
-    int addSource(const DanmuSourceInfo &sourceInfo, QList<DanmuComment *> &danmuList, bool reset=false);
+    int addSource(const DanmuSource &sourceInfo, QList<DanmuComment *> &danmuList, bool reset=false);
     bool deleteSource(int sourceId, bool applyDB=true);
     bool deleteDanmu(int pos);
     bool setTimeline(int sourceId, const QList<QPair<int, int>> &timelineInfo);
@@ -40,7 +40,7 @@ private:
     bool used;
     bool isLoaded;
     QList<QSharedPointer<DanmuComment> > commentList;
-    QMap<int,DanmuSourceInfo> sourcesTable;
+    QMap<int,DanmuSource> sourcesTable;
 
     bool load();
     bool clean();

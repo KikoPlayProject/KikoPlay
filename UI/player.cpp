@@ -2117,11 +2117,8 @@ void PlayerWindow::dropEvent(QDropEvent *event)
                 {
                     QList<DanmuComment *> tmplist;
                     LocalProvider::LoadXmlDanmuFile(fi.filePath(),tmplist);
-                    DanmuSourceInfo sourceInfo;
-                    sourceInfo.delay=0;
-                    sourceInfo.name=fi.fileName();
-                    sourceInfo.show=true;
-                    sourceInfo.url=fi.filePath();
+                    DanmuSource sourceInfo;
+                    sourceInfo.title=fi.fileName();
                     sourceInfo.count=tmplist.count();
                     Pool *pool=GlobalObjects::danmuPool->getPool();
                     if(pool->addSource(sourceInfo,tmplist,true)>=0)
