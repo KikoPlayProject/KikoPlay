@@ -17,7 +17,8 @@ BangumiUpdate::BangumiUpdate(Anime *anime, QWidget *parent)
     QTimer::singleShot(0,[this,anime](){
         showBusyState(true);
         QString errInfo;
-        GlobalObjects::library->downloadDetailInfo(anime,anime->bangumiID,&errInfo);
+        //TODO--------------------------
+        GlobalObjects::library->downloadDetailInfo(anime,anime->id.toInt(),&errInfo);
         showBusyState(false);
         if(!errInfo.isEmpty())
         {

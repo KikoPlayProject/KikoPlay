@@ -9,15 +9,10 @@
 class DanmuScript;
 class LibraryScript;
 class ResourceScript;
-class ScriptBase;
 class ScriptManager : public QObject
 {
     Q_OBJECT
 public:
-    enum ScriptType
-    {
-        DANMU, LIBRARY, RESOURCE, UNKNOWN_STYPE
-    };
     enum class ScriptChangeState
     {
         ADD, REMOVE
@@ -28,6 +23,7 @@ public:
     ~ScriptManager();
 
     void refreshScripts(ScriptType type);
+    void deleteScript(const QString &id);
     const QList<QSharedPointer<ScriptBase>> &scripts(ScriptType type)  {return scriptLists[type]; }
     QSharedPointer<ScriptBase> getScript(const QString &id) {return id2scriptHash.value(id);}
 

@@ -13,7 +13,7 @@ ScriptManager::ScriptManager()
     refreshScripts(ScriptType::RESOURCE);
 }
 
-void ScriptManager::refreshScripts(ScriptManager::ScriptType type)
+void ScriptManager::refreshScripts(ScriptType type)
 {
     if(type == ScriptType::UNKNOWN_STYPE) return;
     QString scriptPath(getScriptPath());
@@ -79,6 +79,30 @@ void ScriptManager::refreshScripts(ScriptManager::ScriptType type)
         } else {
             ++iter;
         }
+    }
+}
+
+void ScriptManager::deleteScript(const QString &id)
+{
+    QString path;
+    if(id2scriptHash.contains(id))
+    {
+        auto script = id2scriptHash.value(id);
+        path = script->getValue("path");
+        if(script->type()!=ScriptType::UNKNOWN_STYPE)
+        {
+            scriptLists[script->type()].removeAll(script);
+            id2scriptHash.remove(id);
+            emit scriptChanged(script->type(), id, ScriptChangeState::REMOVE);
+        }
+    }
+    if(!path.isEmpty())
+    {
+        QFileInfo fi(path);
+        fi.dir().remove(fi.fileName());
+        int suffixPos = path.lastIndexOf('.');
+        QFileInfo settingFile(path.mid(0,suffixPos)+".json");
+        if(settingFile.exists()) settingFile.dir().remove(settingFile.fileName());
     }
 }
 

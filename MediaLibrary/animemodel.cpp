@@ -92,7 +92,7 @@ QVariant AnimeModel::data(const QModelIndex &index, int role) const
     {
         case Qt::DisplayRole:
         {
-            return anime->title;
+            return anime->name;
         }
         case AnimeRole:
         {

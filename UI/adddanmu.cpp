@@ -170,10 +170,10 @@ void AddDanmu::search()
 {
     QString keyword=keywordEdit->text().trimmed();
     if(keyword.isEmpty())return;
-    beginProcrss();
-    if(searchResultWidget->count()>0)
-        searchResultWidget->setEnabled(false);
     QString tmpProviderId=sourceCombo->currentData().toString();
+    if(tmpProviderId.isEmpty()) return;
+    beginProcrss();
+    searchResultWidget->setEnabled(false);
     QList<DanmuSource> results;
     auto ret = GlobalObjects::providerManager->search(tmpProviderId, keyword, results);
     if(ret)

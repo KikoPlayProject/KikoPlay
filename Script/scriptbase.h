@@ -21,6 +21,7 @@ struct ScriptState
     {
          S_NORM, S_BUSY, S_ERROR
     };
+    ScriptState():state(S_NORM){}
     ScriptState(const QString &e):info(e) {state = (info.isEmpty()?S_NORM:S_ERROR);}
     ScriptState(const char *e) {ScriptState(QString(e));}
     ScriptState(StateCode c, const QString &i=""):state(c), info(i) {}
@@ -30,6 +31,14 @@ struct ScriptState
     StateCode state;
     QString info;
 };
+Q_DECLARE_METATYPE(ScriptState)
+
+enum ScriptType
+{
+    DANMU, LIBRARY, RESOURCE, UNKNOWN_STYPE
+};
+Q_DECLARE_METATYPE(ScriptType)
+
 class ScriptBase
 {
 public:
@@ -53,6 +62,7 @@ public:
     virtual QString desc() const {return scriptMeta.value("desc");}
     virtual QString version() const {return scriptMeta.value("version");}
     virtual QString getValue(const QString &key) const {return scriptMeta.value(key);}
+    virtual ScriptType type() const {return sType;}
 
     virtual ScriptState loadScript(const QString &path);
 
@@ -66,6 +76,7 @@ protected:
     QHash<QString, QString> scriptMeta;
     QList<ScriptSettingItem> scriptSettings;
     bool settingsUpdated;
+    ScriptType sType;
 
     QVariantList call(const char *fname, const QVariantList &params, int nRet, QString &errInfo);
     QVariant get(const char *name);

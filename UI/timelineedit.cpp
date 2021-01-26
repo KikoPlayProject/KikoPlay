@@ -24,7 +24,7 @@ TimelineEdit::TimelineEdit(const DanmuSource *source, const QList<SimpleDanmuInf
     timelineInfo = source->timelineInfo;
     timelineModel=new TimeLineInfoModel(&timelineInfo, this);
     SimpleDanumPool *simpleDanmuPool=new SimpleDanumPool(simpleDanmuList,this);
-    simpleDanmuPool->refreshTimeline(timelineModel->getTimeLine());
+    simpleDanmuPool->refreshTimeline(*timelineModel->getTimeLine());
     TimeLineBar *timelineBar=new TimeLineBar(simpleDanmuPool->getDanmuList(),timelineModel,this);
     timelineBar->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
 
@@ -221,8 +221,8 @@ void TimeLineBar::paintEvent(QPaintEvent *event)
     }
 
     static QColor pSpaceColor(255,255,255,200);
-    auto &timelineInfo=timelineModel->getTimeLine();
-    for(auto &spaceItem:timelineInfo)
+    auto timelineInfo=timelineModel->getTimeLine();
+    for(auto &spaceItem:*timelineInfo)
     {
         float l(spaceItem.first/1000*wRatio);
         painter.fillRect(l,0,1,bHeight,pSpaceColor);

@@ -19,6 +19,7 @@ public:
         DESC,
         NONE
     };
+    QStringList scriptTypes{tr("Danmu"), tr("Library"),tr("Resources")};
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
     inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:scriptList.count();}
@@ -28,7 +29,7 @@ public:
 private:
     struct ScriptInfo
     {
-        ScriptManager::ScriptType type;
+        ScriptType type;
         QString id;
         QString name;
         QString version;

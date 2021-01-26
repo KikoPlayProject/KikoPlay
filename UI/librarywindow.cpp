@@ -113,7 +113,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
         QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
         if(selection.size()==0)return;
         Anime * currentAnime = GlobalObjects::library->animeModel->getAnime(selection.indexes().first(),true);
-        if(currentAnime->bangumiID==-1)
+        if(currentAnime->id.isEmpty())
         {
             QMessageBox::information(this,"KikoPlay",tr("No Bangumi ID, Search For Detail First"));
             return;

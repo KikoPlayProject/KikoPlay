@@ -449,7 +449,7 @@ static const luaL_Reg xmlreaderFuncs[] = {
     {nullptr, nullptr}
 };
 }
-ScriptBase::ScriptBase() : L(nullptr), settingsUpdated(false)
+ScriptBase::ScriptBase() : L(nullptr), settingsUpdated(false), sType(ScriptType::UNKNOWN_STYPE)
 {
     L = luaL_newstate();
     if(L)

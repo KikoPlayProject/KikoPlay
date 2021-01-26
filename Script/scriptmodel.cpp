@@ -5,9 +5,9 @@
 ScriptModel::ScriptModel(QObject *parent) : QAbstractItemModel(parent)
 {
     beginResetModel();
-    for(int i=0;i<ScriptManager::ScriptType::UNKNOWN_STYPE;++i)
+    for(int i=0;i<ScriptType::UNKNOWN_STYPE;++i)
     {
-        auto type = ScriptManager::ScriptType(i);
+        auto type = ScriptType(i);
         for(const auto &s: GlobalObjects::scriptManager->scripts(type))
         {
             scriptList.append({type, s->id(), s->name(), s->version(), s->desc(), s->getValue("path")});
@@ -15,7 +15,7 @@ ScriptModel::ScriptModel(QObject *parent) : QAbstractItemModel(parent)
     }
     endResetModel();
     QObject::connect(GlobalObjects::scriptManager, &ScriptManager::scriptChanged, this,
-                     [this](ScriptManager::ScriptType type, const QString &id, ScriptManager::ScriptChangeState state)
+                     [this](ScriptType type, const QString &id, ScriptManager::ScriptChangeState state)
     {
         if(state==ScriptManager::ScriptChangeState::ADD)
         {
@@ -40,7 +40,6 @@ ScriptModel::ScriptModel(QObject *parent) : QAbstractItemModel(parent)
 
 QVariant ScriptModel::data(const QModelIndex &index, int role) const
 {
-    static QStringList scriptTypes({tr("Danmu"), tr("Library"),tr("Resources"), ""});
     if (!index.isValid()) return QVariant();
     ScriptModel::Columns col=static_cast<Columns>(index.column());
     const ScriptInfo &script=scriptList.at(index.row());
@@ -49,7 +48,9 @@ QVariant ScriptModel::data(const QModelIndex &index, int role) const
         switch (col)
         {
         case Columns::TYPE:
-            return scriptTypes[script.type];
+            if(script.type != ScriptType::UNKNOWN_STYPE)
+                return scriptTypes[script.type];
+            break;
         case Columns::ID:
             return script.id;
         case Columns::NAME:
@@ -89,5 +90,5 @@ bool ScriptProxyModel::filterAcceptsRow(int source_row, const QModelIndex &sourc
 {
     if(ctype==-1) return true;
     QModelIndex index = sourceModel()->index(source_row, static_cast<int>(ScriptModel::Columns::ID), source_parent);
-    return ctype == index.data(ScriptTypeRole).value<ScriptManager::ScriptType>();
+    return ctype == index.data(ScriptTypeRole).value<ScriptType>();
 }

@@ -43,7 +43,7 @@ public slots:
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
-    inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:(currentAnime?currentAnime->eps.count():0);}
+    inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:(currentAnime?currentAnime->epList.count():0);}
     inline virtual int columnCount(const QModelIndex &parent) const{return parent.isValid()?0:3;}
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);

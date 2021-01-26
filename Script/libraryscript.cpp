@@ -2,7 +2,7 @@
 
 LibraryScript::LibraryScript() : ScriptBase()
 {
-
+    sType = ScriptType::LIBRARY;
 }
 
 ScriptState LibraryScript::loadScript(const QString &scriptPath)
@@ -47,7 +47,7 @@ ScriptState LibraryScript::search(const QString &keyword, QList<AnimeBase> &resu
     {
         auto robj = r.toMap();
         QString name = robj.value("name").toString(), id = robj.value("id").toString();
-        if(name.isEmpty() or id.isEmpty()) continue;
+        if(name.isEmpty() || id.isEmpty()) continue;
         AnimeBase ab;
         ab.name = name; ab.id = id;
         if(robj.contains("eps") && robj.value("eps").type()==QVariant::List)

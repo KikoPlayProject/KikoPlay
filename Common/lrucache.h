@@ -11,7 +11,7 @@ public:
     template<typename Deleter>
     explicit LRUCache(Deleter deleter, int mSize = 32, bool lock = false):maxSize(mSize), useLock(lock), h(nullptr), t(nullptr)
     {
-        deleter = new CustomDeleter<Deleter>(deleter);
+        this->deleter = new CustomDeleter<Deleter>(deleter);
     }
     ~LRUCache() { if(deleter) delete deleter; }
 

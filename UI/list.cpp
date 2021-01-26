@@ -1126,7 +1126,7 @@ int ListWindow::updateCurrentPool()
     for(auto iter=sources.cbegin();iter!=sources.cend();++iter)
     {
         QList<DanmuComment *> tmpList;
-        showMessage(tr("Updating: %1").arg(iter.value().url),PopMessageFlag::PM_PROCESS);
+        showMessage(tr("Updating: %1").arg(iter.value().title),PopMessageFlag::PM_PROCESS);
         count+=GlobalObjects::danmuPool->getPool()->update(iter.key());
     }
     showMessage(tr("Add %1 Danmu").arg(count),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);

@@ -48,19 +48,19 @@ bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &
 {
      QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
      Anime *anime=GlobalObjects::library->animeModel->getAnime(index,false);
-     QString animeTime(anime->date.left(7));
+     QString animeTime(anime->airDate.left(7));
      if(!timeFilterSet.isEmpty() && !timeFilterSet.contains(animeTime.isEmpty()?tr("Unknown"):animeTime))return false;
      for(const QString &tag:tagFilterList)
      {
-         if(!GlobalObjects::library->labelModel->getTags()[tag].contains(anime->title))
+         if(!GlobalObjects::library->labelModel->getTags()[tag].contains(anime->name))
              return false;
      }
      switch (filterType)
      {
      case 0://title
-         return anime->title.contains(filterRegExp());
+         return anime->name.contains(filterRegExp());
      case 1://summary
-         return anime->summary.contains(filterRegExp());
+         return anime->desc.contains(filterRegExp());
      case 2://staff
      {
          for(auto iter=anime->staff.cbegin();iter!=anime->staff.cend();++iter)
@@ -74,7 +74,8 @@ bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &
      {
          for(auto iter=anime->characters.cbegin();iter!=anime->characters.cend();++iter)
          {
-             if((*iter).name.contains(filterRegExp()) || (*iter).name_cn.contains(filterRegExp())
+             //if((*iter).name.contains(filterRegExp()) || (*iter).name_cn.contains(filterRegExp())
+             if((*iter).name.contains(filterRegExp())
                      || (*iter).actor.contains(filterRegExp()))
                  return true;
          }

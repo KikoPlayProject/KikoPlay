@@ -24,7 +24,7 @@ void EpisodesModel::updatePath(const QString &oldPath, const QString &newPath)
     QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
     query.prepare("update eps set LocalFile=? where Anime=? and LocalFile=?");
     query.bindValue(0,newPath);
-    query.bindValue(1,currentAnime->title);
+    query.bindValue(1,currentAnime->name);
     query.bindValue(2,oldPath);
     query.exec();
 }
@@ -34,24 +34,24 @@ void EpisodesModel::updateTitle(const QString &path, const QString &title)
     QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
     query.prepare("update eps set Name=? where Anime=? and LocalFile=?");
     query.bindValue(0,title);
-    query.bindValue(1,currentAnime->title);
+    query.bindValue(1,currentAnime->name);
     query.bindValue(2,path);
     query.exec();
 }
 
 void EpisodesModel::addEpisode(const QString &title, const QString &path)
 {
-    Episode ep;
+    EpInfo ep;
     ep.name=title;
     ep.localFile=path;
-    int insertPosition = currentAnime->eps.count();
+    int insertPosition = currentAnime->epList.count();
     beginInsertRows(QModelIndex(), insertPosition, insertPosition);
-    currentAnime->eps.append(ep);
+    currentAnime->epList.append(ep);
     endInsertRows();
     episodeChanged=true;
     QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
     query.prepare("insert into eps(Anime,Name,LocalFile) values(?,?,?)");
-    query.bindValue(0,currentAnime->title);
+    query.bindValue(0,currentAnime->name);
     query.bindValue(1,title);
     query.bindValue(2,path);
     query.exec();
@@ -70,8 +70,8 @@ void EpisodesModel::removeEpisodes(const QModelIndexList &removeIndexes)
         {
             int row=index.row();
             rows.append(row);
-            query.bindValue(0,currentAnime->title);
-            query.bindValue(1,currentAnime->eps.at(row).localFile);
+            query.bindValue(0,currentAnime->name);
+            query.bindValue(1,currentAnime->epList.at(row).localFile);
             query.exec();
         }
     }
@@ -80,7 +80,7 @@ void EpisodesModel::removeEpisodes(const QModelIndexList &removeIndexes)
     for(auto iter=rows.begin();iter!=rows.end();++iter)
     {
         beginRemoveRows(QModelIndex(), *iter, *iter);
-        currentAnime->eps.removeAt(*iter);
+        currentAnime->epList.removeAt(*iter);
         endRemoveRows();
     }
     episodeChanged=true;
@@ -89,7 +89,7 @@ void EpisodesModel::removeEpisodes(const QModelIndexList &removeIndexes)
 QVariant EpisodesModel::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid()) return QVariant();
-    const Episode &ep=currentAnime->eps.at(index.row());
+    const auto &ep=currentAnime->epList.at(index.row());
     int col=index.column();
     switch (role)
     {
@@ -116,7 +116,7 @@ QVariant EpisodesModel::data(const QModelIndex &index, int role) const
 bool EpisodesModel::setData(const QModelIndex &index, const QVariant &value, int )
 {
     int row=index.row(),col=index.column();
-    Episode &ep=currentAnime->eps[row];
+    auto &ep=currentAnime->epList[row];
     QString val=value.toString().trimmed();
     if(val.isEmpty())return false;
     switch (col)

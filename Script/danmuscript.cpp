@@ -3,7 +3,7 @@
 
 DanmuScript::DanmuScript() : ScriptBase()
 {
-
+    sType = ScriptType::DANMU;
 }
 
 ScriptState DanmuScript::loadScript(const QString &scriptPath)

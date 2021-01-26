@@ -157,7 +157,7 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     pageGLayout->setColumnStretch(2,1);
 
     QObject::connect(GlobalObjects::library, &AnimeLibrary::captureUpdated, this, [this](const QString &animeName){
-        if(!isHidden() && currentAnime && currentAnime->title == animeName)
+        if(!isHidden() && currentAnime && currentAnime->name == animeName)
             captureModel->setAnimeTitle(animeName);
     });
 
@@ -177,7 +177,7 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
     }
     static QPixmap nullCover(":/res/images/cover.png");
     coverLabel->setPixmap(currentAnime->coverPixmap.isNull()?nullCover:currentAnime->coverPixmap);
-    titleLabel->setText(QString("<style> a {text-decoration: none} </style><a style='color: white;' href = \"http://bgm.tv/subject/%1\">%2</a>").arg(currentAnime->bangumiID).arg(currentAnime->title));
+    titleLabel->setText(QString("<style> a {text-decoration: none} </style><a style='color: white;' href = \"http://bgm.tv/subject/%1\">%2</a>").arg(currentAnime->id).arg(currentAnime->name));
     QString addTime(QDateTime::fromSecsSinceEpoch(currentAnime->addTime).toString("yyyy-MM-dd hh:mm:ss"));
     QStringList stafflist, outlist;
     int c = 0;
@@ -195,8 +195,8 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
         viewInfoLabel->setToolTip(outlist.join('\n'));
     }
     viewInfoLabel->setText(QObject::tr("Add Time: %1\nDate: %3\nEps: %2\n%4").arg(addTime).arg(currentAnime->epCount).
-                           arg(currentAnime->date).arg(stafflist.join('\n')));
-    descInfo->setText(currentAnime->summary);
+                           arg(currentAnime->airDate).arg(stafflist.join('\n')));
+    descInfo->setText(currentAnime->desc);
     epModel->setAnime(currentAnime);
     for(auto &character: currentAnime->characters)
     {
@@ -219,12 +219,12 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
     QStringList tags;
     for(auto iter=tagMap.begin();iter!=tagMap.end();++iter)
     {
-        if(iter.value().contains(currentAnime->title))
+        if(iter.value().contains(currentAnime->name))
             tags<<iter.key();
     }
     tagPanel->addTag(tags);
     tagContainerSLayout->setCurrentIndex(0);
-    captureModel->setAnimeTitle(currentAnime->title);
+    captureModel->setAnimeTitle(currentAnime->name);
 }
 
 void AnimeDetailInfoPage::showBusyState(bool on)
@@ -282,8 +282,8 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
             if (index.isValid())
             {
                 int row=index.row();
-                if(QFile::exists(currentAnime->eps.at(row).localFile))
-                    items<<currentAnime->eps.at(row).localFile;
+                if(QFile::exists(currentAnime->epList.at(row).localFile))
+                    items<<currentAnime->epList.at(row).localFile;
             }
         }
         dialogTip->showMessage(tr("Add %1 items to Playlist").arg(GlobalObjects::playlist->addItems(items,QModelIndex())));
@@ -292,7 +292,7 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
     QObject::connect(playAction,&QAction::triggered,[episodeView,this](){
         auto selection = episodeView->selectionModel()->selectedRows();
         if (selection.size() == 0)return;
-        QFileInfo info(currentAnime->eps.at(selection.last().row()).localFile);
+        QFileInfo info(currentAnime->epList.at(selection.last().row()).localFile);
         if(!info.exists())
         {
             dialogTip->showMessage(tr("File Not Exist"),1);
@@ -304,7 +304,7 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
     QObject::connect(explorerViewAction,&QAction::triggered,[this,episodeView](){
         auto selection = episodeView->selectionModel()->selectedRows();
         if (selection.size() == 0)return;
-        QFileInfo info(currentAnime->eps.at(selection.last().row()).localFile);
+        QFileInfo info(currentAnime->epList.at(selection.last().row()).localFile);
         if(!info.exists())
         {
             dialogTip->showMessage(tr("File not Exist"),1);
@@ -316,12 +316,13 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
 
     QAction *getEpNames=new QAction(tr("Get Epsoide Names"),this);
     QObject::connect(getEpNames,&QAction::triggered,[this,getEpNames](){
-        if(currentAnime->bangumiID==-1)return;
+        if(currentAnime->id.isEmpty())return;
         QList<Bangumi::EpInfo> eps;
         emit setBackEnable(false);
         getEpNames->setEnabled(false);
         this->showBusyState(true);
-        QString err(Bangumi::getEp(currentAnime->bangumiID, eps));
+        // To: -------------------------------------
+        QString err(Bangumi::getEp(currentAnime->id.toInt(), eps));
         if(err.isEmpty())
         {
             epNames.clear();
@@ -379,7 +380,7 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
     tagPanel = new TagPanel(container,true,false,true);
     QObject::connect(GlobalObjects::library->labelModel, &LabelModel::removedTag, tagPanel, &TagPanel::removeTag);
     QObject::connect(tagPanel, &TagPanel::deleteTag, [this](const QString &tag){
-        GlobalObjects::library->deleteTag(tag,currentAnime->title);
+        GlobalObjects::library->deleteTag(tag,currentAnime->name);
     });
     QObject::connect(tagPanel,&TagPanel::tagAdded, [this](const QString &tag){
         QStringList tags{tag};
@@ -393,7 +394,7 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
     QAction *bgmTagAction=new QAction(tr("Tags on Bangumi"), this);
     tagPanel->addAction(bgmTagAction);
     QObject::connect(bgmTagAction,&QAction::triggered,this,[this, bgmTagAction, bgmTagPanel](){
-        if(currentAnime->bangumiID == -1) return;
+        if(currentAnime->id.isEmpty()) return;
         showBusyState(true);
         emit setBackEnable(false);
         QStringList tags;
@@ -427,7 +428,7 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
         tags.clear();
         for(auto iter=tagMap.begin();iter!=tagMap.end();++iter)
         {
-            if(iter.value().contains(currentAnime->title))
+            if(iter.value().contains(currentAnime->name))
                 tags.append(iter.key());
         }
         tagPanel->addTag(tags);
@@ -531,11 +532,11 @@ CharacterWidget::CharacterWidget(Character *character, QWidget *parent) : QWidge
     refreshIcon();
     QLabel *nameLabel=new QLabel(this);
     nameLabel->setOpenExternalLinks(true);
-    QString name = QString("%1%2").arg(character->name, character->name_cn.isEmpty()?"":QString("(%1)").arg(character->name_cn));
+    //QString name = QString("%1%2").arg(character->name, character->name_cn.isEmpty()?"":QString("(%1)").arg(character->name_cn));
     nameLabel->setText(QString("<a style='color: rgb(96, 208, 252);' href = \"http://bgm.tv/character/%1\">%2</a>")
-                       .arg(character->bangumiID).arg(name));
+                       .arg(character->id).arg(character->name));
     nameLabel->setFixedWidth(240*logicalDpiX()/96);
-    nameLabel->setToolTip(name);
+    nameLabel->setToolTip(character->name);
 
     QLabel *infoLabel=new QLabel(this);
     infoLabel->setObjectName(QStringLiteral("AnimeDetailCharactorTitle"));
@@ -552,7 +553,9 @@ CharacterWidget::CharacterWidget(Character *character, QWidget *parent) : QWidge
 
 void CharacterWidget::refreshIcon()
 {
-    if(crt->image.isEmpty())
+    //TODO-----------------
+    if(true)
+    //if(crt->image.isEmpty())
     {
         static QPixmap nullIcon(":/res/images/kikoplay-4.png");
         iconLabel->setPixmap(nullIcon);
@@ -560,7 +563,7 @@ void CharacterWidget::refreshIcon()
     else
     {
         QPixmap icon;
-        icon.loadFromData(crt->image);
+        //icon.loadFromData(crt->image);
         iconLabel->setPixmap(icon);
     }
 }

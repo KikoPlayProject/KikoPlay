@@ -338,11 +338,11 @@ QJsonObject Pool::exportFullJson()
     {
         QJsonObject sourceObj
         {
-            {"name", source.name},
+            {"name", source.title},
             {"id", source.id},
-            {"url", source.url},
+            {"url", source.scriptData},
             {"delay", source.delay},
-            {"timeline", source.getTimelineStr()}
+            {"timeline", source.timelineStr()}
         };
         sourceArray.append(sourceObj);
     }

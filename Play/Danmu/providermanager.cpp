@@ -12,7 +12,7 @@ ProviderManager::ProviderManager(QObject *parent) : QObject(parent)
 QList<QPair<QString, QString>> ProviderManager::getSearchProviders()
 {
     QList<QPair<QString, QString>> searchProviders;
-    for(auto &script : GlobalObjects::scriptManager->scripts(ScriptManager::DANMU))
+    for(auto &script : GlobalObjects::scriptManager->scripts(ScriptType::DANMU))
     {
         DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
         if(dmScript->supportSearch())
@@ -26,7 +26,7 @@ QList<QPair<QString, QString>> ProviderManager::getSearchProviders()
 QStringList ProviderManager::getSampleURLs()
 {
     QStringList sampledURLs;
-    for(auto &script : GlobalObjects::scriptManager->scripts(ScriptManager::DANMU))
+    for(auto &script : GlobalObjects::scriptManager->scripts(ScriptType::DANMU))
     {
         DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
         sampledURLs.append(dmScript->sampleURLs());
@@ -40,7 +40,7 @@ ScriptState ProviderManager::search(const QString &id, const QString &keyword, Q
     if(!script || !script->supportSearch()) return "Script invalid or Unsupport search";
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([&](){
-        return script->search(keyword, results);
+        return QVariant::fromValue(script->search(keyword, results));
     }).value<ScriptState>();
 }
 
@@ -50,7 +50,7 @@ ScriptState ProviderManager::getEpInfo(const DanmuSource *source, QList<DanmuSou
     if(!script) return "Script invalid";
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([&](){
-        return script->getEpInfo(source, results);
+        return QVariant::fromValue(script->getEpInfo(source, results));
     }).value<ScriptState>();
 }
 
@@ -58,15 +58,15 @@ ScriptState ProviderManager::getURLInfo(const QString &url, QList<DanmuSource> &
 {
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([&](){
-        for(auto &script : GlobalObjects::scriptManager->scripts(ScriptManager::DANMU))
+        for(auto &script : GlobalObjects::scriptManager->scripts(ScriptType::DANMU))
         {
             DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
             if(dmScript->supportURL(url))
             {
-                return dmScript->getURLInfo(url, results);
+                return QVariant::fromValue(dmScript->getURLInfo(url, results));
             }
         }
-        return ScriptState(ScriptState::S_ERROR, "Unsupported URL");
+        return QVariant::fromValue(ScriptState(ScriptState::S_ERROR, "Unsupported URL"));
     }).value<ScriptState>();
 }
 
@@ -79,7 +79,7 @@ ScriptState ProviderManager::downloadDanmu(const DanmuSource *item, QList<DanmuC
         DanmuSource *retItem = nullptr;
         ScriptState state = script->getDanmu(item, &retItem, danmuList);
         if(nItem) *nItem = retItem;
-        return state;
+        return QVariant::fromValue(state);
     }).value<ScriptState>();
 }
 
@@ -88,7 +88,7 @@ void ProviderManager::checkSourceToLaunch(const QString &poolId, const QList<Dan
     ThreadTask task(GlobalObjects::workThread);
     task.RunOnce([=](){
         QStringList supportedScripts;
-        for(auto &script : GlobalObjects::scriptManager->scripts(ScriptManager::DANMU))
+        for(auto &script : GlobalObjects::scriptManager->scripts(ScriptType::DANMU))
         {
             DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
             bool ret = false;

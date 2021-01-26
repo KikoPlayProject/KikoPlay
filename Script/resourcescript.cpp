@@ -3,7 +3,7 @@
 
 ResourceScript::ResourceScript() : ScriptBase()
 {
-
+    sType = ScriptType::RESOURCE;
 }
 
 ScriptState ResourceScript::loadScript(const QString &scriptPath)

@@ -14,7 +14,7 @@
 
 BangumiSearch::BangumiSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("Bangumi Search"),parent,true,true,false),currentAnime(anime)
 {
-    searchWordEdit=new QLineEdit(anime->title,this);
+    searchWordEdit=new QLineEdit(anime->name,this);
     searchButton=new QPushButton(tr("Search"),this);
     QObject::connect(searchButton,&QPushButton::clicked,this,&BangumiSearch::search);
     QObject::connect(searchWordEdit,&QLineEdit::returnPressed,this,&BangumiSearch::search);

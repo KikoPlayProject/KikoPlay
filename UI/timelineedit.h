@@ -11,7 +11,7 @@ public:
     explicit TimeLineInfoModel(QList<QPair<int,int>> *timelines,QObject *parent=nullptr);
     void addSpace(int start,int duration);
     void removeSpace(const QModelIndex &index);
-    // inline const QList<QPair<int,int> > &getTimeLine(){return timelineInfo;}
+    inline const QList<QPair<int,int>> *getTimeLine(){return timelineInfo;}
 private:
     QList<QPair<int,int>> *timelineInfo;
     // QAbstractItemModel interface
