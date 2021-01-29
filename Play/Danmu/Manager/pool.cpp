@@ -340,7 +340,7 @@ QJsonObject Pool::exportFullJson()
         {
             {"name", source.title},
             {"id", source.id},
-            {"url", source.scriptData},
+            {"duration", source.duration},
             {"delay", source.delay},
             {"timeline", source.timelineStr()}
         };

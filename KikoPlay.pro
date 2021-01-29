@@ -35,6 +35,7 @@ SOURCES += \
     Download/peermodel.cpp \
     LANServer/mediahandler.cpp \
     MediaLibrary/Service/bangumi.cpp \
+    MediaLibrary/animeinfo.cpp \
     Play/Danmu/eventanalyzer.cpp \
     Play/Video/mpvpreview.cpp \
     Script/danmuscript.cpp \

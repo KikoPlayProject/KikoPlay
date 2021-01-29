@@ -20,53 +20,106 @@ struct EpInfo
             return QObject::tr("No.%0 %1").arg(index).arg(name);
         return name;
     }
-    QVariantMap toMap() const { return {{"name", name}, {"index", index}, {"type", int(type)}, {"localFile", localFile}, {"finishTime", QString::number(finishTime)}, {"lastPlayTime", QString::number(lastPlayTime)}}; }
+    QVariantMap toMap() const
+    {
+        return
+        {
+            {"name", name},
+            {"index", index},
+            {"type", int(type)},
+            {"localFile", localFile},
+            {"finishTime", QString::number(finishTime)},
+            {"lastPlayTime", QString::number(lastPlayTime)}
+        };
+    }
 };
 struct AnimeBase
 {
     QString name;
-    QString id;
+    QString scriptData;
     QSharedPointer<QList<EpInfo>> epList;
 };
 struct MatchResult
 {
     bool success;
-    QSharedPointer<AnimeBase> anime;
-    QSharedPointer<EpInfo> ep;
+    QString name;
+    QString scriptId;
+    QString scriptData;
+    EpInfo ep;
 };
 struct Character
 {
     QString name;
-    QString id;
     QString actor;
     QString link;
     QString imgURL;
+    QPixmap image;
 };
-struct Anime
+struct AnimeImage
 {
-    QString name;
-    QString desc;
-    QString airDate;
-    QString id;
-    QString scriptId;
-    qint64 addTime;
-    int epCount;
-    QString coverURL;
-    QPixmap coverPixmap;
+    enum class ImageType
+    {
+        CAPTURE, SLICE, POSTER
+    };
+    ImageType type;
+    qint64 timeId;
+    QString info;
+    QPixmap thumb;
+};
+class Anime
+{
+    friend class AnimeWorker;
+
+    QString _name;
+    QString _desc;
+    QString _airDate;
+    QString _coverURL;
+    QPixmap _cover;
+    QString _scriptId;
+    QString _scriptData;
+
+    qint64 _addTime;
+    int _epCount;
+
 
     QList<QPair<QString,QString>> staff;
-    QList<EpInfo> epList;
+    QList<EpInfo> epInfoList;
     QList<Character> characters;
-    QMap<QString, QByteArray> crtImages;
-    QList<QByteArray> posters;
+    QList<AnimeImage> posters;
 
-    QVariantMap toMap() const
-    {
-        QVariantList eps;
-        for(const auto &ep : epList)
-            eps.append(ep.toMap());
-        return {{"name", name}, {"desc", desc}, {"id", id}, {"airDate", airDate}, {"epCount", epCount}, {"addTime", QString::number(addTime)}, {"eps", eps}};
-    }
+    bool crtImagesLoaded;
+    bool epLoaded;
+    bool posterLoaded;
+
+public:
+    const QString &name() const {return _name;}
+    const QString &description() const {return _desc;}
+    const QString &airDate() const {return _airDate;}
+    const QString &scriptId() const {return _scriptId;}
+    const QString &scriptData() const {return _scriptData;}
+    qint64 addTime() const {return _addTime;}
+    QString addTimeStr() const {return QDateTime::fromSecsSinceEpoch(_addTime).toString("yyyy-MM-dd hh:mm:ss");}
+    const QPixmap &cover() const {return _cover;}
+    const QString &coverURL() const {return _coverURL;}
+
+public:
+    Anime();
+    bool isValid() const {return !_name.isEmpty();}
+
+    const QList<EpInfo> &epList();
+    const QList<Character> &crList(bool loadImage = false);
+    const QStringList &tagList();
+    const QList<AnimeImage> &posterList();
+    const QList<QPair<QString,QString>> &staffList() const {return staff;}
+public:
+    void addEp(const EpInfo &ep);
+    void removeEp(const QString &epPath);
+
+public:
+    QVariantMap toMap();
+
+private:
+
 };
 
 //struct Character
@@ -100,11 +153,6 @@ struct Anime
 //    QList<Episode> eps;
 //    QList<Character> characters;
 //};
-struct CaptureItem
-{
-    qint64 timeId;
-    QString info;
-    QByteArray thumb;
-};
+
 
 #endif // ANIMEINFO_H

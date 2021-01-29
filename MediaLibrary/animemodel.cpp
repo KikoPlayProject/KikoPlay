@@ -17,11 +17,13 @@ void AnimeModel::setActive(bool isActive)
         if(!tmpAnimes.isEmpty())
         {
             beginInsertRows(QModelIndex(),0,tmpAnimes.count()-1);
-            while(!tmpAnimes.isEmpty())
-            {
-                Anime *anime=tmpAnimes.takeFirst();
-                animes.prepend(anime);
-            }
+            std::copy(tmpAnimes.rbegin(), tmpAnimes.rend(), std::front_inserter(animes));
+            tmpAnimes.clear();
+//            while(!tmpAnimes.isEmpty())
+//            {
+//                Anime *anime=tmpAnimes.takeFirst();
+//                animes.prepend(anime);
+//            }
             endInsertRows();
             showStatisMessage();
         }
@@ -92,7 +94,7 @@ QVariant AnimeModel::data(const QModelIndex &index, int role) const
     {
         case Qt::DisplayRole:
         {
-            return anime->name;
+            return anime->name();
         }
         case AnimeRole:
         {

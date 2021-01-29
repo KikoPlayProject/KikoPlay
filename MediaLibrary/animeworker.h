@@ -5,14 +5,50 @@ class AnimeWorker : public QObject
 {
     Q_OBJECT
 public:
-    explicit AnimeWorker(QObject *parent=nullptr):QObject(parent){}
+    explicit AnimeWorker(QObject *parent=nullptr);
     ~AnimeWorker();
+
+public:
+    static AnimeWorker *instance()
+    {
+        static AnimeWorker worker;
+        return &worker;
+    }
+    int fetchAnimes(QList<Anime *> *animes, int offset, int limit);
+    void loadCrImages(Anime *anime);
+    void loadEpInfo(Anime *anime);
+    void loadPosters(Anime *anime);
+
+    void addAnime(const MatchResult &match);
+    void addAnime(const QString &name);
+    void addAnime(Anime *anime);
+
+    void addEp(const QString &animeName, const EpInfo &ep);
+
+
+
 private:
     QMap<QString,Anime *> animesMap;
+
+    QMultiMap<QString, QString> animeAlias;
+    QMap<QString, QString> aliasAnime;
+    bool aliasLoaded;
+    void loadAlias();
+    QString isAlias(const QString &name);
+
+    bool checkAnimeExist(const QString &name);
+    bool checkEpExist(const QString &animeName, const EpInfo &ep);
+
     void updateAnimeInfo(Anime *anime);
     QString downloadLabelInfo(Anime *anime);
-    QString isAlias(const QString &animeName);
+    //QString isAlias(const QString &animeName);
     void setAlias(const QString &animeName, const QString &alias);
+
+signals:
+    void animeAdded(Anime *anime);
+    void epRemoved(const QString &animeName, const QString &epPath);
+    void epUpdated(const QString &animeName, const QString &epPath);
+    void epAdded(const QString &animeName, const EpInfo &ep);
 
 public slots:
     void loadAnimes(QList<Anime *> *animes, int offset, int limit);
