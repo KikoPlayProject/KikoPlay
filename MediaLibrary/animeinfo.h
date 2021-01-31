@@ -124,6 +124,10 @@ private:
     void setStaffs(const QString &staffStrs);
     QString staffToStr() const;
 };
+enum TagType
+{
+    TAG_SCRIPT, TAG_TIME, TAG_FILE, TAG_CUSTOM
+};
 
 //struct Character
 //{

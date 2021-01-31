@@ -8,6 +8,7 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QSqlError>
+/*
 void AnimeWorker::addAnimeInfo(const QString &animeName,const QString &epName, const QString &path)
 {
     QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
@@ -74,7 +75,8 @@ void AnimeWorker::addAnimeInfo(const QString &animeName,const QString &epName, c
     }
 
 }
-
+*/
+/*
 void AnimeWorker::addAnimeInfo(const QString &animeName, int bgmId)
 {
     QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
@@ -96,7 +98,8 @@ void AnimeWorker::addAnimeInfo(const QString &animeName, int bgmId)
     animesMap.insert(animeName,anime);
     emit addAnime(anime);
 }
-
+*/
+/*
 void AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId)
 {
     QString animeUrl(QString("https://api.bgm.tv/subject/%1").arg(bangumiId));
@@ -216,13 +219,15 @@ void AnimeWorker::downloadDetailInfo(Anime *anime, int bangumiId)
     }
     emit downloadDone(errInfo);
 }
-
+*/
+/*
 void AnimeWorker::downloadTags(int bangumiID, QStringList &tags)
 {
     QString errInfo(Bangumi::getTags(bangumiID, tags));
     emit downloadTagDone(errInfo);
 }
-
+*/
+/*
 void AnimeWorker::saveTags(const QString &title, const QStringList &tags)
 {
     QSqlDatabase db=QSqlDatabase::database("Bangumi_W");
@@ -237,7 +242,9 @@ void AnimeWorker::saveTags(const QString &title, const QStringList &tags)
     }
     db.commit();
 }
+*/
 
+/*
 void AnimeWorker::loadAnimes(QList<Anime *> *animes,int offset,int limit)
 {
     QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
@@ -294,23 +301,29 @@ void AnimeWorker::loadAnimes(QList<Anime *> *animes,int offset,int limit)
     }
     emit loadDone(count);
 }
+*/
 
 void AnimeWorker::deleteAnime(Anime *anime)
 {
-    QSqlDatabase db=GlobalObjects::getDB(GlobalObjects::Bangumi_DB);
-    db.transaction();
-    QSqlQuery query(db);
-    query.prepare("delete from anime where Anime=?");
-    query.bindValue(0,anime->_name);
-    query.exec();
-    query.prepare("delete from alias where Anime=?");
-    query.bindValue(0,anime->_name);
-    query.exec();
-    animesMap.remove(anime->_name);
-    db.commit();
-    emit animeRemoved(anime);
+    ThreadTask task(GlobalObjects::workThread);
+    task.Run([=](){
+        QSqlDatabase db=GlobalObjects::getDB(GlobalObjects::Bangumi_DB);
+        db.transaction();
+        QSqlQuery query(db);
+        query.prepare("delete from anime where Anime=?");
+        query.bindValue(0,anime->_name);
+        query.exec();
+        query.prepare("delete from alias where Anime=?");
+        query.bindValue(0,anime->_name);
+        query.exec();
+        animesMap.remove(anime->_name);
+        db.commit();
+        emit animeRemoved(anime);
+        return 0;
+    });
 }
 
+/*
 void AnimeWorker::updatePlayTime(const QString &title, const QString &path)
 {
     QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
@@ -333,7 +346,9 @@ void AnimeWorker::updatePlayTime(const QString &title, const QString &path)
 
     }
 }
+*/
 
+/*
 void AnimeWorker::loadLabelInfo(QMap<QString, QSet<QString> > &tagMap, QMap<QString,int> &timeMap)
 {
     QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
@@ -365,7 +380,9 @@ void AnimeWorker::loadLabelInfo(QMap<QString, QSet<QString> > &tagMap, QMap<QStr
     }
     emit loadLabelInfoDone();
 }
+*/
 
+/*
 void AnimeWorker::updateCrtImage(const QString &title, const Character *crt)
 {
     QSqlQuery query(QSqlDatabase::database("Bangumi_W"));
@@ -376,7 +393,8 @@ void AnimeWorker::updateCrtImage(const QString &title, const Character *crt)
     query.bindValue(2,crt->id);
     query.exec();
 }
-
+*/
+/*
 void AnimeWorker::deleteTag(const QString &tag, const QString &animeTitle)
 {
     QSqlDatabase db=QSqlDatabase::database("Bangumi_W");
@@ -401,6 +419,7 @@ void AnimeWorker::deleteTag(const QString &tag, const QString &animeTitle)
     query.exec();
     db.commit();
 }
+*/
 
 AnimeWorker::AnimeWorker(QObject *parent):QObject(parent)
 {
@@ -638,7 +657,7 @@ void AnimeWorker::addAnime(Anime *srcAnime, Anime *newAnime)
         Q_ASSERT(animesMap.contains(srcAnime->_name));
         if(srcAnime->_name!=newAnime->_name)
         {
-            setAlias(newAnime->_name, srcAnime->_name);
+            addAlias(newAnime->_name, srcAnime->_name);
             Anime *animeInMap = animesMap.value(newAnime->_name, nullptr);
             QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
             if(animeInMap || checkAnimeExist(newAnime->_name))  //newAnime exists, only merge episodes of srcAnime to newAnime
@@ -784,6 +803,7 @@ bool AnimeWorker::updateAnimeInfo(Anime *anime)
     return db.commit();
 }
 
+/*
 QString AnimeWorker::downloadLabelInfo(Anime *anime)
 {
     QStringList tags;
@@ -805,6 +825,7 @@ QString AnimeWorker::downloadLabelInfo(Anime *anime)
     }
     return err;
 }
+*/
 
 QString AnimeWorker::isAlias(const QString &name)
 {
@@ -879,12 +900,4 @@ bool AnimeWorker::checkEpExist(const QString &animeName, const EpInfo &ep)
     return false;
 }
 
-void AnimeWorker::setAlias(const QString &animeName, const QString &alias)
-{
-    QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
-    query.prepare("insert into alias(Alias,Anime) values(?,?)");
-    query.bindValue(0,alias);
-    query.bindValue(1,animeName);
-    query.exec();
-}
 
