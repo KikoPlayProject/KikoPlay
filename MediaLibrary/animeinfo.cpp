@@ -6,10 +6,44 @@ Anime::Anime() : crtImagesLoaded(false), epLoaded(false), posterLoaded(false)
 
 }
 
+void Anime::assign(const Anime *anime)
+{
+    _desc = anime->_desc;
+    _airDate = anime->_airDate;
+    _coverURL = anime->_coverURL;
+    _cover = anime->_cover;
+    _scriptId = anime->_scriptId;
+    _scriptData = anime->_scriptData;
+    _epCount = anime->_epCount;
+    staff = anime->staff;
+    characters = anime->characters;
+    crtImagesLoaded = anime->crtImagesLoaded;
+}
+
+void Anime::setStaffs(const QString &staffStrs)
+{
+    staff.clear();
+    QStringList staffs(staffStrs.split(';',QString::SkipEmptyParts));
+    for(int i=0;i<staffs.count();++i)
+    {
+        int pos=staffs.at(i).indexOf(':');
+        staff.append(QPair<QString,QString>(staffs[i].left(pos),staffs[i].mid(pos+1)));
+    }
+}
+
+QString Anime::staffToStr() const
+{
+    QStringList staffStrList;
+    for(const auto &p : staff)
+        staffStrList.append(p.first+":"+p.second);
+    return staffStrList.join(';');
+}
+
 const QList<EpInfo> &Anime::epList()
 {
     if(!epLoaded)
     {
+        epInfoList.clear();
         AnimeWorker::instance()->loadEpInfo(this);
         epLoaded = true;
     }
@@ -20,6 +54,7 @@ const QList<Character> &Anime::crList(bool loadImage)
 {
     if(!crtImagesLoaded && loadImage)
     {
+        characters.clear();
         AnimeWorker::instance()->loadCrImages(this);
         crtImagesLoaded = true;
     }
@@ -35,6 +70,7 @@ const QList<AnimeImage> &Anime::posterList()
 {
     if(!posterLoaded)
     {
+        posters.clear();
         AnimeWorker::instance()->loadPosters(this);
         posterLoaded = true;
     }
@@ -55,6 +91,20 @@ void Anime::addEp(const EpInfo &ep)
         }
     }
     epInfoList.append(ep);
+}
+
+void Anime::updateEpTime(const QString &path, qint64 time, bool isFinished)
+{
+    if(!epLoaded) return;
+    for(auto &e : epInfoList)
+    {
+        if(e.localFile==path)
+        {
+            if(isFinished) e.finishTime = time;
+            else e.lastPlayTime = time;
+            return;
+        }
+    }
 }
 
 void Anime::removeEp(const QString &epPath)

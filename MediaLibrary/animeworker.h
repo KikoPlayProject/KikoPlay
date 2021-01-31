@@ -21,9 +21,12 @@ public:
 
     void addAnime(const MatchResult &match);
     void addAnime(const QString &name);
-    void addAnime(Anime *anime);
+    bool addAnime(Anime *anime);
+    void addAnime(Anime *srcAnime, Anime *newAnime);
+    void deleteAnime(Anime *anime);
 
     void addEp(const QString &animeName, const EpInfo &ep);
+    void updateEpTime(const QString &animeName, const QString &path, bool finished = false);
 
 
 
@@ -35,20 +38,25 @@ private:
     bool aliasLoaded;
     void loadAlias();
     QString isAlias(const QString &name);
+    void addAlias(const QString &name, const QString &alias);
 
     bool checkAnimeExist(const QString &name);
     bool checkEpExist(const QString &animeName, const EpInfo &ep);
 
-    void updateAnimeInfo(Anime *anime);
+    bool updateAnimeInfo(Anime *anime);
     QString downloadLabelInfo(Anime *anime);
     //QString isAlias(const QString &animeName);
     void setAlias(const QString &animeName, const QString &alias);
 
 signals:
     void animeAdded(Anime *anime);
+    void animeUpdated(Anime *anime);
+    void animeRemoved(Anime *anime);
     void epRemoved(const QString &animeName, const QString &epPath);
     void epUpdated(const QString &animeName, const QString &epPath);
     void epAdded(const QString &animeName, const EpInfo &ep);
+    void epReset(const QString &animeName);
+
 
 public slots:
     void loadAnimes(QList<Anime *> *animes, int offset, int limit);
@@ -62,7 +70,7 @@ public slots:
     void downloadTags(int bangumiID, QStringList &tags);
     void saveTags(const QString &title, const QStringList &tags);
 
-    void deleteAnime(Anime *anime);
+    //void deleteAnime(Anime *anime);
     void updatePlayTime(const QString &title, const QString &path);
     void deleteTag(const QString &tag,const QString &animeTitle);
 signals:

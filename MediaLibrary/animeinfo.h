@@ -113,13 +113,16 @@ public:
     const QList<QPair<QString,QString>> &staffList() const {return staff;}
 public:
     void addEp(const EpInfo &ep);
+    void updateEpTime(const QString &path, qint64 time, bool isFinished);
     void removeEp(const QString &epPath);
 
 public:
     QVariantMap toMap();
 
 private:
-
+    void assign(const Anime *anime);
+    void setStaffs(const QString &staffStrs);
+    QString staffToStr() const;
 };
 
 //struct Character
