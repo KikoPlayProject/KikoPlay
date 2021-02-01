@@ -12,7 +12,7 @@
 #include "../common.h"
 #include "../blocker.h"
 #include "../danmupool.h"
-#include "../providermanager.h"
+#include "../danmuprovider.h"
 #include "globalobjects.h"
 
 DanmuManager *PoolStateLock::manager=nullptr;
@@ -776,7 +776,7 @@ void DanmuManager::updateSourceDelay(const QString &pid, const DanmuSource *sour
 QList<DanmuComment *> DanmuManager::updateSource(const DanmuSource *sourceInfo, const QSet<QString> &danmuHashSet)
 {
     QList<DanmuComment *> tmpList;
-    auto ret = GlobalObjects::providerManager->downloadDanmu(sourceInfo, tmpList);
+    auto ret = GlobalObjects::danmuProvider->downloadDanmu(sourceInfo, tmpList);
     if(!ret)return tmpList;
     GlobalObjects::blocker->preFilter(tmpList);
     for(auto iter=tmpList.begin();iter!=tmpList.end();)

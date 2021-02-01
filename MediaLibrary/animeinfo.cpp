@@ -121,11 +121,14 @@ void Anime::removeEp(const QString &epPath)
     }
 }
 
-QVariantMap Anime::toMap()
+QVariantMap Anime::toMap(bool fillEp)
 {
     QVariantList eps;
-    for(const auto &ep : epList())
-        eps.append(ep.toMap());
+    if(fillEp)
+    {
+        for(const auto &ep : epList())
+            eps.append(ep.toMap());
+    }
     return
     {
         {"name", _name},

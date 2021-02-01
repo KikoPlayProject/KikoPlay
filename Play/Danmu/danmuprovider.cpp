@@ -1,15 +1,15 @@
-#include "providermanager.h"
+#include "danmuprovider.h"
 #include "Common/threadtask.h"
 #include "Script/scriptmanager.h"
 #include "Script/danmuscript.h"
 #include "globalobjects.h"
 
-ProviderManager::ProviderManager(QObject *parent) : QObject(parent)
+DanmuProvider::DanmuProvider(QObject *parent) : QObject(parent)
 {
 
 }
 
-QList<QPair<QString, QString>> ProviderManager::getSearchProviders()
+QList<QPair<QString, QString>> DanmuProvider::getSearchProviders()
 {
     QList<QPair<QString, QString>> searchProviders;
     for(auto &script : GlobalObjects::scriptManager->scripts(ScriptType::DANMU))
@@ -17,13 +17,13 @@ QList<QPair<QString, QString>> ProviderManager::getSearchProviders()
         DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
         if(dmScript->supportSearch())
         {
-            searchProviders.append({dmScript->id(), dmScript->name()});
+            searchProviders.append({dmScript->name(), dmScript->id()});
         }
     }
     return searchProviders;
 }
 
-QStringList ProviderManager::getSampleURLs()
+QStringList DanmuProvider::getSampleURLs()
 {
     QStringList sampledURLs;
     for(auto &script : GlobalObjects::scriptManager->scripts(ScriptType::DANMU))
@@ -34,9 +34,9 @@ QStringList ProviderManager::getSampleURLs()
     return sampledURLs;
 }
 
-ScriptState ProviderManager::search(const QString &id, const QString &keyword, QList<DanmuSource> &results)
+ScriptState DanmuProvider::danmuSearch(const QString &scriptId, const QString &keyword, QList<DanmuSource> &results)
 {
-    auto script = GlobalObjects::scriptManager->getScript(id).staticCast<DanmuScript>();
+    auto script = GlobalObjects::scriptManager->getScript(scriptId).staticCast<DanmuScript>();
     if(!script || !script->supportSearch()) return "Script invalid or Unsupport search";
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([&](){
@@ -44,7 +44,7 @@ ScriptState ProviderManager::search(const QString &id, const QString &keyword, Q
     }).value<ScriptState>();
 }
 
-ScriptState ProviderManager::getEpInfo(const DanmuSource *source, QList<DanmuSource> &results)
+ScriptState DanmuProvider::getEpInfo(const DanmuSource *source, QList<DanmuSource> &results)
 {
     auto script = GlobalObjects::scriptManager->getScript(source->scriptId).staticCast<DanmuScript>();
     if(!script) return "Script invalid";
@@ -54,7 +54,7 @@ ScriptState ProviderManager::getEpInfo(const DanmuSource *source, QList<DanmuSou
     }).value<ScriptState>();
 }
 
-ScriptState ProviderManager::getURLInfo(const QString &url, QList<DanmuSource> &results)
+ScriptState DanmuProvider::getURLInfo(const QString &url, QList<DanmuSource> &results)
 {
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([&](){
@@ -70,7 +70,7 @@ ScriptState ProviderManager::getURLInfo(const QString &url, QList<DanmuSource> &
     }).value<ScriptState>();
 }
 
-ScriptState ProviderManager::downloadDanmu(const DanmuSource *item, QList<DanmuComment *> &danmuList, DanmuSource **nItem)
+ScriptState DanmuProvider::downloadDanmu(const DanmuSource *item, QList<DanmuComment *> &danmuList, DanmuSource **nItem)
 {
     auto script = GlobalObjects::scriptManager->getScript(item->scriptId).staticCast<DanmuScript>();
     if(!script) return "Script invalid";
@@ -83,7 +83,7 @@ ScriptState ProviderManager::downloadDanmu(const DanmuSource *item, QList<DanmuC
     }).value<ScriptState>();
 }
 
-void ProviderManager::checkSourceToLaunch(const QString &poolId, const QList<DanmuSource> &sources)
+void DanmuProvider::checkSourceToLaunch(const QString &poolId, const QList<DanmuSource> &sources)
 {
     ThreadTask task(GlobalObjects::workThread);
     task.RunOnce([=](){
@@ -99,7 +99,7 @@ void ProviderManager::checkSourceToLaunch(const QString &poolId, const QList<Dan
     });
 }
 
-void ProviderManager::launch(const QStringList &ids, const QString &poolId, const QList<DanmuSource> &sources, DanmuComment *comment)
+void DanmuProvider::launch(const QStringList &ids, const QString &poolId, const QList<DanmuSource> &sources, DanmuComment *comment)
 {
     ThreadTask task(GlobalObjects::workThread);
     task.RunOnce([=](){

@@ -36,6 +36,8 @@ SOURCES += \
     LANServer/mediahandler.cpp \
     MediaLibrary/Service/bangumi.cpp \
     MediaLibrary/animeinfo.cpp \
+    MediaLibrary/animeprovider.cpp \
+    Play/Danmu/danmuprovider.cpp \
     Play/Danmu/eventanalyzer.cpp \
     Play/Video/mpvpreview.cpp \
     Script/danmuscript.cpp \
@@ -91,7 +93,6 @@ SOURCES += \
     Play/Danmu/common.cpp \
     UI/about.cpp \
     Play/Danmu/Provider/tucaoprovider.cpp \
-    Play/Danmu/providermanager.cpp \
     Play/Danmu/Provider/bahamutprovider.cpp \
     Play/Danmu/Provider/dililiprovider.cpp \
     MediaLibrary/animelibrary.cpp \
@@ -154,6 +155,8 @@ HEADERS += \
     Download/peermodel.h \
     LANServer/mediahandler.h \
     MediaLibrary/Service/bangumi.h \
+    MediaLibrary/animeprovider.h \
+    Play/Danmu/danmuprovider.h \
     Play/Danmu/danmuviewmodel.h \
     Play/Danmu/eventanalyzer.h \
     Play/Video/mpvpreview.h \
@@ -213,7 +216,6 @@ HEADERS += \
     UI/about.h \
     Play/Danmu/Provider/tucaoprovider.h \
     Play/Danmu/Provider/providerbase.h \
-    Play/Danmu/providermanager.h \
     Play/Danmu/Provider/bahamutprovider.h \
     Play/Danmu/Provider/dililiprovider.h \
     MediaLibrary/animelibrary.h \

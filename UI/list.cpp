@@ -18,7 +18,7 @@
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/blocker.h"
 #include "Play/Danmu/Render/danmurender.h"
-#include "Play/Danmu/providermanager.h"
+#include "Play/Danmu/danmuprovider.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Download/downloadmodel.h"

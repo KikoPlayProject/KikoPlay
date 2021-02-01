@@ -11,7 +11,7 @@
 #include <QAction>
 #include <QApplication>
 #include "globalobjects.h"
-#include "Play/Danmu/providermanager.h"
+#include "Play/Danmu/danmuprovider.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Video/mpvplayer.h"
 #include "timelineedit.h"

@@ -36,8 +36,18 @@ struct EpInfo
 struct AnimeBase
 {
     QString name;
+    QString extras;
+    QString scriptId;
     QString scriptData;
     QSharedPointer<QList<EpInfo>> epList;
+    QVariantMap toMap() const
+    {
+        return
+        {
+            {"name", name},
+            {"data", scriptData},
+        };
+    }
 };
 struct MatchResult
 {
@@ -69,6 +79,7 @@ struct AnimeImage
 class Anime
 {
     friend class AnimeWorker;
+    friend class LibraryScript;
 
     QString _name;
     QString _desc;
@@ -117,7 +128,7 @@ public:
     void removeEp(const QString &epPath);
 
 public:
-    QVariantMap toMap();
+    QVariantMap toMap(bool fillEp = false);
 
 private:
     void assign(const Anime *anime);

@@ -4,7 +4,8 @@
 #include "Play/Playlist/playlist.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Danmu/blocker.h"
-#include "Play/Danmu/providermanager.h"
+#include "Play/Danmu/danmuprovider.h"
+#include "MediaLibrary/animeprovider.h"
 #include "MediaLibrary/animelibrary.h"
 #include "LANServer/lanserver.h"
 #include "Download/downloadmodel.h"
@@ -26,7 +27,8 @@ PlayList *GlobalObjects::playlist=nullptr;
 Blocker *GlobalObjects::blocker=nullptr;
 QThread *GlobalObjects::workThread=nullptr;
 QSettings *GlobalObjects::appSetting=nullptr;
-ProviderManager *GlobalObjects::providerManager=nullptr;
+DanmuProvider *GlobalObjects::danmuProvider=nullptr;
+AnimeProvider *GlobalObjects::animeProvider=nullptr;
 AnimeLibrary *GlobalObjects::library=nullptr;
 DownloadModel *GlobalObjects::downloadModel=nullptr;
 DanmuManager *GlobalObjects::danmuManager=nullptr;
@@ -82,7 +84,8 @@ void GlobalObjects::init()
         workObj->deleteLater();
     },Qt::QueuedConnection);
     scriptManager=new ScriptManager();
-    providerManager=new ProviderManager();
+    danmuProvider=new DanmuProvider();
+    animeProvider=new AnimeProvider();
     library=new AnimeLibrary();
     downloadModel=new DownloadModel();
     danmuManager=new DanmuManager();
@@ -104,7 +107,8 @@ void GlobalObjects::clear()
 	danmuPool->deleteLater();
 	playlist->deleteLater();
     blocker->deleteLater();
-    providerManager->deleteLater();
+    danmuProvider->deleteLater();
+    animeProvider->deleteLater();
     library->deleteLater();
     downloadModel->deleteLater();
     danmuManager->deleteLater();

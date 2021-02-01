@@ -10,16 +10,16 @@
 #include "globalobjects.h"
 #endif
 class ProviderBase;
-class ProviderManager : public QObject
+class DanmuProvider : public QObject
 {
     Q_OBJECT
 public:
-    explicit ProviderManager(QObject *parent = nullptr);
+    DanmuProvider(QObject *parent = nullptr);
 
     QList<QPair<QString, QString>> getSearchProviders();
     QStringList getSampleURLs();
 
-    ScriptState search(const QString &id, const QString &keyword, QList<DanmuSource> &results);
+    ScriptState danmuSearch(const QString &scriptId, const QString &keyword, QList<DanmuSource> &results);
     ScriptState getEpInfo(const DanmuSource *source, QList<DanmuSource> &results);
     ScriptState getURLInfo(const QString &url, QList<DanmuSource> &results);
     ScriptState downloadDanmu(const DanmuSource *item, QList<DanmuComment *> &danmuList, DanmuSource **nItem=nullptr);

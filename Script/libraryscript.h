@@ -14,11 +14,11 @@ public:
     const QList<QPair<QString, QString>> &getMenuItems() const {return menuItems;}
 public:
     ScriptState search(const QString &keyword, QList<AnimeBase> &results);
-    ScriptState getDetail(const QString &id, Anime &anime, QStringList &posters);
-    ScriptState getEp(const QString &id, QList<EpInfo> &results);
-    ScriptState getTags(const QString &id, QStringList &results);
+    ScriptState getDetail(const AnimeBase &base, Anime *anime);
+    ScriptState getEp(Anime *anime, QList<EpInfo> &results);
+    ScriptState getTags(Anime *anime, QStringList &results);
     ScriptState match(const QString &path, MatchResult &result);
-    ScriptState menuClick(const QString &mid, Anime &anime);
+    ScriptState menuClick(const QString &mid, Anime *anime);
 private:
     bool matchSupported, hasTagFunc;
     QList<QPair<QString, QString>> menuItems; // (title, id)

@@ -14,7 +14,7 @@
 #include <QApplication>
 #include "Play/Danmu/Manager/managermodel.h"
 #include "Play/Danmu/Manager/danmumanager.h"
-#include "Play/Danmu/providermanager.h"
+#include "Play/Danmu/danmuprovider.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Playlist/playlistitem.h"
 #include "Play/Playlist/playlist.h"

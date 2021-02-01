@@ -14,7 +14,7 @@
 #include <QButtonGroup>
 #include <QAction>
 
-#include "Play/Danmu/providermanager.h"
+#include "Play/Danmu/danmuprovider.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Playlist/playlist.h"
@@ -175,7 +175,7 @@ void AddDanmu::search()
     beginProcrss();
     searchResultWidget->setEnabled(false);
     QList<DanmuSource> results;
-    auto ret = GlobalObjects::providerManager->search(tmpProviderId, keyword, results);
+    auto ret = GlobalObjects::danmuProvider->danmuSearch(tmpProviderId, keyword, results);
     if(ret)
     {
         if(!themeWord.isEmpty() && themeWord!=keyword)
@@ -191,7 +191,7 @@ void AddDanmu::search()
             QObject::connect(itemWidget, &SearchItemWidget::addSearchItem, itemWidget, [this](SearchItemWidget *item){
                 beginProcrss();
                 QList<DanmuSource> results;
-                auto ret = GlobalObjects::providerManager->getEpInfo(&item->source, results);
+                auto ret = GlobalObjects::danmuProvider->getEpInfo(&item->source, results);
                 if(ret) addSearchItem(results);
                 endProcess();
             });
@@ -216,7 +216,7 @@ void AddDanmu::addSearchItem(QList<DanmuSource> &sources)
     {
         QList<DanmuComment *> tmplist;
         DanmuSource *nSrc = nullptr;
-        auto ret = GlobalObjects::providerManager->downloadDanmu(&sources.first(), tmplist, &nSrc);
+        auto ret = GlobalObjects::danmuProvider->downloadDanmu(&sources.first(), tmplist, &nSrc);
         if(ret)
         {
             int srcCount=tmplist.count();
@@ -241,7 +241,7 @@ void AddDanmu::addSearchItem(QList<DanmuSource> &sources)
             {
                 QList<DanmuComment *> tmplist;
                 DanmuSource *nSrc = nullptr;
-                auto ret = GlobalObjects::providerManager->downloadDanmu(&sourceItem,tmplist, &nSrc);
+                auto ret = GlobalObjects::danmuProvider->downloadDanmu(&sourceItem,tmplist, &nSrc);
                 if(ret)
                 {
                     int srcCount=tmplist.count();
@@ -268,7 +268,7 @@ void AddDanmu::addURL()
     urlEdit->setEnabled(false);
     beginProcrss();
     QList<DanmuSource> results;
-    auto ret = GlobalObjects::providerManager->getURLInfo(url, results);
+    auto ret = GlobalObjects::danmuProvider->getURLInfo(url, results);
     if(!ret)
         showMessage(ret.info, 1);
     else
@@ -283,9 +283,9 @@ QWidget *AddDanmu::setupSearchPage()
     QWidget *searchPage=new QWidget(this);
     searchPage->setFont(QFont(GlobalObjects::normalFont,10));
     sourceCombo=new QComboBox(searchPage);
-    for(const auto &p : GlobalObjects::providerManager->getSearchProviders())
+    for(const auto &p : GlobalObjects::danmuProvider->getSearchProviders())
     {
-        sourceCombo->addItem(p.second, p.first);  //p: <id, name>
+        sourceCombo->addItem(p.first, p.second);  //p: <name, id>
     }
     keywordEdit=new QLineEdit(searchPage);
     searchButton=new QPushButton(tr("Search"),searchPage);
@@ -325,7 +325,7 @@ QWidget *AddDanmu::setupURLPage()
 
     QLabel *urlTipLabel=new QLabel(tr("Supported URL:"),urlPage);
     QTextEdit *supportUrlInfo=new QTextEdit(urlPage);
-    supportUrlInfo->setText(GlobalObjects::providerManager->getSampleURLs().join('\n'));
+    supportUrlInfo->setText(GlobalObjects::danmuProvider->getSampleURLs().join('\n'));
     supportUrlInfo->setFont(QFont(GlobalObjects::normalFont,10));
     supportUrlInfo->setReadOnly(true);
 
