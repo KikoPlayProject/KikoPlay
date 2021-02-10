@@ -147,10 +147,12 @@ QString DownloadModel::processKikoPlayCode(const QString &code)
     {
         QJsonArray array(Network::toJson(jsonBytes).array());
         QString uri(array.takeAt(0).toString());
-        QString animeTitle(array.takeAt(0).toString());
-        QString epTitle(array.takeAt(0).toString());
-        QString file16MD5(array.takeAt(0).toString());
-        QString pid = GlobalObjects::danmuManager->createPool(animeTitle,epTitle,file16MD5);
+        QString animeTitle(array.takeAt(1).toString());
+        QString epTitle(array.takeAt(2).toString());
+        EpType epType((EpType)array.takeAt(3).toInt());
+        double epIndex(array.takeAt(4).toDouble());
+        QString file16MD5(array.takeAt(5).toString());
+        QString pid = GlobalObjects::danmuManager->createPool(animeTitle,epType, epIndex, epTitle,file16MD5);
         Pool *pool=GlobalObjects::danmuManager->getPool(pid,false);
         pool->addPoolCode(array);
         return uri;

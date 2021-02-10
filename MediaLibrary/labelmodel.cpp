@@ -1,5 +1,5 @@
 #include "labelmodel.h"
-#include "animelibrary.h"
+#include "animeworker.h"
 #include "globalobjects.h"
 #include <QBrush>
 #define TYPELEVEL 1
@@ -8,10 +8,10 @@
 #define LABEL_TAG 4
 #define CountRole Qt::UserRole+1
 #define TypeRole Qt::UserRole+2
-LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
+LabelModel::LabelModel(QObject *parent) : QAbstractItemModel(parent)
 {
     root=new TagNode();
-    QObject::connect(library,&AnimeLibrary::addTagsTo,this,[this](const QString &title, const QStringList &tags){
+    QObject::connect(AnimeWorker::instance(),&AnimeWorker::addTagsTo,this,[this](const QString &title, const QStringList &tags){
         TagNode *tagCollectionNode(root->subNodes->at(1));
         for(const QString &tag:tags)
         {
@@ -40,9 +40,9 @@ LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
                 }
             }
         }
-        GlobalObjects::library->saveTags(title,tags);
+        AnimeWorker::instance()->saveTags(title,tags);
     });
-    QObject::connect(library,&AnimeLibrary::addTimeLabel,this,[this](const QString &time, const QString &oldTime){
+    QObject::connect(AnimeWorker::instance(),&AnimeWorker::addTimeLabel,this,[this](const QString &time, const QString &oldTime){
         QString year(time.left(4)), month(time.right(2));
         TagNode *airDateNode(root->subNodes->at(0));
         auto iter = std::find_if(airDateNode->subNodes->begin(), airDateNode->subNodes->end(),[year](TagNode *node){return node->tagTitle==year;});
@@ -113,7 +113,7 @@ LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
             }
         }
     });
-    QObject::connect(library,&AnimeLibrary::removeTagFrom,this,[this](const QString &title, const QString &tag){
+    QObject::connect(AnimeWorker::instance(),&AnimeWorker::removeTagFrom,this,[this](const QString &title, const QString &tag){
         if(!tagMap.contains(tag)) return;
         if(!tagMap[tag].contains(title)) return;
         tagMap[tag].remove(title);
@@ -140,7 +140,7 @@ LabelModel::LabelModel(AnimeLibrary *library) : QAbstractItemModel(library)
             }
         }
     });
-    QObject::connect(library,&AnimeLibrary::removeTags,this,[this](const QString &title, const QString &time){
+    QObject::connect(AnimeWorker::instance(),&AnimeWorker::removeTags,this,[this](const QString &title, const QString &time){
         QSet<QString> tagSet;
         for(auto iter=tagMap.begin();iter!=tagMap.end();)
         {
@@ -232,7 +232,7 @@ void LabelModel::refreshLabel()
     tagMap.clear();
     if(root) delete root;
     root = new TagNode();
-    GlobalObjects::library->loadTags(tagMap,timeMap);
+    AnimeWorker::instance()->loadTags(tagMap,timeMap);
     QMap<QString, TagNode *> yearNodes;
     TagNode *airDateNode=new TagNode(tr("Air Date"), root, 0, TYPELEVEL);
     airDateNode->subNodes=new QList<TagNode *>();
@@ -261,7 +261,7 @@ void LabelModel::removeTag(const QModelIndex &index)
     if(!index.isValid()) return;
     TagNode *node = static_cast<TagNode*>(index.internalPointer());
     if(node->type!=LABEL_TAG) return;
-    GlobalObjects::library->deleteTag(node->tagTitle);
+    AnimeWorker::instance()->deleteTag(node->tagTitle);
     tagMap.remove(node->tagTitle);
     emit removedTag(node->tagTitle);
     beginRemoveRows(index.parent(),index.row(),index.row());

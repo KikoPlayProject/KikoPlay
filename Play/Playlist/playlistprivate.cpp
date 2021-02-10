@@ -7,11 +7,10 @@
 
 #include "globalobjects.h"
 #include "Play/Video/mpvplayer.h"
-#include "MediaLibrary/animelibrary.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 
 PlayListPrivate::PlayListPrivate(PlayList *pl) : root(new PlayListItem), currentItem(nullptr), playListChanged(false),
-    needRefresh(true), loopMode(PlayList::NO_Loop_All), autoMatch(true), modifyCounter(0), q_ptr(pl)
+    needRefresh(true), loopMode(PlayList::NO_Loop_All), autoMatch(true), modifyCounter(0), saveFinishTimeOnce(true), q_ptr(pl)
 {
     PlayListItem::playlist = pl;
     plPath = GlobalObjects::dataPath + "playlist.xml";
@@ -76,7 +75,7 @@ void PlayListPrivate::loadPlaylist()
                 item->path= path;
                 item->playTime=playTime;
                 item->poolID = poolID;
-                item->playTimeState=playTimeState;
+                item->playTimeState=PlayListItem::PlayState(playTimeState);
                 fileItems.insert(item->path,item);
                 if(!animeTitle.isEmpty())item->animeTitle=animeTitle;
                 for(auto &pair :recentList)
@@ -165,7 +164,7 @@ void PlayListPrivate::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
             if(!child->poolID.isEmpty())
                 writer.writeAttribute("poolID",child->poolID);
             writer.writeAttribute("playTime",QString::number(child->playTime));
-            writer.writeAttribute("playTimeState",QString::number(child->playTimeState));
+            writer.writeAttribute("playTimeState",QString::number((int)child->playTimeState));
             writer.writeCharacters(child->path);
             writer.writeEndElement();
         }
@@ -400,22 +399,6 @@ int PlayListPrivate::refreshFolder(PlayListItem *folderItem, QList<PlayListItem 
     return nCount;
 }
 
-void PlayListPrivate::autoLocalMatch(PlayListItem *item)
-{
-    if(item->poolID.isEmpty())
-    {
-        MatchInfo *matchInfo = GlobalObjects::danmuManager->matchFrom(DanmuManager::Local,item->path);
-        if(matchInfo)
-        {
-            item->animeTitle=matchInfo->matches.first().animeTitle;
-            item->title=matchInfo->matches.first().title;
-            item->poolID=matchInfo->poolID;
-            playListChanged=true;
-            needRefresh = true;
-        }
-    }
-}
-
 QString PlayListPrivate::setCollectionTitle(QList<PlayListItem *> &list)
 {
     int minTitleLen=INT_MAX;
@@ -483,14 +466,6 @@ QString PlayListPrivate::setCollectionTitle(QList<PlayListItem *> &list)
             matchStr=suffix.left(tmpMaxMinMatch);
     }
     return matchStr.length() < minLength? defaultTitle : matchStr;
-}
-
-void PlayListPrivate::updateLibItemInfo(PlayListItem *item)
-{
-    if(!item->poolID.isEmpty())
-    {
-        GlobalObjects::library->refreshEpPlayTime(item->animeTitle,item->path);
-    }
 }
 
 void PlayListPrivate::dumpItem(QJsonArray &array, PlayListItem *item, QHash<QString, QString> &mediaHash)

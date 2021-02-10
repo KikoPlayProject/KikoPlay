@@ -15,6 +15,11 @@ public:
     }
     ~LRUCache() { if(deleter) delete deleter; }
 
+    bool contains(const K &key)
+    {
+        return hash.find(key) != hash.end();
+    }
+
     void put(const K &key, const V &value)
     {
         MutexLocker lock(this->lock, useLock);
@@ -36,6 +41,11 @@ public:
         }
         prepend(node);
         if(hash.count()>maxSize) clean();
+    }
+    V &refVal(const K &key)
+    {
+        MutexLocker lock(this->lock, useLock);
+        return hash[key].value;
     }
     V get(const K &key)
     {

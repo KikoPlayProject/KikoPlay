@@ -36,6 +36,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     poolView->setSelectionMode(QAbstractItemView::SingleSelection);
     poolView->setFont(this->font());
     poolView->setAlternatingRowColors(true);
+    poolView->header()->setSortIndicator(0, Qt::SortOrder::AscendingOrder);
 
     DanmuManagerModel *managerModel=new DanmuManagerModel(this);
     PoolSortProxyModel *proxyModel=new PoolSortProxyModel(this);
@@ -100,7 +101,6 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
             poolView->setEnabled(false);
             this->showBusyState(true);
             int i = 0;
-            //bool hasCurPlaying=false;
             for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
             {
                 DanmuPoolNode *curNode=poolNodeMap.value(addDanmuDialog.danmuToPoolList.at(i++));
@@ -128,7 +128,6 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                 }
                 managerModel->addSrcNode(curNode,sourceNode?nullptr:new DanmuPoolSourceNode(sourceInfo));
             }
-            //if(hasCurPlaying) GlobalObjects::danmuPool->resetModel();
             stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
             poolView->setEnabled(true);
             this->showBusyState(false);
@@ -205,8 +204,9 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         AddPool addPool(this,animeTitle);
         if(QDialog::Accepted==addPool.exec())
         {
-            QString pid(GlobalObjects::danmuManager->createPool(addPool.animeTitle,addPool.epTitle));
-            managerModel->addPoolNode(addPool.animeTitle,addPool.epTitle,pid);
+            EpInfo ep(addPool.epType,addPool.epIndex, addPool.ep);
+            QString pid(GlobalObjects::danmuManager->createPool(addPool.anime,ep.type,ep.index,ep.name));
+            managerModel->addPoolNode(addPool.anime,ep,pid);
         }
 
     });
@@ -217,19 +217,22 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         if(indexList.size()==0)return;
         DanmuPoolNode *poolNode=managerModel->getPoolNode(proxyModel->mapToSource(indexList.first()));
         if(!poolNode)return;
-        AddPool addPool(this,poolNode->parent->title,poolNode->title);
+        Q_ASSERT(poolNode->type==DanmuPoolNode::EpNode);
+        DanmuPoolEpNode *epNode = static_cast<DanmuPoolEpNode *>(poolNode);
+        AddPool addPool(this,poolNode->parent->title, EpInfo(epNode->epType, epNode->epIndex, epNode->epName));
         if(QDialog::Accepted==addPool.exec())
         {
             QString opid(poolNode->idInfo);
-            QString npid = GlobalObjects::danmuManager->renamePool(opid,addPool.animeTitle,addPool.epTitle);
+            EpInfo nEp(addPool.epType, addPool.epIndex, addPool.ep);
+            QString npid = GlobalObjects::danmuManager->renamePool(opid,addPool.anime,nEp.type,nEp.index,nEp.name);
             if(npid.isEmpty())
             {
                 showMessage(tr("Rename Failed, Try Again?"),1);
                 return;
             }
-            if(opid==npid) return;
-            managerModel->renamePoolNode(poolNode,addPool.animeTitle,addPool.epTitle,npid);
-            GlobalObjects::playlist->renameItemPoolId(opid,npid,addPool.animeTitle,addPool.epTitle);
+            if(opid==npid && epNode->epName==nEp.name) return;
+            managerModel->renamePoolNode(poolNode,addPool.anime,nEp.toString(),npid);
+            GlobalObjects::playlist->renameItemPoolId(opid,npid);
         }
 
     });
@@ -435,8 +438,9 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         AddPool addPool(this);
         if(QDialog::Accepted==addPool.exec())
         {
-            QString pid(GlobalObjects::danmuManager->createPool(addPool.animeTitle,addPool.epTitle));
-            managerModel->addPoolNode(addPool.animeTitle,addPool.epTitle,pid);
+            EpInfo ep(addPool.epType, addPool.epIndex, addPool.ep);
+            QString pid(GlobalObjects::danmuManager->createPool(addPool.anime, ep.type, ep.index, ep.name));
+            managerModel->addPoolNode(addPool.anime, ep, pid);
         }
     });
     QObject::connect(deletePool,&QPushButton::clicked,[cancel, deleteHLayout,funcStackLayout](){

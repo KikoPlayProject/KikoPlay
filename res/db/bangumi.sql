@@ -2,10 +2,13 @@ CREATE TABLE "anime" (
 "Anime"  TEXT NOT NULL,
 "AddTime"  INTEGER NOT NULL,
 "EpCount"  INTEGER,
-"Summary"  TEXT,
-"Date"  TEXT,
+"AirDate"  TEXT(10),
+"Desc"  TEXT,
+"URL"  TEXT,
+"ScriptId"  TEXT,
+"ScriptData"  TEXT,
 "Staff"  TEXT,
-"BangumiID"  INTEGER,
+"CoverURL" TEXT,
 "Cover"  BLOB,
 PRIMARY KEY ("Anime" ASC)
 );
@@ -15,33 +18,27 @@ ON "anime" ("Anime" ASC);
 CREATE TABLE "character" (
 "Anime"  TEXT NOT NULL,
 "Name"  TEXT NOT NULL,
-"NameCN"  TEXT NOT NULL,
+"Link"  TEXT,
 "Actor"  TEXT,
-"BangumiID"  INTEGER,
+"ImageURL"  TEXT,
+"Image"  BLOB,
 CONSTRAINT "Anime" FOREIGN KEY ("Anime") REFERENCES "anime" ("Anime") ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE INDEX "Anime_C"
 ON "character" ("Anime" ASC);
 
-CREATE TABLE "character_image" (
-"Anime"  TEXT NOT NULL,
-"CBangumiID"  INTEGER NOT NULL,
-"ImageURL"  TEXT,
-"Image"  BLOB,
-CONSTRAINT "Anime" FOREIGN KEY ("Anime") REFERENCES "anime" ("Anime") ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE INDEX "Anime_CI"
-ON "character_image" ("Anime" ASC);
-
-CREATE TABLE "eps" (
+CREATE TABLE "episode" (
 "Anime"  TEXT NOT NULL,
 "Name"  TEXT,
-"LocalFile"  TEXT,
-"LastPlayTime"  TEXT,
+"Type"  INTEGER,
+"EpIndex"  REAL,
+"LastPlayTime"  INTEGER,
+"FinishTime"  INTEGER,
+"LocalFile"  TEXT NOT NULL,
 CONSTRAINT "Anime" FOREIGN KEY ("Anime") REFERENCES "anime" ("Anime") ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE INDEX "Anime_E"
-ON "eps" ("Anime" ASC);
+ON "episode" ("Anime" ASC);
 
 CREATE TABLE "tag" (
 "Anime"  TEXT NOT NULL,
@@ -59,15 +56,16 @@ PRIMARY KEY ("Alias" ASC)
 CREATE INDEX "Alias_Index"
 ON "alias" ("Alias" ASC);
 
-CREATE TABLE "capture" (
-"Time"  INTEGER NOT NULL ON CONFLICT IGNORE,
+CREATE TABLE "image" (
 "Anime"  TEXT,
+"TimeId"  INTEGER,
+"Type"  INTEGER,
 "Info"  TEXT,
 "Thumb"  BLOB,
-"Image"  BLOB,
-PRIMARY KEY ("Time"),
+"Data"  BLOB,
+PRIMARY KEY ("Anime","TimeId","Type"),
 CONSTRAINT "Anime" FOREIGN KEY ("Anime") REFERENCES "anime" ("Anime") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE INDEX "Time_Index"
-ON "capture" ("Time" ASC);
+ON "image" ("TimeId" ASC);

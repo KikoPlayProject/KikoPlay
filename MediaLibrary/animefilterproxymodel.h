@@ -2,11 +2,12 @@
 #define ANIMEFILTERPROXYMODEL_H
 #include <QtCore>
 #include <QAbstractItemModel>
+class AnimeModel;
 class AnimeFilterProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 public:
-    explicit AnimeFilterProxyModel(QObject *parent = nullptr);
+    explicit AnimeFilterProxyModel(AnimeModel *srcModel, QObject *parent = nullptr);
     void setFilter(int type, const QString &str);
     void setTags(const QStringList &tagList);
     void setTime(const QSet<QString> &timeSet);

@@ -56,7 +56,7 @@ void ScriptManager::refreshScripts(ScriptType type)
                 if(cs)
                 {
                     ScriptState state = cs->loadScript(path);
-                    if(state == ScriptState::S_NORM)
+                    if(state)
                     {
                         scriptLists[type].append(cs);
                         id2scriptHash[cs->id()] = cs;

@@ -15,7 +15,7 @@ ScriptState LibraryScript::loadScript(const QString &scriptPath)
     bool hasSearchFunc = checkType("search", LUA_TFUNCTION);
     bool hasEpFunc = checkType("getep", LUA_TFUNCTION);
     hasTagFunc = checkType("gettags", LUA_TFUNCTION);
-    if(!matchSupported || !(hasSearchFunc && hasEpFunc)) return ScriptState(ScriptState::S_ERROR, "search+getep/match function is not found");
+    if(!matchSupported && !(hasSearchFunc && hasEpFunc)) return ScriptState(ScriptState::S_ERROR, "search+getep/match function is not found");
     QVariant menus = get("menus"); //[{title=xx, id=xx}...]
     if(menus.type() == QVariant::List)
     {
@@ -34,7 +34,7 @@ ScriptState LibraryScript::loadScript(const QString &scriptPath)
     return ScriptState(ScriptState::S_NORM);
 }
 
-ScriptState LibraryScript::search(const QString &keyword, QList<AnimeBase> &results)
+ScriptState LibraryScript::search(const QString &keyword, QList<AnimeLite> &results)
 {
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
@@ -48,7 +48,7 @@ ScriptState LibraryScript::search(const QString &keyword, QList<AnimeBase> &resu
         auto robj = r.toMap();
         QString name = robj.value("name").toString(), scriptData = robj.value("data").toString();
         if(name.isEmpty()) continue;
-        AnimeBase ab;
+        AnimeLite ab;
         ab.name = name;
         ab.extras = robj.value("extra").toString();
         ab.scriptId = id();
@@ -65,7 +65,7 @@ ScriptState LibraryScript::search(const QString &keyword, QList<AnimeBase> &resu
                 if(index<0 || epName.isEmpty()) continue;
                 EpInfo ep;
                 ep.name = epName; ep.index = index;
-                ep.type = EpInfo::EpType(qBound(1, epobj.value("type", 1).toInt(), int(EpInfo::EpType::Other)));
+                ep.type = EpType(qBound(1, epobj.value("type", 1).toInt(), int(EpType::Other)));
                 epList->append(ep);
             }
             ab.epList.reset(epList);
@@ -75,7 +75,7 @@ ScriptState LibraryScript::search(const QString &keyword, QList<AnimeBase> &resu
     return ScriptState(ScriptState::S_NORM);
 }
 
-ScriptState LibraryScript::getDetail(const AnimeBase &base, Anime *anime)
+ScriptState LibraryScript::getDetail(const AnimeLite &base, Anime *anime)
 {
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
@@ -83,7 +83,7 @@ ScriptState LibraryScript::getDetail(const AnimeBase &base, Anime *anime)
     QVariantList rets = call("detail", {base.toMap()}, 1, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(rets[0].type()!=QVariant::Map) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
-    // {name=xx, <desc=xx>, airdate=xx(yyyy-mm-dd), data=xx, <epcount=xx(int)>, <coverurl=xx>,
+    // {name=xx, <desc=xx>, airdate=xx(yyyy-mm-dd), data=xx, <epcount=xx(int)>, <coverurl=xx>, <url=xx>,
     //  <staff=xx("xx:xx;yy:yy;...")>, <crt=[{name=xx,<actor=xx>,<link=xx>, <imgurl=xx>},...]>>}
     auto aobj = rets[0].toMap();
     QString name = aobj.value("name").toString(), scriptData=aobj.value("data").toString(), airdate=aobj.value("airdate").toString();
@@ -103,7 +103,7 @@ ScriptState LibraryScript::getDetail(const AnimeBase &base, Anime *anime)
         for(const auto &s : strs)
         {
             int pos = s.indexOf(':');
-            anime.staff.append({s.mid(0, pos), s.mid(pos+1)});
+            anime->staff.append({s.mid(0, pos), s.mid(pos+1)});
         }
     }
     anime->characters.clear();
@@ -144,7 +144,7 @@ ScriptState LibraryScript::getEp(Anime *anime, QList<EpInfo> &results)
         if(index<0 || epName.isEmpty()) continue;
         EpInfo ep;
         ep.name = epName; ep.index = index;
-        ep.type = EpInfo::EpType(qBound(1, epobj.value("type", 1).toInt(), int(EpInfo::EpType::Other)));
+        ep.type = EpType(qBound(1, epobj.value("type", 1).toInt(), int(EpType::Other)));
         results.append(ep);
     }
     return ScriptState(ScriptState::S_NORM);
@@ -187,8 +187,9 @@ ScriptState LibraryScript::match(const QString &path, MatchResult &result)
         result.scriptId = id();
         result.scriptData = animeId;
         EpInfo &epinfo = result.ep;
+        epinfo.localFile = path;
         epinfo.index = epIndex; epinfo.name = epName;
-        epinfo.type = EpInfo::EpType(qBound(1, epobj.value("type", 1).toInt(), int(EpInfo::EpType::Other)));
+        epinfo.type = EpType(qBound(1, epobj.value("type", 1).toInt(), int(EpType::Other)));
         return ScriptState(ScriptState::S_NORM);
     }while(false);
     result.success = false;

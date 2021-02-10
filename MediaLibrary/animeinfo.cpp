@@ -1,7 +1,7 @@
 #include "animeinfo.h"
 #include "animeworker.h"
 
-Anime::Anime() : crtImagesLoaded(false), epLoaded(false), posterLoaded(false)
+Anime::Anime() : _addTime(0), _epCount(0), crtImagesLoaded(false), epLoaded(false), posterLoaded(false)
 {
 
 }
@@ -63,7 +63,7 @@ const QList<Character> &Anime::crList(bool loadImage)
 
 const QStringList &Anime::tagList()
 {
-
+	return QStringList();
 }
 
 const QList<AnimeImage> &Anime::posterList()
@@ -79,7 +79,7 @@ const QList<AnimeImage> &Anime::posterList()
 
 void Anime::addEp(const EpInfo &ep)
 {
-    if(!epLoaded) return;
+    if(!epLoaded || ep.localFile.isEmpty()) return;
     for(auto &e : epInfoList)
     {
         if(ep.localFile==e.localFile)
@@ -90,7 +90,9 @@ void Anime::addEp(const EpInfo &ep)
             return;
         }
     }
-    epInfoList.append(ep);
+    int pos = 0;
+    while(pos<epInfoList.size() && epInfoList[pos]<ep) ++pos;
+    epInfoList.insert(pos, ep);
 }
 
 void Anime::updateEpTime(const QString &path, qint64 time, bool isFinished)
@@ -102,6 +104,34 @@ void Anime::updateEpTime(const QString &path, qint64 time, bool isFinished)
         {
             if(isFinished) e.finishTime = time;
             else e.lastPlayTime = time;
+            return;
+        }
+    }
+}
+
+void Anime::updateEpInfo(const QString &path, const EpInfo &nInfo)
+{
+    if(!epLoaded) return;
+    for(auto &e : epInfoList)
+    {
+        if(e.localFile==path)
+        {
+            e.name = nInfo.name;
+            e.type = nInfo.type;
+            e.index = nInfo.index;
+            return;
+        }
+    }
+}
+
+void Anime::updateEpPath(const QString &path, const QString &nPath)
+{
+    if(!epLoaded) return;
+    for(auto &e : epInfoList)
+    {
+        if(e.localFile==path)
+        {
+            e.localFile = nPath;
             return;
         }
     }
@@ -121,6 +151,30 @@ void Anime::removeEp(const QString &epPath)
     }
 }
 
+void Anime::removeEp(EpType type, double index)
+{
+    if(!epLoaded) return;
+    for(auto iter=epInfoList.begin(); iter!=epInfoList.end();)
+    {
+        if(iter->type == type && iter->index == index)
+        {
+            iter = epInfoList.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+}
+
+void Anime::removePoster(qint64 timeId)
+{
+    if(!posterLoaded) return;
+    for(auto iter=posters.begin(); iter!=posters.end();)
+    {
+        if(iter->timeId==timeId) iter = posters.erase(iter);
+        else ++iter;
+    }
+}
+
 QVariantMap Anime::toMap(bool fillEp)
 {
     QVariantList eps;
@@ -133,10 +187,45 @@ QVariantMap Anime::toMap(bool fillEp)
     {
         {"name", _name},
         {"desc", _desc},
+        {"url", _url},
         {"scriptData", _scriptData},
         {"airDate", _airDate},
         {"epCount", _epCount},
         {"addTime", QString::number(_addTime)},
         {"eps", eps}
     };
+}
+
+const AnimeLite Anime::toLite() const
+{
+    AnimeLite lite;
+    lite.name = _name;
+    lite.scriptId = _scriptId;
+    lite.scriptData = _scriptData;
+    if(epLoaded) lite.epList.reset(new QList<EpInfo>(epInfoList));
+    return lite;
+}
+
+Anime *AnimeLite::toAnime() const
+{
+    Anime *anime = new Anime;
+    anime->_name = name;
+    anime->_scriptId = scriptId;
+    anime->_scriptData = scriptData;
+    if(epList)
+    {
+        anime->epInfoList = *epList;
+        anime->epLoaded = true;
+    }
+    return anime;
+}
+
+bool operator==(const EpInfo &ep1, const EpInfo &ep2)
+{
+    return ep1.type==ep2.type && ep1.index==ep2.index;
+}
+
+bool operator!=(const EpInfo &ep1, const EpInfo &ep2)
+{
+    return !(ep1==ep2);
 }

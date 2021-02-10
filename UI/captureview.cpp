@@ -48,7 +48,7 @@ CaptureView::CaptureView(CaptureListModel *captureModel, int curRow, QWidget *pa
     QObject::connect(actRemove, &QAction::triggered,[captureModel,this](bool)
     {
         int nRow=this->curRow+1;
-        const CaptureItem *nItem=captureModel->getCaptureItem(nRow);
+        const AnimeImage *nItem=captureModel->getCaptureItem(nRow);
         if(!nItem)
         {
             nRow=this->curRow-1;

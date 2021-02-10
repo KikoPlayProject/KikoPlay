@@ -20,8 +20,14 @@ public:
     DanmuPoolNode *getPoolNode(const QModelIndex &index);
     QString getAnime(const QModelIndex &index);
     void addSrcNode(DanmuPoolNode *epNode, DanmuPoolSourceNode *srcNode);
-    void addPoolNode(const QString &animeTitle, const QString &epTitle, const QString &pid);
+    void addPoolNode(const QString &animeTitle, const EpInfo &ep, const QString &pid);
     void renamePoolNode(DanmuPoolNode *epNode, const QString &animeTitle, const QString &epTitle, const QString &pid);
+
+    enum class Columns
+    {
+        TITLE, SOURCE, DELAY, COUNT
+    };
+
 private:
     QList<DanmuPoolNode *> animeNodeList;
     const QStringList headers={tr("Title"),tr("Source"),tr("Delay"),tr("Danmu Count")};

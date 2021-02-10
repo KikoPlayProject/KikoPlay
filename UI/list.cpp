@@ -14,6 +14,7 @@
 #include "blockeditor.h"
 #include "inputdialog.h"
 #include "Play/Danmu/Provider/localprovider.h"
+#include "MediaLibrary/animeprovider.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/blocker.h"
@@ -102,19 +103,19 @@ namespace
         {
             if(hideTimer.isActive())
                 hideTimer.stop();
-            if(flag&PopMessageFlag::PM_HIDE)
+            if(flag&NotifyMessageFlag::NM_HIDE)
             {
                 hideTimer.setSingleShot(true);
                 hideTimer.start(3000);
             }
             QString icon;
-            if(flag&PopMessageFlag::PM_INFO)
+            if(flag&NotifyMessageFlag::NM_INFO)
                 icon=":/res/images/info.png";
-            else if(flag&PopMessageFlag::PM_OK)
+            else if(flag&NotifyMessageFlag::NM_OK)
                 icon=":/res/images/ok.png";
-            else if(flag&PopMessageFlag::PM_PROCESS)
+            else if(flag&NotifyMessageFlag::NM_PROCESS)
                 icon=":/res/images/loading-rolling.gif";
-            if(flag&PopMessageFlag::PM_SHOWCANCEL) cancelBtn->show();
+            if(flag&NotifyMessageFlag::NM_SHOWCANCEL) cancelBtn->show();
             else cancelBtn->hide();
             if(icon!=infoIcon->fileName())
             {
@@ -230,64 +231,8 @@ void ListWindow::initActions()
         QModelIndex index = selection.size() == 0 ? QModelIndex() : selection.last();
         playItem(index);
     });
-    act_autoAssociate=new QAction(tr("Associate Danmu Pool"),this);
-    QObject::connect(act_autoAssociate,&QAction::triggered,[this](){
-        QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
-        QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
-        if (selection.size() == 0)return;
-        QModelIndexList indexes(selection.indexes());
-        if(indexes.size()==1)
-        {    
-            const PlayListItem *item=GlobalObjects::playlist->getItem(indexes.first());
-            if(!item->children)
-            {
-                bool matchSuccess = false;
-                if(item->poolID.isEmpty())
-                {
-                    showMessage(tr("Match Start"),PopMessageFlag::PM_PROCESS);
-                    MatchInfo *matchInfo=GlobalObjects::danmuManager->matchFrom(DanmuManager::DanDan,item->path);
-                    matchSuccess=(matchInfo && !matchInfo->error && matchInfo->success && matchInfo->matches.count()>0);
-                    if(matchSuccess)
-                    {
-                        GlobalObjects::playlist->matchIndex(indexes.first(),matchInfo);
-                        showMessage(tr("Match Done"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
-                    }
-                }
-                if(!matchSuccess)
-                {
-                    QList<const PlayListItem *> &&siblings=GlobalObjects::playlist->getSiblings(item, false);
-                    MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),&siblings,this);
-                    if(QDialog::Accepted==matchEditor.exec())
-                    {
-                        if(matchEditor.batchAnime.isEmpty())
-                        {
-                            GlobalObjects::playlist->matchIndex(indexes.first(),matchEditor.matchInfo);
-                        }
-                        else
-                        {
-                             QList<const PlayListItem *> items;
-                             QStringList eps;
-                             for(int i=0;i<siblings.size();++i)
-                             {
-                                 if(matchEditor.epCheckedList[i])
-                                 {
-                                     items.append(siblings[i]);
-                                     eps.append(matchEditor.batchEp[i]);
-                                 }
-                             }
-                             GlobalObjects::playlist->matchItems(items, matchEditor.batchAnime, eps);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                GlobalObjects::playlist->matchItems(indexes);
-            }
-            return;
-        }
-        GlobalObjects::playlist->matchItems(indexes);
-    });
+    act_autoMatch=new QAction(tr("Associate Danmu Pool"),this);
+	QObject::connect(act_autoMatch, &QAction::triggered, this, [=]() {matchPool(); });
     act_removeMatch=new QAction(tr("Remove Match"),this);
     QObject::connect(act_removeMatch,&QAction::triggered,[this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
@@ -330,9 +275,9 @@ void ListWindow::initActions()
         if (selection.size() == 0)return;
         QModelIndex selIndex(selection.indexes().first());
         const PlayListItem *item=GlobalObjects::playlist->getItem(selIndex);
-        if(item->poolID.isEmpty() || !GlobalObjects::danmuManager->getPool(item->poolID, false))
+        if(!item->hasPool())
         {
-            showMessage(tr("No pool associated"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+            showMessage(tr("No pool associated"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
             return;
         }
         const QList<const PlayListItem *> &siblings=GlobalObjects::playlist->getSiblings(item);
@@ -361,7 +306,7 @@ void ListWindow::initActions()
                 QList<DanmuComment *> &danmuList=(*iter).second;
                 if(pool)
                 {
-                    showMessage(tr("Adding: %1").arg(pool->epTitle()),PopMessageFlag::PM_PROCESS);
+                    showMessage(tr("Adding: %1").arg(pool->epTitle()),NotifyMessageFlag::NM_PROCESS);
                     if(pool->addSource(sourceInfo,danmuList,true)==-1)
                     {
                         qDeleteAll(danmuList);
@@ -372,7 +317,7 @@ void ListWindow::initActions()
                     qDeleteAll(danmuList);
                 }
             }
-            showMessage(tr("Done adding"),PopMessageFlag::PM_OK|PopMessageFlag::PM_HIDE);
+            showMessage(tr("Done adding"),NotifyMessageFlag::NM_OK|NotifyMessageFlag::NM_HIDE);
         }
 
     });
@@ -383,9 +328,9 @@ void ListWindow::initActions()
         if (selection.size() == 0)return;
         QModelIndex selIndex(selection.indexes().first());
         const PlayListItem *item=GlobalObjects::playlist->getItem(selIndex);
-        if(item->poolID.isEmpty() || !GlobalObjects::danmuManager->getPool(item->poolID, false))
+        if(!item->hasPool())
         {
-            showMessage(tr("No pool associated"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+            showMessage(tr("No pool associated"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
             return;
         }
         bool restorePlayState = false;
@@ -407,12 +352,12 @@ void ListWindow::initActions()
                 if(GlobalObjects::danmuManager->getPool(item->poolID)->addSource(sourceInfo,tmplist,true)==-1)
                 {
                     qDeleteAll(tmplist);
-                    showMessage(tr("Add Failed: Pool is busy"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+                    showMessage(tr("Add Failed: Pool is busy"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
                 }
             }
         }
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
-        showMessage(tr("Done adding"),PopMessageFlag::PM_OK|PopMessageFlag::PM_HIDE);
+        showMessage(tr("Done adding"),NotifyMessageFlag::NM_OK|NotifyMessageFlag::NM_HIDE);
     });
     act_updateDanmu=new QAction(tr("Update Danmu"),this);
     QObject::connect(act_updateDanmu,&QAction::triggered,[this](){
@@ -463,9 +408,9 @@ void ListWindow::initActions()
         QModelIndex selIndex(selection.indexes().first());
         const PlayListItem *item=GlobalObjects::playlist->getItem(selIndex);
         Pool *pool = nullptr;
-        if(item->poolID.isEmpty() || !(pool=GlobalObjects::danmuManager->getPool(item->poolID, false)))
+        if(!item->hasPool())
         {
-            showMessage(tr("No pool associated"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+            showMessage(tr("No pool associated"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
             return;
         }
         InputDialog inputDialog(tr("Resource URI"),tr("Set Resource URI(eg. magnet)\n"
@@ -474,16 +419,17 @@ void ListWindow::initActions()
         if(QDialog::Accepted!=inputDialog.exec()) return;
         QString uri = inputDialog.text;
         QString file16MD5(GlobalObjects::danmuManager->getFileHash(item->path));
-        QString code(pool->getPoolCode(QStringList({uri,pool->animeTitle(),pool->epTitle(),file16MD5})));
+        EpInfo ep(pool->toEp());
+        QString code(pool->getPoolCode(QStringList({uri,pool->animeTitle(),ep.name,QString::number(ep.type),QString::number(ep.index),file16MD5})));
         if(code.isEmpty())
         {
-            showMessage(tr("No Danmu Source to Share"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+            showMessage(tr("No Danmu Source to Share"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
         }
         else
         {
             QClipboard *cb = QApplication::clipboard();
             cb->setText("kikoplay:anime="+code);
-            showMessage(tr("Resource Code has been Copied to Clipboard"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+            showMessage(tr("Resource Code has been Copied to Clipboard"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
         }
     });
     act_sharePoolCode=new QAction(tr("Danmu Pool Code"),this);
@@ -494,21 +440,21 @@ void ListWindow::initActions()
         QModelIndex selIndex(selection.indexes().first());
         const PlayListItem *item=GlobalObjects::playlist->getItem(selIndex);
         Pool *pool = nullptr;
-        if(item->poolID.isEmpty() || !(pool=GlobalObjects::danmuManager->getPool(item->poolID, false)))
+        if(!item->hasPool())
         {
-            showMessage(tr("No pool associated"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+            showMessage(tr("No pool associated"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
             return;
         }
         QString code(pool->getPoolCode());
         if(code.isEmpty())
         {
-            showMessage(tr("No Danmu Source to Share"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+            showMessage(tr("No Danmu Source to Share"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
         }
         else
         {
             QClipboard *cb = QApplication::clipboard();
             cb->setText("kikoplay:pool="+code);
-            showMessage(tr("Pool Code has been Copied to Clipboard"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+            showMessage(tr("Pool Code has been Copied to Clipboard"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
         }
     });
 
@@ -712,7 +658,7 @@ void ListWindow::initActions()
                 if(GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true)==-1)
                 {
                     qDeleteAll(tmplist);
-                    showMessage(tr("Add Failed: Pool is busy"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+                    showMessage(tr("Add Failed: Pool is busy"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
                 }
             }
         }
@@ -753,7 +699,7 @@ void ListWindow::initActions()
         rule->usePreFilter=false;
         rule->content=getSelectedDanmu()->text;
         GlobalObjects::blocker->addBlockRule(rule);
-        showMessage(tr("Blocked"),PopMessageFlag::PM_OK|PopMessageFlag::PM_HIDE);
+        showMessage(tr("Blocked"),NotifyMessageFlag::NM_OK|NotifyMessageFlag::NM_HIDE);
     });
     act_blockColor=new QAction(tr("Block Color"),this);
     QObject::connect(act_blockColor,&QAction::triggered,[this](){
@@ -765,7 +711,7 @@ void ListWindow::initActions()
         rule->usePreFilter=false;
         rule->content=QString::number(getSelectedDanmu()->color,16);
         GlobalObjects::blocker->addBlockRule(rule);
-        showMessage(tr("Blocked"),PopMessageFlag::PM_OK|PopMessageFlag::PM_HIDE);
+        showMessage(tr("Blocked"),NotifyMessageFlag::NM_OK|NotifyMessageFlag::NM_HIDE);
     });
     act_blockSender=new QAction(tr("Block Sender"),this);
     QObject::connect(act_blockSender,&QAction::triggered,[this](){
@@ -777,7 +723,7 @@ void ListWindow::initActions()
         rule->usePreFilter=false;
         rule->content=getSelectedDanmu()->sender;
         GlobalObjects::blocker->addBlockRule(rule);
-        showMessage(tr("Blocked"),PopMessageFlag::PM_OK|PopMessageFlag::PM_HIDE);
+        showMessage(tr("Blocked"),NotifyMessageFlag::NM_OK|NotifyMessageFlag::NM_HIDE);
     });
     act_deleteDanmu=new QAction(tr("Delete"),this);
     QObject::connect(act_deleteDanmu,&QAction::triggered,[this](){
@@ -807,15 +753,77 @@ QModelIndex ListWindow::getPSParentIndex()
 QSharedPointer<DanmuComment> ListWindow::getSelectedDanmu()
 {
     QModelIndexList selection =danmulistView->selectionModel()->selectedRows();
-    //QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(danmulistView->model());
     return GlobalObjects::danmuPool->getDanmu(selection.last());
+}
+
+void ListWindow::matchPool(const QString &scriptId)
+{
+    QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
+    QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
+    if (selection.size() == 0)return;
+    QModelIndexList indexes(selection.indexes());
+    const PlayListItem *item=GlobalObjects::playlist->getItem(indexes.first());
+    if(indexes.size()==1 && !item->children)
+    {
+
+        if(!item->children)
+        {
+            bool matchSuccess = false;
+            if(!item->hasPool())
+            {
+                showMessage(tr("Match Start"),NotifyMessageFlag::NM_PROCESS);
+                MatchResult match;
+                GlobalObjects::danmuManager->localMatch(item->path, match);
+                if(!match.success) GlobalObjects::animeProvider->match(scriptId.isEmpty()?GlobalObjects::animeProvider->defaultMatchScript():scriptId, item->path, match);
+                if(match.success)
+                {
+                    GlobalObjects::playlist->matchIndex(indexes.first(), match);
+                    matchSuccess = true;
+                }
+                showMessage(tr("Match Done"),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
+            }
+            if(!matchSuccess)
+            {
+                QList<const PlayListItem *> &&siblings=GlobalObjects::playlist->getSiblings(item, false);
+                MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),&siblings,this);
+                if(QDialog::Accepted==matchEditor.exec())
+                {
+                    if(matchEditor.singleEp.type!=EpType::UNKNOWN)
+                    {
+                        MatchResult match;
+                        match.success = true;
+                        match.name = matchEditor.anime;
+                        match.ep = matchEditor.singleEp;
+                        GlobalObjects::playlist->matchIndex(indexes.first(), match);
+                    }
+                    else
+                    {
+                         QList<const PlayListItem *> items;
+                         QList<EpInfo> eps;
+                         for(int i=0;i<siblings.size();++i)
+                         {
+                             if(matchEditor.epCheckedList[i])
+                             {
+                                 items.append(siblings[i]);
+                                 eps.append(matchEditor.epList[i]);
+                             }
+                         }
+                         GlobalObjects::playlist->matchItems(items, matchEditor.anime, eps);
+                    }
+                }
+            }
+        }
+    } else {
+        GlobalObjects::playlist->matchItems(indexes);
+    }
 }
 
 void ListWindow::updatePlaylistActions()
 {
     if(actionDisable)
     {
-        act_autoAssociate->setEnabled(false);
+        //act_autoMatch->setEnabled(false);
+        matchSubMenu->setEnabled(false);
         act_removeMatch->setEnabled(false);
         act_exportDanmu->setEnabled(false);
         act_updateDanmu->setEnabled(false);
@@ -828,7 +836,8 @@ void ListWindow::updatePlaylistActions()
         return;
     }
     bool hasPlaylistSelection = !playlistView->selectionModel()->selection().isEmpty();
-    act_autoAssociate->setEnabled(hasPlaylistSelection);
+    //act_autoMatch->setEnabled(hasPlaylistSelection);
+    matchSubMenu->setEnabled(hasPlaylistSelection);
     act_removeMatch->setEnabled(hasPlaylistSelection);
     act_updateDanmu->setEnabled(hasPlaylistSelection);
     act_addWebDanmuSource->setEnabled(hasPlaylistSelection);
@@ -904,10 +913,85 @@ QWidget *ListWindow::setupPlaylistPage()
 
     QMenu *playlistContextMenu=new QMenu(playlistView);
     playlistContextMenu->addAction(act_play);
-    QMenu *matchSubMenu=new QMenu(tr("Match"),playlistContextMenu);
-    matchSubMenu->addAction(act_autoAssociate);
+    matchSubMenu=new QMenu(tr("Match"),playlistContextMenu);
+    QMenu *defaultMatchScriptMenu=new QMenu(tr("Default Match Script"), matchSubMenu);
+    matchSubMenu->addAction(act_autoMatch);
     matchSubMenu->addAction(act_removeMatch);
+    matchSubMenu->addMenu(defaultMatchScriptMenu);
+    defaultMatchScriptMenu->hide();
+    QAction *matchSep = new QAction(this);
+    matchSep->setSeparator(true);
     playlistContextMenu->addMenu(matchSubMenu);
+    QActionGroup *matchCheckGroup = new QActionGroup(this);
+    auto matchProviders = GlobalObjects::animeProvider->getMatchProviders();
+    static QList<QAction *> matchActions;
+    if(matchProviders.count()>0)
+    {
+        defaultMatchScriptMenu->show();
+        matchSubMenu->addAction(matchSep);
+        QString defaultSctiptId = GlobalObjects::animeProvider->defaultMatchScript();
+        for(const auto &p : matchProviders)
+        {
+            QAction *mAct = new QAction(p.first);
+            mAct->setData(p.second); //id
+            matchActions.append(mAct);
+            matchSubMenu->addAction(mAct);
+            QAction *mCheckAct = defaultMatchScriptMenu->addAction(p.first);
+            matchCheckGroup->addAction(mCheckAct);
+            mCheckAct->setCheckable(true);
+            mCheckAct->setChecked(p.second == defaultSctiptId);
+        }
+    }
+    QObject::connect(matchSubMenu, &QMenu::triggered, this, [this](QAction *act){
+        QString scriptId = act->data().toString();
+        if(!scriptId.isEmpty())
+        {
+            matchPool(scriptId);
+        }
+    });
+    QObject::connect(matchCheckGroup,&QActionGroup::triggered,[](QAction *act){
+        QString scriptId = act->data().toString();
+        if(!scriptId.isEmpty())
+        {
+            GlobalObjects::animeProvider->setDefaultMatchScript(scriptId);
+        }
+    });
+    QObject::connect(GlobalObjects::animeProvider, &AnimeProvider::matchProviderChanged, this, [=](){
+         auto matchProviders = GlobalObjects::animeProvider->getMatchProviders();
+         for(QAction *mAct : matchActions)
+         {
+             matchSubMenu->removeAction(mAct);
+         }
+         qDeleteAll(matchActions);
+         matchSubMenu->removeAction(matchSep);
+         defaultMatchScriptMenu->hide();
+         for(QAction *act : defaultMatchScriptMenu->actions())
+         {
+            matchCheckGroup->removeAction(act);
+         }
+         defaultMatchScriptMenu->clear();
+         if(matchProviders.count()>0)
+         {
+             QString defaultSctiptId = GlobalObjects::animeProvider->defaultMatchScript();
+             defaultMatchScriptMenu->show();
+             matchSubMenu->addAction(matchSep);
+             for(const auto &p : matchProviders)
+             {
+                 QAction *mAct = new QAction(p.first);
+                 mAct->setData(p.second); //id
+                 matchActions.append(mAct);
+                 matchSubMenu->addAction(mAct);
+                 QAction *mCheckAct = defaultMatchScriptMenu->addAction(p.first);
+                 matchCheckGroup->addAction(mCheckAct);
+                 mCheckAct->setCheckable(true);
+                 mCheckAct->setChecked(p.second == defaultSctiptId);
+             }
+         }
+    });
+    QObject::connect(GlobalObjects::animeProvider, &AnimeProvider::defaultMacthProviderChanged, this, [=](const QString &name){
+        act_autoMatch->setText(tr("Associate Danmu Pool%1").arg(name.isEmpty()?"":QString("(%1)").arg(name)));
+    });
+
     QMenu *danmuSubMenu=new QMenu(tr("Danmu"),playlistContextMenu);
     danmuSubMenu->addAction(act_addWebDanmuSource);
     danmuSubMenu->addAction(act_addLocalDanmuSource);
@@ -1118,7 +1202,7 @@ QWidget *ListWindow::setupDanmulistPage()
 
 int ListWindow::updateCurrentPool()
 {
-    act_autoAssociate->setEnabled(false);
+    act_autoMatch->setEnabled(false);
     act_addOnlineDanmu->setEnabled(false);
     act_addLocalDanmu->setEnabled(false);
     const auto &sources =  GlobalObjects::danmuPool->getPool()->sources();
@@ -1126,11 +1210,11 @@ int ListWindow::updateCurrentPool()
     for(auto iter=sources.cbegin();iter!=sources.cend();++iter)
     {
         QList<DanmuComment *> tmpList;
-        showMessage(tr("Updating: %1").arg(iter.value().title),PopMessageFlag::PM_PROCESS);
+        showMessage(tr("Updating: %1").arg(iter.value().title),NotifyMessageFlag::NM_PROCESS);
         count+=GlobalObjects::danmuPool->getPool()->update(iter.key());
     }
-    showMessage(tr("Add %1 Danmu").arg(count),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
-    act_autoAssociate->setEnabled(true);
+    showMessage(tr("Add %1 Danmu").arg(count),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
+    act_autoMatch->setEnabled(true);
     act_addOnlineDanmu->setEnabled(true);
     act_addLocalDanmu->setEnabled(true);
     return count;
@@ -1211,7 +1295,7 @@ void ListWindow::dropEvent(QDropEvent *event)
                     if(GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true)==-1)
                     {
                         qDeleteAll(tmplist);
-                        showMessage(tr("Add Failed: Pool is busy"),PopMessageFlag::PM_INFO|PopMessageFlag::PM_HIDE);
+                        showMessage(tr("Add Failed: Pool is busy"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
                     }
                 }
             }

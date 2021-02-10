@@ -1,12 +1,13 @@
 #include "animemodel.h"
 #include "globalobjects.h"
-#include "animelibrary.h"
+#include "animeworker.h"
+#include "Common/notifier.h"
 #define AnimeRole Qt::UserRole+1
-AnimeModel::AnimeModel(AnimeLibrary *library):QAbstractItemModel(library),
+AnimeModel::AnimeModel(QObject *parent):QAbstractItemModel(parent),
     currentOffset(0),active(false),hasMoreAnimes(true)
 {
-    QObject::connect(library,&AnimeLibrary::addAnime,this,&AnimeModel::addAnime);
-    QObject::connect(library,&AnimeLibrary::removeOldAnime,this,&AnimeModel::removeAnime);
+    QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeAdded, this, &AnimeModel::addAnime);
+    QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeRemoved, this, &AnimeModel::removeAnime);
 }
 
 void AnimeModel::setActive(bool isActive)
@@ -47,15 +48,14 @@ void AnimeModel::deleteAnime(const QModelIndex &index)
     animes.removeAt(index.row());
     endRemoveRows();
     currentOffset--;
-    GlobalObjects::library->deleteAnime(anime);
+    AnimeWorker::instance()->deleteAnime(anime);
     showStatisMessage();
 }
 
-Anime *AnimeModel::getAnime(const QModelIndex &index, bool fillInfo)
+Anime *AnimeModel::getAnime(const QModelIndex &index)
 {
     if(!index.isValid()) return nullptr;
     Anime *anime=animes.at(index.row());
-    if(fillInfo) GlobalObjects::library->fillAnimeInfo(anime);
     return anime;
 }
 
@@ -82,7 +82,7 @@ void AnimeModel::removeAnime(Anime *anime)
 
 void AnimeModel::showStatisMessage()
 {
-    int totalCount=GlobalObjects::library->getTotalAnimeCount();
+    int totalCount=AnimeWorker::instance()->animeCount();
     emit animeCountInfo(animes.count(), totalCount);
 }
 
@@ -108,8 +108,8 @@ void AnimeModel::fetchMore(const QModelIndex &)
 {
     QList<Anime *> moreAnimes;
     hasMoreAnimes=false;
-    emit animeMessage(tr("Fetching..."),PopMessageFlag::PM_PROCESS,false);
-    GlobalObjects::library->fetchAnimes(moreAnimes,currentOffset,limitCount);
+    emit animeMessage(tr("Fetching..."),NotifyMessageFlag::NM_PROCESS,false);
+    AnimeWorker::instance()->fetchAnimes(&moreAnimes, currentOffset, limitCount);
     if(moreAnimes.count()>0)
     {
         hasMoreAnimes=true;

@@ -40,9 +40,9 @@ Pool *DanmuManager::getPool(const QString &pid, bool loadDanmu)
     return pool;
 }
 
-Pool *DanmuManager::getPool(const QString &animeTitle, const QString &title, bool loadDanmu)
+Pool *DanmuManager::getPool(const QString &animeTitle, EpType epType, double epIndex, bool loadDanmu)
 {
-    return getPool(getPoolId(animeTitle,title),loadDanmu);
+    return getPool(getPoolId(animeTitle, epType, epIndex),loadDanmu);
 }
 
 void DanmuManager::loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList)
@@ -88,8 +88,8 @@ void DanmuManager::loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList)
             animeMap.insert(pool->anime,animeNode);
             poolNodeList.append(animeNode);
         }
-        DanmuPoolNode *epNode=new DanmuPoolNode(DanmuPoolNode::EpNode,animeNode);
-        epNode->title=pool->ep;
+        EpInfo ep(pool->epType, pool->epIndex, pool->ep);
+        DanmuPoolEpNode *epNode=new DanmuPoolEpNode(ep,animeNode);
         epNode->idInfo=pool->pid;
         for(const auto &src:pool->sourcesTable)
         {
@@ -223,11 +223,13 @@ int DanmuManager::importKdFile(const QString &fileName, QWidget *parent)
             if(poolFlag!=0x23) break;
 
             QString curAnime,curEp,file16MD5;
+            EpType epType;
+            double epIndex;
             QList<DanmuSource> srcInfoList;
             QHash<int, QPair<DanmuSource,QList<DanmuComment *>>> danmuInfo;
             int danmuConut=0;
 
-            ds>>curAnime>>curEp>>file16MD5>>srcInfoList>>danmuConut;
+            ds>>curAnime>>epType>>epIndex>>curEp>>file16MD5>>srcInfoList>>danmuConut;
             emit workerStateMessage(tr("Adding: %1-%2").arg(curAnime,curEp));
             for(auto &src:srcInfoList)
             {
@@ -245,7 +247,7 @@ int DanmuManager::importKdFile(const QString &fileName, QWidget *parent)
                 else delete danmu;
             }
             QStringList file16Md5List(file16MD5.split(';',QString::SkipEmptyParts));
-            QString pid(this->createPool(curAnime,curEp,file16Md5List.count()==1?file16Md5List.first():""));
+            QString pid(this->createPool(curAnime,epType, epIndex, curEp,file16Md5List.count()==1?file16Md5List.first():""));
             if(file16Md5List.count()>1)
             {
                 for(const QString &md5:file16Md5List) this->setMatch(md5,pid);
@@ -264,7 +266,7 @@ int DanmuManager::importKdFile(const QString &fileName, QWidget *parent)
     }).toInt();
 }
 
-QStringList DanmuManager::getAssociatedFile16Md5(const QString &pid)
+QStringList DanmuManager::getMatchedFile16Md5(const QString &pid)
 {
     QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
     query.exec(QString("select MD5 from match where PoolID='%1'").arg(pid));
@@ -275,7 +277,7 @@ QStringList DanmuManager::getAssociatedFile16Md5(const QString &pid)
     }
     return md5s;
 }
-
+/*
 MatchInfo *DanmuManager::searchMatch(DanmuManager::MatchProvider from, const QString &keyword)
 {
     switch (from)
@@ -301,11 +303,10 @@ MatchInfo *DanmuManager::matchFrom(DanmuManager::MatchProvider from, const QStri
         return nullptr;
     }
 }
-
-QString DanmuManager::updateMatch(const QString &fileName, const MatchInfo *newMatchInfo)
+*/
+QString DanmuManager::updateMatch(const QString &fileName, const MatchResult &newMatchInfo)
 {
-    MatchInfo::DetailInfo detailInfo=newMatchInfo->matches.first();
-    return createPool(detailInfo.animeTitle,detailInfo.title,getFileHash(fileName));
+    return createPool(newMatchInfo.name, newMatchInfo.ep.type, newMatchInfo.ep.index, newMatchInfo.ep.name, getFileHash(fileName));
 }
 
 void DanmuManager::removeMatch(const QString &fileName)
@@ -314,6 +315,7 @@ void DanmuManager::removeMatch(const QString &fileName)
     query.exec(QString("delete from match where MD5='%1'").arg(getFileHash(fileName)));
 }
 
+/*
 MatchInfo *DanmuManager::ddSearch(const QString &keyword)
 {
     ThreadTask task(GlobalObjects::workThread);
@@ -377,7 +379,8 @@ MatchInfo *DanmuManager::ddSearch(const QString &keyword)
     });
     return static_cast<MatchInfo *>(ret.value<void *>());
 }
-
+*/
+/*
 MatchInfo *DanmuManager::bgmSearch(const QString &keyword)
 {
     ThreadTask task(GlobalObjects::workThread);
@@ -435,7 +438,8 @@ MatchInfo *DanmuManager::bgmSearch(const QString &keyword)
     });
     return static_cast<MatchInfo *>(ret.value<void *>());
 }
-
+*/
+/*
 MatchInfo *DanmuManager::localSearch(const QString &keyword)
 {
     MatchInfo *searchInfo=new MatchInfo;
@@ -452,7 +456,8 @@ MatchInfo *DanmuManager::localSearch(const QString &keyword)
     }
     return searchInfo;
 }
-
+*/
+/*
 MatchInfo *DanmuManager::ddMatch(const QString &fileName)
 {
     ThreadTask task(GlobalObjects::workThread);
@@ -520,7 +525,8 @@ MatchInfo *DanmuManager::ddMatch(const QString &fileName)
     });
     return static_cast<MatchInfo *>(ret.value<void *>());
 }
-
+*/
+/*
 MatchInfo *DanmuManager::localMatch(const QString &fileName)
 {
     QString hashStr(getFileHash(fileName));
@@ -547,6 +553,7 @@ MatchInfo *DanmuManager::searchInMatchTable(const QString &fileHash)
     matchInfo->matches.append(detailInfo);
     return matchInfo;
 }
+*/
 
 QString DanmuManager::getFileHash(const QString &fileName)
 {
@@ -557,31 +564,102 @@ QString DanmuManager::getFileHash(const QString &fileName)
     return QCryptographicHash::hash(file16MB,QCryptographicHash::Md5).toHex();
 }
 
-QString DanmuManager::createPool(const QString &animeTitle, const QString &title, const QString &fileHash)
+void DanmuManager::localSearch(const QString &keyword, QList<AnimeLite> &results)
 {
-    QString poolId(getPoolId(animeTitle,title));
+    results.clear();
+    QHash<QString, QList<Pool *>> animePools;
+    for(Pool *pool:pools)
+    {
+        if(pool->anime.contains(keyword))
+        {
+            animePools[pool->anime].append(pool);
+        }
+    }
+    for(auto iter=animePools.begin(); iter!=animePools.end(); ++iter)
+    {
+        AnimeLite anime;
+        anime.name = iter.key();
+        anime.epList.reset(new QList<EpInfo>);
+        for(auto p : iter.value())
+        {
+            EpInfo ep;
+            ep.name = p->ep;
+            ep.type = p->epType;
+            ep.index = p->epIndex;
+            anime.epList->append(ep);
+        }
+        std::sort(anime.epList->begin(), anime.epList->end());
+        results.append(anime);
+    }
+}
+
+void DanmuManager::localMatch(const QString &path, MatchResult &result)
+{
+    QString hashStr(getFileHash(path));
+    do
+    {
+        if(hashStr.isEmpty()) break;
+        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
+        query.exec(QString("select poolID from match where MD5='%1'").arg(hashStr));
+        if(!query.first()) break;
+        QString poolID=query.value(0).toString();
+        Pool *pool=getPool(poolID,false);
+        if(!pool) break;
+        result.name = pool->anime;
+        result.ep.name = pool->ep;
+        result.ep.type = pool->epType;
+        result.ep.index = pool->epIndex;
+        result.ep.localFile = path;
+        result.success = true;
+        return;
+    }while(false);
+    result.success = false;
+}
+
+QString DanmuManager::createPool(const QString &animeTitle, EpType epType, double epIndex, const QString &epName,  const QString &fileHash)
+{
+    QString poolId(getPoolId(animeTitle, epType, epIndex));
     if(!pools.contains(poolId))
     {
         QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
-        query.prepare("insert into pool(PoolID,AnimeTitle,Title) values(?,?,?)");
+        query.prepare("insert into pool(PoolID,Anime,EpType,EpIndex,EpName) values(?,?,?,?,?)");
         query.bindValue(0,poolId);
         query.bindValue(1,animeTitle);
-        query.bindValue(2,title);
+        query.bindValue(2,epType);
+        query.bindValue(3,epIndex);
+        query.bindValue(4,epName);
         query.exec();
         QMutexLocker locker(&poolsLock);
-        pools.insert(poolId,new Pool(poolId,animeTitle,title));
+        pools.insert(poolId,new Pool(poolId,animeTitle,epName,epType,epIndex));
     }
     if(!fileHash.isEmpty())
         setMatch(fileHash,poolId);
     return poolId;
 }
 
-QString DanmuManager::renamePool(const QString &pid, const QString &nAnimeTitle, const QString &nEpTitle)
+QString DanmuManager::createPool(const QString &path, const MatchResult &match)
+{
+    return createPool(match.name, match.ep.type, match.ep.index, match.ep.name, getFileHash(path));
+}
+
+QString DanmuManager::renamePool(const QString &pid, const QString &nAnimeTitle, EpType nType, double nIndex,  const QString &nEpTitle)
 {
     Pool *pool=getPool(pid,false);
     if(!pool) return QString();
-    if(nAnimeTitle==pool->anime && nEpTitle==pool->ep) return pool->pid;
-    QString npid(getPoolId(nAnimeTitle,nEpTitle));
+    if(nAnimeTitle==pool->anime && nType==pool->epType && nIndex==pool->epIndex)
+    {
+        if(nEpTitle != pool->ep)
+        {
+            QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
+            query.prepare("update pool set EpName=? where PoolID=?");
+            query.bindValue(0,nEpTitle);
+            query.bindValue(1,pid);
+            query.exec();
+            pool->ep = nEpTitle;
+        }
+        return pool->pid;
+    }
+    QString npid(getPoolId(nAnimeTitle, nType, nIndex));
     if(pools.contains(npid)) return QString();
     PoolStateLock lock;
     if(!lock.tryLock(pid)) return QString();
@@ -590,11 +668,13 @@ QString DanmuManager::renamePool(const QString &pid, const QString &nAnimeTitle,
     db.transaction();
 
     QSqlQuery query(db);
-    query.prepare("update pool set PoolID=?,AnimeTitle=?,Title=? where PoolID=?");
+    query.prepare("update pool set PoolID=?,Anime=?,EpType=?,EpIndex=?,EpName=? where PoolID=?");
     query.bindValue(0,npid);
     query.bindValue(1,nAnimeTitle);
-    query.bindValue(2,nEpTitle);
-    query.bindValue(3,pool->pid);
+    query.bindValue(2,nType);
+    query.bindValue(3,nIndex);
+    query.bindValue(4,nEpTitle);
+    query.bindValue(5,pool->pid);
     query.exec();
 
     if(oldId!=newId)
@@ -613,15 +693,17 @@ QString DanmuManager::renamePool(const QString &pid, const QString &nAnimeTitle,
     pools.remove(pid);
     pool->pid=npid;
     pool->anime=nAnimeTitle;
+    pool->epType=nType;
+    pool->epIndex=nIndex;
     pool->ep=nEpTitle;
     pools.insert(npid,pool);
 
     return npid;
 }
 
-QString DanmuManager::getPoolId(const QString &animeTitle, const QString &title)
+QString DanmuManager::getPoolId(const QString &animeTitle, EpType epType, double epIndex)
 {
-    QByteArray hashData = QString("%1-%2").arg(animeTitle).arg(title).toUtf8();
+    QByteArray hashData = QString("%1 %2.%3").arg(animeTitle).arg(epType).arg(epIndex).toUtf8();
     return QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex();
 }
 
@@ -802,12 +884,17 @@ void DanmuManager::loadAllPool()
     //get all danmu pools
     query.exec("select * from pool");
     int idNo = query.record().indexOf("PoolID"),
-        animeNo=query.record().indexOf("AnimeTitle"),
-        epNo=query.record().indexOf("Title");
+        animeNo=query.record().indexOf("Anime"),
+        epTypeNo=query.record().indexOf("EpType"),
+        epIndexNo=query.record().indexOf("EpIndex"),
+        epNameNo=query.record().indexOf("EpName");
     while (query.next())
     {
         QString poolId(query.value(idNo).toString());
-        pools.insert(poolId,new Pool(poolId,query.value(animeNo).toString(),query.value(epNo).toString()));
+        pools.insert(poolId,  new Pool(poolId,query.value(animeNo).toString(),
+                              query.value(epNameNo).toString(),
+                              EpType(query.value(epTypeNo).toInt()),
+                              query.value(epIndexNo).toDouble()));
     }
     //get source info
     query.exec("select * from source");

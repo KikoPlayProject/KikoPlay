@@ -14,8 +14,8 @@ namespace
     } DanmuSPCompare;
 }
 
-Pool::Pool(const QString &id, const QString &animeTitle, const QString &epTitle, QObject *parent):
-     QObject(parent),pid(id),anime(animeTitle),ep(epTitle),used(false),isLoaded(false)
+Pool::Pool(const QString &id, const QString &animeTitle, const QString &epTitle, EpType type, double index, QObject *parent):
+     QObject(parent),pid(id),anime(animeTitle),ep(epTitle),epType(type), epIndex(index), used(false),isLoaded(false)
 {
 
 }
@@ -287,8 +287,8 @@ void Pool::exportKdFile(QDataStream &stream, const QList<int> &ids)
     PoolStateLock lock;
     if(!lock.tryLock(pid)) return;
 
-    stream<<anime<<ep;
-    stream<<GlobalObjects::danmuManager->getAssociatedFile16Md5(pid).join(';');
+    stream<<anime<<epType<<epIndex<<ep;
+    stream<<GlobalObjects::danmuManager->getMatchedFile16Md5(pid).join(';');
 	auto srcList(sourcesTable.values());
 	int count = 0;
 	for (auto iter = srcList.begin(); iter != srcList.end();)

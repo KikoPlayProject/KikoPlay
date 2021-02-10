@@ -56,24 +56,4 @@ public:
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 };
-class SearchListModel : public QAbstractItemModel
-{
-    Q_OBJECT
-public:
-    explicit SearchListModel(QObject *parent = nullptr):QAbstractItemModel(parent){}
-    void setList(QList<ResItem> &nList);
-    ResItem getItem(const QModelIndex &index) const {return resultList.value(index.row());}
-    QStringList getMagnetList(const QModelIndexList &indexes);
-
-private:
-    QList<ResItem> resultList;
-public:
-    inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
-    inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
-    inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:resultList.count();}
-    inline virtual int columnCount(const QModelIndex &parent) const{return parent.isValid()?0:3;}
-    virtual QVariant data(const QModelIndex &index, int role) const;
-    virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-};
-
 #endif // SCRIPTMANAGER_H

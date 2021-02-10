@@ -36,7 +36,7 @@ struct DownloadRuleLog
     QString content, addition;
     static DownloadRuleLog setLog(DownloadRule *rule, int type, const QString &content, const QString &addition="");
 };
-struct ResItem;
+struct ResourceItem;
 class DownloadRuleChecker : public QObject
 {
     Q_OBJECT
@@ -51,7 +51,7 @@ private:
     bool isChecking;
     void check();
     void fetchInfo(DownloadRule *rule);
-    bool satisfyRule(ResItem *item, DownloadRule *rule, const QList<QRegExp> &filterRegExps);
+    bool satisfyRule(ResourceItem *item, DownloadRule *rule, const QList<QRegExp> &filterRegExps);
 };
 class LogModel : public QAbstractItemModel
 {

@@ -94,6 +94,7 @@ public:
     void  operator delete(void * p);
     static void DeleteObjPool();
 };
+/*
 struct MatchInfo
 {
     bool success;
@@ -113,7 +114,7 @@ QDataStream &operator<<(QDataStream &stream, const MatchInfo &match);
 QDataStream &operator>>(QDataStream &stream, MatchInfo &match);
 QDataStream &operator<<(QDataStream &stream, const MatchInfo::DetailInfo &md);
 QDataStream &operator>>(QDataStream &stream, MatchInfo::DetailInfo &md);
-
+*/
 struct BlockRule
 {
     enum Field

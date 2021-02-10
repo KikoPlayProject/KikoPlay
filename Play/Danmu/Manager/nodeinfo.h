@@ -2,6 +2,7 @@
 #define NODEINFO_H
 #include <QtCore>
 #include "../common.h"
+#include "MediaLibrary/animeinfo.h"
 struct DanmuPoolNode
 {
     enum NodeType
@@ -25,6 +26,17 @@ struct DanmuPoolNode
     void setChildrenCheckStatus();
     void setParentCheckStatus();
     static int idHash(const QString &str);
+};
+struct DanmuPoolEpNode : public DanmuPoolNode
+{
+    DanmuPoolEpNode(DanmuPoolNode *pNode = nullptr):DanmuPoolNode(DanmuPoolNode::EpNode, pNode), epType(EpType::UNKNOWN), epIndex(0){}
+    DanmuPoolEpNode(const EpInfo &ep, DanmuPoolNode *pNode = nullptr):DanmuPoolNode(DanmuPoolNode::EpNode, pNode), epName(ep.name), epType(ep.type), epIndex(ep.index)
+    {
+        title=ep.toString();
+    }
+    QString epName;
+    EpType epType;
+    double epIndex;
 };
 struct DanmuPoolSourceNode : public DanmuPoolNode
 {

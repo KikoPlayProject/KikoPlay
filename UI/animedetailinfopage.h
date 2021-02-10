@@ -3,10 +3,11 @@
 
 #include <QWidget>
 #include <QMap>
-struct Anime;
+class Anime;
 class QLabel;
 class QTextEdit;
 class EpisodesModel;
+class EpItemDelegate;
 class DialogTip;
 struct Character;
 class QListWidget;
@@ -20,9 +21,9 @@ class CharacterWidget : public QWidget
 {
      Q_OBJECT
 public:
-    CharacterWidget(Character *character, QWidget *parent=nullptr);
+    CharacterWidget(const Character *character, QWidget *parent=nullptr);
     void refreshIcon();
-    Character *crt;
+    const Character *crt;
 private:
     QLabel *iconLabel;
 protected:
@@ -71,6 +72,7 @@ private:
     QTextEdit *descInfo;
     QStringList epNames;
     EpisodesModel *epModel;
+    EpItemDelegate *epDelegate;
     QListWidget *characterList;
     TagPanel *tagPanel;
     QStackedLayout *tagContainerSLayout;

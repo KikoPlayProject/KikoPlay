@@ -10,7 +10,8 @@
 #include "globalobjects.h"
 #include "Download/autodownloadmanager.h"
 #include "widgets/dirselectwidget.h"
-#include "Download/Script/scriptmanager.h"
+#include "Script/scriptmanager.h"
+#include "Script/resourcescript.h"
 
 AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add Rule"),parent, true, true, false)
 {
@@ -37,13 +38,12 @@ AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add
 
     QLabel *scriptLabel=new QLabel(tr("Search Script:"),this);
     scriptIdCombo=new QComboBox(this);
-    for(auto &item:GlobalObjects::scriptManager->getScriptList())
+    for(auto &item:GlobalObjects::scriptManager->scripts(ScriptType::RESOURCE))
     {
-        scriptIdCombo->addItem(item.title,item.id);
+        scriptIdCombo->addItem(item->name(),item->id());
     }
 
-    int normalScriptIndex=scriptIdCombo->findData(GlobalObjects::scriptManager->getNormalScriptId());
-    scriptIdCombo->setCurrentIndex(addRule?normalScriptIndex:scriptIdCombo->findData(curRule->scriptId));
+    scriptIdCombo->setCurrentIndex(addRule?0:scriptIdCombo->findData(curRule->scriptId));
 
     QLabel *downloadLabel=new QLabel(tr("After discovering new uri:"),this);
     downloadCombo=new QComboBox(this);
@@ -174,15 +174,20 @@ void AddRule::onAccept()
     {
         showBusyState(true);
         int pageCount;
-        QList<ResItem> resList;
-        QString errInfo = GlobalObjects::scriptManager->search(curRule->scriptId, curRule->searchWord, 1, pageCount, resList);
-        if(errInfo.isEmpty())
+        QList<ResourceItem> resList;
+        auto curScript = GlobalObjects::scriptManager->getScript(curRule->scriptId);
+        if(curScript && curScript->type()!=ScriptType::RESOURCE)
         {
-            for(int i=0; i<3 && i<resList.size(); ++i)
+            ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
+            ScriptState state = resScript->search(curRule->searchWord, 1, pageCount, resList);
+            if(state)
             {
-                curRule->lastCheckPosition<<resList.at(i).title;
+                for(int i=0; i<3 && i<resList.size(); ++i)
+                {
+                    curRule->lastCheckPosition<<resList.at(i).title;
+                }
+                curRule->lastCheckTime=QDateTime::currentDateTime().toSecsSinceEpoch();
             }
-            curRule->lastCheckTime=QDateTime::currentDateTime().toSecsSinceEpoch();
         }
         showBusyState(false);
     }
@@ -239,23 +244,26 @@ void PreviewModel::search(const QString &searchWord, const QString &scriptId)
 {
     if(searchWord==lastSearchWord && lastScriptId==scriptId) return;
     int pageCount;
-    QList<ResItem> resList;
-    QString errInfo = GlobalObjects::scriptManager->search(scriptId, searchWord, 1, pageCount, resList);
+    QList<ResourceItem> resList;
+    auto curScript = GlobalObjects::scriptManager->getScript(scriptId);
     beginResetModel();
     searchResults.clear();
-    if(errInfo.isEmpty())
+    if(curScript && curScript->type()!=ScriptType::RESOURCE)
     {
-        for(const ResItem &item:resList)
+        ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
+        ScriptState state = resScript->search(searchWord, 1, pageCount, resList);
+        if(state)
         {
-            SearchItem sItem({item.title, static_cast<int>(getSize(item.size)), true});
-            searchResults<<sItem;
+            for(const auto &item:resList)
+            {
+                SearchItem sItem({item.title, static_cast<int>(getSize(item.size)), true});
+                searchResults<<sItem;
+            }
+            lastSearchWord=searchWord;
+            lastScriptId=scriptId;
+        } else {
+            emit showError(state.info);
         }
-        lastSearchWord=searchWord;
-        lastScriptId=scriptId;
-    }
-    else
-    {
-        emit showError(errInfo);
     }
     endResetModel();
 }
@@ -318,7 +326,7 @@ QVariant PreviewModel::headerData(int section, Qt::Orientation orientation, int 
     static QStringList headers({tr("Size(MB)"),tr("Title")});
     if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
     {
-        if(section<2)return headers.at(section);
+        if(section<headers.size())return headers.at(section);
     }
     return QVariant();
 }

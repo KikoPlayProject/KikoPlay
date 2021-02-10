@@ -15,6 +15,7 @@ public:
         return &worker;
     }
     int fetchAnimes(QList<Anime *> *animes, int offset, int limit);
+    int animeCount();
     void loadCrImages(Anime *anime);
     void loadEpInfo(Anime *anime);
     void loadPosters(Anime *anime);
@@ -26,7 +27,21 @@ public:
     void deleteAnime(Anime *anime);
 
     void addEp(const QString &animeName, const EpInfo &ep);
-    void updateEpTime(const QString &animeName, const QString &path, bool finished = false);
+    void removeEp(const QString &animeName, const QString &path);
+    void updateEpTime(const QString &animeName, const QString &path, bool finished = false, qint64 epTime=0);
+    void updateEpInfo(const QString &animeName, const QString &path, const EpInfo &nEp);
+    void updateEpPath(const QString &animeName, const QString &path, const QString &nPath);
+
+    void saveCrtImage(const QString &animeName, const QString &crtName, const QByteArray &imageContent);
+    void saveCapture(const QString &animeName, const QString &info, const QImage &image);
+    const QPixmap getAnimeImageData(const QString &animeName, AnimeImage::ImageType type, qint64 timeId);
+    void deleteAnimeImage(const QString &animeName, AnimeImage::ImageType type, qint64 timeId);
+    int fetchCaptures(const QString &animeName, QList<AnimeImage> &captureList, int offset, int limit);
+
+    void loadTags(QMap<QString,QSet<QString> > &tagMap, QMap<QString, int> &timeMap);
+    void deleteTag(const QString &tag,const QString &animeTitle="");
+    void addTags(const QString &aniemName, const QStringList &tags);
+    void saveTags(const QString &animeName, const QStringList &tags);
 
 private:
     QMap<QString,Anime *> animesMap;
@@ -37,6 +52,7 @@ private:
     void loadAlias();
     QString isAlias(const QString &name);
     void addAlias(const QString &name, const QString &alias);
+    void removeAlias(const QString &name, const QString &alias = "");
 
     bool checkAnimeExist(const QString &name);
     bool checkEpExist(const QString &animeName, const EpInfo &ep);
@@ -50,10 +66,18 @@ signals:
     void animeAdded(Anime *anime);
     void animeUpdated(Anime *anime);
     void animeRemoved(Anime *anime);
+
     void epRemoved(const QString &animeName, const QString &epPath);
     void epUpdated(const QString &animeName, const QString &epPath);
     void epAdded(const QString &animeName, const EpInfo &ep);
     void epReset(const QString &animeName);
+
+    void captureUpdated(const QString &animeName, const AnimeImage &aImage);
+
+    void addTagsTo(const QString &animeName, const QStringList &tagList);
+    void removeTagFrom(const QString &animeName, const QString &tag);
+    void removeTags(const QString &animeTitle, const QString &time);
+    void addTimeLabel(const QString &time, const QString &oldTime);
 
 
 public slots:

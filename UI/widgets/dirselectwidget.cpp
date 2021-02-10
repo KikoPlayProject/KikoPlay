@@ -25,6 +25,7 @@ DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent), dirChanged(
     dirHLayout->addStretch(1);
     dirHLayout->addWidget(spaceTip);
     dirHLayout->addSpacing(20*logicalDpiX()/96);
+    dirHLayout->setContentsMargins(0, 0, 0, 0);
     spaceTip->setFont(QFont(GlobalObjects::normalFont,8));
     dirEdit->setLayout(dirHLayout);
     freeSpace=getAvailableBytes(getDir());

@@ -1,5 +1,5 @@
 #include "ressearchwindow.h"
-#include "Download/Script/scriptmanager.h"
+#include "Script/scriptmanager.h"
 #include "settings.h"
 #include <QPushButton>
 #include <QComboBox>
@@ -10,7 +10,6 @@
 #include <QAction>
 #include <QSortFilterProxyModel>
 #include <QGridLayout>
-#include <QMessageBox>
 #include <QApplication>
 #include <QClipboard>
 #include <QDesktopServices>
@@ -21,25 +20,34 @@
 #include "globalobjects.h"
 namespace
 {
-    QMap<int,QList<ResItem> > pageCache;
+    QMap<int,QList<ResourceItem> > pageCache;
 }
 ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0),currentPage(0),isSearching(false)
 {
     searchListModel=new SearchListModel(this);
     QSortFilterProxyModel *searchProxyModel=new QSortFilterProxyModel(this);
     searchProxyModel->setSourceModel(searchListModel);
-    searchProxyModel->setFilterKeyColumn(1);
+    searchProxyModel->setFilterKeyColumn((int)SearchListModel::Columns::TITLE);
     searchProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    QObject::connect(searchListModel, &SearchListModel::fetching, this, [=](bool on){
+        setEnable(!on);
+    });
 
     scriptCombo=new QComboBox(this);
     scriptCombo->setProperty("cScrollStyle", true);
-    QObject::connect(GlobalObjects::scriptManager,&ScriptManager::refreshDone,this,[this](){
+    auto scripts = GlobalObjects::scriptManager->scripts(ScriptType::RESOURCE);
+    for(auto &s : scripts)
+    {
+        scriptCombo->addItem(s->name(), s->id());
+    }
+    QObject::connect(GlobalObjects::scriptManager,&ScriptManager::scriptChanged, this,[this](ScriptType type){
+        if(type!=ScriptType::RESOURCE) return;
         scriptCombo->clear();
-        for(auto &item:GlobalObjects::scriptManager->getScriptList())
+        for(auto &s:GlobalObjects::scriptManager->scripts(ScriptType::RESOURCE))
         {
-            scriptCombo->addItem(item.title,item.id);
+            scriptCombo->addItem(s->name(), s->id());
         }
-        scriptCombo->setCurrentIndex(scriptCombo->findData(GlobalObjects::scriptManager->getNormalScriptId()));
+        scriptCombo->setCurrentIndex(0);
     });
 
     QPushButton *manageScript=new QPushButton(this);
@@ -121,7 +129,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     searchListView->setIndentation(0);
     searchListView->setContextMenuPolicy(Qt::ActionsContextMenu);
     QObject::connect(searchListView, &QTreeView::doubleClicked,[this,searchProxyModel](const QModelIndex &index){
-        ResItem item = searchListModel->getItem(searchProxyModel->mapToSource(index));
+        ResourceItem item = searchListModel->getItem(searchProxyModel->mapToSource(index));
         if(item.magnet.isEmpty())
         {
             if(!item.url.isEmpty())
@@ -156,7 +164,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     QObject::connect(openLink,&QAction::triggered,this,[this,searchProxyModel](){
         QItemSelection selection = searchProxyModel->mapSelectionToSource(searchListView->selectionModel()->selection());
         if (selection.size() == 0)return;
-        ResItem item = searchListModel->getItem(selection.indexes().last());
+        ResourceItem item = searchListModel->getItem(selection.indexes().last());
         if(item.url.isEmpty()) return;
         QDesktopServices::openUrl(QUrl(item.url));
     });
@@ -190,28 +198,30 @@ void ResSearchWindow::search(const QString &keyword, bool setSearchEdit)
 {
     if(isSearching) return;
     if(keyword.isEmpty()) return;
-    if(scriptCombo->currentText().isEmpty()) return;
+    if(scriptCombo->currentData().isNull()) return;
+    auto curScript = GlobalObjects::scriptManager->getScript(scriptCombo->currentData().toString());
+    if(!curScript || curScript->type()!=ScriptType::RESOURCE) return;
+    ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
     if(setSearchEdit) searchEdit->setText(keyword);
     isSearching=true;
     int pageCount;
-    QList<ResItem> results;
+    QList<ResourceItem> results;
     setEnable(false);
-    QString errInfo(GlobalObjects::scriptManager->search(scriptCombo->currentData().toString(),keyword,1,pageCount,results));
-    if(errInfo.isEmpty())
+    ScriptState state = resScript->search(keyword, 1, pageCount, results);
+    if(state)
     {
         currentPage= pageCount>0?1:0;
         totalPage=pageCount;
         currentScriptId=scriptCombo->currentData().toString();
         currentKeyword=keyword;
         pageCache.clear();
-        searchListModel->setList(results);
+        searchListModel->setList(currentScriptId, results);
         pageEdit->setText(QString::number(currentPage));
         totalPageTip->setText(QString("/%1").arg(totalPage));
     }
     else
     {
-        //QMessageBox::information(this,"KikoPlay",errInfo);
-        dialogTip->showMessage(errInfo, 1);
+        dialogTip->showMessage(state.info, 1);
         dialogTip->raise();
     }
     isSearching=false;
@@ -233,20 +243,23 @@ void ResSearchWindow::pageTurning(int page)
     if(pageCache.contains(page))
     {
         auto list=pageCache.value(page);
-        searchListModel->setList(list);
+        searchListModel->setList(currentScriptId, list);
         if(!pageCache.contains(currentPage)) pageCache.insert(currentPage,list);
         currentPage=page;
         pageEdit->setText(QString::number(currentPage));
         totalPageTip->setText(QString("/%1").arg(totalPage));
         return;
     }
+    auto curScript = GlobalObjects::scriptManager->getScript(currentScriptId);
+    if(!curScript || curScript->type()!=ScriptType::RESOURCE) return;
+    ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
     int pageCount;
-    QList<ResItem> results;
+    QList<ResourceItem> results;
     setEnable(false);
-    QString errInfo(GlobalObjects::scriptManager->search(currentScriptId,currentKeyword,page,pageCount,results));
-    if(errInfo.isEmpty())
+    ScriptState state = resScript->search(currentKeyword, page, pageCount, results);
+    if(state)
     {
-        searchListModel->setList(results);
+        searchListModel->setList(currentScriptId, results);
         if(!pageCache.contains(currentPage)) pageCache.insert(currentPage,results);
         currentPage=page;
         totalPage=pageCount;
@@ -255,7 +268,7 @@ void ResSearchWindow::pageTurning(int page)
     }
     else
     {
-        dialogTip->showMessage(errInfo, 1);
+        dialogTip->showMessage(state.info, 1);
         dialogTip->raise();
     }
     setEnable(true);
@@ -267,4 +280,80 @@ void ResSearchWindow::resizeEvent(QResizeEvent *)
     searchListView->header()->resizeSection(0,oneWidth);
     searchListView->header()->resizeSection(1,4*oneWidth);
     searchListView->header()->resizeSection(2,1*oneWidth);
+}
+
+void SearchListModel::setList(const QString &curScriptId, QList<ResourceItem> &nList)
+{
+    beginResetModel();
+    scriptId = curScriptId;
+    resultList.swap(nList);
+    endResetModel();
+}
+QStringList SearchListModel::getMagnetList(const QModelIndexList &indexes)
+{
+    QStringList list;
+    auto curScript = GlobalObjects::scriptManager->getScript(scriptId);
+    if(curScript)
+    {
+        ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
+        if(resScript->needGetDetail())
+        {
+            emit fetching(true);
+            for(auto &index:indexes)
+            {
+                if(index.column()==(int)Columns::TIME)
+                {
+                    int row = index.row();
+                    ScriptState state;
+                    if(resultList[row].magnet.isEmpty())
+                    {
+                        state = resScript->getDetail(resultList[row], resultList[row]);
+                    }
+                    if(state) list<<resultList[row].magnet;
+                }
+            }
+            emit fetching(false);
+            return list;
+        }
+    }
+    for(auto &index:indexes)
+    {
+        if(index.column()==(int)Columns::TIME)
+            list<<resultList.at(index.row()).magnet;
+    }
+    return list;
+}
+
+QVariant SearchListModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid()) return QVariant();
+    Columns col=static_cast<Columns>(index.column());
+    const ResourceItem &item=resultList.at(index.row());
+    if(role==Qt::DisplayRole)
+    {
+        switch (col)
+        {
+        case Columns::TIME:
+            return item.time;
+        case Columns::TITLE:
+            return item.title;
+        case Columns::SIZE:
+            return item.size;
+        }
+    }
+    else if(role==Qt::ToolTipRole)
+    {
+        if(col==Columns::TITLE)
+            return item.title;
+    }
+    return QVariant();
+}
+
+QVariant SearchListModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
+    {
+        if(section<headers.size())return headers.at(section);
+    }
+    return QVariant();
 }

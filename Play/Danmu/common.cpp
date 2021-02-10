@@ -142,27 +142,6 @@ QDataStream &operator>>(QDataStream &stream, DanmuComment &danmu)
     return stream;
 }
 
-
-QDataStream &operator<<(QDataStream &stream, const MatchInfo &match)
-{
-    return stream<<match.success<<match.error<<match.errorInfo<<match.poolID<<match.fileHash<<match.matches;
-}
-
-QDataStream &operator>>(QDataStream &stream, MatchInfo &match)
-{
-    return stream>>match.success>>match.error>>match.errorInfo>>match.poolID>>match.fileHash>>match.matches;
-}
-
-QDataStream &operator<<(QDataStream &stream, const MatchInfo::DetailInfo &md)
-{
-    return stream<<md.title<<md.animeTitle;
-}
-
-QDataStream &operator>>(QDataStream &stream, MatchInfo::DetailInfo &md)
-{
-    return stream>>md.title>>md.animeTitle;
-}
-
 void DanmuSource::setTimeline(const QString &timelineStr)
 {
     QStringList timelineList(timelineStr.split(';',QString::SkipEmptyParts));

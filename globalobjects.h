@@ -14,7 +14,7 @@ class QObject;
 class QSettings;
 class DanmuProvider;
 class AnimeProvider;
-class AnimeLibrary;
+class LabelModel;
 class DownloadModel;
 class DanmuManager;
 class LANServer;
@@ -36,7 +36,7 @@ public:
     static QSettings *appSetting;
     static DanmuProvider *danmuProvider;
     static AnimeProvider *animeProvider;
-    static AnimeLibrary *library;
+    static LabelModel *animeLabelModel;
     static DownloadModel *downloadModel;
     static DanmuManager *danmuManager;
     static LANServer *lanServer;    
@@ -54,13 +54,5 @@ public:
 private:
     static void initDatabase(const char *db_names[]);
     static void setDatabase(const char *name, const char *file);
-};
-enum PopMessageFlag
-{
-    PM_HIDE=1,
-    PM_PROCESS=2,
-    PM_INFO=4,
-    PM_OK=8,
-    PM_SHOWCANCEL = 16
 };
 #endif // GLOBALOBJECTS_H

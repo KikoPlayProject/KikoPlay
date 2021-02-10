@@ -1,140 +1,148 @@
 #include "episodesmodel.h"
-#include <QSqlQuery>
-#include <QSqlRecord>
-#include <QFileDialog>
-#include <QComboBox>
-#include <QLineEdit>
 #include "globalobjects.h"
-#include "Play/Video/mpvplayer.h"
+#include "animeworker.h"
 EpisodesModel::EpisodesModel(Anime *anime, QObject *parent) : QAbstractItemModel(parent),
-    currentAnime(anime),episodeChanged(false)
+    currentAnime(nullptr)
 {
-
+    setAnime(anime);
+    QObject::connect(AnimeWorker::instance(), &AnimeWorker::epUpdated, this, [=](const QString &animeName, const QString &epPath){
+       if(!currentAnime || currentAnime->name()!=animeName) return;
+       int pos = epMap[epPath];
+       EpInfo &ep = currentEps[pos];
+       ep = currentAnime->epList()[pos];
+       if(ep.localFile!=epPath)
+       {
+           epMap.remove(epPath);
+           epMap[ep.localFile] = pos;
+       }
+       QModelIndex modelIndex(this->index(pos, (int)Columns::TITLE, QModelIndex()));
+       emit dataChanged(modelIndex, modelIndex.siblingAtColumn((int)Columns::LOCALFILE));
+    });
+    QObject::connect(AnimeWorker::instance(), &AnimeWorker::epAdded, this, [=](const QString &animeName, const EpInfo &ep){
+         if(!currentAnime || currentAnime->name()!=animeName || epMap.contains(ep.localFile)) return;
+         int pos = currentEps.size();
+         beginInsertRows(QModelIndex(), pos, pos);
+         currentEps.append(ep);
+         epMap[ep.localFile] = pos;
+         endInsertRows();
+    });
+    QObject::connect(AnimeWorker::instance(), &AnimeWorker::epRemoved, this, [=](const QString &animeName, const QString &epPath){
+         if(!currentAnime || currentAnime->name()!=animeName || !epMap.contains(epPath)) return;
+         int pos = epMap[epPath];
+         epMap.remove(epPath);
+         for(int i=pos+1;i<currentEps.size();++i)
+         {
+             epMap[currentEps[i].localFile] = i-1;
+         }
+         beginRemoveRows(QModelIndex(), pos, pos);
+         currentEps.removeAt(pos);
+         endRemoveRows();
+    });
 }
 
 void EpisodesModel::setAnime(Anime *anime)
 {
     beginResetModel();
     currentAnime = anime;
+    currentEps.clear();
+    epMap.clear();
+    if(anime)
+    {
+        currentEps = anime->epList();
+        for(int i=0; i<currentEps.size(); ++i)
+        {
+            epMap[currentEps[i].localFile] = i;
+        }
+    }
     endResetModel();
 }
 
-void EpisodesModel::updatePath(const QString &oldPath, const QString &newPath)
+void EpisodesModel::addEp(const QString &path)
 {
-    QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
-    query.prepare("update eps set LocalFile=? where Anime=? and LocalFile=?");
-    query.bindValue(0,newPath);
-    query.bindValue(1,currentAnime->name);
-    query.bindValue(2,oldPath);
-    query.exec();
-}
-
-void EpisodesModel::updateTitle(const QString &path, const QString &title)
-{
-    QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
-    query.prepare("update eps set Name=? where Anime=? and LocalFile=?");
-    query.bindValue(0,title);
-    query.bindValue(1,currentAnime->name);
-    query.bindValue(2,path);
-    query.exec();
-}
-
-void EpisodesModel::addEpisode(const QString &title, const QString &path)
-{
+    if(!currentAnime || epMap.contains(path)) return;
     EpInfo ep;
-    ep.name=title;
-    ep.localFile=path;
-    int insertPosition = currentAnime->epList.count();
-    beginInsertRows(QModelIndex(), insertPosition, insertPosition);
-    currentAnime->epList.append(ep);
-    endInsertRows();
-    episodeChanged=true;
-    QSqlQuery query(QSqlDatabase::database("Bangumi_M"));
-    query.prepare("insert into eps(Anime,Name,LocalFile) values(?,?,?)");
-    query.bindValue(0,currentAnime->name);
-    query.bindValue(1,title);
-    query.bindValue(2,path);
-    query.exec();
+    ep.localFile = path;
+    ep.type = EpType::EP;
+    ep.name = QFileInfo(path).baseName();
+    AnimeWorker::instance()->addEp(currentAnime->name(), ep);
 }
 
-void EpisodesModel::removeEpisodes(const QModelIndexList &removeIndexes)
+void EpisodesModel::removeEp(const QModelIndex &index)
 {
-    QSqlDatabase db=QSqlDatabase::database("Bangumi_M");
-    QSqlQuery query(db);
-    query.prepare("delete from eps where Anime=? and LocalFile=?");
-    db.transaction();
-    QList<int> rows;
-    for (const QModelIndex &index : removeIndexes)
-    {
-        if (index.isValid())
-        {
-            int row=index.row();
-            rows.append(row);
-            query.bindValue(0,currentAnime->name);
-            query.bindValue(1,currentAnime->epList.at(row).localFile);
-            query.exec();
-        }
-    }
-    db.commit();
-    std::sort(rows.rbegin(),rows.rend());
-    for(auto iter=rows.begin();iter!=rows.end();++iter)
-    {
-        beginRemoveRows(QModelIndex(), *iter, *iter);
-        currentAnime->epList.removeAt(*iter);
-        endRemoveRows();
-    }
-    episodeChanged=true;
+    if(!currentAnime || !index.isValid()) return;
+    EpInfo &ep = currentEps[index.row()];
+    AnimeWorker::instance()->removeEp(currentAnime->name(), ep.localFile);
+}
+
+void EpisodesModel::updateEpInfo(const QModelIndex &index, const EpInfo &nEpInfo)
+{
+    if(!currentAnime || !index.isValid()) return;
+    AnimeWorker::instance()->updateEpInfo(currentAnime->name(), currentEps[index.row()].localFile, nEpInfo);
+}
+
+void EpisodesModel::updateFinishTime(const QModelIndex &index, qint64 nTime)
+{
+    if(!currentAnime || !index.isValid()) return;
+    AnimeWorker::instance()->updateEpTime(currentAnime->name(), currentEps[index.row()].localFile, true, nTime);
 }
 
 QVariant EpisodesModel::data(const QModelIndex &index, int role) const
 {
-    if(!index.isValid()) return QVariant();
-    const auto &ep=currentAnime->epList.at(index.row());
-    int col=index.column();
-    switch (role)
+    if(!index.isValid() || !currentAnime) return QVariant();
+    const auto &ep=currentEps.at(index.row());
+    Columns col=static_cast<Columns>(index.column());
+    if(role==Qt::DisplayRole)
     {
-    case Qt::DisplayRole:
-    {
-        if(col==0)
+        switch (col)
         {
-            return ep.name;
-        }
-        else if(col==2)
-        {
+        case Columns::TITLE:
+            return ep.toString();
+        case Columns::LASTPLAY:
+            return ep.playTimeStr();
+        case Columns::FINISHTIME:
+            return ep.playTimeStr(true);
+        case Columns::LOCALFILE:
             return ep.localFile;
         }
-        else if(col==1)
-        {
-            return ep.lastPlayTime;
-        }
-        break;
     }
+    else if(role == EpRole)
+    {
+        return QVariant::fromValue(ep);
     }
     return QVariant();
 }
 
 bool EpisodesModel::setData(const QModelIndex &index, const QVariant &value, int )
 {
-    int row=index.row(),col=index.column();
-    auto &ep=currentAnime->epList[row];
-    QString val=value.toString().trimmed();
-    if(val.isEmpty())return false;
+    if(!index.isValid() || !currentAnime) return false;
+    Columns col=static_cast<Columns>(index.column());
+    auto &ep=currentEps[index.row()];
     switch (col)
     {
-    case 0:
-        if(val==ep.name)return false;
-        ep.name=value.toString();
-        updateTitle(ep.localFile,ep.name);
-        episodeChanged=true;
-        break;
-    case 2:
-        if(val==ep.localFile)return false;
-        updatePath(ep.localFile,value.toString());
-        ep.localFile=value.toString();
-        episodeChanged=true;
+    case Columns::TITLE:
+    {
+        EpInfo nEp(value.value<EpInfo>());
+        if(ep.name==nEp.name && ep.type==nEp.type && ep.index==nEp.index)return false;
+        AnimeWorker::instance()->updateEpInfo(currentAnime->name(),ep.localFile, nEp);
         break;
     }
-    emit dataChanged(index,index);
+    case Columns::FINISHTIME:
+    {
+        qint64 nTime = value.toLongLong();
+        if(nTime==ep.finishTime) return false;
+        AnimeWorker::instance()->updateEpTime(currentAnime->name(),ep.localFile,true,nTime);
+        break;
+    }
+    case Columns::LOCALFILE:
+    {
+        QString nPath = value.toString();
+        if(nPath==ep.localFile || nPath.isEmpty()) return false;
+        AnimeWorker::instance()->updateEpPath(currentAnime->name(), ep.localFile, nPath);
+        break;
+    }
+    default:
+        return false;
+    }
     return true;
 }
 
@@ -142,57 +150,16 @@ QVariant EpisodesModel::headerData(int section, Qt::Orientation orientation, int
 {
     if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
     {
-        if(section<3)return headers.at(section);
+        if(section<headers.size())return headers.at(section);
     }
     return QVariant();
 }
 
-QWidget *EpItemDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
+Qt::ItemFlags EpisodesModel::flags(const QModelIndex &index) const
 {
-    int col=index.column();
-    if(col==0)
-    {
-        QComboBox *combo=new QComboBox(parent);
-        combo->setFrame(false);
-        combo->setEditable(true);
-        combo->addItems(*epNames);
-        return combo;
-    }
-    return QStyledItemDelegate::createEditor(parent,option,index);
-}
-
-void EpItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
-{
-    int col=index.column();
-    if(col==0)
-    {
-        QComboBox *combo = static_cast<QComboBox*>(editor);
-        combo->setCurrentText(index.data(Qt::DisplayRole).toString());
-    }
-    else if(col==2)
-    {
-        QString file = QFileDialog::getOpenFileName(nullptr,tr("Select Media File"),"",
-                                                    QString("Video Files(%1);;All Files(*) ").arg(GlobalObjects::mpvplayer->videoFileFormats.join(" ")));
-        QLineEdit *lineEdit=static_cast<QLineEdit *>(editor);
-        if(!file.isNull())
-        {
-            lineEdit->setText(file);
-        }
-        else
-        {
-            lineEdit->setText(index.data(Qt::DisplayRole).toString());
-        }
-    }
-}
-
-void EpItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
-{
-    int col=index.column();
-    if(col==0)
-    {
-        QComboBox *combo = static_cast<QComboBox*>(editor);
-        model->setData(index,combo->currentText(),Qt::EditRole);
-        return;
-    }
-    QStyledItemDelegate::setModelData(editor,model,index);
+    Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index);
+    if(!index.isValid()) return defaultFlags;
+    Columns col = static_cast<Columns>(index.column());
+    if(col==Columns::LASTPLAY) return defaultFlags;
+    return defaultFlags | Qt::ItemIsEditable;
 }

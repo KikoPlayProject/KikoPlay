@@ -13,7 +13,7 @@
 #include <QApplication>
 #include <QStyledItemDelegate>
 #include "globalobjects.h"
-#include "MediaLibrary/animelibrary.h"
+#include "MediaLibrary/animeworker.h"
 namespace
 {
     class TextColorDelegate: public QStyledItemDelegate
@@ -135,7 +135,8 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
         QItemSelection selection = bgmListProxyModel->mapSelectionToSource(bgmListView->selectionModel()->selection());
         if (selection.size() == 0)return;
         const BgmItem &item=bgmList->bgmList().at(selection.indexes().last().row());
-        GlobalObjects::library->addToLibrary(item.title,item.bgmId);
+        AnimeWorker::instance()->addAnime(item.title);
+        //GlobalObjects::library->addToLibrary(item.title,item.bgmId);
     });
     QAction *onBangumi=new QAction(tr("Bangumi Info"), this);
     QObject::connect(onBangumi,&QAction::triggered,this,[this,bgmListProxyModel](){

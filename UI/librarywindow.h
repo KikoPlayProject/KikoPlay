@@ -11,6 +11,7 @@ class QGraphicsBlurEffect;
 class QActionGroup;
 class QButtonGroup;
 class QSplitter;
+class AnimeModel;
 class AnimeItemDelegate;
 class AnimeDetailInfoPage;
 class LabelTreeView : public QTreeView
@@ -77,6 +78,7 @@ public:
     bool getBgMode() const {return bgOn;}
     void setBgMode(bool on) {bgOn = on;}
 private:
+    AnimeModel *animeModel;
     QListView *animeListView;
     LabelTreeView *labelView;
     QSplitter *splitter;

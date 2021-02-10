@@ -1,5 +1,6 @@
 #include "autodownloadmanager.h"
-#include "Script/scriptmanager.h"
+#include "../Script/resourcescript.h"
+#include "../Script/scriptmanager.h"
 #include "globalobjects.h"
 #include <QDateTime>
 #include <QBrush>
@@ -369,7 +370,7 @@ void DownloadRuleChecker::check()
 
 void DownloadRuleChecker::fetchInfo(DownloadRule *rule)
 {
-    QList<ResItem> searchResults;
+    QList<ResourceItem> searchResults;
     int page = 1, pageCount=1;
     const int maxPageCount = 3;
     QStringList newCheckPosition;
@@ -380,8 +381,15 @@ void DownloadRuleChecker::fetchInfo(DownloadRule *rule)
     do
     {
         bool positionFinded=false;
-        QString errInfo = GlobalObjects::scriptManager->search(rule->scriptId, rule->searchWord, page, pageCount, searchResults);
-        if(errInfo.isEmpty())
+        auto curScript = GlobalObjects::scriptManager->getScript(rule->scriptId);
+        if(!curScript || curScript->type()!=ScriptType::RESOURCE)
+        {
+            emit log(DownloadRuleLog::setLog(rule, 2, tr("Error occur while checking: Script '%1' not exist").arg(rule->scriptId)));
+            break;
+        }
+        ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
+        ScriptState state = resScript->search(rule->searchWord, page, pageCount, searchResults);
+        if(state)
         {
             if(page==1)
             {
@@ -400,13 +408,17 @@ void DownloadRuleChecker::fetchInfo(DownloadRule *rule)
                 }
                 if(satisfyRule(&item, rule, filterRegExps))
                 {
-                    emit log(DownloadRuleLog::setLog(rule, 1, QString("%1 %2").arg(item.size, item.title), item.magnet));
+                    ScriptState s;
+                    if(resScript->needGetDetail())
+                        s = resScript->getDetail(item, item);
+                    if(s)
+                        emit log(DownloadRuleLog::setLog(rule, 1, QString("%1 %2").arg(item.size, item.title), item.magnet));
                 }
             }
         }
         else
         {
-            emit log(DownloadRuleLog::setLog(rule, 2, tr("Error occur while checking: %1").arg(errInfo)));
+            emit log(DownloadRuleLog::setLog(rule, 2, tr("Error occur while checking: %1").arg(state.info)));
             break;
         }
         searchResults.clear();
@@ -419,7 +431,7 @@ void DownloadRuleChecker::fetchInfo(DownloadRule *rule)
     }
 }
 
-bool DownloadRuleChecker::satisfyRule(ResItem *item, DownloadRule *rule, const QList<QRegExp> &filterRegExps)
+bool DownloadRuleChecker::satisfyRule(ResourceItem *item, DownloadRule *rule, const QList<QRegExp> &filterRegExps)
 {
     static QRegExp re("(\\d+(?:\\.\\d+)?)\\s*([KkMmGgTt])i?B|b");
     for(auto &r:filterRegExps)

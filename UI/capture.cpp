@@ -6,7 +6,7 @@
 #include <QClipboard>
 #include <QFileDialog>
 #include "globalobjects.h"
-#include "MediaLibrary/animelibrary.h"
+#include "MediaLibrary/animeworker.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlistitem.h"
 Capture::Capture(QImage &captureImage, QWidget *parent, const PlayListItem *item) : CFramelessDialog("",parent)
@@ -45,7 +45,7 @@ Capture::Capture(QImage &captureImage, QWidget *parent, const PlayListItem *item
         int cmin=curTime/60;
         int cls=curTime-cmin*60;
         QString info=QString("%1:%2 - %3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(item->animeTitle);
-        GlobalObjects::library->saveCapture(item->animeTitle,item->path,info,captureImage);
+        AnimeWorker::instance()->saveCapture(item->animeTitle, info, captureImage);
         CFramelessDialog::onAccept();
     });
     QHBoxLayout *btnHLayout=new QHBoxLayout(buttonContainer);

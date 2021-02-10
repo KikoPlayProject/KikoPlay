@@ -2,97 +2,36 @@
 #define MATCHEDITOR_H
 
 #include "framelessdialog.h"
-#include <QAbstractItemModel>
-#include <QStyledItemDelegate>
-#include "MediaLibrary/Service/bangumi.h"
+#include "MediaLibrary/animeinfo.h"
 
 class PlayListItem;
-struct MatchInfo;
-class QStackedLayout;
 class QToolButton;
 class QLineEdit;
-class QTreeWidget;
 class MatchEditor;
 class QComboBox;
-class EpComboItemDelegate : public QStyledItemDelegate
-{
-    Q_OBJECT
-public:
-    using QStyledItemDelegate::QStyledItemDelegate;
-    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
-};
-class EpComboDelegate : public QStyledItemDelegate
-{
-    Q_OBJECT
-
-public:
-    EpComboDelegate(QObject *parent = nullptr):QStyledItemDelegate(parent){}
-    void setEpList(const QList<Bangumi::EpInfo> &eps) {epList = eps;}
-
-    QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
-    void setEditorData(QWidget *editor, const QModelIndex &index) const override;
-    void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const override;
-
-    void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &) const override
-    {
-        editor->setGeometry(option.rect);
-    }
-private:
-    QList<Bangumi::EpInfo> epList;
-    void addParentItem(QComboBox *combo, const QString& text) const;
-    void addChildItem(QComboBox *combo, const QString& text) const;
-};
-class EpModel : public QAbstractItemModel
-{
-    Q_OBJECT
-public:
-    EpModel(MatchEditor *matchEditor, QObject *parent = nullptr);
-    void resetEpList(const QList<Bangumi::EpInfo> &eps);
-    void toggleCheckAll();
-    enum class Columns
-    {
-        FILETITLE,
-        EPNAME
-    };
-
-private:
-    QStringList fileTitles;
-    QStringList *batchEp;
-    QList<bool> *epCheckedList;
-    QStringList headers={tr("FileTitle"),tr("EpName")};
-public:
-    inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
-    inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
-    inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:fileTitles.count();}
-    inline virtual int columnCount(const QModelIndex &) const{return headers.size();}
-    virtual QVariant data(const QModelIndex &index, int role) const;
-    virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
-    virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-    virtual Qt::ItemFlags flags(const QModelIndex &index) const;
-};
 class MatchEditor : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit MatchEditor(const PlayListItem *item, QList<const PlayListItem *> *batchItems = nullptr, QWidget *parent = nullptr);
-    ~MatchEditor();
+    MatchEditor(const PlayListItem *item, QList<const PlayListItem *> *batchItems, QWidget *parent = nullptr);
 
-    MatchInfo *matchInfo;
-    QString batchAnime;
-    QStringList batchEp, animeEps;
+    QString anime;
+    EpInfo singleEp;
+    QList<EpInfo> epList;
     QList<bool> epCheckedList;
+
     QList<const PlayListItem *> *batchItems;
+    const PlayListItem *curItem;
 
 private:
-    const PlayListItem *curItem;
-    QToolButton *searchPage,*customPage, *batchPage;
-    QStackedLayout *contentStackLayout;
-    QLineEdit *animeEdit,*subtitleEdit;
-    QTreeWidget *searchResult;
+    QToolButton *searchPage,*customPage;
+    QLineEdit *animeEdit, *epEdit, *epIndexEdit;
+    QComboBox *epTypeCombo;
 
-    QWidget *setupSearchPage();
-    QWidget *setupCustomPage();
-    QWidget *setupBatchPage();
+    QAbstractItemModel *animeModel, *epModel;
+
+    QWidget *setupSearchPage(const QString &srcAnime="");
+    QWidget *setupCustomPage(const QString &srcAnime="", const EpInfo &ep=EpInfo());
 
     // CFramelessDialog interface
 protected:

@@ -1,7 +1,9 @@
 CREATE TABLE "pool" (
 "PoolID"  TEXT(32) NOT NULL,
-"AnimeTitle"  TEXT,
-"Title"  TEXT,
+"Anime"  TEXT,
+"EpType"  INTEGER,
+"EpIndex"  REAL,
+"EpName"  TEXT,
 PRIMARY KEY ("PoolID") ON CONFLICT REPLACE
 );
 CREATE UNIQUE INDEX "PoolID"
@@ -91,7 +93,6 @@ CREATE TABLE "source" (
 "ScriptData"  TEXT,
 "Delay"  INTEGER,
 "Duration"  INTEGER,
-"URL"  TEXT,
 "TimeLine"  TEXT,
 CONSTRAINT "PoolID" FOREIGN KEY ("PoolID") REFERENCES "pool" ("PoolID") ON DELETE CASCADE ON UPDATE CASCADE
 );

@@ -13,8 +13,8 @@ public:
     bool supportMatch() const {return matchSupported;}
     const QList<QPair<QString, QString>> &getMenuItems() const {return menuItems;}
 public:
-    ScriptState search(const QString &keyword, QList<AnimeBase> &results);
-    ScriptState getDetail(const AnimeBase &base, Anime *anime);
+    ScriptState search(const QString &keyword, QList<AnimeLite> &results);
+    ScriptState getDetail(const AnimeLite &base, Anime *anime);
     ScriptState getEp(Anime *anime, QList<EpInfo> &results);
     ScriptState getTags(Anime *anime, QStringList &results);
     ScriptState match(const QString &path, MatchResult &result);

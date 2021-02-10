@@ -110,7 +110,7 @@ void HttpServer::api_UpdateTime(QHttpEngine::Socket *socket)
             QVariantMap data = document.object().toVariantMap();
             QString mediaPath=mediaHash.value(data.value("mediaId").toString());
             int playTime=data.value("playTime").toInt();
-            int playTimeState=data.value("playTimeState").toInt();
+            PlayListItem::PlayState playTimeState=PlayListItem::PlayState(data.value("playTimeState").toInt());
             QMetaObject::invokeMethod(GlobalObjects::playlist,[mediaPath,playTime,playTimeState](){
                 GlobalObjects::playlist->updatePlayTime(mediaPath,playTime,playTimeState);
             },Qt::QueuedConnection);

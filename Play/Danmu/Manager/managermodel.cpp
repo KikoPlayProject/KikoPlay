@@ -185,15 +185,14 @@ void DanmuManagerModel::addSrcNode(DanmuPoolNode *epNode, DanmuPoolSourceNode *s
     emit dataChanged(epIndex.parent().siblingAtColumn(3),epIndex.parent().siblingAtColumn(3));
 }
 
-void DanmuManagerModel::addPoolNode(const QString &animeTitle, const QString &epTitle, const QString &pid)
+void DanmuManagerModel::addPoolNode(const QString &animeTitle, const EpInfo &ep, const QString &pid)
 {
     int i=0;
     for(DanmuPoolNode *node:animeNodeList)
     {
         if(node->title==animeTitle)
         {
-            DanmuPoolNode *epNode=new DanmuPoolNode(DanmuPoolNode::EpNode,node);
-            epNode->title=epTitle;
+            DanmuPoolEpNode *epNode=new DanmuPoolEpNode(ep, node);
             epNode->idInfo=pid;
             QModelIndex animeIndex(createIndex(i,0,node));
             beginInsertRows(animeIndex,node->children->count()-1,node->children->count()-1);
@@ -204,13 +203,11 @@ void DanmuManagerModel::addPoolNode(const QString &animeTitle, const QString &ep
     }
     DanmuPoolNode *animeNode=new DanmuPoolNode(DanmuPoolNode::AnimeNode);
     animeNode->title=animeTitle;
-    DanmuPoolNode *epNode=new DanmuPoolNode(DanmuPoolNode::EpNode,animeNode);
-    epNode->title=epTitle;
+    DanmuPoolEpNode *epNode=new DanmuPoolEpNode(ep, animeNode);
     epNode->idInfo=pid;
     beginInsertRows(QModelIndex(),i,i);
     animeNodeList.append(animeNode);
     endInsertRows();
-
 }
 
 void DanmuManagerModel::renamePoolNode(DanmuPoolNode *epNode, const QString &animeTitle, const QString &epTitle, const QString &pid)

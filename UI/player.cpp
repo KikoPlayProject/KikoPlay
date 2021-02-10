@@ -25,7 +25,7 @@
 #include "Play/Danmu/danmupool.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Danmu/blocker.h"
-#include "MediaLibrary/animelibrary.h"
+#include "MediaLibrary/animeworker.h"
 #include "globalobjects.h"
 namespace
 {
@@ -1359,17 +1359,14 @@ void PlayerWindow::setupSignals()
         }
         else
             titleLabel->setText(QString("%1-%2").arg(currentItem->animeTitle,currentItem->title));
-        if(!currentItem->poolID.isEmpty())
+        if(currentItem->hasPool())
         {
             GlobalObjects::danmuPool->setPoolID(currentItem->poolID);
         }
         else
         {
             showMessage(tr("File is not associated with Danmu Pool"));
-            if (GlobalObjects::danmuPool->hasPool())
-            {
-                GlobalObjects::danmuPool->setPoolID("");
-            }
+            GlobalObjects::danmuPool->setPoolID("");
         }
 #ifdef QT_DEBUG
         qDebug()<<"File Changed,Current Item: "<<currentItem->title;
@@ -1962,7 +1959,7 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
                 {
                     GlobalObjects::mpvplayer->screenshot(tmpImg.fileName());
                     QImage captureImage(tmpImg.fileName());
-                    GlobalObjects::library->saveCapture(curItem->animeTitle,curItem->path,info,captureImage);
+                    AnimeWorker::instance()->saveCapture(curItem->animeTitle, info, captureImage);
                     showMessage(tr("Capture has been add to library: %1").arg(curItem->animeTitle));
                 }
             }

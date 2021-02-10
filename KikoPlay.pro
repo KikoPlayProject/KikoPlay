@@ -34,9 +34,9 @@ SOURCES += \
     Download/autodownloadmanager.cpp \
     Download/peermodel.cpp \
     LANServer/mediahandler.cpp \
-    MediaLibrary/Service/bangumi.cpp \
     MediaLibrary/animeinfo.cpp \
     MediaLibrary/animeprovider.cpp \
+    MediaLibrary/episodeitem.cpp \
     Play/Danmu/danmuprovider.cpp \
     Play/Danmu/eventanalyzer.cpp \
     Play/Video/mpvpreview.cpp \
@@ -50,6 +50,8 @@ SOURCES += \
     UI/addpool.cpp \
     UI/addrule.cpp \
     UI/animedetailinfopage.cpp \
+    UI/animesearch.cpp \
+    UI/animeupdate.cpp \
     UI/autodownloadwindow.cpp \
     UI/danmuview.cpp \
     UI/inputdialog.cpp \
@@ -95,12 +97,10 @@ SOURCES += \
     Play/Danmu/Provider/tucaoprovider.cpp \
     Play/Danmu/Provider/bahamutprovider.cpp \
     Play/Danmu/Provider/dililiprovider.cpp \
-    MediaLibrary/animelibrary.cpp \
     Common/network.cpp \
     Common/htmlparsersax.cpp \
     MediaLibrary/animeitemdelegate.cpp \
     UI/librarywindow.cpp \
-    UI/bangumisearch.cpp \
     MediaLibrary/episodesmodel.cpp \
     Download/util.cpp \
     Download/aria2jsonrpc.cpp \
@@ -115,7 +115,6 @@ SOURCES += \
     UI/checkupdate.cpp \
     Play/Danmu/Provider/iqiyiprovider.cpp \
     Common/flowlayout.cpp \
-    UI/animedetailinfo.cpp \
     UI/timelineedit.cpp \
     Play/Danmu/Provider/acfunprovider.cpp \
     UI/mpvlog.cpp \
@@ -133,12 +132,10 @@ SOURCES += \
     MediaLibrary/labelmodel.cpp \
     MediaLibrary/animefilterproxymodel.cpp \
     MediaLibrary/labelitemdelegate.cpp \
-    UI/bangumiupdate.cpp \
     Play/Danmu/Provider/youkuprovider.cpp \
     Play/Danmu/Provider/tencentprovider.cpp \
     Download/BgmList/bgmlist.cpp \
     UI/bgmlistwindow.cpp \
-    Download/Script/scriptmanager.cpp \
     UI/ressearchwindow.cpp \
     Play/Danmu/Provider/pptvprovider.cpp \
     Play/Danmu/Manager/pool.cpp \
@@ -154,8 +151,8 @@ HEADERS += \
     Download/peerid.h \
     Download/peermodel.h \
     LANServer/mediahandler.h \
-    MediaLibrary/Service/bangumi.h \
     MediaLibrary/animeprovider.h \
+    MediaLibrary/episodeitem.h \
     Play/Danmu/danmuprovider.h \
     Play/Danmu/danmuviewmodel.h \
     Play/Danmu/eventanalyzer.h \
@@ -170,6 +167,8 @@ HEADERS += \
     UI/addpool.h \
     UI/addrule.h \
     UI/animedetailinfopage.h \
+    UI/animesearch.h \
+    UI/animeupdate.h \
     UI/autodownloadwindow.h \
     UI/danmuview.h \
     UI/inputdialog.h \
@@ -218,13 +217,11 @@ HEADERS += \
     Play/Danmu/Provider/providerbase.h \
     Play/Danmu/Provider/bahamutprovider.h \
     Play/Danmu/Provider/dililiprovider.h \
-    MediaLibrary/animelibrary.h \
     Common/network.h \
     Common/htmlparsersax.h \
     MediaLibrary/animeinfo.h \
     MediaLibrary/animeitemdelegate.h \
     UI/librarywindow.h \
-    UI/bangumisearch.h \
     MediaLibrary/episodesmodel.h \
     Download/util.h \
     Download/aria2jsonrpc.h \
@@ -241,7 +238,6 @@ HEADERS += \
     Common/zconf.h \
     Common/zlib.h \
     Common/flowlayout.h \
-    UI/animedetailinfo.h \
     UI/timelineedit.h \
     Play/Danmu/Provider/acfunprovider.h \
     UI/mpvlog.h \
@@ -259,12 +255,10 @@ HEADERS += \
     MediaLibrary/labelmodel.h \
     MediaLibrary/animefilterproxymodel.h \
     MediaLibrary/labelitemdelegate.h \
-    UI/bangumiupdate.h \
     Play/Danmu/Provider/youkuprovider.h \
     Play/Danmu/Provider/tencentprovider.h \
     Download/BgmList/bgmlist.h \
     UI/bgmlistwindow.h \
-    Download/Script/scriptmanager.h \
     UI/ressearchwindow.h \
     Play/Danmu/Provider/pptvprovider.h \
     Play/Danmu/Manager/pool.h \

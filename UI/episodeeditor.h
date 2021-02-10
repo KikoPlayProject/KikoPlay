@@ -2,7 +2,7 @@
 #define EPISODEEDITOR_H
 
 #include "framelessdialog.h"
-struct Anime;
+class Anime;
 class EpisodesModel;
 class EpisodeEditor : public CFramelessDialog
 {

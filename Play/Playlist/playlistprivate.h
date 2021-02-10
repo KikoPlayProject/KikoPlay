@@ -14,6 +14,7 @@ public:
     PlayList::LoopMode loopMode;
     bool autoMatch;
     int modifyCounter;
+    bool saveFinishTimeOnce;
 
     QList<PlayListItem *> itemsClipboard;
     QList<QPair<QString,QString> > recentList;
@@ -32,9 +33,7 @@ public:
     bool addSubFolder(QString folderStr, PlayListItem *parent, int &itemCount);
     int refreshFolder(PlayListItem *folderItem, QList<PlayListItem *> &nItems);
 
-    void autoLocalMatch(PlayListItem *item);
     QString setCollectionTitle(QList<PlayListItem *> &list);
-    void updateLibItemInfo(PlayListItem *item);
     void dumpItem(QJsonArray &array,PlayListItem *item, QHash<QString, QString> &mediaHash);
 private:
     void saveItem(QXmlStreamWriter &writer,PlayListItem *item);

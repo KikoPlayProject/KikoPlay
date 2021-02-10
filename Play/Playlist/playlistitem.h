@@ -9,6 +9,7 @@ public:
     PlayListItem(PlayListItem *p = nullptr, bool leaf = false, int insertPosition = -1);
     ~PlayListItem();
 
+    bool hasPool() const;
     void setLevel(int newLevel);
     void moveTo(PlayListItem *newParent, int insertPosition = -1);
 
@@ -17,8 +18,13 @@ public:
     PlayListItem *parent;
     QList<PlayListItem *> *children;
 
+    enum PlayState
+    {
+        UNPLAY, UNFINISH, FINISH
+    };
+
     int playTime;
-    int playTimeState;
+    PlayState playTimeState;
     int level;
     bool isBgmCollection;
 

@@ -1,10 +1,12 @@
 #include "playlistitem.h"
 #include "playlist.h"
+#include "Play/Danmu/Manager/danmumanager.h"
+#include "globalobjects.h"
 
 PlayList* PlayListItem::playlist=nullptr;
 
 PlayListItem::PlayListItem(PlayListItem *p, bool leaf, int insertPosition):
-    parent(p),children(nullptr),playTime(0),playTimeState(0),level(0),isBgmCollection(false)
+    parent(p),children(nullptr),playTime(0),playTimeState(UNPLAY),level(0),isBgmCollection(false)
 {
     if(!leaf)
     {
@@ -27,6 +29,11 @@ PlayListItem::~PlayListItem()
         qDeleteAll(children->begin(),children->end());
         delete children;
     }
+}
+
+bool PlayListItem::hasPool() const
+{
+    return !poolID.isEmpty() && GlobalObjects::danmuManager->getPool(poolID, false);
 }
 void PlayListItem::setLevel(int newLevel)
 {

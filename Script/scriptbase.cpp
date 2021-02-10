@@ -4,7 +4,7 @@
 #include "Common/network.h"
 namespace
 {
-static int httpget(lua_State *L)
+static int httpGet(lua_State *L)
 {
     do
     {
@@ -55,7 +55,7 @@ static int httpget(lua_State *L)
     lua_pushnil(L);
     return 2;
 }
-static int httppost(lua_State *L)
+static int httpPost(lua_State *L)
 {
     do
     {
@@ -107,7 +107,7 @@ static int json2table(lua_State *L)
         return 2;
     }
     size_t dataLength = 0;
-    const char *data = lua_tolstring(L, 2, &dataLength);
+    const char *data = lua_tolstring(L, 1, &dataLength);
     QByteArray cdata(data, dataLength);
     try {
        auto jdoc = Network::toJson(cdata);
@@ -285,7 +285,8 @@ static int writeSetting(lua_State *L)
     if(params!=2 || lua_type(L, 1)!=LUA_TSTRING || lua_type(L, 2)!=LUA_TSTRING)
     {
         lua_pushstring(L, "writesetting: param error, expect: key(string), value(string)");
-        return 1;
+        lua_pushnil(L);
+        return 2;
     }
     lua_pushstring(L, "kiko_scriptobj");
     lua_gettable(L, LUA_REGISTRYINDEX);
@@ -294,7 +295,8 @@ static int writeSetting(lua_State *L)
     QString errInfo = script->setOption(lua_tostring(L, 1), lua_tostring(L, 2), false);
     if(errInfo.isEmpty()) lua_pushnil(L);
     else lua_pushstring(L, errInfo.toStdString().c_str());
-    return 1;
+    lua_pushnil(L);
+    return 2;
 }
 static int execute(lua_State *L)
 {
@@ -302,7 +304,8 @@ static int execute(lua_State *L)
     if(params!=3 || lua_type(L, 1)!=LUA_TBOOLEAN || lua_type(L, 2)!=LUA_TSTRING || lua_type(L, 3)!=LUA_TTABLE)
     {
         lua_pushstring(L, "execute: param error, expect: detached(bool), program(string), args(array)");
-        return 1;
+        lua_pushnil(L);
+        return 2;
     }
     bool detached = lua_toboolean(L, 1);
     QString program = lua_tostring(L, 2);
@@ -310,14 +313,74 @@ static int execute(lua_State *L)
     if(detached)
     {
         bool ret = QProcess::startDetached(program, args);
+        lua_pushnil(L);
         lua_pushboolean(L, ret);
     }
     else
     {
         int ret = QProcess::execute(program, args);
+        lua_pushnil(L);
         lua_pushinteger(L, ret);
     }
-    return 1;
+    return 2;
+}
+static int hashData(lua_State *L)
+{
+    int params = lua_gettop(L);  // path(string) <filesize(bytes,number)>
+    if(params==0 || params>4 || lua_type(L, 1)!=LUA_TSTRING)
+    {
+        lua_pushstring(L, "md5file: param error, expect: path/data(string), <ispath(boolean,default=true)>, <filesize(number)>, <algorithm(default=md5)>");
+        lua_pushnil(L);
+        return 2;
+    }
+    size_t len = 0;
+    const char *pd = lua_tolstring(L, 1, &len);
+    bool isPath = true;
+    if(params > 1)  //has isdata
+    {
+        isPath = lua_toboolean(L, 2);
+    }
+    qint64 size = 0;
+    if(params > 2)  //has filesize
+    {
+        size = lua_tonumber(L, 3);
+    }
+    static QHash<QString, QCryptographicHash::Algorithm> algorithms({
+        {"md4", QCryptographicHash::Md4},
+        {"md5", QCryptographicHash::Md5},
+        {"sha1", QCryptographicHash::Sha1},
+        {"sha224", QCryptographicHash::Sha224},
+        {"sha256", QCryptographicHash::Sha256},
+        {"sha384", QCryptographicHash::Sha384},
+        {"sha512", QCryptographicHash::Sha512}
+    });
+    QCryptographicHash::Algorithm algo = QCryptographicHash::Md5;
+    if(params > 3)  //has algorithm
+    {
+        algo = algorithms.value(QString(lua_tostring(L, 4)).toLower(), QCryptographicHash::Md5);
+    }
+    QByteArray hashResult;
+    if(isPath)
+    {
+        QFile file(pd);
+        if(!file.open(QIODevice::ReadOnly))
+        {
+            lua_pushstring(L, QString("md5file: open '%1' failed").arg(pd).toStdString().c_str());
+            lua_pushnil(L);
+            return 2;
+        }
+        QByteArray fileData(size==0?file.readAll():file.read(size));
+        hashResult = QCryptographicHash::hash(fileData, algo).toHex();
+
+    }
+    else
+    {
+        QByteArray hashInput(pd, len);
+        hashResult = QCryptographicHash::hash(hashInput, algo).toHex();
+    }
+    lua_pushnil(L);
+    lua_pushlstring(L, hashResult.data(), hashResult.size());
+    return 2;
 }
 // XmlReader-------------
 static int xmlreader (lua_State *L)
@@ -422,9 +485,9 @@ static int xmlreaderGC (lua_State *L) {
 }
 //XmlReader End------------------
 static const luaL_Reg kikoFuncs[] = {
-    {"httpget", httpget},
+    {"httpget", httpGet},
     {"httpgetbatch", httpGetBatch},
-    {"httppost", httppost},
+    {"httppost", httpPost},
     {"json2table", json2table},
     {"table2json", table2json},
     {"compress", compress},
@@ -432,6 +495,7 @@ static const luaL_Reg kikoFuncs[] = {
     {"writesetting", writeSetting},
     {"xmlreader", xmlreader},
     {"execute", execute},
+    {"hashdata", hashData},
     {nullptr, nullptr}
 };
 static const luaL_Reg xmlreaderFuncs[] = {
@@ -627,6 +691,9 @@ void ScriptBase::pushValue(lua_State *L, const QVariant &val)
     switch (val.type())
     {
     case QVariant::Int:
+	case QVariant::LongLong:
+	case QVariant::UInt:
+	case QVariant::ULongLong:
     case QVariant::Double:
         lua_pushnumber(L, val.toDouble());
         break;
@@ -685,9 +752,9 @@ QVariant ScriptBase::getValue(lua_State *L)
     }
     case LUA_TSTRING:
     {
-        size_t len = 0;
-        const char *s = (const char *)lua_tolstring(L, -1, &len);
-        return QByteArray(s, len);
+        //size_t len = 0;
+        //const char *s = (const char *)lua_tolstring(L, -1, &len);
+        return QString(lua_tostring(L, -1));
     }
     case LUA_TTABLE:
     {
@@ -705,19 +772,25 @@ QVariant ScriptBase::getValue(lua_State *L)
                 break;
             }
         }
+		qDebug() << "stack before-gl: " << lua_gettop(L);
         size_t length = getTableLength(L, -1);
+		qDebug() << "stack after-gl: " << lua_gettop(L);
         if(count < 0 || count != length) // map
         {
             QVariantMap map;
             lua_pushnil(L); // t nil
+			qDebug() << "stack before: " << lua_gettop(L);
             while (lua_next(L, -2)) { // t key value
                 if (lua_type(L, -2) != LUA_TSTRING)
                 {
                     luaL_error(L, "key must be a string, but got %s",
                                lua_typename(L, lua_type(L, -2)));
                 }
-                map[lua_tostring(L, -2)] = getValue(L);
+				QString key(lua_tostring(L, -2));
+				qDebug() << "key begin: " << key << " stack: " << lua_gettop(L);
+                map[key] = getValue(L);
                 lua_pop(L, 1); // key
+				qDebug() << "key end: " << key << " stack: " << lua_gettop(L);;
             }
             return map;
         }
@@ -727,8 +800,11 @@ QVariant ScriptBase::getValue(lua_State *L)
             for (int i = 0; ;++i) {
                 lua_pushinteger(L, i + 1); //t n1
                 lua_gettable(L, -2); //t t[n1]
-                if (lua_isnil(L, -1))
-                    break;
+				if (lua_isnil(L, -1))
+				{
+					lua_pop(L, 1);
+					break;
+				}
                 list.append(getValue(L));
                 lua_pop(L, 1); // -
             }

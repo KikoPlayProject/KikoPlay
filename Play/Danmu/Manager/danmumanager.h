@@ -5,6 +5,7 @@
 #include "../common.h"
 #include "Common/lrucache.h"
 #include "nodeinfo.h"
+#include "MediaLibrary/animeinfo.h"
 class Pool;
 class DanmuManager : public QObject
 {
@@ -16,33 +17,40 @@ public:
     virtual ~DanmuManager();
 public:
     Pool *getPool(const QString &pid, bool loadDanmu=true);
-    Pool *getPool(const QString &animeTitle, const QString &title, bool loadDanmu=true);
+    Pool *getPool(const QString &animeTitle, EpType epType, double epIndex, bool loadDanmu=true);
     void loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList);
     void deletePool(const QList<DanmuPoolNode *> &deleteList);
     void updatePool(QList<DanmuPoolNode *> &updateList);
     void exportPool(const QList<DanmuPoolNode *> &exportList, const QString &dir, bool useTimeline=true, bool applyBlockRule=false);
     void exportKdFile(const QList<DanmuPoolNode *> &exportList, const QString &dir, const QString &comment="");
     int importKdFile(const QString &fileName, QWidget *parent);
-    QStringList getAssociatedFile16Md5(const QString &pid);
-    QString createPool(const QString &animeTitle, const QString &title, const QString &fileHash="");
-    QString renamePool(const QString &pid, const QString &nAnimeTitle, const QString &nEpTitle);
+    QStringList getMatchedFile16Md5(const QString &pid);
+    QString createPool(const QString &animeTitle, EpType epType, double epIndex, const QString &epName="", const QString &fileHash="");
+    QString createPool(const QString &path, const MatchResult &match);
+    QString renamePool(const QString &pid, const QString &nAnimeTitle, EpType nType, double nIndex, const QString &nEpTitle);
     QString getFileHash(const QString &fileName);
 public:
+    void localSearch(const QString &keyword,  QList<AnimeLite> &results);
+    void localMatch(const QString &path, MatchResult &result);
+    /*
     enum MatchProvider
     {
         DanDan,Bangumi,Local
     };
     MatchInfo *searchMatch(MatchProvider from, const QString &keyword);
     MatchInfo *matchFrom(MatchProvider from, const QString &fileName);
-    QString updateMatch(const QString &fileName,const MatchInfo *newMatchInfo);
+    */
+    QString updateMatch(const QString &fileName, const MatchResult &newMatchInfo);
     void removeMatch(const QString &fileName);
 private:
+    /*
     MatchInfo *ddSearch(const QString &keyword);
     MatchInfo *bgmSearch(const QString &keyword);
     MatchInfo *localSearch(const QString &keyword);
     MatchInfo *ddMatch(const QString &fileName);
     MatchInfo *localMatch(const QString &fileName);
     MatchInfo *searchInMatchTable(const QString &fileHash);
+    */
     void setMatch(const QString &fileHash, const QString &poolId);
 
 signals:
@@ -50,7 +58,7 @@ signals:
 private:
     void loadPool(Pool *pool);
     void updatePool(Pool *pool, QList<DanmuComment *> &outList, int sourceId=-1);
-    QString getPoolId(const QString &animeTitle, const QString &title);
+    QString getPoolId(const QString &animeTitle, EpType epType, double epIndex);
     void saveSource(const QString &pid, const DanmuSource *source, const QList<QSharedPointer<DanmuComment> > &danmuList);
     void deleteSource(const QString &pid, int sourceId);
     void deleteDanmu(const QString &pid, const QSharedPointer<DanmuComment> danmu);

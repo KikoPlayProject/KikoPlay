@@ -29,7 +29,6 @@ struct TagNode
     TagNode *parent;
     QList<TagNode *> *subNodes;
 };
-class AnimeLibrary;
 class LabelModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -40,7 +39,7 @@ public:
         ChildLevel
     };
 
-    explicit LabelModel(AnimeLibrary *library = nullptr);
+    explicit LabelModel(QObject *parent = nullptr);
     ~LabelModel();
     void refreshLabel();
     void removeTag(const QModelIndex &index);

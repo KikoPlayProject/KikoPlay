@@ -4,7 +4,7 @@
 #include "framelessdialog.h"
 #include <QGraphicsView>
 class CaptureListModel;
-struct CaptureItem;
+struct AnimeImage;
 class ImageView : public QGraphicsView
 {
     Q_OBJECT
@@ -36,7 +36,7 @@ private:
     ImageView *view;
     int curRow;
     QPixmap curPixmap;
-    const CaptureItem *curItem;
+    const AnimeImage *curItem;
     void setCapture();
     // QWidget interface
 protected:

@@ -13,7 +13,8 @@
 #include "Play/Video/mpvplayer.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
-#include "MediaLibrary/animelibrary.h"
+#include "MediaLibrary/animeworker.h"
+#include "MediaLibrary/animeprovider.h"
 #include "Common/notifier.h"
 
 #define BgmCollectionRole Qt::UserRole+1
@@ -130,6 +131,18 @@ void PlayList::removeRecentItem(const QString &path)
     emit recentItemsUpdated();
 }
 
+void PlayList::setFinishTimeOnce(bool on)
+{
+    Q_D(PlayList);
+    d->saveFinishTimeOnce = on;
+}
+
+bool PlayList::saveFinishTimeOnce()
+{
+    Q_D(PlayList);
+    return d->saveFinishTimeOnce;
+}
+
 int PlayList::addItems(QStringList &items, QModelIndex parent)
 {
     Q_D(PlayList);
@@ -142,7 +155,7 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
     Notifier *notifier = Notifier::getNotifier();
     if(tmpItems.count()==0)
     {
-        notifier->showMessage(Notifier::LIST_NOTIFY, tr("File exist or Unsupported format"), PM_HIDE|PM_INFO);
+        notifier->showMessage(Notifier::LIST_NOTIFY, tr("File exist or Unsupported format"), NM_HIDE|NM_INFO);
         return 0;
     }
     int insertPosition(0);
@@ -171,7 +184,7 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
     d->playListChanged=true;
     d->needRefresh = true;
     d->incModifyCounter();
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(tmpItems.size()),PM_HIDE|PM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(tmpItems.size()),NM_HIDE|NM_OK);
     if(d->autoMatch && matchItems.count()>0)
     {
         emit matchStatusChanged(true);
@@ -232,7 +245,7 @@ int PlayList::addFolder(QString folderStr, QModelIndex parent)
         }
 	}
     Notifier *notifier = Notifier::getNotifier();
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(itemCount),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(itemCount),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
     if(d->autoMatch && matchItems.count()>0)
     {
         emit matchStatusChanged(true);
@@ -363,7 +376,7 @@ int PlayList::refreshFolder(const QModelIndex &index)
     QList<PlayListItem *> nItems;
     int c = d->refreshFolder(item, nItems);
     Notifier *notifier = Notifier::getNotifier();
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(c),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(c),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
     if(c>0)
     {
         d->playListChanged=true;
@@ -562,9 +575,9 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
         else
             tipContent<<QString("%1").arg(item->title);
         tipContent<<item->path;
-        if(item->playTimeState==0)
+        if(item->playTimeState==PlayListItem::UNPLAY)
             tipContent<<tr("Unplayed");
-        else if(item->playTimeState==2)
+        else if(item->playTimeState==PlayListItem::FINISH)
             tipContent<<tr("Finished");
         else
         {
@@ -726,10 +739,9 @@ const PlayListItem *PlayList::setCurrentItem(const QModelIndex &index,bool playC
     if(!fileInfo.exists())
     {
         Notifier *notifier = Notifier::getNotifier();
-        notifier->showMessage(Notifier::LIST_NOTIFY, tr("File Not Exist"),PM_INFO|PM_HIDE);
+        notifier->showMessage(Notifier::LIST_NOTIFY, tr("File Not Exist"),NM_INFO|NM_HIDE);
         return nullptr;
     }
-    //d->autoLocalMatch(cur);
     PlayListItem *tmp = d->currentItem;
     d->currentItem = cur;
 	if (tmp)
@@ -738,7 +750,8 @@ const PlayListItem *PlayList::setCurrentItem(const QModelIndex &index,bool playC
 		emit dataChanged(nIndex, nIndex);
 	}
     d->updateRecentlist(cur);
-    d->updateLibItemInfo(cur);
+    if(!cur->animeTitle.isEmpty())
+        AnimeWorker::instance()->updateEpTime(cur->animeTitle, cur->path);
     return cur;
 }
 
@@ -748,7 +761,6 @@ const PlayListItem *PlayList::setCurrentItem(const QString &path)
     PlayListItem *curItem=d->fileItems.value(path,nullptr);
     if(curItem && d->currentItem!=curItem)
     {
-        //d->autoLocalMatch(curItem);
         PlayListItem *tmp = d->currentItem;
         d->currentItem = curItem;
         if (tmp)
@@ -758,8 +770,9 @@ const PlayListItem *PlayList::setCurrentItem(const QString &path)
         }
         QModelIndex cIndex = createIndex(curItem->parent->children->indexOf(curItem), 0, curItem);
         emit dataChanged(cIndex, cIndex);
+        if(!curItem->animeTitle.isEmpty())
+            AnimeWorker::instance()->updateEpTime(curItem->animeTitle, curItem->path);
         d->updateRecentlist(curItem);
-        d->updateLibItemInfo(curItem);
     }
     return curItem;
 }
@@ -784,7 +797,6 @@ const PlayListItem *PlayList::playPrevOrNext(bool prev)
     {
         PlayListItem *tmp = d->currentItem;
         d->currentItem = item;
-        //d->autoLocalMatch(item);
         if (tmp)
         {
             QModelIndex nIndex(createIndex(tmp->parent->children->indexOf(tmp), 0, tmp));
@@ -793,7 +805,8 @@ const PlayListItem *PlayList::playPrevOrNext(bool prev)
         QModelIndex nIndex(createIndex(item->parent->children->indexOf(item),0,item));
         emit dataChanged(nIndex,nIndex);
         d->updateRecentlist(item);
-        d->updateLibItemInfo(item);
+        if(!item->animeTitle.isEmpty())
+            AnimeWorker::instance()->updateEpTime(item->animeTitle, item->path);
         return item;
     }
     return nullptr;
@@ -856,31 +869,30 @@ void PlayList::matchItems(const QModelIndexList &matchIndexes)
     },Qt::QueuedConnection);
 }
 
-void PlayList::matchIndex(QModelIndex &index, MatchInfo *matchInfo)
+void PlayList::matchIndex(QModelIndex &index, const MatchResult &match)
 {
     Q_D(PlayList);
     if(!index.isValid())return;
     PlayListItem *item=static_cast<PlayListItem *>(index.internalPointer());
-    MatchInfo::DetailInfo &bestMatch=matchInfo->matches.first();
-    item->animeTitle=bestMatch.animeTitle;
-    item->title=bestMatch.title;
-    item->poolID=GlobalObjects::danmuManager->updateMatch(item->path,matchInfo);
+    item->animeTitle=match.name;
+    item->title=match.ep.toString();
+    item->poolID=GlobalObjects::danmuManager->updateMatch(item->path,match);
     d->playListChanged = true;
     d->needRefresh = true;
     Notifier *notifier = Notifier::getNotifier();
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Success: %1").arg(item->title),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Success: %1").arg(item->title),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
     emit dataChanged(index, index);
     if (item == d->currentItem)
     {
         emit currentMatchChanged(item->poolID);
     }
     autoMoveToBgmCollection(index);
-    GlobalObjects::library->addToLibrary(item->animeTitle,item->title,item->path);
+    AnimeWorker::instance()->addAnime(match);
+    //GlobalObjects::library->addToLibrary(item->animeTitle,item->title,item->path);
     d->savePlaylist();
-
 }
 
-void PlayList::matchItems(const QList<const PlayListItem *> &items, const QString &title,  const QStringList &eps)
+void PlayList::matchItems(const QList<const PlayListItem *> &items, const QString &title,  const QList<EpInfo> &eps)
 {
     QList<PlayListItem *> ncItems;
     for(auto i : items)
@@ -945,7 +957,7 @@ void PlayList::updateItemsDanmu(const QModelIndexList &itemIndexes)
     bool cancel = false;
     auto notifier = Notifier::getNotifier();
     auto conn = QObject::connect(notifier, &Notifier::cancelTrigger, [&](int nType){ if(nType&Notifier::LIST_NOTIFY) cancel=true;});
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Update Start"),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Update Start"),NotifyMessageFlag::NM_PROCESS|NotifyMessageFlag::NM_SHOWCANCEL);
     while(!items.empty())
     {
         if(cancel) break;
@@ -961,12 +973,12 @@ void PlayList::updateItemsDanmu(const QModelIndexList &itemIndexes)
         {
             Pool *pool=GlobalObjects::danmuManager->getPool(currentItem->poolID);
             if(!pool) continue;
-            notifier->showMessage(Notifier::LIST_NOTIFY, tr("Updating: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
+            notifier->showMessage(Notifier::LIST_NOTIFY, tr("Updating: %1").arg(currentItem->title),NotifyMessageFlag::NM_PROCESS|NotifyMessageFlag::NM_SHOWCANCEL);
             pool->update();
         }
     }
     QObject::disconnect(conn);
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Update Done"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Update Done"),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
 }
 
 void PlayList::setCurrentPlayTime(int playTime)
@@ -974,21 +986,27 @@ void PlayList::setCurrentPlayTime(int playTime)
     Q_D(PlayList);
     PlayListItem *currentItem=d->currentItem;
     if(!currentItem) return;
+    PlayListItem::PlayState lastState = currentItem->playTimeState;
     currentItem->playTime=playTime;
     const int ignoreLength = 15;
     int duration = GlobalObjects::mpvplayer->getDuration();
     if(playTime>duration-ignoreLength)
     {
-        currentItem->playTimeState=2;//finished
+        currentItem->playTimeState=PlayListItem::FINISH;//finished
     }
     else if(playTime<ignoreLength)//unplayed
     {
-        if(currentItem->playTimeState!=2)
-            currentItem->playTimeState=0;
+        if(currentItem->playTimeState!=PlayListItem::FINISH)
+            currentItem->playTimeState=PlayListItem::UNPLAY;
     }
     else
     {
-        currentItem->playTimeState=1;//playing
+        currentItem->playTimeState=PlayListItem::UNFINISH;//playing
+    }
+    if(!currentItem->animeTitle.isEmpty() && currentItem->playTimeState==PlayListItem::FINISH)
+    {
+        if((d->saveFinishTimeOnce && lastState!=PlayListItem::FINISH) || !d->saveFinishTimeOnce)
+            AnimeWorker::instance()->updateEpTime(currentItem->animeTitle, currentItem->path, true);
     }
     d->playListChanged=true;
     d->needRefresh=true;
@@ -1074,7 +1092,7 @@ void PlayList::exportDanmuItems(const QModelIndexList &exportIndexes)
         {
             if(!currentItem->path.isEmpty())
             {
-                notifier->showMessage(Notifier::LIST_NOTIFY, tr("Exporting: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS);
+                notifier->showMessage(Notifier::LIST_NOTIFY, tr("Exporting: %1").arg(currentItem->title),NotifyMessageFlag::NM_PROCESS);
                 QFileInfo fi(currentItem->path);
                 QFileInfo dfi(fi.absolutePath(),fi.baseName()+".xml");
                 Pool *pool=GlobalObjects::danmuManager->getPool(currentItem->poolID);
@@ -1082,7 +1100,7 @@ void PlayList::exportDanmuItems(const QModelIndexList &exportIndexes)
             }
         }
     }
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Export Down"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Export Down"),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
 }
 
 void PlayList::dumpJsonPlaylist(QJsonDocument &jsonDoc, QHash<QString, QString> &mediaHash)
@@ -1099,34 +1117,52 @@ void PlayList::dumpJsonPlaylist(QJsonDocument &jsonDoc, QHash<QString, QString> 
     d->needRefresh=false;
 }
 
-void PlayList::updatePlayTime(const QString &path, int time, int state)
+void PlayList::updatePlayTime(const QString &path, int time, PlayListItem::PlayState state)
 {
     Q_D(PlayList);
     PlayListItem *item=d->fileItems.value(path,nullptr);
     if(item)
     {
+        PlayListItem::PlayState lastState = item->playTimeState;
         item->playTime=time;
         item->playTimeState=state;
         QModelIndex cIndex = createIndex(item->parent->children->indexOf(item), 0, item);
         emit dataChanged(cIndex, cIndex);
         d->playListChanged=true;
         d->needRefresh=true;
-        d->updateLibItemInfo(item);
+        if(!item->animeTitle.isEmpty())
+        {
+            if(state==PlayListItem::PlayState::FINISH)
+            {
+                if((d->saveFinishTimeOnce && lastState!=PlayListItem::FINISH) || !d->saveFinishTimeOnce)
+                    AnimeWorker::instance()->updateEpTime(item->animeTitle, item->path, true);
+            }
+            else
+            {
+                AnimeWorker::instance()->updateEpTime(item->animeTitle, item->path);
+            }
+        }
         d->updateRecentlist(item);
         d->incModifyCounter();
     }
 }
 
-void PlayList::renameItemPoolId(const QString &opid, const QString &npid, const QString &animeTitle, const QString &epTitle)
+void PlayList::renameItemPoolId(const QString &opid, const QString &npid)
 {
     Q_D(PlayList);
+    Pool *nPool = GlobalObjects::danmuManager->getPool(npid, false);
+    if(!nPool) return;
+    MatchResult match;
+    match.success = true;
+    match.name = nPool->animeTitle();
+    match.ep = nPool->toEp();
     for(PlayListItem *item:d->fileItems)
     {
         if(item->poolID==opid)
         {
             item->poolID=npid;
-            item->animeTitle=animeTitle;
-            item->title=epTitle;
+            item->animeTitle=nPool->animeTitle();
+            item->title=match.ep.toString();
             if (item == d->currentItem)
             {
                 emit currentMatchChanged(item->poolID);
@@ -1134,7 +1170,8 @@ void PlayList::renameItemPoolId(const QString &opid, const QString &npid, const 
             d->playListChanged=true;
             d->needRefresh=true;
             d->incModifyCounter();
-            GlobalObjects::library->addToLibrary(item->animeTitle,item->title,item->path);
+            match.ep.localFile = item->path;
+            AnimeWorker::instance()->addAnime(match);
         }
     }
 }
@@ -1144,7 +1181,7 @@ void MatchWorker::match(const QList<PlayListItem *> &items)
 {
     QList<PlayListItem *> matchedItems;
     auto notifier = Notifier::getNotifier();
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Start"),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Start"),NotifyMessageFlag::NM_PROCESS|NotifyMessageFlag::NM_SHOWCANCEL);
     bool cancel = false;
     auto conn = QObject::connect(notifier, &Notifier::cancelTrigger, [&](int nType){ if(nType & Notifier::LIST_NOTIFY) cancel=true;});
     for(auto currentItem: items)
@@ -1152,66 +1189,54 @@ void MatchWorker::match(const QList<PlayListItem *> &items)
         if(cancel) break;
         if(!currentItem->poolID.isEmpty()) continue;
         if (!QFile::exists(currentItem->path))continue;
-        QScopedPointer<MatchInfo> matchInfo(GlobalObjects::danmuManager->matchFrom(DanmuManager::Local,currentItem->path));
-        if(!matchInfo) matchInfo.reset(GlobalObjects::danmuManager->matchFrom(DanmuManager::DanDan,currentItem->path));
-        if(!matchInfo) continue;
-        if(matchInfo->error)
+        MatchResult match;
+        GlobalObjects::danmuManager->localMatch(currentItem->path, match);
+        if(!match.success) GlobalObjects::animeProvider->match(GlobalObjects::animeProvider->defaultMatchScript(), currentItem->path, match);
+        if(!match.success)
         {
-            notifier->showMessage(Notifier::LIST_NOTIFY, tr("Failed: %1").arg(matchInfo->errorInfo),PopMessageFlag::PM_PROCESS);
+            notifier->showMessage(Notifier::LIST_NOTIFY, tr("Failed: %1").arg(currentItem->title),NotifyMessageFlag::NM_PROCESS);
+            continue;
         }
-        else
-        {
-            QList<MatchInfo::DetailInfo> &matchList=matchInfo->matches;
-            if(matchInfo->success && matchList.count()>0)
-            {
-                MatchInfo::DetailInfo &bestMatch=matchList.first();
-                notifier->showMessage(Notifier::LIST_NOTIFY, tr("Success: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
-                currentItem->animeTitle=bestMatch.animeTitle;
-                currentItem->title=bestMatch.title;
-                currentItem->poolID=matchInfo->poolID;
-                matchedItems<<currentItem;
-                GlobalObjects::library->addToLibrary(currentItem->animeTitle,currentItem->title,currentItem->path);
-            }
-            else
-            {
-                notifier->showMessage(Notifier::LIST_NOTIFY, tr("Need manually: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
-                //emit message(tr("Need manually: %1").arg(currentItem->title),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
-            }
-        }
+        currentItem->animeTitle=match.name;
+        currentItem->title=match.ep.toString();
+        currentItem->poolID=GlobalObjects::danmuManager->createPool(currentItem->path, match);
+        matchedItems<<currentItem;
+        notifier->showMessage(Notifier::LIST_NOTIFY, tr("Success: %1").arg(currentItem->title),NotifyMessageFlag::NM_PROCESS|NotifyMessageFlag::NM_SHOWCANCEL);
+        AnimeWorker::instance()->addAnime(match);
+        //GlobalObjects::library->addToLibrary(currentItem->animeTitle,currentItem->title,currentItem->path);
     }
     QObject::disconnect(conn);
     emit matchDown(matchedItems);
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Done"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Done"),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
 }
 
-void MatchWorker::match(const QList<PlayListItem *> &items, const QString &animeTitle, const QStringList &eps)
+void MatchWorker::match(const QList<PlayListItem *> &items, const QString &animeTitle, const QList<EpInfo> &eps)
 {
     Q_ASSERT(items.size()==eps.size());
     QList<PlayListItem *> matchedItems;
     auto notifier = Notifier::getNotifier();
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Start"),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Start"),NotifyMessageFlag::NM_PROCESS|NotifyMessageFlag::NM_SHOWCANCEL);
     bool cancel = false;
     auto conn = QObject::connect(notifier, &Notifier::cancelTrigger, [&](int nType){ if(nType & Notifier::LIST_NOTIFY) cancel=true;});
     for(int i=0; i<items.size(); ++i)
     {
         if(cancel) break;
-        notifier->showMessage(Notifier::LIST_NOTIFY, tr("Success: %1").arg(eps[i]),PopMessageFlag::PM_PROCESS|PopMessageFlag::PM_SHOWCANCEL);
+        notifier->showMessage(Notifier::LIST_NOTIFY, tr("Success: %1").arg(eps[i].toString()),NotifyMessageFlag::NM_PROCESS|NotifyMessageFlag::NM_SHOWCANCEL);
 
-        MatchInfo matchInfo;
-        matchInfo.error=false;
-        MatchInfo::DetailInfo detailInfo;
-        detailInfo.animeTitle=animeTitle;
-        detailInfo.title=eps[i];
-        matchInfo.matches.append(detailInfo);
+        MatchResult match;
+        match.success = true;
+        match.name = animeTitle;
+        match.ep = eps[i];
 
         items[i]->animeTitle=animeTitle;
-        items[i]->title=eps[i];
-        items[i]->poolID=GlobalObjects::danmuManager->updateMatch(items[i]->path, &matchInfo);
+        items[i]->title=eps[i].toString();
+        items[i]->poolID=GlobalObjects::danmuManager->updateMatch(items[i]->path, match);
 
         matchedItems<<items[i];
-        GlobalObjects::library->addToLibrary(items[i]->animeTitle,items[i]->title,items[i]->path);
+        AnimeWorker::instance()->addAnime(match);
+        //GlobalObjects::library->addToLibrary(items[i]->animeTitle,items[i]->title,items[i]->path);
     }
     QObject::disconnect(conn);
     emit matchDown(matchedItems);
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Done"),PopMessageFlag::PM_HIDE|PopMessageFlag::PM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Done"),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
 }

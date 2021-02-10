@@ -6,13 +6,13 @@ class CaptureListModel : public QAbstractListModel
 {
     Q_OBJECT
 public:
-    explicit CaptureListModel(const QString &anime, QObject *parent = nullptr);
-    ~CaptureListModel();
+    explicit CaptureListModel(const QString &animeName, QObject *parent = nullptr);
+
     void deleteCaptures(const QModelIndexList &indexes);
     void deleteRow(int row);
     QPixmap getFullCapture(int row);
-    const CaptureItem *getCaptureItem(int row);
-    void setAnimeTitle(const QString &title);
+    const AnimeImage *getCaptureItem(int row);
+    void setAnimeName(const QString &name);
 signals:
     void fetching(bool);
 private:
@@ -20,7 +20,7 @@ private:
     const int limitCount=20;
     int currentOffset;
     bool hasMoreCaptures;
-    QList<CaptureItem *> captureList;
+    QList<AnimeImage> captureList;
     // QAbstractItemModel interface
 public:
     virtual int rowCount(const QModelIndex &parent) const{return parent.isValid()?0:captureList.count();};

@@ -4,7 +4,7 @@
 #include <QAbstractItemModel>
 #include <QSortFilterProxyModel>
 #include "playlistitem.h"
-struct MatchInfo;
+#include "MediaLibrary/animeinfo.h"
 class PlayListPrivate;
 class MatchWorker : public QObject
 {
@@ -12,7 +12,7 @@ class MatchWorker : public QObject
 public:
     explicit MatchWorker(QObject *parent = nullptr):QObject(parent){}
     void match(const QList<PlayListItem *> &items);
-    void match(const QList<PlayListItem *> &items, const QString &animeTitle, const QStringList &eps);
+    void match(const QList<PlayListItem *> &items, const QString &animeTitle, const QList<EpInfo> &eps);
 signals:
     void matchDown(const QList<PlayListItem *> &matchedItems);
 };
@@ -41,6 +41,8 @@ public:
     bool canPaste() const;
     const QList<QPair<QString,QString> > &recent();
     void removeRecentItem(const QString &path);
+    void setFinishTimeOnce(bool on);
+    bool saveFinishTimeOnce();
 signals:
     void currentInvaild();
     void currentMatchChanged(const QString &pid);
@@ -72,8 +74,8 @@ public slots :
     void checkCurrentItem(PlayListItem *itemDeleted);
     void setAutoMatch(bool on);
     void matchItems(const QModelIndexList &matchIndexes);
-    void matchIndex(QModelIndex &index,MatchInfo *matchInfo);
-    void matchItems(const QList<const PlayListItem *> &items, const QString &title, const QStringList &eps);
+    void matchIndex(QModelIndex &index, const MatchResult &match);
+    void matchItems(const QList<const PlayListItem *> &items, const QString &title, const QList<EpInfo> &eps);
     void removeMatch(const QModelIndexList &matchIndexes);
     void updateItemsDanmu(const QModelIndexList &itemIndexes);
     void setCurrentPlayTime(int playTime);
@@ -82,8 +84,8 @@ public slots :
 
     
     void dumpJsonPlaylist(QJsonDocument &jsonDoc,QHash<QString,QString> &mediaHash);
-    void updatePlayTime(const QString &path, int time, int state);
-    void renameItemPoolId(const QString &opid, const QString &npid, const QString &animeTitle, const QString &epTitle);
+    void updatePlayTime(const QString &path, int time, PlayListItem::PlayState state);
+    void renameItemPoolId(const QString &opid, const QString &npid);
 
     // QAbstractItemModel interface
 public:

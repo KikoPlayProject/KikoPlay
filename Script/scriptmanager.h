@@ -20,7 +20,6 @@ public:
 
 public:
     ScriptManager();
-    ~ScriptManager();
 
     void refreshScripts(ScriptType type);
     void deleteScript(const QString &id);

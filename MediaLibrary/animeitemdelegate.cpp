@@ -88,7 +88,7 @@ void AnimeItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     initStyleOption(&viewOption,index);
     AnimeItemWidget *animeItemWidget=static_cast<AnimeItemWidget *>(contentWidget.data());
 	const Anime *anime = (const Anime *)index.data(AnimeRole).value<void *>();
-    animeItemWidget->setCover(anime->coverPixmap);
+    animeItemWidget->setCover(anime->cover());
     animeItemWidget->setTitle(index.data(Qt::DisplayRole).toString());
     animeItemWidget->setSelected(viewOption.state.testFlag(QStyle::State_Selected));
     animeItemWidget->setHover(viewOption.state.testFlag(QStyle::State_MouseOver));

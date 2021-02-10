@@ -28,7 +28,7 @@ namespace
         }
     } DanmuSPCompare;
 }
-DanmuPool::DanmuPool(QObject *parent) : QAbstractItemModel(parent),curPool(nullptr), emptyPool(new Pool("","","",this)),
+DanmuPool::DanmuPool(QObject *parent) : QAbstractItemModel(parent),curPool(nullptr), emptyPool(new Pool("","","",EpType::UNKNOWN,0,this)),
     currentPosition(0),currentTime(0),enableAnalyze(true),enableMerged(true),mergeInterval(15*1000),maxContentUnsimCount(4),minMergeCount(3)
 {
     analyzer=new EventAnalyzer(this);

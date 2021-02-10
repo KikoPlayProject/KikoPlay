@@ -7,11 +7,11 @@ class AnimeModel : public QAbstractItemModel
 {
     Q_OBJECT
 public:
-    explicit AnimeModel(AnimeLibrary *library = nullptr);
+    explicit AnimeModel(QObject *parent = nullptr);
 public:
     void setActive(bool isActive);
     void deleteAnime(const QModelIndex &index);
-    Anime *getAnime(const QModelIndex &index, bool fillInfo);
+    Anime *getAnime(const QModelIndex &index);
     void showStatisMessage();
 signals:
     void animeMessage(const QString &msg, int flags, bool hasMore);

@@ -1,16 +1,20 @@
 #include "capturelistmodel.h"
 #include "globalobjects.h"
-#include "animelibrary.h"
+#include "animeworker.h"
 
-CaptureListModel::CaptureListModel(const QString &anime, QObject *parent) : QAbstractListModel(parent),
-    animeName(anime),currentOffset(0),hasMoreCaptures(true)
+CaptureListModel::CaptureListModel(const QString &animeName, QObject *parent) : QAbstractListModel(parent), currentOffset(0),hasMoreCaptures(true)
 {
+    this->animeName = animeName;
     if(animeName.isEmpty()) hasMoreCaptures = false;
-}
-
-CaptureListModel::~CaptureListModel()
-{
-    qDeleteAll(captureList);
+    QObject::connect(AnimeWorker::instance(), &AnimeWorker::captureUpdated, this, [=](const QString &animeName, const AnimeImage &aImage){
+        if(animeName==this->animeName)
+        {
+            beginInsertRows(QModelIndex(),0,0);
+            captureList.prepend(aImage);
+            endInsertRows();
+            ++currentOffset;
+        }
+    });
 }
 
 void CaptureListModel::deleteCaptures(const QModelIndexList &indexes)
@@ -34,33 +38,32 @@ void CaptureListModel::deleteCaptures(const QModelIndexList &indexes)
 void CaptureListModel::deleteRow(int row)
 {
     if(row<0 || row>=captureList.count()) return;
-    CaptureItem *capture=captureList.at(row);
+    const AnimeImage &img = captureList.at(row);
+    AnimeWorker::instance()->deleteAnimeImage(animeName, img.type, img.timeId);
     beginRemoveRows(QModelIndex(), row, row);
     captureList.removeAt(row);
     endRemoveRows();
-    GlobalObjects::library->deleteCapture(capture->timeId);
-    delete capture;
 }
 
 QPixmap CaptureListModel::getFullCapture(int row)
 {
     if(row<0 || row>=captureList.count()) return QPixmap();
-    return GlobalObjects::library->getCapture(captureList.at(row)->timeId);
+    const AnimeImage &img = captureList.at(row);
+    return AnimeWorker::instance()->getAnimeImageData(animeName, img.type, img.timeId);
 }
 
-const CaptureItem *CaptureListModel::getCaptureItem(int row)
+const AnimeImage *CaptureListModel::getCaptureItem(int row)
 {
     if(row<0 || row>=captureList.count()) return nullptr;
-    return captureList.at(row);
+    return &captureList.at(row);
 }
 
-void CaptureListModel::setAnimeTitle(const QString &title)
+void CaptureListModel::setAnimeName(const QString &name)
 {
     beginResetModel();
-    qDeleteAll(captureList);
     captureList.clear();
-    animeName = title;
-    hasMoreCaptures = !title.isEmpty();
+    animeName = name;
+    hasMoreCaptures = !name.isEmpty();
     currentOffset = 0;
     endResetModel();
 }
@@ -68,22 +71,20 @@ void CaptureListModel::setAnimeTitle(const QString &title)
 QVariant CaptureListModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid()) return QVariant();
-    const CaptureItem *capture = captureList.at(index.row());
+    const AnimeImage &capture = captureList.at(index.row());
     switch (role)
     {
         case Qt::DisplayRole:
         {
-            return capture->info;
+            return capture.info;
         }
         case Qt::ToolTipRole:
         {
-            return QString("%1\n%2").arg(capture->info,QDateTime::fromSecsSinceEpoch(capture->timeId).toString("yyyy-MM-dd hh:mm:ss"));
+            return QString("%1\n%2").arg(capture.info,QDateTime::fromSecsSinceEpoch(capture.timeId).toString("yyyy-MM-dd hh:mm:ss"));
         }
         case Qt::DecorationRole:
         {
-            QPixmap thumb;
-            thumb.loadFromData(capture->thumb);
-            return thumb;
+            return capture.thumb;
         }
     }
     return QVariant();
@@ -91,10 +92,10 @@ QVariant CaptureListModel::data(const QModelIndex &index, int role) const
 
 void CaptureListModel::fetchMore(const QModelIndex &)
 {
-    QList<CaptureItem *> moreCaptures;
+    QList<AnimeImage> moreCaptures;
     hasMoreCaptures=false;
     emit fetching(true);
-    GlobalObjects::library->fetchAnimeCaptures(animeName,moreCaptures,currentOffset,limitCount);
+    AnimeWorker::instance()->fetchCaptures(animeName,moreCaptures,currentOffset,limitCount);
     if(moreCaptures.count()>0)
     {
         hasMoreCaptures=(moreCaptures.count()==limitCount);

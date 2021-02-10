@@ -2,26 +2,33 @@
 #define ADDPOOL_H
 
 #include "framelessdialog.h"
+#include "MediaLibrary/animeinfo.h"
 class QStackedLayout;
 class QToolButton;
 class QLineEdit;
-class QTreeWidget;
+class QComboBox;
+class QTreeView;
 class AddPool : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit AddPool(QWidget *parent = nullptr, const QString &srcAnime="",const QString &srcEp="");
-    QString animeTitle,epTitle;
+    AddPool(QWidget *parent = nullptr, const QString &srcAnime="", const EpInfo &ep=EpInfo());
+    QString anime, ep;
+    EpType epType;
+    double epIndex;
 private:
     QToolButton *searchPage,*customPage;
     QStackedLayout *contentStackLayout;
-    QLineEdit *keywordEdit, *animeEdit,*epEdit;
-    QTreeWidget *searchResult;
-    int searchLocation;
+    QLineEdit *animeEdit, *epEdit, *epIndexEdit;
+    QComboBox *epTypeCombo;
+
+    QTreeView *epView;
+    QAbstractItemModel *animeModel, *epModel;
+
     bool renamePool;
 
-    QWidget *setupSearchPage();
-    QWidget *setupCustomPage();
+    QWidget *setupSearchPage(const QString &srcAnime="", const EpInfo &ep=EpInfo());
+    QWidget *setupCustomPage(const QString &srcAnime="", const EpInfo &ep=EpInfo());
 
     // CFramelessDialog interface
 protected:

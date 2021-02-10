@@ -40,7 +40,7 @@ TimelineEdit::TimelineEdit(const DanmuSource *source, const QList<SimpleDanmuInf
     QLineEdit *startEdit=new QLineEdit(this);
     startEdit->setClearButtonEnabled(true);
     startEdit->setPlaceholderText(tr("Start Time(mm:ss)"));
-    QRegExpValidator *startValidator=new QRegExpValidator(QRegExp("\\d+:\\d+"),this);
+    QRegExpValidator *startValidator=new QRegExpValidator(QRegExp("\\d+:?(\\d+)?"),this);
     startEdit->setValidator(startValidator);
     if(curTime!=-1) startEdit->setText(formatTime(curTime*1000));
 

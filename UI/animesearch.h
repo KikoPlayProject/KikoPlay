@@ -4,19 +4,18 @@
 class QTreeWidget;
 class QLineEdit;
 class QComboBox;
-struct Anime;
-class BangumiSearch : public CFramelessDialog
+class Anime;
+class AnimeSearch : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit BangumiSearch(Anime *anime, QWidget *parent = nullptr);
+    explicit AnimeSearch(Anime *anime, QWidget *parent = nullptr);
     Anime *currentAnime;
 private:
     QTreeWidget *bangumiList;
     QLineEdit *searchWordEdit;
     QPushButton *searchButton;
-    QLabel *downloadInfoLabel;
-    QComboBox *qualityCombo;
+    QComboBox *scriptCombo;
     void search();
     // CFramelessDialog interface
 protected:

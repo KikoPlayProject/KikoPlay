@@ -6,7 +6,7 @@
 #include "Play/Danmu/blocker.h"
 #include "Play/Danmu/danmuprovider.h"
 #include "MediaLibrary/animeprovider.h"
-#include "MediaLibrary/animelibrary.h"
+#include "MediaLibrary/labelmodel.h"
 #include "LANServer/lanserver.h"
 #include "Download/downloadmodel.h"
 #include "Play/Danmu/Manager/danmumanager.h"
@@ -29,7 +29,7 @@ QThread *GlobalObjects::workThread=nullptr;
 QSettings *GlobalObjects::appSetting=nullptr;
 DanmuProvider *GlobalObjects::danmuProvider=nullptr;
 AnimeProvider *GlobalObjects::animeProvider=nullptr;
-AnimeLibrary *GlobalObjects::library=nullptr;
+LabelModel *GlobalObjects::animeLabelModel=nullptr;
 DownloadModel *GlobalObjects::downloadModel=nullptr;
 DanmuManager *GlobalObjects::danmuManager=nullptr;
 LANServer *GlobalObjects::lanServer=nullptr;
@@ -86,7 +86,7 @@ void GlobalObjects::init()
     scriptManager=new ScriptManager();
     danmuProvider=new DanmuProvider();
     animeProvider=new AnimeProvider();
-    library=new AnimeLibrary();
+    animeLabelModel=new LabelModel();
     downloadModel=new DownloadModel();
     danmuManager=new DanmuManager();
     lanServer=new LANServer();
@@ -109,7 +109,8 @@ void GlobalObjects::clear()
     blocker->deleteLater();
     danmuProvider->deleteLater();
     animeProvider->deleteLater();
-    library->deleteLater();
+    //library->deleteLater();
+    animeLabelModel->deleteLater();
     downloadModel->deleteLater();
     danmuManager->deleteLater();
     lanServer->deleteLater();
