@@ -939,7 +939,11 @@ QWidget *ListWindow::setupPlaylistPage()
             QAction *mCheckAct = defaultMatchScriptMenu->addAction(p.first);
             matchCheckGroup->addAction(mCheckAct);
             mCheckAct->setCheckable(true);
-            mCheckAct->setChecked(p.second == defaultSctiptId);
+            if(p.second == defaultSctiptId)
+            {
+                mCheckAct->setChecked(true);
+                act_autoMatch->setText(tr("Associate Danmu Pool(%1)").arg(p.first));
+            }
         }
     }
     QObject::connect(matchSubMenu, &QMenu::triggered, this, [this](QAction *act){
@@ -963,6 +967,7 @@ QWidget *ListWindow::setupPlaylistPage()
              matchSubMenu->removeAction(mAct);
          }
          qDeleteAll(matchActions);
+		 matchActions.clear();
          matchSubMenu->removeAction(matchSep);
          defaultMatchScriptMenu->hide();
          for(QAction *act : defaultMatchScriptMenu->actions())

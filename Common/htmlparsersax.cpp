@@ -75,7 +75,7 @@ void HTMLParserSax::skip()
     }
 }
 
-HTMLParserSax::HTMLParserSax(const QString &content):cHtml(content),isStart(false)
+HTMLParserSax::HTMLParserSax(const QString &content):cHtml(content), isStart(false)
 {
     begin=content.cbegin();
     end=content.cend();
@@ -83,6 +83,7 @@ HTMLParserSax::HTMLParserSax(const QString &content):cHtml(content),isStart(fals
 
 void HTMLParserSax::seekTo(int pos)
 {
+    pos = qBound<int>(0, pos, end-begin);
     begin=cHtml.begin()+pos;
     nodeName="";
     isStart=false;
@@ -107,7 +108,7 @@ void HTMLParserSax::readNext()
     }
 }
 
-QString HTMLParserSax::readContentText()
+const QString HTMLParserSax::readContentText()
 {
     int contentState=0;
     QString text;
@@ -133,7 +134,7 @@ QString HTMLParserSax::readContentText()
     return text;
 }
 
-QString HTMLParserSax::readContentUntil(const QString &node, bool isStart)
+const QString HTMLParserSax::readContentUntil(const QString &node, bool isStart)
 {
     int startPos = curPos();
     while(begin!=end)

@@ -75,7 +75,7 @@ protected:
     QMutex scriptLock;
     QHash<QString, QString> scriptMeta;
     QList<ScriptSettingItem> scriptSettings;
-    bool settingsUpdated;
+    bool settingsUpdated, hasSetOptionFunc;
     ScriptType sType;
 
     QVariantList call(const char *fname, const QVariantList &params, int nRet, QString &errInfo);

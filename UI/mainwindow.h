@@ -11,6 +11,8 @@
 #include <QStackedLayout>
 class QSplitter;
 class BackgroundWidget;
+class LogWindow;
+
 class DropableWidget : public QWidget
 {
     Q_OBJECT
@@ -63,6 +65,7 @@ private:
     ListWindow *listWindow;
     LibraryWindow *library;
     DownloadWindow *download;
+    LogWindow *logWindow;
     int listWindowWidth;
     QStackedLayout *contentStackLayout;
     QRect originalGeo, miniGeo;

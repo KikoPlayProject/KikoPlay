@@ -46,7 +46,7 @@ EpInfoEditWidget::EpInfoEditWidget(QWidget *parent) : QWidget(parent)
     epTypeCombo = new QComboBox(this);
     epTypeCombo->addItems(QStringList(std::begin(EpTypeName), std::end(EpTypeName)));
     epIndexEdit = new QLineEdit(this);
-    epIndexEdit->setValidator(new QRegExpValidator(QRegExp("\\d+.?(\\d+)?"),epIndexEdit));
+    epIndexEdit->setValidator(new QRegExpValidator(QRegExp("\\d+\\.?(\\d+)?"),epIndexEdit));
     epNameEdit = new QComboBox(this);
     epNameEdit->setEditable(true);
     epNameEdit->view()->setItemDelegate(new EpComboItemDelegate(this));
@@ -77,7 +77,6 @@ void EpInfoEditWidget::setEpInfo(const EpInfo &curEp, const QList<EpInfo> &eps)
     epNameEdit->clear();
     epTypeCombo->setCurrentIndex(curEp.type==EpType::UNKNOWN?EpType::EP:curEp.type-1);
     epIndexEdit->setText(QString::number(curEp.index));
-    epNameEdit->setEditText(curEp.name);
     int lastType = -1;
     int index = 0;
     for(auto &ep : epList)
@@ -89,6 +88,7 @@ void EpInfoEditWidget::setEpInfo(const EpInfo &curEp, const QList<EpInfo> &eps)
         addChildItem(epNameEdit, ep.toString(), index++);
         lastType = static_cast<int>(ep.type);
     }
+	epNameEdit->setEditText(curEp.name);
 }
 
 const EpInfo EpInfoEditWidget::getEp() const
@@ -96,7 +96,7 @@ const EpInfo EpInfoEditWidget::getEp() const
     EpInfo ep;
     ep.type = EpType(epTypeCombo->currentIndex()+1);
     ep.index = epIndexEdit->text().toDouble();
-    ep.name = epNameEdit->currentText();
+    ep.name = epNameEdit->lineEdit()->text();
     return ep;
 }
 
@@ -175,10 +175,7 @@ void EpItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) co
     {
         QDateTimeEdit *dateTimeEdit = static_cast<QDateTimeEdit *>(editor);
         auto ep = index.data(EpisodesModel::EpRole).value<EpInfo>();
-        if(ep.finishTime==0)
-            dateTimeEdit->clear();
-        else
-            dateTimeEdit->setDateTime(QDateTime::fromSecsSinceEpoch(ep.finishTime));
+        dateTimeEdit->setDateTime(QDateTime::fromSecsSinceEpoch(ep.finishTime));
         break;
     }
     default:

@@ -4,38 +4,8 @@
 
 ScriptModel::ScriptModel(QObject *parent) : QAbstractItemModel(parent)
 {
-    beginResetModel();
-    for(int i=0;i<ScriptType::UNKNOWN_STYPE;++i)
-    {
-        auto type = ScriptType(i);
-        for(const auto &s: GlobalObjects::scriptManager->scripts(type))
-        {
-            scriptList.append({type, s->id(), s->name(), s->version(), s->desc(), s->getValue("path")});
-        }
-    }
-    endResetModel();
-    QObject::connect(GlobalObjects::scriptManager, &ScriptManager::scriptChanged, this,
-                     [this](ScriptType type, const QString &id, ScriptManager::ScriptChangeState state)
-    {
-        if(state==ScriptManager::ScriptChangeState::ADD)
-        {
-            beginInsertRows(QModelIndex(), scriptList.size(), scriptList.size());
-            auto s = GlobalObjects::scriptManager->getScript(id);
-            scriptList.append({type, s->id(), s->name(), s->version(), s->desc(), s->getValue("path")});
-            endInsertRows();
-        }
-        else if(state==ScriptManager::ScriptChangeState::REMOVE)
-        {
-            auto iter = std::find_if(scriptList.begin(), scriptList.end(), [=](const ScriptInfo &si){return si.id==id;});
-            if(iter!=scriptList.end())
-            {
-                int index = iter - scriptList.begin();
-                beginRemoveRows(QModelIndex(), index, index);
-                scriptList.erase(iter);
-                endRemoveRows();
-            }
-        }
-    });
+    refresh();
+    QObject::connect(GlobalObjects::scriptManager, &ScriptManager::scriptChanged, this, &ScriptModel::refresh);
 }
 
 QVariant ScriptModel::data(const QModelIndex &index, int role) const
@@ -63,6 +33,22 @@ QVariant ScriptModel::data(const QModelIndex &index, int role) const
             break;
         }
     }
+    else if(role == Qt::ToolTipRole)
+    {
+        switch (col)
+        {
+        case Columns::ID:
+            return script.id;
+        case Columns::NAME:
+            return script.name;
+        case Columns::VERSION:
+            return script.version;
+        case Columns::DESC:
+            return script.desc;
+        default:
+            break;
+        }
+    }
     else if(role == ScriptTypeRole)
     {
         return script.type;
@@ -78,6 +64,21 @@ QVariant ScriptModel::headerData(int section, Qt::Orientation orientation, int r
         if(section<headers.size()) return headers.at(section);
     }
     return QVariant();
+}
+
+void ScriptModel::refresh()
+{
+    beginResetModel();
+    scriptList.clear();
+    for(int i=0;i<ScriptType::UNKNOWN_STYPE;++i)
+    {
+        auto type = ScriptType(i);
+        for(const auto &s: GlobalObjects::scriptManager->scripts(type))
+        {
+            scriptList.append({type, s->id(), s->name(), s->version(), s->desc(), s->getValue("path")});
+        }
+    }
+    endResetModel();
 }
 
 void ScriptProxyModel::setType(int type)

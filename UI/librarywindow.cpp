@@ -26,7 +26,10 @@
 #include "animeupdate.h"
 #include "episodeeditor.h"
 #include "animedetailinfopage.h"
+#include "Script/scriptmanager.h"
+#include "Script/libraryscript.h"
 #include "MediaLibrary/animeitemdelegate.h"
+#include "MediaLibrary/animeprovider.h"
 #include "MediaLibrary/animemodel.h"
 #include "MediaLibrary/labelmodel.h"
 #include "MediaLibrary/labelitemdelegate.h"
@@ -84,7 +87,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     animeListView->setSelectionMode(QAbstractItemView::SingleSelection);
     animeListView->setItemDelegate(itemDelegate);
     animeListView->setMouseTracking(true);
-    animeListView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    animeListView->setContextMenuPolicy(Qt::CustomContextMenu);
     animeModel = new AnimeModel(this);
     AnimeFilterProxyModel *proxyModel=new AnimeFilterProxyModel(animeModel, this);
     proxyModel->setSourceModel(animeModel);
@@ -123,11 +126,56 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     });
     act_updateDetailInfo->setEnabled(false);
 
-    animeListView->addAction(act_getDetailInfo);
-    animeListView->addAction(act_updateDetailInfo);
-    animeListView->addAction(act_delete);
+    QMenu *animeListContextMenu=new QMenu(animeListView);
+    animeListContextMenu->addAction(act_getDetailInfo);
+    animeListContextMenu->addAction(act_updateDetailInfo);
+    animeListContextMenu->addAction(act_delete);
+    QAction *menuSep = new QAction(this);
+    menuSep->setSeparator(true);
+    static QList<QAction *> scriptActions;
+    QObject::connect(animeListView,&QListView::customContextMenuRequested,[=](){
+        QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
+        animeListContextMenu->clear();
+        qDeleteAll(scriptActions);
+        scriptActions.clear();
+        animeListContextMenu->addAction(act_getDetailInfo);
+        animeListContextMenu->addAction(act_updateDetailInfo);
+        animeListContextMenu->addAction(act_delete);
+        if(selection.size()>0)
+        {
+            Anime *currentAnime = animeModel->getAnime(selection.indexes().first());
+            auto script = GlobalObjects::scriptManager->getScript(currentAnime->scriptId());
+            if(script)
+            {
+                LibraryScript *libScript = static_cast<LibraryScript *>(script.data());
+                const auto &menuItems = libScript->getMenuItems();
+                if(menuItems.size()>0)
+                {
+                    animeListContextMenu->addAction(menuSep);
+                    for(auto &p : menuItems)
+                    {
+                        QAction *scriptAct = new QAction(p.first);
+                        scriptAct->setData(p.second);
+                        animeListContextMenu->addAction(scriptAct);
+                        scriptActions.append(scriptAct);
+                    }
+                }
+            }
 
-    QObject::connect(animeListView->selectionModel(), &QItemSelectionModel::selectionChanged,[act_delete,act_getDetailInfo,act_updateDetailInfo,this](){
+        }
+        animeListContextMenu->exec(QCursor::pos());
+    });
+    QObject::connect(animeListContextMenu, &QMenu::triggered, this, [=](QAction *act){
+        if(!act->data().isNull())
+        {
+            auto scriptInfo = act->data().value<QPair<QString, QString>>();
+            QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
+            if(selection.size()==0)return;
+            Anime *currentAnime = animeModel->getAnime(selection.indexes().first());
+            GlobalObjects::animeProvider->menuClick(act->data().toString(), currentAnime);
+        }
+    });
+    QObject::connect(animeListView->selectionModel(), &QItemSelectionModel::selectionChanged,[=](){
         bool hasSelection = !animeListView->selectionModel()->selection().isEmpty();
         act_delete->setEnabled(hasSelection);
         act_updateDetailInfo->setEnabled(hasSelection);

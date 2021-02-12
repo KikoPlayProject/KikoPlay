@@ -23,8 +23,9 @@ public:
     void addAnime(const MatchResult &match);
     void addAnime(const QString &name);
     bool addAnime(Anime *anime);
-    void addAnime(Anime *srcAnime, Anime *newAnime);
+    const QString addAnime(Anime *srcAnime, Anime *newAnime);
     void deleteAnime(Anime *anime);
+    Anime *getAnime(const QString &name);
 
     void addEp(const QString &animeName, const EpInfo &ep);
     void removeEp(const QString &animeName, const QString &path);

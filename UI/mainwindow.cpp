@@ -19,6 +19,7 @@
 #include "tip.h"
 #include "stylemanager.h"
 #include "settings.h"
+#include "logwindow.h"
 #include "widgets/backgroundwidget.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
@@ -178,6 +179,14 @@ void MainWindow::setupUI()
         settings.exec();
     });
     buttonIcon->addAction(act_Settingse);
+
+    logWindow=new LogWindow(this);
+    logWindow->resize(GlobalObjects::appSetting->value("DialogSize/MPVLog",QSize(400*logicalDpiX()/96,300*logicalDpiY()/96)).toSize());
+    QAction *act_ShowScriptLog=new QAction(tr("Script Log"), this);
+    QObject::connect(act_ShowScriptLog,&QAction::triggered,[this](){
+        logWindow->show(LogWindow::LogType::SCRIPT);
+    });
+    buttonIcon->addAction(act_ShowScriptLog);
 
     QAction *act_checkUpdate=new QAction(tr("Check For Updates"), this);
     QObject::connect(act_checkUpdate,&QAction::triggered,[this](){
@@ -589,6 +598,9 @@ QWidget *MainWindow::setupPlayPage()
             notifier->showMessage(Notifier::PLAYER_NOTIFY, tr("Add %1 Danmu").arg(c));
         }
     });
+    QObject::connect(playerWindow, &PlayerWindow::showMPVLog, this, [this](){
+        logWindow->show(LogWindow::LogType::MPV);
+    });
 
     playSplitter->addWidget(playerWindowWidget);
     playSplitter->addWidget(listWindow);
@@ -638,6 +650,7 @@ QWidget *MainWindow::setupDownloadPage()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	GlobalObjects::appSetting->setValue("MainWindow/miniGeometry", miniGeo);
+    GlobalObjects::appSetting->setValue("DialogSize/MPVLog",logWindow->size());
     if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
     {
         GlobalObjects::appSetting->beginGroup("MainWindow");

@@ -9,6 +9,7 @@ Anime::Anime() : _addTime(0), _epCount(0), crtImagesLoaded(false), epLoaded(fals
 void Anime::assign(const Anime *anime)
 {
     _desc = anime->_desc;
+    _url = anime->_url;
     _airDate = anime->_airDate;
     _coverURL = anime->_coverURL;
     _cover = anime->_cover;
@@ -54,7 +55,6 @@ const QList<Character> &Anime::crList(bool loadImage)
 {
     if(!crtImagesLoaded && loadImage)
     {
-        characters.clear();
         AnimeWorker::instance()->loadCrImages(this);
         crtImagesLoaded = true;
     }

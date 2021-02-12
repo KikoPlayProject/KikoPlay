@@ -174,7 +174,7 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
     }
     static QPixmap nullCover(":/res/images/cover.png");
     coverLabel->setPixmap(currentAnime->cover().isNull()?nullCover:currentAnime->cover());
-    titleLabel->setText(QString("<style> a {text-decoration: none} </style><a style='color: white;' href = \"%1\">%2</a>").arg(currentAnime->url()).arg(currentAnime->name()));
+    titleLabel->setText(QString("<style> a {text-decoration: none} </style><a style='color: white;' href = \"%1\">%2</a>").arg(currentAnime->url(), currentAnime->name()));
     QStringList stafflist, outlist;
     int c = 0;
     for(const auto &p: currentAnime->staffList())
@@ -195,7 +195,7 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
     descInfo->setText(currentAnime->description());
     epModel->setAnime(currentAnime);
     epDelegate->setAnime(currentAnime);
-    for(auto &character: currentAnime->crList())
+    for(auto &character: currentAnime->crList(true))
     {
         CharacterWidget *crtItem=new CharacterWidget(&character);
         QObject::connect(crtItem,&CharacterWidget::updateCharacter,this,[this](CharacterWidget *crtItem){

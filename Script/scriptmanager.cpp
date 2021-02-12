@@ -5,9 +5,13 @@
 #include "danmuscript.h"
 #include "libraryscript.h"
 #include "resourcescript.h"
+#include "scriptlogger.h"
 
-ScriptManager::ScriptManager()
+ScriptManager::ScriptManager(QObject *parent) : QObject(parent)
 {
+    qRegisterMetaType<ScriptType>("ScriptType");
+    qRegisterMetaType<ScriptState>("ScriptState");
+    qRegisterMetaType<ScriptManager::ScriptChangeState>("ScriptChangeState");
     refreshScripts(ScriptType::DANMU);
     refreshScripts(ScriptType::LIBRARY);
     refreshScripts(ScriptType::RESOURCE);
@@ -27,6 +31,7 @@ void ScriptManager::refreshScripts(ScriptType type)
     }
     QSet<QString> existPaths;
     QDir folder(scriptPath);
+    bool changed = false;
     for (QFileInfo fileInfo : folder.entryInfoList())
     {
         if (fileInfo.isFile() && fileInfo.suffix().toLower()=="lua")
@@ -44,7 +49,7 @@ void ScriptManager::refreshScripts(ScriptType type)
                     curScripts.remove(path);
                     id2scriptHash.remove(id);
                     add = true;
-                    emit scriptChanged(type, id, ScriptChangeState::REMOVE);
+                    changed = true;
                 }
             }
             if(add)
@@ -60,8 +65,12 @@ void ScriptManager::refreshScripts(ScriptType type)
                     {
                         scriptLists[type].append(cs);
                         id2scriptHash[cs->id()] = cs;
-                        emit scriptChanged(type, cs->id(), ScriptChangeState::ADD);
-                    }
+                        changed = true;
+					}
+					else
+					{
+                        ScriptLogger::instance()->appendError(state.info, path);
+					}
                 }
 
             }
@@ -75,11 +84,12 @@ void ScriptManager::refreshScripts(ScriptType type)
             QString id((*iter)->id());
             id2scriptHash.remove(id);
             iter = scripts.erase(iter);
-            emit scriptChanged(type, id, ScriptChangeState::REMOVE);
+            changed = true;
         } else {
             ++iter;
         }
     }
+    if(changed) emit scriptChanged(type);
 }
 
 void ScriptManager::deleteScript(const QString &id)
@@ -93,7 +103,7 @@ void ScriptManager::deleteScript(const QString &id)
         {
             scriptLists[script->type()].removeAll(script);
             id2scriptHash.remove(id);
-            emit scriptChanged(script->type(), id, ScriptChangeState::REMOVE);
+            emit scriptChanged(script->type());
         }
     }
     if(!path.isEmpty())

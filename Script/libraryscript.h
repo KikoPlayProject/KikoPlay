@@ -20,6 +20,14 @@ public:
     ScriptState match(const QString &path, MatchResult &result);
     ScriptState menuClick(const QString &mid, Anime *anime);
 private:
+    const char *searchFunc = "search";
+    const char *detailFunc = "detail";
+    const char *epFunc = "getep";
+    const char *tagFunc = "gettags";
+    const char *matchFunc = "match";
+    const char *menusTable = "menus";
+    const char *menuFunc = "menuclick";
+
     bool matchSupported, hasTagFunc;
     QList<QPair<QString, QString>> menuItems; // (title, id)
 };

@@ -325,6 +325,11 @@ void AnimeWorker::deleteAnime(Anime *anime)
     });
 }
 
+Anime *AnimeWorker::getAnime(const QString &name)
+{
+    return animesMap.value(name, nullptr);
+}
+
 /*
 void AnimeWorker::updatePlayTime(const QString &title, const QString &path)
 {
@@ -644,7 +649,7 @@ bool AnimeWorker::addAnime(Anime *anime)
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([=](){
         Anime *animeInMap = animesMap.value(anime->_name, nullptr);
-        if(animeInMap || checkAnimeExist(anime->_name))  //anime exists, update infomation
+        if(animeInMap || checkAnimeExist(anime->_name))  //anime exists
         {
             if(animeInMap == anime) return false;
             delete anime;
@@ -667,14 +672,16 @@ bool AnimeWorker::addAnime(Anime *anime)
     }).toBool();
 }
 
-void AnimeWorker::addAnime(Anime *srcAnime, Anime *newAnime)
+const QString AnimeWorker::addAnime(Anime *srcAnime, Anime *newAnime)
 {
     ThreadTask task(GlobalObjects::workThread);
-    task.Run([=](){
+    return task.Run([=](){
         Q_ASSERT(animesMap.contains(srcAnime->_name));
+        QString retAnimeName = srcAnime->_name;
         if(srcAnime->_name!=newAnime->_name)
         {
             addAlias(newAnime->_name, srcAnime->_name);
+            retAnimeName = newAnime->_name;
             Anime *animeInMap = animesMap.value(newAnime->_name, nullptr);
             QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
             if(animeInMap || checkAnimeExist(newAnime->_name))  //newAnime exists, only merge episodes of srcAnime to newAnime
@@ -720,8 +727,8 @@ void AnimeWorker::addAnime(Anime *srcAnime, Anime *newAnime)
             }
         }
         delete newAnime;
-        return 0;
-    });
+        return retAnimeName;
+    }).toString();
 }
 
 void AnimeWorker::addEp(const QString &animeName, const EpInfo &ep)
@@ -847,8 +854,10 @@ void AnimeWorker::saveCapture(const QString &animeName, const QString &info, con
         query.bindValue(0,matchAnimeName);
         query.bindValue(1,AnimeImage::CAPTURE);
         query.bindValue(2,timeId);
-        query.bindValue(3,thumbBytes);
-        query.bindValue(4,imgBytes);
+        query.bindValue(3,info);
+        query.bindValue(4,thumbBytes);
+        query.bindValue(5,imgBytes);
+        query.exec();
 
         AnimeImage aImage;
         aImage.type = AnimeImage::CAPTURE;
@@ -893,7 +902,7 @@ int AnimeWorker::fetchCaptures(const QString &animeName, QList<AnimeImage> &capt
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([&](){
         QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
-        query.prepare("select Type, TimeId,Info,Thumb from image where Anime=? and (Type=? or Type=?) order by Time desc limit ? offset ?");
+        query.prepare("select Type, TimeId,Info,Thumb from image where Anime=? and (Type=? or Type=?) order by TimeId desc limit ? offset ?");
         query.bindValue(0,animeName);
         query.bindValue(1,AnimeImage::CAPTURE);
         query.bindValue(2,AnimeImage::SLICE);
@@ -1053,7 +1062,7 @@ bool AnimeWorker::updateAnimeInfo(Anime *anime)
     query.bindValue(0,anime->_name);
     query.exec();
 
-    query.prepare("insert into character(Anime,Name,Actor,Link,ImageURL,Image) values(?,?,?,?,?)");
+    query.prepare("insert into character(Anime,Name,Actor,Link,ImageURL,Image) values(?,?,?,?,?,?)");
     query.bindValue(0,anime->_name);
     for(const auto &c : anime->characters)
     {

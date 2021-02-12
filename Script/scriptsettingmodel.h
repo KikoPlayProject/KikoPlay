@@ -34,7 +34,7 @@ public:
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
-    inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:(curScript?curScript->settings().count():0);}
+    inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:settingItems.count();}
     inline virtual int columnCount(const QModelIndex &parent) const{return parent.isValid()?0:(int)Columns::NONE;}
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
@@ -43,7 +43,7 @@ public:
 signals:
     void itemChanged(const QString &key, int index,  const QString &val);
 private:
-    QSharedPointer<ScriptBase> curScript;
+    QList<ScriptBase::ScriptSettingItem> settingItems;
 };
 
 #endif // SCRIPTSETTINGMODEL_H

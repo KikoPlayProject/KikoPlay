@@ -1,5 +1,6 @@
 #include "animeprovider.h"
 #include "Common/threadtask.h"
+#include "Common/network.h"
 #include "Script/scriptmanager.h"
 #include "Script/libraryscript.h"
 #include "globalobjects.h"
@@ -10,8 +11,8 @@ namespace
 
 AnimeProvider::AnimeProvider(QObject *parent) : QObject(parent)
 {
-    QObject::connect(GlobalObjects::scriptManager, &ScriptManager::scriptChanged, this, [=](ScriptType type, const QString &id){
-        if(type==ScriptType::LIBRARY && matchProviderIds.contains(id))
+    QObject::connect(GlobalObjects::scriptManager, &ScriptManager::scriptChanged, this, [=](ScriptType type){
+        if(type==ScriptType::LIBRARY)
         {
             setMacthProviders();
             if(!matchProviderIds.contains(defaultMatchScriptId))
@@ -75,7 +76,45 @@ ScriptState AnimeProvider::getDetail(const AnimeLite &base, Anime *anime)
     if(!script) return "Script invalid";
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([&](){
-        return QVariant::fromValue(script->getDetail(base, anime));
+        ScriptState state = script->getDetail(base, anime);
+        if(state)
+        {
+            if(QUrl(anime->coverURL()).isLocalFile())
+            {
+                QFile coverFile(anime->coverURL());
+                if(coverFile.open(QIODevice::ReadOnly))
+                    anime->_cover.loadFromData(coverFile.readAll());
+                anime->_coverURL = "";
+            }
+            else
+            {
+                try {
+                    anime->_cover.loadFromData(Network::httpGet(anime->coverURL(), QUrlQuery()));
+                } catch (Network::NetworkError &error) {
+
+                }
+            }
+            for(auto &crt : anime->characters)
+            {
+                if(QUrl(crt.imgURL).isLocalFile())
+                {
+                    QFile crtImageFile(crt.imgURL);
+                    if(crtImageFile.open(QIODevice::ReadOnly))
+                        crt.image.loadFromData(crtImageFile.readAll());
+                    crt.imgURL = "";
+                }
+                else
+                {
+                    try {
+                        crt.image.loadFromData(Network::httpGet(crt.imgURL, QUrlQuery()));
+                    } catch (Network::NetworkError &error) {
+
+                    }
+                }
+            }
+
+        }
+        return QVariant::fromValue(state);
     }).value<ScriptState>();
 }
 

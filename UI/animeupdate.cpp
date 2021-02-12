@@ -17,7 +17,14 @@ AnimeUpdate::AnimeUpdate(Anime *anime, QWidget *parent)
             QMessageBox::information(this,tr("Error"), state.info);
             delete nAnime;
         } else {
-            AnimeWorker::instance()->addAnime(anime, nAnime);
+            QString animeName(AnimeWorker::instance()->addAnime(anime, nAnime));
+            QStringList tags;
+            Anime *tAnime = AnimeWorker::instance()->getAnime(animeName);
+            if(tAnime)
+            {
+                GlobalObjects::animeProvider->getTags(tAnime, tags);
+                if(tags.size()>0) AnimeWorker::instance()->addTagsTo(tAnime->name(), tags);
+            }
         }
         CFramelessDialog::onAccept();
     });

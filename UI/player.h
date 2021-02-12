@@ -79,8 +79,6 @@ private:
      QMenu *contexMenu;
      QAction *ctx_Text,*ctx_Copy,*ctx_BlockUser,*ctx_BlockText,*ctx_BlockColor;
 
-     CFramelessDialog *logDialog;
-
      void setupDanmuSettingPage();
      void setupPlaySettingPage();
      void setupSignals();
@@ -106,6 +104,7 @@ signals:
     void moveWindow(const QPoint &pos);
     void miniMode(bool on);
     void refreshPool();
+    void showMPVLog();
 
      // QWidget interface
 protected:

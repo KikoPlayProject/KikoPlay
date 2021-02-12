@@ -18,7 +18,7 @@
 #include "capture.h"
 #include "mediainfo.h"
 #include "settings.h"
-#include "mpvlog.h"
+#include "logwindow.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/Render/danmurender.h"
 #include "Play/Danmu/Provider/localprovider.h"
@@ -202,9 +202,6 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     centralWidget->setMouseTracking(true);
     setCentralWidget(centralWidget);
     QWidget *contralContainer = new QWidget(centralWidget);
-
-    logDialog=new MPVLog(this);
-    logDialog->resize(GlobalObjects::appSetting->value("DialogSize/MPVLog",QSize(400*logicalDpiX()/96,300*logicalDpiY()/96)).toSize());
 
     playInfo=new InfoTip(centralWidget);
     playInfo->hide();
@@ -1127,7 +1124,9 @@ void PlayerWindow::setupPlaySettingPage()
         settings.exec();
     });
 
-    QPushButton *showMpvLog=new QPushButton(tr("Show Mpv Log"), pagePlay);
+    QPushButton *showMpvLog=new QPushButton(tr("Show MPV Log"), pagePlay);
+    QObject::connect(showMpvLog,&QPushButton::clicked, this, &PlayerWindow::showMPVLog);
+    /*
     QObject::connect(showMpvLog,&QPushButton::clicked,[this](){
         static bool inited = false;
         if(!inited)
@@ -1139,6 +1138,7 @@ void PlayerWindow::setupPlaySettingPage()
         }
         logDialog->show();
     });
+    */
 
 //Behavior Page
     QWidget *pageBehavior=new QWidget(playSettingPage);
@@ -2076,7 +2076,6 @@ void PlayerWindow::closeEvent(QCloseEvent *)
     GlobalObjects::appSetting->setValue("Hue",hueSlider->value());
     GlobalObjects::appSetting->setValue("Sharpen",sharpenSlider->value());
     GlobalObjects::appSetting->endGroup();
-    GlobalObjects::appSetting->setValue("DialogSize/MPVLog",logDialog->size());
 }
 
 void PlayerWindow::dragEnterEvent(QDragEnterEvent *event)

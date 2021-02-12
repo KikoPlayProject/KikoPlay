@@ -44,6 +44,7 @@ SOURCES += \
     Script/libraryscript.cpp \
     Script/resourcescript.cpp \
     Script/scriptbase.cpp \
+    Script/scriptlogger.cpp \
     Script/scriptmanager.cpp \
     Script/scriptmodel.cpp \
     Script/scriptsettingmodel.cpp \
@@ -55,6 +56,7 @@ SOURCES += \
     UI/autodownloadwindow.cpp \
     UI/danmuview.cpp \
     UI/inputdialog.cpp \
+    UI/logwindow.cpp \
     UI/settings.cpp \
     UI/settings/downloadpage.cpp \
     UI/settings/lanserverpage.cpp \
@@ -117,7 +119,6 @@ SOURCES += \
     Common/flowlayout.cpp \
     UI/timelineedit.cpp \
     Play/Danmu/Provider/acfunprovider.cpp \
-    UI/mpvlog.cpp \
     LANServer/lanserver.cpp \
     LANServer/httpserver.cpp \
     Play/Playlist/playlistitem.cpp \
@@ -161,6 +162,7 @@ HEADERS += \
     Script/libraryscript.h \
     Script/resourcescript.h \
     Script/scriptbase.h \
+    Script/scriptlogger.h \
     Script/scriptmanager.h \
     Script/scriptmodel.h \
     Script/scriptsettingmodel.h \
@@ -172,6 +174,7 @@ HEADERS += \
     UI/autodownloadwindow.h \
     UI/danmuview.h \
     UI/inputdialog.h \
+    UI/logwindow.h \
     UI/mainwindow.h \
     UI/framelesswindow.h \
     Play/Danmu/Layouts/bottomlayout.h \
@@ -240,7 +243,6 @@ HEADERS += \
     Common/flowlayout.h \
     UI/timelineedit.h \
     Play/Danmu/Provider/acfunprovider.h \
-    UI/mpvlog.h \
     LANServer/lanserver.h \
     LANServer/httpserver.h \
     Play/Playlist/playlistitem.h \

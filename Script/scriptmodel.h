@@ -37,6 +37,7 @@ private:
         QString path;
     };
     QList<ScriptInfo> scriptList;
+    void refresh();
 };
 class ScriptProxyModel : public QSortFilterProxyModel
 {

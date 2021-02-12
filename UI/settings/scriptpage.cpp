@@ -147,7 +147,15 @@ ScriptSettingDialog::ScriptSettingDialog(QSharedPointer<ScriptBase> script, QWid
     });
 
     QGridLayout *scriptGLayout=new QGridLayout(this);
+    scriptGLayout->setContentsMargins(0, 0, 0, 0);
     scriptGLayout->addWidget(scriptView,0,0);
     scriptGLayout->setRowStretch(0,1);
     scriptGLayout->setColumnStretch(0,1);
+
+    resize(GlobalObjects::appSetting->value("DialogSize/ScriptSetting",QSize(300*logicalDpiX()/96,200*logicalDpiY()/96)).toSize());
+}
+
+ScriptSettingDialog::~ScriptSettingDialog()
+{
+    GlobalObjects::appSetting->setValue("DialogSize/ScriptSetting",size());
 }

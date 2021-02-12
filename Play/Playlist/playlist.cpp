@@ -857,7 +857,7 @@ void PlayList::matchItems(const QModelIndexList &matchIndexes)
                 items.push_back(child);
             }
         }
-        else if(currentItem->poolID.isEmpty())
+        else if(!currentItem->hasPool())
         {
             selectedItems<<currentItem;
         }
@@ -1187,7 +1187,7 @@ void MatchWorker::match(const QList<PlayListItem *> &items)
     for(auto currentItem: items)
     {
         if(cancel) break;
-        if(!currentItem->poolID.isEmpty()) continue;
+        if(currentItem->hasPool()) continue;
         if (!QFile::exists(currentItem->path))continue;
         MatchResult match;
         GlobalObjects::danmuManager->localMatch(currentItem->path, match);

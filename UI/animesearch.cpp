@@ -90,8 +90,25 @@ void AnimeSearch::onAccept()
         ScriptState state = GlobalObjects::animeProvider->getDetail(animeLite, nAnime);
         if(state)
         {
-            if(currentAnime) AnimeWorker::instance()->addAnime(currentAnime, nAnime);
-            else AnimeWorker::instance()->addAnime(nAnime);
+            QStringList tags;
+            if(currentAnime)
+            {
+                QString animeName(AnimeWorker::instance()->addAnime(currentAnime, nAnime));
+                Anime *tAnime = AnimeWorker::instance()->getAnime(animeName);
+                if(tAnime)
+                {
+                    GlobalObjects::animeProvider->getTags(tAnime, tags);
+                    if(tags.size()>0) AnimeWorker::instance()->addTagsTo(tAnime->name(), tags);
+                }
+            }
+            else
+            {
+                if(AnimeWorker::instance()->addAnime(nAnime))
+                {
+                    GlobalObjects::animeProvider->getTags(nAnime, tags);
+                    if(tags.size()>0) AnimeWorker::instance()->addTagsTo(nAnime->name(), tags);
+                }
+            }
         }
         else
         {

@@ -19,7 +19,7 @@ public:
     };
 
 public:
-    ScriptManager();
+    ScriptManager(QObject *parent=nullptr);
 
     void refreshScripts(ScriptType type);
     void deleteScript(const QString &id);
@@ -27,7 +27,7 @@ public:
     QSharedPointer<ScriptBase> getScript(const QString &id) {return id2scriptHash.value(id);}
 
 signals:
-    void scriptChanged(ScriptType type, const QString &id, ScriptChangeState state);
+    void scriptChanged(ScriptType type);
 private:
     QList<QSharedPointer<ScriptBase>> scriptLists[ScriptType::UNKNOWN_STYPE];
     QHash<QString, QSharedPointer<ScriptBase>> id2scriptHash;

@@ -11,12 +11,12 @@ ScriptState LibraryScript::loadScript(const QString &scriptPath)
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo = ScriptBase::loadScript(scriptPath);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
-    matchSupported = checkType("match", LUA_TFUNCTION);
-    bool hasSearchFunc = checkType("search", LUA_TFUNCTION);
-    bool hasEpFunc = checkType("getep", LUA_TFUNCTION);
-    hasTagFunc = checkType("gettags", LUA_TFUNCTION);
+    matchSupported = checkType(matchFunc, LUA_TFUNCTION);
+    bool hasSearchFunc = checkType(searchFunc, LUA_TFUNCTION);
+    bool hasEpFunc = checkType(epFunc, LUA_TFUNCTION);
+    hasTagFunc = checkType(tagFunc, LUA_TFUNCTION);
     if(!matchSupported && !(hasSearchFunc && hasEpFunc)) return ScriptState(ScriptState::S_ERROR, "search+getep/match function is not found");
-    QVariant menus = get("menus"); //[{title=xx, id=xx}...]
+    QVariant menus = get(menusTable); //[{title=xx, id=xx}...]
     if(menus.type() == QVariant::List)
     {
         auto mlist = menus.toList();
@@ -39,7 +39,7 @@ ScriptState LibraryScript::search(const QString &keyword, QList<AnimeLite> &resu
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo;
-    QVariantList rets = call("search", {keyword}, 1, errInfo);
+    QVariantList rets = call(searchFunc, {keyword}, 1, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(rets[0].type()!=QVariant::List) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
     auto robjs = rets[0].toList(); //[{name=xx, data=xx, <extra=xx>, <eps=[{index=number, name=xx, <type=xx(1:ep, 2:sp, ...,7=other)>, }]>},...]
@@ -80,15 +80,19 @@ ScriptState LibraryScript::getDetail(const AnimeLite &base, Anime *anime)
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo;
-    QVariantList rets = call("detail", {base.toMap()}, 1, errInfo);
+    QVariantList rets = call(detailFunc, {base.toMap()}, 1, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(rets[0].type()!=QVariant::Map) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
     // {name=xx, <desc=xx>, airdate=xx(yyyy-mm-dd), data=xx, <epcount=xx(int)>, <coverurl=xx>, <url=xx>,
     //  <staff=xx("xx:xx;yy:yy;...")>, <crt=[{name=xx,<actor=xx>,<link=xx>, <imgurl=xx>},...]>>}
     auto aobj = rets[0].toMap();
-    QString name = aobj.value("name").toString(), scriptData=aobj.value("data").toString(), airdate=aobj.value("airdate").toString();
+    QString name = aobj.value("name").toString(),
+            scriptData=aobj.value("data").toString(),
+            airdate=aobj.value("airdate").toString();
     if(name.isEmpty() || airdate.isEmpty()) return ScriptState(ScriptState::S_ERROR, "Wrong anime info");
     anime->_name = name;
+    anime->_desc = aobj.value("desc").toString();
+    anime->_url = aobj.value("url").toString();
     anime->_scriptId = id();
     anime->_scriptData = scriptData;
     anime->_airDate = airdate;
@@ -114,8 +118,8 @@ ScriptState LibraryScript::getDetail(const AnimeLite &base, Anime *anime)
         {
             if(c.type()!=QVariant::Map) continue;
             auto cobj = c.toMap();
-            QString cname = cobj.value("name").toString(), cid = cobj.value("id").toString();
-            if(cname.isEmpty() || cid.isEmpty()) continue;
+            QString cname = cobj.value("name").toString();
+            if(cname.isEmpty()) continue;
             Character crt;
             crt.name = cname;
             crt.actor = cobj.value("actor").toString();
@@ -132,14 +136,14 @@ ScriptState LibraryScript::getEp(Anime *anime, QList<EpInfo> &results)
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo;
-    QVariantList rets = call("getep", {anime->toMap()}, 1, errInfo);
+    QVariantList rets = call(epFunc, {anime->toMap()}, 1, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(rets[0].type()!=QVariant::List) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
     auto eps = rets[0].toList();
     for(auto e: eps)
     {
         auto epobj = e.toMap();
-        double index = epobj.value("index", -1).toDouble();
+        double index = epobj.value("index", 0).toDouble();
         QString epName = epobj.value("name").toString();
         if(index<0 || epName.isEmpty()) continue;
         EpInfo ep;
@@ -155,7 +159,7 @@ ScriptState LibraryScript::getTags(Anime *anime, QStringList &results)
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo;
-    QVariantList rets = call("gettags", {anime->toMap()}, 1, errInfo);
+    QVariantList rets = call(tagFunc, {anime->toMap()}, 1, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(!rets[0].canConvert(QVariant::StringList)) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
     results = rets[0].toStringList();
@@ -167,7 +171,7 @@ ScriptState LibraryScript::match(const QString &path, MatchResult &result)
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo;
-    QVariantList rets = call("match", {path}, 1, errInfo);
+    QVariantList rets = call(matchFunc, {path}, 1, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(rets[0].type()!=QVariant::Map) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
     auto m = rets[0].toMap(); //{success=xx, anime={name=xx,data=xx}, ep={name=xx, index=number, <type=xx>}}
@@ -201,7 +205,7 @@ ScriptState LibraryScript::menuClick(const QString &mid, Anime *anime)
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo;
-    call("menuclick", {mid, anime->toMap(true)}, 0, errInfo);
+    call(menuFunc, {mid, anime->toMap(true)}, 0, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     return ScriptState(ScriptState::S_NORM);
 }

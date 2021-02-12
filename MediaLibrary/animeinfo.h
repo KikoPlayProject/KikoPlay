@@ -73,7 +73,7 @@ struct AnimeLite
         return
         {
             {"name", name},
-            {"data", scriptData},
+            {"scriptData", scriptData},
         };
     }
 };
@@ -114,6 +114,7 @@ class Anime
     friend class AnimeWorker;
     friend class LibraryScript;
     friend struct AnimeLite;
+    friend class AnimeProvider;
 
     QString _name;
     QString _desc;

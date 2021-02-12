@@ -7,18 +7,19 @@
 ScriptSettingModel::ScriptSettingModel(QSharedPointer<ScriptBase> script, QObject *parent) : QAbstractItemModel(parent)
 {
     beginResetModel();
-    curScript = script;
+    settingItems =  script->settings();
     endResetModel();
 }
 
 QVariant ScriptSettingModel::data(const QModelIndex &index, int role) const
 {
-    if(!index.isValid() || !curScript) return QVariant();
-    auto &settingItem = curScript->settings().at(index.row());
+    if(!index.isValid()) return QVariant();
+    auto &settingItem = settingItems.at(index.row());
     Columns col=static_cast<Columns>(index.column());
     switch (role)
     {
     case Qt::DisplayRole:
+    case Qt::ToolTipRole:
     {
         switch (col)
         {
@@ -44,7 +45,8 @@ bool ScriptSettingModel::setData(const QModelIndex &index, const QVariant &value
     Columns col=static_cast<Columns>(index.column());
     if(col==Columns::VALUE)
     {
-        auto &settingItem = curScript->settings().at(index.row());
+        auto &settingItem = settingItems[index.row()];
+        settingItem.value = value.toString();
         emit dataChanged(index,index);
         emit itemChanged(settingItem.key, index.row(), value.toString());
     }
@@ -83,7 +85,7 @@ QWidget *SettingDelegate::createEditor(QWidget *parent, const QStyleOptionViewIt
         {
             QComboBox *combo=new QComboBox(parent);
             combo->setFrame(false);
-            combo->addItems(choices.split(','));
+            combo->addItems(choices.split(',', QString::SplitBehavior::SkipEmptyParts));
             return combo;
         }
     }

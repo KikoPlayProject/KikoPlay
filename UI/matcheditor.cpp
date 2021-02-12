@@ -252,7 +252,9 @@ namespace
             if(index.column()==static_cast<int>(EpModel::Columns::EPNAME))
             {
                 QComboBox *combo = static_cast<QComboBox*>(editor);
-                model->setData(index, QVariant::fromValue(epList[combo->currentData(EpRole).toInt()]), Qt::EditRole);
+				int epIndex = combo->currentData(EpRole).toInt();
+				if (epList.size() == 0 || epIndex<0 || epIndex>epList.size()) return;
+                model->setData(index, QVariant::fromValue(epList[epIndex]), Qt::EditRole);
                 return;
             }
             QStyledItemDelegate::setModelData(editor,model,index);
@@ -430,7 +432,7 @@ QWidget *MatchEditor::setupCustomPage(const QString &srcAnime, const EpInfo &ep)
 
     QLabel *epIndexTip=new QLabel(tr("Episode Index"),customPage);
     epIndexEdit=new QLineEdit(customPage);
-    epIndexEdit->setValidator(new QRegExpValidator(QRegExp("\\d+.?(\\d+)?"),epIndexEdit));
+    epIndexEdit->setValidator(new QRegExpValidator(QRegExp("\\d+\\.?(\\d+)?"),epIndexEdit));
 
     QLabel *epTitleTip=new QLabel(tr("Episode Title"),customPage);
     epEdit=new QLineEdit(customPage);
@@ -574,6 +576,7 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
         {
             static_cast<EpModel *>(epModel)->reset(animeLite);
             this->anime = animeLite.name;
+			epDelegate->setEpList(*animeLite.epList);
             animeLabel->setText(animeLite.name);
             searchSLayout->setCurrentIndex(1);
         }
@@ -591,6 +594,7 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
                 static_cast<AnimeModel *>(animeModel)->fillEpInfo(index, results);
                 auto anime = animeModel->data(index, AnimeRole).value<AnimeLite>();
                 static_cast<EpModel *>(epModel)->reset(anime);
+				epDelegate->setEpList(results);
                 animeLabel->setText(anime.name);
                 this->anime = animeLite.name;
                 searchSLayout->setCurrentIndex(1);

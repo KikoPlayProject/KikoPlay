@@ -326,6 +326,7 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
         if(animeLite.epList)
         {
             static_cast<EpModel *>(epModel)->reset(animeLite);
+			animeLabel->setText(animeLite.name);
             searchSLayout->setCurrentIndex(1);
         }
         else
@@ -368,7 +369,7 @@ QWidget *AddPool::setupCustomPage(const QString &srcAnime, const EpInfo &ep)
 
     QLabel *epIndexTip=new QLabel(tr("Episode Index"),customPage);
     epIndexEdit=new QLineEdit(customPage);
-    epIndexEdit->setValidator(new QRegExpValidator(QRegExp("\\d+.?(\\d+)?"),epIndexEdit));
+    epIndexEdit->setValidator(new QRegExpValidator(QRegExp("\\d+\\.?(\\d+)?"),epIndexEdit));
 
     QLabel *epTitleTip=new QLabel(tr("Episode Title"),customPage);
     epEdit=new QLineEdit(ep.name, customPage);

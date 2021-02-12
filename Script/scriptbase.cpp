@@ -2,6 +2,11 @@
 #include <QFile>
 #include <QVariant>
 #include "Common/network.h"
+#include "Common/htmlparsersax.h"
+#include "scriptlogger.h"
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
 namespace
 {
 static int httpGet(lua_State *L)
@@ -19,7 +24,7 @@ static int httpGet(lua_State *L)
             lua_pushvalue(L, 2);
             auto q = ScriptBase::getValue(L);
             lua_pop(L, 1);
-            if(q.type()!=QVariant::Map) break;
+			if (q.type() != QVariant::Map && !(q.type() == QVariant::List && q.toList().size() == 0)) break;
             auto qmap = q.toMap();
             for(auto iter=qmap.constBegin(); iter!=qmap.constEnd(); ++iter)
             {
@@ -29,7 +34,7 @@ static int httpGet(lua_State *L)
         if(params > 2)  //has header
         {
             auto h = ScriptBase::getValue(L);
-            if(h.type()!=QVariant::Map) break;
+			if (h.type() != QVariant::Map && !(h.type() == QVariant::List && h.toList().size() == 0)) break;
             auto hmap = h.toMap();
             for(auto iter=hmap.constBegin(); iter!=hmap.constEnd(); ++iter)
             {
@@ -71,7 +76,7 @@ static int httpPost(lua_State *L)
         if(params > 2)  //has header
         {
             auto h = ScriptBase::getValue(L);
-            if(h.type()!=QVariant::Map) break;
+			if (h.type() != QVariant::Map && !(h.type() == QVariant::List && h.toList().size() == 0)) break;
             auto hmap = h.toMap();
             for(auto iter=hmap.constBegin(); iter!=hmap.constEnd(); ++iter)
             {
@@ -382,6 +387,80 @@ static int hashData(lua_State *L)
     lua_pushlstring(L, hashResult.data(), hashResult.size());
     return 2;
 }
+static int logger(lua_State *L)
+{
+    int params = lua_gettop(L);
+    if(params==0) return 0;
+    lua_pushstring(L, "kiko_scriptobj");
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    ScriptBase *script = (ScriptBase *)lua_topointer(L, -1);
+    lua_pop(L, 1);
+    if(params > 1)
+    {
+        QStringList vals;
+        for(int i=1;i<=params;++i)
+        {
+            if(lua_type(L, i) == LUA_TTABLE)
+            {
+                vals.append("[Table]");
+            }
+            else
+            {
+                lua_pushvalue(L, i);
+                vals.append(ScriptBase::getValue(L).toString());
+                lua_pop(L, 1);
+            }
+        }
+        ScriptLogger::instance()->appendInfo(vals.join('\t'), script->id());
+        return 0;
+    }
+    lua_pushvalue(L, 1);
+    auto val = ScriptBase::getValue(L);
+    lua_pop(L, 1);
+    QString logText;
+    if(val.type()==QVariant::List || val.type()==QVariant::Map)
+    {
+        QString json(QJsonDocument::fromVariant(val).toJson(QJsonDocument::JsonFormat::Indented));
+        ScriptLogger::instance()->appendInfo("Show Table: ", script->id());
+        ScriptLogger::instance()->appendText(json);
+    }
+    else
+    {
+        ScriptLogger::instance()->appendInfo(val.toString(), script->id());
+    }
+    return 0;
+}
+#ifdef Q_OS_WIN
+const QString stTrans(const QString &str, bool toSimplified)
+{
+    WORD wLanguageID = MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED);
+    LCID Locale = MAKELCID(wLanguageID, SORT_CHINESE_PRCP);
+    QScopedPointer<QChar> buf(new QChar[str.length()]);
+    LCMapString(Locale,toSimplified?LCMAP_SIMPLIFIED_CHINESE:LCMAP_TRADITIONAL_CHINESE,reinterpret_cast<LPCWSTR>(str.constData()),str.length(),reinterpret_cast<LPWSTR>(buf.data()),str.length());
+    return QString(buf.data(), str.length());
+}
+#endif
+static int simplifiedTraditionalTrans(lua_State *L)
+{
+#ifdef Q_OS_WIN
+    int params = lua_gettop(L);  // str(string) toSimpOrTrad(bool)
+    if(params!=2 ||  lua_type(L, 1)!=LUA_TSTRING || lua_type(L, 2)!=LUA_TBOOLEAN)
+    {
+        lua_pushstring(L, "stTrans: param error, expect: str(string) toSimpOrTrad(bool, true: toSimp)");
+        lua_pushnil(L);
+        return 2;
+    }
+    QString input(lua_tostring(L, 1));
+    QString trans(stTrans(input, lua_toboolean(L, 2)));
+    lua_pushnil(L);
+    lua_pushstring(L, trans.toStdString().c_str());
+    return 2;
+#else
+    lua_pushnil(L);
+    lua_pushvalue(L, 1)
+    return 2;
+#endif
+}
 // XmlReader-------------
 static int xmlreader (lua_State *L)
 {
@@ -484,6 +563,112 @@ static int xmlreaderGC (lua_State *L) {
     return 0;
 }
 //XmlReader End------------------
+
+//HTMLParserSax------------------
+static int htmlparser (lua_State *L)
+{
+    int n = lua_gettop(L);
+    const char *data = nullptr;
+    if(n > 0 && lua_type(L, 1)==LUA_TSTRING)
+    {
+        data = lua_tostring(L, -1);
+    }
+    HTMLParserSax **parser = (HTMLParserSax **)lua_newuserdata(L, sizeof(HTMLParserSax *));
+    luaL_getmetatable(L, "meta.kiko.htmlparser");
+    lua_setmetatable(L, -2);  // reader meta
+    *parser = new HTMLParserSax(data); //meta
+    return 1;
+}
+static HTMLParserSax *checkHTMLParser(lua_State *L)
+{
+    void *ud = luaL_checkudata(L, 1, "meta.kiko.htmlparser");
+    luaL_argcheck(L, ud != NULL, 1, "`kiko.htmlparser' expected");
+    return *(HTMLParserSax **)ud;
+}
+static int hpSeekTo(lua_State *L)
+{
+    int n = lua_gettop(L);
+    if(n!=1 || lua_type(L, 1)!=LUA_TNUMBER)
+    {
+        return 0;
+    }
+    int pos = lua_tonumber(L, 1);
+    HTMLParserSax *parser = checkHTMLParser(L);
+    parser->seekTo(pos);
+    return 0;
+}
+static int hpReadNext(lua_State *L)
+{
+    HTMLParserSax *parser = checkHTMLParser(L);
+    parser->readNext();
+    return 0;
+}
+static int hpEnd(lua_State *L)
+{
+    HTMLParserSax *parser = checkHTMLParser(L);
+    bool atEnd = parser->atEnd();
+    lua_pushboolean(L, atEnd);
+    return 1;
+}
+static int hpCurPos(lua_State *L)
+{
+    HTMLParserSax *parser = checkHTMLParser(L);
+    int pos = parser->curPos();
+    lua_pushnumber(L, pos);
+    return 1;
+}
+static int hpReadContentText(lua_State *L)
+{
+    HTMLParserSax *parser = checkHTMLParser(L);
+    lua_pushstring(L, parser->readContentText().toStdString().c_str());
+    return 1;
+}
+static int hpReadContentUntil(lua_State *L)
+{
+    int n = lua_gettop(L);
+    if(n!=2 || lua_type(L, 1)!=LUA_TSTRING || lua_type(L, 2)!=LUA_TBOOLEAN)
+    {
+        lua_pushnil(L);
+        return 1;
+    }
+    HTMLParserSax *parser = checkHTMLParser(L);
+    QString nodeName(lua_tostring(L, 1));
+    bool isStart = lua_toboolean(L, 2);
+    lua_pushstring(L, parser->readContentUntil(nodeName, isStart).toStdString().c_str());
+    return 1;
+}
+static int hpIsStartNode(lua_State *L)
+{
+    HTMLParserSax *parser = checkHTMLParser(L);
+    lua_pushboolean(L, parser->isStartNode());
+    return 1;
+}
+static int hpCurrentNode(lua_State *L)
+{
+    HTMLParserSax *parser = checkHTMLParser(L);
+    lua_pushstring(L, parser->currentNode().toStdString().c_str());
+    return 1;
+}
+static int hpCurrentNodeProperty(lua_State *L)
+{
+    int n = lua_gettop(L);
+    if(n!=1 || lua_type(L, 1)!=LUA_TSTRING)
+    {
+        lua_pushnil(L);
+        return 1;
+    }
+    HTMLParserSax *parser = checkHTMLParser(L);
+    QString nodeName(lua_tostring(L, 1));
+    lua_pushstring(L, parser->currentNodeProperty(nodeName).toStdString().c_str());
+    return 1;
+}
+static int htmlParserGC (lua_State *L) {
+    HTMLParserSax *parser = checkHTMLParser(L);
+    if(parser) delete parser;
+    return 0;
+}
+//HTMLParserSax End--------------
+
 static const luaL_Reg kikoFuncs[] = {
     {"httpget", httpGet},
     {"httpgetbatch", httpGetBatch},
@@ -494,14 +679,17 @@ static const luaL_Reg kikoFuncs[] = {
     {"decompress", decompress},
     {"writesetting", writeSetting},
     {"xmlreader", xmlreader},
+    {"htmlparser", htmlparser},
     {"execute", execute},
     {"hashdata", hashData},
+    {"log", logger},
+    {"sttrans", simplifiedTraditionalTrans},
     {nullptr, nullptr}
 };
 static const luaL_Reg xmlreaderFuncs[] = {
     {"adddata", xrAddData},
     {"clear", xrClear},
-    {"end", xrEnd},
+    {"atend", xrEnd},
     {"readnext", xrReadNext},
     {"startelem", xrStartElem},
     {"endelem", xrEndElem},
@@ -512,8 +700,21 @@ static const luaL_Reg xmlreaderFuncs[] = {
     {"__gc", xmlreaderGC},
     {nullptr, nullptr}
 };
+static const luaL_Reg htmlparserFuncs [] = {
+    {"seekto", hpSeekTo},
+    {"atend", hpEnd},
+    {"readnext", hpReadNext},
+    {"curpos", hpCurPos},
+    {"readcontent", hpReadContentText},
+    {"readuntil", hpReadContentUntil},
+    {"start", hpIsStartNode},
+    {"curnode", hpCurrentNode},
+    {"curproperty", hpCurrentNodeProperty},
+    {"__gc", htmlParserGC},
+    {nullptr, nullptr}
+};
 }
-ScriptBase::ScriptBase() : L(nullptr), settingsUpdated(false), sType(ScriptType::UNKNOWN_STYPE)
+ScriptBase::ScriptBase() : L(nullptr), settingsUpdated(false),hasSetOptionFunc(false),sType(ScriptType::UNKNOWN_STYPE)
 {
     L = luaL_newstate();
     if(L)
@@ -526,6 +727,13 @@ ScriptBase::ScriptBase() : L(nullptr), settingsUpdated(false), sType(ScriptType:
         lua_pushvalue(L, -2); // pushes the metatable
         lua_rawset(L, -3); // metatable.__index = metatable
         luaL_setfuncs(L, xmlreaderFuncs, 0);
+        lua_pop(L, 1);
+
+        luaL_newmetatable(L, "meta.kiko.htmlparser");
+        lua_pushstring(L, "__index");
+        lua_pushvalue(L, -2); // pushes the metatable
+        lua_rawset(L, -3); // metatable.__index = metatable
+        luaL_setfuncs(L, htmlparserFuncs, 0);
         lua_pop(L, 1);
 
         lua_pushstring(L, "kiko_scriptobj");
@@ -568,7 +776,8 @@ ScriptState ScriptBase::setOption(int index, const QString &value, bool callLua)
     if(callLua)
     {
         setTable(luaSettingsTable, scriptSettings[index].key, value);
-        call(luaSetOptionFunc, {scriptSettings[index].key, value}, 0, errInfo);
+        if(hasSetOptionFunc)
+            call(luaSetOptionFunc, {scriptSettings[index].key, value}, 0, errInfo);
     }
     return errInfo;
 }
@@ -585,7 +794,8 @@ ScriptState ScriptBase::setOption(const QString &key, const QString &value, bool
             if(callLua)
             {
                 setTable(luaSettingsTable, key, value);
-                call(luaSetOptionFunc, {key, value}, 0, errInfo);
+                if(hasSetOptionFunc)
+                    call(luaSetOptionFunc, {key, value}, 0, errInfo);
             }
             break;
         }
@@ -618,11 +828,13 @@ QVariantList ScriptBase::call(const char *fname, const QVariantList &params, int
     if(!L)
     {
         errInfo = "Wrong Lua State";
+        ScriptLogger::instance()->appendError(errInfo, "Lua");
         return QVariantList();
     }
     if(lua_getglobal(L, fname) != LUA_TFUNCTION)
     {
         errInfo = QString("%1 is not founded").arg(fname);
+        ScriptLogger::instance()->appendError(errInfo, id());
         return QVariantList();
     }
     for(auto &p : params)
@@ -631,8 +843,9 @@ QVariantList ScriptBase::call(const char *fname, const QVariantList &params, int
     }
     if(lua_pcall(L, params.size(), nRet, 0))
     {
-        errInfo="Script Error: "+ QString(lua_tostring(L, -1));
+        errInfo=QString(lua_tostring(L, -1));
         lua_pop(L,1);
+        ScriptLogger::instance()->appendError(errInfo, id());
         return QVariantList();
     }
     QVariantList rets;
@@ -772,14 +985,11 @@ QVariant ScriptBase::getValue(lua_State *L)
                 break;
             }
         }
-		qDebug() << "stack before-gl: " << lua_gettop(L);
         size_t length = getTableLength(L, -1);
-		qDebug() << "stack after-gl: " << lua_gettop(L);
         if(count < 0 || count != length) // map
         {
             QVariantMap map;
             lua_pushnil(L); // t nil
-			qDebug() << "stack before: " << lua_gettop(L);
             while (lua_next(L, -2)) { // t key value
                 if (lua_type(L, -2) != LUA_TSTRING)
                 {
@@ -787,10 +997,8 @@ QVariant ScriptBase::getValue(lua_State *L)
                                lua_typename(L, lua_type(L, -2)));
                 }
 				QString key(lua_tostring(L, -2));
-				qDebug() << "key begin: " << key << " stack: " << lua_gettop(L);
                 map[key] = getValue(L);
                 lua_pop(L, 1); // key
-				qDebug() << "key end: " << key << " stack: " << lua_gettop(L);;
             }
             return map;
         }
@@ -837,6 +1045,7 @@ QString ScriptBase::loadMeta(const QString &scriptPath)
     if(!scriptInfo.canConvert(QVariant::Map))
     {
         errInfo = "Script Error: no info table";
+        ScriptLogger::instance()->appendError(errInfo, "KikoPlay");
         return errInfo;
     }
     QVariantMap scriptInfoMap = scriptInfo.toMap();
@@ -861,6 +1070,7 @@ void ScriptBase::loadSettings(const QString &scriptPath)
     //settings = {key = {title = 'xx', default='', desc='', choices=',..,'},...}
     QString errInfo;
     QVariant settings = get(luaSettingsTable);
+    hasSetOptionFunc = checkType(luaSetOptionFunc, LUA_TFUNCTION);
     if(!settings.canConvert(QVariant::Map)) return;
     QVariantMap settingMap = settings.toMap();
     scriptSettings.clear();
@@ -888,7 +1098,7 @@ void ScriptBase::loadSettings(const QString &scriptPath)
         QHash<QString, ScriptSettingItem *> itemHash;
         for(auto &item: scriptSettings)
         {
-            itemHash[item.title] = &item;
+            itemHash[item.key] = &item;
         }
         for(auto iter = sObj.constBegin(); iter != sObj.constEnd(); ++iter)
         {
