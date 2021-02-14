@@ -20,6 +20,7 @@
 #include <QApplication>
 #include <QHeaderView>
 #include "Common/lrucache.h"
+#include "Common/notifier.h"
 #include "globalobjects.h"
 #define AnimeRole Qt::UserRole+1
 #define EpRole Qt::UserRole+2
@@ -599,7 +600,7 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
                 this->anime = animeLite.name;
                 searchSLayout->setCurrentIndex(1);
             } else {
-                showMessage(state.info, 1);
+                showMessage(state.info, NM_ERROR | NM_HIDE);
             }
         }
     });
@@ -643,7 +644,7 @@ void MatchEditor::onAccept()
     {
         if(this->anime.isEmpty())
         {
-            showMessage(tr("Anime should not be empty"),1);
+            showMessage(tr("Anime should not be empty"),NM_ERROR | NM_HIDE);
             return;
         }
     }
@@ -654,7 +655,7 @@ void MatchEditor::onAccept()
         QString epIndex = epIndexEdit->text().trimmed();
         if(animeTitle.isEmpty()|| epIndex.isEmpty())
         {
-            showMessage(tr("Anime Title and Episode Index should not be empty"),1);
+            showMessage(tr("Anime Title and Episode Index should not be empty"),NM_ERROR | NM_HIDE);
             return;
         }
         anime = animeTitle;

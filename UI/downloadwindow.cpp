@@ -34,10 +34,16 @@
 #include "ressearchwindow.h"
 #include "autodownloadwindow.h"
 #include "widgets/fonticonbutton.h"
+#include "widgets/dialogtip.h"
 
 DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nullptr)
 {
     setObjectName(QStringLiteral("DownLoadWindow"));
+    dialogTip = new DialogTip(this);
+    dialogTip->raise();
+    dialogTip->hide();
+    Notifier::getNotifier()->addNotify(Notifier::DOWNLOAD_NOTIFY, this);
+
     initActions();
 
     contentSplitter = new QSplitter(this);
@@ -1000,6 +1006,11 @@ void DownloadWindow::showEvent(QShowEvent *)
 void DownloadWindow::hideEvent(QHideEvent *)
 {
     refreshTimer->setInterval(backgoundRefreshInterval);
+}
+
+void DownloadWindow::showMessage(const QString &content, int flag)
+{
+    dialogTip->showMessage(content, flag);
 }
 
 

@@ -3,6 +3,7 @@
 #include <QVariant>
 #include "Common/network.h"
 #include "Common/htmlparsersax.h"
+#include "Common/notifier.h"
 #include "scriptlogger.h"
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -430,6 +431,30 @@ static int logger(lua_State *L)
     }
     return 0;
 }
+static int message(lua_State *L)
+{
+    int params = lua_gettop(L);
+    if(params==0 || lua_type(L, 1)!=LUA_TSTRING) return 0;
+    lua_pushstring(L, "kiko_scriptobj");
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    ScriptBase *script = (ScriptBase *)lua_topointer(L, -1);
+    lua_pop(L, 1);
+    QString message(lua_tostring(L, 1));
+    int flags = NotifyMessageFlag::NM_HIDE;
+    if(params > 1 && lua_type(L, 2)!=LUA_TNUMBER)
+    {
+        flags = lua_tonumber(L, 2);
+    }
+    switch (script->type())
+    {
+    case ScriptType::LIBRARY:
+        Notifier::getNotifier()->showMessage(Notifier::NotifyType::LIBRARY_NOTIFY, message, flags);
+        break;
+    default:
+        break;
+    }
+    return 0;
+}
 #ifdef Q_OS_WIN
 const QString stTrans(const QString &str, bool toSimplified)
 {
@@ -683,6 +708,7 @@ static const luaL_Reg kikoFuncs[] = {
     {"execute", execute},
     {"hashdata", hashData},
     {"log", logger},
+    {"message", message},
     {"sttrans", simplifiedTraditionalTrans},
     {nullptr, nullptr}
 };
@@ -1024,12 +1050,12 @@ QVariant ScriptBase::getValue(lua_State *L)
     }
 }
 
-size_t ScriptBase::getTableLength(lua_State *L, int pos)
+int ScriptBase::getTableLength(lua_State *L, int pos)
 {
     if(!L) return 0;
     if (pos < 0)  pos = lua_gettop(L) + (pos + 1);
     lua_pushnil(L); // nil
-    size_t length = 0;
+    int length = 0;
     while (lua_next(L, pos))  // key value
     {
         ++length;

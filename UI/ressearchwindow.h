@@ -10,7 +10,6 @@ class QLineEdit;
 class SearchListModel;
 class QPushButton;
 class QComboBox;
-class DialogTip;
 class SearchListModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -46,11 +45,10 @@ public:
 
 private:
     QTreeView *searchListView;
-    QLabel *totalPageTip,*busyLabel;
+    QLabel *totalPageTip;
     QLineEdit *searchEdit,*pageEdit;
     QPushButton *prevPage, *nextPage;
     QComboBox *scriptCombo;
-    DialogTip *dialogTip;
     SearchListModel *searchListModel;
     int totalPage,currentPage;
     bool isSearching;

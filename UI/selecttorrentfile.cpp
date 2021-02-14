@@ -6,6 +6,7 @@
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QHeaderView>
+#include "Common/notifier.h"
 #include "widgets/dirselectwidget.h"
 #include "Download/torrent.h"
 SelectTorrentFile::SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *parent) : CFramelessDialog(tr("Add Torrent"),parent,true),model(nullptr)
@@ -57,18 +58,18 @@ void SelectTorrentFile::onAccept()
     QString selectIndexes=model->getCheckedIndex();
     if(selectIndexes.isEmpty())
     {
-        showMessage(tr("No File is Selected"),1);
+        showMessage(tr("No File is Selected"), NM_ERROR | NM_HIDE);
         return;
     }
     this->selectIndexes=selectIndexes;
     if(!dirSelect->isValid())
     {
-        showMessage(tr("Dir is invaild"),1);
+        showMessage(tr("Dir is invaild"), NM_ERROR | NM_HIDE);
         return;
     }
     if(checkedFileSize>dirSelect->getFreeSpace())
     {
-        showMessage(tr("Insufficient Disk Space"),1);
+        showMessage(tr("Insufficient Disk Space"), NM_ERROR | NM_HIDE);
         return;
     }
     this->dir=dirSelect->getDir();

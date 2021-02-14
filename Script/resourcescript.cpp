@@ -12,8 +12,8 @@ ScriptState ResourceScript::loadScript(const QString &scriptPath)
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo = ScriptBase::loadScript(scriptPath);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
-    hasDetailFunc = checkType("getdetail", LUA_TFUNCTION);
-    bool hasSearchFunc = checkType("search", LUA_TFUNCTION);
+    hasDetailFunc = checkType(detailFunc, LUA_TFUNCTION);
+    bool hasSearchFunc = checkType(searchFunc, LUA_TFUNCTION);
     if(!hasSearchFunc) return ScriptState(ScriptState::S_ERROR, "Search function is not found");
     return ScriptState(ScriptState::S_NORM);
 }
@@ -23,7 +23,7 @@ ScriptState ResourceScript::search(const QString &keyword, int page, int &totalP
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo;
-    QVariantList rets = call("search", {keyword, page}, 2, errInfo);
+    QVariantList rets = call(searchFunc, {keyword, page}, 2, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(rets[0].type()!=QVariant::List || !rets[1].canConvert(QVariant::Int)) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
     totalPage = rets[1].toInt();
@@ -45,7 +45,7 @@ ScriptState ResourceScript::getDetail(const ResourceItem &oldItem, ResourceItem 
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo;
-    QVariantList rets = call("getdetail", {oldItem.toMap()}, 1, errInfo);
+    QVariantList rets = call(detailFunc, {oldItem.toMap()}, 1, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(rets[0].type() != QVariant::Map) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
     auto robj = rets[0].toMap();

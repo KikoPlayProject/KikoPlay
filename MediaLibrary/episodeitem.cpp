@@ -149,12 +149,12 @@ void EpItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) co
         EpInfoEditWidget *epEditor = static_cast<EpInfoEditWidget *>(editor);
         if(!epCache.contains(curAnime->name()) && autoGetEpInfo)
         {
-            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Episode List...."), NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_PROCESS);
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Episode List...."), NotifyMessageFlag::NM_DARKNESS_BACK|NotifyMessageFlag::NM_PROCESS);
             QList<EpInfo> results;
             ScriptState state = GlobalObjects::animeProvider->getEp(curAnime, results);
             if(state)
             {
-                Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetch Down"), NotifyMessageFlag::NM_INFO|NM_HIDE);
+                Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetch Down"), NM_HIDE);
                 epCache.put(curAnime->name(), results);
             }
             else Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, state.info, NotifyMessageFlag::NM_ERROR|NM_HIDE);

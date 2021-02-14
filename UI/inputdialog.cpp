@@ -2,6 +2,8 @@
 #include <QPlainTextEdit>
 #include <QLabel>
 #include <QVBoxLayout>
+#include "Common/notifier.h"
+
 InputDialog::InputDialog(const QString &title, const QString &tip, const QString &text, bool canEmpty, QWidget *parent)
     : CFramelessDialog (title,parent,true)
 {
@@ -19,7 +21,7 @@ void InputDialog::onAccept()
     text=edit->toPlainText().trimmed();
     if(!canEmpty && text.isEmpty())
     {
-        showMessage(tr("Can't be empty"),1);
+        showMessage(tr("Can't be empty"), NM_ERROR | NM_HIDE);
         return;
     }
     CFramelessDialog::onAccept();

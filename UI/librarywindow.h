@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <QLineEdit>
 #include <QTreeView>
+#include "Common/notifier.h"
+class Anime;
 class QListView;
 class QToolButton;
 class QPushButton;
@@ -14,6 +16,7 @@ class QSplitter;
 class AnimeModel;
 class AnimeItemDelegate;
 class AnimeDetailInfoPage;
+class DialogTip;
 class LabelTreeView : public QTreeView
 {
     Q_OBJECT
@@ -67,23 +70,21 @@ signals:
 private:
     QActionGroup *filterTypeGroup;
 };
-class LibraryWindow : public QWidget
+class LibraryWindow : public QWidget, public NotifyInterface
 {
     Q_OBJECT
-    Q_PROPERTY(bool bgMode READ getBgMode WRITE setBgMode)
 public:
     explicit LibraryWindow(QWidget *parent = nullptr);
     void beforeClose();
 
-    bool getBgMode() const {return bgOn;}
-    void setBgMode(bool on) {bgOn = on;}
 private:
     AnimeModel *animeModel;
     QListView *animeListView;
     LabelTreeView *labelView;
     QSplitter *splitter;
+    DialogTip *dialogTip;
     AnimeDetailInfoPage *detailPage;
-    bool bgOn;
+    void searchAddAnime(Anime *srcAnime = nullptr);
 signals:
     void playFile(const QString &file);
     void switchBackground(const QPixmap &pixmap, bool setPixmap);
@@ -92,6 +93,10 @@ public slots:
 protected:
     virtual void showEvent(QShowEvent *event);
     virtual void hideEvent(QHideEvent *event);
+
+    // NotifyInterface interface
+public:
+    virtual void showMessage(const QString &content, int flag);
 };
 
 #endif // LIBRARYWINDOW_H

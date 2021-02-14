@@ -14,6 +14,7 @@
 #include <QAbstractItemModel>
 #include "globalobjects.h"
 #include "Common/lrucache.h"
+#include "Common/notifier.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "MediaLibrary/animeprovider.h"
 #define AnimeRole Qt::UserRole+1
@@ -346,7 +347,7 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
                 animeLabel->setText(anime.name);
                 searchSLayout->setCurrentIndex(1);
             } else {
-                showMessage(state.info, 1);
+                showMessage(state.info, NM_ERROR | NM_HIDE);
             }
         }
     });
@@ -404,7 +405,7 @@ void AddPool::onAccept()
         auto selectedRows= epView->selectionModel()->selectedRows((int)EpModel::Columns::EPNAME);
         if(selectedRows.count()==0)
         {
-            showMessage(tr("You need to choose an episode"), 1);
+            showMessage(tr("You need to choose an episode"), NM_ERROR | NM_HIDE);
             return;
         }
         const auto &anime = static_cast<EpModel *>(epModel)->anime();
@@ -423,12 +424,12 @@ void AddPool::onAccept()
     }
     if(anime.isEmpty() || epIndexEdit->text().trimmed().isEmpty())
     {
-        showMessage(tr("Anime Title and Episode Index should not be empty"), 1);
+        showMessage(tr("Anime Title and Episode Index should not be empty"), NM_ERROR | NM_HIDE);
         return;
     }
     if(!renamePool && GlobalObjects::danmuManager->getPool(anime, epType, epIndex, false))
     {
-        showMessage(tr("Pool Already Exists"), 1);
+        showMessage(tr("Pool Already Exists"), NM_ERROR | NM_HIDE);
         return;
     }
     if(!lastSearchCacheId.isEmpty())

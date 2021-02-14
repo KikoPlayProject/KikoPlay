@@ -23,11 +23,12 @@
 #include "globalobjects.h"
 #include "Common/notifier.h"
 #include "animesearch.h"
-#include "animeupdate.h"
 #include "episodeeditor.h"
+#include "widgets/dialogtip.h"
 #include "animedetailinfopage.h"
 #include "Script/scriptmanager.h"
 #include "Script/libraryscript.h"
+#include "MediaLibrary/animeworker.h"
 #include "MediaLibrary/animeitemdelegate.h"
 #include "MediaLibrary/animeprovider.h"
 #include "MediaLibrary/animemodel.h"
@@ -64,9 +65,14 @@ namespace
     };
 }
 
-LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
+LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
 {
     setObjectName(QStringLiteral("LibraryWindow"));
+    dialogTip = new DialogTip(this);
+    dialogTip->raise();
+    dialogTip->hide();
+    Notifier::getNotifier()->addNotify(Notifier::LIBRARY_NOTIFY, this);
+
     AnimeItemDelegate *itemDelegate=new AnimeItemDelegate(this);
 
     splitter = new QSplitter(this);
@@ -105,9 +111,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     QObject::connect(act_getDetailInfo,&QAction::triggered,[this,proxyModel](){
         QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
         if(selection.size()==0)return;
-        Anime * currentAnime = animeModel->getAnime(selection.indexes().first());
-        AnimeSearch animeSearch(currentAnime,this);
-        animeSearch.exec();
+        searchAddAnime(animeModel->getAnime(selection.indexes().first()));
     });
     act_getDetailInfo->setEnabled(false);
 
@@ -118,17 +122,44 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
         Anime *currentAnime = animeModel->getAnime(selection.indexes().first());
         if(currentAnime->scriptId().isEmpty())
         {
-            QMessageBox::information(this,"KikoPlay",tr("No Script ID, Search For Detail First"));
+            showMessage(tr("No Script ID, Search For Detail First"), NotifyMessageFlag::NM_HIDE);
             return;
         }
-        AnimeUpdate bgmUpdate(currentAnime,this);
-        bgmUpdate.exec();
+        showMessage(tr("Fetching Info from %1").arg(GlobalObjects::scriptManager->getScript(currentAnime->scriptId())->name()),
+                    NotifyMessageFlag::NM_PROCESS|NotifyMessageFlag::NM_DARKNESS_BACK);
+        Anime *nAnime = new Anime;
+        ScriptState state = GlobalObjects::animeProvider->getDetail(currentAnime->toLite(), nAnime);
+        if(!state)
+        {
+            showMessage(state.info, NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_ERROR);
+            delete nAnime;
+        }
+        else
+        {
+            QString animeName(AnimeWorker::instance()->addAnime(currentAnime, nAnime));
+            QStringList tags;
+            Anime *tAnime = AnimeWorker::instance()->getAnime(animeName);
+            if(tAnime)
+            {
+                showMessage(tr("Fetching Tags from %1").arg(GlobalObjects::scriptManager->getScript(currentAnime->scriptId())->name()),
+                            NotifyMessageFlag::NM_PROCESS|NotifyMessageFlag::NM_DARKNESS_BACK);
+                GlobalObjects::animeProvider->getTags(tAnime, tags);
+                if(tags.size()>0) AnimeWorker::instance()->addTagsTo(tAnime->name(), tags);
+            }
+        }
+        showMessage(tr("Fetch Down"), NotifyMessageFlag::NM_HIDE);
     });
     act_updateDetailInfo->setEnabled(false);
+
+    QAction *act_searchAdd=new QAction(tr("Add Anime"), this);
+    QObject::connect(act_searchAdd,&QAction::triggered, this, [this](){
+        searchAddAnime();
+    });
 
     QMenu *animeListContextMenu=new QMenu(animeListView);
     animeListContextMenu->addAction(act_getDetailInfo);
     animeListContextMenu->addAction(act_updateDetailInfo);
+    animeListContextMenu->addAction(act_searchAdd);
     animeListContextMenu->addAction(act_delete);
     QAction *menuSep = new QAction(this);
     menuSep->setSeparator(true);
@@ -140,6 +171,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
         scriptActions.clear();
         animeListContextMenu->addAction(act_getDetailInfo);
         animeListContextMenu->addAction(act_updateDetailInfo);
+        animeListContextMenu->addAction(act_searchAdd);
         animeListContextMenu->addAction(act_delete);
         if(selection.size()>0)
         {
@@ -235,15 +267,6 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     });
     labelView->addAction(act_deleteTag);
 
-    QMovie *loadingIcon=new QMovie(animeContainer);
-    QLabel *loadingLabel=new QLabel(animeContainer);
-    loadingLabel->setMovie(loadingIcon);
-    loadingLabel->setFixedSize(36,36);
-    loadingLabel->setScaledContents(true);
-    loadingIcon->setFileName(":/res/images/loading-blocks.gif");
-    loadingIcon->start();
-    loadingLabel->hide();
-
     QLabel *totalCountLabel=new QLabel(animeContainer);
     totalCountLabel->setFont(QFont(GlobalObjects::normalFont,12));
     totalCountLabel->setObjectName(QStringLiteral("LibraryCountTip"));
@@ -251,11 +274,9 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
     QObject::connect(loadMore,&QPushButton::clicked,[=](){
         animeModel->fetchMore(QModelIndex());
     });
-    QObject::connect(proxyModel,&AnimeFilterProxyModel::animeMessage,this,
-                     [totalCountLabel,loadMore,loadingLabel](const QString &msg, int flag,bool hasMore){
+    QObject::connect(proxyModel,&AnimeFilterProxyModel::animeMessage,this, [=](const QString &msg, bool hasMore){
         totalCountLabel->setText(msg);
         hasMore? loadMore->show():loadMore->hide();
-        flag&NotifyMessageFlag::NM_PROCESS? loadingLabel->show():loadingLabel->hide();
     });
 
     QPushButton *backButton =  new QPushButton(animeContainer);
@@ -271,7 +292,6 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
 
     QHBoxLayout *toolbuttonHLayout=new QHBoxLayout();
     toolbuttonHLayout->addWidget(backButton);
-    toolbuttonHLayout->addWidget(loadingLabel);
     toolbuttonHLayout->addWidget(totalCountLabel);
     toolbuttonHLayout->addWidget(loadMore);
     toolbuttonHLayout->addSpacing(5*logicalDpiX()/96);
@@ -314,19 +334,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), bgOn(true)
         detailPage->setAnime(anime);
         backButton->show();
         viewSLayout->setCurrentIndex(1);
-        /*
-        else
-        {
-            AnimeDetailInfo infoDialog(anime,this);
-            QObject::connect(&infoDialog,&AnimeDetailInfo::playFile,this,&LibraryWindow::playFile);
-            QRect geo(0,0,400*logicalDpiX()/96,600*logicalDpiY()/96);
-            geo.moveCenter(this->geometry().center());
-            infoDialog.move(mapToGlobal(geo.topLeft()));
-            infoDialog.exec();
-        }
-        */
     });
-    QObject::connect(detailPage, &AnimeDetailInfoPage::setBackEnable, backButton, &QPushButton::setEnabled);
     QObject::connect(backButton, &QPushButton::clicked, this, [this, viewSLayout, backButton](){
         emit switchBackground(QPixmap(), false);
         backButton->hide();
@@ -362,6 +370,50 @@ void LibraryWindow::beforeClose()
     GlobalObjects::appSetting->setValue("Library/SplitterState", splitter->saveState());
 }
 
+void LibraryWindow::searchAddAnime(Anime *srcAnime)
+{
+    AnimeSearch animeSearch(srcAnime,this);
+    while(animeSearch.exec()==QDialog::Accepted)
+    {
+        Anime *nAnime = new Anime;
+        QString scriptName(GlobalObjects::scriptManager->getScript(animeSearch.curSelectedAnime.scriptId)->name());
+        showMessage(tr("Fetching Info from %1").arg(scriptName), NM_PROCESS | NM_DARKNESS_BACK);
+        ScriptState state = GlobalObjects::animeProvider->getDetail(animeSearch.curSelectedAnime, nAnime);
+        if(state)
+        {
+            QStringList tags;
+            if(srcAnime)
+            {
+                QString animeName(AnimeWorker::instance()->addAnime(srcAnime, nAnime));
+                Anime *tAnime = AnimeWorker::instance()->getAnime(animeName);
+                if(tAnime)
+                {
+                    showMessage(tr("Fetching Tags from %1").arg(scriptName), NM_PROCESS | NM_DARKNESS_BACK);
+                    GlobalObjects::animeProvider->getTags(tAnime, tags);
+                    if(tags.size()>0) AnimeWorker::instance()->addTagsTo(tAnime->name(), tags);
+                }
+            }
+            else
+            {
+                if(AnimeWorker::instance()->addAnime(nAnime))
+                {
+                    showMessage(tr("Fetching Tags from %1").arg(scriptName), NM_PROCESS | NM_DARKNESS_BACK);
+                    GlobalObjects::animeProvider->getTags(nAnime, tags);
+                    if(tags.size()>0) AnimeWorker::instance()->addTagsTo(nAnime->name(), tags);
+                }
+            }
+            showMessage(tr("Fetch Down"), NotifyMessageFlag::NM_HIDE);
+            break;
+        }
+        else
+        {
+            showMessage(state.info, NM_ERROR | NM_HIDE);
+            delete nAnime;
+        }
+    }
+
+
+}
 
 void LibraryWindow::showEvent(QShowEvent *)
 {
@@ -371,6 +423,11 @@ void LibraryWindow::showEvent(QShowEvent *)
 void LibraryWindow::hideEvent(QHideEvent *)
 {
     animeModel->setActive(false);
+}
+
+void LibraryWindow::showMessage(const QString &content, int flag)
+{
+    dialogTip->showMessage(content, flag);
 }
 
 AnimeFilterBox::AnimeFilterBox(QWidget *parent)

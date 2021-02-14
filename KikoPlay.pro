@@ -52,7 +52,6 @@ SOURCES += \
     UI/addrule.cpp \
     UI/animedetailinfopage.cpp \
     UI/animesearch.cpp \
-    UI/animeupdate.cpp \
     UI/autodownloadwindow.cpp \
     UI/danmuview.cpp \
     UI/inputdialog.cpp \
@@ -170,7 +169,6 @@ HEADERS += \
     UI/addrule.h \
     UI/animedetailinfopage.h \
     UI/animesearch.h \
-    UI/animeupdate.h \
     UI/autodownloadwindow.h \
     UI/danmuview.h \
     UI/inputdialog.h \

@@ -16,7 +16,7 @@
 #include <QToolButton>
 #include <QMenu>
 #include <QApplication>
-#include "widgets/dialogtip.h"
+#include "Common/notifier.h"
 #include "MediaLibrary/animeinfo.h"
 #include "MediaLibrary/episodesmodel.h"
 #include "MediaLibrary/episodeitem.h"
@@ -100,15 +100,6 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     capturePageButton->setObjectName(QStringLiteral("AnimeInfoPage"));
     capturePageButton->setFixedSize(pageButtonSize);
 
-    QMovie *loadingIcon=new QMovie(pageContainer);
-    loadingLabel=new QLabel(pageContainer);
-    loadingLabel->setMovie(loadingIcon);
-    loadingLabel->setFixedSize(36,36);
-    loadingLabel->setScaledContents(true);
-    loadingIcon->setFileName(":/res/images/loading-blocks.gif");
-    loadingIcon->start();
-    loadingLabel->hide();
-
     QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
     pageButtonHLayout->setContentsMargins(0,0,0,0);
     pageButtonHLayout->setSpacing(0);
@@ -118,7 +109,6 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     pageButtonHLayout->addWidget(tagPageButton);
     pageButtonHLayout->addWidget(capturePageButton);
     pageButtonHLayout->addStretch(1);
-    pageButtonHLayout->addWidget(loadingLabel);
 
     QStackedLayout *contentStackLayout=new QStackedLayout();
     contentStackLayout->setContentsMargins(0,0,0,0);
@@ -138,10 +128,6 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
             contentStackLayout->setCurrentIndex(id);
     });
     descPageButton->setChecked(true);
-
-    dialogTip = new DialogTip(pageContainer);
-    dialogTip->raise();
-    dialogTip->hide();
 
     QVBoxLayout *pageVLayout = new QVBoxLayout(pageContainer);
     pageVLayout->setContentsMargins(0,0,0,0);
@@ -199,15 +185,14 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
     {
         CharacterWidget *crtItem=new CharacterWidget(&character);
         QObject::connect(crtItem,&CharacterWidget::updateCharacter,this,[this](CharacterWidget *crtItem){
-            showBusyState(true);
+            if(crtItem->crt->imgURL.isEmpty()) return;
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Character Image..."), NotifyMessageFlag::NM_PROCESS | NotifyMessageFlag::NM_DARKNESS_BACK);
             crtItem->setEnabled(false);
-            emit setBackEnable(false);
             QByteArray img(Network::httpGet(crtItem->crt->imgURL,QUrlQuery()));
             AnimeWorker::instance()->saveCrtImage(currentAnime->name(), crtItem->crt->name, img);
             crtItem->refreshIcon();
             crtItem->setEnabled(true);
-            showBusyState(false);
-            emit setBackEnable(true);
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NotifyMessageFlag::NM_HIDE);
         });
         QListWidgetItem *listItem=new QListWidgetItem(characterList);
         characterList->setItemWidget(listItem, crtItem);
@@ -225,10 +210,6 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
     captureModel->setAnimeName(currentAnime->name());
 }
 
-void AnimeDetailInfoPage::showBusyState(bool on)
-{
-    on?loadingLabel->show():loadingLabel->hide();
-}
 
 QWidget *AnimeDetailInfoPage::setupDescriptionPage()
 {
@@ -282,7 +263,8 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
                 if(QFile::exists(localFile)) items<<localFile;
             }
         }
-        dialogTip->showMessage(tr("Add %1 items to Playlist").arg(GlobalObjects::playlist->addItems(items,QModelIndex())));
+        Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Add %1 items to Playlist").arg(GlobalObjects::playlist->addItems(items,QModelIndex())),
+                                             NotifyMessageFlag::NM_HIDE);
     });
     QAction *playAction=new QAction(tr("Play"), this);
     QObject::connect(playAction,&QAction::triggered,[episodeView,this](){
@@ -291,7 +273,7 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
         QFileInfo info(epModel->data(selection.last(), Qt::DisplayRole).toString());
         if(!info.exists())
         {
-            dialogTip->showMessage(tr("File Not Exist"),1);
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("File Not Exist"), NotifyMessageFlag::NM_ERROR|NotifyMessageFlag::NM_HIDE);
             return;
         }
         emit playFile(info.absoluteFilePath());
@@ -303,7 +285,7 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
         QFileInfo info(epModel->data(selection.last(), Qt::DisplayRole).toString());
         if(!info.exists())
         {
-            dialogTip->showMessage(tr("File not Exist"),1);
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("File Not Exist"), NotifyMessageFlag::NM_ERROR|NotifyMessageFlag::NM_HIDE);
             return;
         }
         QString command("Explorer /select," + QDir::toNativeSeparators(info.absoluteFilePath()));
@@ -395,25 +377,21 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
     tagPanel->addAction(webTagAction);
     QObject::connect(webTagAction,&QAction::triggered,this,[this, webTagAction, webTagPanel](){
         if(currentAnime->scriptId().isEmpty()) return;
-        showBusyState(true);
-        emit setBackEnable(false);
         QStringList tags;
         webTagAction->setEnabled(false);
-        //GlobalObjects::library->downloadTags(currentAnime,tags,&errorInfo);
+        Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Tags..."), NotifyMessageFlag::NM_DARKNESS_BACK | NotifyMessageFlag::NM_PROCESS);
         ScriptState state = GlobalObjects::animeProvider->getTags(currentAnime, tags);
         if(state)
         {
-            this->dialogTip->showMessage(tr("Add the Selected Tags from the Right-Click Menu"));
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Add the Selected Tags from the Right-Click Menu"), NotifyMessageFlag::NM_HIDE);
             webTagPanel->clear();
             webTagPanel->addTag(tags);
             webTagPanel->setChecked(tagPanel->tags());
             tagContainerSLayout->setCurrentIndex(1);
         } else {
-            this->dialogTip->showMessage(state.info,1);
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, state.info, NotifyMessageFlag::NM_ERROR | NotifyMessageFlag::NM_HIDE);
         }
         webTagAction->setEnabled(true);
-        showBusyState(false);
-        emit setBackEnable(true);
     });
 
     QAction *webTagOKAction=new QAction(tr("Add Selected Tags"), this);
@@ -444,7 +422,10 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
 QWidget *AnimeDetailInfoPage::setupCapturePage()
 {
     captureModel=new CaptureListModel("",this);
-    QObject::connect(captureModel,&CaptureListModel::fetching,this,&AnimeDetailInfoPage::showBusyState);
+    QObject::connect(captureModel,&CaptureListModel::fetching,this,[](bool on){
+        if(on)  Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Loading..."), NotifyMessageFlag::NM_PROCESS);
+        else Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Loading..."), NotifyMessageFlag::NM_HIDE);
+    });
     QListView *captureView=new QListView(this);
     captureView->setObjectName(QStringLiteral("captureView"));
     captureView->setSelectionMode(QAbstractItemView::ExtendedSelection);

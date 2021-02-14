@@ -75,11 +75,14 @@ namespace
         explicit InfoTip(QWidget *parent=nullptr):QWidget(parent)
         {
             setObjectName(QStringLiteral("ListInfoBar"));
-            infoIcon=new QMovie(this);
-            QLabel *movieLabel=new QLabel(this);
+            QMovie *infoIcon=new QMovie(this);
+            infoIcon->setFileName(":/res/images/busy.gif");
+            movieLabel=new QLabel(this);
             movieLabel->setMovie(infoIcon);
-            movieLabel->setFixedSize(32, 32);
-            //movieLabel->setScaledContents(true);
+            movieLabel->setFixedSize(32 * logicalDpiX()/96, 32 * logicalDpiY()/96);
+            infoIcon->start();
+            movieLabel->hide();
+
             infoText=new QLabel(this);
             infoText->setObjectName(QStringLiteral("labelListInfo"));
             infoText->setFont(QFont(GlobalObjects::normalFont,10));
@@ -109,25 +112,18 @@ namespace
                 hideTimer.start(3000);
             }
             QString icon;
-            if(flag&NotifyMessageFlag::NM_INFO)
-                icon=":/res/images/info.png";
-            else if(flag&NotifyMessageFlag::NM_OK)
-                icon=":/res/images/ok.png";
-            else if(flag&NotifyMessageFlag::NM_PROCESS)
-                icon=":/res/images/loading-rolling.gif";
-            if(flag&NotifyMessageFlag::NM_SHOWCANCEL) cancelBtn->show();
-            else cancelBtn->hide();
-            if(icon!=infoIcon->fileName())
-            {
-                infoIcon->stop();
-                infoIcon->setFileName(icon);
-            }
+            if(flag&NotifyMessageFlag::NM_PROCESS)
+                movieLabel->show();
+            else
+                movieLabel->hide();
+            if(flag&NotifyMessageFlag::NM_SHOWCANCEL)
+                cancelBtn->show();
+            else
+                cancelBtn->hide();
             infoText->setText(msg);
-            infoIcon->start();
         }
     private:
-        QMovie *infoIcon;
-        QLabel *infoText;
+        QLabel *infoText, *movieLabel;
         QTimer hideTimer;
         QPushButton *cancelBtn;
     };
@@ -277,7 +273,7 @@ void ListWindow::initActions()
         const PlayListItem *item=GlobalObjects::playlist->getItem(selIndex);
         if(!item->hasPool())
         {
-            showMessage(tr("No pool associated"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
+            showMessage(tr("No pool associated"), NotifyMessageFlag::NM_HIDE);
             return;
         }
         const QList<const PlayListItem *> &siblings=GlobalObjects::playlist->getSiblings(item);
@@ -317,7 +313,7 @@ void ListWindow::initActions()
                     qDeleteAll(danmuList);
                 }
             }
-            showMessage(tr("Done adding"),NotifyMessageFlag::NM_OK|NotifyMessageFlag::NM_HIDE);
+            showMessage(tr("Done adding"), NotifyMessageFlag::NM_HIDE);
         }
 
     });
@@ -330,7 +326,7 @@ void ListWindow::initActions()
         const PlayListItem *item=GlobalObjects::playlist->getItem(selIndex);
         if(!item->hasPool())
         {
-            showMessage(tr("No pool associated"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
+            showMessage(tr("No pool associated"), NotifyMessageFlag::NM_HIDE);
             return;
         }
         bool restorePlayState = false;
@@ -352,12 +348,12 @@ void ListWindow::initActions()
                 if(GlobalObjects::danmuManager->getPool(item->poolID)->addSource(sourceInfo,tmplist,true)==-1)
                 {
                     qDeleteAll(tmplist);
-                    showMessage(tr("Add Failed: Pool is busy"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
+                    showMessage(tr("Add Failed: Pool is busy"), NotifyMessageFlag::NM_HIDE);
                 }
             }
         }
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
-        showMessage(tr("Done adding"),NotifyMessageFlag::NM_OK|NotifyMessageFlag::NM_HIDE);
+        showMessage(tr("Done adding"), NotifyMessageFlag::NM_HIDE);
     });
     act_updateDanmu=new QAction(tr("Update Danmu"),this);
     QObject::connect(act_updateDanmu,&QAction::triggered,[this](){
@@ -410,7 +406,7 @@ void ListWindow::initActions()
         Pool *pool = nullptr;
         if(!item->hasPool())
         {
-            showMessage(tr("No pool associated"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
+            showMessage(tr("No pool associated"), NotifyMessageFlag::NM_HIDE);
             return;
         }
         InputDialog inputDialog(tr("Resource URI"),tr("Set Resource URI(eg. magnet)\n"
@@ -423,13 +419,13 @@ void ListWindow::initActions()
         QString code(pool->getPoolCode(QStringList({uri,pool->animeTitle(),ep.name,QString::number(ep.type),QString::number(ep.index),file16MD5})));
         if(code.isEmpty())
         {
-            showMessage(tr("No Danmu Source to Share"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
+            showMessage(tr("No Danmu Source to Share"), NotifyMessageFlag::NM_HIDE);
         }
         else
         {
             QClipboard *cb = QApplication::clipboard();
             cb->setText("kikoplay:anime="+code);
-            showMessage(tr("Resource Code has been Copied to Clipboard"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
+            showMessage(tr("Resource Code has been Copied to Clipboard"), NotifyMessageFlag::NM_HIDE);
         }
     });
     act_sharePoolCode=new QAction(tr("Danmu Pool Code"),this);
@@ -442,19 +438,19 @@ void ListWindow::initActions()
         Pool *pool = nullptr;
         if(!item->hasPool())
         {
-            showMessage(tr("No pool associated"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
+            showMessage(tr("No pool associated"), NotifyMessageFlag::NM_HIDE);
             return;
         }
         QString code(pool->getPoolCode());
         if(code.isEmpty())
         {
-            showMessage(tr("No Danmu Source to Share"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
+            showMessage(tr("No Danmu Source to Share"), NotifyMessageFlag::NM_HIDE);
         }
         else
         {
             QClipboard *cb = QApplication::clipboard();
             cb->setText("kikoplay:pool="+code);
-            showMessage(tr("Pool Code has been Copied to Clipboard"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
+            showMessage(tr("Pool Code has been Copied to Clipboard"), NotifyMessageFlag::NM_HIDE);
         }
     });
 
@@ -658,7 +654,7 @@ void ListWindow::initActions()
                 if(GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true)==-1)
                 {
                     qDeleteAll(tmplist);
-                    showMessage(tr("Add Failed: Pool is busy"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
+                    showMessage(tr("Add Failed: Pool is busy"), NotifyMessageFlag::NM_HIDE);
                 }
             }
         }
@@ -699,7 +695,7 @@ void ListWindow::initActions()
         rule->usePreFilter=false;
         rule->content=getSelectedDanmu()->text;
         GlobalObjects::blocker->addBlockRule(rule);
-        showMessage(tr("Blocked"),NotifyMessageFlag::NM_OK|NotifyMessageFlag::NM_HIDE);
+        showMessage(tr("Blocked"), NotifyMessageFlag::NM_HIDE);
     });
     act_blockColor=new QAction(tr("Block Color"),this);
     QObject::connect(act_blockColor,&QAction::triggered,[this](){
@@ -711,7 +707,7 @@ void ListWindow::initActions()
         rule->usePreFilter=false;
         rule->content=QString::number(getSelectedDanmu()->color,16);
         GlobalObjects::blocker->addBlockRule(rule);
-        showMessage(tr("Blocked"),NotifyMessageFlag::NM_OK|NotifyMessageFlag::NM_HIDE);
+        showMessage(tr("Blocked"), NotifyMessageFlag::NM_HIDE);
     });
     act_blockSender=new QAction(tr("Block Sender"),this);
     QObject::connect(act_blockSender,&QAction::triggered,[this](){
@@ -723,7 +719,7 @@ void ListWindow::initActions()
         rule->usePreFilter=false;
         rule->content=getSelectedDanmu()->sender;
         GlobalObjects::blocker->addBlockRule(rule);
-        showMessage(tr("Blocked"),NotifyMessageFlag::NM_OK|NotifyMessageFlag::NM_HIDE);
+        showMessage(tr("Blocked"), NotifyMessageFlag::NM_HIDE);
     });
     act_deleteDanmu=new QAction(tr("Delete"),this);
     QObject::connect(act_deleteDanmu,&QAction::triggered,[this](){
@@ -780,7 +776,7 @@ void ListWindow::matchPool(const QString &scriptId)
                     GlobalObjects::playlist->matchIndex(indexes.first(), match);
                     matchSuccess = true;
                 }
-                showMessage(tr("Match Done"),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
+                showMessage(tr("Match Done"), NotifyMessageFlag::NM_HIDE);
             }
             if(!matchSuccess)
             {
@@ -1218,7 +1214,7 @@ int ListWindow::updateCurrentPool()
         showMessage(tr("Updating: %1").arg(iter.value().title),NotifyMessageFlag::NM_PROCESS);
         count+=GlobalObjects::danmuPool->getPool()->update(iter.key());
     }
-    showMessage(tr("Add %1 Danmu").arg(count),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
+    showMessage(tr("Add %1 Danmu").arg(count), NotifyMessageFlag::NM_HIDE);
     act_autoMatch->setEnabled(true);
     act_addOnlineDanmu->setEnabled(true);
     act_addLocalDanmu->setEnabled(true);
@@ -1300,7 +1296,7 @@ void ListWindow::dropEvent(QDropEvent *event)
                     if(GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true)==-1)
                     {
                         qDeleteAll(tmplist);
-                        showMessage(tr("Add Failed: Pool is busy"),NotifyMessageFlag::NM_INFO|NotifyMessageFlag::NM_HIDE);
+                        showMessage(tr("Add Failed: Pool is busy"), NotifyMessageFlag::NM_HIDE);
                     }
                 }
             }

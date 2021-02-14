@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QTreeView>
+#include "Common/notifier.h"
 class Aria2JsonRPC;
 class QLabel;
 class QPlainTextEdit;
@@ -12,6 +13,7 @@ class QSplitter;
 struct DownloadTask;
 class CTorrentFileModel;
 class PeerModel;
+class DialogTip;
 class TorrentTreeView : public QTreeView
 {
     Q_OBJECT
@@ -93,7 +95,7 @@ private:
     QVector<int> blockState;
 };
 
-class DownloadWindow : public QWidget
+class DownloadWindow : public QWidget, public NotifyInterface
 {
     Q_OBJECT
 public:
@@ -122,6 +124,7 @@ private:
     DownloadTask *currentTask;
 
     QLabel *downSpeedLabel,*upSpeedLabel,*downSpeedIconLabel,*upSpeedIconLabel;
+    DialogTip *dialogTip;
     QStackedLayout *rightPanelSLayout;
     QButtonGroup *taskTypeButtonGroup;
     QTimer *refreshTimer;
@@ -141,6 +144,10 @@ signals:
 protected:
     virtual void showEvent(QShowEvent *event);
     virtual void hideEvent(QHideEvent *event);
+
+    // NotifyInterface interface
+public:
+    virtual void showMessage(const QString &content, int flag);
 };
 
 #endif // DOWNLOADWINDOW_H

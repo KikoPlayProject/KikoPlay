@@ -11,7 +11,8 @@ enum NotifyMessageFlag
     NM_INFO=4,
     NM_OK=8,
     NM_SHOWCANCEL = 16,
-    NM_ERROR = 32
+    NM_ERROR = 32,
+    NM_DARKNESS_BACK = 64
 };
 
 class NotifyInterface
@@ -36,7 +37,8 @@ public:
     {
         LIST_NOTIFY = 1,
         PLAYER_NOTIFY = 2,
-        LIBRARY_NOTIFY = 3
+        LIBRARY_NOTIFY = 3,
+        DOWNLOAD_NOTIFY = 4
     };
     void addNotify(NotifyType nType, NotifyInterface *notify);
     void showMessage(NotifyType nType, const QString &content, int flag = 0);

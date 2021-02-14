@@ -17,6 +17,7 @@
 #include <QIntValidator>
 #include <QMovie>
 #include "widgets/dialogtip.h"
+#include "Common/notifier.h"
 #include "globalobjects.h"
 namespace
 {
@@ -67,15 +68,6 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
         search(searchEdit->text().trimmed());
     });
 
-    QMovie *downloadingIcon=new QMovie(this);
-    busyLabel=new QLabel(this);
-    busyLabel->setMovie(downloadingIcon);
-    downloadingIcon->setFileName(":/res/images/loading-blocks.gif");
-    busyLabel->setFixedSize(24*logicalDpiX()/96,24*logicalDpiY()/96);
-    busyLabel->setScaledContents(true);
-    downloadingIcon->start();
-    busyLabel->hide();
-
     QLineEdit *filterEdit=new QLineEdit(this);
     filterEdit->setPlaceholderText(tr("Filter"));
     filterEdit->setClearButtonEnabled(true);
@@ -114,9 +106,6 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
 
     totalPageTip=new QLabel("/0", this);
     totalPageTip->setObjectName(QStringLiteral("ResTotalPage"));
-
-    dialogTip = new DialogTip(this);
-    dialogTip->hide();
 
     searchListView=new QTreeView(this);
     searchListView->setObjectName(QStringLiteral("SearchListView"));
@@ -177,7 +166,6 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     btnHLayout->addWidget(manageScript);
     btnHLayout->addWidget(scriptCombo);
     btnHLayout->addWidget(searchEdit);
-    btnHLayout->addWidget(busyLabel);
     btnHLayout->addStretch(1);
     btnHLayout->addWidget(filterEdit);
     QHBoxLayout *pageBarHLayout=new QHBoxLayout();
@@ -207,6 +195,7 @@ void ResSearchWindow::search(const QString &keyword, bool setSearchEdit)
     int pageCount;
     QList<ResourceItem> results;
     setEnable(false);
+    Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, tr("Searching..."), NM_PROCESS | NM_DARKNESS_BACK);
     ScriptState state = resScript->search(keyword, 1, pageCount, results);
     if(state)
     {
@@ -218,11 +207,11 @@ void ResSearchWindow::search(const QString &keyword, bool setSearchEdit)
         searchListModel->setList(currentScriptId, results);
         pageEdit->setText(QString::number(currentPage));
         totalPageTip->setText(QString("/%1").arg(totalPage));
+        Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, tr("Down"), NM_HIDE);
     }
     else
     {
-        dialogTip->showMessage(state.info, 1);
-        dialogTip->raise();
+        Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, state.info, NM_ERROR | NM_HIDE);
     }
     isSearching=false;
     setEnable(true);
@@ -234,7 +223,6 @@ void ResSearchWindow::setEnable(bool on)
     prevPage->setEnabled(on);
     nextPage->setEnabled(on);
     pageEdit->setEnabled(on);
-    busyLabel->setVisible(!on);
 }
 
 void ResSearchWindow::pageTurning(int page)
@@ -256,6 +244,7 @@ void ResSearchWindow::pageTurning(int page)
     int pageCount;
     QList<ResourceItem> results;
     setEnable(false);
+    Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, tr("Searching..."), NM_PROCESS | NM_DARKNESS_BACK);
     ScriptState state = resScript->search(currentKeyword, page, pageCount, results);
     if(state)
     {
@@ -265,11 +254,11 @@ void ResSearchWindow::pageTurning(int page)
         totalPage=pageCount;
         pageEdit->setText(QString::number(currentPage));
         totalPageTip->setText(QString("/%1").arg(totalPage));
+        Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, tr("Down"), NM_HIDE);
     }
     else
     {
-        dialogTip->showMessage(state.info, 1);
-        dialogTip->raise();
+        Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, state.info, NM_ERROR | NM_HIDE);
     }
     setEnable(true);
 }

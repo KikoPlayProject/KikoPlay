@@ -33,13 +33,11 @@ void AnimeFilterProxyModel::refreshAnimeCount(int cur, int total)
 {
     if(cur<total)
     {
-        emit animeMessage(tr("Current: %1/%2 Loaded: %2/%3").arg(rowCount()).arg(cur).arg(total),
-                          NotifyMessageFlag::NM_INFO, true);
+        emit animeMessage(tr("Current: %1/%2 Loaded: %2/%3").arg(rowCount()).arg(cur).arg(total), true);
     }
     else
     {
-        emit animeMessage(tr("Current: %1/%2").arg(rowCount()).arg(cur),
-                          NotifyMessageFlag::NM_OK, false);
+        emit animeMessage(tr("Current: %1/%2").arg(rowCount()).arg(cur), false);
     }
 }
 

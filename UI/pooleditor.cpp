@@ -15,6 +15,7 @@
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Video/mpvplayer.h"
 #include "timelineedit.h"
+#include "Common/notifier.h"
 #include "danmuview.h"
 namespace
 {
@@ -44,7 +45,7 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),paren
         QString code(GlobalObjects::danmuPool->getPool()->getPoolCode());
         if(code.isEmpty())
         {
-            this->showMessage(tr("No Danmu Source to Share"),1);
+            this->showMessage(tr("No Danmu Source to Share"), NM_ERROR | NM_HIDE);
         }
         else
         {
@@ -66,7 +67,7 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),paren
                     code.mid(code.startsWith("kikoplay:pool=")?14:15),
                     code.startsWith("kikoplay:anime="));
         if(ret) refreshItems();
-        this->showMessage(ret?tr("Code Added"):tr("Code Error"),ret?0:1);
+        this->showMessage(ret?tr("Code Added"):tr("Code Error"),ret? NM_HIDE:NM_ERROR | NM_HIDE);
     });
 
     QGridLayout *blockGLayout=new QGridLayout(this);

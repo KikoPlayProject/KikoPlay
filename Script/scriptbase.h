@@ -90,7 +90,7 @@ protected:
 public:
     static void pushValue(lua_State *L, const QVariant &val);
     static QVariant getValue(lua_State *L);
-    static size_t getTableLength(lua_State *L, int pos);
+    static int getTableLength(lua_State *L, int pos);
 };
 
 #endif // SCRIPTBASE_H

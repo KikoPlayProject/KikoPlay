@@ -18,13 +18,8 @@ void AnimeModel::setActive(bool isActive)
         if(!tmpAnimes.isEmpty())
         {
             beginInsertRows(QModelIndex(),0,tmpAnimes.count()-1);
-            std::copy(tmpAnimes.rbegin(), tmpAnimes.rend(), std::front_inserter(animes));
+            std::copy(tmpAnimes.begin(), tmpAnimes.end(), std::front_inserter(animes));
             tmpAnimes.clear();
-//            while(!tmpAnimes.isEmpty())
-//            {
-//                Anime *anime=tmpAnimes.takeFirst();
-//                animes.prepend(anime);
-//            }
             endInsertRows();
             showStatisMessage();
         }
@@ -108,7 +103,7 @@ void AnimeModel::fetchMore(const QModelIndex &)
 {
     QList<Anime *> moreAnimes;
     hasMoreAnimes=false;
-    emit animeMessage(tr("Fetching..."),NotifyMessageFlag::NM_PROCESS,false);
+    Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching..."), NM_PROCESS|NM_DARKNESS_BACK);
     AnimeWorker::instance()->fetchAnimes(&moreAnimes, currentOffset, limitCount);
     if(moreAnimes.count()>0)
     {
@@ -118,6 +113,7 @@ void AnimeModel::fetchMore(const QModelIndex &)
         endInsertRows();
         currentOffset+=moreAnimes.count();
     }
+    Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Down"), NM_HIDE);
     showStatisMessage();
 }
 

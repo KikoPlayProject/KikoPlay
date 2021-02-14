@@ -23,6 +23,7 @@
 #include "Play/Danmu/blocker.h"
 #include "Script/scriptmanager.h"
 #include "globalobjects.h"
+#include "Common/notifier.h"
 namespace
 {
 
@@ -201,7 +202,7 @@ void AddDanmu::search()
             QCoreApplication::processEvents();
         }
     } else {
-        showMessage(ret.info, 1);
+        showMessage(ret.info, NM_ERROR | NM_HIDE);
     }
     searchResultWidget->setEnabled(true);
     endProcess();
@@ -228,7 +229,7 @@ void AddDanmu::addSearchItem(QList<DanmuSource> &sources)
             selectedDanmuList.append({src, tmplist});
             danmuItemModel->addItem(src);
         } else {
-            showMessage(ret.info, 1);
+            showMessage(ret.info, NM_ERROR | NM_HIDE);
         }
         if(nSrc) delete nSrc;
     }
@@ -270,7 +271,7 @@ void AddDanmu::addURL()
     QList<DanmuSource> results;
     auto ret = GlobalObjects::danmuProvider->getURLInfo(url, results);
     if(!ret)
-        showMessage(ret.info, 1);
+        showMessage(ret.info, NM_ERROR | NM_HIDE);
     else
         addSearchItem(results);
     addUrlButton->setEnabled(true);

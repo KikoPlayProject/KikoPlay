@@ -318,7 +318,7 @@ void CFramelessDialog::setTitle(const QString &text)
 void CFramelessDialog::showMessage(const QString &msg, int type)
 {
     dialogTip->showMessage(msg, type);
-    dialogTip->raise();
+    //dialogTip->raise();
 }
 
 void CFramelessDialog::reject()

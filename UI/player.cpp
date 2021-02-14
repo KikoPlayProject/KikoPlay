@@ -42,6 +42,7 @@ public:
         QHBoxLayout *infoBarHLayout=new QHBoxLayout(this);
         infoBarHLayout->addWidget(infoText);
         QObject::connect(&hideTimer,&QTimer::timeout,this,&InfoTip::hide);
+        eff = new QGraphicsOpacityEffect(this);
     }
     void showMessage(const QString &msg)
     {
@@ -52,7 +53,7 @@ public:
         infoText->setText(msg);
         infoText->adjustSize();
         adjustSize();
-        QGraphicsOpacityEffect *eff = new QGraphicsOpacityEffect(this);
+        //QGraphicsOpacityEffect *eff = new QGraphicsOpacityEffect(this);
         setGraphicsEffect(eff);
         eff->setOpacity(0);
         show();
@@ -64,6 +65,7 @@ public:
         a->start(QPropertyAnimation::DeleteWhenStopped);
     }
 private:
+    QGraphicsOpacityEffect *eff;
     QLabel *infoText;
     QTimer hideTimer;
 };

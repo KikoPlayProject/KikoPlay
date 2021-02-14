@@ -3,6 +3,7 @@
 #include <QHBoxLayout>
 #include <QDir>
 #include "widgets/dirselectwidget.h"
+#include "Common/notifier.h"
 AddUriTask::AddUriTask(QWidget *parent, const QStringList &uris, const QString &path) : CFramelessDialog(tr("Add URI"),parent,true,true,false)
 {
     uriEdit=new QPlainTextEdit(this);
@@ -26,7 +27,7 @@ void AddUriTask::onAccept()
 {
     if(!dirSelect->isValid())
     {
-        showMessage(tr("Dir is invaild"),1);
+        showMessage(tr("Dir is invaild"), NM_ERROR | NM_HIDE);
         return;
     }
     this->dir=dirSelect->getDir();
@@ -40,7 +41,7 @@ void AddUriTask::onAccept()
     }
     if(uris.count()==0)
     {
-        showMessage(tr("Uri is invaild"),1);
+        showMessage(tr("Uri is invaild"), NM_ERROR | NM_HIDE);
         return;
     }
     this->uriList=uris;

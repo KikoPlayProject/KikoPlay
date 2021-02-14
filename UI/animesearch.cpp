@@ -7,13 +7,13 @@
 #include <QLabel>
 #include <QComboBox>
 #include <QCheckBox>
-#include "MediaLibrary/animeinfo.h"
 #include "globalobjects.h"
 #include "MediaLibrary/animeworker.h"
 #include "MediaLibrary/animeprovider.h"
+#include "Common/notifier.h"
 #define AnimeRole Qt::UserRole+1
 
-AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("Bangumi Search"),parent,true,true,false),currentAnime(anime)
+AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("Bangumi Search"),parent,true,true,false)
 {
     scriptCombo=new QComboBox(this);
     for(const auto &p : GlobalObjects::animeProvider->getSearchProviders())
@@ -66,7 +66,7 @@ void AnimeSearch::search()
             item->setData(0, AnimeRole, QVariant::fromValue(anime));
         }
     } else {
-        showMessage(state.info, 1);
+        showMessage(state.info, NM_ERROR | NM_HIDE);
     }
     searchButton->setEnabled(true);
     searchWordEdit->setEnabled(true);
@@ -77,48 +77,12 @@ void AnimeSearch::onAccept()
 {
     if(bangumiList->selectedItems().count()==0)
     {
-        showMessage(tr("You need to choose one"), 1);
+        showMessage(tr("You need to choose one"), NM_ERROR | NM_HIDE);
         return;
     }
     else
     {
-        showBusyState(true);
-        searchButton->setEnabled(false);
-        searchWordEdit->setEnabled(false);
-        AnimeLite animeLite = bangumiList->selectedItems().last()->data(0, AnimeRole).value<AnimeLite>();
-        Anime *nAnime = new Anime;
-        ScriptState state = GlobalObjects::animeProvider->getDetail(animeLite, nAnime);
-        if(state)
-        {
-            QStringList tags;
-            if(currentAnime)
-            {
-                QString animeName(AnimeWorker::instance()->addAnime(currentAnime, nAnime));
-                Anime *tAnime = AnimeWorker::instance()->getAnime(animeName);
-                if(tAnime)
-                {
-                    GlobalObjects::animeProvider->getTags(tAnime, tags);
-                    if(tags.size()>0) AnimeWorker::instance()->addTagsTo(tAnime->name(), tags);
-                }
-            }
-            else
-            {
-                if(AnimeWorker::instance()->addAnime(nAnime))
-                {
-                    GlobalObjects::animeProvider->getTags(nAnime, tags);
-                    if(tags.size()>0) AnimeWorker::instance()->addTagsTo(nAnime->name(), tags);
-                }
-            }
-        }
-        else
-        {
-            showMessage(state.info, 1);
-            delete nAnime;
-        }
-        showBusyState(false);
-        searchButton->setEnabled(true);
-        searchWordEdit->setEnabled(true);
-        if(!state) return;
-        CFramelessDialog::onAccept();
+        curSelectedAnime = bangumiList->selectedItems().last()->data(0, AnimeRole).value<AnimeLite>();
     }
+    CFramelessDialog::onAccept();
 }

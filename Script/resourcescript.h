@@ -23,6 +23,8 @@ public:
     ScriptState getDetail(const ResourceItem &oldItem, ResourceItem &newItem);
 private:
     bool hasDetailFunc;
+    const char *searchFunc = "search";
+    const char *detailFunc = "getdetail";
 };
 
 #endif // RESOURCESCRIPT_H

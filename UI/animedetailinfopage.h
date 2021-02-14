@@ -8,7 +8,6 @@ class QLabel;
 class QTextEdit;
 class EpisodesModel;
 class EpItemDelegate;
-class DialogTip;
 struct Character;
 class QListWidget;
 class QPushButton;
@@ -64,11 +63,9 @@ public:
     void setAnime(Anime *anime);
 signals:
     void playFile(const QString &file);
-    void setBackEnable(bool enable);
 private:
     Anime *currentAnime;
-    DialogTip *dialogTip;
-    QLabel *titleLabel, *coverLabel, *viewInfoLabel, *loadingLabel;
+    QLabel *titleLabel, *coverLabel, *viewInfoLabel;
     QTextEdit *descInfo;
     QStringList epNames;
     EpisodesModel *epModel;
@@ -78,7 +75,6 @@ private:
     QStackedLayout *tagContainerSLayout;
     CaptureListModel *captureModel;
 
-    void showBusyState(bool on);
     QWidget *setupDescriptionPage();
     QWidget *setupEpisodesPage();
     QWidget *setupCharacterPage();

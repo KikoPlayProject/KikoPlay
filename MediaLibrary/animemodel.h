@@ -14,7 +14,6 @@ public:
     Anime *getAnime(const QModelIndex &index);
     void showStatisMessage();
 signals:
-    void animeMessage(const QString &msg, int flags, bool hasMore);
     void animeCountInfo(int cur, int total);
 public:
     virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}

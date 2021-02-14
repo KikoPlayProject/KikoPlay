@@ -18,6 +18,7 @@
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Playlist/playlistitem.h"
 #include "Play/Playlist/playlist.h"
+#include "Common/notifier.h"
 #include "timelineedit.h"
 #include "adddanmu.h"
 #include "addpool.h"
@@ -112,7 +113,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                 int srcId=pool->addSource(sourceInfo,danmuList,true);
                 if(srcId<0)
                 {
-                    showMessage(tr("Add %1 Failed").arg(sourceInfo.title),1);
+                    showMessage(tr("Add %1 Failed").arg(sourceInfo.title), NM_ERROR | NM_HIDE);
                     qDeleteAll(danmuList);
                     continue;
                 }
@@ -174,7 +175,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         }
         poolView->setEnabled(true);
         this->showBusyState(false);
-        this->showMessage(ret?tr("Code Added"):tr("Code Error"),ret?0:1);
+        this->showMessage(ret?tr("Code Added"):tr("Code Error"),ret?NM_HIDE:NM_ERROR | NM_HIDE);
     });
     QAction *act_copyPoolCode=new QAction(tr("Copy Danmu Pool Code"),this);
     QObject::connect(act_copyPoolCode,&QAction::triggered,this,[this,managerModel,poolView,proxyModel](){
@@ -186,7 +187,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         QString code(pool->getPoolCode());
         if(code.isEmpty())
         {
-            showMessage(tr("No Danmu Source to Share"),1);
+            showMessage(tr("No Danmu Source to Share"), NM_ERROR | NM_HIDE);
         }
         else
         {
@@ -227,7 +228,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
             QString npid = GlobalObjects::danmuManager->renamePool(opid,addPool.anime,nEp.type,nEp.index,nEp.name);
             if(npid.isEmpty())
             {
-                showMessage(tr("Rename Failed, Try Again?"),1);
+                showMessage(tr("Rename Failed, Try Again?"), NM_ERROR | NM_HIDE);
                 return;
             }
             if(opid==npid && epNode->epName==nEp.name) return;

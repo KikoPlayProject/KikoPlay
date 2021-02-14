@@ -155,7 +155,7 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
     Notifier *notifier = Notifier::getNotifier();
     if(tmpItems.count()==0)
     {
-        notifier->showMessage(Notifier::LIST_NOTIFY, tr("File exist or Unsupported format"), NM_HIDE|NM_INFO);
+        notifier->showMessage(Notifier::LIST_NOTIFY, tr("File exist or Unsupported format"), NM_HIDE);
         return 0;
     }
     int insertPosition(0);
@@ -184,7 +184,7 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
     d->playListChanged=true;
     d->needRefresh = true;
     d->incModifyCounter();
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(tmpItems.size()),NM_HIDE|NM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(tmpItems.size()),NM_HIDE);
     if(d->autoMatch && matchItems.count()>0)
     {
         emit matchStatusChanged(true);
@@ -245,7 +245,7 @@ int PlayList::addFolder(QString folderStr, QModelIndex parent)
         }
 	}
     Notifier *notifier = Notifier::getNotifier();
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(itemCount),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(itemCount),NotifyMessageFlag::NM_HIDE);
     if(d->autoMatch && matchItems.count()>0)
     {
         emit matchStatusChanged(true);
@@ -376,7 +376,7 @@ int PlayList::refreshFolder(const QModelIndex &index)
     QList<PlayListItem *> nItems;
     int c = d->refreshFolder(item, nItems);
     Notifier *notifier = Notifier::getNotifier();
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(c),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(c),NotifyMessageFlag::NM_HIDE);
     if(c>0)
     {
         d->playListChanged=true;
@@ -739,7 +739,7 @@ const PlayListItem *PlayList::setCurrentItem(const QModelIndex &index,bool playC
     if(!fileInfo.exists())
     {
         Notifier *notifier = Notifier::getNotifier();
-        notifier->showMessage(Notifier::LIST_NOTIFY, tr("File Not Exist"),NM_INFO|NM_HIDE);
+        notifier->showMessage(Notifier::LIST_NOTIFY, tr("File Not Exist"), NM_HIDE);
         return nullptr;
     }
     PlayListItem *tmp = d->currentItem;
@@ -880,7 +880,7 @@ void PlayList::matchIndex(QModelIndex &index, const MatchResult &match)
     d->playListChanged = true;
     d->needRefresh = true;
     Notifier *notifier = Notifier::getNotifier();
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Success: %1").arg(item->title),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Success: %1").arg(item->title),NotifyMessageFlag::NM_HIDE);
     emit dataChanged(index, index);
     if (item == d->currentItem)
     {
@@ -978,7 +978,7 @@ void PlayList::updateItemsDanmu(const QModelIndexList &itemIndexes)
         }
     }
     QObject::disconnect(conn);
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Update Done"),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Update Done"),NotifyMessageFlag::NM_HIDE);
 }
 
 void PlayList::setCurrentPlayTime(int playTime)
@@ -1100,7 +1100,7 @@ void PlayList::exportDanmuItems(const QModelIndexList &exportIndexes)
             }
         }
     }
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Export Down"),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Export Down"),NotifyMessageFlag::NM_HIDE);
 }
 
 void PlayList::dumpJsonPlaylist(QJsonDocument &jsonDoc, QHash<QString, QString> &mediaHash)
@@ -1194,7 +1194,7 @@ void MatchWorker::match(const QList<PlayListItem *> &items)
         if(!match.success) GlobalObjects::animeProvider->match(GlobalObjects::animeProvider->defaultMatchScript(), currentItem->path, match);
         if(!match.success)
         {
-            notifier->showMessage(Notifier::LIST_NOTIFY, tr("Failed: %1").arg(currentItem->title),NotifyMessageFlag::NM_PROCESS);
+            notifier->showMessage(Notifier::LIST_NOTIFY, tr("Failed: %1").arg(currentItem->title),NotifyMessageFlag::NM_PROCESS|NotifyMessageFlag::NM_SHOWCANCEL);
             continue;
         }
         currentItem->animeTitle=match.name;
@@ -1207,7 +1207,7 @@ void MatchWorker::match(const QList<PlayListItem *> &items)
     }
     QObject::disconnect(conn);
     emit matchDown(matchedItems);
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Done"),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Done"),NotifyMessageFlag::NM_HIDE);
 }
 
 void MatchWorker::match(const QList<PlayListItem *> &items, const QString &animeTitle, const QList<EpInfo> &eps)
@@ -1234,9 +1234,8 @@ void MatchWorker::match(const QList<PlayListItem *> &items, const QString &anime
 
         matchedItems<<items[i];
         AnimeWorker::instance()->addAnime(match);
-        //GlobalObjects::library->addToLibrary(items[i]->animeTitle,items[i]->title,items[i]->path);
     }
     QObject::disconnect(conn);
     emit matchDown(matchedItems);
-    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Done"),NotifyMessageFlag::NM_HIDE|NotifyMessageFlag::NM_OK);
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Done"),NotifyMessageFlag::NM_HIDE);
 }

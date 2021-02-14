@@ -58,7 +58,7 @@ protected:
     virtual void resizeEvent(QResizeEvent *event);
     void showBusyState(bool busy);
     void setTitle(const QString &text);
-    void showMessage(const QString &msg, int type=0);
+    void showMessage(const QString &msg, int type=1);
     // QDialog interface
 public slots:
     virtual void reject();

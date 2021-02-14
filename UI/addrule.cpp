@@ -12,6 +12,7 @@
 #include "widgets/dirselectwidget.h"
 #include "Script/scriptmanager.h"
 #include "Script/resourcescript.h"
+#include "Common/notifier.h"
 
 AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add Rule"),parent, true, true, false)
 {
@@ -76,7 +77,7 @@ AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add
     preview->setAlternatingRowColors(true);
     preview->setModel(previewModel);
     QObject::connect(previewModel, &PreviewModel::showError, this, [this](const QString &err){
-        showMessage(err, 1);
+        showMessage(err, NM_ERROR | NM_HIDE);
     });
 
     QGridLayout *addRuleGLayout=new QGridLayout(this);
@@ -141,22 +142,22 @@ void AddRule::onAccept()
 {
     if(nameEdit->text().trimmed().isEmpty())
     {
-        showMessage(tr("Title can't be empty"), 1);
+        showMessage(tr("Title should not be empty"), NM_ERROR | NM_HIDE);
         return;
     }
     if(searchWordEdit->text().trimmed().isEmpty())
     {
-        showMessage(tr("Search Word can't be empty"), 1);
+        showMessage(tr("Search Word should not be empty"), NM_ERROR | NM_HIDE);
         return;
     }
     if(!filePathSelector->isValid())
     {
-        showMessage(tr("File Path is invaild"), 1);
+        showMessage(tr("File Path is invaild"), NM_ERROR | NM_HIDE);
         return;
     }
     if(minSizeSpin->value()>=maxSizeSpin->value() && maxSizeSpin->value()>0)
     {
-        showMessage(tr("Min Size should be less than Max Size"), 1);
+        showMessage(tr("Min Size should be less than Max Size"), NM_ERROR | NM_HIDE);
         return;
     }
     curRule->name=nameEdit->text().trimmed();

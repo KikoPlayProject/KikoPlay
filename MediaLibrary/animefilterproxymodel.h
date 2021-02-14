@@ -12,7 +12,7 @@ public:
     void setTags(const QStringList &tagList);
     void setTime(const QSet<QString> &timeSet);
 signals:
-    void animeMessage(const QString &msg, int flags, bool hasMore);
+    void animeMessage(const QString &msg, bool hasMore);
 private:
     int filterType;
     QSet<QString> timeFilterSet;

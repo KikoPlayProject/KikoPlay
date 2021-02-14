@@ -60,5 +60,6 @@
         <file>res/style_bg_default.qss</file>
         <file>res/images/folder.svg</file>
         <file>res/mediainfo</file>
+        <file>res/images/busy.gif</file>
     </qresource>
 </RCC>

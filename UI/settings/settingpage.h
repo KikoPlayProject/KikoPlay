@@ -13,7 +13,7 @@ public:
     const QHash<QString, QVariant> &getChangedValues() const {return changedValues;}
 signals:
     void showBusyState(bool);
-    void showMessage(const QString &msg, int type=0);
+    void showMessage(const QString &msg, int type=1);
 protected:
     QHash<QString, QVariant> changedValues;
 };

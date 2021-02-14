@@ -433,6 +433,7 @@ AnimeWorker::AnimeWorker(QObject *parent):QObject(parent)
     qRegisterMetaType<EpInfo>("EpInfo");
     qRegisterMetaType<AnimeImage>("AnimeImage");
     qRegisterMetaType<EpType>("EpType");
+    qRegisterMetaType<AnimeLite>("AnimeLite");
 }
 
 AnimeWorker::~AnimeWorker()
@@ -658,6 +659,7 @@ bool AnimeWorker::addAnime(Anime *anime)
         else  //anime not exits, add it to library
         {
             QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+            anime->_addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
             query.prepare("insert into anime(Anime,AddTime) values(?,?)");
             query.bindValue(0,anime->_name);
             query.bindValue(1,anime->_addTime);

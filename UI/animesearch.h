@@ -1,16 +1,17 @@
 #ifndef BANGUMISEARCH_H
 #define BANGUMISEARCH_H
 #include "framelessdialog.h"
+#include "MediaLibrary/animeinfo.h"
 class QTreeWidget;
 class QLineEdit;
 class QComboBox;
-class Anime;
 class AnimeSearch : public CFramelessDialog
 {
     Q_OBJECT
 public:
     explicit AnimeSearch(Anime *anime, QWidget *parent = nullptr);
-    Anime *currentAnime;
+    AnimeLite curSelectedAnime;
+
 private:
     QTreeWidget *bangumiList;
     QLineEdit *searchWordEdit;
