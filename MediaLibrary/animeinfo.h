@@ -73,6 +73,7 @@ struct AnimeLite
         return
         {
             {"name", name},
+            {"scriptId", scriptId},
             {"scriptData", scriptData},
         };
     }

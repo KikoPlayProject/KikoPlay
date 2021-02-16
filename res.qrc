@@ -4,9 +4,7 @@
         <file>res/iconfont.ttf</file>
         <file>res/images/sliderThumb.png</file>
         <file>res/images/info.png</file>
-        <file>res/images/loading-rolling.gif</file>
         <file>res/images/ok.png</file>
-        <file>res/images/loading-spinner.gif</file>
         <file>res/images/kikoplay-3.png</file>
         <file>res/images/kikoplay-4.png</file>
         <file>res/images/slider-hover.png</file>
@@ -27,7 +25,6 @@
         <file>res/db/bangumi.sql</file>
         <file>res/db/comment.sql</file>
         <file>res/db/download.sql</file>
-        <file>res/images/loading-blocks.gif</file>
         <file>res/onAirSites.json</file>
         <file>res/tip</file>
         <file>res/about</file>
@@ -60,7 +57,6 @@
         <file>res/style_bg_default.qss</file>
         <file>res/images/folder.svg</file>
         <file>res/mediainfo</file>
-        <file>res/images/busy.gif</file>
         <file>res/images/down-light-hover.svg</file>
         <file>res/images/down-arrow-dark-hover.svg</file>
         <file>res/images/up-arrow-dark-hover.svg</file>

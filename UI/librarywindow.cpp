@@ -107,7 +107,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     });
     act_delete->setEnabled(false);
 
-    QAction *act_getDetailInfo=new QAction(tr("Search for details"),this);
+    QAction *act_getDetailInfo=new QAction(tr("Search Details"),this);
     QObject::connect(act_getDetailInfo,&QAction::triggered,[this,proxyModel](){
         QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
         if(selection.size()==0)return;
@@ -136,18 +136,8 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         }
         else
         {
-            QString animeName(AnimeWorker::instance()->addAnime(currentAnime, nAnime));
-            QStringList tags;
-            Anime *tAnime = AnimeWorker::instance()->getAnime(animeName);
-            if(tAnime)
-            {
-                showMessage(tr("Fetching Tags from %1").arg(GlobalObjects::scriptManager->getScript(currentAnime->scriptId())->name()),
-                            NotifyMessageFlag::NM_PROCESS|NotifyMessageFlag::NM_DARKNESS_BACK);
-                GlobalObjects::animeProvider->getTags(tAnime, tags);
-                if(tags.size()>0) AnimeWorker::instance()->addTagsTo(tAnime->name(), tags);
-            }
+            showMessage(tr("Fetch Down"), NotifyMessageFlag::NM_HIDE);
         }
-        showMessage(tr("Fetch Down"), NotifyMessageFlag::NM_HIDE);
     });
     act_updateDetailInfo->setEnabled(false);
 
@@ -157,22 +147,20 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     });
 
     QMenu *animeListContextMenu=new QMenu(animeListView);
+    animeListContextMenu->addAction(act_searchAdd);
     animeListContextMenu->addAction(act_getDetailInfo);
     animeListContextMenu->addAction(act_updateDetailInfo);
-    animeListContextMenu->addAction(act_searchAdd);
     animeListContextMenu->addAction(act_delete);
     QAction *menuSep = new QAction(this);
     menuSep->setSeparator(true);
     static QList<QAction *> scriptActions;
     QObject::connect(animeListView,&QListView::customContextMenuRequested,[=](){
         QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
-        animeListContextMenu->clear();
+        for(QAction *act : scriptActions)
+            animeListContextMenu->removeAction(act);
+        animeListContextMenu->removeAction(menuSep);
         qDeleteAll(scriptActions);
         scriptActions.clear();
-        animeListContextMenu->addAction(act_getDetailInfo);
-        animeListContextMenu->addAction(act_updateDetailInfo);
-        animeListContextMenu->addAction(act_searchAdd);
-        animeListContextMenu->addAction(act_delete);
         if(selection.size()>0)
         {
             Anime *currentAnime = animeModel->getAnime(selection.indexes().first());

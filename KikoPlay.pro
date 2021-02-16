@@ -71,6 +71,7 @@ SOURCES += \
     UI/widgets/danmustatiswidget.cpp \
     UI/widgets/dialogtip.cpp \
     UI/widgets/fonticonbutton.cpp \
+    UI/widgets/loadingicon.cpp \
         main.cpp \
     UI/mainwindow.cpp \
     UI/framelesswindow.cpp \
@@ -198,6 +199,7 @@ HEADERS += \
     UI/widgets/danmustatiswidget.h \
     UI/widgets/dialogtip.h \
     UI/widgets/fonticonbutton.h \
+    UI/widgets/loadingicon.h \
     globalobjects.h \
     Play/Playlist/playlist.h \
     Play/Video/mpvplayer.h \

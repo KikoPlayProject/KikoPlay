@@ -1141,19 +1141,6 @@ void PlayerWindow::setupPlaySettingPage()
 
     QPushButton *showMpvLog=new QPushButton(tr("Show MPV Log"), pagePlay);
     QObject::connect(showMpvLog,&QPushButton::clicked, this, &PlayerWindow::showMPVLog);
-    /*
-    QObject::connect(showMpvLog,&QPushButton::clicked,[this](){
-        static bool inited = false;
-        if(!inited)
-        {
-            inited = true;
-            QRect geo(0,0,400*logicalDpiX()/96,300*logicalDpiY()/96);
-            geo.moveCenter(this->geometry().center());
-            logDialog->move(mapToGlobal(geo.topLeft()));
-        }
-        logDialog->show();
-    });
-    */
 
 //Behavior Page
     QWidget *pageBehavior=new QWidget(playSettingPage);
@@ -1282,56 +1269,59 @@ void PlayerWindow::setupPlaySettingPage()
     QGridLayout *playSettingGLayout=new QGridLayout(pagePlay);
     playSettingGLayout->setContentsMargins(0,0,0,0);
     playSettingGLayout->setColumnStretch(1, 1);
-    playSettingGLayout->setRowStretch(6, 1);
-    playSettingGLayout->addWidget(audioTrackLabel,0,0);
-    playSettingGLayout->addWidget(audioTrackCombo,0,1,1,2);
-    playSettingGLayout->addWidget(subtitleTrackLabel,1,0);
-    playSettingGLayout->addWidget(subtitleTrackCombo,1,1);
-    playSettingGLayout->addWidget(addSubtitleButton,1,2);
-    playSettingGLayout->addWidget(subtitleDelayLabel,2,0);
-    playSettingGLayout->addWidget(delaySpinBox,2,1, 1,2);
-    playSettingGLayout->addWidget(aspectLabel,3,0);
-    playSettingGLayout->addWidget(aspectRatioCombo,3,1,1,2);
-    playSettingGLayout->addWidget(speedLabel,4,0);
-    playSettingGLayout->addWidget(playSpeedCombo,4,1,1,2);
+    //playSettingGLayout->setRowStretch(0, 1);
+    //playSettingGLayout->setRowStretch(7, 1);
+    playSettingGLayout->addWidget(audioTrackLabel,1,0);
+    playSettingGLayout->addWidget(audioTrackCombo,1,1,1,2);
+    playSettingGLayout->addWidget(subtitleTrackLabel,2,0);
+    playSettingGLayout->addWidget(subtitleTrackCombo,2,1);
+    playSettingGLayout->addWidget(addSubtitleButton,2,2);
+    playSettingGLayout->addWidget(subtitleDelayLabel,3,0);
+    playSettingGLayout->addWidget(delaySpinBox,3,1, 1,2);
+    playSettingGLayout->addWidget(aspectLabel,4,0);
+    playSettingGLayout->addWidget(aspectRatioCombo,4,1,1,2);
+    playSettingGLayout->addWidget(speedLabel,5,0);
+    playSettingGLayout->addWidget(playSpeedCombo,5,1,1,2);
     QHBoxLayout *bottomBtnHLayout=new QHBoxLayout();
     bottomBtnHLayout->addWidget(editMpvOptions);
     bottomBtnHLayout->addWidget(showMpvLog);
-    playSettingGLayout->addLayout(bottomBtnHLayout,5,0,1,3);
+    playSettingGLayout->addLayout(bottomBtnHLayout,6,0,1,3);
 
 
     QGridLayout *appearanceGLayout=new QGridLayout(pageBehavior);
     appearanceGLayout->setContentsMargins(0,0,0,0);
     appearanceGLayout->setColumnStretch(1, 1);
-    appearanceGLayout->setRowStretch(4,1);
-    appearanceGLayout->addWidget(clickBehaivorLabel,0,0);
-    appearanceGLayout->addWidget(clickBehaviorCombo,0,1);
-    appearanceGLayout->addWidget(dbClickBehaivorLabel,1,0);
-    appearanceGLayout->addWidget(dbClickBehaviorCombo,1,1);
-    appearanceGLayout->addWidget(forwardTimeLabel,2,0);
-    appearanceGLayout->addWidget(forwardTimeSpin,2,1);
-    appearanceGLayout->addWidget(backwardTimeLabel,3,0);
-    appearanceGLayout->addWidget(backwardTimeSpin,3,1);
-    appearanceGLayout->addWidget(showPreview,4,0,1,2);
+    //appearanceGLayout->setRowStretch(0,1);
+    //appearanceGLayout->setRowStretch(6,1);
+    appearanceGLayout->addWidget(clickBehaivorLabel,1,0);
+    appearanceGLayout->addWidget(clickBehaviorCombo,1,1);
+    appearanceGLayout->addWidget(dbClickBehaivorLabel,2,0);
+    appearanceGLayout->addWidget(dbClickBehaviorCombo,2,1);
+    appearanceGLayout->addWidget(forwardTimeLabel,3,0);
+    appearanceGLayout->addWidget(forwardTimeSpin,3,1);
+    appearanceGLayout->addWidget(backwardTimeLabel,4,0);
+    appearanceGLayout->addWidget(backwardTimeSpin,4,1);
+    appearanceGLayout->addWidget(showPreview,5,0,1,2);
 
 
     QGridLayout *colorGLayout=new QGridLayout(pageColor);
     colorGLayout->setContentsMargins(0,0,0,0);
     colorGLayout->setColumnStretch(1, 1);
-    colorGLayout->setRowStretch(7,1);
-    colorGLayout->addWidget(brightnessLabel,0,0);
-    colorGLayout->addWidget(brightnessSlider,0,1);
-    colorGLayout->addWidget(contrastLabel,1,0);
-    colorGLayout->addWidget(contrastSlider,1,1);
-    colorGLayout->addWidget(saturationLabel,2,0);
-    colorGLayout->addWidget(saturationSlider,2,1);
-    colorGLayout->addWidget(gammaLabel,3,0);
-    colorGLayout->addWidget(gammaSlider,3,1);
-    colorGLayout->addWidget(hueLabel,4,0);
-    colorGLayout->addWidget(hueSlider,4,1);
-    colorGLayout->addWidget(sharpenLabel,5,0);
-    colorGLayout->addWidget(sharpenSlider,5,1);
-    colorGLayout->addWidget(colorReset,6,0,1,2);
+    //colorGLayout->setRowStretch(0,1);
+    //colorGLayout->setRowStretch(8,1);
+    colorGLayout->addWidget(brightnessLabel,1,0);
+    colorGLayout->addWidget(brightnessSlider,1,1);
+    colorGLayout->addWidget(contrastLabel,2,0);
+    colorGLayout->addWidget(contrastSlider,2,1);
+    colorGLayout->addWidget(saturationLabel,3,0);
+    colorGLayout->addWidget(saturationSlider,3,1);
+    colorGLayout->addWidget(gammaLabel,4,0);
+    colorGLayout->addWidget(gammaSlider,4,1);
+    colorGLayout->addWidget(hueLabel,5,0);
+    colorGLayout->addWidget(hueSlider,5,1);
+    colorGLayout->addWidget(sharpenLabel,6,0);
+    colorGLayout->addWidget(sharpenSlider,6,1);
+    colorGLayout->addWidget(colorReset,7,0,1,2);
 
     playSettingPage->resize(playSettingPage->layout()->sizeHint() + QSize(40*logicalDpiX()/96, 0));
     playSettingPage->hide();

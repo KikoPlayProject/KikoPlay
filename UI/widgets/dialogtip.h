@@ -10,7 +10,8 @@ public:
     explicit DialogTip(QWidget *parent);
     void showMessage(const QString &msg, int type=0);
 private:
-    QLabel *infoText, *busyLabel;
+    QLabel *infoText;
+    QWidget *busyWidget;
     QTimer hideTimer;
     QWidget *bgDarkWidget;
     QGraphicsOpacityEffect *fadeoutEffect;

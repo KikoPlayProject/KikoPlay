@@ -13,6 +13,7 @@
 #include "matcheditor.h"
 #include "blockeditor.h"
 #include "inputdialog.h"
+#include "widgets/loadingicon.h"
 #include "Play/Danmu/Provider/localprovider.h"
 #include "MediaLibrary/animeprovider.h"
 #include "Play/Video/mpvplayer.h"
@@ -77,11 +78,11 @@ namespace
             setObjectName(QStringLiteral("ListInfoBar"));
             QMovie *infoIcon=new QMovie(this);
             infoIcon->setFileName(":/res/images/busy.gif");
-            movieLabel=new QLabel(this);
-            movieLabel->setMovie(infoIcon);
-            movieLabel->setFixedSize(32 * logicalDpiX()/96, 32 * logicalDpiY()/96);
-            infoIcon->start();
-            movieLabel->hide();
+            loadingIcon=new LoadingIcon(Qt::white, this);
+            //movieLabel->setMovie(infoIcon);
+            //movieLabel->setFixedSize(32 * logicalDpiX()/96, 32 * logicalDpiY()/96);
+            //infoIcon->start();
+            loadingIcon->hide();
 
             infoText=new QLabel(this);
             infoText->setObjectName(QStringLiteral("labelListInfo"));
@@ -91,7 +92,7 @@ namespace
             QHBoxLayout *infoBarHLayout=new QHBoxLayout(this);
             infoBarHLayout->setContentsMargins(5,0,5,0);
             infoBarHLayout->setSpacing(4);
-            infoBarHLayout->addWidget(movieLabel);
+            infoBarHLayout->addWidget(loadingIcon);
             infoBarHLayout->addWidget(infoText);
             infoBarHLayout->addWidget(cancelBtn);
             cancelBtn->hide();
@@ -113,9 +114,9 @@ namespace
             }
             QString icon;
             if(flag&NotifyMessageFlag::NM_PROCESS)
-                movieLabel->show();
+                loadingIcon->show();
             else
-                movieLabel->hide();
+                loadingIcon->hide();
             if(flag&NotifyMessageFlag::NM_SHOWCANCEL)
                 cancelBtn->show();
             else
@@ -123,7 +124,8 @@ namespace
             infoText->setText(msg);
         }
     private:
-        QLabel *infoText, *movieLabel;
+        QLabel *infoText;
+        LoadingIcon *loadingIcon;
         QTimer hideTimer;
         QPushButton *cancelBtn;
     };

@@ -1,7 +1,7 @@
 #include "dialogtip.h"
 #include <QLabel>
 #include <QHBoxLayout>
-#include <QMovie>
+#include "loadingicon.h"
 #include <QPropertyAnimation>
 #include <QGraphicsOpacityEffect>
 #include "globalobjects.h"
@@ -19,17 +19,11 @@ DialogTip::DialogTip(QWidget *parent):QWidget(parent)
     bgDarkWidget->hide();
     fadeoutEffect = new QGraphicsOpacityEffect(bgDarkWidget);
 
-    QMovie *busyIcon=new QMovie(this);
-    busyLabel=new QLabel(this);
-    busyLabel->setMovie(busyIcon);
-    busyIcon->setFileName(":/res/images/busy.gif");
-    busyLabel->setScaledContents(true);
-    busyLabel->setFixedSize(32 * logicalDpiX()/96, 32 * logicalDpiY() / 96);
-    busyIcon->start();
-    busyLabel->hide();
+    busyWidget = new LoadingIcon(Qt::white, this);
+    static_cast<LoadingIcon *>(busyWidget)->hide();
 
     QHBoxLayout *infoBarHLayout=new QHBoxLayout(this);
-    infoBarHLayout->addWidget(busyLabel);
+    infoBarHLayout->addWidget(busyWidget);
     infoBarHLayout->addWidget(infoText);
     QObject::connect(&hideTimer,&QTimer::timeout,this,[this](){
         QPropertyAnimation *moveAnime = new QPropertyAnimation(this, "pos");
@@ -51,11 +45,11 @@ void DialogTip::showMessage(const QString &msg, int type)
 
     if(type & NM_PROCESS)
     {
-        busyLabel->show();
+        static_cast<LoadingIcon *>(busyWidget)->show();
     }
     else
     {
-        busyLabel->hide();
+        static_cast<LoadingIcon *>(busyWidget)->hide();
     }
     bool isShow=hideTimer.isActive();
     if(hideTimer.isActive()) hideTimer.stop();

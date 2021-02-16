@@ -193,6 +193,7 @@ QVariantMap Anime::toMap(bool fillEp)
         {"name", _name},
         {"desc", _desc},
         {"url", _url},
+        {"scriptId", _scriptId},
         {"scriptData", _scriptData},
         {"airDate", _airDate},
         {"epCount", _epCount},

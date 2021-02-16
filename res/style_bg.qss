@@ -229,6 +229,8 @@ QSlider#MiniProgressSlider::sub-page:horizontal{
 }
 QSlider#widgetVolumeSlider{
     border-color: #bcbcbc;
+    margin-top: 4px;
+    margin-bottom: 4px;
 }
 QSlider#widgetVolumeSlider::groove:horizontal {
     border: 1px solid #999999;
@@ -684,6 +686,10 @@ QWidget#PopupPage QPushButton:hover{
     background-color: #38485e;
     border: 1px solid rgb(@ThemeColor);
     color: #eeeeee;
+}
+QWidget#PopupPage QSlider{
+    margin-top: 4px;
+    margin-bottom: 4px;
 }
 QWidget#PopupPage QSlider::groove:horizontal {
     height: 5px;
