@@ -14,12 +14,12 @@ ScriptState DanmuScript::loadScript(const QString &scriptPath)
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     canSearch = checkType("search", LUA_TFUNCTION);
     canLaunch = checkType("launch", LUA_TFUNCTION);
-    QVariant res = get("supportedURLsRe");
+    QVariant res = get(urlReTable);
     if(res.canConvert(QVariant::StringList))
     {
         supportedURLsRe = res.toStringList();
     }
-    QVariant urlSamples = get("sampleSupporedURLs");
+    QVariant urlSamples = get(sampleUrlTable);
     if(urlSamples.canConvert(QVariant::StringList))
     {
         sampleSupporedURLs = urlSamples.toStringList();
@@ -110,7 +110,7 @@ ScriptState DanmuScript::hasSourceToLaunch(const QList<DanmuSource> &sources, bo
     for(auto &src: sources)
         params.append(src.toMap());
     QString errInfo;
-    QVariantList rets = call(luaLaunchCheckFunc, params, 1, errInfo);
+    QVariantList rets = call(luaLaunchCheckFunc, {params}, 1, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(rets[0].type()!=QVariant::Bool) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
     result = rets[0].toBool();
@@ -154,7 +154,7 @@ QString DanmuScript::callGetSources(const char *fname, const QVariant &param, QL
     QString errInfo;
     QVariantList rets = call(fname, {param}, 1, errInfo);
     if(!errInfo.isEmpty()) return errInfo;
-    QVariant ret = rets.first();  // array, [{title='', <desc>='', data='', <delay>=xx, <count>=''},{}...]
+    QVariant ret = rets.first();  // array, [{title='', <desc>='', data='', <delay>=xx, <duration>=''},{}...]
     if(ret.type() != QVariant::List) return "Wrong Return Value Type";
     QVariantList sourceList = ret.toList();
     results.clear();

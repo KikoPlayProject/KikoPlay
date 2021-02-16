@@ -565,21 +565,7 @@ QWidget *DownloadWindow::setupLeftPanel(QWidget *parent)
         }
     });
 
-    GlobalObjects::iconfont.setPointSize(12);
-    downSpeedIconLabel=new QLabel(leftPanel);
-    downSpeedIconLabel->setObjectName(QStringLiteral("DownSpeedIcon"));
-    downSpeedIconLabel->setFont(GlobalObjects::iconfont);
-    downSpeedIconLabel->setText(QChar(0xe910));
-    downSpeedIconLabel->setMaximumWidth(downSpeedIconLabel->height()+4*logicalDpiX()/96);
-    upSpeedIconLabel=new QLabel(leftPanel);
-    upSpeedIconLabel->setObjectName(QStringLiteral("UpSpeedIcon"));
-    upSpeedIconLabel->setFont(GlobalObjects::iconfont);
-    upSpeedIconLabel->setText(QChar(0xe941));
-    upSpeedIconLabel->setMaximumWidth(upSpeedIconLabel->height()+4*logicalDpiX()/96);
-    downSpeedLabel=new QLabel(leftPanel);
-    downSpeedLabel->setObjectName(QStringLiteral("DownSpeedLabel"));
-    upSpeedLabel=new QLabel(leftPanel);
-    upSpeedLabel->setObjectName(QStringLiteral("UpSpeedLabel"));
+
 
     QObject::connect(downloadingTask, &FontIconButton::textHidden, this, [this, completedTask,
                      allTask, bgmList, resSearch,autoDownload,leftPanel](bool hide){
@@ -590,10 +576,6 @@ QWidget *DownloadWindow::setupLeftPanel(QWidget *parent)
             bgmList->hideText(true);
             resSearch->hideText(true);
             autoDownload->hideText(true);
-            downSpeedLabel->hide();
-            downSpeedIconLabel->hide();
-            upSpeedLabel->hide();
-            upSpeedIconLabel->hide();
             leftPanel->setMinimumWidth(completedTask->sizeHint().width());
         }
         else
@@ -603,10 +585,6 @@ QWidget *DownloadWindow::setupLeftPanel(QWidget *parent)
             bgmList->hideText(false);
             resSearch->hideText(false);
             autoDownload->hideText(false);
-            downSpeedLabel->show();
-            downSpeedIconLabel->show();
-            upSpeedLabel->show();
-            upSpeedIconLabel->show();
         }
     });
 
@@ -620,21 +598,7 @@ QWidget *DownloadWindow::setupLeftPanel(QWidget *parent)
     leftVLayout->addWidget(resSearch);
     leftVLayout->addWidget(autoDownload);
     leftVLayout->addStretch(1);
-    QHBoxLayout *downHLayout = new QHBoxLayout(), *upHLayout = new QHBoxLayout();
-    downHLayout->addStretch(1);
-    downHLayout->addWidget(downSpeedIconLabel);
-    downHLayout->addSpacing(4*logicalDpiX()/96);
-    downHLayout->addWidget(downSpeedLabel);
-    downHLayout->addStretch(1);
-    upHLayout->addStretch(1);
-    upHLayout->addWidget(upSpeedIconLabel);
-    upHLayout->addSpacing(4*logicalDpiX()/96);
-    upHLayout->addWidget(upSpeedLabel);
-    upHLayout->addStretch(1);
 
-    leftVLayout->addLayout(downHLayout);
-    leftVLayout->addLayout(upHLayout);
-    leftVLayout->addSpacing(20*logicalDpiY()/96);
     return leftPanel;
 }
 
@@ -648,11 +612,43 @@ QWidget *DownloadWindow::setupGeneralInfoPage(QWidget *parent)
     taskTitleLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     taskTimeLabel=new QLabel(content);
     taskTimeLabel->setObjectName(QStringLiteral("TaskTimeLabel"));
-    taskDirLabel=new QLabel(content);
-    taskDirLabel->setOpenExternalLinks(true);
+
+    GlobalObjects::iconfont.setPointSize(12);
+    downSpeedIconLabel=new QLabel(parent);
+    downSpeedIconLabel->setObjectName(QStringLiteral("DownSpeedIcon"));
+    downSpeedIconLabel->setFont(GlobalObjects::iconfont);
+    downSpeedIconLabel->setText(QChar(0xe910));
+    downSpeedIconLabel->setMaximumWidth(downSpeedIconLabel->height()+4*logicalDpiX()/96);
+    upSpeedIconLabel=new QLabel(parent);
+    upSpeedIconLabel->setObjectName(QStringLiteral("UpSpeedIcon"));
+    upSpeedIconLabel->setFont(GlobalObjects::iconfont);
+    upSpeedIconLabel->setText(QChar(0xe941));
+    upSpeedIconLabel->setMaximumWidth(upSpeedIconLabel->height()+4*logicalDpiX()/96);
+    downSpeedLabel=new QLabel(parent);
+    downSpeedLabel->setObjectName(QStringLiteral("DownSpeedLabel"));
+    upSpeedLabel=new QLabel(parent);
+    upSpeedLabel->setObjectName(QStringLiteral("UpSpeedLabel"));
+
+    QGridLayout *speedGLayout = new QGridLayout;
+    speedGLayout->addWidget(downSpeedIconLabel, 0, 0);
+    speedGLayout->addWidget(downSpeedLabel, 0, 1);
+    speedGLayout->addWidget(upSpeedIconLabel, 0, 2);
+    speedGLayout->addWidget(upSpeedLabel, 0, 3);
+    speedGLayout->setContentsMargins(0, 0, 0, 0);
+    speedGLayout->setSpacing(4*logicalDpiX()/96);
+    speedGLayout->setColumnStretch(1, 1);
+    speedGLayout->setColumnStretch(3, 1);
+    speedGLayout->setRowStretch(1, 1);
+
+    QHBoxLayout *speedHLayout = new QHBoxLayout;
+    speedHLayout->setContentsMargins(0, 0, 0, 0);
+    speedHLayout->setSpacing(0);
+    speedHLayout->addLayout(speedGLayout);
+    speedHLayout->addStretch(1);
+
     gInfoGLayout->addWidget(taskTitleLabel,0,0);
     gInfoGLayout->addWidget(taskTimeLabel,1,0);
-    gInfoGLayout->addWidget(taskDirLabel,2,0);
+    gInfoGLayout->addLayout(speedHLayout,2,0);
     gInfoGLayout->setRowStretch(3,1);
     gInfoGLayout->setColumnStretch(0,1);
     return content;
@@ -940,8 +936,6 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
         taskTimeLabel->setText(tr("Create Time: %1 \t Finish Time: %2")
                                .arg(QDateTime::fromSecsSinceEpoch(task->createTime).toString("yyyy-MM-dd hh:mm:ss"))
                                .arg(task->finishTime<task->createTime?"----":QDateTime::fromSecsSinceEpoch(task->finishTime).toString("yyyy-MM-dd hh:mm:ss")));
-        taskDirLabel->setText(QString("<a href = \"file:///%1\">%2</a>").arg(task->dir).arg(task->dir));
-        taskDirLabel->setOpenExternalLinks(true);
         blockView->setBlock(task->numPieces, task->bitfield);
         blockView->setToolTip(tr("Blocks: %1 Size: %2").arg(task->numPieces).arg(formatSize(false, task->pieceLength)));
         if(task->torrentContentState==-1) GlobalObjects::downloadModel->tryLoadTorrentContent(task);
@@ -986,7 +980,6 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
         peerModel->clear();
         taskTitleLabel->setText(tr("<No Item has been Selected>"));
         taskTimeLabel->setText(tr("Create Time: ---- \t Finish Time: ----"));
-        taskDirLabel->setText(QString());
         blockView->setBlock(0, "0");
         blockView->setToolTip("");
         selectedTFModel->setContent(nullptr);

@@ -37,7 +37,7 @@ private:
     int iconSpace;
     QString text;
     bool hideTextOn = false;
-    mutable QSize sHint, contentSize;
+    mutable QSize sHint;
     QColor fontColor, normColor, hoverColor;
     bool autoHideText = false;
     int preferredWidth;

@@ -58,7 +58,6 @@ QSize FontIconButton::sizeHint() const
     if(!hideTextOn) w += textSize.width() + iconSpace;
     w += iconSize.width();
     h = qMax(iconSize.height(), textSize.height());
-    contentSize = QSize(w, h);
     w += marginLeft + marginRight;
     h += marginTop + marginBottom;
     QStyleOptionButton opt;
@@ -74,7 +73,11 @@ void FontIconButton::paintEvent(QPaintEvent *event)
     QPushButton::paintEvent(event);
     QPainter painter(this);
     painter.setPen(QPen(fontColor));
+
+    painter.setFont(QFont(GlobalObjects::normalFont, textFontSize));
+    QSize textSize(painter.fontMetrics().size(Qt::TextShowMnemonic, text));
     painter.setFont(font());
+    QSize fontIconSize(painter.fontMetrics().size(Qt::TextShowMnemonic, icon));
 
     if(hideTextOn)
     {
@@ -82,12 +85,16 @@ void FontIconButton::paintEvent(QPaintEvent *event)
     }
     else
     {
-        int x = (width()-contentSize.width())/2;
-        int t = painter.fontMetrics().width(icon);
+        int contentWidth = fontIconSize.width()+textSize.width()+iconSpace;
+        int x = (width()-contentWidth)/2;
+
         QRect textRect(x,0,width(),height());
+        painter.setPen(QPen(fontColor));
         painter.drawText(textRect,Qt::AlignVCenter|Qt::AlignLeft,icon);
-        x += t + iconSpace;
+
+        x += fontIconSize.width() + iconSpace;
         textRect.setRect(x,0, width()-x,height());
+        painter.setPen(QPen(fontColor));
         painter.setFont(QFont(GlobalObjects::normalFont, textFontSize));
         painter.drawText(textRect,Qt::AlignVCenter|Qt::AlignLeft,text);
     }

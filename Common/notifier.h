@@ -8,11 +8,9 @@ enum NotifyMessageFlag
 {
     NM_HIDE=1,
     NM_PROCESS=2,
-    NM_INFO=4,
-    NM_OK=8,
-    NM_SHOWCANCEL = 16,
-    NM_ERROR = 32,
-    NM_DARKNESS_BACK = 64
+    NM_SHOWCANCEL = 4,
+    NM_ERROR = 8,
+    NM_DARKNESS_BACK = 16
 };
 
 class NotifyInterface

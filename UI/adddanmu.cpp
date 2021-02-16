@@ -89,7 +89,7 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,
     if(!relCache) relCache=new RelWordCache();
     Pool *pool = nullptr;
     if(item) pool=GlobalObjects::danmuManager->getPool(item->poolID, false);
-    danmuItemModel=new DanmuItemModel(this,!danmuPools.isEmpty(),pool?pool->epTitle():(item?item->title:""),this);
+    danmuItemModel=new DanmuItemModel(this,!danmuPools.isEmpty(),pool?pool->toEp().toString():(item?item->title:""),this);
 
     QVBoxLayout *danmuVLayout=new QVBoxLayout(this);
     danmuVLayout->setContentsMargins(0,0,0,0);

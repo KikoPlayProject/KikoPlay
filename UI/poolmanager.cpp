@@ -111,6 +111,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                 DanmuSource &sourceInfo=(*iter).first;
                 QList<DanmuComment *> &danmuList=(*iter).second;
                 int srcId=pool->addSource(sourceInfo,danmuList,true);
+				sourceInfo.id = srcId;
                 if(srcId<0)
                 {
                     showMessage(tr("Add %1 Failed").arg(sourceInfo.title), NM_ERROR | NM_HIDE);
@@ -244,8 +245,8 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         DanmuPoolNode *poolNode=managerModel->getPoolNode(proxyModel->mapToSource(indexList.first()));
         if(!poolNode)return;
         Pool *pool=GlobalObjects::danmuManager->getPool(poolNode->idInfo);
-        DanmuPoolNode *sourceNode=managerModel->getSourceNode(proxyModel->mapToSource(indexList.first()));
-        DanmuView view(&pool->comments(),this, sourceNode?sourceNode->idInfo:"");
+        DanmuPoolSourceNode *sourceNode=managerModel->getSourceNode(proxyModel->mapToSource(indexList.first()));
+        DanmuView view(&pool->comments(),this,  sourceNode?sourceNode->srcId:-1);
         view.exec();
     });
 

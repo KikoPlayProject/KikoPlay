@@ -53,6 +53,7 @@ SOURCES += \
     UI/animedetailinfopage.cpp \
     UI/animesearch.cpp \
     UI/autodownloadwindow.cpp \
+    UI/danmulaunch.cpp \
     UI/danmuview.cpp \
     UI/inputdialog.cpp \
     UI/logwindow.cpp \
@@ -65,6 +66,7 @@ SOURCES += \
     UI/stylemanager.cpp \
     UI/widgets/backgroundwidget.cpp \
     UI/widgets/clickslider.cpp \
+    UI/widgets/colorpicker.cpp \
     UI/widgets/colorslider.cpp \
     UI/widgets/danmustatiswidget.cpp \
     UI/widgets/dialogtip.cpp \
@@ -170,6 +172,7 @@ HEADERS += \
     UI/animedetailinfopage.h \
     UI/animesearch.h \
     UI/autodownloadwindow.h \
+    UI/danmulaunch.h \
     UI/danmuview.h \
     UI/inputdialog.h \
     UI/logwindow.h \
@@ -190,6 +193,7 @@ HEADERS += \
     UI/stylemanager.h \
     UI/widgets/backgroundwidget.h \
     UI/widgets/clickslider.h \
+    UI/widgets/colorpicker.h \
     UI/widgets/colorslider.h \
     UI/widgets/danmustatiswidget.h \
     UI/widgets/dialogtip.h \

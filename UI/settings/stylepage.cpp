@@ -59,6 +59,7 @@ StylePage::StylePage(QWidget *parent) : SettingPage(parent)
 
     QLabel *bgLightnessTip = new QLabel(tr("Background Darkness"), this);
 
+
     QGridLayout *styleGLayout = new QGridLayout(this);
     styleGLayout->setContentsMargins(0, 0, 0, 0);
     styleGLayout->addWidget(enableBg, 0, 0, 1, 3);

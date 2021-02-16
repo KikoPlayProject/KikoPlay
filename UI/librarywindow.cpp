@@ -328,16 +328,22 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     });
 
     QObject::connect(detailPage,&AnimeDetailInfoPage::playFile,this,&LibraryWindow::playFile);
-    QObject::connect(itemDelegate,&AnimeItemDelegate::ItemClicked,[this, viewSLayout, backButton](const QModelIndex &index){
+    QObject::connect(itemDelegate,&AnimeItemDelegate::ItemClicked,[=](const QModelIndex &index){
         Anime * anime = animeModel->getAnime(static_cast<AnimeFilterProxyModel *>(animeListView->model())->mapToSource(index));
         emit switchBackground(anime->cover(), true);
         detailPage->setAnime(anime);
         backButton->show();
+        selectedLabelTip->hide();
+        totalCountLabel->hide();
+        filterBox->hide();
         viewSLayout->setCurrentIndex(1);
     });
-    QObject::connect(backButton, &QPushButton::clicked, this, [this, viewSLayout, backButton](){
+    QObject::connect(backButton, &QPushButton::clicked, this, [=](){
         emit switchBackground(QPixmap(), false);
         backButton->hide();
+        selectedLabelTip->show();
+        totalCountLabel->show();
+        filterBox->show();
         viewSLayout->setCurrentIndex(0);
     });
     splitter->addWidget(labelView);

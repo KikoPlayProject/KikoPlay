@@ -2,6 +2,8 @@
 #include "Common/threadtask.h"
 #include "Script/scriptmanager.h"
 #include "Script/danmuscript.h"
+#include "Manager/danmumanager.h"
+#include "Manager/pool.h"
 #include "globalobjects.h"
 
 DanmuProvider::DanmuProvider(QObject *parent) : QObject(parent)
@@ -83,11 +85,25 @@ ScriptState DanmuProvider::downloadDanmu(const DanmuSource *item, QList<DanmuCom
     }).value<ScriptState>();
 }
 
-void DanmuProvider::checkSourceToLaunch(const QString &poolId, const QList<DanmuSource> &sources)
+void DanmuProvider::checkSourceToLaunch(const QString &poolId)
 {
     ThreadTask task(GlobalObjects::workThread);
     task.RunOnce([=](){
         QStringList supportedScripts;
+        Pool *pool = GlobalObjects::danmuManager->getPool(poolId, false);
+        if(!pool)
+        {
+            emit sourceCheckDown(poolId, supportedScripts);
+            return;
+        }
+        QList<DanmuSource> sources;
+        for(auto &src : pool->sources())
+            sources.append(src);
+        if(sources.size()==0)
+        {
+            emit sourceCheckDown(poolId, supportedScripts);
+            return;
+        }
         for(auto &script : GlobalObjects::scriptManager->scripts(ScriptType::DANMU))
         {
             DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());

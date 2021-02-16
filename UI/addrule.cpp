@@ -249,7 +249,7 @@ void PreviewModel::search(const QString &searchWord, const QString &scriptId)
     auto curScript = GlobalObjects::scriptManager->getScript(scriptId);
     beginResetModel();
     searchResults.clear();
-    if(curScript && curScript->type()!=ScriptType::RESOURCE)
+    if(curScript && curScript->type()==ScriptType::RESOURCE)
     {
         ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
         ScriptState state = resScript->search(searchWord, 1, pageCount, resList);

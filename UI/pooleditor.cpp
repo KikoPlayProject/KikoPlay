@@ -109,8 +109,7 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
 {
     QAction *viewDanmu=new QAction(tr("View Danmu"),this);
     QObject::connect(viewDanmu,&QAction::triggered,this,[sourceInfo](){
-        DanmuView view(&GlobalObjects::danmuPool->getPool()->comments(),editor,
-                       sourceInfo->scriptId);
+        DanmuView view(&GlobalObjects::danmuPool->getPool()->comments(),editor, sourceInfo->id);
         view.exec();
     });
     QAction *copyTimeline=new QAction(tr("Copy TimeLine Info"), this);

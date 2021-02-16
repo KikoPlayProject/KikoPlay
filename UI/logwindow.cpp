@@ -52,6 +52,7 @@ LogWindow::LogWindow(QWidget *parent) : CFramelessDialog(tr("Log"),parent,false,
     });
 
     QGridLayout *logGLayout = new QGridLayout(this);
+    logGLayout->setContentsMargins(0, 0, 0, 0);
     logGLayout->addWidget(logTypeCombo, 0, 0);
     logGLayout->addWidget(cleanLog, 0, 1);
     logGLayout->addLayout(logSLayout, 1, 0, 1, 2);

@@ -177,12 +177,17 @@ void Anime::removePoster(qint64 timeId)
 
 QVariantMap Anime::toMap(bool fillEp)
 {
-    QVariantList eps;
+    QVariantList eps, crts;
     if(fillEp)
     {
         for(const auto &ep : epList())
             eps.append(ep.toMap());
     }
+    for(const auto &c : characters)
+        crts.append(c.toMap());
+    QVariantMap staffMap;
+    for(const auto &p : staff)
+        staffMap.insert(p.first, p.second);
     return
     {
         {"name", _name},
@@ -192,6 +197,8 @@ QVariantMap Anime::toMap(bool fillEp)
         {"airDate", _airDate},
         {"epCount", _epCount},
         {"addTime", QString::number(_addTime)},
+        {"crt", crts},
+        {"staff", staffMap},
         {"eps", eps}
     };
 }

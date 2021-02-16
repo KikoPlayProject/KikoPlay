@@ -29,6 +29,8 @@ private:
     const char *luaDanmuFunc = "danmu";
     const char *luaLaunchCheckFunc = "canlaunch";
     const char *luaLaunchFunc = "launch";
+    const char *urlReTable = "supportedURLsRe";
+    const char *sampleUrlTable = "sampleSupporedURLs";
 
     bool canSearch, canLaunch;
     QStringList supportedURLsRe, sampleSupporedURLs;

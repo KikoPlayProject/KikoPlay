@@ -14,8 +14,8 @@ class CFramelessDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit CFramelessDialog(QString titleStr="", QWidget *parent = 0,
-                              bool showAccept=false,bool showClose=true,bool autoPauseVideo=true);
+    explicit CFramelessDialog(const QString &titleStr="", QWidget *parent = 0,
+                              bool showAccept=false, bool showClose=true, bool autoPauseVideo=true);
 public:
     void setResizeable(bool resizeable=true);
     bool isResizeable(){return m_bResizeable;}
@@ -47,7 +47,7 @@ private:
     QPushButton *closeButton,*acceptButton;
     QLabel *busyLabel;
     QLabel *title;
-    QWidget *titleBar;
+    QWidget *titleBar, *backWidget;
 	bool restorePlayState;
 
     DialogTip *dialogTip;

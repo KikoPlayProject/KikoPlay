@@ -111,7 +111,7 @@ private:
     TorrentTreeView *fileInfoView;
     BlockWidget *blockView;
     CTorrentFileModel *selectedTFModel;
-    QLabel *taskTitleLabel,*taskTimeLabel,*taskDirLabel;
+    QLabel *taskTitleLabel,*taskTimeLabel;
 
     PeerModel *peerModel;
 

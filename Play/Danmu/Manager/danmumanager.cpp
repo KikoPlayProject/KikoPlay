@@ -1030,7 +1030,7 @@ void DanmuManager::saveSource(const QString &pid, const DanmuSource *source, con
         db.transaction();
         if(source)
         {
-            query.prepare("insert into source(PoolID,ID,Title,Desc,ScriptId,ScriptData,Delay,Duration,TimeLine) values(?,?,?,?,?,?)");
+            query.prepare("insert into source(PoolID,ID,Title,Desc,ScriptId,ScriptData,Delay,Duration,TimeLine) values(?,?,?,?,?,?,?,?,?)");
             query.bindValue(0,pid);
             query.bindValue(1,src.id);
             query.bindValue(2,src.title);

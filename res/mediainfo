@@ -1,5 +1,5 @@
 <font size=4 face="${kiko:normalfont}" color="#18C0F1">${kiko:tr:file}</font><br />
-    <font size="3" face="${kiko:normalfont}">${filename}</font> <br />
+    <font size="3" face="${kiko:normalfont}">${path}</font> <br />
     <font size="3" face="${kiko:normalfont}" color="#ECCC1E">${kiko:tr:title}</font>
     :<font size="3" face="${kiko:normalfont}"> ${media-title}</font><br />
     <font size="3" face="${kiko:normalfont}" color="#ECCC1E">${kiko:tr:file-size}</font>

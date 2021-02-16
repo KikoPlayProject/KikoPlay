@@ -53,7 +53,7 @@ struct DanmuComment
 
     QList<QSharedPointer<DanmuComment> > *mergedList;
     DanmuComment *m_parent;
-    QVariantMap toMap() const {return {{"text", text}, {"time", originTime}, {"color", color}, {"fontsize", fontSizeLevel}, {"date", date}, {"type", type}};}
+    QVariantMap toMap() const {return {{"text", text}, {"time", originTime}, {"color", color}, {"fontsize", fontSizeLevel}, {"date", QString::number(date)}, {"type", type}};}
 };
 QDataStream &operator<<(QDataStream &stream, const DanmuComment &danmu);
 QDataStream &operator>>(QDataStream &stream, DanmuComment &danmu);
@@ -158,7 +158,7 @@ struct DanmuSource
     QString scriptData;
     QString scriptId;
     //---------
-    int id = 0;
+    int id = -1;
     int delay = 0;
     int count = 0;
     int duration = 0;

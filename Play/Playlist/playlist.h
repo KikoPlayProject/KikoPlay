@@ -55,6 +55,7 @@ public slots :
     int refreshFolder(const QModelIndex &index);
 
     void deleteItems(const QModelIndexList &deleteIndexes);
+    int deleteInvalidItems(const QModelIndexList &indexes);
     void clear();
 
     void sortItems(const QModelIndex &parent,bool ascendingOrder);

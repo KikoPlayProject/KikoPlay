@@ -61,5 +61,8 @@
         <file>res/images/folder.svg</file>
         <file>res/mediainfo</file>
         <file>res/images/busy.gif</file>
+        <file>res/images/down-light-hover.svg</file>
+        <file>res/images/down-arrow-dark-hover.svg</file>
+        <file>res/images/up-arrow-dark-hover.svg</file>
     </qresource>
 </RCC>

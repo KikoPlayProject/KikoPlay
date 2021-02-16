@@ -96,6 +96,16 @@ struct Character
     QString link;
     QString imgURL;
     QPixmap image;
+    QVariantMap toMap() const
+    {
+        return
+        {
+            {"name", name},
+            {"actor", actor},
+            {"link", link},
+            {"imgurl", imgURL}
+        };
+    }
 };
 struct AnimeImage
 {

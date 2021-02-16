@@ -25,7 +25,9 @@
 #include "Play/Danmu/danmupool.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Danmu/blocker.h"
+#include "Play/Danmu/danmuprovider.h"
 #include "MediaLibrary/animeworker.h"
+#include "danmulaunch.h"
 #include "globalobjects.h"
 namespace
 {
@@ -204,6 +206,8 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     centralWidget->setMouseTracking(true);
     setCentralWidget(centralWidget);
     QWidget *contralContainer = new QWidget(centralWidget);
+
+    launchWindow = new DanmuLaunch(this);
 
     playInfo=new InfoTip(centralWidget);
     playInfo->hide();
@@ -388,6 +392,14 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
 
     GlobalObjects::iconfont.setPointSize(18);
 
+    launch=new QPushButton(playControlPanel);
+    launch->setFont(GlobalObjects::iconfont);
+    launch->setText(QChar(0xe6fd));
+    launch->setFixedSize(buttonWidth,buttonHeight);
+    launch->setToolTip(tr("Launch Danmu"));
+    launch->setObjectName(QStringLiteral("widgetPlayControlButtons"));
+    launch->hide();
+
     setting=new QPushButton(playControlPanel);
     setting->setFont(GlobalObjects::iconfont);
     setting->setText(QChar(0xe607));
@@ -429,14 +441,15 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
 
     QHBoxLayout *buttonHLayout=new QHBoxLayout();
     buttonHLayout->addWidget(timeLabel);
-    buttonHLayout->addStretch(1);
+    buttonHLayout->addStretch(5);
     buttonHLayout->addWidget(stop);
     buttonHLayout->addWidget(prev);
     buttonHLayout->addWidget(play_pause);
     buttonHLayout->addWidget(next);
     buttonHLayout->addWidget(mute);
     buttonHLayout->addWidget(volume);
-    buttonHLayout->addStretch(1);
+    buttonHLayout->addStretch(4);
+    buttonHLayout->addWidget(launch);
     buttonHLayout->addWidget(setting);
     buttonHLayout->addWidget(danmu);
     buttonHLayout->addWidget(fullscreen);
@@ -1364,9 +1377,11 @@ void PlayerWindow::setupSignals()
         if(currentItem->hasPool())
         {
             GlobalObjects::danmuPool->setPoolID(currentItem->poolID);
+            GlobalObjects::danmuProvider->checkSourceToLaunch(currentItem->poolID);
         }
         else
         {
+            launch->hide();
             showMessage(tr("File is not associated with Danmu Pool"));
             GlobalObjects::danmuPool->setPoolID("");
         }
@@ -1464,6 +1479,7 @@ void PlayerWindow::setupSignals()
         {
             QCoreApplication::processEvents();
             setPlayTime();
+            launch->hide();
             play_pause->setText(QChar(0xe606));
             progress->setValue(0);
             progress->setRange(0, 0);
@@ -1596,6 +1612,22 @@ void PlayerWindow::setupSignals()
     });
     if(GlobalObjects::appSetting->value("Play/Mute",false).toBool())
         mute->click();
+
+
+    QObject::connect(launch, &QPushButton::clicked, [this]() {
+        launchWindow->exec();
+    });
+    QObject::connect(GlobalObjects::danmuProvider, &DanmuProvider::sourceCheckDown, this, [=](const QString &poolId, const QStringList &supportedScripts){
+        const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
+        if(currentItem && currentItem->hasPool() && poolId == currentItem->poolID && supportedScripts.size()>0)
+        {
+            launch->show();
+        }
+        else
+        {
+            launch->hide();
+        }
+    });
 
 	QObject::connect(danmu, &QPushButton::clicked, [this]() {
         if (!playSettingPage->isHidden() ||!danmuSettingPage->isHidden())

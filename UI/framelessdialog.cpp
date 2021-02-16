@@ -20,7 +20,7 @@
 #pragma comment (lib,"Dwmapi.lib") // Adds missing library, fixes error LNK2019: unresolved external symbol __imp__DwmExtendFrameIntoClientArea
 #pragma comment (lib,"user32.lib")
 
-CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showAccept, bool showClose, bool autoPauseVideo)
+CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, bool showAccept, bool showClose, bool autoPauseVideo)
     : QDialog(parent),
       m_borderWidth(5),
       m_bJustMaximized(false),
@@ -32,7 +32,8 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
     setWindowFlags((windowFlags() | Qt::Dialog | Qt::FramelessWindowHint) & ~Qt::WindowSystemMenuHint);
     setObjectName(QStringLiteral("framelessDialog"));
     GlobalObjects::iconfont.setPointSize(10);
-    titleBar=new QWidget(this);
+    backWidget = new QWidget(this);
+    titleBar=new QWidget(backWidget);
 
     QSize btnSize(20*logicalDpiX()/96,20*logicalDpiY()/96);
 
@@ -68,18 +69,25 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
 
     title=new QLabel(titleStr, titleBar);
     title->setFont(QFont(GlobalObjects::normalFont,10));
-    title->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
-    title->setGeometry(10,10,title->width(),title->height());
+    title->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Preferred);
+    //title->setGeometry(10,10,title->width(),title->height());
     title->setOpenExternalLinks(true);
     addIgnoreWidget(title);
 
     QHBoxLayout *titleHBLayout=new QHBoxLayout(titleBar);
-    //titleHBLayout->setContentsMargins(0,0,0,0);
-    titleHBLayout->addWidget(title);
+    titleHBLayout->setContentsMargins(8*logicalDpiX()/96, 8*logicalDpiY()/96, 8*logicalDpiX()/96, 8*logicalDpiY()/96);
+    titleHBLayout->addWidget(title, 0, Qt::AlignVCenter);
     titleHBLayout->addWidget(busyLabel);
     titleHBLayout->addWidget(acceptButton);
     titleHBLayout->addWidget(closeButton);
-    setContentsMargins(6*logicalDpiX()/96,38*logicalDpiY()/96,6*logicalDpiX()/96,6*logicalDpiY()/96);
+
+    QVBoxLayout *vbLayout = new QVBoxLayout(backWidget);
+    vbLayout->addWidget(titleBar);
+    vbLayout->addStretch(1);
+    vbLayout->setContentsMargins(0, 0, 0, 0);
+
+    //setContentsMargins(6*logicalDpiX()/96,38*logicalDpiY()/96,6*logicalDpiX()/96,6*logicalDpiY()/96);
+
     if (autoPauseVideo && GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
 	{
 		restorePlayState = true;
@@ -250,10 +258,7 @@ void CFramelessDialog::setContentsMargins(const QMargins &margins)
 }
 void CFramelessDialog::setContentsMargins(int left, int top, int right, int bottom)
 {
-    QDialog::setContentsMargins(left+m_frames.left(),\
-                                    top+m_frames.top(), \
-                                    right+m_frames.right(), \
-                                    bottom+m_frames.bottom());
+    QDialog::setContentsMargins(left+m_frames.left(), top+m_frames.top(), right+m_frames.right(), bottom+m_frames.bottom());
     m_margins.setLeft(left);
     m_margins.setTop(top);
     m_margins.setRight(right);
@@ -285,13 +290,16 @@ void CFramelessDialog::showEvent(QShowEvent *)
         setResizeable(m_bResizeable);
         inited=true;
     }
+    setContentsMargins(8*logicalDpiX()/96,titleBar->height(),8*logicalDpiX()/96,8*logicalDpiY()/96);
     resize(width(),height());
 }
 
 void CFramelessDialog::resizeEvent(QResizeEvent *)
 {
-    titleBar->setGeometry(0,0,width(),42*logicalDpiY()/96);
+    //titleBar->setGeometry(0,0,width(),42*logicalDpiY()/96);
+    backWidget->setGeometry(0,0,width(),height());
     dialogTip->move((width()-dialogTip->width())/2,dialogTip->y());
+    //setContentsMargins(6*logicalDpiX()/96,titleBar->height()+6*logicalDpiY()/96,6*logicalDpiX()/96,6*logicalDpiY()/96);
 }
 
 void CFramelessDialog::showBusyState(bool busy)

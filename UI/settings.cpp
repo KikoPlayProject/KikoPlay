@@ -22,7 +22,7 @@ Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings")
     pageSLayout = new QStackedLayout;
     pageSLayout->setContentsMargins(0, 0, 0, 0);
 
-    QStringList pageNames{tr("Appearance"), tr("MPV Param"), tr("Download"), tr("LAN Server"), tr("Res Script")};
+    QStringList pageNames{tr("Appearance"), tr("MPV Param"), tr("Download"), tr("LAN Server"), tr("Script")};
 
     for(int i=PAGE_UI;i<PAGE_STOP;++i)
     {

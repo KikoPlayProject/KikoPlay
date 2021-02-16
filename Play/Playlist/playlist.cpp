@@ -259,7 +259,7 @@ int PlayList::addFolder(QString folderStr, QModelIndex parent)
 void PlayList::deleteItems(const QModelIndexList &deleteIndexes)
 {
     QList<PlayListItem *> items;
-    foreach (const QModelIndex &index, deleteIndexes)
+    for(const QModelIndex &index : deleteIndexes)
     {
         if (index.isValid())
         {
@@ -281,6 +281,54 @@ void PlayList::deleteItems(const QModelIndexList &deleteIndexes)
     d->playListChanged=true;
     d->needRefresh = true;
     d->incModifyCounter();
+}
+
+int PlayList::deleteInvalidItems(const QModelIndexList &indexes)
+{
+    QList<PlayListItem *> items, invalidItems;
+    for(const QModelIndex &index : indexes)
+    {
+        if (index.isValid())
+        {
+            PlayListItem *item = static_cast<PlayListItem*>(index.internalPointer());
+            items.append(item);
+        }
+    }
+    while(!items.empty())
+    {
+        PlayListItem *currentItem=items.takeFirst();
+        if(currentItem->children)
+        {
+            for(PlayListItem *child:*currentItem->children)
+            {
+                items.push_back(child);
+            }
+            if(!currentItem->folderPath.isEmpty())
+            {
+                if(!QFileInfo::exists(currentItem->folderPath)) invalidItems.append(currentItem);
+            }
+        }
+        else if(!currentItem->path.isEmpty())
+        {
+            if(!QFileInfo::exists(currentItem->path)) invalidItems.append(currentItem);
+        }
+    }
+    if(invalidItems.size() == 0) return 0;
+    std::sort(invalidItems.begin(),invalidItems.end(),[](const PlayListItem *item1,const PlayListItem *item2){return item1->level>item2->level;});
+    for(PlayListItem *curItem:invalidItems)
+    {
+        int cr_row = curItem->parent->children->indexOf(curItem);
+        const QModelIndex &itemIndex = createIndex(cr_row, 0, curItem);
+        beginRemoveRows(itemIndex.parent(), cr_row, cr_row);
+        curItem->parent->children->removeAt(cr_row);
+        endRemoveRows();
+        delete curItem;
+    }
+    Q_D(PlayList);
+    d->playListChanged=true;
+    d->needRefresh = true;
+    d->incModifyCounter();
+    return invalidItems.size();
 }
 
 void PlayList::clear()

@@ -16,6 +16,7 @@ class CFramelessDialog;
 class QSpinBox;
 class QSlider;
 class ClickSlider;
+class DanmuLaunch;
 class PlayerWindow : public QWidget, public NotifyInterface
 {
     Q_OBJECT
@@ -43,7 +44,7 @@ private:
      QSlider *volume;
      QLabel *timeLabel;
 
-     QPushButton *play_pause,*prev,*next,*stop,*mute,*setting, *danmu,*fullscreen;
+     QPushButton *play_pause,*prev,*next,*stop,*mute,*setting, *danmu,*fullscreen, *launch;
      QAction *actPlayPause,*actPrev,*actNext,*actFullscreen,*act_screenshotSrc,*act_screenshotAct, *act_MiniMode;
      QTimer doublePressTimer,hideCursorTimer;
      const int hideCursorTimeout=3000;
@@ -58,6 +59,7 @@ private:
      bool processInited;
      bool processPressed;
      QString totalTimeStr;
+     DanmuLaunch *launchWindow;
 
      QWidget *danmuSettingPage,*playSettingPage;
      QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold,

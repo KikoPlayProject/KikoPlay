@@ -284,8 +284,9 @@ void ListWindow::initActions()
             Pool *pool=GlobalObjects::danmuManager->getPool(sItem->poolID,false);
             if(pool)
             {
-                poolIdMap.insert(pool->epTitle(),pool->id());
-                poolTitles<<pool->epTitle();
+                EpInfo ep(pool->toEp());
+                poolIdMap.insert(ep.toString(),pool->id());
+                poolTitles<<ep.toString();
             }
         }
         std::sort(poolTitles.begin(),poolTitles.end(), [&](const QString &s1, const QString &s2){
@@ -542,6 +543,15 @@ void ListWindow::initActions()
         if (selection.size() == 0)return;
         GlobalObjects::playlist->deleteItems(selection.indexes());
     });
+
+    act_removeInvalid=new QAction(tr("Remove Invalid Items"),this);
+    QObject::connect(act_removeInvalid,&QAction::triggered,[this](){
+        QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
+        QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
+        if (selection.size() == 0)return;
+        showMessage(tr("Remove %1 Invalid Item(s)").arg(GlobalObjects::playlist->deleteInvalidItems(selection.indexes())), NM_HIDE);
+    });
+
     act_clear=new QAction(tr("Clear"),this);
     QObject::connect(act_clear,&QAction::triggered,[this](){
        QMessageBox::StandardButton btn =QMessageBox::question(this,tr("Clear"),tr("Are you sure to clear the list ?"),QMessageBox::Yes|QMessageBox::No);
@@ -818,13 +828,13 @@ void ListWindow::updatePlaylistActions()
 {
     if(actionDisable)
     {
-        //act_autoMatch->setEnabled(false);
         matchSubMenu->setEnabled(false);
         act_removeMatch->setEnabled(false);
         act_exportDanmu->setEnabled(false);
         act_updateDanmu->setEnabled(false);
         act_cut->setEnabled(false);
         act_remove->setEnabled(false);
+        act_removeInvalid->setEnabled(false);
         act_moveUp->setEnabled(false);
         act_moveDown->setEnabled(false);
         act_paste->setEnabled(false);
@@ -832,7 +842,6 @@ void ListWindow::updatePlaylistActions()
         return;
     }
     bool hasPlaylistSelection = !playlistView->selectionModel()->selection().isEmpty();
-    //act_autoMatch->setEnabled(hasPlaylistSelection);
     matchSubMenu->setEnabled(hasPlaylistSelection);
     act_removeMatch->setEnabled(hasPlaylistSelection);
     act_updateDanmu->setEnabled(hasPlaylistSelection);
@@ -840,6 +849,7 @@ void ListWindow::updatePlaylistActions()
     act_addLocalDanmuSource->setEnabled(hasPlaylistSelection);
     act_cut->setEnabled(hasPlaylistSelection);
     act_remove->setEnabled(hasPlaylistSelection);
+    act_removeInvalid->setEnabled(hasPlaylistSelection);
     act_moveUp->setEnabled(hasPlaylistSelection);
     act_moveDown->setEnabled(hasPlaylistSelection);
     act_merge->setEnabled(hasPlaylistSelection);
@@ -913,6 +923,7 @@ QWidget *ListWindow::setupPlaylistPage()
     QMenu *defaultMatchScriptMenu=new QMenu(tr("Default Match Script"), matchSubMenu);
     matchSubMenu->addAction(act_autoMatch);
     matchSubMenu->addAction(act_removeMatch);
+    matchSubMenu->addAction(act_autoMatchMode);
     matchSubMenu->addMenu(defaultMatchScriptMenu);
     defaultMatchScriptMenu->hide();
     QAction *matchSep = new QAction(this);
@@ -938,7 +949,6 @@ QWidget *ListWindow::setupPlaylistPage()
             if(p.second == defaultSctiptId)
             {
                 mCheckAct->setChecked(true);
-                act_autoMatch->setText(tr("Associate Danmu Pool(%1)").arg(p.first));
             }
         }
     }
@@ -989,9 +999,6 @@ QWidget *ListWindow::setupPlaylistPage()
              }
          }
     });
-    QObject::connect(GlobalObjects::animeProvider, &AnimeProvider::defaultMacthProviderChanged, this, [=](const QString &name){
-        act_autoMatch->setText(tr("Associate Danmu Pool%1").arg(name.isEmpty()?"":QString("(%1)").arg(name)));
-    });
 
     QMenu *danmuSubMenu=new QMenu(tr("Danmu"),playlistContextMenu);
     danmuSubMenu->addAction(act_addWebDanmuSource);
@@ -1029,10 +1036,10 @@ QWidget *ListWindow::setupPlaylistPage()
     shareSubMenu->addAction(act_sharePoolCode);
     shareSubMenu->addAction(act_shareResourceCode);
     playlistContextMenu->addMenu(shareSubMenu);
-    playlistContextMenu->addAction(act_updateFolder);
-    playlistContextMenu->addAction(act_browseFile);
     playlistContextMenu->addSeparator();
-    playlistContextMenu->addAction(act_autoMatchMode);
+    playlistContextMenu->addAction(act_updateFolder);
+    playlistContextMenu->addAction(act_removeInvalid);
+    playlistContextMenu->addAction(act_browseFile);
 
     QObject::connect(playlistView,&QTreeView::customContextMenuRequested,[playlistContextMenu](){
         playlistContextMenu->exec(QCursor::pos());

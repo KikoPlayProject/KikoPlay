@@ -3,6 +3,7 @@
 
 #include <QAbstractItemModel>
 #include "common.h"
+static const int SourceRole = Qt::UserRole+1;
 template<typename T>
 class DanmuViewModel : public QAbstractItemModel
 {
@@ -74,6 +75,8 @@ public:
             normalBrush.setColor(QColor((c>>16)&0xff,(c>>8)&0xff,c&0xff));
             return normalBrush;
         }
+        case SourceRole:
+            return comment->source;
         default:
             return QVariant();
         }
@@ -81,5 +84,25 @@ public:
     }
 
 };
+class DanmuViewProxyModel : public QSortFilterProxyModel
+{
+public:
+    explicit DanmuViewProxyModel(QObject *parent=nullptr):QSortFilterProxyModel(parent), sourceId(-1){}
 
+public:
+    void setSourceId(int sid)
+    {
+        sourceId = sid;
+        invalidateFilter();
+    }
+    virtual bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
+    {
+        QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
+        int sid = index.data(SourceRole).toInt();
+        if(sourceId !=-1 && sid != sourceId) return false;
+        return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
+    }
+private:
+    int sourceId;
+};
 #endif // DANMUVIEWMODEL_H

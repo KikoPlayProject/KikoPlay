@@ -493,7 +493,7 @@ static int xmlreader (lua_State *L)
     const char *data = nullptr;
     if(n > 0 && lua_type(L, 1)==LUA_TSTRING)
     {
-        data = lua_tostring(L, -1);
+        data = lua_tostring(L, 1);
     }
     QXmlStreamReader **reader = (QXmlStreamReader **)lua_newuserdata(L, sizeof(QXmlStreamReader *));
     luaL_getmetatable(L, "meta.kiko.xmlreader");
@@ -510,7 +510,7 @@ static QXmlStreamReader *checkXmlReader(lua_State *L)
 static int xrAddData(lua_State *L)
 {
     QXmlStreamReader *reader = checkXmlReader(L);
-    if(lua_type(L, 2)==LUA_TSTRING)
+    if(lua_gettop(L) > 1 && lua_type(L, 2)==LUA_TSTRING)
     {
         const char *data = lua_tostring(L, 2);
         reader->addData(data);
@@ -559,13 +559,25 @@ static int xrName(lua_State *L)
 static int xrAttr(lua_State *L)
 {
     QXmlStreamReader *reader = checkXmlReader(L);
-    if(lua_gettop(L) == 0 || lua_type(L, -1)!=LUA_TSTRING)
+    if(lua_gettop(L) == 1 || lua_type(L, 2)!=LUA_TSTRING)
     {
         lua_pushnil(L);
         return 1;
     }
-    const char *attrName = lua_tostring(L, -1);
+    const char *attrName = lua_tostring(L, 2);
     lua_pushstring(L, reader->attributes().value(attrName).toString().toStdString().c_str());
+    return 1;
+}
+static int xrHasAttr(lua_State *L)
+{
+    QXmlStreamReader *reader = checkXmlReader(L);
+    if(lua_gettop(L) == 1 || lua_type(L, 2)!=LUA_TSTRING)
+    {
+        lua_pushnil(L);
+        return 1;
+    }
+    const char *attrName = lua_tostring(L, 2);
+    lua_pushboolean(L, reader->attributes().hasAttribute(attrName));
     return 1;
 }
 static int xrReadElemText(lua_State *L)
@@ -612,13 +624,13 @@ static HTMLParserSax *checkHTMLParser(lua_State *L)
 }
 static int hpSeekTo(lua_State *L)
 {
+    HTMLParserSax *parser = checkHTMLParser(L);
     int n = lua_gettop(L);
-    if(n!=1 || lua_type(L, 1)!=LUA_TNUMBER)
+    if(n!=2 || lua_type(L, 2)!=LUA_TNUMBER)
     {
         return 0;
     }
-    int pos = lua_tonumber(L, 1);
-    HTMLParserSax *parser = checkHTMLParser(L);
+    int pos = lua_tonumber(L, 2);
     parser->seekTo(pos);
     return 0;
 }
@@ -650,15 +662,15 @@ static int hpReadContentText(lua_State *L)
 }
 static int hpReadContentUntil(lua_State *L)
 {
+    HTMLParserSax *parser = checkHTMLParser(L);
     int n = lua_gettop(L);
-    if(n!=2 || lua_type(L, 1)!=LUA_TSTRING || lua_type(L, 2)!=LUA_TBOOLEAN)
+    if(n!=3 || lua_type(L, 2)!=LUA_TSTRING || lua_type(L, 3)!=LUA_TBOOLEAN)
     {
         lua_pushnil(L);
         return 1;
     }
-    HTMLParserSax *parser = checkHTMLParser(L);
-    QString nodeName(lua_tostring(L, 1));
-    bool isStart = lua_toboolean(L, 2);
+    QString nodeName(lua_tostring(L, 2));
+    bool isStart = lua_toboolean(L, 3);
     lua_pushstring(L, parser->readContentUntil(nodeName, isStart).toStdString().c_str());
     return 1;
 }
@@ -676,14 +688,14 @@ static int hpCurrentNode(lua_State *L)
 }
 static int hpCurrentNodeProperty(lua_State *L)
 {
+    HTMLParserSax *parser = checkHTMLParser(L);
     int n = lua_gettop(L);
-    if(n!=1 || lua_type(L, 1)!=LUA_TSTRING)
+    if(n!= 2 || lua_type(L, 2)!=LUA_TSTRING)
     {
         lua_pushnil(L);
         return 1;
     }
-    HTMLParserSax *parser = checkHTMLParser(L);
-    QString nodeName(lua_tostring(L, 1));
+    QString nodeName(lua_tostring(L, 2));
     lua_pushstring(L, parser->currentNodeProperty(nodeName).toStdString().c_str());
     return 1;
 }
@@ -721,6 +733,7 @@ static const luaL_Reg xmlreaderFuncs[] = {
     {"endelem", xrEndElem},
     {"name", xrName},
     {"attr", xrAttr},
+    {"hasattr", xrHasAttr},
     {"elemtext", xrReadElemText},
     {"error", xrError},
     {"__gc", xmlreaderGC},

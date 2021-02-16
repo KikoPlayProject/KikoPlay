@@ -251,6 +251,8 @@ QSlider#widgetVolumeSlider::sub-page:horizontal{
 
 QSlider#ColorSlider{
     border-color: #bcbcbc;
+    margin-top: 4px;
+    margin-bottom: 4px;
 }
 QSlider#ColorSlider::groove:horizontal {
     border: 1px solid #999999;
@@ -576,7 +578,7 @@ QSpinBox::up-button {
 }
 
 QSpinBox::up-button:hover {
-    border-image: url(:/res/images/up-arrow-hover.svg) 1;
+    border-image: url(:/res/images/up-arrow-dark-hover.svg) 1;
 }
 QSpinBox::down-button {
     subcontrol-origin: border;
@@ -588,7 +590,7 @@ QSpinBox::down-button {
     border-top-width: 0;
 }
 QSpinBox::down-button:hover {
-    border-image: url(:/res/images/down-arrow-hover.svg) 1;
+    border-image: url(:/res/images/down-arrow-dark-hover.svg) 1;
 }
 QDialog QComboBox {
     background-color:rgb(250,250,250);
@@ -779,10 +781,17 @@ QWidget#PopupPage QComboBox::down-arrow {
 }
 
 QWidget#PopupPage QComboBox::down-arrow:hover {
-    image: url(:/res/images/down-hover.svg);
+    image: url(:/res/images/down-light-hover.svg);
     width:20px;
     height:20px;
 }
+QWidget#PopupPage QSpinBox::up-button:hover {
+    border-image: url(:/res/images/up-arrow-hover.svg) 1;
+}
+QWidget#PopupPage QSpinBox::down-button:hover {
+    border-image: url(:/res/images/down-arrow-hover.svg) 1;
+}
+
 QPushButton#RecentItemDeleteButton{
        border-style:none;
        color:#c8c8c8;

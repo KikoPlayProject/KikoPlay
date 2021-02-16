@@ -30,15 +30,15 @@ class DanmuView : public CFramelessDialog
     Q_OBJECT
 public:
     explicit DanmuView(const QList<DanmuComment *> *danmuList, QWidget *parent = nullptr,
-                       const QString &filterStr="", DanmuFilterBox::FilterType type=DanmuFilterBox::FilterType::USER);
+                       int sourceId=-1);
     explicit DanmuView(const QList<QSharedPointer<DanmuComment> > *danmuList, QWidget *parent = nullptr,
-                       const QString &filterStr="", DanmuFilterBox::FilterType type=DanmuFilterBox::FilterType::USER);
+                       int sourceId=-1);
 
 private:
     QTreeView *danmuView;
     DanmuFilterBox *filterEdit;
     QLabel *tipLabel;
-    void initView(int danmuCount);
+    void initView();
 
     // CFramelessDialog interface
 protected:

@@ -51,16 +51,6 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
         scriptCombo->setCurrentIndex(0);
     });
 
-    QPushButton *manageScript=new QPushButton(this);
-    manageScript->setToolTip(tr("Manage Script"));
-    GlobalObjects::iconfont.setPointSize(12);
-    manageScript->setFont(GlobalObjects::iconfont);
-    manageScript->setText(QChar(0xe607));
-    QObject::connect(manageScript,&QPushButton::clicked,this,[this](){
-        Settings settings(Settings::PAGE_SCRIPT, this);
-        settings.exec();
-    });
-
     searchEdit=new QLineEdit(this);
     searchEdit->setClearButtonEnabled(true);
     searchEdit->setPlaceholderText(tr("Search"));
@@ -118,16 +108,8 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     searchListView->setIndentation(0);
     searchListView->setContextMenuPolicy(Qt::ActionsContextMenu);
     QObject::connect(searchListView, &QTreeView::doubleClicked,[this,searchProxyModel](const QModelIndex &index){
-        ResourceItem item = searchListModel->getItem(searchProxyModel->mapToSource(index));
-        if(item.magnet.isEmpty())
-        {
-            if(!item.url.isEmpty())
-            {
-                QDesktopServices::openUrl(QUrl(item.url));
-            }
-            return;
-        }
-        emit addTask(QStringList()<<item.magnet);
+        QModelIndex selIndex = searchProxyModel->mapToSource(index);
+        emit addTask(searchListModel->getMagnetList({selIndex.siblingAtColumn((int)SearchListModel::Columns::TIME)}));
     });
     QAction *download=new QAction(tr("Download"),this);
     QObject::connect(download,&QAction::triggered,this,[this,searchProxyModel](){
@@ -163,7 +145,6 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     searchListView->addAction(openLink);
 
     QHBoxLayout *btnHLayout=new QHBoxLayout();
-    btnHLayout->addWidget(manageScript);
     btnHLayout->addWidget(scriptCombo);
     btnHLayout->addWidget(searchEdit);
     btnHLayout->addStretch(1);
@@ -287,6 +268,7 @@ QStringList SearchListModel::getMagnetList(const QModelIndexList &indexes)
         ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
         if(resScript->needGetDetail())
         {
+            Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, tr("Fetching Magnet..."), NM_PROCESS | NM_DARKNESS_BACK);
             emit fetching(true);
             for(auto &index:indexes)
             {
@@ -301,6 +283,7 @@ QStringList SearchListModel::getMagnetList(const QModelIndexList &indexes)
                     if(state) list<<resultList[row].magnet;
                 }
             }
+            Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, tr("Down"), NM_HIDE);
             emit fetching(false);
             return list;
         }

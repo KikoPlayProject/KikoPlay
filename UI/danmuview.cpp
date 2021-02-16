@@ -10,40 +10,42 @@
 #include <QWidgetAction>
 #include "globalobjects.h"
 #include "Play/Danmu/danmuviewmodel.h"
-DanmuView::DanmuView(const QList<DanmuComment *> *danmuList, QWidget *parent, const QString &filterStr, DanmuFilterBox::FilterType type):CFramelessDialog (tr("View Danmu"),parent)
+DanmuView::DanmuView(const QList<DanmuComment *> *danmuList, QWidget *parent, int sourceId):CFramelessDialog (tr("View Danmu"),parent)
 {
-    initView(danmuList->count());
+    initView();
     DanmuViewModel<DanmuComment *> *model=new DanmuViewModel<DanmuComment *>(danmuList,this);
-    QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
+    DanmuViewProxyModel *proxyModel = new DanmuViewProxyModel(this);
+    proxyModel->setSourceId(sourceId);
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     proxyModel->setSourceModel(model);
     danmuView->setModel(proxyModel);
+    tipLabel->setText(tr("Danmu Count: %1").arg(proxyModel->rowCount()));
     QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[proxyModel,this](int type, const QString &keyword){
         proxyModel->setFilterKeyColumn(type);
         proxyModel->setFilterRegExp(keyword);
         tipLabel->setText(tr("Danmu Count: %1").arg(proxyModel->rowCount()));
     });
-    if(!filterStr.isEmpty()) filterEdit->setFilter(type, filterStr);
 }
 
-DanmuView::DanmuView(const QList<QSharedPointer<DanmuComment> > *danmuList, QWidget *parent, const QString &filterStr, DanmuFilterBox::FilterType type):CFramelessDialog (tr("View Danmu"),parent)
+DanmuView::DanmuView(const QList<QSharedPointer<DanmuComment> > *danmuList, QWidget *parent, int sourceId):CFramelessDialog (tr("View Danmu"),parent)
 {
-    initView(danmuList->count());
+    initView();
     DanmuViewModel<QSharedPointer<DanmuComment> > *model=new DanmuViewModel<QSharedPointer<DanmuComment> >(danmuList,this);
-    QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
+    DanmuViewProxyModel *proxyModel = new DanmuViewProxyModel(this);
+    proxyModel->setSourceId(sourceId);
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     proxyModel->setFilterKeyColumn(4);
     proxyModel->setSourceModel(model);
     danmuView->setModel(proxyModel);
+    tipLabel->setText(tr("Danmu Count: %1").arg(proxyModel->rowCount()));
     QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[proxyModel,this](int type, const QString &keyword){
         proxyModel->setFilterKeyColumn(type);
         proxyModel->setFilterRegExp(keyword);
         tipLabel->setText(tr("Danmu Count: %1").arg(proxyModel->rowCount()));
     });
-    if(!filterStr.isEmpty()) filterEdit->setFilter(type, filterStr);
 }
 
-void DanmuView::initView(int danmuCount)
+void DanmuView::initView()
 {
     danmuView=new QTreeView(this);
     danmuView->setRootIsDecorated(false);
@@ -52,7 +54,7 @@ void DanmuView::initView(int danmuCount)
     danmuView->setSortingEnabled(true);
     danmuView->header()->setSortIndicator(0, Qt::SortOrder::AscendingOrder);
 
-    tipLabel = new QLabel(tr("Danmu Count: %1").arg(danmuCount),this);
+    tipLabel = new QLabel(this);
     filterEdit=new DanmuFilterBox(this);
 
     QGridLayout *viewGLayout=new QGridLayout(this);
