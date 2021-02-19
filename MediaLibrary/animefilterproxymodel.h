@@ -1,7 +1,8 @@
 #ifndef ANIMEFILTERPROXYMODEL_H
 #define ANIMEFILTERPROXYMODEL_H
-#include <QtCore>
 #include <QAbstractItemModel>
+#include <QSortFilterProxyModel>
+#include "labelmodel.h"
 class AnimeModel;
 class AnimeFilterProxyModel : public QSortFilterProxyModel
 {
@@ -9,14 +10,12 @@ class AnimeFilterProxyModel : public QSortFilterProxyModel
 public:
     explicit AnimeFilterProxyModel(AnimeModel *srcModel, QObject *parent = nullptr);
     void setFilter(int type, const QString &str);
-    void setTags(const QStringList &tagList);
-    void setTime(const QSet<QString> &timeSet);
+    void setTags(SelectedLabelInfo &&selectedLabels);
 signals:
     void animeMessage(const QString &msg, bool hasMore);
 private:
     int filterType;
-    QSet<QString> timeFilterSet;
-    QStringList tagFilterList;
+    SelectedLabelInfo filterLabels;
     void refreshAnimeCount(int cur, int total);
     // QSortFilterProxyModel interface
 protected:

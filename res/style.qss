@@ -1048,6 +1048,19 @@ QTreeView#LabelView::branch:open:has-children {
 QTreeView#LabelView::branch:closed:has-children {
     image: url(:/res/images/branch-closed-2.svg);
 }
+QTreeView#LabelView::indicator{
+    width: 16px;
+    height: 16px;
+}
+QTreeView#LabelView::indicator:checked {
+    image: url(:/res/images/label-check.svg);
+}
+QTreeView#LabelView::indicator:unchecked {
+    image: url(:/res/images/label-uncheck.svg);
+}
+QTreeView#LabelView::indicator:indeterminate {
+    image: url(:/res/images/label-partially.svg);
+}
 QTreeView#BgmListView {
     border: 1px solid #1abc9c;
     background-color: transparent;

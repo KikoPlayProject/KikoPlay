@@ -307,7 +307,6 @@ void AnimeWorker::deleteAnime(Anime *anime)
 {
     ThreadTask task(GlobalObjects::workThread);
     task.Run([=](){
-        emit removeTags(anime->_name,anime->_airDate.left(7));
         QSqlDatabase db=GlobalObjects::getDB(GlobalObjects::Bangumi_DB);
         db.transaction();
         QSqlQuery query(db);
@@ -433,6 +432,7 @@ AnimeWorker::AnimeWorker(QObject *parent):QObject(parent)
     qRegisterMetaType<EpInfo>("EpInfo");
     qRegisterMetaType<AnimeImage>("AnimeImage");
     qRegisterMetaType<EpType>("EpType");
+    qRegisterMetaType<TagNode::TagType>("TagNode::TagType");
     qRegisterMetaType<AnimeLite>("AnimeLite");
 }
 
@@ -619,6 +619,7 @@ void AnimeWorker::addAnime(const MatchResult &match)
         query.bindValue(2,anime->_scriptId);
         query.bindValue(3,anime->_scriptData);
         query.exec();
+        if(!anime->_scriptId.isEmpty()) emit addScriptTag(anime->_scriptId);
         addEp(matchAnimeName, match.ep);
         animesMap.insert(matchAnimeName,anime);
         emit animeAdded(anime);
@@ -667,8 +668,8 @@ bool AnimeWorker::addAnime(Anime *anime)
             updateAnimeInfo(anime);
             animesMap.insert(anime->_name,anime);
             emit animeAdded(anime);
-            if(!anime->_airDate.isEmpty())
-                emit addTimeLabel(anime->_airDate.left(7), "");
+            if(!anime->_airDate.isEmpty()) emit addTimeTag(anime->_airDate);
+            if(!anime->_scriptId.isEmpty()) emit addScriptTag(anime->_scriptId);
             return true;
         }
     }).toBool();
@@ -684,6 +685,7 @@ const QString AnimeWorker::addAnime(Anime *srcAnime, Anime *newAnime)
         {
             addAlias(newAnime->_name, srcAnime->_name);
             retAnimeName = newAnime->_name;
+            emit renameEpTag(srcAnime->_name, newAnime->_name);
             Anime *animeInMap = animesMap.value(newAnime->_name, nullptr);
             QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
             if(animeInMap || checkAnimeExist(newAnime->_name))  //newAnime exists, only merge episodes of srcAnime to newAnime
@@ -698,6 +700,8 @@ const QString AnimeWorker::addAnime(Anime *srcAnime, Anime *newAnime)
                     emit epReset(animeInMap->_name);
                 }
                 animesMap.remove(srcAnime->_name);
+                if(!srcAnime->_airDate.isEmpty()) emit removeTimeTag(srcAnime->_airDate);
+                if(!srcAnime->_scriptId.isEmpty()) emit removeScriptTag(srcAnime->_scriptId);
                 emit animeRemoved(srcAnime);
             }
             else  //newAnime not exist, rename srcAnime to newAnime
@@ -709,7 +713,15 @@ const QString AnimeWorker::addAnime(Anime *srcAnime, Anime *newAnime)
                 if(success && updateAnimeInfo(newAnime))
                 {
                     if(srcAnime->_airDate!=newAnime->_airDate)
-                        emit addTimeLabel(newAnime->_airDate.left(7), srcAnime->_airDate.left(7));
+                    {
+                        emit removeTimeTag(srcAnime->_airDate);
+                        emit addTimeTag(newAnime->_airDate);
+                    }
+                    if(srcAnime->_scriptId!=newAnime->_scriptId)
+                    {
+                        emit removeScriptTag(srcAnime->_scriptId);
+                        emit removeScriptTag(newAnime->_scriptId);
+                    }
                     animesMap.remove(srcAnime->_name);
                     srcAnime->_name=newAnime->_name;
                     animesMap.insert(srcAnime->_name, srcAnime);
@@ -723,7 +735,15 @@ const QString AnimeWorker::addAnime(Anime *srcAnime, Anime *newAnime)
             if(updateAnimeInfo(newAnime))
             {
                 if(srcAnime->_airDate!=newAnime->_airDate)
-                    emit addTimeLabel(newAnime->_airDate.left(7), srcAnime->_airDate.left(7));
+                {
+                    emit removeTimeTag(srcAnime->_airDate);
+                    emit addTimeTag(newAnime->_airDate);
+                }
+                if(srcAnime->_scriptId!=newAnime->_scriptId)
+                {
+                    emit removeScriptTag(srcAnime->_scriptId);
+                    emit removeScriptTag(newAnime->_scriptId);
+                }
                 srcAnime->assign(newAnime);
                 emit animeUpdated(srcAnime);
             }
@@ -930,36 +950,59 @@ int AnimeWorker::fetchCaptures(const QString &animeName, QList<AnimeImage> &capt
     }).toInt();
 }
 
-void AnimeWorker::loadTags(QMap<QString, QSet<QString> > &tagMap, QMap<QString, int> &timeMap)
+void AnimeWorker::loadAnimeInfoTag(AnimeInfoTag &animeInfoTags)
+{
+    ThreadTask task(GlobalObjects::workThread);
+    task.Run([&](){
+        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+        query.prepare("select AirDate, ScriptId from anime");
+        query.exec();
+        int dateNo=query.record().indexOf("AirDate"), scriptIdNo=query.record().indexOf("ScriptId");
+        animeInfoTags.clear();
+        while (query.next())
+        {
+            QString airDate(query.value(dateNo).toString().left(7));
+            QString scriptId(query.value(scriptIdNo).toString());
+            if(!airDate.isEmpty())
+                ++animeInfoTags.airDateCount[airDate];
+            if(!scriptId.isEmpty())
+                ++animeInfoTags.scriptIdCount[scriptId];
+        }
+        return 0;
+    });
+}
+
+void AnimeWorker::loadEpInfoTag(QMap<QString, QSet<QString> > &epPathAnimes)
+{
+    ThreadTask task(GlobalObjects::workThread);
+    task.Run([&](){
+        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+        query.prepare("select Anime, LocalFile from episode");
+        query.exec();
+        int animeNo=query.record().indexOf("Anime"),pathNo=query.record().indexOf("LocalFile");
+        epPathAnimes.clear();
+        while (query.next())
+        {
+            QString epPath(query.value(pathNo).toString());
+            QString filePath = epPath.mid(0, epPath.lastIndexOf('/'));
+            epPathAnimes[filePath].insert(query.value(animeNo).toString());
+        }
+        return 0;
+    });
+}
+
+void AnimeWorker::loadCustomTags(QMap<QString, QSet<QString> > &tagAnimes)
 {
     ThreadTask task(GlobalObjects::workThread);
     task.Run([&](){
         QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
         query.prepare("select * from tag");
         query.exec();
+        tagAnimes.clear();
         int animeNo=query.record().indexOf("Anime"),tagNo=query.record().indexOf("Tag");
-        QString tagName;
         while (query.next())
         {
-            tagName=query.value(tagNo).toString();
-            if(!tagMap.contains(tagName))
-                tagMap.insert(tagName,QSet<QString>());
-            tagMap[tagName].insert(query.value(animeNo).toString());
-        }
-
-        query.prepare("select AirDate from anime");
-        query.exec();
-        int dateNo=query.record().indexOf("AirDate");
-        QString dateStr;
-        while (query.next())
-        {
-            dateStr=query.value(dateNo).toString().left(7);
-            if(dateStr.isEmpty())continue;
-            if(!timeMap.contains(dateStr))
-            {
-                timeMap.insert(dateStr,0);
-            }
-            timeMap[dateStr]++;
+            tagAnimes[query.value(tagNo).toString()].insert(query.value(animeNo).toString());
         }
         return 0;
     });
@@ -990,14 +1033,27 @@ void AnimeWorker::deleteTag(const QString &tag, const QString &animeTitle)
         }
         query.exec();
         db.commit();
-        if(!tag.isEmpty() && !animeTitle.isEmpty())
-            emit removeTagFrom(animeTitle,tag);
+        //if(!tag.isEmpty() && !animeTitle.isEmpty())
+        //    emit removeTagFrom(animeTitle,tag);
     });
 }
 
-void AnimeWorker::addTags(const QString &aniemName, const QStringList &tags)
+void AnimeWorker::deleteTags(const QStringList &tags)
 {
-    emit addTagsTo(aniemName,tags);
+    ThreadTask task(GlobalObjects::workThread);
+    task.RunOnce([=](){
+        QSqlDatabase db=GlobalObjects::getDB(GlobalObjects::Bangumi_DB);
+        QSqlQuery query(db);
+        db.transaction();
+        for(const QString &tag : tags)
+        {
+            query.prepare("delete from tag where Tag=?");
+            query.bindValue(0,tag);
+            query.exec();
+        }
+        query.exec();
+        db.commit();
+    });
 }
 
 void AnimeWorker::saveTags(const QString &animeName, const QStringList &tags)

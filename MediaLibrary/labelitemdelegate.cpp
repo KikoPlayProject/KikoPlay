@@ -1,13 +1,9 @@
 #include <QPainter>
 #include <QPainterPath>
-
+#include "tagnode.h"
 #include "globalobjects.h"
 #include "labelitemdelegate.h"
 
-#define TYPELEVEL 1
-#define LABEL_YEAR 2
-#define LABEL_MONTH 3
-#define LABEL_TAG 4
 #define CountRole Qt::UserRole+1
 #define TypeRole Qt::UserRole+2
 
@@ -27,7 +23,7 @@ void LabelItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
 
     }
     QStyledItemDelegate::paint(painter, ViewOption, index);
-    if(index.data(TypeRole)==TYPELEVEL ) return;
+    if(index.data(TypeRole)==TagNode::TAG_ROOT_CATE) return;
 
     static QFont decorationFont("Microsoft Yahei UI", 9);
     painter->setFont(decorationFont);
@@ -35,11 +31,11 @@ void LabelItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
 
     QRect decoration = option.rect;
     decoration.setHeight(decoration.height()-10);
-    int decorationWidth = painter->fontMetrics().width(QStringLiteral("00000"));
+    int decorationWidth = painter->fontMetrics().horizontalAdvance(QStringLiteral("00000"));
     if(decorationWidth > decoration.width()/3) return;
     decoration.setWidth(decorationWidth);
     decoration.moveCenter(option.rect.center());
-    decoration.moveRight(option.rect.width());
+    decoration.moveRight(option.rect.right()-6);
 
 
     QPainterPath path;

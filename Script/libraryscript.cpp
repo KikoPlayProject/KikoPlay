@@ -162,7 +162,16 @@ ScriptState LibraryScript::getTags(Anime *anime, QStringList &results)
     QVariantList rets = call(tagFunc, {anime->toMap()}, 1, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(!rets[0].canConvert(QVariant::StringList)) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
-    results = rets[0].toStringList();
+    QSet<QString> tags;
+    auto list = rets[0].toStringList();
+    for(const QString &tag : list)
+    {
+        if(!tag.trimmed().isEmpty())
+        {
+            tags.insert(tag.trimmed());
+        }
+    }
+    results = QStringList(tags.begin(), tags.end());
     return ScriptState(ScriptState::S_NORM);
 }
 

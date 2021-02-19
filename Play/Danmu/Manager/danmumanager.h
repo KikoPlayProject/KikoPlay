@@ -32,25 +32,9 @@ public:
 public:
     void localSearch(const QString &keyword,  QList<AnimeLite> &results);
     void localMatch(const QString &path, MatchResult &result);
-    /*
-    enum MatchProvider
-    {
-        DanDan,Bangumi,Local
-    };
-    MatchInfo *searchMatch(MatchProvider from, const QString &keyword);
-    MatchInfo *matchFrom(MatchProvider from, const QString &fileName);
-    */
     QString updateMatch(const QString &fileName, const MatchResult &newMatchInfo);
     void removeMatch(const QString &fileName);
 private:
-    /*
-    MatchInfo *ddSearch(const QString &keyword);
-    MatchInfo *bgmSearch(const QString &keyword);
-    MatchInfo *localSearch(const QString &keyword);
-    MatchInfo *ddMatch(const QString &fileName);
-    MatchInfo *localMatch(const QString &fileName);
-    MatchInfo *searchInMatchTable(const QString &fileHash);
-    */
     void setMatch(const QString &fileHash, const QString &poolId);
 
 signals:

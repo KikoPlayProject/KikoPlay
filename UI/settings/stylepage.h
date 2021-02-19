@@ -22,7 +22,7 @@ private:
     void setSlide();
     static QHash<QString, QPixmap> bgThumb;
     bool bgChanged = false, bgDarknessChanged = false, colorChanged = false;
-    const int maxBgCount = 10;
+    const int maxBgCount = 32;
     QStringList historyBgs;
     QSize thumbSize;
     ColorSlider *sliderBgDarkness, *sliderHue, *sliderLightness;

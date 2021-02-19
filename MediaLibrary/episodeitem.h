@@ -21,6 +21,10 @@ private:
     QComboBox *epNameEdit;
     void addParentItem(QComboBox *combo, const QString& text) const;
     void addChildItem(QComboBox *combo, const QString& text, int epListIndex) const;
+
+    // QWidget interface
+protected:
+    virtual void paintEvent(QPaintEvent *event);
 };
 
 class EpItemDelegate : public QStyledItemDelegate

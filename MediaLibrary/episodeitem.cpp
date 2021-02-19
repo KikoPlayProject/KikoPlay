@@ -43,6 +43,7 @@ namespace
 
 EpInfoEditWidget::EpInfoEditWidget(QWidget *parent) : QWidget(parent)
 {
+    setObjectName(QStringLiteral("EpInfoEditWidget"));
     epTypeCombo = new QComboBox(this);
     epTypeCombo->addItems(QStringList(std::begin(EpTypeName), std::end(EpTypeName)));
     epIndexEdit = new QLineEdit(this);
@@ -119,6 +120,14 @@ void EpInfoEditWidget::addChildItem(QComboBox *combo, const QString &text, int e
     item->setData(epListIndex, EpRole);
     QStandardItemModel* itemModel = (QStandardItemModel*)combo->model();
     itemModel->appendRow(item);
+}
+
+void EpInfoEditWidget::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    QStyleOption styleOpt;
+    styleOpt.initFrom(this);
+    style()->drawPrimitive(QStyle::PE_Widget, &styleOpt, &painter, this);
 }
 
 QWidget *EpItemDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const

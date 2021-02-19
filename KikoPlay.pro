@@ -37,6 +37,7 @@ SOURCES += \
     MediaLibrary/animeinfo.cpp \
     MediaLibrary/animeprovider.cpp \
     MediaLibrary/episodeitem.cpp \
+    MediaLibrary/tagnode.cpp \
     Play/Danmu/danmuprovider.cpp \
     Play/Danmu/eventanalyzer.cpp \
     Play/Video/mpvpreview.cpp \
@@ -156,6 +157,7 @@ HEADERS += \
     LANServer/mediahandler.h \
     MediaLibrary/animeprovider.h \
     MediaLibrary/episodeitem.h \
+    MediaLibrary/tagnode.h \
     Play/Danmu/danmuprovider.h \
     Play/Danmu/danmuviewmodel.h \
     Play/Danmu/eventanalyzer.h \

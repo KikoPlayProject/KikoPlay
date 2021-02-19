@@ -188,17 +188,25 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
             if(crtItem->crt->imgURL.isEmpty()) return;
             Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Character Image..."), NotifyMessageFlag::NM_PROCESS | NotifyMessageFlag::NM_DARKNESS_BACK);
             crtItem->setEnabled(false);
-            QByteArray img(Network::httpGet(crtItem->crt->imgURL,QUrlQuery()));
-            AnimeWorker::instance()->saveCrtImage(currentAnime->name(), crtItem->crt->name, img);
-            crtItem->refreshIcon();
-            crtItem->setEnabled(true);
-            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NotifyMessageFlag::NM_HIDE);
+			try
+			{
+				QByteArray img(Network::httpGet(crtItem->crt->imgURL, QUrlQuery()));
+				AnimeWorker::instance()->saveCrtImage(currentAnime->name(), crtItem->crt->name, img);
+				crtItem->refreshIcon();
+				
+				Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NotifyMessageFlag::NM_HIDE);
+			}
+			catch (Network::NetworkError &err)
+			{
+				Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, err.errorInfo, NotifyMessageFlag::NM_HIDE | NotifyMessageFlag::NM_ERROR);
+			}
+			crtItem->setEnabled(true);  
         });
         QListWidgetItem *listItem=new QListWidgetItem(characterList);
         characterList->setItemWidget(listItem, crtItem);
         listItem->setSizeHint(crtItem->sizeHint());
     }
-    auto &tagMap=GlobalObjects::animeLabelModel->getTags();
+    auto &tagMap=GlobalObjects::animeLabelModel->customTags();
     QStringList tags;
     for(auto iter=tagMap.begin();iter!=tagMap.end();++iter)
     {
@@ -224,7 +232,7 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
     QTreeView *episodeView=new QTreeView(this);
     episodeView->setObjectName(QStringLiteral("AnimeDetailEpisode"));
     episodeView->setRootIsDecorated(false);
-    episodeView->setSelectionMode(QAbstractItemView::SingleSelection);
+    episodeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     epDelegate = new EpItemDelegate(this);
     episodeView->setItemDelegate(epDelegate);
     episodeView->setFont(font());
@@ -246,9 +254,26 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
 
     QAction *deleteAction=new QAction(tr("Delete"), this);
     QObject::connect(deleteAction,&QAction::triggered,[this,episodeView](){
-        auto selection = episodeView->selectionModel()->selectedRows();
+        auto selection = episodeView->selectionModel()->selectedRows((int)EpisodesModel::Columns::LOCALFILE);
         if (selection.size() == 0)return;
-        epModel->removeEp(selection.last());
+        QModelIndex selectedIndex = selection.last();
+        if(selectedIndex.isValid())
+        {
+            int epCount = epModel->rowCount(QModelIndex());
+            QHash<QString, int> pathCounter;
+            for(int i = 0; i<epCount; ++i)
+            {
+                QString file(epModel->data(epModel->index(i, (int)EpisodesModel::Columns::LOCALFILE, QModelIndex()), Qt::DisplayRole).toString());
+                ++pathCounter[file.mid(0, file.lastIndexOf('/'))];
+            }
+            QString localFile = epModel->data(selectedIndex, Qt::DisplayRole).toString();
+            QString filePath = localFile.mid(0, localFile.lastIndexOf('/'));
+            if(pathCounter.value(filePath, 0)<2)
+            {
+                GlobalObjects::animeLabelModel->removeTag(currentAnime->name(), filePath, TagNode::TAG_FILE);
+            }
+            epModel->removeEp(selection.last());
+        }
     });
     QAction *addAction=new QAction(tr("Add to Playlist"), this);
     QObject::connect(addAction,&QAction::triggered,[episodeView,this](){
@@ -360,13 +385,13 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
     tagContainerSLayout->setContentsMargins(0,0,0,0);
 
     tagPanel = new TagPanel(container,true,false,true);
-    QObject::connect(GlobalObjects::animeLabelModel, &LabelModel::removedTag, tagPanel, &TagPanel::removeTag);
+    QObject::connect(GlobalObjects::animeLabelModel, &LabelModel::tagRemoved, tagPanel, &TagPanel::removeTag);
     QObject::connect(tagPanel, &TagPanel::deleteTag, [this](const QString &tag){
-        AnimeWorker::instance()->deleteTag(tag, currentAnime->name());
+        GlobalObjects::animeLabelModel->removeTag(currentAnime->name(), tag, TagNode::TAG_CUSTOM);
     });
     QObject::connect(tagPanel,&TagPanel::tagAdded, [this](const QString &tag){
         QStringList tags{tag};
-        AnimeWorker::instance()->addTags(currentAnime->name(), tags);
+        GlobalObjects::animeLabelModel->addCustomTags(currentAnime->name(), tags);
         tagPanel->addTag(tags);
     });
     TagPanel *webTagPanel = new TagPanel(container,false,true);
@@ -398,9 +423,9 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
     QObject::connect(webTagOKAction,&QAction::triggered,this,[this,webTagPanel](){
         QStringList tags(webTagPanel->getSelectedTags());
         if(tags.count()==0) return;
-        AnimeWorker::instance()->addTags(currentAnime->name(), tags);
+        GlobalObjects::animeLabelModel->addCustomTags(currentAnime->name(), tags);
         tagPanel->clear();
-        auto &tagMap=GlobalObjects::animeLabelModel->getTags();
+        auto &tagMap=GlobalObjects::animeLabelModel->customTags();
         tags.clear();
         for(auto iter=tagMap.begin();iter!=tagMap.end();++iter)
         {

@@ -277,33 +277,7 @@ QStringList DanmuManager::getMatchedFile16Md5(const QString &pid)
     }
     return md5s;
 }
-/*
-MatchInfo *DanmuManager::searchMatch(DanmuManager::MatchProvider from, const QString &keyword)
-{
-    switch (from)
-    {
-    case MatchProvider::DanDan:
-        return ddSearch(keyword);
-    case MatchProvider::Bangumi:
-        return bgmSearch(keyword);
-    case MatchProvider::Local:
-        return localSearch(keyword);
-    }
-}
 
-MatchInfo *DanmuManager::matchFrom(DanmuManager::MatchProvider from, const QString &fileName)
-{
-    switch (from)
-    {
-    case MatchProvider::DanDan:
-        return ddMatch(fileName);
-    case MatchProvider::Local:
-        return localMatch(fileName);
-    default:
-        return nullptr;
-    }
-}
-*/
 QString DanmuManager::updateMatch(const QString &fileName, const MatchResult &newMatchInfo)
 {
     return createPool(newMatchInfo.name, newMatchInfo.ep.type, newMatchInfo.ep.index, newMatchInfo.ep.name, getFileHash(fileName));
@@ -315,245 +289,6 @@ void DanmuManager::removeMatch(const QString &fileName)
     query.exec(QString("delete from match where MD5='%1'").arg(getFileHash(fileName)));
 }
 
-/*
-MatchInfo *DanmuManager::ddSearch(const QString &keyword)
-{
-    ThreadTask task(GlobalObjects::workThread);
-    QVariant ret= task.Run([&keyword](){
-        QString baseUrl = "https://api.acplay.net/api/v2/search/episodes";
-        QUrlQuery query;
-        query.addQueryItem("anime", keyword);
-        MatchInfo *searchInfo=new MatchInfo;
-        try
-        {
-            QString str(Network::httpGet(baseUrl,query));
-            QJsonDocument document(Network::toJson(str));
-            do
-            {
-                if (!document.isObject()) break;
-                QJsonObject obj = document.object();
-                QJsonValue success = obj.value("success");
-                if (success.type() != QJsonValue::Bool)break;
-                if (!success.toBool())
-                {
-                    searchInfo->error = false;
-                    return QVariant::fromValue(static_cast<void *>(searchInfo));;
-                }
-                QJsonValue animes=obj.value("animes");
-                if(animes.type()!=QJsonValue::Array) break;
-                QJsonArray animeArray=animes.toArray();
-                for(auto animeIter=animeArray.begin();animeIter!=animeArray.end();++animeIter)
-                {
-                    if(!(*animeIter).isObject())continue;
-                    QJsonObject animeObj=(*animeIter).toObject();
-                    QJsonValue animeTitle=animeObj.value("animeTitle");
-                    if(animeTitle.type()!=QJsonValue::String)continue;
-                    QString animeTitleStr=animeTitle.toString().trimmed();
-                    QJsonValue episodes= animeObj.value("episodes");
-                    if(episodes.type()!=QJsonValue::Array) continue;
-                    QJsonArray episodeArray=episodes.toArray();
-                    for(auto episodeIter=episodeArray.begin();episodeIter!=episodeArray.end();++episodeIter)
-                    {
-                        if(!(*episodeIter).isObject())continue;
-                        QJsonObject episodeObj=(*episodeIter).toObject();
-                        QJsonValue episodeTitle=episodeObj.value("episodeTitle");
-                        if(episodeTitle.type()!=QJsonValue::String)continue;
-                        MatchInfo::DetailInfo detailInfo;
-                        detailInfo.animeTitle=animeTitleStr;
-                        detailInfo.title=episodeTitle.toString().trimmed();
-                        searchInfo->matches.append(detailInfo);
-                    }
-                }
-                searchInfo->error = false;
-                return QVariant::fromValue(static_cast<void *>(searchInfo));;
-            }while(false);
-            searchInfo->error=true;
-            searchInfo->errorInfo=QObject::tr("Reply JSON Format Error");
-        }
-        catch(Network::NetworkError &error)
-        {
-            searchInfo->error=true;
-            searchInfo->errorInfo=error.errorInfo;
-        }
-        return QVariant::fromValue(static_cast<void *>(searchInfo));
-    });
-    return static_cast<MatchInfo *>(ret.value<void *>());
-}
-*/
-/*
-MatchInfo *DanmuManager::bgmSearch(const QString &keyword)
-{
-    ThreadTask task(GlobalObjects::workThread);
-    QVariant ret= task.Run([&keyword](){
-        QString baseUrl("https://api.bgm.tv/search/subject/"+keyword);
-        QUrlQuery query;
-        query.addQueryItem("type","2");
-        query.addQueryItem("responseGroup","small");
-        query.addQueryItem("start","0");
-        query.addQueryItem("max_results","3");
-        MatchInfo *searchInfo=new MatchInfo;
-        try
-        {
-            QJsonDocument document(Network::toJson(Network::httpGet(baseUrl,query,QStringList()<<"Accept"<<"application/json")));
-            QJsonArray results=document.object().value("list").toArray();
-            for(auto iter=results.begin();iter!=results.end();++iter)
-            {
-                QJsonObject searchObj=(*iter).toObject();
-                int bgmID=searchObj.value("id").toInt();
-                QString animeTitle=searchObj.value("name_cn").toString().trimmed();
-                if(animeTitle.isEmpty())animeTitle=searchObj.value("name").toString().trimmed();
-                animeTitle.replace("&amp;","&");
-                QString epUrl(QString("https://api.bgm.tv/subject/%1/ep").arg(bgmID));
-                try
-                {
-                    QString str(Network::httpGet(epUrl,QUrlQuery(),QStringList()<<"Accept"<<"application/json"));
-                    QJsonDocument document(Network::toJson(str));
-                    QJsonObject obj = document.object();
-                    QJsonArray epArray=obj.value("eps").toArray();
-                    for(auto epIter=epArray.begin();epIter!=epArray.end();++epIter)
-                    {
-                        QJsonObject epobj=(*epIter).toObject();
-                        QString epTitle(epobj.value("name_cn").toString().trimmed());
-                        if(epTitle.isEmpty())epTitle=epobj.value("name").toString().trimmed();
-                        epTitle.replace("&amp;","&");
-                        MatchInfo::DetailInfo detailInfo;
-                        detailInfo.animeTitle=animeTitle;
-                        detailInfo.title=tr("No.%0 %1").arg(epobj.value("sort").toInt()).arg(epTitle);
-                        searchInfo->matches.append(detailInfo);
-                    }
-                }
-                catch(Network::NetworkError &)
-                {
-                    continue;
-                }
-                searchInfo->error = false;
-            }
-        }
-        catch(Network::NetworkError &error)
-        {
-            searchInfo->error=true;
-            searchInfo->errorInfo=error.errorInfo;
-        }
-        return QVariant::fromValue(static_cast<void *>(searchInfo));
-    });
-    return static_cast<MatchInfo *>(ret.value<void *>());
-}
-*/
-/*
-MatchInfo *DanmuManager::localSearch(const QString &keyword)
-{
-    MatchInfo *searchInfo=new MatchInfo;
-    searchInfo->error=false;
-    for(Pool *pool:pools)
-    {
-        if(pool->anime.contains(keyword) || pool->ep.contains(keyword))
-        {
-            MatchInfo::DetailInfo detailInfo;
-            detailInfo.animeTitle=pool->anime;
-            detailInfo.title=pool->ep;
-            searchInfo->matches.append(detailInfo);
-        }
-    }
-    return searchInfo;
-}
-*/
-/*
-MatchInfo *DanmuManager::ddMatch(const QString &fileName)
-{
-    ThreadTask task(GlobalObjects::workThread);
-    QVariant ret= task.Run([&fileName,this](){
-        QString hashStr(getFileHash(fileName));
-        if(hashStr.isEmpty()) return QVariant::fromValue(static_cast<void *>(nullptr));
-
-        MatchInfo *localMatchInfo=searchInMatchTable(hashStr);
-        if(localMatchInfo) return QVariant::fromValue(static_cast<void *>(localMatchInfo));
-        QFileInfo fileInfo(fileName);
-        QJsonObject json;
-        json.insert("fileName", fileInfo.baseName());
-        json.insert("fileHash", hashStr);
-
-        QJsonDocument document;
-        document.setObject(json);
-        QByteArray dataArray = document.toJson(QJsonDocument::Compact);
-
-        QString baseUrl = "https://api.acplay.net/api/v2/match";
-        MatchInfo *matchInfo=new MatchInfo;
-        matchInfo->fileHash=hashStr;
-        try
-        {
-            QString str(Network::httpPost(baseUrl,dataArray,QStringList()<<"Content-Type"<<"application/json"<<"Accept"<<"application/json"));
-            QJsonDocument document(Network::toJson(str));
-            do
-            {
-                if (!document.isObject()) break;
-                QJsonObject obj = document.object();
-                QJsonValue isMatched=obj.value("isMatched");
-                if(isMatched.type()!=QJsonValue::Bool) break;
-                matchInfo->success=isMatched.toBool();
-                QJsonValue matches=obj.value("matches");
-                if(matches.type()!=QJsonValue::Array) break;
-                QJsonArray detailInfoArray=matches.toArray();
-                for(auto iter=detailInfoArray.begin();iter!=detailInfoArray.end();++iter)
-                {
-                    if(!(*iter).isObject())continue;
-                    QJsonObject detailObj=(*iter).toObject();
-                    QJsonValue animeTitle=detailObj.value("animeTitle");
-                    if(animeTitle.type()!=QJsonValue::String)continue;
-                    QJsonValue episodeTitle=detailObj.value("episodeTitle");
-                    if(episodeTitle.type()!=QJsonValue::String)continue;
-                    MatchInfo::DetailInfo detailInfo;
-                    detailInfo.animeTitle=animeTitle.toString().trimmed();
-                    detailInfo.title=episodeTitle.toString().trimmed();
-                    matchInfo->matches.append(detailInfo);
-                }
-                matchInfo->error = false;
-                if(matchInfo->success && matchInfo->matches.count()>0)
-                {
-                    matchInfo->poolID=createPool(matchInfo->matches.first().animeTitle,matchInfo->matches.first().title,hashStr);
-                }
-                return QVariant::fromValue(static_cast<void *>(matchInfo));
-            }while(false);
-            matchInfo->error=true;
-            matchInfo->errorInfo=QObject::tr("Reply JSON Format Error");
-        }
-        catch(Network::NetworkError &error)
-        {
-            matchInfo->error=true;
-            matchInfo->errorInfo=error.errorInfo;
-        }
-        return QVariant::fromValue(static_cast<void *>(matchInfo));
-    });
-    return static_cast<MatchInfo *>(ret.value<void *>());
-}
-*/
-/*
-MatchInfo *DanmuManager::localMatch(const QString &fileName)
-{
-    QString hashStr(getFileHash(fileName));
-    if(hashStr.isEmpty()) return nullptr;
-    return searchInMatchTable(hashStr);
-}
-
-MatchInfo *DanmuManager::searchInMatchTable(const QString &fileHash)
-{
-    QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
-    query.exec(QString("select poolID from match where MD5='%1'").arg(fileHash));
-    if(!query.first())return nullptr;
-    QString poolID=query.value(0).toString();
-    Pool *pool=getPool(poolID,false);
-    if(!pool)return nullptr;
-    MatchInfo *matchInfo=new MatchInfo;
-    matchInfo->error=false;
-    matchInfo->fileHash=fileHash;
-    matchInfo->poolID=poolID;
-    matchInfo->success=true;
-    MatchInfo::DetailInfo detailInfo;
-    detailInfo.title=pool->ep;
-    detailInfo.animeTitle=pool->anime;
-    matchInfo->matches.append(detailInfo);
-    return matchInfo;
-}
-*/
 
 QString DanmuManager::getFileHash(const QString &fileName)
 {
@@ -619,7 +354,8 @@ void DanmuManager::localMatch(const QString &path, MatchResult &result)
 QString DanmuManager::createPool(const QString &animeTitle, EpType epType, double epIndex, const QString &epName,  const QString &fileHash)
 {
     QString poolId(getPoolId(animeTitle, epType, epIndex));
-    if(!pools.contains(poolId))
+    Pool *pool = pools.value(poolId, nullptr);
+    if(!pool)
     {
         QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
         query.prepare("insert into pool(PoolID,Anime,EpType,EpIndex,EpName) values(?,?,?,?,?)");
@@ -631,6 +367,18 @@ QString DanmuManager::createPool(const QString &animeTitle, EpType epType, doubl
         query.exec();
         QMutexLocker locker(&poolsLock);
         pools.insert(poolId,new Pool(poolId,animeTitle,epName,epType,epIndex));
+    }
+    else
+    {
+        if(!epName.isEmpty() && pool->ep != epName)
+        {
+            QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));
+            query.prepare("update pool set EpName=? where PoolID=?");
+            query.bindValue(0,epName);
+            query.bindValue(1,poolId);
+            query.exec();
+            pool->ep = epName;
+        }
     }
     if(!fileHash.isEmpty())
         setMatch(fileHash,poolId);

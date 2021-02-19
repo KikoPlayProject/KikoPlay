@@ -1062,6 +1062,7 @@ QTreeView#LabelView::item:hover, QTreeView#LabelView::branch:hover {
 QTreeView#LabelView::item:selected, QTreeView#LabelView::branch:selected{
     background-color: rgba(255, 255, 255, 80);
 }
+
 QTreeView#LabelView::branch {
     background-color: transparent;
 }
@@ -1070,6 +1071,19 @@ QTreeView#LabelView::branch:open:has-children {
 }
 QTreeView#LabelView::branch:closed:has-children {
     image: url(:/res/images/branch-closed-2.svg);
+}
+QTreeView#LabelView::indicator{
+    width: 16px;
+    height: 16px;
+}
+QTreeView#LabelView::indicator:checked {
+    image: url(:/res/images/label-check.svg);
+}
+QTreeView#LabelView::indicator:unchecked {
+    image: url(:/res/images/label-uncheck.svg);
+}
+QTreeView#LabelView::indicator:indeterminate {
+    image: url(:/res/images/label-partially.svg);
 }
 QTreeView#BgmListView::indicator:checked {
     image: url(:/res/images/focus-on.svg);
@@ -1160,6 +1174,9 @@ QPlainTextEdit#TaskLogView{
 }
 QLabel#LibraryCountTip, QLabel#SelectedLabelTip{
     color: rgb(240,240,240);
+}
+QWidget#EpInfoEditWidget {
+    background-color:rgb(255,255,255);
 }
 QLabel#AnimeItemTitle{
     color: rgb(250,250,250);

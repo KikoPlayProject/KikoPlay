@@ -60,5 +60,9 @@
         <file>res/images/down-light-hover.svg</file>
         <file>res/images/down-arrow-dark-hover.svg</file>
         <file>res/images/up-arrow-dark-hover.svg</file>
+        <file>res/images/loading-spinner.gif</file>
+        <file>res/images/label-check.svg</file>
+        <file>res/images/label-uncheck.svg</file>
+        <file>res/images/label-partially.svg</file>
     </qresource>
 </RCC>

@@ -189,9 +189,16 @@ private:
     void setStaffs(const QString &staffStrs);
     QString staffToStr() const;
 };
-enum TagType
+
+struct AnimeInfoTag
 {
-    TAG_SCRIPT, TAG_TIME, TAG_FILE, TAG_CUSTOM
+    QMap<QString, int> airDateCount;
+    QMap<QString, int> scriptIdCount;
+    void clear()
+    {
+        airDateCount.clear();
+        scriptIdCount.clear();
+    }
 };
 
 //struct Character

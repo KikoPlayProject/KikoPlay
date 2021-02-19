@@ -1,6 +1,7 @@
 #ifndef ANIMEWORKER_H
 #define ANIMEWORKER_H
 #include "animeinfo.h"
+#include "tagnode.h"
 class AnimeWorker : public QObject
 {
     Q_OBJECT
@@ -39,10 +40,13 @@ public:
     void deleteAnimeImage(const QString &animeName, AnimeImage::ImageType type, qint64 timeId);
     int fetchCaptures(const QString &animeName, QList<AnimeImage> &captureList, int offset, int limit);
 
-    void loadTags(QMap<QString,QSet<QString> > &tagMap, QMap<QString, int> &timeMap);
-    void deleteTag(const QString &tag,const QString &animeTitle="");
-    void addTags(const QString &aniemName, const QStringList &tags);
+    void loadAnimeInfoTag(AnimeInfoTag &animeInfoTags);
+    void loadEpInfoTag(QMap<QString, QSet<QString>> &epPathAnimes);
+    void loadCustomTags(QMap<QString, QSet<QString> > &tagAnimes);
+
     void saveTags(const QString &animeName, const QStringList &tags);
+    void deleteTag(const QString &tag,const QString &animeTitle="");
+    void deleteTags(const QStringList &tags);
 
 private:
     QMap<QString,Anime *> animesMap;
@@ -75,11 +79,16 @@ signals:
 
     void captureUpdated(const QString &animeName, const AnimeImage &aImage);
 
-    void addTagsTo(const QString &animeName, const QStringList &tagList);
-    void removeTagFrom(const QString &animeName, const QString &tag);
-    void removeTags(const QString &animeTitle, const QString &time);
-    void addTimeLabel(const QString &time, const QString &oldTime);
+    //void addTagsTo(const QString &animeName, const QStringList &tagList);
+    //void removeTagFrom(const QString &animeName, const QString &tag);
+    //void removeTags(const QString &animeTitle, const QString &time);
+    //void addTimeLabel(const QString &time, const QString &oldTime);
 
+    void renameEpTag(const QString &oldAnimeName, const QString &newAnimeName);
+    void addTimeTag(const QString &tag);
+    void addScriptTag(const QString &scriptId);
+    void removeTimeTag(const QString &tag);
+    void removeScriptTag(const QString &scriptId);
 
 public slots:
     //void loadAnimes(QList<Anime *> *animes, int offset, int limit);

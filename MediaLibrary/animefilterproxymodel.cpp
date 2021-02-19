@@ -15,16 +15,10 @@ void AnimeFilterProxyModel::setFilter(int type, const QString &str)
     setFilterRegExp(str);
     static_cast<AnimeModel *>(sourceModel())->showStatisMessage();
 }
-void AnimeFilterProxyModel::setTags(const QStringList &tagList)
-{
-    tagFilterList=tagList;
-    invalidateFilter();
-    static_cast<AnimeModel *>(sourceModel())->showStatisMessage();
-}
 
-void AnimeFilterProxyModel::setTime(const QSet<QString> &timeSet)
+void AnimeFilterProxyModel::setTags(SelectedLabelInfo &&selectedLabels)
 {
-    timeFilterSet=timeSet;
+    filterLabels = selectedLabels;
     invalidateFilter();
     static_cast<AnimeModel *>(sourceModel())->showStatisMessage();
 }
@@ -46,13 +40,64 @@ bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &
      QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
      AnimeModel *model = static_cast<AnimeModel *>(sourceModel());
      Anime *anime = model->getAnime(index);
+
+     if(!filterLabels.scriptTags.isEmpty() && !filterLabels.scriptTags.contains(anime->scriptId())) return false;
+
      QString animeTime(anime->airDate().left(7));
-     if(!timeFilterSet.isEmpty() && !timeFilterSet.contains(animeTime.isEmpty()?tr("Unknown"):animeTime))return false;
-     for(const QString &tag:tagFilterList)
+     if(!filterLabels.timeTags.isEmpty() && !filterLabels.timeTags.contains(animeTime))return false;
+
+     if(!filterLabels.epPathTags.isEmpty())
      {
-         if(!GlobalObjects::animeLabelModel->getTags()[tag].contains(anime->name()))
+         bool contains = false;
+         for(const QString &tag : filterLabels.epPathTags)
+         {
+             auto iter = GlobalObjects::animeLabelModel->epTags().lowerBound(tag);
+             while(iter != GlobalObjects::animeLabelModel->epTags().end() && iter.key().startsWith(tag))
+             {
+                 if(iter.key()==tag || iter.key().startsWith(tag+'/'))
+                 {
+                     if(iter.value().contains(anime->name()))
+                     {
+                         contains = true;
+                         break;
+                     }
+                 }
+                 ++iter;
+             }
+             if(contains) break;
+         }
+         if(!contains) return false;
+     }
+
+     if(!filterLabels.customPrefixTags.isEmpty())
+     {
+         bool contains = false;
+         for(const QString &tag : filterLabels.customPrefixTags)
+         {
+             auto iter = GlobalObjects::animeLabelModel->customTags().lowerBound(tag);
+             while(iter != GlobalObjects::animeLabelModel->customTags().end() && iter.key().startsWith(tag))
+             {
+                 if(iter.key()==tag || iter.key().startsWith(tag+'/'))
+                 {
+                     if(iter.value().contains(anime->name()))
+                     {
+                         contains = true;
+                         break;
+                     }
+                 }
+				 ++iter;
+             }
+             if(contains) break;
+         }
+         if(!contains) return false;
+     }
+
+     for(const QString &tag : filterLabels.customTags)
+     {
+         if(!GlobalObjects::animeLabelModel->customTags()[tag].contains(anime->name()))
              return false;
      }
+
      switch (filterType)
      {
      case 0://title
