@@ -15,39 +15,34 @@ void LocalProvider::LoadXmlDanmuFile(QString filePath, QList<DanmuComment *> &li
             if(attributes.hasAttribute("p"))
             {
                 QStringList attrList=attributes.value("p").toString().split(',');
-                if(attrList.length()<4)continue;
-                DanmuComment *danmu=new DanmuComment();
-                danmu->text=reader.readElementText();
-                danmu->time = attrList[0].toFloat() * 1000;
-                danmu->originTime=danmu->time;
-                danmu->setType(attrList[1].toInt());
-                danmu->color=attrList[3].toInt();
                 if(attrList.length()>4)
-                    danmu->date=attrList[4].toLongLong();
-                if(attrList.length()>6)
-                    danmu->sender=attrList[6];
-                switch (attrList[2].toInt())
                 {
-                case 25:
-                    danmu->fontSizeLevel=DanmuComment::Normal;
-                    break;
-                case 18:
-                    danmu->fontSizeLevel=DanmuComment::Small;
-                    break;
-                case 36:
-                    danmu->fontSizeLevel=DanmuComment::Large;
-                    break;
-                default:
-                    danmu->fontSizeLevel=DanmuComment::Normal;
-                    break;
-                }
-                if(danmu->type!=DanmuComment::UNKNOW)list.append(danmu);
-                else
-                {
-#ifdef QT_DEBUG
-                    qDebug()<<"unsupport danmu mode:"<<danmu->text;
-#endif
-                    delete danmu;
+                    DanmuComment *danmu=new DanmuComment();
+                    danmu->text=reader.readElementText();
+                    danmu->time = attrList[0].toFloat() * 1000;
+                    danmu->originTime=danmu->time;
+                    danmu->setType(attrList[1].toInt());
+                    danmu->color=attrList[3].toInt();
+                    if(attrList.length()>4)
+                        danmu->date=attrList[4].toLongLong();
+                    if(attrList.length()>6)
+                        danmu->sender=attrList[6];
+                    switch (attrList[2].toInt())
+                    {
+                    case 25:
+                        danmu->fontSizeLevel=DanmuComment::Normal;
+                        break;
+                    case 18:
+                        danmu->fontSizeLevel=DanmuComment::Small;
+                        break;
+                    case 36:
+                        danmu->fontSizeLevel=DanmuComment::Large;
+                        break;
+                    default:
+                        danmu->fontSizeLevel=DanmuComment::Normal;
+                        break;
+                    }
+                    list.append(danmu);
                 }
             }
         }

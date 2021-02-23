@@ -201,7 +201,9 @@ bool GIFCapture::ffmpegCut(const QString &input, const QString &output, int w, i
     });
     showBusyState(true);
     saveFile->setEnabled(false);
-    ffmpegProcess.start(ffmpegPath, arguments);
+    QTimer::singleShot(0, [&]() {
+        ffmpegProcess.start(ffmpegPath, arguments);
+    });
     eventLoop.exec();
     showBusyState(false);
     saveFile->setEnabled(true);

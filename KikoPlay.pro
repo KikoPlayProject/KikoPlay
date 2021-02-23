@@ -151,7 +151,6 @@ SOURCES += \
     UI/tip.cpp
 
 HEADERS += \
-    Common/kcache.h \
     Common/lrucache.h \
     Common/notifier.h \
     Download/autodownloadmanager.h \

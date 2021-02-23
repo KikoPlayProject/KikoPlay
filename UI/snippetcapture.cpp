@@ -177,7 +177,9 @@ bool SnippetCapture::ffmpegCut(double start, const QString &input, int duration,
     bool addEnable = addToLibrary->isEnabled();
     if(addEnable) addToLibrary->setEnabled(false);
     saveFile->setEnabled(false);
-    ffmpegProcess.start(ffmpegPath, arguments);
+    QTimer::singleShot(0, [&]() {
+        ffmpegProcess.start(ffmpegPath, arguments);
+    });
     eventLoop.exec();
     showBusyState(false);
     if(addEnable) addToLibrary->setEnabled(true);

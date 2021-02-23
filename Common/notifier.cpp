@@ -1,6 +1,5 @@
 #include "notifier.h"
-#include <QThread>
-#include <QDebug>
+
 Notifier::Notifier(QObject *parent) : QObject(parent)
 {
 

@@ -320,7 +320,9 @@ void HttpServer::api_Screenshot(QHttpEngine::Socket *socket)
                     qInfo() << content.replace("\\n", "\n");
                 });
 
-                ffmpegProcess.start(ffmpegPath, arguments);
+                QTimer::singleShot(0, [&]() {
+                    ffmpegProcess.start(ffmpegPath, arguments);
+                });
                 eventLoop.exec();
                 if(success)
                 {
