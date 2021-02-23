@@ -12,16 +12,16 @@
 Capture::Capture(QImage &captureImage, QWidget *parent, const PlayListItem *item) : CFramelessDialog("",parent)
 {
     setResizeable(false);
-    QLabel *imgLabel=new QLabel(this);
+    imgLabel=new QLabel(this);
     imgLabel->setScaledContents(true);
-    double aspectRatio = double(captureImage.width())/captureImage.height();
+    aspectRatio = double(captureImage.width())/captureImage.height();
     double w=500*logicalDpiX()/96;
     double h=w/aspectRatio;
     imgLabel->setPixmap(QPixmap::fromImage(captureImage));
     imgLabel->setGeometry(2,2,w,h);
     imgLabel->lower();
 
-    QWidget *buttonContainer=new QWidget(this);
+    buttonContainer=new QWidget(this);
     buttonContainer->setGeometry(0,h+2,w,50*logicalDpiY()/96);
     QPushButton *copyToClipboard=new QPushButton(tr("Copy to Clipboard"),buttonContainer);
     QObject::connect(copyToClipboard,&QPushButton::clicked,[&captureImage,this](){
@@ -44,7 +44,7 @@ Capture::Capture(QImage &captureImage, QWidget *parent, const PlayListItem *item
         int curTime=GlobalObjects::mpvplayer->getTime();
         int cmin=curTime/60;
         int cls=curTime-cmin*60;
-        QString info=QString("%1:%2 - %3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(item->animeTitle);
+        QString info=QString("%1:%2 - %3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(item->title);
         AnimeWorker::instance()->saveCapture(item->animeTitle, info, captureImage);
         CFramelessDialog::onAccept();
     });
@@ -54,4 +54,14 @@ Capture::Capture(QImage &captureImage, QWidget *parent, const PlayListItem *item
     btnHLayout->addItem(new QSpacerItem(1,1,QSizePolicy::MinimumExpanding));
     btnHLayout->addWidget(saveToFile);
     resize(w+4,h+50*logicalDpiY()/96);
+}
+
+void Capture::resizeEvent(QResizeEvent *event)
+{
+    double w=500*logicalDpiX()/96;
+    double h=w/aspectRatio;
+    imgLabel->setGeometry(2,2,w,h);
+    imgLabel->lower();
+    buttonContainer->setGeometry(0,h+2,w,50*logicalDpiY()/96);
+    CFramelessDialog::resizeEvent(event);
 }

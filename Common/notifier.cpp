@@ -1,4 +1,6 @@
 #include "notifier.h"
+#include <QThread>
+#include <QDebug>
 Notifier::Notifier(QObject *parent) : QObject(parent)
 {
 
@@ -24,7 +26,7 @@ void Notifier::showMessage(NotifyType nType, const QString &content, int flag)
     {
         QMetaObject::invokeMethod(this, [=](){
             n->showMessage(content, flag);
-        });
+        }, Qt::QueuedConnection);
     }
 }
 

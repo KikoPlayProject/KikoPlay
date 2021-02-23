@@ -24,7 +24,7 @@ AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("B
     searchWordEdit=new QLineEdit(anime?anime->name():"",this);
     searchButton=new QPushButton(tr("Search"),this);
     QObject::connect(searchButton,&QPushButton::clicked,this,&AnimeSearch::search);
-    QObject::connect(searchWordEdit,&QLineEdit::returnPressed,this,&AnimeSearch::search);
+    //QObject::connect(searchWordEdit,&QLineEdit::returnPressed,this,&AnimeSearch::search);
 
     bangumiList=new QTreeWidget(this);
     bangumiList->setRootIsDecorated(false);

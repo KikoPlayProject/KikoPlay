@@ -8,6 +8,8 @@
 #include "Play/Danmu/common.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
+#include "Play/Video/mpvpreview.h"
+#include "MediaLibrary/animeworker.h"
 #include "globalobjects.h"
 
 #include <QCoreApplication>
@@ -48,6 +50,7 @@ HttpServer::HttpServer(QObject *parent) : QObject(parent)
     apiHandler->registerMethod("danmu/full/", this, &HttpServer::api_DanmuFull);
     apiHandler->registerMethod("updateDelay", this, &HttpServer::api_UpdateDelay);
     apiHandler->registerMethod("updateTimeline", this, &HttpServer::api_UpdateTimeline);
+    apiHandler->registerMethod("screenshot", this, &HttpServer::api_Screenshot);
     handler->addSubHandler(QRegExp("api/"), apiHandler);
 
     server = new QHttpEngine::Server(handler,this);
@@ -257,5 +260,80 @@ void HttpServer::api_Subtitle(QHttpEngine::Socket *socket)
     socket->setHeader("Content-Type", "application/json");
     socket->writeHeaders();
     socket->write(data);
+    socket->close();
+}
+
+void HttpServer::api_Screenshot(QHttpEngine::Socket *socket)
+{
+    QJsonDocument document;
+    if (socket->readJson(document))
+    {
+        QVariantMap data = document.object().toVariantMap();
+        QString animeName=data.value("animeName").toString();
+        double pos = data.value("pos").toDouble();  //s
+        QString mediaId=data.value("mediaId").toString();
+        QString mediaPath=mediaHash.value(mediaId);
+        QFileInfo fi(mediaPath);
+        if(fi.exists() && !animeName.isEmpty())
+        {
+            QTemporaryFile tmpImg("XXXXXX.jpg");
+            if(tmpImg.open())
+            {
+                int cmin=pos/60;
+                int cls=pos-cmin*60;
+                QString posStr(QString("%1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')));
+
+                QString ffmpegPath = GlobalObjects::appSetting->value("Play/FFmpeg", "ffmpeg").toString();
+                QStringList arguments;
+                arguments << "-ss" << QString::number(pos);
+                arguments << "-i" << mediaPath;
+                arguments << "-vframes" << "1";
+                arguments << "-y";
+                arguments << tmpImg.fileName();
+
+                QProcess ffmpegProcess;
+                QEventLoop eventLoop;
+                bool success = true;
+                QString errorInfo;
+                QObject::connect(&ffmpegProcess, &QProcess::errorOccurred, this, [&errorInfo, &eventLoop, &success](QProcess::ProcessError error){
+                    if(error == QProcess::FailedToStart)
+                    {
+                        errorInfo = tr("Start FFmpeg Failed");
+                    }
+                   success = false;
+                   eventLoop.quit();
+                });
+                QObject::connect(&ffmpegProcess, (void (QProcess:: *)(int, QProcess::ExitStatus))&QProcess::finished, this,
+                                 [&errorInfo, &eventLoop, &success](int exitCode, QProcess::ExitStatus exitStatus){
+                   success = (exitStatus == QProcess::NormalExit && exitCode == 0);
+                   if(!success)
+                   {
+                       errorInfo = tr("Generate Failed, FFmpeg exit code: %1").arg(exitCode);
+                   }
+                   eventLoop.quit();
+                });
+                QObject::connect(&ffmpegProcess, &QProcess::readyReadStandardOutput, this, [&](){
+                   qInfo()<<ffmpegProcess.readAllStandardOutput();
+                });
+                QObject::connect(&ffmpegProcess, &QProcess::readyReadStandardError, this, [&]() {
+                    QString content(ffmpegProcess.readAllStandardError());
+                    qInfo() << content.replace("\\n", "\n");
+                });
+
+                ffmpegProcess.start(ffmpegPath, arguments);
+                eventLoop.exec();
+                if(success)
+                {
+                    genLog(QString("[%1]Request:Screenshot,[%2]%3").arg(socket->peerAddress().toString(),posStr, fi.filePath()));
+                    QImage captureImage(tmpImg.fileName());
+                    AnimeWorker::instance()->saveCapture(animeName, data.value("info").toString(), captureImage);
+                }
+                else
+                {
+                    genLog(QString("[%1]Request:Screenshot, [%2]%3, %4").arg(socket->peerAddress().toString(),posStr, fi.filePath(), errorInfo));
+                }
+            }
+        }
+    }
     socket->close();
 }

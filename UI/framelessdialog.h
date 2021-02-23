@@ -49,13 +49,15 @@ private:
     QLabel *title;
     QWidget *titleBar, *backWidget;
 	bool restorePlayState;
+    bool isBusy;
 
     DialogTip *dialogTip;
 
     // QWidget interface
 protected:
-    virtual void showEvent(QShowEvent *event);
-    virtual void resizeEvent(QResizeEvent *event);
+    virtual void showEvent(QShowEvent *event) override;
+    virtual void resizeEvent(QResizeEvent *event) override;
+    void keyPressEvent(QKeyEvent *) override;
     void showBusyState(bool busy);
     void setTitle(const QString &text);
     void showMessage(const QString &msg, int type=1);
@@ -95,8 +97,9 @@ private:
     QPushButton *closeButton,*acceptButton;
     QLabel *busyLabel;
     QLabel *title;
-    QWidget *titleBar;
+    QWidget *titleBar, *backWidget;
     bool restorePlayState;
+    bool isBusy;
     bool isMousePressed;
     QPoint mousePressPos;
 
@@ -113,6 +116,7 @@ protected:
     void mousePressEvent(QMouseEvent *e);
     void mouseReleaseEvent(QMouseEvent *e);
     virtual void resizeEvent(QResizeEvent *event);
+    void keyPressEvent(QKeyEvent *) override;
     void showBusyState(bool busy);
     void setTitle(const QString &text);
     void showMessage(const QString &msg, int type=0);

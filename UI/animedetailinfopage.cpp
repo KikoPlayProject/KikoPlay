@@ -29,6 +29,7 @@
 #include "Common/flowlayout.h"
 #include "Common/network.h"
 #include "captureview.h"
+#include "gifcapture.h"
 #include "globalobjects.h"
 
 AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), currentAnime(nullptr)
@@ -42,6 +43,32 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     shadowEffect->setBlurRadius(12);
     shadowEffect->setColor(Qt::white);
     coverLabel->setGraphicsEffect(shadowEffect);
+    QAction *actCopyCover = new QAction(tr("Copy Cover"), this);
+    QObject::connect(actCopyCover, &QAction::triggered, this, [=](){
+        if(currentAnime && currentAnime->cover().isNull()) return;
+        QApplication::clipboard()->setPixmap(currentAnime->cover());
+    });
+    QAction *actDownloadCover = new QAction(tr("Re-Download Cover"), this);
+    QObject::connect(actDownloadCover, &QAction::triggered, this, [=](){
+        if(currentAnime && !currentAnime->coverURL().isEmpty())
+        {
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Cover Image..."), NM_PROCESS | NM_DARKNESS_BACK);
+            try
+            {
+                QByteArray img(Network::httpGet(currentAnime->coverURL(), QUrlQuery()));
+                currentAnime->setCover(img);
+                coverLabel->setPixmap(currentAnime->cover());
+                Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NM_HIDE);
+            }
+            catch (Network::NetworkError &err)
+            {
+                Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, err.errorInfo, NM_HIDE | NM_ERROR);
+            }
+        }
+    });
+    coverLabel->addAction(actCopyCover);
+    coverLabel->addAction(actDownloadCover);
+    coverLabel->setContextMenuPolicy(Qt::ActionsContextMenu);
 
     titleLabel=new QLabel(this);
     titleLabel->setObjectName(QStringLiteral("AnimeDetailTitle"));
@@ -191,9 +218,8 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
 			try
 			{
 				QByteArray img(Network::httpGet(crtItem->crt->imgURL, QUrlQuery()));
-				AnimeWorker::instance()->saveCrtImage(currentAnime->name(), crtItem->crt->name, img);
+                currentAnime->setCrtImage(crtItem->crt->name, img);
 				crtItem->refreshIcon();
-				
 				Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NotifyMessageFlag::NM_HIDE);
 			}
 			catch (Network::NetworkError &err)
@@ -313,42 +339,13 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
             Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("File Not Exist"), NotifyMessageFlag::NM_ERROR|NotifyMessageFlag::NM_HIDE);
             return;
         }
-        QString command("Explorer /select," + QDir::toNativeSeparators(info.absoluteFilePath()));
-        QProcess::startDetached(command);
+        QProcess::startDetached("Explorer", {"/select,", QDir::toNativeSeparators(info.absoluteFilePath())});
     });
 
     QAction *autoGetEpNames=new QAction(tr("Auto Get Epsoide Names"),this);
     autoGetEpNames->setCheckable(true);
     autoGetEpNames->setChecked(true);
     QObject::connect(autoGetEpNames, &QAction::toggled, epDelegate, &EpItemDelegate::setAutoGetEpInfo);
-    /*
-    QObject::connect(autoGetEpNames,&QAction::triggered,[this,autoGetEpNames](){
-        if(currentAnime->id.isEmpty())return;
-        QList<Bangumi::EpInfo> eps;
-        emit setBackEnable(false);
-        autoGetEpNames->setEnabled(false);
-        this->showBusyState(true);
-        // To: -------------------------------------
-        QString err(Bangumi::getEp(currentAnime->id.toInt(), eps));
-        if(err.isEmpty())
-        {
-            epNames.clear();
-            for(auto &ep : eps)
-            {
-                epNames.append(tr("No.%0 %1(%2)").arg(ep.index).arg(ep.name, ep.name_cn));
-            }
-            this->dialogTip->showMessage(tr("Getting Down. Double-Click Title to See Epsoide Names"));
-        }
-        else
-        {
-            this->dialogTip->showMessage(err,1);
-        }
-        this->showBusyState(false);
-        autoGetEpNames->setEnabled(true);
-        this->showBusyState(false);
-        emit setBackEnable(true);
-    });
-    */
 
     episodeView->setContextMenuPolicy(Qt::ActionsContextMenu);
     episodeView->addAction(playAction);
@@ -453,13 +450,14 @@ QWidget *AnimeDetailInfoPage::setupCapturePage()
     });
     QListView *captureView=new QListView(this);
     captureView->setObjectName(QStringLiteral("captureView"));
-    captureView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    captureView->setSelectionMode(QAbstractItemView::SingleSelection);
     captureView->setIconSize(QSize(200*logicalDpiX()/96,112*logicalDpiY()/96));
     captureView->setViewMode(QListView::IconMode);
     captureView->setUniformItemSizes(true);
     captureView->setResizeMode(QListView::Adjust);
     captureView->setMovement(QListView::Static);
     captureView->setWordWrap(true);
+    captureView->setEditTriggers(QAbstractItemView::SelectedClicked);
 
     captureView->setModel(captureModel);
     QAction* actListMode = new QAction(tr("List Mode"),this);
@@ -479,21 +477,76 @@ QWidget *AnimeDetailInfoPage::setupCapturePage()
     {
         auto selection = captureView->selectionModel()->selectedRows();
         if(selection.size()==0) return;
-        QPixmap img(captureModel->getFullCapture(selection.first().row()));
-        QApplication::clipboard()->setPixmap(img);
+        const AnimeImage *item=captureModel->getCaptureItem(selection.first().row());
+        if(item->type == AnimeImage::CAPTURE)
+        {
+            QPixmap img(captureModel->getFullCapture(selection.first().row()));
+            QApplication::clipboard()->setPixmap(img);
+        }
     });
     QAction* actSave = new QAction(tr("Save"),this);
     QObject::connect(actSave, &QAction::triggered,[this,captureView](bool)
     {
         auto selection = captureView->selectionModel()->selectedRows();
         if(selection.size()==0) return;
-        QPixmap img(captureModel->getFullCapture(selection.first().row()));
         const AnimeImage *item=captureModel->getCaptureItem(selection.first().row());
-        QString fileName = QFileDialog::getSaveFileName(this, tr("Save Capture"),item->info,
-                                    "JPEG Images (*.jpg);;PNG Images (*.png)");
+        if(item->type == AnimeImage::CAPTURE)
+        {
+            QString fileName = QFileDialog::getSaveFileName(this, tr("Save Capture"), item->info, "JPEG Images (*.jpg);;PNG Images (*.png)");
+            if(!fileName.isEmpty())
+            {
+                QPixmap img(captureModel->getFullCapture(selection.first().row()));
+                img.save(fileName);
+            }
+        }
+        else if(item->type == AnimeImage::SNIPPET)
+        {
+            QString snippetFilePath(captureModel->getSnippetFile(selection.first().row()));
+            if(snippetFilePath.isEmpty())
+            {
+                Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Snippet %1 Lost").arg(item->timeId), NM_HIDE | NM_ERROR);
+                return;
+            }
+            else
+            {
+                QFileInfo snippetFile(snippetFilePath);
+                QString fileName = QFileDialog::getSaveFileName(this, tr("Save Snippet"), item->info, QString("(*.%1)").arg(snippetFile.suffix()));
+                if(!fileName.isEmpty())
+                {
+                    QFile::copy(snippetFilePath, fileName);
+                }
+            }
+        }
+
+    });
+    QAction* actSaveGIF = new QAction(tr("Save As GIF"),this);
+    QObject::connect(actSaveGIF, &QAction::triggered,[this,captureView](bool)
+    {
+        auto selection = captureView->selectionModel()->selectedRows();
+        if(selection.size()==0) return;
+        const AnimeImage *item=captureModel->getCaptureItem(selection.first().row());
+        if(item->type != AnimeImage::SNIPPET) return;
+
+
+        QString snippetFilePath(captureModel->getSnippetFile(selection.first().row()));
+        if(snippetFilePath.isEmpty())
+        {
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Snippet %1 Lost").arg(item->timeId), NM_HIDE | NM_ERROR);
+            return;
+        }
+        else
+        {
+            GIFCapture gifCapture(snippetFilePath, false, this);
+            gifCapture.exec();
+        }
+    });
+    QAction* actAdd = new QAction(tr("Add"),this);
+    QObject::connect(actAdd, &QAction::triggered,[=](bool)
+    {
+        QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), "", "JPEG Images (*.jpg);;PNG Images (*.png)");
         if(!fileName.isEmpty())
         {
-            img.save(fileName);
+            AnimeWorker::instance()->saveCapture(currentAnime->name(), QFileInfo(fileName).fileName(), QImage(fileName));
         }
     });
     QAction* actRemove = new QAction(tr("Remove"),this);
@@ -501,8 +554,20 @@ QWidget *AnimeDetailInfoPage::setupCapturePage()
     {
         auto selection = captureView->selectionModel()->selectedRows();
         if(selection.size()==0) return;
-        captureModel->deleteCaptures(selection);
+		captureModel->deleteRow(selection.first().row());
     });
+    QAction *explorerViewAction=new QAction(tr("Browse File"), this);
+    QObject::connect(explorerViewAction,&QAction::triggered,[=](){
+        auto selection = captureView->selectionModel()->selectedRows();
+        if(selection.size()==0) return;
+        QString snippetFilePath(captureModel->getSnippetFile(selection.first().row()));
+        if(!snippetFilePath.isEmpty())
+        {
+            QFileInfo snippetFile(snippetFilePath);
+            QProcess::startDetached("Explorer", {"/select,", QDir::toNativeSeparators(snippetFile.absoluteFilePath())});
+        }
+    });
+
     QMenu *contexMenu = new QMenu(this);
     QActionGroup *group=new QActionGroup(this);
     group->addAction(actIconMode);
@@ -510,13 +575,34 @@ QWidget *AnimeDetailInfoPage::setupCapturePage()
     actIconMode->setChecked(true);
     contexMenu->addAction(actCopy);
     contexMenu->addAction(actSave);
+    contexMenu->addAction(actSaveGIF);
+    contexMenu->addAction(actAdd);
     contexMenu->addAction(actRemove);
+    contexMenu->addAction(explorerViewAction);
     contexMenu->addSeparator();
     contexMenu->addAction(actIconMode);
     contexMenu->addAction(actListMode);
     captureView->setContextMenuPolicy(Qt::CustomContextMenu);
-    QObject::connect(captureView, &QListView::customContextMenuRequested, [contexMenu]()
+    QObject::connect(captureView, &QListView::customContextMenuRequested, [=]()
     {
+        auto selection = captureView->selectionModel()->selectedRows();
+        if(selection.size()==0)
+        {
+            actCopy->setEnabled(false);
+            actSave->setEnabled(false);
+            actSaveGIF->setEnabled(false);
+            actRemove->setEnabled(false);
+            explorerViewAction->setEnabled(false);
+        }
+        else
+        {
+            const AnimeImage *item=captureModel->getCaptureItem(selection.first().row());
+            actCopy->setEnabled(item->type == AnimeImage::CAPTURE);
+            actSave->setEnabled(true);
+            actRemove->setEnabled(true);
+            explorerViewAction->setEnabled(item->type == AnimeImage::SNIPPET);
+            actSaveGIF->setEnabled(item->type == AnimeImage::SNIPPET);
+        }
         contexMenu->exec(QCursor::pos());
     });
     QObject::connect(captureView,&QListView::doubleClicked,[this](const QModelIndex &index){
@@ -533,13 +619,28 @@ CharacterWidget::CharacterWidget(const Character *character, QWidget *parent) : 
     iconLabel->setObjectName(QStringLiteral("CrtIcon"));
     iconLabel->setFixedSize(60*logicalDpiX()/96,60*logicalDpiY()/96);
     iconLabel->setAlignment(Qt::AlignCenter);
+
+    QAction *actCopyImage = new QAction(tr("Copy Image"), this);
+    QObject::connect(actCopyImage, &QAction::triggered, this, [=](){
+        if(crt->image.isNull()) return;
+        QApplication::clipboard()->setPixmap(crt->image);
+    });
+    QAction *actDownloadImage = new QAction(tr("Re-Download Image"), this);
+    QObject::connect(actDownloadImage, &QAction::triggered, this, [=](){
+        if(!crt->imgURL.isEmpty())
+            emit updateCharacter(this);
+    });
+
+    iconLabel->addAction(actCopyImage);
+    iconLabel->addAction(actDownloadImage);
+    iconLabel->setContextMenuPolicy(Qt::ActionsContextMenu);
+
     refreshIcon();
     QLabel *nameLabel=new QLabel(this);
     nameLabel->setOpenExternalLinks(true);
-    //QString name = QString("%1%2").arg(character->name, character->name_cn.isEmpty()?"":QString("(%1)").arg(character->name_cn));
     nameLabel->setText(QString("<a style='color: rgb(96, 208, 252);' href = \"%1\">%2</a>")
                        .arg(character->link).arg(character->name));
-    nameLabel->setFixedWidth(240*logicalDpiX()/96);
+    nameLabel->setFixedWidth(200*logicalDpiX()/96);
     nameLabel->setToolTip(character->name);
 
     QLabel *infoLabel=new QLabel(this);
@@ -566,25 +667,6 @@ void CharacterWidget::refreshIcon()
     {
         iconLabel->setPixmap(crt->image);
     }
-}
-
-void CharacterWidget::mousePressEvent(QMouseEvent *event)
-{
-    if(event->button()==Qt::LeftButton)
-    {
-        if(iconLabel->underMouse())
-        {
-            if(!crt->imgURL.isEmpty())
-            {
-                emit updateCharacter(this);
-            }
-        }
-    }
-}
-
-QSize CharacterWidget::sizeHint() const
-{
-    return layout()->sizeHint();
 }
 
 TagPanel::TagPanel(QWidget *parent, bool allowDelete, bool checkAble, bool allowAdd):QWidget(parent),
@@ -618,6 +700,12 @@ TagPanel::TagPanel(QWidget *parent, bool allowDelete, bool checkAble, bool allow
     actAddTag->setEnabled(allowAdd);
 
     tagContextMenu = new QMenu(this);
+    QAction *actCopy=new QAction(tr("Copy"),this);
+    tagContextMenu->addAction(actCopy);
+    QObject::connect(actCopy,&QAction::triggered,[this](){
+        if(!currentTagButton) return;
+        QApplication::clipboard()->setText(currentTagButton->text());
+    });
     QAction *actRemoveTag=new QAction(tr("Delete"),this);
     tagContextMenu->addAction(actRemoveTag);
     QObject::connect(actRemoveTag,&QAction::triggered,[this](){

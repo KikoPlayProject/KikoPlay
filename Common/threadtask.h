@@ -1,11 +1,10 @@
 #ifndef THREADTASK_H
 #define THREADTASK_H
 #include <QtCore>
-class ThreadTask : public QObject
+class ThreadTask
 {
-    Q_OBJECT
 public:
-    ThreadTask(QThread *thread, QObject *parent=nullptr):QObject(parent),taskId(0),taskThread(thread)
+    ThreadTask(QThread *thread) : taskThread(thread)
     {
 
     }
@@ -19,19 +18,11 @@ public:
 		QObject obj;
 		obj.moveToThread(taskThread);
 		QEventLoop eventLoop;
-		int tId = this->taskId;
 		QVariant result;
-        QObject::connect(this,&ThreadTask::TaskDone,&eventLoop,[&eventLoop,&result,tId](int taskId, QVariant ret){
-            if(tId==taskId)
-            {
-                result=ret;
-                eventLoop.quit();
-            }
-        });
-        QMetaObject::invokeMethod(&obj,[task,tId,this](){
-            emit this->TaskDone(tId,task());
-        });
-        tId++;
+        QMetaObject::invokeMethod(&obj,[task, &result, &eventLoop](){
+            result = task();
+            QMetaObject::invokeMethod(&eventLoop, "quit", Qt::QueuedConnection);
+        }, Qt::QueuedConnection);
         eventLoop.exec();
         return result;
     }
@@ -50,10 +41,7 @@ public:
            obj->deleteLater();
         });
     }
-signals:
-    void TaskDone(int taskId, QVariant ret);
 private:
-    int taskId;
     QThread *taskThread;
 };
 #endif // THREADTASK_H

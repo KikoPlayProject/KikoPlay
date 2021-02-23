@@ -31,6 +31,11 @@ void BackgroundWidget::setBgDarkness(int val)
     update();
 }
 
+int BackgroundWidget::bgDarkness() const
+{
+    return opColor.alpha();
+}
+
 
 void BackgroundWidget::setBlur(bool on, qreal blurRadius)
 {
@@ -57,7 +62,7 @@ void BackgroundWidget::setBlurAnimation(qreal s, qreal e, int duration)
     }
     QGraphicsBlurEffect *bgBlur = new QGraphicsBlurEffect;
     bgBlur->setBlurHints(QGraphicsBlurEffect::AnimationHint);
-    bgBlur->setBlurRadius(s);
+    bgBlur->setBlurRadius(e);
     setGraphicsEffect(bgBlur);
     QPropertyAnimation *blurAnime = new QPropertyAnimation(bgBlur, "blurRadius");
     lastAnime = blurAnime;
@@ -65,11 +70,11 @@ void BackgroundWidget::setBlurAnimation(qreal s, qreal e, int duration)
     blurAnime->setEasingCurve(QEasingCurve::OutExpo);
     blurAnime->setStartValue(s);
     blurAnime->setEndValue(e);
-    blurAnime->start(QAbstractAnimation::DeleteWhenStopped);
     QObject::connect(blurAnime,&QPropertyAnimation::finished,[this, e, blurAnime](){
         if(e==0.) setGraphicsEffect(nullptr);
         if(lastAnime == blurAnime) lastAnime = nullptr;
     });
+    blurAnime->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 void BackgroundWidget::setImg(const QImage &nImg)
@@ -92,8 +97,8 @@ void BackgroundWidget::paintEvent(QPaintEvent *e)
         painter.setRenderHint(QPainter::Antialiasing);
         painter.drawPixmap(0, 0, bgCache);
         painter.fillRect(rect(), opColor);
-        QWidget::paintEvent(e);
     }
+    QWidget::paintEvent(e);
 }
  void BackgroundWidget::resizeEvent(QResizeEvent *)
 {

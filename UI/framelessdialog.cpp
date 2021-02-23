@@ -21,12 +21,8 @@
 #pragma comment (lib,"user32.lib")
 
 CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, bool showAccept, bool showClose, bool autoPauseVideo)
-    : QDialog(parent),
-      m_borderWidth(5),
-      m_bJustMaximized(false),
-      m_bResizeable(true),
-      inited(false),
-	  restorePlayState(false)
+    : QDialog(parent), m_borderWidth(5), m_bJustMaximized(false), m_bResizeable(true),
+      inited(false), restorePlayState(false), isBusy(false)
 {
 
     setWindowFlags((windowFlags() | Qt::Dialog | Qt::FramelessWindowHint) & ~Qt::WindowSystemMenuHint);
@@ -69,10 +65,9 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
 
     title=new QLabel(titleStr, titleBar);
     title->setFont(QFont(GlobalObjects::normalFont,10));
-    title->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Preferred);
+    title->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
     //title->setGeometry(10,10,title->width(),title->height());
     title->setOpenExternalLinks(true);
-    addIgnoreWidget(title);
 
     QHBoxLayout *titleHBLayout=new QHBoxLayout(titleBar);
     titleHBLayout->setContentsMargins(8*logicalDpiX()/96, 8*logicalDpiY()/96, 8*logicalDpiX()/96, 8*logicalDpiY()/96);
@@ -85,6 +80,8 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
     vbLayout->addWidget(titleBar);
     vbLayout->addStretch(1);
     vbLayout->setContentsMargins(0, 0, 0, 0);
+    addIgnoreWidget(titleBar);
+    addIgnoreWidget(title);
 
     //setContentsMargins(6*logicalDpiX()/96,38*logicalDpiY()/96,6*logicalDpiX()/96,6*logicalDpiY()/96);
 
@@ -296,14 +293,21 @@ void CFramelessDialog::showEvent(QShowEvent *)
 
 void CFramelessDialog::resizeEvent(QResizeEvent *)
 {
-    //titleBar->setGeometry(0,0,width(),42*logicalDpiY()/96);
     backWidget->setGeometry(0,0,width(),height());
     dialogTip->move((width()-dialogTip->width())/2,dialogTip->y());
-    //setContentsMargins(6*logicalDpiX()/96,titleBar->height()+6*logicalDpiY()/96,6*logicalDpiX()/96,6*logicalDpiY()/96);
 }
+
+void CFramelessDialog::keyPressEvent(QKeyEvent *event)
+{
+    if(event->key() == Qt::Key_Escape && isBusy)
+        return;
+    QDialog::keyPressEvent(event);
+}
+
 
 void CFramelessDialog::showBusyState(bool busy)
 {
+    isBusy = busy;
     if(busy)
     {
         busyLabel->show();
@@ -353,13 +357,8 @@ QRect CFramelessDialog::contentsRect() const
 #include "globalobjects.h"
 #include "Play/Video/mpvplayer.h"
 CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showAccept, bool showClose, bool autoPauseVideo)
-    : QDialog(parent),
-      m_borderWidth(5),
-      m_bJustMaximized(false),
-      m_bResizeable(true),
-      restorePlayState(false),
-      isMousePressed(false),
-      resizeMouseDown(false)
+    : QDialog(parent), m_borderWidth(5), m_bJustMaximized(false), m_bResizeable(true),
+      restorePlayState(false),isBusy(false), isMousePressed(false),resizeMouseDown(false)
 {
 
     setWindowFlags((Qt::Dialog| Qt::FramelessWindowHint));
@@ -367,6 +366,7 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
     setMouseTracking(true);
     GlobalObjects::iconfont.setPointSize(10);
     titleBar=new QWidget(this);
+    backWidget = new QWidget(this);
     titleBar->installEventFilter(this);
 
     QSize btnSize(20*logicalDpiX()/96,20*logicalDpiY()/96);
@@ -400,20 +400,25 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
     downloadingIcon->start();
     busyLabel->hide();
 
-
     title=new QLabel(titleStr, titleBar);
     title->setFont(QFont(GlobalObjects::normalFont,10));
-    title->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
-    title->setGeometry(10,10,title->width(),title->height());
+    title->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
     title->setOpenExternalLinks(true);
 
     QHBoxLayout *titleHBLayout=new QHBoxLayout(titleBar);
-    //titleHBLayout->setContentsMargins(0,0,0,0);
-    titleHBLayout->addWidget(title);
+    titleHBLayout->setContentsMargins(8*logicalDpiX()/96, 8*logicalDpiY()/96, 8*logicalDpiX()/96, 8*logicalDpiY()/96);
+    titleHBLayout->addWidget(title, 0, Qt::AlignVCenter);
     titleHBLayout->addWidget(busyLabel);
     titleHBLayout->addWidget(acceptButton);
     titleHBLayout->addWidget(closeButton);
-    setContentsMargins(6*logicalDpiX()/96,38*logicalDpiY()/96,6*logicalDpiX()/96,6*logicalDpiY()/96);
+
+    QVBoxLayout *vbLayout = new QVBoxLayout(backWidget);
+    vbLayout->addWidget(titleBar);
+    vbLayout->addStretch(1);
+    vbLayout->setContentsMargins(0, 0, 0, 0);
+
+    setContentsMargins(8*logicalDpiX()/96,titleBar->height(),8*logicalDpiX()/96,8*logicalDpiY()/96);
+
     if (autoPauseVideo && GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
     {
         restorePlayState = true;
@@ -572,12 +577,18 @@ void CFramelessDialog::mouseReleaseEvent(QMouseEvent *e)
 
 void CFramelessDialog::resizeEvent(QResizeEvent *)
 {
-    titleBar->setGeometry(0,0,width(),42*logicalDpiY()/96);
+    backWidget->setGeometry(0,0,width(),height());
     dialogTip->move((width()-dialogTip->width())/2,dialogTip->y());
 }
-
+void CFramelessDialog::keyPressEvent(QKeyEvent *event)
+{
+    if(event->key() == Qt::Key_Escape && isBusy)
+        return;
+    QDialog::keyPressEvent(event);
+}
 void CFramelessDialog::showBusyState(bool busy)
 {
+    isBusy = busy;
     if(busy)
     {
         busyLabel->show();

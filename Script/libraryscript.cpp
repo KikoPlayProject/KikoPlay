@@ -51,7 +51,7 @@ ScriptState LibraryScript::search(const QString &keyword, QList<AnimeLite> &resu
         AnimeLite ab;
         ab.name = name;
         ab.extras = robj.value("extra").toString();
-        ab.scriptId = id();
+        ab.scriptId = robj.contains("scriptid")?robj.value("scriptid").toString():id();
         ab.scriptData = robj.value("data").toString();
         if(robj.contains("eps") && robj.value("eps").type()==QVariant::List)
         {
@@ -197,7 +197,7 @@ ScriptState LibraryScript::match(const QString &path, MatchResult &result)
         if(animeName.isEmpty() || animeId.isEmpty() || epName.isEmpty() || epIndex<0) break;
         result.success = true;
         result.name = animeName;
-        result.scriptId = id();
+        result.scriptId = aobj.contains("scriptid")?aobj.value("scriptid").toString():id();;
         result.scriptData = animeId;
         EpInfo &epinfo = result.ep;
         epinfo.localFile = path;

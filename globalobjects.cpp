@@ -13,6 +13,7 @@
 #include "Script/scriptmanager.h"
 #include "Download/autodownloadmanager.h"
 #include "UI/stylemanager.h"
+#include "Common/notifier.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -65,7 +66,7 @@ void GlobalObjects::init()
     static QTranslator translator;
     if(translator.load(transFile))
         qApp->installTranslator(&translator);
-
+    Notifier::getNotifier();
     workThread=new QThread();
     workThread->setObjectName(QStringLiteral("workThread"));
     workThread->start(QThread::NormalPriority);

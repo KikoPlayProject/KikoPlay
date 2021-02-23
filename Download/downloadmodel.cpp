@@ -86,6 +86,7 @@ QString DownloadModel::addTorrentTask(const QByteArray &torrentContent, const QS
         return QString(tr("The task already exists: \n%1").arg(infoHash));
     QJsonObject options;
     options.insert("dir", dir);
+    options.insert("rpc-save-upload-metadata","false");
     options.insert("select-file",selIndexes);
     options.insert("seed-time",QString::number(GlobalObjects::appSetting->value("Download/SeedTime",5).toInt()));
     options.insert("bt-tracker",GlobalObjects::appSetting->value("Download/Trackers",QStringList()).toStringList().join(','));
@@ -330,6 +331,7 @@ QString DownloadModel::restartDownloadTask(DownloadTask *task, bool allowOverwri
     }
     else
     {
+        options.insert("rpc-save-upload-metadata","false");
         options.insert("select-file",task->selectedIndexes);
         options.insert("seed-time",QString::number(GlobalObjects::appSetting->value("Download/SeedTime",5).toInt()));
         options.insert("bt-tracker",GlobalObjects::appSetting->value("Download/Trackers",QStringList()).toStringList().join(','));
@@ -463,6 +465,10 @@ QVariant DownloadModel::data(const QModelIndex &index, int role) const
     case Columns::SEEDER:
         if(role==Qt::DisplayRole)
             return downloadItem->seeders;
+        break;
+    case Columns::DIR:
+        if(role==Qt::DisplayRole || role==Qt::ToolTipRole)
+            return downloadItem->dir;
         break;
     default:
         break;

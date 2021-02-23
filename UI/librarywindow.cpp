@@ -351,6 +351,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         backButton->show();
         selectedLabelTip->hide();
         totalCountLabel->hide();
+        if(animeModel->canFetchMore(QModelIndex())) loadMore->hide();
         filterBox->hide();
         viewSLayout->setCurrentIndex(1);
     });
@@ -360,6 +361,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         selectedLabelTip->show();
         totalCountLabel->show();
         filterBox->show();
+        if(animeModel->canFetchMore(QModelIndex())) loadMore->show();
         viewSLayout->setCurrentIndex(0);
     });
     splitter->addWidget(labelView);
@@ -448,14 +450,14 @@ void LibraryWindow::showEvent(QShowEvent *)
     static bool labelInited = false;
     if(!labelInited)
     {
-        QTimer::singleShot(0,[this](){
+        labelInited = true;
+        QTimer::singleShot(0, [=](){
             GlobalObjects::animeLabelModel->loadLabels();
             labelView->expand(labelProxyModel->index(0,0,QModelIndex()));
             labelView->expand(labelProxyModel->index(1,0,QModelIndex()));
             labelView->expand(labelProxyModel->index(2,0,QModelIndex()));
             labelView->expand(labelProxyModel->index(3,0,QModelIndex()));
         });
-        labelInited = true;
     }
     animeModel->setActive(true);
 }

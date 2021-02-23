@@ -26,7 +26,7 @@ private:
     QStringList historyBgs;
     QSize thumbSize;
     ColorSlider *sliderBgDarkness, *sliderHue, *sliderLightness;
-    QCheckBox *enableBg, *customColor;
+    QCheckBox *enableBg, *customColor, *hideToTray;
     QWidget *colorPreview;
 };
 

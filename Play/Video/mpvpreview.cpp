@@ -7,7 +7,8 @@
 #include <QPixmap>
 #include <QDebug>
 #include <stdexcept>
-namespace  {
+namespace
+{
 static void *get_proc_address(void *ctx, const char *name) {
     Q_UNUSED(ctx);
     QOpenGLContext *glctx = QOpenGLContext::currentContext();
@@ -127,7 +128,6 @@ void MPVPreview::update()
 
     int ptime = mpv::qt::get_property(mpv, "playback-time").toInt();
     int pos = ptime / previewInterval;
-	QString fn = mpv::qt::get_property(mpv, "filename").toString();
     if(!posSet.contains(ptime))
     {
         posSet.insert(ptime);
@@ -141,5 +141,6 @@ void MPVPreview::update()
 
     ctx->doneCurrent();
 }
+
 
 

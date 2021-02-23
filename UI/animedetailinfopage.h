@@ -25,12 +25,8 @@ public:
     const Character *crt;
 private:
     QLabel *iconLabel;
-protected:
-    virtual void mousePressEvent(QMouseEvent *event);
 signals:
     void updateCharacter(CharacterWidget *crtItem);
-public:
-    virtual QSize sizeHint() const;
 };
 class TagPanel : public QWidget
 {

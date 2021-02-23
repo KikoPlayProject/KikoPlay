@@ -185,7 +185,8 @@ bool BgmList::fetchMetaInfo()
     QString ret = task.Run([this](){
         try
         {
-            QJsonObject archive(Network::toJson(Network::httpGet("https://bgmlist.com/tempapi/archive.json",QUrlQuery())).object());
+            QString bgmListPath(GlobalObjects::appSetting->value("BgmList/ListURL", "https://bgmlist.com/tempapi/archive.json").toString());
+            QJsonObject archive(Network::toJson(Network::httpGet(bgmListPath,QUrlQuery())).object());
             archive=archive.value("data").toObject();
             QStringList seasons;
             for(auto iter=archive.begin();iter!=archive.end();++iter)

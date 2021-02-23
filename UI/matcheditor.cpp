@@ -186,7 +186,6 @@ namespace
             default:
                 return false;
             }
-            emit dataChanged(index,index);
             return true;
         }
         virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const

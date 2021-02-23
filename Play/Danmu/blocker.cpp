@@ -399,7 +399,6 @@ bool Blocker::setData(const QModelIndex &index, const QVariant &value, int)
     default:
         return false;
     }
-    emit dataChanged(index,index);
     if(col != Columns::ID && col != Columns::PREFILTER)
         GlobalObjects::danmuPool->testBlockRule(rule);
     ruleChanged=true;

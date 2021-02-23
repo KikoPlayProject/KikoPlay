@@ -52,6 +52,7 @@ StylePage::StylePage(QWidget *parent) : SettingPage(parent)
 
     setSlide();
 
+    hideToTray = new QCheckBox(tr("Hide to Tray Icon when Minimize"), this);
     enableBg = new QCheckBox(tr("Enable Background"), this);
     customColor = new QCheckBox(tr("Custom Color"), this);
     enableBg->setChecked(!GlobalObjects::appSetting->value("MainWindow/Background").toString().isEmpty());
@@ -62,14 +63,15 @@ StylePage::StylePage(QWidget *parent) : SettingPage(parent)
 
     QGridLayout *styleGLayout = new QGridLayout(this);
     styleGLayout->setContentsMargins(0, 0, 0, 0);
-    styleGLayout->addWidget(enableBg, 0, 0, 1, 3);
-    styleGLayout->addWidget(bgLightnessTip, 1, 0);
-    styleGLayout->addWidget(sliderBgDarkness, 1, 1, 1, 2);
-    styleGLayout->addWidget(bgImgView, 2, 0, 1, 3);
-    styleGLayout->addWidget(customColor, 3, 0, 1, 3);
-    styleGLayout->addWidget(sliderHue, 4, 0, 1, 2);
-    styleGLayout->addWidget(colorPreview, 4, 2, 2, 1);
-    styleGLayout->addWidget(sliderLightness, 5, 0, 1, 2);
+    styleGLayout->addWidget(hideToTray, 0, 0, 1, 3);
+    styleGLayout->addWidget(enableBg, 1, 0, 1, 3);
+    styleGLayout->addWidget(bgLightnessTip, 2, 0);
+    styleGLayout->addWidget(sliderBgDarkness, 2, 1, 1, 2);
+    styleGLayout->addWidget(bgImgView, 3, 0, 1, 3);
+    styleGLayout->addWidget(customColor, 4, 0, 1, 3);
+    styleGLayout->addWidget(sliderHue, 5, 0, 1, 2);
+    styleGLayout->addWidget(colorPreview, 5, 2, 2, 1);
+    styleGLayout->addWidget(sliderLightness, 6, 0, 1, 2);
     styleGLayout->setRowStretch(1, 1);
     styleGLayout->setColumnStretch(1, 1);
 
@@ -129,6 +131,7 @@ StylePage::StylePage(QWidget *parent) : SettingPage(parent)
     QObject::connect(this, &StylePage::setBackground, mW, (void (MainWindow::*)(const QString &, const QColor &))&MainWindow::setBackground);
     QObject::connect(this, &StylePage::setBgDarkness, mW, &MainWindow::setBgDarkness);
     QObject::connect(this, &StylePage::setThemeColor, mW, &MainWindow::setThemeColor);
+    hideToTray->setChecked(mW->isHideToTray());
 }
 
 void StylePage::onAccept()
@@ -140,6 +143,7 @@ void StylePage::onAccept()
         GlobalObjects::appSetting->setValue("MainWindow/CustomColorHSV", QColor::fromHsv(sliderHue->value(), 255, sliderLightness->value()));
         GlobalObjects::appSetting->setValue("MainWindow/CustomColor", customColor->isChecked());
     }
+    static_cast<MainWindow *>(GlobalObjects::mainWindow)->setHideToTray(hideToTray->isChecked());
 }
 
 void StylePage::onClose()

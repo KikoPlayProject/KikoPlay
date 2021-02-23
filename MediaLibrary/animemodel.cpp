@@ -3,8 +3,12 @@
 #include "animeworker.h"
 #include "Common/notifier.h"
 #define AnimeRole Qt::UserRole+1
+namespace
+{
+	static bool firstActive = true;
+}
 AnimeModel::AnimeModel(QObject *parent):QAbstractItemModel(parent),
-    currentOffset(0),active(false),hasMoreAnimes(true)
+    currentOffset(0),active(false),hasMoreAnimes(false)
 {
     QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeAdded, this, &AnimeModel::addAnime);
     QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeRemoved, this, &AnimeModel::removeAnime);
@@ -12,6 +16,11 @@ AnimeModel::AnimeModel(QObject *parent):QAbstractItemModel(parent),
 
 void AnimeModel::setActive(bool isActive)
 {
+    if(firstActive)
+    {
+        firstActive = false;
+        fetchMore(QModelIndex());
+    }
     active=isActive;
     if(active)
     {
@@ -22,15 +31,6 @@ void AnimeModel::setActive(bool isActive)
             tmpAnimes.clear();
             endInsertRows();
             showStatisMessage();
-        }
-        else
-        {
-            static bool firstActive=true;
-            if(firstActive)
-            {
-                showStatisMessage();
-                firstActive=false;
-            }
         }
     }
 }
@@ -65,6 +65,7 @@ void AnimeModel::addAnime(Anime *anime)
         beginInsertRows(QModelIndex(),0,0);
         animes.prepend(anime);
         endInsertRows();
+        showStatisMessage();
     }
     currentOffset++;
 }
@@ -77,7 +78,8 @@ void AnimeModel::removeAnime(Anime *anime)
 
 void AnimeModel::showStatisMessage()
 {
-    int totalCount=AnimeWorker::instance()->animeCount();
+    int totalCount=animes.count();
+    if(hasMoreAnimes) totalCount = AnimeWorker::instance()->animeCount();
     emit animeCountInfo(animes.count(), totalCount);
 }
 
@@ -103,17 +105,17 @@ void AnimeModel::fetchMore(const QModelIndex &)
 {
     QList<Anime *> moreAnimes;
     hasMoreAnimes=false;
-    Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching..."), NM_PROCESS|NM_DARKNESS_BACK);
+    Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching..."), NM_PROCESS | NM_DARKNESS_BACK);
     AnimeWorker::instance()->fetchAnimes(&moreAnimes, currentOffset, limitCount);
-    if(moreAnimes.count()>0)
+	hasMoreAnimes = moreAnimes.count() >= limitCount;
+    if(moreAnimes.count() > 0)
     {
-        hasMoreAnimes=true;
         beginInsertRows(QModelIndex(),animes.count(),animes.count()+moreAnimes.count()-1);
         animes.append(moreAnimes);
         endInsertRows();
         currentOffset+=moreAnimes.count();
+        showStatisMessage();
     }
     Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Down"), NM_HIDE);
-    showStatisMessage();
 }
 

@@ -37,13 +37,9 @@ void LabelItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     decoration.moveCenter(option.rect.center());
     decoration.moveRight(option.rect.right()-6);
 
-
-    QPainterPath path;
-    path.addRoundedRect(decoration, 4, 4);
-    painter->fillPath(path, QBrush(brushColor));
+    painter->fillRect(decoration, brushColor);
     int count=index.data(CountRole).toInt();
     painter->drawText(decoration, Qt::AlignCenter, count>999?"999+":QString::number(count));
-
 }
 
 void LabelItemDelegate::setPenColor(const QColor &color)

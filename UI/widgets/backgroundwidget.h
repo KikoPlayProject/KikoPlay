@@ -13,6 +13,7 @@ public:
     void setBackground(const QPixmap &pixmap);
 
     void setBgDarkness(int val);
+    int bgDarkness() const;
 
     void setBlur(bool on, qreal blurRadius = 0);
     void setBlurAnimation(qreal s, qreal e, int duration = 500);

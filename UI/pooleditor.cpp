@@ -158,8 +158,7 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
     itemControlHLayout1->addStretch(1);
     itemControlHLayout1->addWidget(itemSwitch);
 
-    QLabel *url=new QLabel(tr("Source: <a href = %1>%1</a>").arg(sourceInfo->scriptId),this);
-    url->setOpenExternalLinks(true);
+    QLabel *url=new QLabel(tr("Source: %1%2").arg(sourceInfo->scriptId, sourceInfo->duration>0?QString(" (%1)").arg(sourceInfo->durationStr()):""),this);
     url->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
 
     QLabel *delayLabel=new QLabel(tr("Delay(s): "),this);

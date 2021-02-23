@@ -8,11 +8,11 @@ class CaptureListModel : public QAbstractListModel
 public:
     explicit CaptureListModel(const QString &animeName, QObject *parent = nullptr);
 
-    void deleteCaptures(const QModelIndexList &indexes);
     void deleteRow(int row);
     QPixmap getFullCapture(int row);
     const AnimeImage *getCaptureItem(int row);
     void setAnimeName(const QString &name);
+    const QString getSnippetFile(int row);
 signals:
     void fetching(bool);
 private:
@@ -23,10 +23,12 @@ private:
     QList<AnimeImage> captureList;
     // QAbstractItemModel interface
 public:
-    virtual int rowCount(const QModelIndex &parent) const{return parent.isValid()?0:captureList.count();};
-    virtual QVariant data(const QModelIndex &index, int role) const;
-    virtual void fetchMore(const QModelIndex &parent);
-    virtual bool canFetchMore(const QModelIndex &) const {return hasMoreCaptures;};
+    virtual int rowCount(const QModelIndex &parent) const override{return parent.isValid()?0:captureList.count();};
+    virtual QVariant data(const QModelIndex &index, int role) const override;
+    virtual void fetchMore(const QModelIndex &parent) override;
+    virtual bool canFetchMore(const QModelIndex &) const override {return hasMoreCaptures;};
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
+    virtual bool setData(const QModelIndex &index, const QVariant &value, int) override;
 };
 
 #endif // CAPTURELISTMODEL_H

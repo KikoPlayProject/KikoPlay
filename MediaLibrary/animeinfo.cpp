@@ -6,6 +6,28 @@ Anime::Anime() : _addTime(0), _epCount(0), crtImagesLoaded(false), epLoaded(fals
 
 }
 
+void Anime::setCover(const QByteArray &data)
+{
+    AnimeWorker::instance()->updateCoverImage(_name, data);
+    _cover.loadFromData(data);
+}
+
+void Anime::setCrtImage(const QString &name, const QByteArray &data)
+{
+    AnimeWorker::instance()->updateCrtImage(_name, name, data);
+    if(crtImagesLoaded)
+    {
+        for(auto &crt : characters)
+        {
+            if(crt.name == name)
+            {
+                crt.image.loadFromData(data);
+                break;
+            }
+        }
+    }
+}
+
 void Anime::assign(const Anime *anime)
 {
     _desc = anime->_desc;
@@ -59,22 +81,6 @@ const QList<Character> &Anime::crList(bool loadImage)
         crtImagesLoaded = true;
     }
     return characters;
-}
-
-const QStringList &Anime::tagList()
-{
-	return QStringList();
-}
-
-const QList<AnimeImage> &Anime::posterList()
-{
-    if(!posterLoaded)
-    {
-        posters.clear();
-        AnimeWorker::instance()->loadPosters(this);
-        posterLoaded = true;
-    }
-    return posters;
 }
 
 void Anime::addEp(const EpInfo &ep)
@@ -162,16 +168,6 @@ void Anime::removeEp(EpType type, double index)
         } else {
             ++iter;
         }
-    }
-}
-
-void Anime::removePoster(qint64 timeId)
-{
-    if(!posterLoaded) return;
-    for(auto iter=posters.begin(); iter!=posters.end();)
-    {
-        if(iter->timeId==timeId) iter = posters.erase(iter);
-        else ++iter;
     }
 }
 

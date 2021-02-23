@@ -27,6 +27,7 @@ private slots:
     void update();
 private:
     static void on_update(void *ctx);
+    static void wakeup(void *ctx);
 
     mpv_handle *mpv;
     mpv_render_context *mpv_gl;

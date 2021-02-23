@@ -231,11 +231,22 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     });
     actShowSeeders->setChecked(GlobalObjects::appSetting->value("Download/ShowSeeders", false).toBool());
 
+    downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::DIR));
+    QAction *actShowDir=new QAction(tr("Dir"),this);
+    actShowDir->setCheckable(true);
+    QObject::connect(actShowDir,&QAction::toggled,[this](bool checked){
+        if(checked) downloadView->showColumn(static_cast<int>(DownloadModel::Columns::DIR));
+        else downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::DIR));
+        GlobalObjects::appSetting->setValue("Download/ShowDir", checked);
+    });
+    actShowDir->setChecked(GlobalObjects::appSetting->value("Download/ShowDir", false).toBool());
+
 
     downloadView->header()->setContextMenuPolicy(Qt::ActionsContextMenu);
     downloadView->header()->addAction(actShowUpSpeed);
     downloadView->header()->addAction(actShowConnections);
     downloadView->header()->addAction(actShowSeeders);
+    downloadView->header()->addAction(actShowDir);
 
     QObject::connect(downloadView, &QTreeView::doubleClicked,[this,proxyModel](const QModelIndex &index){
         DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(proxyModel->mapToSource(index));
@@ -250,7 +261,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         proxyModel->setFilterRegExp(keyword);
     });
 
-    int pageBtnHeight=28*logicalDpiY()/96;
+    int pageBtnHeight=30*logicalDpiY()/96;
     QToolButton *generalInfoPage=new QToolButton(downloadContainer);
     generalInfoPage->setObjectName(QStringLiteral("DownloadInfoPage"));
     generalInfoPage->setText(tr("General"));
@@ -462,6 +473,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
                                              arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss")).
                                              arg(errInfo).
                                              arg(magnet));
+
             }
             else
             {
@@ -475,6 +487,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
                         QMessageBox::information(this,tr("Error"),tr("An error occurred while adding Torrent : \n %1 ").arg(errInfo));
                 }
             }
+            QFile::remove(path);
             delete decoder.root;
         }
         catch(TorrentError &err)
@@ -1065,6 +1078,11 @@ void BlockWidget::paintEvent(QPaintEvent *event)
 
 void BlockWidget::resizeEvent(QResizeEvent *)
 {
+    blockWidth = 12*logicalDpiX()/96;
+    blockHeight = 12*logicalDpiY()/96;
+    marginX = 2*logicalDpiX()/96;
+    marginY = 2*logicalDpiY()/96;
+
     int sw = blockWidth + marginX;
     int sh = blockHeight+marginY;
     int colCount = width() / sw;

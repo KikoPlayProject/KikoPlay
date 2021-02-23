@@ -47,7 +47,6 @@ bool ScriptSettingModel::setData(const QModelIndex &index, const QVariant &value
     {
         auto &settingItem = settingItems[index.row()];
         settingItem.value = value.toString();
-        emit dataChanged(index,index);
         emit itemChanged(settingItem.key, index.row(), value.toString());
     }
     return true;

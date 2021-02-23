@@ -823,7 +823,7 @@ QListView#AnimesContent{
 QPushButton#TagButton{
     border:1px solid #cccccc;
     background:transparent;
-    color:#000000;
+    color:rgb(240,240,240);
 }
 QPushButton#TagButton:hover{
     background-color:#84b8f3;

@@ -113,7 +113,7 @@ struct AnimeImage
     static const int thumbH = 112, thumbW = 200;
     enum ImageType
     {
-        CAPTURE, SLICE, POSTER
+        CAPTURE, SNIPPET
     };
     ImageType type;
     qint64 timeId;
@@ -143,7 +143,6 @@ class Anime
     QList<QPair<QString,QString>> staff;
     QList<EpInfo> epInfoList;
     QList<Character> characters;
-    QList<AnimeImage> posters;
 
     bool crtImagesLoaded;
     bool epLoaded;
@@ -166,10 +165,11 @@ public:
     Anime();
     bool isValid() const {return !_name.isEmpty();}
 
+    void setCover(const QByteArray &data);
+    void setCrtImage(const QString &name, const QByteArray &data);
     const QList<EpInfo> &epList();
     const QList<Character> &crList(bool loadImage = false);
     const QStringList &tagList();
-    const QList<AnimeImage> &posterList();
     const QList<QPair<QString,QString>> &staffList() const {return staff;}
 private:
     void addEp(const EpInfo &ep);
@@ -178,7 +178,6 @@ private:
     void updateEpPath(const QString &path, const QString &nPath);
     void removeEp(const QString &epPath);
     void removeEp(EpType type, double index);
-    void removePoster(qint64 timeId);
 
 public:
     QVariantMap toMap(bool fillEp = false);

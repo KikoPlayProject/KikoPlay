@@ -27,6 +27,9 @@ Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent)
     }
     args << "--enable-rpc=true";
     args << "--rpc-listen-port=6800";
+    //args << "rpc-save-upload-metadata","false");
+
+
 #ifdef Q_OS_WIN
     aria2Process->start(QCoreApplication::applicationDirPath()+"\\aria2c.exe", args);
 #else

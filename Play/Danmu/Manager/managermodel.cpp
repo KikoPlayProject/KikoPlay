@@ -415,7 +415,6 @@ bool DanmuManagerModel::setData(const QModelIndex &index, const QVariant &value,
         item->setParentCheckStatus();
         refreshChildrenCheckStatus(index);
         refreshParentCheckStatus(index);
-        emit dataChanged(index,index);
         return true;
     }
     else if(index.column()==2 && item->type==DanmuPoolNode::SourecNode)
@@ -429,7 +428,6 @@ bool DanmuManagerModel::setData(const QModelIndex &index, const QVariant &value,
             if(pool && pool->setDelay(srcNode->srcId,newDelay))
             {
                 srcNode->delay=newDelay;
-                emit dataChanged(index,index);
                 return true;
             }
         }

@@ -748,7 +748,6 @@ bool PlayList::setData(const QModelIndex &index, const QVariant &value, int)
             d->bgmCollectionItems.insert(val, item);
         }
         item->title=val;
-        emit dataChanged(index,index);
         d->playListChanged=true;
         d->needRefresh = true;
         return true;

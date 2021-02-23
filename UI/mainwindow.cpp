@@ -9,6 +9,7 @@
 #include <QButtonGroup>
 #include <QHoverEvent>
 #include <QMouseEvent>
+#include <QSystemTrayIcon>
 #ifdef Q_OS_WIN
 #include <QWinTaskbarProgress>
 #include <QWinTaskbarButton>
@@ -27,7 +28,7 @@
 #include "Play/Danmu/Render/danmurender.h"
 
 MainWindow::MainWindow(QWidget *parent)
-    : CFramelessWindow(parent),hasBackground(false),hasCoverBg(false),curPage(0),listWindowWidth(0),isMini(false)
+    : CFramelessWindow(parent),hasBackground(false),hasCoverBg(false),curPage(0),listWindowWidth(0),isMini(false),hideToTrayIcon(false)
 {
     setupUI();
     setWindowIcon(QIcon(":/res/kikoplay.ico"));
@@ -38,6 +39,18 @@ MainWindow::MainWindow(QWidget *parent)
     setMinimumSize(120*logicalDpiX()/96, 100*logicalDpiY()/96);
     miniGeo = GlobalObjects::appSetting->value("MainWindow/miniGeometry", defaultMiniGeo).toRect();
     originalGeo=geometry();
+    hideToTrayIcon = GlobalObjects::appSetting->value("MainWindow/hideToTrayIcon", false).toBool();
+    trayIcon = new QSystemTrayIcon(windowIcon(), this);
+    trayIcon->setToolTip("KikoPlay");
+    QObject::connect(trayIcon, &QSystemTrayIcon::activated, this, [=](QSystemTrayIcon::ActivationReason reason){
+        if(QSystemTrayIcon::Trigger == reason)
+        {
+            show();
+			if (isMinimized()) showNormal();
+            raise();
+            trayIcon->hide();
+        }
+    });
     QVariant splitterState(GlobalObjects::appSetting->value("MainWindow/SplitterState"));
     if(!splitterState.isNull())
         playSplitter->restoreState(splitterState.toByteArray());
@@ -105,11 +118,6 @@ MainWindow::MainWindow(QWidget *parent)
     }
 }
 
-MainWindow::~MainWindow()
-{
-    delete playerWindow;
-}
-
 void MainWindow::setBackground(const QString &path, const QColor &color)
 {
     themeColor = color;
@@ -119,6 +127,7 @@ void MainWindow::setBackground(const QString &path, const QColor &color)
 void MainWindow::setBgDarkness(int val)
 {
     bgWidget->setBgDarkness(val);
+    curDarkness = val;
 }
 
 void MainWindow::setThemeColor(const QColor &color)
@@ -132,11 +141,17 @@ void MainWindow::setThemeColor(const QColor &color)
         StyleManager::getStyleManager()->setQSS(StyleManager::NO_BG);
 }
 
+void MainWindow::setHideToTray(bool on)
+{
+    hideToTrayIcon = on;
+}
+
 void MainWindow::setupUI()
 {
 
     QWidget *centralWidget = new QWidget(this);
     bgWidget = new BackgroundWidget(centralWidget);
+    curDarkness = bgWidget->bgDarkness();
     QWidget *centralContainer = new QWidget(centralWidget);
     QStackedLayout *centralSLayout = new QStackedLayout(centralWidget);
     centralSLayout->setStackingMode(QStackedLayout::StackAll);
@@ -261,11 +276,13 @@ void MainWindow::setupUI()
             if(id == 1 && hasCoverBg)
             {
                 if(!coverPixmap.isNull()) bgWidget->setBackground(coverPixmap);
+                bgWidget->setBgDarkness(curDarkness * 1.5);
                 bgWidget->setBlurAnimation(20., 60.);
             }
             else if(curPage == 1 && hasCoverBg)
             {
                 bgWidget->setBackground(bgImg);
+                bgWidget->setBgDarkness(curDarkness);
                 bgWidget->setBlurAnimation(60., 0.);
             }
             curPage = id;
@@ -293,7 +310,17 @@ void MainWindow::setupUI()
     minButton->setText(QChar(0xe651));
     minButton->setObjectName(QStringLiteral("ControlButton"));
     minButton->setMinimumSize(controlButtonSize);
-    QObject::connect(minButton,&QToolButton::clicked,this,&MainWindow::showMinimized);
+    QObject::connect(minButton,&QToolButton::clicked,this, [=](){
+        if(hideToTrayIcon)
+        {
+            this->hide();
+            trayIcon->show();
+        }
+        else
+        {
+            showMinimized();
+        }
+    });
 
     maxButton=new QToolButton(widgetTitlebar);
     maxButton->setFont(GlobalObjects::iconfont);
@@ -626,6 +653,7 @@ QWidget *MainWindow::setupLibraryPage()
         {
             hasCoverBg = false;
             bgWidget->setBackground(bgImg);
+            bgWidget->setBgDarkness(curDarkness);
             bgWidget->setBlurAnimation(60., 0.);
         }
         else
@@ -633,6 +661,7 @@ QWidget *MainWindow::setupLibraryPage()
             hasCoverBg = true;
             coverPixmap = pixmap;
             if(!pixmap.isNull()) bgWidget->setBackground(pixmap);
+            bgWidget->setBgDarkness(curDarkness * 1.5);
             bgWidget->setBlurAnimation(20., 60.);
         }
     });
@@ -650,6 +679,7 @@ QWidget *MainWindow::setupDownloadPage()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	GlobalObjects::appSetting->setValue("MainWindow/miniGeometry", miniGeo);
+    GlobalObjects::appSetting->setValue("MainWindow/hideToTrayIcon", hideToTrayIcon);
     GlobalObjects::appSetting->setValue("DialogSize/MPVLog",logWindow->size());
     if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
     {
@@ -663,6 +693,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     GlobalObjects::playlist->setCurrentPlayTime(playTime);
     QWidget::closeEvent(event);
     playerWindow->close();
+	playerWindow->deleteLater();
     library->beforeClose();
     download->beforeClose();
     GlobalObjects::clear();
@@ -677,6 +708,11 @@ void MainWindow::changeEvent(QEvent *event)
             maxButton->setText(QChar(0xe93d));
         else
             maxButton->setText(QChar(0xe93c));
+        if(this->isMinimized() && hideToTrayIcon)
+        {
+            this->hide();
+            trayIcon->show();
+        }
     }
 }
 
@@ -731,6 +767,14 @@ void MainWindow::resizeEvent(QResizeEvent *)
         originalGeo=geometry();
     if(isMini)
         miniGeo=geometry();
+#ifdef Q_OS_WIN
+    widgetTitlebar->setFixedHeight(36*logicalDpiY()/96);
+#endif
+    QSize pageButtonSize(100*logicalDpiX()/96,30*logicalDpiY()/96);
+    buttonPage_Play->setFixedSize(pageButtonSize);
+    buttonPage_Library->setFixedSize(pageButtonSize);
+    buttonPage_Downlaod->setFixedSize(pageButtonSize);
+
 }
 
 void MainWindow::showEvent(QShowEvent *)

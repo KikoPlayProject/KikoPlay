@@ -346,6 +346,7 @@ void ListWindow::initActions()
                 QList<DanmuComment *> tmplist;
                 LocalProvider::LoadXmlDanmuFile(file,tmplist);
                 DanmuSource sourceInfo;
+                sourceInfo.scriptData = file;
                 sourceInfo.title=file.mid(file.lastIndexOf('/')+1);
                 sourceInfo.count=tmplist.count();
                 if(GlobalObjects::danmuManager->getPool(item->poolID)->addSource(sourceInfo,tmplist,true)==-1)

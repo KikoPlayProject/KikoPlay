@@ -30,17 +30,19 @@ protected:
 class QWinTaskbarProgress;
 class QWinTaskbarButton;
 #endif
+class QSystemTrayIcon;
 class MainWindow : public CFramelessWindow
 {
     Q_OBJECT
 
 public:
     MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
 
     void setBackground(const QString &path, const QColor &color);
     void setBgDarkness(int val);
     void setThemeColor(const QColor &color);
+    void setHideToTray(bool on);
+    bool isHideToTray() const {return hideToTrayIcon;}
 
     ListWindow *getList() const {return listWindow;}
 private:
@@ -48,6 +50,7 @@ private:
     BackgroundWidget *bgWidget;
     bool hasBackground;
     bool hasCoverBg;
+    int curDarkness;
     QImage bgImg;
     QPixmap coverPixmap;
     int curPage;
@@ -72,6 +75,8 @@ private:
     bool listShowState;
     bool isMini;
     QPoint miniPressPos;
+    QSystemTrayIcon *trayIcon;
+    bool hideToTrayIcon;
 
     void setupUI();
     void switchToPlay(const QString &fileToPlay);

@@ -41,11 +41,12 @@ private:
      const int playlistCollapseHeight=80*logicalDpiX()/96;
 
      ClickSlider *progress, *miniProgress;
+     bool progressPressed;
      QSlider *volume;
      QLabel *timeLabel;
 
-     QPushButton *play_pause,*prev,*next,*stop,*mute,*setting, *danmu,*fullscreen, *launch;
-     QAction *actPlayPause,*actPrev,*actNext,*actFullscreen,*act_screenshotSrc,*act_screenshotAct, *act_MiniMode;
+     QPushButton *playPause,*prev,*next,*stop,*mute,*setting, *danmu,*fullscreen, *launch;
+     QAction *actPlayPause,*actPrev,*actNext,*actFullscreen,*actScreenshotSrc,*actScreenshotAct, *actSnippet, *actGIF,  *actMiniMode;
      QTimer doublePressTimer,hideCursorTimer;
      const int hideCursorTimeout=3000;
      int ctrlPressCount,altPressCount;
@@ -56,15 +57,13 @@ private:
      QActionGroup *stayOnTopGroup,*windowSizeGroup;
      void initActions();
 
-     bool processInited;
-     bool processPressed;
      QString totalTimeStr;
      DanmuLaunch *launchWindow;
 
      QWidget *danmuSettingPage,*playSettingPage;
      QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold,
                 *bottomSubtitleProtect,*topSubtitleProtect,*randomSize,
-                *enableAnalyze, *enableMerge,*enlargeMerged, *showPreview;
+                *enableAnalyze, *enableMerge,*enlargeMerged, *showPreview, *autoLoadDanmuCheck;
      QSpinBox *mergeInterval,*contentSimCount,*minMergeCount;
      QFontComboBox *fontFamilyCombo;
      QComboBox *aspectRatioCombo,*playSpeedCombo,*clickBehaviorCombo,*dbClickBehaviorCombo,
@@ -76,10 +75,12 @@ private:
      int resizePercent;
      int clickBehavior,dbClickBehaivior;
      int jumpForwardTime, jumpBackwardTime;
+     bool autoLoadLocalDanmu;
+
      QSharedPointer<DanmuComment> currentDanmu;
 
      QMenu *contexMenu;
-     QAction *ctx_Text,*ctx_Copy,*ctx_BlockUser,*ctx_BlockText,*ctx_BlockColor;
+     QAction *ctxText,*ctxCopy,*ctxBlockUser,*ctxBlockText,*ctxBlockColor;
 
      void setupDanmuSettingPage();
      void setupPlaySettingPage();

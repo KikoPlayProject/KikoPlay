@@ -150,7 +150,7 @@ void DanmuLaunch::setTime()
     curTime = GlobalObjects::mpvplayer->getTime();
     int cmin=curTime/60;
     int cls=curTime-cmin*60;
-    CFramelessDialog::setTitle(QString("Launch - %1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')));
+    CFramelessDialog::setTitle(tr("Launch - %1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')));
 }
 
 int DanmuLaunch::exec()

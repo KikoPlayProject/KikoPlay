@@ -41,6 +41,7 @@ SOURCES += \
     Play/Danmu/danmuprovider.cpp \
     Play/Danmu/eventanalyzer.cpp \
     Play/Video/mpvpreview.cpp \
+    Play/Video/simpleplayer.cpp \
     Script/danmuscript.cpp \
     Script/libraryscript.cpp \
     Script/resourcescript.cpp \
@@ -56,6 +57,7 @@ SOURCES += \
     UI/autodownloadwindow.cpp \
     UI/danmulaunch.cpp \
     UI/danmuview.cpp \
+    UI/gifcapture.cpp \
     UI/inputdialog.cpp \
     UI/logwindow.cpp \
     UI/settings.cpp \
@@ -64,6 +66,7 @@ SOURCES += \
     UI/settings/mpvpage.cpp \
     UI/settings/scriptpage.cpp \
     UI/settings/stylepage.cpp \
+    UI/snippetcapture.cpp \
     UI/stylemanager.cpp \
     UI/widgets/backgroundwidget.cpp \
     UI/widgets/clickslider.cpp \
@@ -162,6 +165,7 @@ HEADERS += \
     Play/Danmu/danmuviewmodel.h \
     Play/Danmu/eventanalyzer.h \
     Play/Video/mpvpreview.h \
+    Play/Video/simpleplayer.h \
     Script/danmuscript.h \
     Script/libraryscript.h \
     Script/resourcescript.h \
@@ -177,6 +181,7 @@ HEADERS += \
     UI/autodownloadwindow.h \
     UI/danmulaunch.h \
     UI/danmuview.h \
+    UI/gifcapture.h \
     UI/inputdialog.h \
     UI/logwindow.h \
     UI/mainwindow.h \
@@ -193,6 +198,7 @@ HEADERS += \
     UI/settings/scriptpage.h \
     UI/settings/settingpage.h \
     UI/settings/stylepage.h \
+    UI/snippetcapture.h \
     UI/stylemanager.h \
     UI/widgets/backgroundwidget.h \
     UI/widgets/clickslider.h \

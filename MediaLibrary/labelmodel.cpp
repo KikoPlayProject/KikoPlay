@@ -43,7 +43,7 @@ LabelModel::LabelModel(QObject *parent) : QAbstractItemModel(parent), root(nullp
         QString scriptName(scriptId);
         auto script = GlobalObjects::scriptManager->getScript(scriptId);
         if(script) scriptName = script->name();
-        removeNodeIndex(root->subNodes->value(C_SCRIPT), scriptName, 1, TagNode::TAG_SCRIPT);
+        removeNodeIndex(root->subNodes->value(C_SCRIPT), scriptName, false, TagNode::TAG_SCRIPT);
     });
     QObject::connect(AnimeWorker::instance(), &AnimeWorker::epAdded, this, [=](const QString &animeName, const EpInfo &ep){
         QString filePath = ep.localFile.mid(0, ep.localFile.lastIndexOf('/'));

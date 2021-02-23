@@ -4,6 +4,7 @@
 #include "framelessdialog.h"
 #include <QGraphicsView>
 class CaptureListModel;
+class SimplePlayer;
 struct AnimeImage;
 class ImageView : public QGraphicsView
 {
@@ -31,13 +32,17 @@ class CaptureView : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit CaptureView(CaptureListModel *captureModel, int curRow, QWidget *parent = nullptr);
+    CaptureView(CaptureListModel *model, int curRow, QWidget *parent = nullptr);
+    ~CaptureView();
 private:
     ImageView *view;
+    SimplePlayer *smPlayer;
+    CaptureListModel *captureModel;
     int curRow;
     QPixmap curPixmap;
     const AnimeImage *curItem;
     void setCapture();
+    void navigate(bool next);
     // QWidget interface
 protected:
     virtual void resizeEvent(QResizeEvent *event);
@@ -45,6 +50,10 @@ protected:
     // CFramelessDialog interface
 protected:
     virtual void onClose();
+
+    // QWidget interface
+protected:
+    virtual void wheelEvent(QWheelEvent *event);
 };
 
 #endif // CAPTUREVIEW_H

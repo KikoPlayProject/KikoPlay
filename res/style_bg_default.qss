@@ -553,7 +553,7 @@ QCheckBox::indicator:unchecked:hover {
 QCheckBox::indicator:checked {
     image: url(:/res/images/checkbox-check.svg);
 }
-QPlainTextEdit,QTextEdit {
+QPlainTextEdit,QTextEdit,QListWidget,QTreeView {
     border: 1px solid #dcdcdc;
 }
 QLineEdit,QSpinBox {

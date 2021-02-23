@@ -9,7 +9,7 @@
 FontIconButton::FontIconButton(QChar iconChar, const QString &content, int iconSize, int fontSize, int iconTextSpace, QWidget *parent):
     QPushButton(parent), icon(iconChar), iconFontSize(iconSize), textFontSize(fontSize), iconSpace(iconTextSpace), text(content)
 {
-    if(iconSpace==-1) iconSpace = 2*logicalDpiX()/96;
+    if(iconSpace==-1) iconSpace = 2;
     GlobalObjects::iconfont.setPointSize(iconFontSize);
     setFont(GlobalObjects::iconfont);
     preferredWidth = sizeHint().width();
@@ -55,7 +55,7 @@ QSize FontIconButton::sizeHint() const
     int w = 0, h = 0;
     const int marginLeft = 4*logicalDpiX()/96, marginRight = 4*logicalDpiX()/96,
             marginTop = 4*logicalDpiY()/96, marginBottom = 4*logicalDpiY()/96;
-    if(!hideTextOn) w += textSize.width() + iconSpace;
+    if(!hideTextOn) w += textSize.width() + iconSpace*logicalDpiX()/96;
     w += iconSize.width();
     h = qMax(iconSize.height(), textSize.height());
     w += marginLeft + marginRight;
@@ -85,14 +85,14 @@ void FontIconButton::paintEvent(QPaintEvent *event)
     }
     else
     {
-        int contentWidth = fontIconSize.width()+textSize.width()+iconSpace;
+        int contentWidth = fontIconSize.width()+textSize.width()+iconSpace*logicalDpiX()/96;
         int x = (width()-contentWidth)/2;
 
         QRect textRect(x,0,width(),height());
         painter.setPen(QPen(fontColor));
         painter.drawText(textRect,Qt::AlignVCenter|Qt::AlignLeft,icon);
 
-        x += fontIconSize.width() + iconSpace;
+        x += fontIconSize.width() + iconSpace*logicalDpiX()/96;
         textRect.setRect(x,0, width()-x,height());
         painter.setPen(QPen(fontColor));
         painter.setFont(QFont(GlobalObjects::normalFont, textFontSize));
@@ -120,6 +120,7 @@ void FontIconButton::resizeEvent(QResizeEvent *event)
             emit textHidden(false);
         }
     }
+    sHint = QSize();
     QPushButton::resizeEvent(event);
 }
 

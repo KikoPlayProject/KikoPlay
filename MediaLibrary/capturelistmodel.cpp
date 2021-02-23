@@ -17,29 +17,16 @@ CaptureListModel::CaptureListModel(const QString &animeName, QObject *parent) : 
     });
 }
 
-void CaptureListModel::deleteCaptures(const QModelIndexList &indexes)
-{
-    QList<int> rows;
-    for(const QModelIndex &index : indexes)
-    {
-        if (index.isValid())
-        {
-            int row=index.row();
-            rows.append(row);
-        }
-    }
-    std::sort(rows.rbegin(),rows.rend());
-    for(auto iter=rows.begin();iter!=rows.end();++iter)
-    {
-        deleteRow(*iter);
-    }
-}
-
 void CaptureListModel::deleteRow(int row)
 {
     if(row<0 || row>=captureList.count()) return;
     const AnimeImage &img = captureList.at(row);
     AnimeWorker::instance()->deleteAnimeImage(animeName, img.type, img.timeId);
+    QString snippetFilePath(getSnippetFile(row));
+    if(!snippetFilePath.isEmpty())
+    {
+        QFile::remove(snippetFilePath);
+    }
     beginRemoveRows(QModelIndex(), row, row);
     captureList.removeAt(row);
     endRemoveRows();
@@ -68,6 +55,18 @@ void CaptureListModel::setAnimeName(const QString &name)
     endResetModel();
 }
 
+const QString CaptureListModel::getSnippetFile(int row)
+{
+    if(row<0 || row>=captureList.count()) return "";
+    const AnimeImage &img = captureList.at(row);
+    if(img.type != AnimeImage::SNIPPET) return "";
+    QString snippetPath(GlobalObjects::appSetting->value("Play/SnippetPath", GlobalObjects::dataPath + "/snippet").toString());
+    QDir dir(snippetPath, QString("%1.*").arg(img.timeId));
+    QFileInfoList list = dir.entryInfoList();
+    if(list.size()==0) return "";
+    return list.first().absoluteFilePath();
+}
+
 QVariant CaptureListModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid()) return QVariant();
@@ -75,12 +74,13 @@ QVariant CaptureListModel::data(const QModelIndex &index, int role) const
     switch (role)
     {
         case Qt::DisplayRole:
+        case Qt::EditRole:
         {
             return capture.info;
         }
         case Qt::ToolTipRole:
         {
-            return QString("%1\n%2").arg(capture.info,QDateTime::fromSecsSinceEpoch(capture.timeId).toString("yyyy-MM-dd hh:mm:ss"));
+            return QString("%1\n%2").arg(capture.info,QDateTime::fromMSecsSinceEpoch(capture.timeId).toString("yyyy-MM-dd hh:mm:ss"));
         }
         case Qt::DecorationRole:
         {
@@ -105,4 +105,27 @@ void CaptureListModel::fetchMore(const QModelIndex &)
         currentOffset+=moreCaptures.count();
     }
     emit fetching(false);
+}
+
+Qt::ItemFlags CaptureListModel::flags(const QModelIndex &index) const
+{
+    Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index);
+    if (index.isValid() && index.column()==0)
+    {
+        return  Qt::ItemIsEditable | defaultFlags;
+    }
+    return defaultFlags;
+}
+
+bool CaptureListModel::setData(const QModelIndex &index, const QVariant &value, int )
+{
+    if(!index.isValid()) return false;
+    AnimeImage &capture = captureList[index.row()];
+    if(index.column()==0)
+    {
+        capture.info = value.toString();
+        AnimeWorker::instance()->updateCaptureInfo(animeName, capture.timeId, capture.info);
+        return true;
+    }
+    return false;
 }

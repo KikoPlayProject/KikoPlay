@@ -94,6 +94,9 @@ ScriptState AnimeProvider::getDetail(const AnimeLite &base, Anime *anime)
 
                 }
             }
+            QStringList urls;
+            QList<QUrlQuery> querys;
+            QList<Character *> crts;
             for(auto &crt : anime->characters)
             {
                 if(QUrl(crt.imgURL).isLocalFile())
@@ -105,12 +108,23 @@ ScriptState AnimeProvider::getDetail(const AnimeLite &base, Anime *anime)
                 }
                 else
                 {
-                    try {
-                        crt.image.loadFromData(Network::httpGet(crt.imgURL, QUrlQuery()));
-                    } catch (Network::NetworkError &error) {
-
+                    urls.append(crt.imgURL);
+                    querys.append(QUrlQuery());
+                    crts.append(&crt);
+                }
+            }
+            try
+            {
+                QList<QPair<QString, QByteArray> > results(Network::httpGetBatch(urls,querys));
+                for(int i = 0; i<crts.size(); ++i)
+                {
+                    if(results[i].first.isEmpty())
+                    {
+                        crts[i]->image.loadFromData(results[i].second);
                     }
                 }
+            } catch (Network::NetworkError &error) {
+
             }
 
         }

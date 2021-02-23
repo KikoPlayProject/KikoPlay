@@ -561,7 +561,6 @@ bool DanmuItemModel::setData(const QModelIndex &index, const QVariant &value, in
     default:
         return false;
     }
-    emit dataChanged(index,index);
     return true;
 }
 

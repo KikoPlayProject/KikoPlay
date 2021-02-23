@@ -141,7 +141,7 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
        emit positionChanged(curTime*1000);
     });
 
-    if(GlobalObjects::appSetting->value("Play/ShowPreview", false).toBool())
+    if(GlobalObjects::appSetting->value("Play/ShowPreview", true).toBool())
     {
         mpvPreview = new MPVPreview(QSize(220*logicalDpiX()/96,124*logicalDpiY()/96));
         previewThread = new QThread();
@@ -296,7 +296,7 @@ void MPVPlayer::drawTexture(QList<const DanmuObject *> &objList, float alpha)
     }
 }
 
-void MPVPlayer::setMedia(QString file)
+void MPVPlayer::setMedia(const QString &file)
 {
     if(!setMPVCommand(QStringList() << "loadfile" << file))
     {
@@ -381,7 +381,7 @@ void MPVPlayer::hideDanmu(bool hide)
     danmuHide=hide;
 }
 
-void MPVPlayer::addSubtitle(QString path)
+void MPVPlayer::addSubtitle(const QString &path)
 {
 	setMPVCommand(QVariantList() << "sub-add" << path);
 	audioTrack.desc_str.clear();
@@ -419,7 +419,7 @@ void MPVPlayer::setVideoAspect(int index)
     setMPVProperty("video-aspect", videoAspcetVal[index]);
 }
 
-void MPVPlayer::screenshot(QString filename)
+void MPVPlayer::screenshot(const QString &filename)
 {
     setMPVCommand(QVariantList() << "screenshot-to-file" << filename);
 }

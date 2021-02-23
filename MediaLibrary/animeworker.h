@@ -19,7 +19,6 @@ public:
     int animeCount();
     void loadCrImages(Anime *anime);
     void loadEpInfo(Anime *anime);
-    void loadPosters(Anime *anime);
 
     void addAnime(const MatchResult &match);
     void addAnime(const QString &name);
@@ -33,9 +32,12 @@ public:
     void updateEpTime(const QString &animeName, const QString &path, bool finished = false, qint64 epTime=0);
     void updateEpInfo(const QString &animeName, const QString &path, const EpInfo &nEp);
     void updateEpPath(const QString &animeName, const QString &path, const QString &nPath);
+    void updateCaptureInfo(const QString &animeName, qint64 timeId, const QString &newInfo);
 
-    void saveCrtImage(const QString &animeName, const QString &crtName, const QByteArray &imageContent);
+    void updateCoverImage(const QString &animeName, const QByteArray &imageContent);
+    void updateCrtImage(const QString &animeName, const QString &crtName, const QByteArray &imageContent);
     void saveCapture(const QString &animeName, const QString &info, const QImage &image);
+    void saveSnippet(const QString &animeName, const QString &info, qint64 timeId, const QImage &image);
     const QPixmap getAnimeImageData(const QString &animeName, AnimeImage::ImageType type, qint64 timeId);
     void deleteAnimeImage(const QString &animeName, AnimeImage::ImageType type, qint64 timeId);
     int fetchCaptures(const QString &animeName, QList<AnimeImage> &captureList, int offset, int limit);
