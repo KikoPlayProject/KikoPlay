@@ -38,10 +38,10 @@ private:
     void createImage(CacheMiddleInfo &midInfo);
     void createTexture(QList<CacheMiddleInfo> &midInfo);
 signals:
-    void cacheDone(PrepareList *danmus);
+    void cacheDone(QList<DrawTask> *danmus);
     void recyleRefList(QList<DanmuDrawInfo *> *descList);
 public slots:
-    void beginCache(PrepareList *danmus);
+    void beginCache(QList<DrawTask> *danmus);
     void changeRefCount(QList<DanmuDrawInfo *> *descList);
     void changeDanmuStyle();
 };

@@ -53,12 +53,12 @@ public:
     void setMergeCountPos(int pos);
     void setEnlargeMerged(bool enlarge);
 signals:
-    void cacheDanmu(PrepareList *newDanmu);
+    void cacheDanmu(QList<DrawTask> *newDanmu);
     void danmuStyleChanged();
     void refCountChanged(QList<DanmuDrawInfo *> *descList);
 public slots:
-    void prepareDanmu(PrepareList *prepareList);
-    void addDanmu(PrepareList *newDanmu);
+    void prepareDanmu(QList<DrawTask> *prepareList);
+    void addDanmu(QList<DrawTask> *newDanmu);
 };
 
 #endif // DANMURENDER_H

@@ -227,7 +227,7 @@ void DanmuRender::setEnlargeMerged(bool enlarge)
     danmuStyle.enlargeMerged=enlarge;
 }
 
-void DanmuRender::prepareDanmu(PrepareList *prepareList)
+void DanmuRender::prepareDanmu(QList<DrawTask> *prepareList)
 {
     if(maxCount!=-1)
     {
@@ -242,13 +242,14 @@ void DanmuRender::prepareDanmu(PrepareList *prepareList)
     emit cacheDanmu(prepareList);
 }
 
-void DanmuRender::addDanmu(PrepareList *newDanmu)
+void DanmuRender::addDanmu(QList<DrawTask> *newDanmu)
 {
     if(GlobalObjects::playlist->getCurrentItem()!=nullptr)
     {
         for(auto &danmuInfo:*newDanmu)
         {
-            layout_table[danmuInfo.first->type]->addDanmu(danmuInfo.first,danmuInfo.second);
+            if(danmuInfo.isCurrent)
+                layout_table[danmuInfo.comment->type]->addDanmu(danmuInfo.comment,danmuInfo.drawInfo);
         }
     }
     GlobalObjects::danmuPool->recyclePrepareList(newDanmu);

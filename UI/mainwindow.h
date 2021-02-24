@@ -6,6 +6,7 @@
 #include "list.h"
 #include "librarywindow.h"
 #include "downloadwindow.h"
+#include "Common/notifier.h"
 #include <QToolButton>
 #include <QHBoxLayout>
 #include <QStackedLayout>
@@ -31,7 +32,7 @@ class QWinTaskbarProgress;
 class QWinTaskbarButton;
 #endif
 class QSystemTrayIcon;
-class MainWindow : public CFramelessWindow
+class MainWindow : public CFramelessWindow, public NotifyInterface
 {
     Q_OBJECT
 
@@ -85,6 +86,8 @@ private:
     QWidget *setupPlayPage();
     QWidget *setupLibraryPage();
     QWidget *setupDownloadPage();
+public:
+    QVariant showDialog(const QVariant &inputs);
 
 protected:
     virtual void closeEvent(QCloseEvent *event);

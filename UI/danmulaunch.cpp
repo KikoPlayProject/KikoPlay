@@ -142,6 +142,7 @@ void DanmuLaunch::onAccept()
     comment->fontSizeLevel = DanmuComment::FontSizeLevel(fontSize);
     comment->date = QDateTime::currentDateTime().toSecsSinceEpoch();
     GlobalObjects::danmuProvider->launch(scriptIds, curPoolId, srcs, comment);
+    textEdit->clear();
     CFramelessDialog::onAccept();
 }
 

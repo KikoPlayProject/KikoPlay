@@ -39,7 +39,7 @@ public:
 
     const QStringList videoFileFormats = {"*.mp4","*.mkv","*.avi","*.flv","*.wmv"};
     const QStringList subtitleFormats = {"*.sub","*.srt","*.ass","*.ssa","*.smi","*.rt","*.txt","*.mks","*.vtt","*.sup"};
-    const QStringList speedLevel={"0.5","0.75","1","1.5","2"};
+    const QStringList speedLevel={"0.5","0.75","1","1.5","2","2.5","3"};
     const QStringList videoAspect={tr("Auto"),"4:3","16:9","2.35:1"};
 	const double videoAspcetVal[4] = { -1,4.0 / 3,16.0 / 9,2.35 / 1 };
 

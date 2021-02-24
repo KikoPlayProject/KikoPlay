@@ -93,18 +93,13 @@ SOURCES += \
     Play/Danmu/Provider/localprovider.cpp \
     UI/adddanmu.cpp \
     UI/matcheditor.cpp \
-    Play/Danmu/Provider/bilibiliprovider.cpp \
     UI/selectepisode.cpp \
-    Play/Danmu/Provider/dandanprovider.cpp \
     Play/Danmu/blocker.cpp \
     UI/blockeditor.cpp \
     UI/capture.cpp \
     UI/mediainfo.cpp \
     Play/Danmu/common.cpp \
     UI/about.cpp \
-    Play/Danmu/Provider/tucaoprovider.cpp \
-    Play/Danmu/Provider/bahamutprovider.cpp \
-    Play/Danmu/Provider/dililiprovider.cpp \
     Common/network.cpp \
     Common/htmlparsersax.cpp \
     MediaLibrary/animeitemdelegate.cpp \
@@ -121,10 +116,8 @@ SOURCES += \
     UI/selecttorrentfile.cpp \
     UI/poolmanager.cpp \
     UI/checkupdate.cpp \
-    Play/Danmu/Provider/iqiyiprovider.cpp \
     Common/flowlayout.cpp \
     UI/timelineedit.cpp \
-    Play/Danmu/Provider/acfunprovider.cpp \
     LANServer/lanserver.cpp \
     LANServer/httpserver.cpp \
     Play/Playlist/playlistitem.cpp \
@@ -139,12 +132,9 @@ SOURCES += \
     MediaLibrary/labelmodel.cpp \
     MediaLibrary/animefilterproxymodel.cpp \
     MediaLibrary/labelitemdelegate.cpp \
-    Play/Danmu/Provider/youkuprovider.cpp \
-    Play/Danmu/Provider/tencentprovider.cpp \
     Download/BgmList/bgmlist.cpp \
     UI/bgmlistwindow.cpp \
     UI/ressearchwindow.cpp \
-    Play/Danmu/Provider/pptvprovider.cpp \
     Play/Danmu/Manager/pool.cpp \
     MediaLibrary/capturelistmodel.cpp \
     UI/captureview.cpp \
@@ -218,19 +208,12 @@ HEADERS += \
     UI/adddanmu.h \
     Play/Danmu/common.h \
     UI/matcheditor.h \
-    Play/Danmu/Provider/bilibiliprovider.h \
-    Play/Danmu/Provider/info.h \
     UI/selectepisode.h \
-    Play/Danmu/Provider/dandanprovider.h \
     Play/Danmu/blocker.h \
     UI/blockeditor.h \
     UI/capture.h \
     UI/mediainfo.h \
     UI/about.h \
-    Play/Danmu/Provider/tucaoprovider.h \
-    Play/Danmu/Provider/providerbase.h \
-    Play/Danmu/Provider/bahamutprovider.h \
-    Play/Danmu/Provider/dililiprovider.h \
     Common/network.h \
     Common/htmlparsersax.h \
     MediaLibrary/animeinfo.h \
@@ -248,12 +231,10 @@ HEADERS += \
     UI/selecttorrentfile.h \
     UI/poolmanager.h \
     UI/checkupdate.h \
-    Play/Danmu/Provider/iqiyiprovider.h \
     Common/zconf.h \
     Common/zlib.h \
     Common/flowlayout.h \
     UI/timelineedit.h \
-    Play/Danmu/Provider/acfunprovider.h \
     LANServer/lanserver.h \
     LANServer/httpserver.h \
     Play/Playlist/playlistitem.h \
@@ -268,12 +249,9 @@ HEADERS += \
     MediaLibrary/labelmodel.h \
     MediaLibrary/animefilterproxymodel.h \
     MediaLibrary/labelitemdelegate.h \
-    Play/Danmu/Provider/youkuprovider.h \
-    Play/Danmu/Provider/tencentprovider.h \
     Download/BgmList/bgmlist.h \
     UI/bgmlistwindow.h \
     UI/ressearchwindow.h \
-    Play/Danmu/Provider/pptvprovider.h \
     Play/Danmu/Manager/pool.h \
     Common/threadtask.h \
     MediaLibrary/capturelistmodel.h \
@@ -282,8 +260,7 @@ HEADERS += \
 
 INCLUDEPATH += \
     Play/Video \
-    LANServer \
-    Download/Script/lua
+    LANServer
 RESOURCES += \
     res.qrc
 

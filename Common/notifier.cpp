@@ -1,5 +1,5 @@
 #include "notifier.h"
-
+#include <QThread>
 Notifier::Notifier(QObject *parent) : QObject(parent)
 {
 
@@ -20,6 +20,7 @@ void Notifier::addNotify(Notifier::NotifyType nType, NotifyInterface *notify)
 
 void Notifier::showMessage(NotifyType nType, const QString &content, int flag)
 {
+    if(!notifyHash.contains(nType)) return;
     auto &notifyList = notifyHash[nType];
     for(auto n: notifyList)
     {
@@ -27,6 +28,19 @@ void Notifier::showMessage(NotifyType nType, const QString &content, int flag)
             n->showMessage(content, flag);
         }, Qt::QueuedConnection);
     }
+}
+
+QVariant Notifier::showDialog(Notifier::NotifyType nType, const QVariant &inputs)
+{
+    if(!notifyHash.contains(nType)) return QVariant();
+    auto &notifier = notifyHash[nType].first();
+    if(QThread::currentThread()==this->thread())
+        return notifier->showDialog(inputs);
+    QVariant ret;
+    QMetaObject::invokeMethod(this, [&ret, notifier, inputs](){
+        ret = notifier->showDialog(inputs);
+    }, Qt::BlockingQueuedConnection);
+    return ret;
 }
 
 Notifier *Notifier::getNotifier()

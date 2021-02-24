@@ -94,27 +94,7 @@ public:
     void  operator delete(void * p);
     static void DeleteObjPool();
 };
-/*
-struct MatchInfo
-{
-    bool success;
-    bool error;
-    QString errorInfo;
-    QString poolID;
-    QString fileHash;
-    struct DetailInfo
-    {
-        QString animeTitle;
-        QString title;
-        //int episodeId;
-    };
-    QList<DetailInfo> matches;
-};
-QDataStream &operator<<(QDataStream &stream, const MatchInfo &match);
-QDataStream &operator>>(QDataStream &stream, MatchInfo &match);
-QDataStream &operator<<(QDataStream &stream, const MatchInfo::DetailInfo &md);
-QDataStream &operator>>(QDataStream &stream, MatchInfo::DetailInfo &md);
-*/
+
 struct BlockRule
 {
     enum Field
@@ -144,6 +124,13 @@ struct BlockRule
     BlockRule() = default;
 };
 typedef QList<QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo *> > PrepareList;
+struct DrawTask
+{
+    QSharedPointer<DanmuComment> comment;
+    DanmuDrawInfo *drawInfo;
+    bool isCurrent;
+};
+
 struct DanmuEvent
 {
     int start;

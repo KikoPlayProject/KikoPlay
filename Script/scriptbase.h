@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QHash>
 #include <QMutex>
-#include "lua.hpp"
+#include "lua/lua.hpp"
 class MutexLocker
 {
     QMutex &m;
@@ -89,7 +89,7 @@ protected:
     void registerFuncs(const char *tname, const luaL_Reg *funcs);
 public:
     static void pushValue(lua_State *L, const QVariant &val);
-    static QVariant getValue(lua_State *L);
+    static QVariant getValue(lua_State *L, bool useString=true);
     static int getTableLength(lua_State *L, int pos);
 };
 

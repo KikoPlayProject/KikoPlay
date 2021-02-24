@@ -145,6 +145,9 @@ QLabel#labelPlayInfo{
 QLabel#DialogTipLabel{
     color:#ffffff;
 }
+QDialog QLabel {
+    color: rgb(0,0,0);
+}
 QScrollArea#PoolItemContainer{
     border-color: rgb(200,200,200);
     border-style:solid;
@@ -444,6 +447,10 @@ QMenu {
 QMenu::item {
     background-color: transparent;
     padding: 5px 35px 5px 25px;
+    color: rgb(0,0,0);
+}
+QMenu::item:disabled {
+    color: rgb(100,100,100);
 }
 QMenu::separator {
      height: 1px;
@@ -542,6 +549,7 @@ QLineEdit,QSpinBox {
     background-color:#fafafa;
     border: 1px solid #dddddd;
     padding: 2px 2px 2px 2px;
+    color: rgb(0,0,0);
 }
 QLineEdit:hover,QSpinBox:hover {
     background-color:#fdfdfd;
@@ -580,6 +588,7 @@ QComboBox {
     background-color:#fafafa;
     border: 1px solid #dddddd;
     padding: 2px 2px 2px 2px;
+    color: rgb(0,0,0);
 }
 QComboBox:hover {
     background-color:#fdfdfd;
@@ -610,6 +619,7 @@ QPushButton{
     border-color:rgb(221,221,221);
     background-color:rgb(250,250,250);
     padding:4px 4px 4px 4px;
+    color: rgb(0,0,0);
 }
 QPushButton:hover{
     border-color:rgb(150,150,150);
@@ -872,11 +882,17 @@ QLabel#CrtIcon{
     background: none;
 }
 /* --ScrollBar Setting-- */
+QLabel#LibraryCountTip, QLabel#SelectedLabelTip{
+    color: rgb(0,0,0);
+}
 QLabel#AnimeDetailTitle{
     color: rgb(250,250,250);
 }
 QLabel#AnimeDetailViewInfo{
     color: rgb(240,240,240);
+}
+QLabel#AnimeItemTitle{
+    color: rgb(0,0,0);
 }
 QTreeView#AnimeDetailEpisode{
     background-color: rgba(255,255,255,40);

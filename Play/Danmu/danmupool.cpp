@@ -362,8 +362,8 @@ void DanmuPool::mediaTimeElapsed(int newTime)
         return;
     }
     currentTime=newTime;
-    PrepareList *prepareList(nullptr);
-    prepareList=prepareListPool.isEmpty()?new PrepareList:prepareListPool.takeFirst();
+    QList<DrawTask> *prepareList(nullptr);
+    prepareList=prepareListPool.isEmpty()?new QList<DrawTask>:prepareListPool.takeFirst();
     const int bundleSize=32;
     for(;currentPosition<finalPool.length();++currentPosition)
     {
@@ -371,14 +371,14 @@ void DanmuPool::mediaTimeElapsed(int newTime)
         if(curTime<0)continue;
         if(curTime<newTime)
         {
-            auto dm=finalPool.at(currentPosition);
+            auto &dm=finalPool.at(currentPosition);
             if (dm->blockBy == -1 && curPool->sources()[dm->source].show)
 			{
-				prepareList->append({ dm,nullptr });
+                prepareList->append({ dm,nullptr,true });
                 if(prepareList->size()>=bundleSize)
                 {
                     GlobalObjects::danmuRender->prepareDanmu(prepareList);
-                    prepareList=prepareListPool.isEmpty()?new PrepareList :prepareListPool.takeFirst();
+                    prepareList=prepareListPool.isEmpty()?new QList<DrawTask> :prepareListPool.takeFirst();
                 }
 			}
         }
@@ -387,6 +387,11 @@ void DanmuPool::mediaTimeElapsed(int newTime)
     }
     if(prepareList->size()>0)
     {
+        int extendPos = currentPosition;
+        while(prepareList->size()<bundleSize && extendPos<finalPool.size())
+        {
+            prepareList->append({ finalPool.at(extendPos++),nullptr,false });
+        }
         GlobalObjects::danmuRender->prepareDanmu(prepareList);
     }
 	else

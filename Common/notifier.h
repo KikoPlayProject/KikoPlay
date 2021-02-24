@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QHash>
 #include <QList>
+#include <QVariant>
 enum NotifyMessageFlag
 {
     NM_HIDE=1,
@@ -17,7 +18,8 @@ class NotifyInterface
 {
 public:
     using CancelCallBack = void(*)(NotifyInterface *);
-    virtual void showMessage(const QString &content, int flag) = 0;
+    virtual void showMessage(const QString &/*content*/, int /*flag*/){};
+    virtual QVariant showDialog(const QVariant &/*inputs*/){ return QVariant();};
     void setCancelCallBack(CancelCallBack cb){ ccb = cb; }
     void setType(int type) {nTypeFlag = type; }
     int getType() const {return nTypeFlag; }
@@ -36,10 +38,12 @@ public:
         LIST_NOTIFY = 1,
         PLAYER_NOTIFY = 2,
         LIBRARY_NOTIFY = 3,
-        DOWNLOAD_NOTIFY = 4
+        DOWNLOAD_NOTIFY = 4,
+        MAIN_DIALOG_NOTIFY
     };
     void addNotify(NotifyType nType, NotifyInterface *notify);
     void showMessage(NotifyType nType, const QString &content, int flag = 0);
+    QVariant showDialog(NotifyType nType, const QVariant &inputs);
     static Notifier *getNotifier();
 
 signals:

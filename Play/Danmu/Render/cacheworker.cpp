@@ -250,7 +250,7 @@ void CacheWorker::createTexture(QList<CacheMiddleInfo> &midInfo)
 #endif
 }
 
-void CacheWorker::beginCache(PrepareList *danmus)
+void CacheWorker::beginCache(QList<DrawTask> *danmus)
 {
 #ifdef QT_DEBUG
     qDebug()<<"cache start---";
@@ -261,20 +261,20 @@ void CacheWorker::beginCache(PrepareList *danmus)
     QStringList hashList;
     QSet<QString> tmpHash;
     QList<CacheMiddleInfo> mInfoList;
-    for(QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*> &dm:*danmus)
+    for(auto &dm:*danmus)
     {
         QString hash_str(QCryptographicHash::hash(QString("%1%2%3%4")
-                         .arg(dm.first->text
-                              ,QString::number(dm.first->color)
-                              ,QString::number(danmuStyle->fontSizeTable[dm.first->fontSizeLevel])
-                         ,dm.first->mergedList?QString::number(dm.first->mergedList->count()):"0").toUtf8()
+                         .arg(dm.comment->text
+                              ,QString::number(dm.comment->color)
+                              ,QString::number(danmuStyle->fontSizeTable[dm.comment->fontSizeLevel])
+                         ,dm.comment->mergedList?QString::number(dm.comment->mergedList->count()):"0").toUtf8()
                          ,QCryptographicHash::Md5).toHex());
         hashList<<hash_str;
         if(!danmuCache.contains(hash_str) && !tmpHash.contains(hash_str))
         {
             CacheMiddleInfo mInfo;
             mInfo.hash=hash_str;
-            mInfo.comment=dm.first.data();
+            mInfo.comment=dm.comment.data();
             mInfoList.append(mInfo);
             tmpHash.insert(hash_str);
         }
@@ -290,12 +290,12 @@ void CacheWorker::beginCache(PrepareList *danmus)
 		}
 	}
     int i=0;
-    for(QPair<QSharedPointer<DanmuComment>,DanmuDrawInfo*> &dm:*danmus)
+    for(auto &dm:*danmus)
     {
          DanmuDrawInfo *drawInfo(danmuCache.value(hashList[i++],nullptr));
          Q_ASSERT(drawInfo);
-         drawInfo->useCount++;
-         dm.second=drawInfo;
+         if(dm.isCurrent) drawInfo->useCount++;
+         dm.drawInfo=drawInfo;
     }
 #ifdef QT_DEBUG
     etime=timer.elapsed();

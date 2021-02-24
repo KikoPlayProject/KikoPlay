@@ -7,8 +7,12 @@ class InputDialog : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit InputDialog(const QString &title, const QString &tip, const QString &text="",
+    InputDialog(const QString &title, const QString &tip, const QString &text="",
                          bool canEmpty=true, QWidget *parent = nullptr);
+
+    InputDialog(const QString &title, const QString &tip, QWidget *parent = nullptr);
+    InputDialog(const QByteArray &imgData, const QString &title, const QString &tip, const QString &text, QWidget *parent = nullptr);
+    InputDialog(const QByteArray &imgData, const QString &title, const QString &tip, QWidget *parent = nullptr);
     QString text;
 private:
     QPlainTextEdit *edit;

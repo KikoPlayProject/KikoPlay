@@ -141,12 +141,15 @@ extern "C" {
  * - In certain cases, mpv may start sub processes (such as with the ytdl
  *   wrapper script).
  * - Using UNIX IPC (off by default) will override the SIGPIPE signal handler,
- *   and set it to SIG_IGN.
+ *   and set it to SIG_IGN. Some invocations of the "subprocess" command will
+ *   also do that.
  * - mpv will reseed the legacy C random number generator by calling srand() at
  *   some random point once.
  * - mpv may start sub processes, so overriding SIGCHLD, or waiting on all PIDs
  *   (such as calling wait()) by the parent process or any other library within
  *   the process must be avoided. libmpv itself only waits for its own PIDs.
+ * - If anything in the process registers signal handlers, they must set the
+ *   SA_RESTART flag. Otherwise you WILL get random failures on signals.
  *
  * Encoding of filenames
  * ---------------------
@@ -232,7 +235,7 @@ extern "C" {
  * relational operators (<, >, <=, >=).
  */
 #define MPV_MAKE_VERSION(major, minor) (((major) << 16) | (minor) | 0UL)
-#define MPV_CLIENT_API_VERSION MPV_MAKE_VERSION(1, 108)
+#define MPV_CLIENT_API_VERSION MPV_MAKE_VERSION(1, 109)
 
 /**
  * The API user is allowed to "#define MPV_ENABLE_DEPRECATED 0" before
@@ -404,8 +407,7 @@ const char *mpv_client_name(mpv_handle *ctx);
  * client name as first argument, but also accepts the client ID formatted in
  * this manner.
  *
- * @return The client name. The string is read-only and is valid until the
- *         mpv_handle is destroyed.
+ * @return The client ID.
  */
 int64_t mpv_client_id(mpv_handle *ctx);
 

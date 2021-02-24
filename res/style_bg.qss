@@ -147,6 +147,9 @@ QLabel#labelPlayInfo{
 QLabel#DialogTipLabel{
     color:#ffffff;
 }
+QDialog QLabel {
+    color: rgb(0,0,0);
+}
 QScrollArea#PoolItemContainer{
     border-color: rgb(200,200,200);
     border-style:solid;
@@ -462,6 +465,10 @@ QMenu {
 QMenu::item {
     background-color: transparent;
     padding: 5px 35px 5px 25px;
+    color: rgb(0,0,0);
+}
+QMenu::item:disabled {
+    color: rgb(100,100,100);
 }
 QMenu::separator {
      height: 1px;
@@ -561,6 +568,7 @@ QLineEdit,QSpinBox {
     background-color:rgba(250,250,250,120);
     border: 1px solid #dcdcdc;
     padding: 2px 2px 2px 2px;
+    color: rgb(0,0,0);
 }
 QLineEdit:hover,QSpinBox:hover {
     background-color:rgba(250,250,250,160);
@@ -596,11 +604,13 @@ QSpinBox::down-button:hover {
 }
 QDialog QComboBox {
     background-color:rgb(250,250,250);
+    color: rgb(0,0,0);
 }
 QComboBox {
     background-color:rgba(250,250,250,180);
     border: 1px solid #dddddd;
     padding: 2px 2px 2px 2px;
+    color: rgb(0,0,0);
 }
 QComboBox:hover{
     background-color: rgba(250,250,250,220);
@@ -635,12 +645,14 @@ QPushButton{
     border-color:rgb(221,221,221);
     background-color:rgba(250,250,250,180);
     padding:4px 4px 4px 4px;
+    color: rgb(0,0,0);
 }
 QDialog QPushButton{
     border:1px solid;
     border-color:rgb(221,221,221);
     background-color:rgb(250,250,250);
     padding:4px 4px 4px 4px;
+    color: rgb(0,0,0);
 }
 QPushButton:hover{
     border-color:rgb(@ThemeColorL1);
@@ -1241,7 +1253,7 @@ QWidget#TaskPeerView{
 }
 QListWidget#SettingPageList {
     show-decoration-selected: 1;
-    outline:0px;
+    outline:0px;f
 }
 QListWidget#SettingPageList::item {
     border: none;

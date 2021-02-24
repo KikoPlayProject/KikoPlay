@@ -43,7 +43,7 @@ static int httpGet(lua_State *L)
             }
         }
         QString errInfo;
-        QString content;
+        QByteArray content;
         try
         {
             content=Network::httpGet(curl,query,headers);
@@ -54,7 +54,7 @@ static int httpGet(lua_State *L)
         }
         if(errInfo.isEmpty()) lua_pushnil(L);
         else lua_pushstring(L,errInfo.toStdString().c_str());
-        lua_pushstring(L,content.toStdString().c_str());
+		lua_pushlstring(L, content.data(), content.size());
         return 2;
     }while(false);
     lua_pushstring(L, "httpget: param error, expect: url(string), <query(table)>, <header(table)>");
@@ -85,7 +85,7 @@ static int httpPost(lua_State *L)
             }
         }
         QString errInfo;
-        QString content;
+		QByteArray content;
         try
         {
             content=Network::httpPost(curl,cdata,headers);
@@ -96,7 +96,7 @@ static int httpPost(lua_State *L)
         }
         if(errInfo.isEmpty()) lua_pushnil(L);
         else lua_pushstring(L,errInfo.toStdString().c_str());
-        lua_pushstring(L,content.toStdString().c_str());
+		lua_pushlstring(L, content.data(), content.size());
         return 2;
     }while(false);
     lua_pushstring(L, "httppost: param error, expect: url(string), <data(string)>, <header(table)>");
@@ -213,7 +213,7 @@ static int httpGetBatch(lua_State *L)
             else
                 lua_pushstring(L, content[i].first.toStdString().c_str()); // table table errStr
             lua_rawseti(L, -2, 1); // table table
-            lua_pushstring(L, content[i].second.constData()); //table table data
+            lua_pushlstring(L, content[i].second.constData(), content[i].second.size()); //table table data
             lua_rawseti(L, -2, 2); // table table
             lua_rawseti(L, -2, i+1); //table
         }
@@ -452,6 +452,30 @@ static int message(lua_State *L)
         break;
     default:
         break;
+    }
+    return 0;
+}
+static int dialog(lua_State *L)
+{
+    int params = lua_gettop(L);
+    if(params==0 || lua_type(L, 1)!=LUA_TTABLE) return 0;
+    QVariant table = ScriptBase::getValue(L, false);
+    if(table.type()==QVariant::Map)
+    {
+        QVariantMap map = table.toMap();
+        QVariantMap inputs;
+        if(map.contains("title"))
+            inputs["title"] = QString(map["title"].toByteArray());
+        if(map.contains("tip"))
+            inputs["tip"] = QString(map["tip"].toByteArray());
+        if(map.contains("text"))
+            inputs["text"] = QString(map["text"].toByteArray());
+        if(map.contains("image"))
+            inputs["image"] = map["image"].toByteArray();
+        QStringList rets = Notifier::getNotifier()->showDialog(Notifier::MAIN_DIALOG_NOTIFY, inputs).toStringList();
+        lua_pushstring(L, rets[0].toStdString().c_str()); // accept/reject
+        lua_pushstring(L, rets[1].toStdString().c_str());  //text
+        return 2;
     }
     return 0;
 }
@@ -721,6 +745,7 @@ static const luaL_Reg kikoFuncs[] = {
     {"hashdata", hashData},
     {"log", logger},
     {"message", message},
+    {"dialog", dialog},
     {"sttrans", simplifiedTraditionalTrans},
     {nullptr, nullptr}
 };
@@ -987,7 +1012,7 @@ void ScriptBase::pushValue(lua_State *L, const QVariant &val)
     }
 }
 
-QVariant ScriptBase::getValue(lua_State *L)
+QVariant ScriptBase::getValue(lua_State *L, bool useString)
 {
     if(!L) return QVariant();
     if(lua_gettop(L)==0) return QVariant();
@@ -1004,9 +1029,10 @@ QVariant ScriptBase::getValue(lua_State *L)
     }
     case LUA_TSTRING:
     {
-        //size_t len = 0;
-        //const char *s = (const char *)lua_tolstring(L, -1, &len);
-        return QString(lua_tostring(L, -1));
+        size_t len = 0;
+        const char *s = (const char *)lua_tolstring(L, -1, &len);
+		if (useString) return QString(s);
+		else return QByteArray(s, len);
     }
     case LUA_TTABLE:
     {
@@ -1036,7 +1062,7 @@ QVariant ScriptBase::getValue(lua_State *L)
                                lua_typename(L, lua_type(L, -2)));
                 }
 				QString key(lua_tostring(L, -2));
-                map[key] = getValue(L);
+                map[key] = getValue(L, useString);
                 lua_pop(L, 1); // key
             }
             return map;
@@ -1052,7 +1078,7 @@ QVariant ScriptBase::getValue(lua_State *L)
 					lua_pop(L, 1);
 					break;
 				}
-                list.append(getValue(L));
+                list.append(getValue(L, useString));
                 lua_pop(L, 1); // -
             }
             return list;

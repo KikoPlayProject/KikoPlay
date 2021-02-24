@@ -20,6 +20,7 @@
 #include "tip.h"
 #include "stylemanager.h"
 #include "settings.h"
+#include "inputdialog.h"
 #include "logwindow.h"
 #include "widgets/backgroundwidget.h"
 #include "Play/Video/mpvplayer.h"
@@ -30,6 +31,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : CFramelessWindow(parent),hasBackground(false),hasCoverBg(false),curPage(0),listWindowWidth(0),isMini(false),hideToTrayIcon(false)
 {
+    Notifier::getNotifier()->addNotify(Notifier::MAIN_DIALOG_NOTIFY, this);
     setupUI();
     setWindowIcon(QIcon(":/res/kikoplay.ico"));
     QRect defaultGeo(0,0,800*logicalDpiX()/96,480*logicalDpiX()/96), defaultMiniGeo(0,0,200*logicalDpiX()/96, 200*logicalDpiY()/96);
@@ -674,6 +676,38 @@ QWidget *MainWindow::setupDownloadPage()
     download->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     QObject::connect(download,&DownloadWindow::playFile,this,&MainWindow::switchToPlay);
     return download;
+}
+
+QVariant MainWindow::showDialog(const QVariant &inputs)
+{
+    QVariantMap optMap = inputs.toMap();
+    QString title = optMap.value("title", "KikoPlay").toString();
+    QString tip = optMap.value("tip").toString();
+    bool hasText = optMap.contains("text"), hasImage = optMap.contains("image");
+    if(!hasText && !hasImage)
+    {
+        InputDialog dialog(title, tip, this);
+        dialog.exec();
+        return QStringList{"reject", ""};
+    }
+    else if(hasText && !hasImage)
+    {
+        InputDialog dialog(title, tip,  optMap.value("text").toString(), true, this);
+        int ret = dialog.exec();
+        return ret==QDialog::Accepted? QStringList({"accept", dialog.text}):QStringList({"reject", ""});
+    }
+    else if(!hasText && hasImage)
+    {
+        InputDialog dialog(optMap.value("image").toByteArray(), title, tip, this);
+        dialog.exec();
+        return QStringList{"reject", ""};
+    }
+    else
+    {
+        InputDialog dialog(optMap.value("image").toByteArray(), title, tip,  optMap.value("text").toString(), this);
+        int ret = dialog.exec();
+        return ret==QDialog::Accepted? QStringList({"accept", dialog.text}):QStringList({"reject", ""});
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
