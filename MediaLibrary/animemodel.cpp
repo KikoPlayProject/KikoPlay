@@ -3,10 +3,7 @@
 #include "animeworker.h"
 #include "Common/notifier.h"
 #define AnimeRole Qt::UserRole+1
-namespace
-{
-	static bool firstActive = true;
-}
+
 AnimeModel::AnimeModel(QObject *parent):QAbstractItemModel(parent),
     currentOffset(0),active(false),hasMoreAnimes(false)
 {
@@ -16,14 +13,15 @@ AnimeModel::AnimeModel(QObject *parent):QAbstractItemModel(parent),
 
 void AnimeModel::setActive(bool isActive)
 {
-    if(firstActive)
-    {
-        firstActive = false;
-        fetchMore(QModelIndex());
-    }
+    static bool firstActive = true;
     active=isActive;
     if(active)
     {
+        if(firstActive)
+        {
+            firstActive = false;
+            fetchMore(QModelIndex());
+        }
         if(!tmpAnimes.isEmpty())
         {
             beginInsertRows(QModelIndex(),0,tmpAnimes.count()-1);

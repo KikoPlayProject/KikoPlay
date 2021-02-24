@@ -604,6 +604,7 @@ void LabelModel::selectFile(QStringList &paths)
 
 bool LabelProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
 {
+    static QCollator comparer;
     TagNode *lNode = static_cast<TagNode*>(left.internalPointer()), *rNode = static_cast<TagNode*>(right.internalPointer());
     switch (lNode->tagType)
     {
@@ -614,6 +615,8 @@ bool LabelProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right
     case TagNode::TAG_FILE:
         return lNode->tagTitle<rNode->tagTitle;
     default:
+        if(lNode->animeCount==rNode->animeCount)
+            return comparer.compare(lNode->tagTitle, rNode->tagTitle)<0;
         return lNode->animeCount>rNode->animeCount;
     }
 }

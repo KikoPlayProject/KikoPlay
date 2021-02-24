@@ -110,7 +110,9 @@ ScriptState DanmuScript::hasSourceToLaunch(const QList<DanmuSource> &sources, bo
     for(auto &src: sources)
         params.append(src.toMap());
     QString errInfo;
-    QVariantList rets = call(luaLaunchCheckFunc, {params}, 1, errInfo);
+    QVariantList param;
+    param.append(QVariant(params));
+    QVariantList rets = call(luaLaunchCheckFunc, param, 1, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(rets[0].type()!=QVariant::Bool) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
     result = rets[0].toBool();

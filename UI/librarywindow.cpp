@@ -447,7 +447,7 @@ void LibraryWindow::searchAddAnime(Anime *srcAnime)
 
 void LibraryWindow::showEvent(QShowEvent *)
 {
-    static bool labelInited = false;
+    static bool labelInited = false, animeModelActive = false;
     if(!labelInited)
     {
         labelInited = true;
@@ -459,7 +459,15 @@ void LibraryWindow::showEvent(QShowEvent *)
             labelView->expand(labelProxyModel->index(3,0,QModelIndex()));
         });
     }
-    animeModel->setActive(true);
+    if(!animeModelActive)
+    {
+        QTimer::singleShot(0, [this](){
+            animeModelActive = true;
+            animeModel->setActive(true);
+            animeModelActive = false;
+        });
+    }
+
 }
 
 void LibraryWindow::hideEvent(QHideEvent *)
