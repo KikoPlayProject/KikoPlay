@@ -293,13 +293,13 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     QLabel *totalCountLabel=new QLabel(animeContainer);
     totalCountLabel->setFont(QFont(GlobalObjects::normalFont,12));
     totalCountLabel->setObjectName(QStringLiteral("LibraryCountTip"));
-    QPushButton *loadMore=new QPushButton(tr("Continue to load"),this);
-    QObject::connect(loadMore,&QPushButton::clicked,[=](){
+    QPushButton *loadMoreButton=new QPushButton(tr("Continue to load"),this);
+    QObject::connect(loadMoreButton,&QPushButton::clicked,[=](){
         animeModel->fetchMore(QModelIndex());
     });
     QObject::connect(proxyModel,&AnimeFilterProxyModel::animeMessage,this, [=](const QString &msg, bool hasMore){
         totalCountLabel->setText(msg);
-        hasMore? loadMore->show():loadMore->hide();
+        hasMore? loadMoreButton->show():loadMoreButton->hide();
     });
 
     QPushButton *backButton =  new QPushButton(animeContainer);
@@ -316,7 +316,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     QHBoxLayout *toolbuttonHLayout=new QHBoxLayout();
     toolbuttonHLayout->addWidget(backButton);
     toolbuttonHLayout->addWidget(totalCountLabel);
-    toolbuttonHLayout->addWidget(loadMore);
+    toolbuttonHLayout->addWidget(loadMoreButton);
     toolbuttonHLayout->addSpacing(5*logicalDpiX()/96);
     toolbuttonHLayout->addWidget(selectedLabelTip);
     toolbuttonHLayout->addStretch(1);
@@ -351,7 +351,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         backButton->show();
         selectedLabelTip->hide();
         totalCountLabel->hide();
-        if(animeModel->canFetchMore(QModelIndex())) loadMore->hide();
+        if(animeModel->canFetchMore(QModelIndex())) loadMoreButton->hide();
         filterBox->hide();
         viewSLayout->setCurrentIndex(1);
     });
@@ -361,7 +361,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         selectedLabelTip->show();
         totalCountLabel->show();
         filterBox->show();
-        if(animeModel->canFetchMore(QModelIndex())) loadMore->show();
+        if(animeModel->canFetchMore(QModelIndex())) loadMoreButton->show();
         viewSLayout->setCurrentIndex(0);
     });
     splitter->addWidget(labelView);

@@ -160,6 +160,7 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
 
     QLabel *url=new QLabel(tr("Source: %1%2").arg(sourceInfo->scriptId, sourceInfo->duration>0?QString(" (%1)").arg(sourceInfo->durationStr()):""),this);
     url->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
+    url->setToolTip(sourceInfo->scriptData);
 
     QLabel *delayLabel=new QLabel(tr("Delay(s): "),this);
     QSpinBox *delaySpinBox=new QSpinBox(this);

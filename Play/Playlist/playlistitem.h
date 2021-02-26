@@ -22,11 +22,16 @@ public:
     {
         UNPLAY, UNFINISH, FINISH
     };
+    enum Marker
+    {
+        M_RED, M_BLUE, M_GREEN, M_ORANGE, M_PINK, M_YELLOW, M_NONE
+    };
 
     int playTime;
     PlayState playTimeState;
     int level;
     bool isBgmCollection;
+    Marker marker;
 
     QString title;
     QString animeTitle;

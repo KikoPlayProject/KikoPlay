@@ -64,5 +64,11 @@
         <file>res/images/label-check.svg</file>
         <file>res/images/label-uncheck.svg</file>
         <file>res/images/label-partially.svg</file>
+        <file>res/images/mark_blue.svg</file>
+        <file>res/images/mark_green.svg</file>
+        <file>res/images/mark_orange.svg</file>
+        <file>res/images/mark_pink.svg</file>
+        <file>res/images/mark_red.svg</file>
+        <file>res/images/mark_yellow.svg</file>
     </qresource>
 </RCC>

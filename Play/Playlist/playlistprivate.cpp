@@ -52,6 +52,10 @@ void PlayListPrivate::loadPlaylist()
                 collection->isBgmCollection=(reader.attributes().value("bgmCollection")=="true");
                 if(collection->isBgmCollection) bgmCollectionItems.insert(collection->title, collection);
                 collection->folderPath=reader.attributes().value("folderPath").toString();
+                int marker=PlayListItem::Marker::M_NONE;
+                if(reader.attributes().hasAttribute("marker"))
+                    marker = reader.attributes().value("marker").toInt();
+                collection->marker = PlayListItem::Marker(marker);
                 parents.push_back(collection);
                 break;
             }
@@ -62,6 +66,9 @@ void PlayListPrivate::loadPlaylist()
                 QString poolID=reader.attributes().value("poolID").toString();
                 int playTime=reader.attributes().value("playTime").toInt();
                 int playTimeState=reader.attributes().value("playTimeState").toInt();
+                int marker=PlayListItem::Marker::M_NONE;
+                if(reader.attributes().hasAttribute("marker"))
+                    marker = reader.attributes().value("marker").toInt();
                 QString path = reader.readElementText().trimmed();
                 /*QFileInfo fileInfo(path);
                 if(!fileInfo.exists())
@@ -76,6 +83,7 @@ void PlayListPrivate::loadPlaylist()
                 item->playTime=playTime;
                 item->poolID = poolID;
                 item->playTimeState=PlayListItem::PlayState(playTimeState);
+                item->marker = PlayListItem::Marker(marker);
                 fileItems.insert(item->path,item);
                 if(!animeTitle.isEmpty())item->animeTitle=animeTitle;
                 for(auto &pair :recentList)
@@ -148,6 +156,8 @@ void PlayListPrivate::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
         writer.writeAttribute("bgmCollection",item->isBgmCollection?"true":"false");
         if(!item->folderPath.isEmpty())
             writer.writeAttribute("folderPath",item->folderPath);
+        if(item->marker != PlayListItem::Marker::M_NONE)
+            writer.writeAttribute("marker", QString::number((int)item->marker));
     }
     for(PlayListItem *child : *item->children)
     {
@@ -165,6 +175,8 @@ void PlayListPrivate::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
                 writer.writeAttribute("poolID",child->poolID);
             writer.writeAttribute("playTime",QString::number(child->playTime));
             writer.writeAttribute("playTimeState",QString::number((int)child->playTimeState));
+            if(child->marker != PlayListItem::Marker::M_NONE)
+                writer.writeAttribute("marker", QString::number((int)child->marker));
             writer.writeCharacters(child->path);
             writer.writeEndElement();
         }

@@ -24,7 +24,7 @@ public:
     virtual void fetchMore(const QModelIndex &);
     inline virtual bool canFetchMore(const QModelIndex &) const{ return hasMoreAnimes; }
 private:
-    const int limitCount=5;
+    const int limitCount=128;
     int currentOffset;
     QList<Anime *> animes, tmpAnimes;
     bool active;

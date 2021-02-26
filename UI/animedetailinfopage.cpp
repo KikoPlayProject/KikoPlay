@@ -538,6 +538,7 @@ QWidget *AnimeDetailInfoPage::setupCapturePage()
         {
             GIFCapture gifCapture(snippetFilePath, false, this);
             gifCapture.exec();
+            GlobalObjects::mpvplayer->setMute(GlobalObjects::mpvplayer->getMute());
         }
     });
     QAction* actAdd = new QAction(tr("Add"),this);

@@ -50,7 +50,6 @@ QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QS
             manager->cookieJar()->insertCookie(cookie);
         }
     }
-    //request.setRawHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0");
     QTimer timer;
     timer.setInterval(timeout);
     timer.setSingleShot(true);
@@ -224,6 +223,81 @@ QByteArray Network::httpPost(const QString &url, const QByteArray &data, const Q
     {
         return replyData;
     }
+}
+
+QList<QPair<QByteArray, QByteArray> > Network::httpHead(const QString &url, const QUrlQuery &query, const QStringList &header)
+{
+    QUrl queryUrl(url);
+    if(!query.isEmpty()) queryUrl.setQuery(query);
+    QNetworkRequest request;
+    request.setUrl(queryUrl);
+    if(header.size()>=2)
+    {
+        Q_ASSERT((header.size() & 1) ==0);
+        for(int i=0;i<header.size();i+=2)
+            request.setRawHeader(header[i].toUtf8(),header[i+1].toUtf8());
+    }
+    QList<QNetworkCookie> cookies;
+    QNetworkAccessManager *manager = getManager();
+    if(request.hasRawHeader("Cookie"))
+    {
+        auto cookieBytes = request.rawHeader("Cookie");
+        auto rawList = cookieBytes.split(';');
+        for (auto &bytes:rawList)
+        {
+            int pos =bytes.indexOf('=');
+            if(pos<=0) continue;
+            auto name = bytes.left(pos);
+            auto value = bytes.mid(pos+1);
+            QNetworkCookie cookie(name, value);
+            cookie.setDomain(queryUrl.host());
+            cookie.setPath(queryUrl.path());
+            cookies<<cookie;
+            manager->cookieJar()->insertCookie(cookie);
+        }
+    }
+    QTimer timer;
+    timer.setInterval(timeout);
+    timer.setSingleShot(true);
+    QNetworkReply *reply = manager->head(request);
+    for(auto &cookie:cookies)
+    {
+        manager->cookieJar()->deleteCookie(cookie);
+    }
+    QEventLoop eventLoop;
+    QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
+    QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
+    timer.start();
+    eventLoop.exec();
+    bool hasError=false;
+    QString errorInfo;
+    QByteArray replyBytes;
+    if (timer.isActive())
+    {
+        timer.stop();
+        if (reply->error() == QNetworkReply::NoError)
+        {
+            return reply->rawHeaderPairs();
+        }
+        else
+        {
+            hasError=true;
+            errorInfo=reply->errorString();
+        }
+    }
+    else
+    {
+        QObject::disconnect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
+        reply->abort();
+        hasError=true;
+        errorInfo=QObject::tr("Replay Timeout");
+    }
+    reply->deleteLater();
+    if(hasError)
+    {
+        throw NetworkError(errorInfo);
+    }
+    return QList<QNetworkReply::RawHeaderPair>();
 }
 
 QJsonDocument Network::toJson(const QString &str)

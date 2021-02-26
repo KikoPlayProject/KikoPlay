@@ -61,6 +61,64 @@ static int httpGet(lua_State *L)
     lua_pushnil(L);
     return 2;
 }
+static int httpHead(lua_State *L)
+{
+    do
+    {
+        int params = lua_gettop(L);  //url <query> <header>
+        if(params==0 || params>3) break;
+        if(lua_type(L, 1)!=LUA_TSTRING) break;
+        const char *curl = luaL_checkstring(L,1);
+        QUrlQuery query;
+        QStringList headers;
+        if(params > 1)  //has query
+        {
+            lua_pushvalue(L, 2);
+            auto q = ScriptBase::getValue(L);
+            lua_pop(L, 1);
+            if (q.type() != QVariant::Map && !(q.type() == QVariant::List && q.toList().size() == 0)) break;
+            auto qmap = q.toMap();
+            for(auto iter=qmap.constBegin(); iter!=qmap.constEnd(); ++iter)
+            {
+                query.addQueryItem(iter.key(),iter.value().toString());
+            }
+        }
+        if(params > 2)  //has header
+        {
+            auto h = ScriptBase::getValue(L);
+            if (h.type() != QVariant::Map && !(h.type() == QVariant::List && h.toList().size() == 0)) break;
+            auto hmap = h.toMap();
+            for(auto iter=hmap.constBegin(); iter!=hmap.constEnd(); ++iter)
+            {
+                headers<<iter.key()<<iter.value().toString();
+            }
+        }
+        QString errInfo;
+        QList<QPair<QByteArray, QByteArray>> headerPairs;
+        try
+        {
+            headerPairs=Network::httpHead(curl,query,headers);
+        }
+        catch(Network::NetworkError &err)
+        {
+            errInfo=err.errorInfo;
+        }
+        if(errInfo.isEmpty()) lua_pushnil(L);
+        else lua_pushstring(L,errInfo.toStdString().c_str());
+
+        lua_newtable(L); // table
+        for(int i=0; i<headerPairs.size(); ++i)
+        {
+            lua_pushlstring(L, headerPairs[i].first.constData(), headerPairs[i].first.size()); // table key
+            lua_pushlstring(L, headerPairs[i].second.constData(), headerPairs[i].second.size()); // table key value
+            lua_rawset(L, -3);
+        }
+        return 2;
+    }while(false);
+    lua_pushstring(L, "httpget: param error, expect: url(string), <query(table)>, <header(table)>");
+    lua_pushnil(L);
+    return 2;
+}
 static int httpPost(lua_State *L)
 {
     do
@@ -732,6 +790,7 @@ static int htmlParserGC (lua_State *L) {
 
 static const luaL_Reg kikoFuncs[] = {
     {"httpget", httpGet},
+    {"httphead", httpHead},
     {"httpgetbatch", httpGetBatch},
     {"httppost", httpPost},
     {"json2table", json2table},

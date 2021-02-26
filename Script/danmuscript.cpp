@@ -72,7 +72,7 @@ ScriptState DanmuScript::getDanmu(const DanmuSource *item, DanmuSource **nItem, 
         nSrc->title = itemObj.value("title").toString();
         nSrc->desc = itemObj.value("desc").toString();
         nSrc->scriptData = itemObj.value("data").toString();
-        nSrc->duration = itemObj.value("count", 0).toInt();
+        nSrc->duration = itemObj.value("duration", 0).toInt();
         *nItem = nSrc;
     }
     auto dobjs = rets[1].toList();  //[{text=xx, time=xx(number, ms), <color=xx(int)>, <fontsize=xx(int, 1=normal, 2=small, 3=large)> <type=xx(int, 1=roll,2=top,3=bottom)>, <date=xx(str)>, <sender=xx>},....]

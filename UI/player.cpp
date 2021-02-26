@@ -599,6 +599,7 @@ void PlayerWindow::initActions()
         geo.moveCenter(this->geometry().center());
         snippet.move(mapToGlobal(geo.topLeft()));
         snippet.exec();
+        GlobalObjects::mpvplayer->setMute(GlobalObjects::mpvplayer->getMute());
     });
     actGIF = new QAction(tr("GIF Capture"),this);
     QObject::connect(actGIF,&QAction::triggered,[this](){
@@ -609,6 +610,7 @@ void PlayerWindow::initActions()
         geo.moveCenter(this->geometry().center());
         gifCapture.move(mapToGlobal(geo.topLeft()));
         gifCapture.exec();
+        GlobalObjects::mpvplayer->setMute(GlobalObjects::mpvplayer->getMute());
     });
     screenshot->addAction(actScreenshotSrc);
     screenshot->addAction(actScreenshotAct);

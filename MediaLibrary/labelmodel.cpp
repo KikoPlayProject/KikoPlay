@@ -345,6 +345,7 @@ void LabelModel::addAnimeInfoTag()
 
     auto &scriptIdCount = animeInfoTag.scriptIdCount;
     TagNode *scriptCate = new TagNode(tr("Source"), root, 0, TagNode::TAG_ROOT_CATE);
+    scriptCate->subNodes = new QList<TagNode *>();
     cateTags[CategoryTag::C_SCRIPT] = scriptCate;
     for(auto iter = scriptIdCount.begin(); iter!=scriptIdCount.end(); ++iter)
     {
@@ -356,6 +357,7 @@ void LabelModel::addAnimeInfoTag()
 
     auto &airDateCount = animeInfoTag.airDateCount;
     TagNode *airDateNode=new TagNode(tr("Air Date"), root, 0, TagNode::TAG_ROOT_CATE);
+    airDateNode->subNodes = new QList<TagNode *>();
     cateTags[CategoryTag::C_TIME] = airDateNode;
     QHash<QString, TagNode *> yearNodes;
 
@@ -377,6 +379,7 @@ void LabelModel::addEpPathTag()
 {
     AnimeWorker::instance()->loadEpInfoTag(epPathAnimes);
     TagNode *epPathNode=new TagNode(tr("File"), root, 0, TagNode::TAG_ROOT_CATE);
+    epPathNode->subNodes = new QList<TagNode *>();
     cateTags[CategoryTag::C_FILE] = epPathNode;
     for(auto iter=epPathAnimes.begin(); iter!=epPathAnimes.end();++iter)
     {
@@ -389,6 +392,7 @@ void LabelModel::addCustomTag()
 {
     AnimeWorker::instance()->loadCustomTags(tagAnimes);
     TagNode *customNode=new TagNode(tr("Tag"), root, 0, TagNode::TAG_ROOT_CATE);
+    customNode->subNodes = new QList<TagNode *>();
     cateTags[CategoryTag::C_CUSTOM] = customNode;
     for(auto iter=tagAnimes.begin(); iter!=tagAnimes.end();++iter)
     {

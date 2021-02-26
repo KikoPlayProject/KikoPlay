@@ -111,9 +111,9 @@ void AnimeModel::fetchMore(const QModelIndex &)
         beginInsertRows(QModelIndex(),animes.count(),animes.count()+moreAnimes.count()-1);
         animes.append(moreAnimes);
         endInsertRows();
-        currentOffset+=moreAnimes.count();
-        showStatisMessage();
+        currentOffset+=moreAnimes.count();      
     }
+    showStatisMessage();
     Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Down"), NM_HIDE);
 }
 

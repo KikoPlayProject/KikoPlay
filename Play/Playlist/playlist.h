@@ -32,6 +32,11 @@ public:
         Loop_All,
         Random
     };
+    enum MarkRole
+    {
+        BgmCollectionRole=Qt::UserRole+1,FolderCollectionRole,ColorMarkerRole
+    };
+
     const int maxRecentItems=4;
     const PlayListItem *getCurrentItem() const;
     QModelIndex getCurrentIndex() const;
@@ -65,21 +70,25 @@ public slots :
     void pasteItems(QModelIndex parent);
     void moveUpDown(QModelIndex index,bool up);
     void switchBgmCollection(const QModelIndex &index);
+    void setMarker(const QModelIndex &index, PlayListItem::Marker marker);
     void autoMoveToBgmCollection(const QModelIndex &index);
 
     const PlayListItem *setCurrentItem(const QModelIndex &index,bool playChild=true);
     const PlayListItem *setCurrentItem(const QString &path);
 	void cleanCurrentItem();
+    void setCurrentPlayTime(int playTime);
+
     const PlayListItem *playPrevOrNext(bool prev);
     void setLoopMode(PlayList::LoopMode newMode);
     void checkCurrentItem(PlayListItem *itemDeleted);
+
     void setAutoMatch(bool on);
     void matchItems(const QModelIndexList &matchIndexes);
     void matchIndex(QModelIndex &index, const MatchResult &match);
     void matchItems(const QList<const PlayListItem *> &items, const QString &title, const QList<EpInfo> &eps);
     void removeMatch(const QModelIndexList &matchIndexes);
+
     void updateItemsDanmu(const QModelIndexList &itemIndexes);
-    void setCurrentPlayTime(int playTime);
     QModelIndex mergeItems(const QModelIndexList &mergeIndexes);
     void exportDanmuItems(const QModelIndexList &exportIndexes);
 

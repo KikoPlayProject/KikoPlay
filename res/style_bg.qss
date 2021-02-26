@@ -647,6 +647,9 @@ QPushButton{
     padding:4px 4px 4px 4px;
     color: rgb(0,0,0);
 }
+QPushButton:disabled{
+    color: rgb(100,100,100);
+}
 QDialog QPushButton{
     border:1px solid;
     border-color:rgb(221,221,221);

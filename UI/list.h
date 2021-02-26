@@ -56,7 +56,7 @@ private:
             *act_noLoopOne,*act_noLoopAll,*act_loopOne,*act_loopAll,*act_random,
             *act_browseFile,*act_autoMatch,*act_exportDanmu,*act_addWebDanmuSource, *act_addLocalDanmuSource, *act_updateDanmu,
             *act_sharePoolCode, *act_shareResourceCode, *act_autoMatchMode, *act_markBgmCollection, *act_updateFolder;
-    QMenu *matchSubMenu;
+    QMenu *matchSubMenu, *markSubMenu;
     bool actionDisable;
     QActionGroup *loopModeGroup;
     int matchStatus;

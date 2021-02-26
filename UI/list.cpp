@@ -24,10 +24,70 @@
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Download/downloadmodel.h"
-#define BgmCollectionRole Qt::UserRole+1
-#define FolderCollectionRole Qt::UserRole+2
+
 namespace
 {
+    static QIcon bgmCollectionIcon(":/res/images/bgm-collection.svg");
+    static QIcon folderIcon(":/res/images/folder.svg");
+    static QIcon colorMarkerIcon[] =
+    {
+        QIcon(":/res/images/mark_red.svg"),
+        QIcon(":/res/images/mark_blue.svg"),
+        QIcon(":/res/images/mark_green.svg"),
+        QIcon(":/res/images/mark_orange.svg"),
+        QIcon(":/res/images/mark_pink.svg"),
+        QIcon(":/res/images/mark_yellow.svg"),
+        QIcon()
+    };
+    class PlayListItemDelegate: public QStyledItemDelegate
+    {
+    public:
+        explicit PlayListItemDelegate(QObject* parent = nullptr) : QStyledItemDelegate(parent)
+        { }
+
+        void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+        {
+            QStyleOptionViewItem ViewOption(option);
+            QColor itemForegroundColor = index.data(Qt::ForegroundRole).value<QBrush>().color();
+            if (itemForegroundColor.isValid())
+            {
+                if (itemForegroundColor != option.palette.color(QPalette::WindowText))
+                    ViewOption.palette.setColor(QPalette::HighlightedText, itemForegroundColor);
+
+            }
+            QStyledItemDelegate::paint(painter, ViewOption, index);
+
+            QIcon *marker(nullptr);
+            if(index.data(PlayList::MarkRole::BgmCollectionRole).toBool())
+            {
+                marker = &bgmCollectionIcon;
+
+            }
+            else if(index.data(PlayList::MarkRole::FolderCollectionRole).toBool())
+            {
+                marker = &folderIcon;
+            }
+            PlayListItem::Marker colorMarker = (PlayListItem::Marker)index.data(PlayList::MarkRole::ColorMarkerRole).toInt();
+            if(marker || colorMarker != PlayListItem::Marker::M_NONE)
+            {
+                QRect decoration = option.rect;
+                decoration.setHeight(decoration.height()-10);
+                decoration.setWidth(decoration.height());
+                decoration.moveCenter(option.rect.center());
+                decoration.moveRight(option.rect.width()+option.rect.x()-10);
+                if(marker)
+                {
+                    marker->paint(painter, decoration);
+                }
+
+                if(colorMarker != PlayListItem::Marker::M_NONE)
+                {
+                    if(marker) decoration.moveLeft(decoration.left() - decoration.width() - 4);
+                    colorMarkerIcon[colorMarker].paint(painter, decoration);
+                }
+            }
+        }
+    };
     class TextColorDelegate: public QStyledItemDelegate
     {
     public:
@@ -45,29 +105,6 @@ namespace
 
             }
             QStyledItemDelegate::paint(painter, ViewOption, index);
-
-            static QIcon bgmCollectionIcon(":/res/images/bgm-collection.svg");
-            static QIcon folderIcon(":/res/images/folder.svg");
-
-            QIcon *marker(nullptr);
-            if(index.data(BgmCollectionRole).toBool())
-            {
-                marker = &bgmCollectionIcon;
-
-            }
-            else if(index.data(FolderCollectionRole).toBool())
-            {
-                marker = &folderIcon;
-            }
-            if(marker)
-            {
-                QRect decoration = option.rect;
-                decoration.setHeight(decoration.height()-10);
-                decoration.setWidth(decoration.height());
-                decoration.moveCenter(option.rect.center());
-                decoration.moveRight(option.rect.width()+option.rect.x()-10);
-                marker->paint(painter, decoration);
-            }
         }
     };
     class InfoTip : public QWidget
@@ -832,6 +869,7 @@ void ListWindow::updatePlaylistActions()
     if(actionDisable)
     {
         matchSubMenu->setEnabled(false);
+        markSubMenu->setEnabled(false);
         act_removeMatch->setEnabled(false);
         act_exportDanmu->setEnabled(false);
         act_updateDanmu->setEnabled(false);
@@ -846,6 +884,7 @@ void ListWindow::updatePlaylistActions()
     }
     bool hasPlaylistSelection = !playlistView->selectionModel()->selection().isEmpty();
     matchSubMenu->setEnabled(hasPlaylistSelection);
+    markSubMenu->setEnabled(hasPlaylistSelection);
     act_removeMatch->setEnabled(hasPlaylistSelection);
     act_updateDanmu->setEnabled(hasPlaylistSelection);
     act_addWebDanmuSource->setEnabled(hasPlaylistSelection);
@@ -903,7 +942,7 @@ QWidget *ListWindow::setupPlaylistPage()
     playlistView->setFont(QFont(GlobalObjects::normalFont,12));
     playlistView->setContextMenuPolicy(Qt::CustomContextMenu);
     playlistView->setIndentation(12*logicalDpiX()/96);
-    playlistView->setItemDelegate(new TextColorDelegate(this));
+    playlistView->setItemDelegate(new PlayListItemDelegate(this));
 
     QSortFilterProxyModel *proxyModel=new QSortFilterProxyModel(this);
     proxyModel->setRecursiveFilteringEnabled(true);
@@ -1022,11 +1061,31 @@ QWidget *ListWindow::setupPlaylistPage()
     playlistView->addAction(act_cut);
     playlistView->addAction(act_paste);
     playlistContextMenu->addMenu(editSubMenu);
-    QMenu *markSubMenu=new QMenu(tr("Mark"),playlistContextMenu);
+
+    markSubMenu=new QMenu(tr("Mark"),playlistContextMenu);
     markSubMenu->addAction(act_markBgmCollection);
+    markSubMenu->addSeparator();
+
+    QStringList markerName{tr("Red"), tr("Blue"), tr("Green"), tr("Orange"), tr("Pink"), tr("Yellow"), tr("None")};
+    QActionGroup *markerGroup = new QActionGroup(this);
+    for(int i = 0; i<=PlayListItem::Marker::M_NONE; ++i)
+    {
+        QAction *act = markSubMenu->addAction(colorMarkerIcon[i], markerName[i]);
+        markerGroup->addAction(act);
+        act->setData(i);
+    }
+    QObject::connect(markerGroup, &QActionGroup::triggered, this, [this](QAction *act){
+        int marker = act->data().toInt();
+        QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
+        QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
+        if (selection.size() == 0)return;
+        QModelIndex selIndex(selection.indexes().first());
+        GlobalObjects::playlist->setMarker(selIndex, (PlayListItem::Marker)marker);
+    });
     playlistContextMenu->addMenu(markSubMenu);
     playlistContextMenu->addAction(act_remove);
     playlistContextMenu->addSeparator();
+
     QMenu *moveSubMenu=new QMenu(tr("Move"),playlistContextMenu);
     moveSubMenu->addAction(act_moveUp);
     moveSubMenu->addAction(act_moveDown);
@@ -1044,11 +1103,9 @@ QWidget *ListWindow::setupPlaylistPage()
     playlistContextMenu->addAction(act_removeInvalid);
     playlistContextMenu->addAction(act_browseFile);
 
-    QObject::connect(playlistView,&QTreeView::customContextMenuRequested,[playlistContextMenu](){
+    QObject::connect(playlistView,&QTreeView::customContextMenuRequested,[=](){
         playlistContextMenu->exec(QCursor::pos());
     });
-
-
 
     playlistPageVLayout->addWidget(playlistView);
 

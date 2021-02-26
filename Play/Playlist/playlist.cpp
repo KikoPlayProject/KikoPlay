@@ -17,9 +17,6 @@
 #include "MediaLibrary/animeprovider.h"
 #include "Common/notifier.h"
 
-#define BgmCollectionRole Qt::UserRole+1
-#define FolderCollectionRole Qt::UserRole+2
-
 namespace
 {
     static QCollator comparer;
@@ -533,6 +530,18 @@ void PlayList::switchBgmCollection(const QModelIndex &index)
     emit dataChanged(index, index);
 }
 
+void PlayList::setMarker(const QModelIndex &index, PlayListItem::Marker marker)
+{
+    Q_D(PlayList);
+    if(!index.isValid())return;
+    PlayListItem *item= static_cast<PlayListItem*>(index.internalPointer());
+    if(item->marker==marker) return;
+    item->marker = marker;
+    d->playListChanged=true;
+    d->incModifyCounter();
+    emit dataChanged(index, index);
+}
+
 void PlayList::autoMoveToBgmCollection(const QModelIndex &index)
 {
     Q_D(PlayList);
@@ -645,10 +654,12 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
     }
     case Qt::DecorationRole:
         return item==d->currentItem?QIcon(":/res/images/playing.svg"):QVariant();
-    case BgmCollectionRole:
+    case MarkRole::BgmCollectionRole:
         return (item->isBgmCollection && item->children);
-    case FolderCollectionRole:
+    case MarkRole::FolderCollectionRole:
         return !item->folderPath.isEmpty();
+    case MarkRole::ColorMarkerRole:
+        return item->marker;
     default:
         return QVariant();
     }
@@ -740,7 +751,7 @@ bool PlayList::setData(const QModelIndex &index, const QVariant &value, int)
     Q_D(PlayList);
     PlayListItem *item = static_cast<PlayListItem*>(index.internalPointer());
     QString val=value.toString();
-    if(!val.isEmpty())
+    if(!val.isEmpty() && item->title!=val)
     {
         if(item->children && item->isBgmCollection)
         {
@@ -750,6 +761,7 @@ bool PlayList::setData(const QModelIndex &index, const QVariant &value, int)
         item->title=val;
         d->playListChanged=true;
         d->needRefresh = true;
+        d->incModifyCounter();
         return true;
     }
     return false;
