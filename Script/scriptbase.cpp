@@ -564,7 +564,7 @@ static int simplifiedTraditionalTrans(lua_State *L)
     return 2;
 #else
     lua_pushnil(L);
-    lua_pushvalue(L, 1)
+    lua_pushvalue(L, 1);
     return 2;
 #endif
 }
