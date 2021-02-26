@@ -22,7 +22,6 @@ SimplePlayer::SimplePlayer(QWidget *parent): QOpenGLWidget(parent)
 
     mpv_set_option_string(mpv, "terminal", "yes");
     mpv_set_option_string(mpv, "keep-open", "yes");
-    mpv::qt::set_option_variant(mpv, "vo", "opengl-cb");
 
     mpv_observe_property(mpv, 0, "duration", MPV_FORMAT_DOUBLE);
     mpv_observe_property(mpv, 0, "pause", MPV_FORMAT_FLAG);
