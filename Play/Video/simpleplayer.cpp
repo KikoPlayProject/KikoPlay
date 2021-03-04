@@ -3,6 +3,7 @@
 #include <QOpenGLFunctions>
 #include <QMouseEvent>
 #include <QTimer>
+#include <stdexcept>
 namespace
 {
 static void *get_proc_address(void *ctx, const char *name) {

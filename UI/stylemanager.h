@@ -3,8 +3,9 @@
 #include <QtCore>
 #include <QColor>
 
-class StyleManager
+class StyleManager : public QObject
 {
+    Q_OBJECT
 public:
     enum StyleMode
     {
@@ -15,6 +16,8 @@ public:
     };
     static StyleManager *getStyleManager();
     void setQSS(StyleMode mode, const QColor &color=QColor());
+signals:
+    void styleModelChanged(StyleMode newMode);
 private:
     StyleManager();
     StyleManager(const StyleManager &)=delete;

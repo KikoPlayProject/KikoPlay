@@ -4,7 +4,7 @@
 #include "Common/notifier.h"
 #include "globalobjects.h"
 
-AnimeFilterProxyModel::AnimeFilterProxyModel(AnimeModel *srcModel, QObject *parent):QSortFilterProxyModel(parent),filterType(0)
+AnimeFilterProxyModel::AnimeFilterProxyModel(AnimeModel *srcModel, QObject *parent):QSortFilterProxyModel(parent),filterType(0), orderType(O_AddTime), ascending(false)
 {
     QObject::connect(srcModel, &AnimeModel::animeCountInfo,this, &AnimeFilterProxyModel::refreshAnimeCount);
 }
@@ -21,6 +21,22 @@ void AnimeFilterProxyModel::setTags(SelectedLabelInfo &&selectedLabels)
     filterLabels = selectedLabels;
     invalidateFilter();
     static_cast<AnimeModel *>(sourceModel())->showStatisMessage();
+}
+
+void AnimeFilterProxyModel::setOrder(AnimeFilterProxyModel::OrderType oType)
+{
+    if(orderType==oType) return;
+    orderType = oType;
+    invalidate();
+    sort(0);
+}
+
+void AnimeFilterProxyModel::setAscending(bool on)
+{
+    if(ascending==on) return;
+    ascending = on;
+    invalidate();
+    sort(0);
 }
 
 void AnimeFilterProxyModel::refreshAnimeCount(int cur, int total)
@@ -124,4 +140,24 @@ bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &
      }
      }
      return true;
+}
+
+bool AnimeFilterProxyModel::lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const
+{
+    AnimeModel *model = static_cast<AnimeModel *>(sourceModel());
+    Anime *animeL = model->getAnime(source_left), *animeR = model->getAnime(source_right);
+    static QCollator comparer;
+    switch (orderType)
+    {
+    case O_AddTime:
+        return ascending?animeL->addTime()<animeR->addTime():
+                         animeL->addTime()>animeR->addTime();
+    case O_Title:
+        return ascending?comparer.compare(animeL->name(), animeR->name())<0:
+                         comparer.compare(animeL->name(), animeR->name())>0;
+    case O_AirDate:
+        return ascending?animeL->airDate()<animeR->airDate():
+                         animeL->airDate()>animeR->airDate();
+    }
+    return QSortFilterProxyModel::lessThan(source_left, source_right);
 }

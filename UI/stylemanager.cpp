@@ -3,7 +3,7 @@
 #include <QApplication>
 #include "globalobjects.h"
 
-StyleManager::StyleManager():mode(UNKNOWN)
+StyleManager::StyleManager():QObject(),mode(UNKNOWN)
 {
     normalQSS = loadQSS(":/res/style.qss");
     bgQSS = loadQSS(":/res/style_bg.qss");
@@ -19,6 +19,7 @@ StyleManager *StyleManager::getStyleManager()
 void StyleManager::setQSS(StyleMode mode, const QColor &color)
 {
     if(mode == this->mode && color == themeColor) return;
+    emit styleModelChanged(mode);
     if(mode == StyleMode::BG_COLOR)
     {
         if(color.isValid())

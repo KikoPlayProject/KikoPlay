@@ -1239,9 +1239,6 @@ QPushButton#AnimeDetailBack:hover{
 QPushButton#AnimeDetailBack:pressed{
     color:rgb(@ThemeColorL1);
 }
-QWidget#LibraryWindow{
-    qproperty-bgMode: true;
-}
 QWidget#TaskBlockView{
     qproperty-borderColor: rgb(200,200,200);
     qproperty-fColor: rgba(@ThemeColor, 140);

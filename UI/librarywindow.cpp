@@ -176,11 +176,43 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         searchAddAnime();
     });
 
+    QMenu *orderSubMenu = new QMenu(tr("Sort Order"), animeListView);
+    QActionGroup *ascDesc = new QActionGroup(orderSubMenu);
+    QAction *actAsc = ascDesc->addAction(tr("Ascending"));
+    QAction *actDesc = ascDesc->addAction(tr("Descending"));
+    actAsc->setCheckable(true);
+    actDesc->setCheckable(true);
+    actDesc->setChecked(true);
+    QObject::connect(ascDesc, &QActionGroup::triggered, this, [=](QAction *act){
+        proxyModel->setAscending(act==actAsc);
+    });
+    QActionGroup *orderTypes = new QActionGroup(orderSubMenu);
+    QAction *actOrderAddTime = orderTypes->addAction(tr("Add Time"));
+    QAction *actOrderName = orderTypes->addAction(tr("Anime Name"));
+    QAction *actOrderDate = orderTypes->addAction(tr("Air Date"));
+    actOrderAddTime->setCheckable(true);
+    actOrderName->setCheckable(true);
+    actOrderDate->setCheckable(true);
+    actOrderAddTime->setChecked(true);
+    QObject::connect(orderTypes, &QActionGroup::triggered, this, [=](QAction *act){
+        static QList<QAction *> acts({actOrderAddTime, actOrderName, actOrderDate});
+        proxyModel->setOrder((AnimeFilterProxyModel::OrderType)acts.indexOf(act));
+    });
+
+    orderSubMenu->addAction(actAsc);
+    orderSubMenu->addAction(actDesc);
+    orderSubMenu->addSeparator();
+    orderSubMenu->addAction(actOrderAddTime);
+    orderSubMenu->addAction(actOrderName);
+    orderSubMenu->addAction(actOrderDate);
+
     QMenu *animeListContextMenu=new QMenu(animeListView);
     animeListContextMenu->addAction(act_searchAdd);
     animeListContextMenu->addAction(act_getDetailInfo);
     animeListContextMenu->addAction(act_updateDetailInfo);
     animeListContextMenu->addAction(act_delete);
+    animeListContextMenu->addMenu(orderSubMenu);
+
     QAction *menuSep = new QAction(this);
     menuSep->setSeparator(true);
     static QList<QAction *> scriptActions;
@@ -218,7 +250,6 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     QObject::connect(animeListContextMenu, &QMenu::triggered, this, [=](QAction *act){
         if(!act->data().isNull())
         {
-            auto scriptInfo = act->data().value<QPair<QString, QString>>();
             QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
             if(selection.size()==0)return;
             Anime *currentAnime = animeModel->getAnime(selection.indexes().first());

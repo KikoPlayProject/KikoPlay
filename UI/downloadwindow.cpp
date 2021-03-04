@@ -28,6 +28,7 @@
 #include "Play/Video/mpvplayer.h"
 #include "adduritask.h"
 #include "settings.h"
+#include "stylemanager.h"
 #include "selecttorrentfile.h"
 #include "globalobjects.h"
 #include "bgmlistwindow.h"
@@ -156,7 +157,6 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 
     downloadView=new QTreeView(downloadContainer);
     downloadView->setObjectName(QStringLiteral("DownloadView"));
-    downloadView->setProperty("cScrollStyle", true);
     downloadView->setFont(QFont(GlobalObjects::normalFont,10));
     downloadView->setRootIsDecorated(false);
     downloadView->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -312,7 +312,6 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 
 
     QWidget *detailInfoContent=new QWidget(downloadContainer);
-    detailInfoContent->setProperty("cScrollStyle", true);
     detailInfoContent->setContentsMargins(0,0,0,0);
     QStackedLayout *detailInfoSLayout=new QStackedLayout(detailInfoContent);
     detailInfoSLayout->addWidget(setupGeneralInfoPage(detailInfoContent));
@@ -346,7 +345,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     downContainerGLayout->setRowStretch(1,1);
 
     BgmListWindow *bgmListWindow=new BgmListWindow(containerWidget);
-    bgmListWindow->setProperty("cScrollStyle", true);
+
     ResSearchWindow *resSearchWindow=new ResSearchWindow(containerWidget);
     QObject::connect(bgmListWindow,&BgmListWindow::searchBgm,this,[this,resSearchWindow](const QString &item){
         taskTypeButtonGroup->button(4)->setChecked(true);
@@ -393,6 +392,12 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         }
     });
 
+    QObject::connect(StyleManager::getStyleManager(), &StyleManager::styleModelChanged, this, [=](StyleManager::StyleMode mode){
+        bool setScrollStyle = (mode==StyleManager::BG_COLOR || mode==StyleManager::DEFAULT_BG);
+        downloadView->setProperty("cScrollStyle", setScrollStyle);
+        detailInfoContent->setProperty("cScrollStyle", setScrollStyle);
+        bgmListWindow->setProperty("cScrollStyle", setScrollStyle);
+    });
 
     rightPanelSLayout=new QStackedLayout(containerWidget);
     rightPanelSLayout->addWidget(downloadContainer);
@@ -454,9 +459,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
            peerModel->setPeers(peerArray, currentTask->numPieces);
        }
     });
-
     QObject::connect(rpc,&Aria2JsonRPC::showLog,logView,&QPlainTextEdit::appendPlainText);
-
     QObject::connect(GlobalObjects::downloadModel,&DownloadModel::magnetDone,[this](const QString &path, const QString &magnet, bool directlyDownload){
         try
         {

@@ -11,15 +11,15 @@ void HTMLParserSax::parseNode()
 		propertyMap.clear();
         return;
     }
-    QString::const_iterator iter=begin;
+    QByteArray::const_iterator iter=begin;
     nodeName.clear();
     isStart=!(*iter=='/');
     if(!isStart)iter++;
-    while (iter!=end && iter->isLetterOrNumber()) nodeName+=*iter++;
+    while (iter!=end && QChar(*iter).isLetterOrNumber()) nodeName+=*iter++;
     propertyMap.clear();
     while(iter!=end && *iter!='>')
     {
-        while(iter!=end && iter->isSpace())iter++;
+        while(iter!=end && QChar(*iter).isSpace())iter++;
         if(*iter=='/')
         {
             while(iter!=end && *iter!='>')iter++;
@@ -27,7 +27,7 @@ void HTMLParserSax::parseNode()
         }
         else if(*iter!='>')
         {
-            QString propertyName,propertyVal;
+            QByteArray propertyName,propertyVal;
             while (iter!=end && *iter!='=' && *iter!='>') propertyName+=*iter++;
             if(iter!=end && *iter!='>')
             {
@@ -75,7 +75,7 @@ void HTMLParserSax::skip()
     }
 }
 
-HTMLParserSax::HTMLParserSax(const QString &content):cHtml(content), isStart(false)
+HTMLParserSax::HTMLParserSax(const QByteArray &content):cHtml(content), isStart(false)
 {
     begin=content.cbegin();
     end=content.cend();
@@ -83,7 +83,7 @@ HTMLParserSax::HTMLParserSax(const QString &content):cHtml(content), isStart(fal
 
 void HTMLParserSax::seekTo(int pos)
 {
-    pos = qBound<int>(0, pos, end-begin);
+    pos = qBound<int>(0, pos, cHtml.size());
     begin=cHtml.begin()+pos;
     nodeName="";
     isStart=false;
@@ -93,8 +93,8 @@ void HTMLParserSax::seekTo(int pos)
 void HTMLParserSax::readNext()
 {
     if(begin==end)return;
-    if(begin->isSpace())
-        while(begin!=end && begin->isSpace())begin++;
+    if(QChar(*begin).isSpace())
+        while(begin!=end && QChar(*begin).isSpace())begin++;
     if(*begin=='<')
     {
         parseNode();
@@ -108,10 +108,10 @@ void HTMLParserSax::readNext()
     }
 }
 
-const QString HTMLParserSax::readContentText()
+const QByteArray HTMLParserSax::readContentText()
 {
     int contentState=0;
-    QString text;
+    QByteArray text;
     while(begin!=end)
     {
         if(*begin=='<')
@@ -134,7 +134,7 @@ const QString HTMLParserSax::readContentText()
     return text;
 }
 
-const QString HTMLParserSax::readContentUntil(const QString &node, bool isStart)
+const QByteArray HTMLParserSax::readContentUntil(const QString &node, bool isStart)
 {
     int startPos = curPos();
     while(begin!=end)

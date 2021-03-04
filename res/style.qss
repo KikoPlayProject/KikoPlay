@@ -850,41 +850,61 @@ QLabel#CrtIcon{
 }
 
 /* ScrollBar Setting */
-
-#LabelView QScrollBar:vertical,
-#AnimesContent QScrollBar:vertical{
+QWidget[cScrollStyle="true"] QScrollBar:horizontal{
     background: transparent;
-    width: 10px;
+    height: 10px;
 }
-#LabelView QScrollBar::handle:vertical,
-#AnimesContent QScrollBar::handle:vertical{
+QWidget[cScrollStyle="true"] QScrollBar::handle:horizontal{
     background: rgba(255,255,255,180);
     min-height: 70px;
     border-radius: 1px;
 }
-#LabelView QScrollBar::handle:vertical:hover,
-#AnimesContent QScrollBar::handle:vertical:hover {
+QWidget[cScrollStyle="true"] QScrollBar::handle:horizontal:hover{
     background: rgba(255,255,255,255);
 }
-#LabelView QScrollBar::handle:vertical:pressed,
-#AnimesContent QScrollBar::handle:vertical:pressed {
+QWidget[cScrollStyle="true"] QScrollBar::handle:horizontal:pressed{
     background: rgba(255,255,255,200);
 }
-#LabelView QScrollBar::add-line:vertical,
-#AnimesContent QScrollBar::add-line:vertical{
+QWidget[cScrollStyle="true"] QScrollBar::add-line:horizontal{
     background: none;
 }
-#LabelView QScrollBar::sub-line:vertical,
-#AnimesContent QScrollBar::sub-line:vertical{
+QWidget[cScrollStyle="true"] QScrollBar::sub-line:horizontal{
     background: none;
 }
-#LabelView  QScrollBar::add-page:vertical,
-#LabelView  QScrollBar::sub-page:vertical,
-#AnimesContent QScrollBar::add-page:vertical,
-#AnimesContent QScrollBar::sub-page:vertical{
+QWidget[cScrollStyle="true"] QScrollBar::add-page:horizontal,
+QWidget[cScrollStyle="true"] QScrollBar::sub-page:horizontal{
+    background: none;
+}
+
+
+QWidget[cScrollStyle="true"] QScrollBar:vertical{
+    background: transparent;
+    width: 10px;
+}
+QWidget[cScrollStyle="true"] QScrollBar::handle:vertical{
+    background: rgba(255,255,255,180);
+    min-height: 70px;
+    border-radius: 1px;
+}
+QWidget[cScrollStyle="true"] QScrollBar::handle:vertical:hover {
+    background: rgba(255,255,255,255);
+}
+QWidget[cScrollStyle="true"] QScrollBar::handle:vertical:pressed {
+    background: rgba(255,255,255,200);
+}
+QWidget[cScrollStyle="true"] QScrollBar::add-line:vertical{
+    background: none;
+}
+QWidget[cScrollStyle="true"] QScrollBar::sub-line:vertical{
+    background: none;
+}
+QWidget[cScrollStyle="true"] QScrollBar::add-page:vertical,
+QWidget[cScrollStyle="true"] QScrollBar::sub-page:vertical{
     background: none;
 }
 /* --ScrollBar Setting-- */
+
+
 QLabel#LibraryCountTip, QLabel#SelectedLabelTip{
     color: rgb(0,0,0);
 }
@@ -1124,13 +1144,11 @@ QLineEdit#PageEdit{
 QListView#captureView,QListView#captureImageView{
     border-style:none;
     background: transparent;
+    color: rgb(240,240,240);
 }
 QTreeView#TaskFileInfoView {
     qproperty-normColor: rgb(0,0,0);
     qproperty-ignoreColor: rgb(200,200,200);
-}
-QWidget#LibraryWindow{
-    qproperty-bgMode: false;
 }
 QWidget#TaskBlockView{
     qproperty-borderColor: rgb(200,200,200);

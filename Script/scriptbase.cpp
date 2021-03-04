@@ -267,7 +267,7 @@ static int httpGetBatch(lua_State *L)
         {
             lua_newtable(L); // table table
             if(content[i].first.isEmpty())
-                lua_pushnil(L);  // table table nil
+                lua_pushstring(L, "");  // table table ""
             else
                 lua_pushstring(L, content[i].first.toStdString().c_str()); // table table errStr
             lua_rawseti(L, -2, 1); // table table
@@ -328,7 +328,7 @@ static int decompress(lua_State *L)
         if(strcmp(method, "gzip")==0) useGzip = true;
     }
     size_t dataLength = 0;
-    const char *data = lua_tolstring(L, 2, &dataLength);
+    const char *data = lua_tolstring(L, 1, &dataLength);
     QByteArray cdata(data, dataLength), outdata;
     int ret = 0;
     if(useGzip) ret = Network::gzipDecompress(cdata, outdata);
@@ -688,14 +688,15 @@ static int htmlparser (lua_State *L)
 {
     int n = lua_gettop(L);
     const char *data = nullptr;
+    size_t length = 0;
     if(n > 0 && lua_type(L, 1)==LUA_TSTRING)
     {
-        data = lua_tostring(L, -1);
+        data = lua_tolstring(L, -1, &length);
     }
     HTMLParserSax **parser = (HTMLParserSax **)lua_newuserdata(L, sizeof(HTMLParserSax *));
     luaL_getmetatable(L, "meta.kiko.htmlparser");
     lua_setmetatable(L, -2);  // reader meta
-    *parser = new HTMLParserSax(data); //meta
+    *parser = new HTMLParserSax(QByteArray(data, length)); //reader
     return 1;
 }
 static HTMLParserSax *checkHTMLParser(lua_State *L)
@@ -739,7 +740,8 @@ static int hpCurPos(lua_State *L)
 static int hpReadContentText(lua_State *L)
 {
     HTMLParserSax *parser = checkHTMLParser(L);
-    lua_pushstring(L, parser->readContentText().toStdString().c_str());
+    QByteArray content(parser->readContentText());
+    lua_pushlstring(L, content.constData(), content.size());
     return 1;
 }
 static int hpReadContentUntil(lua_State *L)
@@ -751,9 +753,10 @@ static int hpReadContentUntil(lua_State *L)
         lua_pushnil(L);
         return 1;
     }
-    QString nodeName(lua_tostring(L, 2));
+    QByteArray nodeName(lua_tostring(L, 2));
     bool isStart = lua_toboolean(L, 3);
-    lua_pushstring(L, parser->readContentUntil(nodeName, isStart).toStdString().c_str());
+    QByteArray content(parser->readContentUntil(nodeName, isStart));
+    lua_pushlstring(L, content.constData(), content.size());
     return 1;
 }
 static int hpIsStartNode(lua_State *L)
@@ -765,7 +768,7 @@ static int hpIsStartNode(lua_State *L)
 static int hpCurrentNode(lua_State *L)
 {
     HTMLParserSax *parser = checkHTMLParser(L);
-    lua_pushstring(L, parser->currentNode().toStdString().c_str());
+    lua_pushstring(L, parser->currentNode().constData());
     return 1;
 }
 static int hpCurrentNodeProperty(lua_State *L)
@@ -777,8 +780,8 @@ static int hpCurrentNodeProperty(lua_State *L)
         lua_pushnil(L);
         return 1;
     }
-    QString nodeName(lua_tostring(L, 2));
-    lua_pushstring(L, parser->currentNodeProperty(nodeName).toStdString().c_str());
+    QByteArray nodeName(lua_tostring(L, 2));
+    lua_pushstring(L, parser->currentNodeProperty(nodeName).constData());
     return 1;
 }
 static int htmlParserGC (lua_State *L) {
@@ -1120,7 +1123,7 @@ QVariant ScriptBase::getValue(lua_State *L, bool useString)
                     luaL_error(L, "key must be a string, but got %s",
                                lua_typename(L, lua_type(L, -2)));
                 }
-				QString key(lua_tostring(L, -2));
+                QString key(lua_tostring(L, -2));
                 map[key] = getValue(L, useString);
                 lua_pop(L, 1); // key
             }

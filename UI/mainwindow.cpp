@@ -663,7 +663,7 @@ QWidget *MainWindow::setupLibraryPage()
             hasCoverBg = true;
             coverPixmap = pixmap;
             if(!pixmap.isNull()) bgWidget->setBackground(pixmap);
-            bgWidget->setBgDarkness(curDarkness * 1.5);
+            bgWidget->setBgDarkness(curDarkness + 40);
             bgWidget->setBlurAnimation(20., 60.);
         }
     });
