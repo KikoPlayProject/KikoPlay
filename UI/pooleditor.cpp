@@ -197,9 +197,6 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
     QPushButton *updateButton=new QPushButton(tr("Update"),this);
     updateButton->setFixedWidth(80*logicalDpiX()/96);
     updateButton->setObjectName(QStringLiteral("DialogButton"));
-    //QFileInfo fi(sourceInfo->url);
-    //if(fi.exists())
-    //	updateButton->setEnabled(false);
     QObject::connect(updateButton,&QPushButton::clicked,[this,sourceInfo,updateButton,deleteButton,
                      editTimeline,delaySpinBox,name](){
         QList<DanmuComment *> tmpList;
@@ -207,6 +204,8 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
         deleteButton->setEnabled(false);
         editTimeline->setEnabled(false);
         delaySpinBox->setEnabled(false);
+        this->parentWidget()->setEnabled(false);
+        editor->showBusyState(true);
         int addCount = GlobalObjects::danmuPool->getPool()->update(sourceInfo->id);
         if(addCount>0)
         {
@@ -216,6 +215,8 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
             name->setText(sourceName);
             name->setToolTip(elidedName);
         }
+        editor->showBusyState(false);
+        this->parentWidget()->setEnabled(true);
         updateButton->setEnabled(true);
         deleteButton->setEnabled(true);
         editTimeline->setEnabled(true);

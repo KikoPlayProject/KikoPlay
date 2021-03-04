@@ -257,7 +257,7 @@ static int httpGetBatch(lua_State *L)
                 {
                     header<<iter.key()<<iter.value().toString();
                 }
-                headers.append(headers);
+                headers.append(header);
             }
         }
         QList<QPair<QString, QByteArray>> content = Network::httpGetBatch(urls,querys,headers); //[[hasError, content], [], ...]
@@ -277,7 +277,7 @@ static int httpGetBatch(lua_State *L)
         }
         return 2;
     }while(false);
-    lua_pushstring(L, "httpget: param error, expect: urls(string array), <querys(table array)>, <headers(table array)>");
+    lua_pushstring(L, "httpgetbatch: param error, expect: urls(string array), <querys(table array)>, <headers(table array)>");
     lua_pushnil(L);
     return 2;
 }

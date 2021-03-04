@@ -31,33 +31,13 @@ QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QS
         for(int i=0;i<header.size();i+=2)
             request.setRawHeader(header[i].toUtf8(),header[i+1].toUtf8());
     }
-    QList<QNetworkCookie> cookies;
     QNetworkAccessManager *manager = getManager();
-    if(request.hasRawHeader("Cookie"))
-    {
-        auto cookieBytes = request.rawHeader("Cookie");
-        auto rawList = cookieBytes.split(';');
-        for (auto &bytes:rawList)
-        {
-            int pos =bytes.indexOf('=');
-            if(pos<=0) continue;
-            auto name = bytes.left(pos);
-            auto value = bytes.mid(pos+1);
-            QNetworkCookie cookie(name, value);
-            cookie.setDomain(queryUrl.host());
-            cookie.setPath(queryUrl.path());
-            cookies<<cookie;
-            manager->cookieJar()->insertCookie(cookie);
-        }
-    }
+
     QTimer timer;
     timer.setInterval(timeout);
     timer.setSingleShot(true);
     QNetworkReply *reply = manager->get(request);
-    for(auto &cookie:cookies)
-    {
-        manager->cookieJar()->deleteCookie(cookie);
-    }
+
     QEventLoop eventLoop;
 	QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
     QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
@@ -147,25 +127,7 @@ QByteArray Network::httpPost(const QString &url, const QByteArray &data, const Q
             request.setRawHeader(header[i].toUtf8(),header[i+1].toUtf8());
     }
     request.setUrl(queryUrl);
-    QList<QNetworkCookie> cookies;
     QNetworkAccessManager *manager = getManager();
-    if(request.hasRawHeader("Cookie"))
-    {
-        auto cookieBytes = request.rawHeader("Cookie");
-        auto rawList = cookieBytes.split(';');
-        for (auto &bytes:rawList)
-        {
-            int pos =bytes.indexOf('=');
-            if(pos<=0) continue;
-            auto name = bytes.left(pos);
-            auto value = bytes.mid(pos+1);
-            QNetworkCookie cookie(name, value);
-            cookie.setDomain(queryUrl.host());
-            cookie.setPath(queryUrl.path());
-            cookies<<cookie;
-            manager->cookieJar()->insertCookie(cookie);
-        }
-    }
 
     bool hasError=false;
     QString errorInfo;
@@ -175,10 +137,7 @@ QByteArray Network::httpPost(const QString &url, const QByteArray &data, const Q
     timer.setInterval(timeout);
     timer.setSingleShot(true);
     QNetworkReply *reply = manager->post(request, data);
-    for(auto &cookie:cookies)
-    {
-        manager->cookieJar()->deleteCookie(cookie);
-    }
+
     QEventLoop eventLoop;
 	QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
     QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
@@ -349,7 +308,7 @@ QList<QPair<QString, QByteArray>> Network::httpGetBatch(const QStringList &urls,
         request.setUrl(queryUrl);
         if(!headers.isEmpty())
         {
-            for(int j=0;i<headers[i].size();j+=2)
+            for(int j=0;j<headers[i].size();j+=2)
                 request.setRawHeader(headers[i][j].toUtf8(),headers[i][j+1].toUtf8());
         }
         QNetworkReply *reply = manager->get(request);

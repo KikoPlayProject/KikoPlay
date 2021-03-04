@@ -16,7 +16,24 @@
 #include <QMimeDatabase>
 #include <QFileInfo>
 
-
+namespace
+{
+    const QString duration2Str(int duration, bool hour = false)
+    {
+        int cmin=duration/60;
+        int cls=duration-cmin*60;
+        if(hour)
+        {
+            int ch = cmin/60;
+            cmin = cmin - ch*60;
+            return QString("%1:%2:%3").arg(ch, 2, 10, QChar('0')).arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0'));
+        }
+        else
+        {
+            return QString("%1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0'));
+        }
+    }
+}
 HttpServer::HttpServer(QObject *parent) : QObject(parent)
 {
     MediaHandler *handler=new MediaHandler(&mediaHash,this);
@@ -326,9 +343,42 @@ void HttpServer::api_Screenshot(QHttpEngine::Socket *socket)
                 eventLoop.exec();
                 if(success)
                 {
-                    genLog(QString("[%1]Request:Screenshot,[%2]%3").arg(socket->peerAddress().toString(),posStr, fi.filePath()));
                     QImage captureImage(tmpImg.fileName());
-                    AnimeWorker::instance()->saveCapture(animeName, data.value("info").toString(), captureImage);
+                    if(data.contains("duration")) //snippet task
+                    {
+                        qint64 timeId = QDateTime::currentDateTime().toMSecsSinceEpoch();
+                        QString snippetPath(GlobalObjects::appSetting->value("Play/SnippetPath", GlobalObjects::dataPath + "/snippet").toString());
+                        QDir dir;
+                        if(!dir.exists(snippetPath)) dir.mkpath(snippetPath);
+                        QString fileName(QString("%1/%2.%3").arg(snippetPath, QString::number(timeId), fi.suffix()));
+                        QString duration = QString::number(qBound<int>(1, data.value("duration", 1).toInt(), 15));
+                        QStringList arguments;
+                        arguments << "-ss" << QString::number(pos);
+                        arguments << "-i" << mediaPath;
+                        arguments << "-t" << duration;
+                        if(!data.value("retainAudio", true).toBool())
+                            arguments << "-an";
+                        arguments << "-y";
+                        arguments << fileName;
+                        QTimer::singleShot(0, [&]() {
+                            ffmpegProcess.start(ffmpegPath, arguments);
+                        });
+                        eventLoop.exec();
+                        if(success)
+                        {
+                            genLog(QString("[%1]Request:Snippet,[%2]%3").arg(socket->peerAddress().toString(),posStr, fi.filePath()));
+                            QString info = data.value("info").toString();
+                            if(info.isEmpty())  info = QString("%1,%2s - %3").arg(duration2Str(pos), duration, fi.fileName());
+                            AnimeWorker::instance()->saveSnippet(animeName, info, timeId, captureImage);
+                        }
+                    }
+                    else
+                    {
+                        genLog(QString("[%1]Request:Screenshot,[%2]%3").arg(socket->peerAddress().toString(),posStr, fi.filePath()));
+                        QString info = data.value("info").toString();
+                        if(info.isEmpty())  info = QString("%1 - %2").arg(duration2Str(pos), fi.fileName());
+                        AnimeWorker::instance()->saveCapture(animeName, info, captureImage);
+                    }
                 }
                 else
                 {
