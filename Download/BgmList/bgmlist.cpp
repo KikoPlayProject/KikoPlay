@@ -186,7 +186,9 @@ bool BgmList::fetchMetaInfo()
         try
         {
             QString bgmListPath(GlobalObjects::appSetting->value("BgmList/ListURL", "https://bgmlist.com/tempapi/archive.json").toString());
-            QJsonObject archive(Network::toJson(Network::httpGet(bgmListPath,QUrlQuery())).object());
+            Network::Reply reply(Network::httpGet(bgmListPath,QUrlQuery()));
+            if(reply.hasError) throw Network::NetworkError(reply.errInfo);
+            QJsonObject archive(Network::toJson(reply.content).object());
             archive=archive.value("data").toObject();
             QStringList seasons;
             for(auto iter=archive.begin();iter!=archive.end();++iter)
@@ -241,8 +243,9 @@ bool BgmList::fetchBgmList(BgmSeason &season)
     QString ret = task.Run([&season,this](){
         try
         {
-            QString content(Network::httpGet(season.path, QUrlQuery()));
-            QJsonObject bgmListObj(Network::toJson(content).object());
+            Network::Reply reply(Network::httpGet(season.path,QUrlQuery()));
+            if(reply.hasError) throw Network::NetworkError(reply.errInfo);
+            QJsonObject bgmListObj(Network::toJson(reply.content).object());
             season.newBgmCount=0;
             int lastPos = seasons.indexOf(season.id)-1;
             if(lastPos>=0 && season.focusSet.isEmpty())

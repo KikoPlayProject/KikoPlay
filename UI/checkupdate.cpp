@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QIODevice>
 #include "Common/network.h"
+#include "globalobjects.h"
 CheckUpdate::CheckUpdate(QWidget *parent) : CFramelessDialog(tr("Check For Updates"),parent)
 {
     QLabel *curVersionLabel=new QLabel(this);
@@ -24,7 +25,10 @@ CheckUpdate::CheckUpdate(QWidget *parent) : CFramelessDialog(tr("Check For Updat
     QTimer::singleShot(500,[this,newVersionLabel,versionStr](){
         try
         {
-            QJsonObject newVersionObj(Network::toJson(Network::httpGet("https://raw.githubusercontent.com/Protostars/KikoPlay/master/newVersion/version.json",QUrlQuery())).object());
+            QString updatePath(GlobalObjects::appSetting->value("KikoPlay/checkUpdateURL", "https://raw.githubusercontent.com/Protostars/KikoPlay/master/newVersion/version.json").toString());
+            Network::Reply reply(Network::httpGet(updatePath,QUrlQuery()));
+            if(reply.hasError) throw Network::NetworkError(reply.errInfo);
+            QJsonObject newVersionObj(Network::toJson(reply.content).object());
             QString nVersionStr=newVersionObj.value("Version").toString();
             QString downloadURL=newVersionObj.value("URL").toString();
             QStringList curVer(versionStr.split('.',QString::SkipEmptyParts)),newVer(nVersionStr.split('.',QString::SkipEmptyParts));

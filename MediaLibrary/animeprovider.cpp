@@ -88,10 +88,10 @@ ScriptState AnimeProvider::getDetail(const AnimeLite &base, Anime *anime)
             }
             else
             {
-                try {
-                    anime->_cover.loadFromData(Network::httpGet(anime->coverURL(), QUrlQuery()));
-                } catch (Network::NetworkError &error) {
-
+                Network::Reply reply(Network::httpGet(anime->coverURL(), QUrlQuery()));
+                if(!reply.hasError)
+                {
+                    anime->_cover.loadFromData(reply.content);
                 }
             }
             QStringList urls;
@@ -113,20 +113,15 @@ ScriptState AnimeProvider::getDetail(const AnimeLite &base, Anime *anime)
                     crts.append(&crt);
                 }
             }
-            try
+
+            QList<Network::Reply> results(Network::httpGetBatch(urls,querys));
+            for(int i = 0; i<crts.size(); ++i)
             {
-                QList<QPair<QString, QByteArray> > results(Network::httpGetBatch(urls,querys));
-                for(int i = 0; i<crts.size(); ++i)
+                if(!results[i].hasError)
                 {
-                    if(results[i].first.isEmpty())
-                    {
-                        crts[i]->image.loadFromData(results[i].second);
-                    }
+                    crts[i]->image.loadFromData(results[i].content);
                 }
-            } catch (Network::NetworkError &error) {
-
             }
-
         }
         return QVariant::fromValue(state);
     }).value<ScriptState>();

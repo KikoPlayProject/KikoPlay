@@ -6,11 +6,20 @@
 #include <QtCore>
 namespace Network
 {
-    const int timeout=10000;
-    QByteArray httpGet(const QString &url, const QUrlQuery &query, const QStringList &header=QStringList(), int ttl=10);
-    QByteArray httpPost(const QString &url, const QByteArray &data, const QStringList &header=QStringList());
-    QList<QPair<QByteArray, QByteArray>> httpHead(const QString &url, const QUrlQuery &query, const QStringList &header=QStringList());
-    QList<QPair<QString,QByteArray> > httpGetBatch(const QStringList &urls, const QList<QUrlQuery> &querys, const QList<QStringList> &headers=QList<QStringList>());
+    static const int timeout=10000;
+    static const int maxRedirectTimes=10;
+    struct Reply
+    {
+        int statusCode;
+        bool hasError;
+        QString errInfo;
+        QByteArray content;
+        QList<QPair<QByteArray,QByteArray>> headers;
+    };
+
+    Reply httpGet(const QString &url, const QUrlQuery &query, const QStringList &header=QStringList(), bool redirect=true);
+    Reply httpPost(const QString &url, const QByteArray &data, const QStringList &header=QStringList());
+    QList<Reply> httpGetBatch(const QStringList &urls, const QList<QUrlQuery> &querys, const QList<QStringList> &headers=QList<QStringList>(), bool redirect=true);
     QJsonDocument toJson(const QString &str);
     QJsonValue getValue(QJsonObject &obj, const QString &path);
     int decompress(const QByteArray &input, QByteArray &output);

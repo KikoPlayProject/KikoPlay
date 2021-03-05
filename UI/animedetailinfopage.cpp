@@ -53,17 +53,15 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
         if(currentAnime && !currentAnime->coverURL().isEmpty())
         {
             Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Cover Image..."), NM_PROCESS | NM_DARKNESS_BACK);
-            try
+            Network::Reply reply(Network::httpGet(currentAnime->coverURL(), QUrlQuery()));
+            if(reply.hasError)
             {
-                QByteArray img(Network::httpGet(currentAnime->coverURL(), QUrlQuery()));
-                currentAnime->setCover(img);
-                coverLabel->setPixmap(currentAnime->cover());
-                Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NM_HIDE);
+                Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, reply.errInfo, NM_HIDE | NM_ERROR);
+                return;
             }
-            catch (Network::NetworkError &err)
-            {
-                Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, err.errorInfo, NM_HIDE | NM_ERROR);
-            }
+            currentAnime->setCover(reply.content);
+            coverLabel->setPixmap(currentAnime->cover());
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NM_HIDE);
         }
     });
     coverLabel->addAction(actCopyCover);
@@ -215,18 +213,16 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
             if(crtItem->crt->imgURL.isEmpty()) return;
             Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Character Image..."), NotifyMessageFlag::NM_PROCESS | NotifyMessageFlag::NM_DARKNESS_BACK);
             crtItem->setEnabled(false);
-			try
-			{
-				QByteArray img(Network::httpGet(crtItem->crt->imgURL, QUrlQuery()));
-                currentAnime->setCrtImage(crtItem->crt->name, img);
-				crtItem->refreshIcon();
-				Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NotifyMessageFlag::NM_HIDE);
-			}
-			catch (Network::NetworkError &err)
-			{
-				Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, err.errorInfo, NotifyMessageFlag::NM_HIDE | NotifyMessageFlag::NM_ERROR);
-			}
-			crtItem->setEnabled(true);  
+            Network::Reply reply(Network::httpGet(crtItem->crt->imgURL, QUrlQuery()));
+            crtItem->setEnabled(true);
+            if(reply.hasError)
+            {
+                Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, reply.errInfo, NM_HIDE | NM_ERROR);
+                return;
+            }
+            currentAnime->setCrtImage(crtItem->crt->name, reply.content);
+            crtItem->refreshIcon();
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NotifyMessageFlag::NM_HIDE);
         });
         QListWidgetItem *listItem=new QListWidgetItem(characterList);
         characterList->setItemWidget(listItem, crtItem);

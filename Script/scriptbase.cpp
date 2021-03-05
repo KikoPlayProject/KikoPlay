@@ -10,16 +10,47 @@
 #endif
 namespace
 {
+static void pushNetworkReply(lua_State *L, const Network::Reply &reply)
+{
+    lua_newtable(L); // table
+
+    lua_pushstring(L, "statusCode"); // table key
+    lua_pushnumber(L, reply.statusCode); // tabel key value
+    lua_rawset(L, -3); //table
+
+    lua_pushstring(L, "hasError"); // table key
+    lua_pushboolean(L, reply.hasError); // tabel key value
+    lua_rawset(L, -3); //table
+
+    lua_pushstring(L, "errInfo"); // table key
+    lua_pushstring(L, reply.errInfo.toStdString().c_str()); // tabel key value
+    lua_rawset(L, -3); //table
+
+    lua_pushstring(L, "content"); // table key
+    lua_pushlstring(L, reply.content.constData(), reply.content.size()); // tabel key value
+    lua_rawset(L, -3); //table
+
+    lua_pushstring(L, "headers"); // table key
+    lua_newtable(L); // table key table
+    for(auto &p : reply.headers)
+    {
+        lua_pushlstring(L, p.first.constData(), p.first.size()); // table key table key
+        lua_pushlstring(L, p.second.constData(), p.second.size()); // table key table key value
+        lua_rawset(L, -3); //table key table
+    }
+    lua_rawset(L, -3); //table
+}
 static int httpGet(lua_State *L)
 {
     do
     {
-        int params = lua_gettop(L);  //url <query> <header>
-        if(params==0 || params>3) break;
+        int params = lua_gettop(L);  //url <query> <header> <redirect>
+        if(params==0 || params>4) break;
         if(lua_type(L, 1)!=LUA_TSTRING) break;
         const char *curl = luaL_checkstring(L,1);
         QUrlQuery query;
         QStringList headers;
+        bool redirect = true;
         if(params > 1)  //has query
         {
             lua_pushvalue(L, 2);
@@ -34,7 +65,9 @@ static int httpGet(lua_State *L)
         }
         if(params > 2)  //has header
         {
+            lua_pushvalue(L, 3);
             auto h = ScriptBase::getValue(L);
+            lua_pop(L, 1);
 			if (h.type() != QVariant::Map && !(h.type() == QVariant::List && h.toList().size() == 0)) break;
             auto hmap = h.toMap();
             for(auto iter=hmap.constBegin(); iter!=hmap.constEnd(); ++iter)
@@ -42,80 +75,24 @@ static int httpGet(lua_State *L)
                 headers<<iter.key()<<iter.value().toString();
             }
         }
-        QString errInfo;
-        QByteArray content;
-        try
+        if(params > 3)
         {
-            content=Network::httpGet(curl,query,headers);
+            redirect = lua_toboolean(L, 4);
         }
-        catch(Network::NetworkError &err)
+        Network::Reply &&reply = Network::httpGet(curl,query,headers,redirect);
+        if(!reply.hasError)
         {
-            errInfo=err.errorInfo;
+            lua_pushnil(L);
+            pushNetworkReply(L, reply);
         }
-        if(errInfo.isEmpty()) lua_pushnil(L);
-        else lua_pushstring(L,errInfo.toStdString().c_str());
-		lua_pushlstring(L, content.data(), content.size());
-        return 2;
-    }while(false);
-    lua_pushstring(L, "httpget: param error, expect: url(string), <query(table)>, <header(table)>");
-    lua_pushnil(L);
-    return 2;
-}
-static int httpHead(lua_State *L)
-{
-    do
-    {
-        int params = lua_gettop(L);  //url <query> <header>
-        if(params==0 || params>3) break;
-        if(lua_type(L, 1)!=LUA_TSTRING) break;
-        const char *curl = luaL_checkstring(L,1);
-        QUrlQuery query;
-        QStringList headers;
-        if(params > 1)  //has query
+        else
         {
-            lua_pushvalue(L, 2);
-            auto q = ScriptBase::getValue(L);
-            lua_pop(L, 1);
-            if (q.type() != QVariant::Map && !(q.type() == QVariant::List && q.toList().size() == 0)) break;
-            auto qmap = q.toMap();
-            for(auto iter=qmap.constBegin(); iter!=qmap.constEnd(); ++iter)
-            {
-                query.addQueryItem(iter.key(),iter.value().toString());
-            }
-        }
-        if(params > 2)  //has header
-        {
-            auto h = ScriptBase::getValue(L);
-            if (h.type() != QVariant::Map && !(h.type() == QVariant::List && h.toList().size() == 0)) break;
-            auto hmap = h.toMap();
-            for(auto iter=hmap.constBegin(); iter!=hmap.constEnd(); ++iter)
-            {
-                headers<<iter.key()<<iter.value().toString();
-            }
-        }
-        QString errInfo;
-        QList<QPair<QByteArray, QByteArray>> headerPairs;
-        try
-        {
-            headerPairs=Network::httpHead(curl,query,headers);
-        }
-        catch(Network::NetworkError &err)
-        {
-            errInfo=err.errorInfo;
-        }
-        if(errInfo.isEmpty()) lua_pushnil(L);
-        else lua_pushstring(L,errInfo.toStdString().c_str());
-
-        lua_newtable(L); // table
-        for(int i=0; i<headerPairs.size(); ++i)
-        {
-            lua_pushlstring(L, headerPairs[i].first.constData(), headerPairs[i].first.size()); // table key
-            lua_pushlstring(L, headerPairs[i].second.constData(), headerPairs[i].second.size()); // table key value
-            lua_rawset(L, -3);
+            lua_pushstring(L, reply.errInfo.toStdString().c_str());
+            lua_pushnil(L);
         }
         return 2;
     }while(false);
-    lua_pushstring(L, "httpget: param error, expect: url(string), <query(table)>, <header(table)>");
+    lua_pushstring(L, "httpget: param error, expect: url(string), <query(table)>, <header(table)>, <redirect=true>");
     lua_pushnil(L);
     return 2;
 }
@@ -142,19 +119,17 @@ static int httpPost(lua_State *L)
                 headers<<iter.key()<<iter.value().toString();
             }
         }
-        QString errInfo;
-		QByteArray content;
-        try
+        Network::Reply &&reply = Network::httpPost(curl,cdata,headers);
+        if(!reply.hasError)
         {
-            content=Network::httpPost(curl,cdata,headers);
+            lua_pushnil(L);
+            pushNetworkReply(L, reply);
         }
-        catch(Network::NetworkError &err)
+        else
         {
-            errInfo=err.errorInfo;
+            lua_pushstring(L, reply.errInfo.toStdString().c_str());
+            lua_pushnil(L);
         }
-        if(errInfo.isEmpty()) lua_pushnil(L);
-        else lua_pushstring(L,errInfo.toStdString().c_str());
-		lua_pushlstring(L, content.data(), content.size());
         return 2;
     }while(false);
     lua_pushstring(L, "httppost: param error, expect: url(string), <data(string)>, <header(table)>");
@@ -214,7 +189,7 @@ static int httpGetBatch(lua_State *L)
 {
     do
     {
-        int params = lua_gettop(L);  //urls([u1,u2,...]) <querys([{xx=xx,...},{xx=xx,...},...])> <headers([{xx=xx,..},{xx=xx,..},...])>
+        int params = lua_gettop(L);  //urls([u1,u2,...]) <querys([{xx=xx,...},{xx=xx,...},...])> <headers([{xx=xx,..},{xx=xx,..},...])>, <redirect=true>
         if(params==0 || params>3) break;
         if(lua_type(L, 1)!=LUA_TTABLE) break;
         lua_pushvalue(L, 1);
@@ -224,6 +199,7 @@ static int httpGetBatch(lua_State *L)
         auto urls = us.toStringList();
         QList<QUrlQuery> querys;
         QList<QStringList> headers;
+        bool redirect = true;
         if(params > 1)  //has query
         {
             lua_pushvalue(L, 2);
@@ -245,7 +221,9 @@ static int httpGetBatch(lua_State *L)
         }
         if(params > 2)  //has header
         {
+            lua_pushvalue(L, 3);
             auto h = ScriptBase::getValue(L);
+            lua_pop(L, 1);
             if(h.type()!=QVariant::List) break;
             auto hs = h.toList();
             if(hs.size()>0 && hs.size()!=urls.size()) break;
@@ -260,24 +238,21 @@ static int httpGetBatch(lua_State *L)
                 headers.append(header);
             }
         }
-        QList<QPair<QString, QByteArray>> content = Network::httpGetBatch(urls,querys,headers); //[[hasError, content], [], ...]
+        if(params > 3)
+        {
+            redirect = lua_toboolean(L, 4);
+        }
+        QList<Network::Reply> &&content = Network::httpGetBatch(urls,querys,headers); //[[hasError, content], [], ...]
         lua_pushnil(L);
         lua_newtable(L); // table
         for(int i=0; i<content.size(); ++i)
         {
-            lua_newtable(L); // table table
-            if(content[i].first.isEmpty())
-                lua_pushstring(L, "");  // table table ""
-            else
-                lua_pushstring(L, content[i].first.toStdString().c_str()); // table table errStr
-            lua_rawseti(L, -2, 1); // table table
-            lua_pushlstring(L, content[i].second.constData(), content[i].second.size()); //table table data
-            lua_rawseti(L, -2, 2); // table table
+            pushNetworkReply(L, content[i]); //table reply
             lua_rawseti(L, -2, i+1); //table
         }
         return 2;
     }while(false);
-    lua_pushstring(L, "httpgetbatch: param error, expect: urls(string array), <querys(table array)>, <headers(table array)>");
+    lua_pushstring(L, "httpgetbatch: param error, expect: urls(string array), <querys(table array)>, <headers(table array)>, <redirect=true>");
     lua_pushnil(L);
     return 2;
 }
@@ -793,7 +768,6 @@ static int htmlParserGC (lua_State *L) {
 
 static const luaL_Reg kikoFuncs[] = {
     {"httpget", httpGet},
-    {"httphead", httpHead},
     {"httpgetbatch", httpGetBatch},
     {"httppost", httpPost},
     {"json2table", json2table},

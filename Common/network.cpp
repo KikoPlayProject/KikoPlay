@@ -18,19 +18,24 @@ namespace
         return manager;
     }
 }
-QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QStringList &header, int ttl)
+
+Network::Reply Network::httpGet(const QString &url, const QUrlQuery &query, const QStringList &header, bool redirect)
 {
     QUrl queryUrl(url);
-    if(!query.isEmpty())
-        queryUrl.setQuery(query);
+    if(!query.isEmpty())  queryUrl.setQuery(query);
     QNetworkRequest request;
     request.setUrl(queryUrl);
     if(header.size()>=2)
     {
         Q_ASSERT((header.size() & 1) ==0);
         for(int i=0;i<header.size();i+=2)
+        {
             request.setRawHeader(header[i].toUtf8(),header[i+1].toUtf8());
+        }
     }
+    request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, redirect);
+    request.setMaximumRedirectsAllowed(maxRedirectTimes);
+
     QNetworkAccessManager *manager = getManager();
 
     QTimer timer;
@@ -39,99 +44,52 @@ QByteArray Network::httpGet(const QString &url, const QUrlQuery &query, const QS
     QNetworkReply *reply = manager->get(request);
 
     QEventLoop eventLoop;
-	QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
+    QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
     QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
     timer.start();
     eventLoop.exec();
-    bool hasError=false;
-    QString errorInfo;
-    QByteArray replyBytes;
+    Reply replyObj;
     if (timer.isActive())
     {
         timer.stop();
         if (reply->error() == QNetworkReply::NoError)
         {
-            int nStatusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-            if(nStatusCode==301 || nStatusCode==302)
-            {
-                if(ttl<=0)
-                {
-                    throw NetworkError(QObject::tr("Too many redirects"));
-                }
-                try
-                {
-                    QString location(reply->header(QNetworkRequest::LocationHeader).toString());
-                    if (location.isEmpty())
-                        location = reply->rawHeader("Location");
-                    QUrl redirectUrl(location);
-                    if (redirectUrl.isRelative())
-                    {
-						QString host(redirectUrl.host());
-						if (host.isEmpty()) host = queryUrl.host();
-                        QString scheme(queryUrl.scheme());
-						int i = 0;
-						while (i < location.length() && location[i] == '/') ++i;
-						location = location.mid(i);
-						if (!location.startsWith(host)) location = QString("%1/%2").arg(host, location);
-						if(!scheme.isEmpty()) location = QString("%1://%2").arg(scheme,location);
-                    }
-                    replyBytes=httpGet(location,QUrlQuery(),header,ttl-1);
-                }
-                catch(NetworkError &error)
-                {
-                    hasError=true;
-                    errorInfo=error.errorInfo;
-                }
-            }
-            else if(nStatusCode==200)
-            {
-                replyBytes = reply->readAll();
-            }
-            else
-            {
-                hasError=true;
-                errorInfo=QObject::tr("Error,Status Code:%1").arg(nStatusCode);
-            }
+            replyObj.hasError = false;
+            replyObj.statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            replyObj.content = reply->readAll();
+            replyObj.headers = reply->rawHeaderPairs();
         }
         else
         {
-            hasError=true;
-            errorInfo=reply->errorString();
+            replyObj.hasError = true;
+            replyObj.errInfo=reply->errorString();
         }
     }
     else
     {
         QObject::disconnect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
         reply->abort();
-        hasError=true;
-        errorInfo=QObject::tr("Replay Timeout");
+        replyObj.hasError = true;
+        replyObj.errInfo=QObject::tr("Replay Timeout");
     }
     reply->deleteLater();
-    if(hasError)
-    {
-        throw NetworkError(errorInfo);
-    }
-    else
-    {
-        return replyBytes;
-    }
+    return replyObj;
 }
 
-QByteArray Network::httpPost(const QString &url, const QByteArray &data, const QStringList &header)
+Network::Reply Network::httpPost(const QString &url, const QByteArray &data, const QStringList &header)
 {
     QUrl queryUrl(url);
     QNetworkRequest request;
     if(header.size()>=2)
     {
         for(int i=0;i<header.size();i+=2)
+        {
             request.setRawHeader(header[i].toUtf8(),header[i+1].toUtf8());
+        }
     }
     request.setUrl(queryUrl);
-    QNetworkAccessManager *manager = getManager();
 
-    bool hasError=false;
-    QString errorInfo;
-    QByteArray replyData;
+    QNetworkAccessManager *manager = getManager();
 
     QTimer timer;
     timer.setInterval(timeout);
@@ -139,124 +97,39 @@ QByteArray Network::httpPost(const QString &url, const QByteArray &data, const Q
     QNetworkReply *reply = manager->post(request, data);
 
     QEventLoop eventLoop;
-	QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
-    QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
-    timer.start();
-    eventLoop.exec();
-
-    if (timer.isActive())
-    {
-        timer.stop();
-        if (reply->error() == QNetworkReply::NoError)
-        {
-            int nStatusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-            if(nStatusCode==200)
-            {
-                replyData = reply->readAll();
-            }
-            else
-            {
-                hasError=true;
-                errorInfo=QObject::tr("Error,Status Code:%1").arg(nStatusCode);
-            }
-        }
-        else
-        {
-            hasError=true;
-            errorInfo=reply->errorString();
-        }
-    }
-    else
-    {
-        QObject::disconnect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
-        reply->abort();
-        hasError=true;
-        errorInfo=QObject::tr("Replay Timeout");
-    }
-    reply->deleteLater();
-    if(hasError)
-    {
-        throw NetworkError(errorInfo);
-    }
-    else
-    {
-        return replyData;
-    }
-}
-
-QList<QPair<QByteArray, QByteArray> > Network::httpHead(const QString &url, const QUrlQuery &query, const QStringList &header)
-{
-    QUrl queryUrl(url);
-    if(!query.isEmpty()) queryUrl.setQuery(query);
-    QNetworkRequest request;
-    request.setUrl(queryUrl);
-    if(header.size()>=2)
-    {
-        Q_ASSERT((header.size() & 1) ==0);
-        for(int i=0;i<header.size();i+=2)
-            request.setRawHeader(header[i].toUtf8(),header[i+1].toUtf8());
-    }
-    QList<QNetworkCookie> cookies;
-    QNetworkAccessManager *manager = getManager();
-    if(request.hasRawHeader("Cookie"))
-    {
-        auto cookieBytes = request.rawHeader("Cookie");
-        auto rawList = cookieBytes.split(';');
-        for (auto &bytes:rawList)
-        {
-            int pos =bytes.indexOf('=');
-            if(pos<=0) continue;
-            auto name = bytes.left(pos);
-            auto value = bytes.mid(pos+1);
-            QNetworkCookie cookie(name, value);
-            cookie.setDomain(queryUrl.host());
-            cookie.setPath(queryUrl.path());
-            cookies<<cookie;
-            manager->cookieJar()->insertCookie(cookie);
-        }
-    }
-    QTimer timer;
-    timer.setInterval(timeout);
-    timer.setSingleShot(true);
-    QNetworkReply *reply = manager->head(request);
-    for(auto &cookie:cookies)
-    {
-        manager->cookieJar()->deleteCookie(cookie);
-    }
-    QEventLoop eventLoop;
     QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
     QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
     timer.start();
     eventLoop.exec();
-    bool hasError=false;
-    QString errorInfo;
-    QByteArray replyBytes;
+
+    Reply replyObj;
+
     if (timer.isActive())
     {
         timer.stop();
         if (reply->error() == QNetworkReply::NoError)
         {
-            return reply->rawHeaderPairs();
+            replyObj.hasError = false;
+            replyObj.statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            replyObj.content = reply->readAll();
+            replyObj.headers = reply->rawHeaderPairs();
         }
         else
         {
-            hasError=true;
-            errorInfo=reply->errorString();
+            replyObj.hasError = true;
+            replyObj.errInfo=reply->errorString();
         }
     }
     else
     {
         QObject::disconnect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
         reply->abort();
-        hasError=true;
-        errorInfo=QObject::tr("Replay Timeout");
+        replyObj.hasError = true;
+        replyObj.errInfo=QObject::tr("Replay Timeout");
     }
     reply->deleteLater();
-    if(hasError)
-    {
-        throw NetworkError(errorInfo);
-    }
-    return QList<QNetworkReply::RawHeaderPair>();
+    reply->deleteLater();
+    return replyObj;
 }
 
 QJsonDocument Network::toJson(const QString &str)
@@ -291,25 +164,30 @@ QJsonValue Network::getValue(QJsonObject &obj, const QString &path)
     return value;
 }
 
-QList<QPair<QString, QByteArray>> Network::httpGetBatch(const QStringList &urls, const QList<QUrlQuery> &querys, const QList<QStringList> &headers)
+QList<Network::Reply> Network::httpGetBatch(const QStringList &urls, const QList<QUrlQuery> &querys, const QList<QStringList> &headers, bool redirect)
 {
     Q_ASSERT(urls.size()==querys.size() || querys.size()==0);
     Q_ASSERT(urls.size()==headers.size() || headers.size()==0);
-    QList<QPair<QString, QByteArray> > results;
+    QList<Reply> results;
     int finishCount=0;
     QEventLoop eventLoop;
     QNetworkAccessManager *manager(getManager());
     for(int i=0;i<urls.size();++i)
     {
-        results.append(QPair<QString,QByteArray>());
+        results.append(Reply());
         QUrl queryUrl(urls.at(i));
         if(!querys.isEmpty()) queryUrl.setQuery(querys.at(i));
         QNetworkRequest request;
         request.setUrl(queryUrl);
+        request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, redirect);
+        request.setMaximumRedirectsAllowed(maxRedirectTimes);
+
         if(!headers.isEmpty())
         {
             for(int j=0;j<headers[i].size();j+=2)
+            {
                 request.setRawHeader(headers[i][j].toUtf8(),headers[i][j+1].toUtf8());
+            }
         }
         QNetworkReply *reply = manager->get(request);
         QTimer *timer=new QTimer;
@@ -322,22 +200,23 @@ QList<QPair<QString, QByteArray>> Network::httpGetBatch(const QStringList &urls,
             if(timer->isActive())
             {
                 timer->stop();
-                int nStatusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
                 if(reply->error() == QNetworkReply::NoError)
                 {
-                    if(nStatusCode==200)
-                        results[i].second = reply->readAll();
-                    else
-                        results[i].first = QObject::tr("Error,Status Code:%1").arg(nStatusCode);
+                    results[i].hasError = false;
+                    results[i].statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+                    results[i].content = reply->readAll();
+                    results[i].headers = reply->rawHeaderPairs();
                 }
                 else
                 {
-                    results[i].first = reply->errorString();
+                    results[i].hasError = true;
+                    results[i].errInfo=reply->errorString();
                 }
             }
             else
             {
-                results[i].first = QObject::tr("Replay Timeout");
+                results[i].hasError = true;
+                results[i].errInfo=QObject::tr("Replay Timeout");
             }
             reply->deleteLater();
             timer->deleteLater();
@@ -483,3 +362,7 @@ int Network::decompress(const QByteArray &input, QByteArray &output)
     (void)inflateEnd(&stream);
     return Z_OK ;
 }
+
+
+
+
