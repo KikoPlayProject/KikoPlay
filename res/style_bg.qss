@@ -150,6 +150,9 @@ QLabel#DialogTipLabel{
 QDialog QLabel {
     color: rgb(0,0,0);
 }
+QDialog QCheckBox {
+    color: rgb(0,0,0);
+}
 QScrollArea#PoolItemContainer{
     border-color: rgb(200,200,200);
     border-style:solid;
