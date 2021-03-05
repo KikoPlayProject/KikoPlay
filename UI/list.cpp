@@ -27,18 +27,6 @@
 
 namespace
 {
-    static QIcon bgmCollectionIcon(":/res/images/bgm-collection.svg");
-    static QIcon folderIcon(":/res/images/folder.svg");
-    static QIcon colorMarkerIcon[] =
-    {
-        QIcon(":/res/images/mark_red.svg"),
-        QIcon(":/res/images/mark_blue.svg"),
-        QIcon(":/res/images/mark_green.svg"),
-        QIcon(":/res/images/mark_orange.svg"),
-        QIcon(":/res/images/mark_pink.svg"),
-        QIcon(":/res/images/mark_yellow.svg"),
-        QIcon()
-    };
     class PlayListItemDelegate: public QStyledItemDelegate
     {
     public:
@@ -57,6 +45,18 @@ namespace
             }
             QStyledItemDelegate::paint(painter, ViewOption, index);
 
+            static QIcon bgmCollectionIcon(":/res/images/bgm-collection.svg");
+            static QIcon folderIcon(":/res/images/folder.svg");
+            static QIcon colorMarkerIcon[] =
+            {
+                QIcon(":/res/images/mark_red.svg"),
+                QIcon(":/res/images/mark_blue.svg"),
+                QIcon(":/res/images/mark_green.svg"),
+                QIcon(":/res/images/mark_orange.svg"),
+                QIcon(":/res/images/mark_pink.svg"),
+                QIcon(":/res/images/mark_yellow.svg"),
+                QIcon()
+            };
             QIcon *marker(nullptr);
             if(index.data(PlayList::MarkRole::BgmCollectionRole).toBool())
             {
@@ -1067,10 +1067,20 @@ QWidget *ListWindow::setupPlaylistPage()
     markSubMenu->addSeparator();
 
     QStringList markerName{tr("Red"), tr("Blue"), tr("Green"), tr("Orange"), tr("Pink"), tr("Yellow"), tr("None")};
+    QStringList colorMarkerIcon
+    {
+        (":/res/images/mark_red.svg"),
+        (":/res/images/mark_blue.svg"),
+        (":/res/images/mark_green.svg"),
+        (":/res/images/mark_orange.svg"),
+        (":/res/images/mark_pink.svg"),
+        (":/res/images/mark_yellow.svg"),
+        ("")
+    };
     QActionGroup *markerGroup = new QActionGroup(this);
     for(int i = 0; i<=PlayListItem::Marker::M_NONE; ++i)
     {
-        QAction *act = markSubMenu->addAction(colorMarkerIcon[i], markerName[i]);
+        QAction *act = markSubMenu->addAction(QIcon(colorMarkerIcon[i]), markerName[i]);
         markerGroup->addAction(act);
         act->setData(i);
     }
