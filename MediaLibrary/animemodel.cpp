@@ -7,6 +7,7 @@
 AnimeModel::AnimeModel(QObject *parent):QAbstractItemModel(parent),
     currentOffset(0),active(false),hasMoreAnimes(false)
 {
+    limitCount = GlobalObjects::appSetting->value("Library/BatchSize", 128).toInt();
     QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeAdded, this, &AnimeModel::addAnime);
     QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeRemoved, this, &AnimeModel::removeAnime);
 }
