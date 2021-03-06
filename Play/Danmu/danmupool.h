@@ -32,6 +32,7 @@ public:
 
     QSharedPointer<DanmuComment> getDanmu(const QModelIndex &index);
     void deleteDanmu(QSharedPointer<DanmuComment> danmu);
+    void launch(const QList<QSharedPointer<DanmuComment>> userComments);
 
 private:
     Pool *curPool,*emptyPool;
@@ -42,7 +43,7 @@ private:
     EventAnalyzer *analyzer;
     int currentPosition;
     int currentTime;
-   // QString poolID;
+    const int bundleSize=32;
 
     bool enableAnalyze;
     bool enableMerged;

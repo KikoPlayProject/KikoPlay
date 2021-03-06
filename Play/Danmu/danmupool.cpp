@@ -118,6 +118,29 @@ void DanmuPool::deleteDanmu(QSharedPointer<DanmuComment> danmu)
     endRemoveRows();
     setStatisInfo();
 }
+
+void DanmuPool::launch(const QList<QSharedPointer<DanmuComment> > userComments)
+{
+    if(!hasPool() || userComments.isEmpty()) return;
+    QList<DrawTask> *prepareList(nullptr);
+    prepareList=prepareListPool.isEmpty()?new QList<DrawTask>:prepareListPool.takeFirst();
+    for(auto &c : userComments)
+    {
+        prepareList->append({ c,nullptr,true });
+        if(prepareList->size()>=bundleSize)
+        {
+            GlobalObjects::danmuRender->prepareDanmu(prepareList);
+            prepareList=prepareListPool.isEmpty()?new QList<DrawTask> :prepareListPool.takeFirst();
+        }
+    }
+    if(prepareList->size()>0)
+    {
+        GlobalObjects::danmuRender->prepareDanmu(prepareList);
+    } else {
+        recyclePrepareList(prepareList);
+    }
+
+}
 void DanmuPool::setMerged()
 {
 #ifdef QT_DEBUG
@@ -364,7 +387,6 @@ void DanmuPool::mediaTimeElapsed(int newTime)
     currentTime=newTime;
     QList<DrawTask> *prepareList(nullptr);
     prepareList=prepareListPool.isEmpty()?new QList<DrawTask>:prepareListPool.takeFirst();
-    const int bundleSize=32;
     for(;currentPosition<finalPool.length();++currentPosition)
     {
         int curTime=finalPool.at(currentPosition)->time;

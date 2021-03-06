@@ -8,6 +8,7 @@
 #include "globalobjects.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Danmu/danmuprovider.h"
+#include "Play/Danmu/danmupool.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Script/scriptmanager.h"
@@ -66,8 +67,7 @@ DanmuLaunch::DanmuLaunch(QWidget *parent) : CFramelessDialog(tr("Launch"), paren
         }
     });
     QObject::connect(GlobalObjects::danmuProvider, &DanmuProvider::danmuLaunchStatus,
-                     [=](const QString &poolId, const QStringList &scriptIds, const QStringList &status, DanmuComment *comment){
-        QScopedPointer<DanmuComment> c(comment);
+                     [=](const QString &poolId, const QStringList &scriptIds, const QStringList &status, DanmuComment *c){
         Pool *pool = GlobalObjects::danmuManager->getPool(poolId, false);
         if(!pool) return;
         QStringList results;
@@ -82,6 +82,7 @@ DanmuLaunch::DanmuLaunch(QWidget *parent) : CFramelessDialog(tr("Launch"), paren
         QString msg(QString("%1\n%2\n%3").arg(poolInfo, commentInfo, results.join('\n')));
         Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, msg);
         ScriptLogger::instance()->appendText(msg);
+        GlobalObjects::danmuPool->launch({QSharedPointer<DanmuComment>(c)});
     });
 }
 

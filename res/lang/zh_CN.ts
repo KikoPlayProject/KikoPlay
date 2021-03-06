@@ -3406,7 +3406,7 @@ The changes will take effect when KikoPlay is restarted</source>
     <message>
         <location filename="../../UI/matcheditor.cpp" line="657"/>
         <source>Anime Title and Episode Index should not be empty</source>
-        <translation>动画标题和分集标题不能为空</translation>
+        <translation>动画标题和分集索引不能为空</translation>
     </message>
     <message>
         <source>Batch</source>
