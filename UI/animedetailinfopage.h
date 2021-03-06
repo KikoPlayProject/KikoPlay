@@ -57,6 +57,7 @@ class AnimeDetailInfoPage : public QWidget
 public:
     AnimeDetailInfoPage(QWidget *parent = nullptr);
     void setAnime(Anime *anime);
+    Anime *curAnime() const {return currentAnime;}
 signals:
     void playFile(const QString &file);
 private:

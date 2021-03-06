@@ -45,7 +45,7 @@ EpInfoEditWidget::EpInfoEditWidget(QWidget *parent) : QWidget(parent)
 {
     setObjectName(QStringLiteral("EpInfoEditWidget"));
     epTypeCombo = new QComboBox(this);
-    epTypeCombo->addItems(QStringList(std::begin(EpTypeName), std::end(EpTypeName)));
+    epTypeCombo->addItems(QList<QString>(std::begin(EpTypeName), std::end(EpTypeName)));
     epIndexEdit = new QLineEdit(this);
     epIndexEdit->setValidator(new QRegExpValidator(QRegExp("\\d+\\.?(\\d+)?"),epIndexEdit));
     epNameEdit = new QComboBox(this);

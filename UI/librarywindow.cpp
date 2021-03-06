@@ -106,6 +106,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         Anime *anime = animeModel->getAnime(selection.indexes().first());
         if(anime)
         {
+            if(detailPage->curAnime()==anime) detailPage->setAnime(nullptr);
             GlobalObjects::animeLabelModel->removeTag(anime->name(), anime->airDate(), anime->scriptId());
             animeModel->deleteAnime(selection.indexes().first());
         }
