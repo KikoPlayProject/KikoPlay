@@ -11,25 +11,21 @@
 ## 特性
 
  - OpenGL渲染，流畅的弹幕体验
- - libmpv播放内核，支持多种媒体文件格式，保留mpv灵活的参数设置，支持实时进度条预览
- - 树形播放列表，可随意组织你的番剧
- - 支持所有主流视频网站弹幕搜索下载：AcFun,Bilibili,Tucao,5dm,巴哈姆特,爱奇艺,优酷,腾讯视频,PPTV
- - 灵活的弹幕屏蔽规则设定，支持自动合并相似弹幕、弹幕事件分析标注，提升观看体验
- - 支持批量管理弹幕池，支持弹幕时间轴调整，更好地处理本地视频和网站上的视频时长不一致的情况
- - 资料库可以记录并组织你看过的番剧，同时可以从Bangumi上获取详细信息
+ - libmpv播放内核，保留mpv灵活的参数设置，支持实时进度条预览
+ - 树形播放列表，可随意组织视频文件
+ - 支持所有主流视频网站弹幕搜索下载，同时可以通过脚本支持更多弹幕来源
+ - 灵活的弹幕屏蔽规则设定，支持自动合并相似弹幕、分析标注弹幕事件，提升观看体验
+ - 支持批量管理弹幕池、弹幕时间轴调整，更好地处理本地视频和网站上的视频时长不一致的情况
+ - 强大的资料库功能，支持通过多种方式记录并组织你看过的动画，通过脚本扩展可以支持更多信息来源
  - 局域网服务，你可以通过网页在其他设备上观看，现在还有[Android端](https://github.com/Protostars/KikoPlay-Android-LAN)可供选择
- - 集成aria2下载功能
- - 每日放送功能：可快速浏览新番列表并添加关注
- - 基于Lua脚本的资源搜索功能，你也可以为KikoPlay编写脚本，[脚本仓库](https://github.com/Protostars/KikoPlayScript)
- - 支持自动下载，通过设置规则，KikoPlay可自动搜索下载资源
- - 独特的KikoPlay资源代码和弹幕池代码，可直接分享包含弹幕池信息的资源链接
+ - 集成每日放送、资源搜索、aria2下载、自动下载等功能，在KikoPlay里即可完成下载、观看、管理等全部操作
  - .........
 
 ## 编译
 
 KikoPlay基于以下项目：
 
- - Qt 5.15.0
+ - Qt 5.15.2
  - [libmpv](https://github.com/mpv-player/mpv)
  - [aria2](https://github.com/aria2/aria2)
  - [Qt-Nice-Frameless-Window](https://github.com/Bringer-of-Light/Qt-Nice-Frameless-Window)
@@ -49,12 +45,23 @@ Mac OS 系统可自行尝试
 
 ## 下载
 
-最新版本均在[百度网盘](https://pan.baidu.com/s/1gyT0FU9rioaa77znhAUx2w)发布
+可以从[Github](https://github.com/Protostars/KikoPlay/releases) 或 [百度网盘](https://pan.baidu.com/s/1gyT0FU9rioaa77znhAUx2w) 或 QQ群文件 下载Windows版
 
 ## 反馈
 
 如果有问题，欢迎创建issue或者联系我:
 dx_8820832#yeah.net（#→@），或者加QQ群874761809反馈
+
+## 做点贡献
+
+ - 为主程序贡献代码，包括但不限于新功能开发、BUG修复等等
+ - 为KikoPlay编写脚本，支持更多弹幕、资料或者资源来源，脚本仓库在[这里](https://github.com/Protostars/KikoPlayScript)
+ - 提升局域网网页访问体验，目前的网页是在[这里](https://github.com/Protostars/KikoPlay/tree/master/web)
+ - 改进[Android局域网客户端]((https://github.com/Protostars/KikoPlay-Android-LAN))
+ - 开发ios局域网客户端
+ - 测试，找出BUG并反馈
+ - ......
+ - Star or Fork
 
 ## 截图
 
