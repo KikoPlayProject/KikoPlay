@@ -4,6 +4,7 @@
 class QPlainTextEdit;
 class QCheckBox;
 class QLineEdit;
+class QTextEdit;
 class LANServerPage: public SettingPage
 {
     Q_OBJECT
@@ -14,7 +15,7 @@ public:
 private:
     QCheckBox *startServer, *syncUpdateTime;
     QLineEdit *portEdit;
-    QPlainTextEdit *logInfo;
+    QTextEdit *logInfo;
     bool syncTimeChanged, serverStateChanged, portChanged;
     void printLog(const QString &log);
 };

@@ -1,6 +1,7 @@
 #include "lanserverpage.h"
 #include <QLineEdit>
 #include <QPlainTextEdit>
+#include <QTextEdit>
 #include <QGridLayout>
 #include <QCheckBox>
 #include <QLabel>
@@ -35,12 +36,11 @@ LANServerPage::LANServerPage(QWidget *parent) : SettingPage(parent)
             addressTip->appendPlainText(address.toString());
     }
 
-    logInfo=new QPlainTextEdit(this);
+    logInfo=new QTextEdit(this);
     logInfo->setReadOnly(true);
-    logInfo->setMaximumBlockCount(256);
     for(const QString &log:GlobalObjects::lanServer->getLog())
     {
-        logInfo->appendPlainText(log);
+        logInfo->append(log);
     }
 
     QObject::connect(startServer,&QCheckBox::clicked,[this](bool checked){
@@ -92,7 +92,7 @@ void LANServerPage::onClose()
 
 void LANServerPage::printLog(const QString &log)
 {
-    logInfo->appendPlainText(log.trimmed());
+    logInfo->append(log.trimmed());
     QTextCursor cursor = logInfo->textCursor();
     cursor.movePosition(QTextCursor::End);
     logInfo->setTextCursor(cursor);

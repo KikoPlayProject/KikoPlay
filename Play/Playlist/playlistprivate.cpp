@@ -488,7 +488,7 @@ void PlayListPrivate::dumpItem(QJsonArray &array, PlayListItem *item, QHash<QStr
         itemObj.insert("text",child->title);
         if(child->marker!=PlayListItem::M_NONE)
         {
-            itemObj.insert("marker", child->animeTitle);
+            itemObj.insert("marker", (int)child->marker);
         }
         if(child->children)
         {

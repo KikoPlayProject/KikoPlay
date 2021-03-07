@@ -538,6 +538,7 @@ void PlayList::setMarker(const QModelIndex &index, PlayListItem::Marker marker)
     if(item->marker==marker) return;
     item->marker = marker;
     d->playListChanged=true;
+    d->needRefresh = true;
     d->incModifyCounter();
     emit dataChanged(index, index);
 }
