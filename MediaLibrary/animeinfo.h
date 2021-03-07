@@ -6,7 +6,7 @@ enum EpType
 {
     UNKNOWN, EP, SP, OP, ED, Trailer, MAD, Other
 };
-static const QString EpTypeName[] = {QObject::tr("EP"),QObject::tr("SP"),QObject::tr("OP"),QObject::tr("ED"),QObject::tr("Trailer"),QObject::tr("MAD"),QObject::tr("Other")};
+static const QString EpTypeName[] = {"EP", "SP","OP","ED","Trailer","MAD","Other"};
 struct EpInfo
 {
 

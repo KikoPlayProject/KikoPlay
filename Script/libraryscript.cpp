@@ -57,17 +57,29 @@ ScriptState LibraryScript::search(const QString &keyword, QList<AnimeLite> &resu
         {
             QList<EpInfo> *epList = new QList<EpInfo>;
             auto eps = robj.value("eps").toList();
+            QMap<EpType, QPair<double, QSet<double>>> reOrderMap;
             for(auto e: eps)
             {
                 auto epobj = e.toMap();
                 double index = epobj.value("index", -1).toDouble();
                 QString epName = epobj.value("name").toString();
-                if(index<0 || epName.isEmpty()) continue;
+                if(index<0) continue;
                 EpInfo ep;
                 ep.name = epName; ep.index = index;
                 ep.type = EpType(qBound(1, epobj.value("type", 1).toInt(), int(EpType::Other)));
+                if(!reOrderMap.contains(ep.type))
+                {
+                    reOrderMap.insert(ep.type, {1, QSet<double>()});
+                }
+                if(reOrderMap[ep.type].second.contains(ep.index))
+                {
+                    ep.index = reOrderMap[ep.type].first + 1;
+                }
+                reOrderMap[ep.type].first = qMax(reOrderMap[ep.type].first, ep.index);
+                reOrderMap[ep.type].second.insert(ep.index);
                 epList->append(ep);
             }
+            std::sort(epList->begin(), epList->end());
             ab.epList.reset(epList);
         }
         results.append(ab);
@@ -140,17 +152,29 @@ ScriptState LibraryScript::getEp(Anime *anime, QList<EpInfo> &results)
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(rets[0].type()!=QVariant::List) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
     auto eps = rets[0].toList();
+    QMap<EpType, QPair<double, QSet<double>>> reOrderMap;
     for(auto e: eps)
     {
         auto epobj = e.toMap();
         double index = epobj.value("index", 0).toDouble();
         QString epName = epobj.value("name").toString();
-        if(index<0 || epName.isEmpty()) continue;
+        if(index<0) continue;
         EpInfo ep;
         ep.name = epName; ep.index = index;
         ep.type = EpType(qBound(1, epobj.value("type", 1).toInt(), int(EpType::Other)));
+        if(!reOrderMap.contains(ep.type))
+        {
+            reOrderMap.insert(ep.type, {1, QSet<double>()});
+        }
+        if(reOrderMap[ep.type].second.contains(ep.index))
+        {
+            ep.index = reOrderMap[ep.type].first + 1;
+        }
+        reOrderMap[ep.type].first = qMax(reOrderMap[ep.type].first, ep.index);
+        reOrderMap[ep.type].second.insert(ep.index);
         results.append(ep);
     }
+	std::sort(results.begin(), results.end());
     return ScriptState(ScriptState::S_NORM);
 }
 

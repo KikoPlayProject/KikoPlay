@@ -473,8 +473,6 @@ void LibraryWindow::searchAddAnime(Anime *srcAnime)
             delete nAnime;
         }
     }
-
-
 }
 
 void LibraryWindow::showEvent(QShowEvent *)
@@ -499,7 +497,6 @@ void LibraryWindow::showEvent(QShowEvent *)
             animeModelActive = false;
         });
     }
-
 }
 
 void LibraryWindow::hideEvent(QHideEvent *)

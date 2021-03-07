@@ -28,6 +28,7 @@ private:
     int currentOffset;
     QList<Anime *> animes, tmpAnimes;
     bool active;
+    bool firstActive;
     bool hasMoreAnimes;
     void addAnime(Anime *anime);
     void removeAnime(Anime *anime);

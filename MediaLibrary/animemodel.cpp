@@ -5,7 +5,7 @@
 #define AnimeRole Qt::UserRole+1
 
 AnimeModel::AnimeModel(QObject *parent):QAbstractItemModel(parent),
-    currentOffset(0),active(false),hasMoreAnimes(false)
+    currentOffset(0),active(false),firstActive(true), hasMoreAnimes(true)
 {
     limitCount = GlobalObjects::appSetting->value("Library/BatchSize", 128).toInt();
     limitCount = qMax(limitCount, 8);
@@ -15,14 +15,13 @@ AnimeModel::AnimeModel(QObject *parent):QAbstractItemModel(parent),
 
 void AnimeModel::setActive(bool isActive)
 {
-    static bool firstActive = true;
     active=isActive;
     if(active)
     {
         if(firstActive)
         {
             firstActive = false;
-            fetchMore(QModelIndex());
+            showStatisMessage();
         }
         if(!tmpAnimes.isEmpty())
         {
@@ -105,7 +104,8 @@ void AnimeModel::fetchMore(const QModelIndex &)
 {
     QList<Anime *> moreAnimes;
     hasMoreAnimes=false;
-    Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching..."), NM_PROCESS | NM_DARKNESS_BACK);
+    if(!firstActive)
+        Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching..."), NM_PROCESS | NM_DARKNESS_BACK);
     AnimeWorker::instance()->fetchAnimes(&moreAnimes, currentOffset, limitCount);
 	hasMoreAnimes = moreAnimes.count() >= limitCount;
     if(moreAnimes.count() > 0)
@@ -113,9 +113,10 @@ void AnimeModel::fetchMore(const QModelIndex &)
         beginInsertRows(QModelIndex(),animes.count(),animes.count()+moreAnimes.count()-1);
         animes.append(moreAnimes);
         endInsertRows();
-        currentOffset+=moreAnimes.count();      
+        currentOffset+=moreAnimes.count();
+        showStatisMessage();
     }
-    showStatisMessage();
-    Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Down"), NM_HIDE);
+    if(!firstActive)
+        Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Down"), NM_HIDE);
 }
 

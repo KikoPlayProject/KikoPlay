@@ -1,5 +1,6 @@
 #include "pool.h"
 #include "danmumanager.h"
+#include "Script/scriptmanager.h"
 #include "globalobjects.h"
 #include "../blocker.h"
 #include "Common/network.h"
@@ -336,12 +337,18 @@ QJsonObject Pool::exportFullJson()
     QJsonArray sourceArray;
     for(auto &source:sourcesTable)
     {
+        QString scriptName;
+        auto s = GlobalObjects::scriptManager->getScript(source.scriptId);
+        if(s) scriptName = s->name();
         QJsonObject sourceObj
         {
             {"name", source.title},
             {"id", source.id},
             {"duration", source.duration},
             {"delay", source.delay},
+            {"scriptId", source.scriptId},
+            {"scriptName", scriptName},
+            {"scriptData", source.scriptData},
             {"timeline", source.timelineStr()}
         };
         sourceArray.append(sourceObj);

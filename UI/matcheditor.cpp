@@ -139,7 +139,7 @@ namespace
         QList<EpInfo> *epList;
         AnimeLite anime;
         QList<bool> *epCheckedList;
-        QStringList headers={tr("FileTitle"),tr("EpName")};
+        QStringList headers={QObject::tr("FileTitle"),QObject::tr("EpName")};
     public:
         inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
         inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}

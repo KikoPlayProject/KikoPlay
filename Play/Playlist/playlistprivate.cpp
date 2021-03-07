@@ -486,6 +486,10 @@ void PlayListPrivate::dumpItem(QJsonArray &array, PlayListItem *item, QHash<QStr
     {
         QJsonObject itemObj;
         itemObj.insert("text",child->title);
+        if(child->marker!=PlayListItem::M_NONE)
+        {
+            itemObj.insert("marker", child->animeTitle);
+        }
         if(child->children)
         {
             QJsonArray childArray;
@@ -499,6 +503,7 @@ void PlayListPrivate::dumpItem(QJsonArray &array, PlayListItem *item, QHash<QStr
             itemObj.insert("danmuPool",child->poolID);
             itemObj.insert("playTime",child->playTime);
             itemObj.insert("playTimeState",child->playTimeState);
+            itemObj.insert("animeName", child->animeTitle);
             static QString nodeColors[3]={"#333","#428bca","#a4a2a2"};
             itemObj.insert("color",nodeColors[child->playTimeState]);
             mediaHash.insert(pathHash,child->path);
