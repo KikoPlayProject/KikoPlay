@@ -34,6 +34,12 @@ Anime *AnimeWorker::getAnime(const QString &name)
     return animesMap.value(name, nullptr);
 }
 
+bool AnimeWorker::hasAnime(const QString &name)
+{
+    if(animesMap.contains(name)) return true;
+    return checkAnimeExist(name);
+}
+
 AnimeWorker::AnimeWorker(QObject *parent):QObject(parent)
 {
     qRegisterMetaType<EpInfo>("EpInfo");
@@ -791,30 +797,6 @@ bool AnimeWorker::updateAnimeInfo(Anime *anime)
     return db.commit();
 }
 
-/*
-QString AnimeWorker::downloadLabelInfo(Anime *anime)
-{
-    QStringList tags;
-    QString err(Bangumi::getTags(anime->id.toInt(), tags));
-    if(err.isEmpty())
-    {
-        QRegExp yearRe("(19|20)\\d{2}");
-        QStringList trivialTags={"TV","OVA","WEB"};
-        QStringList tagList;
-        for(auto &tagName : tags)
-        {
-            if(yearRe.indexIn(tagName)==-1 && !trivialTags.contains(tagName)
-                    && !anime->name.contains(tagName) && !tagName.contains(anime->name))
-                tagList.append(tagName);
-            if(tagList.count()>12)
-                break;
-        }
-        emit newTagDownloaded(anime->name, tagList);
-    }
-    return err;
-}
-*/
-
 QString AnimeWorker::isAlias(const QString &name)
 {
     loadAlias();
@@ -822,30 +804,50 @@ QString AnimeWorker::isAlias(const QString &name)
     return i==aliasAnime.end()?"":i.value();
 }
 
-void AnimeWorker::addAlias(const QString &name, const QString &alias)
+bool AnimeWorker::addAlias(const QString &name, const QString &alias)
 {
-    if(aliasAnime.contains(alias)) return;
+    if(aliasAnime.contains(alias)) return false;
     animeAlias.insert(name, alias);
     aliasAnime.insert(alias, name);
     QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
     query.prepare("insert into alias(Alias,Anime) values(?,?)");
     query.bindValue(0,alias);
     query.bindValue(1,name);
-    query.exec();
-
+    return query.exec();
 }
 
-void AnimeWorker::removeAlias(const QString &name, const QString &alias)
+void AnimeWorker::removeAlias(const QString &name, const QString &alias, bool updateDB)
 {
     if(alias.isEmpty())
     {
         animeAlias.remove(name);
+        if(updateDB)
+        {
+            QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+            query.prepare("delete from alias where Anime=?");
+            query.bindValue(0, name);
+            query.exec();
+        }
     }
     else
     {
         animeAlias.remove(name, alias);
         aliasAnime.remove(alias);
+        if(updateDB)
+        {
+            QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+            query.prepare("delete from alias where Anime=? and Alias=?");
+            query.bindValue(0, name);
+            query.bindValue(1, alias);
+            query.exec();
+        }
     }
+}
+
+const QStringList AnimeWorker::getAlias(const QString &animeName)
+{
+    loadAlias();
+    return animeAlias.values(animeName);
 }
 
 bool AnimeWorker::checkAnimeExist(const QString &name)

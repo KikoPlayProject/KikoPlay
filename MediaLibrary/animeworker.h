@@ -26,6 +26,7 @@ public:
     const QString addAnime(Anime *srcAnime, Anime *newAnime);
     void deleteAnime(Anime *anime);
     Anime *getAnime(const QString &name);
+    bool hasAnime(const QString &name);
 
     void addEp(const QString &animeName, const EpInfo &ep);
     void removeEp(const QString &animeName, const QString &path);
@@ -50,6 +51,10 @@ public:
     void deleteTag(const QString &tag,const QString &animeTitle="");
     void deleteTags(const QStringList &tags);
 
+    bool addAlias(const QString &name, const QString &alias);
+    void removeAlias(const QString &name, const QString &alias = "", bool updateDB=false);
+    const QStringList getAlias(const QString &animeName);
+
 private:
     QMap<QString,Anime *> animesMap;
 
@@ -58,16 +63,11 @@ private:
     bool aliasLoaded;
     void loadAlias();
     QString isAlias(const QString &name);
-    void addAlias(const QString &name, const QString &alias);
-    void removeAlias(const QString &name, const QString &alias = "");
 
     bool checkAnimeExist(const QString &name);
     bool checkEpExist(const QString &animeName, const EpInfo &ep);
 
     bool updateAnimeInfo(Anime *anime);
-
-    //QString downloadLabelInfo(Anime *anime);
-    //QString isAlias(const QString &animeName);
 
 signals:
     void animeAdded(Anime *anime);
@@ -81,41 +81,10 @@ signals:
 
     void captureUpdated(const QString &animeName, const AnimeImage &aImage);
 
-    //void addTagsTo(const QString &animeName, const QStringList &tagList);
-    //void removeTagFrom(const QString &animeName, const QString &tag);
-    //void removeTags(const QString &animeTitle, const QString &time);
-    //void addTimeLabel(const QString &time, const QString &oldTime);
-
     void renameEpTag(const QString &oldAnimeName, const QString &newAnimeName);
     void addTimeTag(const QString &tag);
     void addScriptTag(const QString &scriptId);
     void removeTimeTag(const QString &tag);
     void removeScriptTag(const QString &scriptId);
-
-public slots:
-    //void loadAnimes(QList<Anime *> *animes, int offset, int limit);
-    //void loadLabelInfo(QMap<QString,QSet<QString> > &tagMap, QMap<QString, int> &timeMap);
-
-    //void updateCrtImage(const QString &title, const Character *crt);
-
-    //void addAnimeInfo(const QString &animeName, const QString &epName, const QString &path);
-    //void addAnimeInfo(const QString &animeName,int bgmId);
-    //void downloadDetailInfo(Anime *anime, int bangumiId);
-    //void downloadTags(int bangumiID, QStringList &tags);
-    //void saveTags(const QString &title, const QStringList &tags);
-
-    //void deleteAnime(Anime *anime);
-    //void updatePlayTime(const QString &title, const QString &path);
-    //void deleteTag(const QString &tag,const QString &animeTitle);
-//signals:
-//    void addAnime(Anime *anime);
-//    void mergeAnime(Anime *oldAnime,Anime *newAnime);
-//    void downloadDone(const QString &errInfo);
-//    void downloadTagDone(const QString &errInfo);
-//    void deleteDone();
-//    void loadDone(int count);
-//    void loadLabelInfoDone();
-//    void newTagDownloaded(const QString &animeTitle, const QStringList &tags);
-//    void downloadDetailMessage(const QString &msg);
 };
 #endif // ANIMEWORKER_H

@@ -29,6 +29,7 @@
 #include "Common/flowlayout.h"
 #include "Common/network.h"
 #include "captureview.h"
+#include "aliasedit.h"
 #include "gifcapture.h"
 #include "globalobjects.h"
 
@@ -45,8 +46,10 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     coverLabel->setGraphicsEffect(shadowEffect);
     QAction *actCopyCover = new QAction(tr("Copy Cover"), this);
     QObject::connect(actCopyCover, &QAction::triggered, this, [=](){
-        if(currentAnime && currentAnime->cover().isNull()) return;
-        QApplication::clipboard()->setPixmap(currentAnime->cover());
+        if(currentAnime && !currentAnime->cover().isNull())
+        {
+            QApplication::clipboard()->setPixmap(currentAnime->cover());
+        }
     });
     QAction *actDownloadCover = new QAction(tr("Re-Download Cover"), this);
     QObject::connect(actDownloadCover, &QAction::triggered, this, [=](){
@@ -74,7 +77,16 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     titleLabel->setWordWrap(true);
     titleLabel->setOpenExternalLinks(true);
     titleLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
-
+    QAction *actEditAlias = new QAction(tr("Edit Alias"), this);
+    QObject::connect(actEditAlias, &QAction::triggered, this, [=](){
+        if(currentAnime)
+        {
+            AliasEdit aliasEdit(currentAnime->name(), this);
+            aliasEdit.exec();
+        }
+    });
+    titleLabel->setContextMenuPolicy(Qt::ActionsContextMenu);
+    titleLabel->addAction(actEditAlias);
     viewInfoLabel=new QLabel(this);
     viewInfoLabel->setObjectName(QStringLiteral("AnimeDetailViewInfo"));
     viewInfoLabel->setFont(QFont(GlobalObjects::normalFont,12));

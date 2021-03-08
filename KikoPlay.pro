@@ -52,6 +52,7 @@ SOURCES += \
     Script/scriptsettingmodel.cpp \
     UI/addpool.cpp \
     UI/addrule.cpp \
+    UI/aliasedit.cpp \
     UI/animedetailinfopage.cpp \
     UI/animesearch.cpp \
     UI/autodownloadwindow.cpp \
@@ -165,6 +166,7 @@ HEADERS += \
     Script/scriptsettingmodel.h \
     UI/addpool.h \
     UI/addrule.h \
+    UI/aliasedit.h \
     UI/animedetailinfopage.h \
     UI/animesearch.h \
     UI/autodownloadwindow.h \
