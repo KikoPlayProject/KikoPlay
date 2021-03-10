@@ -58,8 +58,6 @@ int AnimeWorker::fetchAnimes(QList<Anime *> *animes, int offset, int limit)
 {
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([=](){
-        QThread::sleep(2);
-
         QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
         query.exec(QString("select * from anime order by AddTime desc limit %1 offset %2").arg(limit).arg(offset));
         int animeNo=query.record().indexOf("Anime"),
