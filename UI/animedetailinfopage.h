@@ -63,6 +63,7 @@ signals:
 private:
     Anime *currentAnime;
     QLabel *titleLabel, *coverLabel, *viewInfoLabel;
+    QWidget *coverLabelShadow;
     QTextEdit *descInfo;
     QStringList epNames;
     EpisodesModel *epModel;

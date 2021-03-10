@@ -6,18 +6,24 @@
 #include <QGraphicsOpacityEffect>
 #include "globalobjects.h"
 #include "Common/notifier.h"
+#include "backgroundfadewidget.h"
 
-DialogTip::DialogTip(QWidget *parent):QWidget(parent)
+DialogTip::DialogTip(QWidget *parent):QWidget(parent), moveHide(false)
 {
     infoText=new QLabel(this);
     infoText->setObjectName(QStringLiteral("DialogTipLabel"));
     infoText->setFont(QFont(GlobalObjects::normalFont,10));
     infoText->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
 
-    bgDarkWidget = new QWidget(parent);
-    bgDarkWidget->setStyleSheet("background-color:black;border-style:solid; border-width:1px;");
+    bgDarkWidget = new BackgroundFadeWidget(parent);
     bgDarkWidget->hide();
-    fadeoutEffect = new QGraphicsOpacityEffect(bgDarkWidget);
+    moveAnime = new QPropertyAnimation(this, "pos");
+    moveAnime->setDuration(animeDuration);
+    moveAnime->setEasingCurve(QEasingCurve::OutExpo);
+    QObject::connect(moveAnime,&QPropertyAnimation::finished,this, [=](){
+        if(moveHide) hide();
+    });
+
 
     busyWidget = new LoadingIcon(Qt::white, this);
     static_cast<LoadingIcon *>(busyWidget)->hide();
@@ -26,15 +32,12 @@ DialogTip::DialogTip(QWidget *parent):QWidget(parent)
     infoBarHLayout->addWidget(busyWidget);
     infoBarHLayout->addWidget(infoText);
     QObject::connect(&hideTimer,&QTimer::timeout,this,[this](){
-        QPropertyAnimation *moveAnime = new QPropertyAnimation(this, "pos");
         QPoint endPos(this->x(),-this->height()), startPos(this->x(),this->y());
-        moveAnime->setDuration(animeDuration);
-        moveAnime->setEasingCurve(QEasingCurve::OutExpo);
         moveAnime->setStartValue(startPos);
         moveAnime->setEndValue(endPos);
         if(!bgDarkWidget->isHidden()) bgDarkWidget->hide();
-        QObject::connect(moveAnime,&QPropertyAnimation::finished,this,&QWidget::hide);
-        moveAnime->start(QAbstractAnimation::DeleteWhenStopped);
+        moveHide = true;
+        moveAnime->start();
     });
 }
 
@@ -65,16 +68,7 @@ void DialogTip::showMessage(const QString &msg, int type)
         {
             bgDarkWidget->move(0, 0);
             bgDarkWidget->resize(parentWidget()->width(), parentWidget()->height());
-            bgDarkWidget->setGraphicsEffect(fadeoutEffect);
-            fadeoutEffect->setOpacity(0);
-            bgDarkWidget->show();
-            bgDarkWidget->raise();
-            QPropertyAnimation *bgFadeout = new QPropertyAnimation(fadeoutEffect,"opacity");
-            bgFadeout->setDuration(animeDuration);
-            bgFadeout->setStartValue(0);
-            bgFadeout->setEndValue(0.7);
-            bgFadeout->setEasingCurve(QEasingCurve::OutExpo);
-            bgFadeout->start(QAbstractAnimation::DeleteWhenStopped);
+            bgDarkWidget->fadeIn();
         }
     }
     else
@@ -91,12 +85,10 @@ void DialogTip::showMessage(const QString &msg, int type)
     if(!isShow)
     {
         show();
-        QPropertyAnimation *moveAnime = new QPropertyAnimation(this, "pos");
         QPoint endPos(this->x(),0), startPos(this->x(),-this->height());
-        moveAnime->setDuration(animeDuration);
-        moveAnime->setEasingCurve(QEasingCurve::OutExpo);
         moveAnime->setStartValue(startPos);
         moveAnime->setEndValue(endPos);        
-        moveAnime->start(QAbstractAnimation::DeleteWhenStopped);
+        moveHide = false;
+        moveAnime->start();
     }
 }

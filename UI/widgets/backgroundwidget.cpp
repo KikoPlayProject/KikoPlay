@@ -3,16 +3,31 @@
 #include <QGraphicsBlurEffect>
 #include <QPropertyAnimation>
 #include "globalobjects.h"
+#include <QDebug>
 #include <QSettings>
+QT_BEGIN_NAMESPACE
+  extern Q_WIDGETS_EXPORT void qt_blurImage(QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
+QT_END_NAMESPACE
 
 BackgroundWidget::BackgroundWidget(QWidget *parent):BackgroundWidget(QColor(0,0,0,100), parent)
 {
-
+    blurAnime = new QPropertyAnimation(this, "blurRadius", this);
+    blurAnime->setEasingCurve(QEasingCurve::OutExpo);
 }
 
-BackgroundWidget::BackgroundWidget(const QColor &opactiyColor, QWidget *parent) : QWidget(parent), opColor(opactiyColor)
+BackgroundWidget::BackgroundWidget(const QColor &opactiyColor, QWidget *parent) : QWidget(parent), opColor(opactiyColor), backBlurRadius(0)
 {
     opColor.setAlpha(GlobalObjects::appSetting->value("MainWindow/BackgroundDarkness", 100).toInt());
+}
+
+void BackgroundWidget::setBlurRadius(qreal radius)
+{
+    if(backBlurRadius != radius)
+    {
+        backBlurRadius = radius;
+        setBgCache();
+        update();
+    }
 }
 
 void BackgroundWidget::setBackground(const QImage &image)
@@ -41,40 +56,25 @@ void BackgroundWidget::setBlur(bool on, qreal blurRadius)
 {
     if(on)
     {
-        QGraphicsBlurEffect *bgBlur = new QGraphicsBlurEffect;
-        bgBlur->setBlurHints(QGraphicsBlurEffect::PerformanceHint);
-        bgBlur->setBlurRadius(blurRadius);
-        setGraphicsEffect(bgBlur);
+        setBlurRadius(blurRadius);
     }
     else
     {
-        setGraphicsEffect(nullptr);
+        setBlurRadius(0);
     }
+    update();
 }
 
 void BackgroundWidget::setBlurAnimation(qreal s, qreal e, int duration)
 {
-    static QPropertyAnimation *lastAnime = nullptr;
-    if(lastAnime)
+    if(blurAnime->state()==QPropertyAnimation::Running)
     {
-        lastAnime->stop();
-        lastAnime = nullptr;
+        blurAnime->stop();
     }
-    QGraphicsBlurEffect *bgBlur = new QGraphicsBlurEffect;
-    bgBlur->setBlurHints(QGraphicsBlurEffect::AnimationHint);
-    bgBlur->setBlurRadius(e);
-    setGraphicsEffect(bgBlur);
-    QPropertyAnimation *blurAnime = new QPropertyAnimation(bgBlur, "blurRadius");
-    lastAnime = blurAnime;
     blurAnime->setDuration(duration);
-    blurAnime->setEasingCurve(QEasingCurve::OutExpo);
     blurAnime->setStartValue(s);
     blurAnime->setEndValue(e);
-    QObject::connect(blurAnime,&QPropertyAnimation::finished,[this, e, blurAnime](){
-        if(e==0.) setGraphicsEffect(nullptr);
-        if(lastAnime == blurAnime) lastAnime = nullptr;
-    });
-    blurAnime->start(QAbstractAnimation::DeleteWhenStopped);
+    blurAnime->start();
 }
 
 void BackgroundWidget::setImg(const QImage &nImg)
@@ -82,10 +82,25 @@ void BackgroundWidget::setImg(const QImage &nImg)
     img = nImg;
     if(!img.isNull())
     {
-        QImage s(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-        bgCache = QPixmap::fromImage(s);
+        bgCacheSrc = img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+        setBgCache();
     }
     update();
+}
+
+void BackgroundWidget::setBgCache()
+{
+    if(backBlurRadius <= 1)
+    {
+        bgCache = QPixmap::fromImage(bgCacheSrc);
+        return;
+    }
+    if(bgCache.isNull() || bgCache.size()!=bgCacheSrc.size())
+        bgCache = QPixmap(bgCacheSrc.size());
+    bgCache.fill(Qt::transparent);
+    QPainter painter(&bgCache);
+    QImage imgTmp(bgCacheSrc);
+    qt_blurImage(&painter, imgTmp, backBlurRadius*2.5, false, false);
 }
 
 
@@ -98,13 +113,12 @@ void BackgroundWidget::paintEvent(QPaintEvent *e)
         painter.drawPixmap(0, 0, bgCache);
         painter.fillRect(rect(), opColor);
     }
-    QWidget::paintEvent(e);
 }
  void BackgroundWidget::resizeEvent(QResizeEvent *)
 {
     if(!img.isNull())
     {
-        QImage s(img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-        bgCache = QPixmap::fromImage(s);
+        bgCacheSrc = (img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+        setBgCache();
     }
 }

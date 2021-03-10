@@ -474,7 +474,7 @@ static int message(lua_State *L)
     lua_pop(L, 1);
     QString message(lua_tostring(L, 1));
     int flags = NotifyMessageFlag::NM_HIDE;
-    if(params > 1 && lua_type(L, 2)!=LUA_TNUMBER)
+    if(params > 1 && lua_type(L, 2)==LUA_TNUMBER)
     {
         flags = lua_tonumber(L, 2);
     }

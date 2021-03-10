@@ -29,6 +29,7 @@ void LoadingIcon::hide()
 void LoadingIcon::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
+    p.save();
     p.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
     QPoint center(width()/2, height()/2);
     p.translate(center);
@@ -39,6 +40,7 @@ void LoadingIcon::paintEvent(QPaintEvent *)
     if(length & 1) --length;
     int cx = width()/2, cy=height()/2;
     p.drawPixmap(QRect(cx-length/2, cy-length/2, length, length),  icon);
+    p.restore();
 }
 
 void LoadingIcon::resizeEvent(QResizeEvent *)

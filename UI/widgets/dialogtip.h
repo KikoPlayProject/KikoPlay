@@ -4,6 +4,8 @@
 #include <QTimer>
 class QLabel;
 class QGraphicsOpacityEffect;
+class QPropertyAnimation;
+class BackgroundFadeWidget;
 class DialogTip : public QWidget
 {
 public:
@@ -13,8 +15,9 @@ private:
     QLabel *infoText;
     QWidget *busyWidget;
     QTimer hideTimer;
-    QWidget *bgDarkWidget;
-    QGraphicsOpacityEffect *fadeoutEffect;
+    BackgroundFadeWidget *bgDarkWidget;
+    QPropertyAnimation *moveAnime;
+    bool moveHide;
     const int animeDuration = 500;
     const int showDuration = 2500;
 };

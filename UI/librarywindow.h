@@ -9,7 +9,6 @@ class Anime;
 class QListView;
 class QToolButton;
 class QPushButton;
-class QGraphicsBlurEffect;
 class QActionGroup;
 class QButtonGroup;
 class QSplitter;

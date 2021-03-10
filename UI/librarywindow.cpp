@@ -11,7 +11,6 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QScrollArea>
-#include <QGraphicsBlurEffect>
 #include <QMouseEvent>
 #include <QScrollBar>
 #include <QButtonGroup>
@@ -480,6 +479,7 @@ void LibraryWindow::showEvent(QShowEvent *)
     static bool labelInited = false, animeModelActive = false;
     if(!labelInited)
     {
+
         labelInited = true;
         QTimer::singleShot(0, [=](){
             GlobalObjects::animeLabelModel->loadLabels();

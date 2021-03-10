@@ -22,11 +22,19 @@ void Notifier::showMessage(NotifyType nType, const QString &content, int flag)
 {
     if(!notifyHash.contains(nType)) return;
     auto &notifyList = notifyHash[nType];
+    Qt::ConnectionType connType = Qt::AutoConnection;
+    if(QThread::currentThread()!=this->thread())
+    {
+        if(flag & NM_DARKNESS_BACK)
+        {
+            connType = Qt::BlockingQueuedConnection;
+        }
+    }
     for(auto n: notifyList)
     {
         QMetaObject::invokeMethod(this, [=](){
             n->showMessage(content, flag);
-        }, Qt::QueuedConnection);
+        }, connType);
     }
 }
 

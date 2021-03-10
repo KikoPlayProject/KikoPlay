@@ -32,18 +32,47 @@
 #include "aliasedit.h"
 #include "gifcapture.h"
 #include "globalobjects.h"
-
+namespace
+{
+    class ShadowLabel : public QWidget
+    {
+    public:
+        ShadowLabel(QWidget *parent=nullptr) : QWidget(parent)
+        {
+            setStyleSheet(QStringLiteral("background:transparent;"));
+            coverLabel = new QLabel(this);
+            coverLabel->setAlignment(Qt::AlignCenter);
+            coverLabel->setScaledContents(true);
+            QHBoxLayout *sLayout = new QHBoxLayout(this);
+            sLayout->addWidget(coverLabel);
+            QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(this);
+            shadowEffect->setOffset(0, 0);
+            shadowEffect->setBlurRadius(12);
+            shadowEffect->setColor(Qt::white);
+            coverLabel->setGraphicsEffect(shadowEffect);
+            setFixedSize(150*logicalDpiX()/96,217*logicalDpiY()/96);
+        }
+        QPixmap getShadowPixmap(const QPixmap &cover)
+        {
+            coverLabel->setPixmap(cover);
+            QPixmap pixmap(size());
+            pixmap.fill(Qt::transparent);
+            render(&pixmap);
+            return pixmap;
+        }
+    private:
+        QLabel *coverLabel;
+    };
+}
 AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), currentAnime(nullptr)
 {
     coverLabel=new QLabel(this);
     coverLabel->setAlignment(Qt::AlignCenter);
     coverLabel->setScaledContents(true);
-    coverLabel->setFixedSize(140*logicalDpiX()/96,205*logicalDpiY()/96);
-    QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(this);
-    shadowEffect->setOffset(0, 0);
-    shadowEffect->setBlurRadius(12);
-    shadowEffect->setColor(Qt::white);
-    coverLabel->setGraphicsEffect(shadowEffect);
+    //coverLabel->setFixedSize(140*logicalDpiX()/96,205*logicalDpiY()/96);
+
+    coverLabelShadow = new ShadowLabel();
+
     QAction *actCopyCover = new QAction(tr("Copy Cover"), this);
     QObject::connect(actCopyCover, &QAction::triggered, this, [=](){
         if(currentAnime && !currentAnime->cover().isNull())
@@ -63,7 +92,7 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
                 return;
             }
             currentAnime->setCover(reply.content);
-            coverLabel->setPixmap(currentAnime->cover());
+            coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->cover()));
             Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NM_HIDE);
         }
     });
@@ -196,7 +225,8 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
         return;
     }
     static QPixmap nullCover(":/res/images/cover.png");
-    coverLabel->setPixmap(currentAnime->cover().isNull()?nullCover:currentAnime->cover());
+    coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->cover().isNull()?nullCover:currentAnime->cover()));
+
     titleLabel->setText(QString("<style> a {text-decoration: none} </style><a style='color: white;' href = \"%1\">%2</a>").arg(currentAnime->url(), currentAnime->name()));
     QStringList stafflist, outlist;
     int c = 0;

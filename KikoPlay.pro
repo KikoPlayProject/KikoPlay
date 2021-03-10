@@ -69,6 +69,7 @@ SOURCES += \
     UI/settings/stylepage.cpp \
     UI/snippetcapture.cpp \
     UI/stylemanager.cpp \
+    UI/widgets/backgroundfadewidget.cpp \
     UI/widgets/backgroundwidget.cpp \
     UI/widgets/clickslider.cpp \
     UI/widgets/colorpicker.cpp \
@@ -191,6 +192,7 @@ HEADERS += \
     UI/settings/stylepage.h \
     UI/snippetcapture.h \
     UI/stylemanager.h \
+    UI/widgets/backgroundfadewidget.h \
     UI/widgets/backgroundwidget.h \
     UI/widgets/clickslider.h \
     UI/widgets/colorpicker.h \

@@ -58,6 +58,8 @@ int AnimeWorker::fetchAnimes(QList<Anime *> *animes, int offset, int limit)
 {
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([=](){
+        QThread::sleep(2);
+
         QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
         query.exec(QString("select * from anime order by AddTime desc limit %1 offset %2").arg(limit).arg(offset));
         int animeNo=query.record().indexOf("Anime"),
@@ -125,57 +127,49 @@ int AnimeWorker::animeCount()
 
 void AnimeWorker::loadCrImages(Anime *anime)
 {
-    ThreadTask task(GlobalObjects::workThread);
-    task.Run([anime](){
-        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
-        query.prepare("select Name, Image from character where Anime=?");
-        query.bindValue(0,anime->name());
-        query.exec();
-        int nameNo=query.record().indexOf("Name"),
-            imgNo=query.record().indexOf("Image");
-        while (query.next())
+    QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+    query.prepare("select Name, Image from character where Anime=?");
+    query.bindValue(0,anime->name());
+    query.exec();
+    int nameNo=query.record().indexOf("Name"),
+        imgNo=query.record().indexOf("Image");
+    while (query.next())
+    {
+        for(Character &crt:anime->characters)
         {
-            for(Character &crt:anime->characters)
+            if(crt.name==query.value(nameNo).toString())
             {
-                if(crt.name==query.value(nameNo).toString())
-                {
-                    crt.image.loadFromData(query.value(imgNo).toByteArray());
-                    break;
-                }
+                crt.image.loadFromData(query.value(imgNo).toByteArray());
+                break;
             }
         }
-        return 0;
-    });
+    }
 }
 
 void AnimeWorker::loadEpInfo(Anime *anime)
 {
-    ThreadTask task(GlobalObjects::workThread);
-    task.Run([anime](){
-        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
-        query.prepare("select * from episode where Anime=?");
-        query.bindValue(0,anime->name());
-        query.exec();
-        int nameNo=query.record().indexOf("Name"),
-            epIndexNo=query.record().indexOf("EpIndex"),
-            typeNo=query.record().indexOf("Type"),
-            localFileNo=query.record().indexOf("LocalFile"),
-            finishTimeNo=query.record().indexOf("FinishTime"),
-            lastPlayTimeNo=query.record().indexOf("LastPlayTime");
-        while (query.next())
-        {
-            EpInfo ep;
-            ep.name=query.value(nameNo).toString();
-            ep.type=EpType(query.value(typeNo).toInt());
-            ep.index=query.value(epIndexNo).toDouble();
-            ep.localFile=query.value(localFileNo).toString();
-            ep.finishTime=query.value(finishTimeNo).toLongLong();
-            ep.lastPlayTime=query.value(lastPlayTimeNo).toLongLong();
-            anime->epInfoList.append(ep);
-        }
-        std::sort(anime->epInfoList.begin(), anime->epInfoList.end());
-        return 0;
-    });
+    QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+    query.prepare("select * from episode where Anime=?");
+    query.bindValue(0,anime->name());
+    query.exec();
+    int nameNo=query.record().indexOf("Name"),
+        epIndexNo=query.record().indexOf("EpIndex"),
+        typeNo=query.record().indexOf("Type"),
+        localFileNo=query.record().indexOf("LocalFile"),
+        finishTimeNo=query.record().indexOf("FinishTime"),
+        lastPlayTimeNo=query.record().indexOf("LastPlayTime");
+    while (query.next())
+    {
+        EpInfo ep;
+        ep.name=query.value(nameNo).toString();
+        ep.type=EpType(query.value(typeNo).toInt());
+        ep.index=query.value(epIndexNo).toDouble();
+        ep.localFile=query.value(localFileNo).toString();
+        ep.finishTime=query.value(finishTimeNo).toLongLong();
+        ep.lastPlayTime=query.value(lastPlayTimeNo).toLongLong();
+        anime->epInfoList.append(ep);
+    }
+    std::sort(anime->epInfoList.begin(), anime->epInfoList.end());
 }
 
 void AnimeWorker::addAnime(const MatchResult &match)
