@@ -36,7 +36,6 @@ public:
     static QSettings *appSetting;
     static DanmuProvider *danmuProvider;
     static AnimeProvider *animeProvider;
-    static LabelModel *animeLabelModel;
     static DownloadModel *downloadModel;
     static DanmuManager *danmuManager;
     static LANServer *lanServer;    

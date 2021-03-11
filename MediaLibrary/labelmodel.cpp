@@ -255,6 +255,12 @@ void LabelModel::removeTag(const QModelIndex &index)
     }
 }
 
+const TagNode *LabelModel::getTag(const QModelIndex &index)
+{
+    if (!index.isValid()) return nullptr;
+    return static_cast<TagNode*>(index.internalPointer());
+}
+
 QModelIndex LabelModel::index(int row, int column, const QModelIndex &parent) const
 {
     if (!hasIndex(row, column, parent)) return QModelIndex();

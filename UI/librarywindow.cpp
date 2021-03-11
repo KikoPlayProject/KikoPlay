@@ -18,6 +18,8 @@
 #include <QAction>
 #include <QWidgetAction>
 #include <QSplitter>
+#include <QApplication>
+#include <QClipboard>
 
 #include "globalobjects.h"
 #include "Common/notifier.h"
@@ -106,7 +108,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         if(anime)
         {
             if(detailPage->curAnime()==anime) detailPage->setAnime(nullptr);
-            GlobalObjects::animeLabelModel->removeTag(anime->name(), anime->airDate(), anime->scriptId());
+            LabelModel::instance()->removeTag(anime->name(), anime->airDate(), anime->scriptId());
             animeModel->deleteAnime(selection.indexes().first());
         }
     });
@@ -142,7 +144,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         else
         {
             QString animeName(AnimeWorker::instance()->addAnime(currentAnime, nAnime));
-            auto &tagAnimes = GlobalObjects::animeLabelModel->customTags();
+            auto &tagAnimes = LabelModel::instance()->customTags();
             bool hasTag = false;
             for(const auto &animes : tagAnimes)
             {
@@ -162,7 +164,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
                     GlobalObjects::animeProvider->getTags(tAnime, tags);
                     if(tags.size()>0)
                     {
-                        GlobalObjects::animeLabelModel->addCustomTags(tAnime->name(), tags);
+                        LabelModel::instance()->addCustomTags(tAnime->name(), tags);
                     }
                 }
             }
@@ -274,7 +276,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     LabelItemDelegate *labelItemDelegate = new LabelItemDelegate(this);
     labelView->setItemDelegate(labelItemDelegate);
     labelProxyModel = new LabelProxyModel(this);
-    labelProxyModel->setSourceModel(GlobalObjects::animeLabelModel);
+    labelProxyModel->setSourceModel(LabelModel::instance());
     labelProxyModel->setRecursiveFilteringEnabled(true);
     labelView->setModel(labelProxyModel);
     labelView->setSortingEnabled(true);
@@ -282,12 +284,18 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     labelProxyModel->setFilterKeyColumn(0);
     labelView->setContextMenuPolicy(Qt::ActionsContextMenu);
 
-    auto setBrushColor = [=](LabelModel::BrushType bType, const QColor &color){
-        GlobalObjects::animeLabelModel->setBrushColor(bType, color);
+    LabelModel::instance()->loadLabels();
+    auto expand = [=](){
         labelView->expand(labelProxyModel->index(0,0,QModelIndex()));
         labelView->expand(labelProxyModel->index(1,0,QModelIndex()));
         labelView->expand(labelProxyModel->index(2,0,QModelIndex()));
         labelView->expand(labelProxyModel->index(3,0,QModelIndex()));
+    };
+    expand();
+
+    auto setBrushColor = [=](LabelModel::BrushType bType, const QColor &color){
+        LabelModel::instance()->setBrushColor(bType, color);
+        expand();
     };
     QObject::connect(labelView, &LabelTreeView::topLevelColorChanged, [=](const QColor &color){
         setBrushColor(LabelModel::BrushType::TopLevel, color);
@@ -313,13 +321,21 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         }
     });
 
-    QAction *act_deleteTag=new QAction(tr("Delete"),this);
-    QObject::connect(act_deleteTag,&QAction::triggered,[this](){
+    QAction *actDeleteTag=new QAction(tr("Delete"),this);
+    QObject::connect(actDeleteTag,&QAction::triggered,[this](){
         QItemSelection selection=labelView->selectionModel()->selection();
         if(selection.size()==0)return;
-        GlobalObjects::animeLabelModel->removeTag(labelProxyModel->mapSelectionToSource(selection).indexes().first());
+        LabelModel::instance()->removeTag(labelProxyModel->mapSelectionToSource(selection).indexes().first());
     });
-    labelView->addAction(act_deleteTag);
+    QAction *actCopyTag=new QAction(tr("Copy"),this);
+    QObject::connect(actCopyTag,&QAction::triggered,[this](){
+        QItemSelection selection=labelView->selectionModel()->selection();
+        if(selection.size()==0)return;
+        const TagNode *tag = LabelModel::instance()->getTag(labelProxyModel->mapSelectionToSource(selection).indexes().first());
+        QApplication::clipboard()->setText(tag->tagFilter);
+    });
+    labelView->addAction(actCopyTag);
+    labelView->addAction(actDeleteTag);
 
     QLabel *totalCountLabel=new QLabel(animeContainer);
     totalCountLabel->setFont(QFont(GlobalObjects::normalFont,12));
@@ -364,14 +380,14 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     auto refreshLabelFilter = [=](){
         auto indexes(labelProxyModel->mapSelectionToSource(labelView->selectionModel()->selection()).indexes());
         SelectedLabelInfo selectedInfo;
-        GlobalObjects::animeLabelModel->selectedLabelList(indexes, selectedInfo);
+        LabelModel::instance()->selectedLabelList(indexes, selectedInfo);
         QString tagStr(selectedInfo.customTags.join(','));
         QString elidedLastLine = selectedLabelTip->fontMetrics().
                 elidedText(tagStr, Qt::ElideRight, animeListView->width()-filterBox->width()-totalCountLabel->width()-10*logicalDpiX()/96);
         selectedLabelTip->setText(elidedLastLine);
         proxyModel->setTags(std::move(selectedInfo));
     };
-    QObject::connect(GlobalObjects::animeLabelModel, &LabelModel::tagCheckedChanged, refreshLabelFilter);
+    QObject::connect(LabelModel::instance(), &LabelModel::tagCheckedChanged, refreshLabelFilter);
     QObject::connect(labelView->selectionModel(), &QItemSelectionModel::selectionChanged, refreshLabelFilter);
 
     QObject::connect(detailPage,&AnimeDetailInfoPage::playFile,this,&LibraryWindow::playFile);
@@ -447,7 +463,7 @@ void LibraryWindow::searchAddAnime(Anime *srcAnime)
                     GlobalObjects::animeProvider->getTags(tAnime, tags);
                     if(tags.size()>0)
                     {
-                        GlobalObjects::animeLabelModel->addCustomTags(tAnime->name(), tags);
+                        LabelModel::instance()->addCustomTags(tAnime->name(), tags);
                     }
                 }
             }
@@ -459,7 +475,7 @@ void LibraryWindow::searchAddAnime(Anime *srcAnime)
                     GlobalObjects::animeProvider->getTags(nAnime, tags);
                     if(tags.size()>0)
                     {
-                        GlobalObjects::animeLabelModel->addCustomTags(nAnime->name(), tags);
+                        LabelModel::instance()->addCustomTags(nAnime->name(), tags);
                     }
                 }
             }
@@ -476,19 +492,7 @@ void LibraryWindow::searchAddAnime(Anime *srcAnime)
 
 void LibraryWindow::showEvent(QShowEvent *)
 {
-    static bool labelInited = false, animeModelActive = false;
-    if(!labelInited)
-    {
-
-        labelInited = true;
-        QTimer::singleShot(0, [=](){
-            GlobalObjects::animeLabelModel->loadLabels();
-            labelView->expand(labelProxyModel->index(0,0,QModelIndex()));
-            labelView->expand(labelProxyModel->index(1,0,QModelIndex()));
-            labelView->expand(labelProxyModel->index(2,0,QModelIndex()));
-            labelView->expand(labelProxyModel->index(3,0,QModelIndex()));
-        });
-    }
+    static bool animeModelActive = false;
     if(!animeModelActive)
     {
         QTimer::singleShot(0, [this](){

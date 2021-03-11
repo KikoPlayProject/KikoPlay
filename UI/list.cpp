@@ -113,12 +113,7 @@ namespace
         explicit InfoTip(QWidget *parent=nullptr):QWidget(parent)
         {
             setObjectName(QStringLiteral("ListInfoBar"));
-            QMovie *infoIcon=new QMovie(this);
-            infoIcon->setFileName(":/res/images/busy.gif");
             loadingIcon=new LoadingIcon(Qt::white, this);
-            //movieLabel->setMovie(infoIcon);
-            //movieLabel->setFixedSize(32 * logicalDpiX()/96, 32 * logicalDpiY()/96);
-            //infoIcon->start();
             loadingIcon->hide();
 
             infoText=new QLabel(this);
@@ -1168,8 +1163,7 @@ QWidget *ListWindow::setupPlaylistPage()
     listEditHLayout->addWidget(tb_remove);
     listEditHLayout->addWidget(tb_sort);
     listEditHLayout->addWidget(tb_playmode);
-    QSpacerItem *listHSpacer = new QSpacerItem(0, 10, QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
-    listEditHLayout->addItem(listHSpacer);
+    listEditHLayout->addStretch(1);
 
     playlistPageVLayout->addLayout(listEditHLayout);
 

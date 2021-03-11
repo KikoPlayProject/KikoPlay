@@ -67,8 +67,8 @@ bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &
          bool contains = false;
          for(const QString &tag : filterLabels.epPathTags)
          {
-             auto iter = GlobalObjects::animeLabelModel->epTags().lowerBound(tag);
-             while(iter != GlobalObjects::animeLabelModel->epTags().end() && iter.key().startsWith(tag))
+             auto iter = LabelModel::instance()->epTags().lowerBound(tag);
+             while(iter != LabelModel::instance()->epTags().end() && iter.key().startsWith(tag))
              {
                  if(iter.key()==tag || iter.key().startsWith(tag+'/'))
                  {
@@ -90,8 +90,8 @@ bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &
          bool contains = false;
          for(const QString &tag : filterLabels.customPrefixTags)
          {
-             auto iter = GlobalObjects::animeLabelModel->customTags().lowerBound(tag);
-             while(iter != GlobalObjects::animeLabelModel->customTags().end() && iter.key().startsWith(tag))
+             auto iter = LabelModel::instance()->customTags().lowerBound(tag);
+             while(iter != LabelModel::instance()->customTags().end() && iter.key().startsWith(tag))
              {
                  if(iter.key()==tag || iter.key().startsWith(tag+'/'))
                  {
@@ -110,7 +110,7 @@ bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &
 
      for(const QString &tag : filterLabels.customTags)
      {
-         if(!GlobalObjects::animeLabelModel->customTags()[tag].contains(anime->name()))
+         if(!LabelModel::instance()->customTags()[tag].contains(anime->name()))
              return false;
      }
 

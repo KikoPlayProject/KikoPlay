@@ -3,7 +3,7 @@
 #include <QPainterPath>
 #include <QTimer>
 
-LoadingIcon::LoadingIcon(const QColor &color, QWidget *parent) : QWidget(parent), iconColor(color), angleSpeed(12)
+LoadingIcon::LoadingIcon(const QColor &color, QWidget *parent) : QWidget(parent), iconColor(color), angleSpeed(12), margin(2)
 {
     createIcon();
     refreshTimer = new QTimer(this);
@@ -26,6 +26,12 @@ void LoadingIcon::hide()
     QWidget::hide();
 }
 
+void LoadingIcon::setMargin(int m)
+{
+    margin = m;
+    update();
+}
+
 void LoadingIcon::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
@@ -37,6 +43,7 @@ void LoadingIcon::paintEvent(QPaintEvent *)
     p.translate(-center);
 
     int length = qMin(width(), height());
+    length -= margin*2;
     if(length & 1) --length;
     int cx = width()/2, cy=height()/2;
     p.drawPixmap(QRect(cx-length/2, cy-length/2, length, length),  icon);

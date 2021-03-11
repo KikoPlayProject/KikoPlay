@@ -270,7 +270,7 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
         characterList->setItemWidget(listItem, crtItem);
         listItem->setSizeHint(crtItem->sizeHint());
     }
-    auto &tagMap=GlobalObjects::animeLabelModel->customTags();
+    auto &tagMap=LabelModel::instance()->customTags();
     QStringList tags;
     for(auto iter=tagMap.begin();iter!=tagMap.end();++iter)
     {
@@ -334,7 +334,7 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
             QString filePath = localFile.mid(0, localFile.lastIndexOf('/'));
             if(pathCounter.value(filePath, 0)<2)
             {
-                GlobalObjects::animeLabelModel->removeTag(currentAnime->name(), filePath, TagNode::TAG_FILE);
+                LabelModel::instance()->removeTag(currentAnime->name(), filePath, TagNode::TAG_FILE);
             }
             epModel->removeEp(selection.last());
         }
@@ -420,13 +420,13 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
     tagContainerSLayout->setContentsMargins(0,0,0,0);
 
     tagPanel = new TagPanel(container,true,false,true);
-    QObject::connect(GlobalObjects::animeLabelModel, &LabelModel::tagRemoved, tagPanel, &TagPanel::removeTag);
+    QObject::connect(LabelModel::instance(), &LabelModel::tagRemoved, tagPanel, &TagPanel::removeTag);
     QObject::connect(tagPanel, &TagPanel::deleteTag, [this](const QString &tag){
-        GlobalObjects::animeLabelModel->removeTag(currentAnime->name(), tag, TagNode::TAG_CUSTOM);
+        LabelModel::instance()->removeTag(currentAnime->name(), tag, TagNode::TAG_CUSTOM);
     });
     QObject::connect(tagPanel,&TagPanel::tagAdded, [this](const QString &tag){
         QStringList tags{tag};
-        GlobalObjects::animeLabelModel->addCustomTags(currentAnime->name(), tags);
+        LabelModel::instance()->addCustomTags(currentAnime->name(), tags);
         tagPanel->addTag(tags);
     });
     TagPanel *webTagPanel = new TagPanel(container,false,true);
@@ -458,9 +458,9 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
     QObject::connect(webTagOKAction,&QAction::triggered,this,[this,webTagPanel](){
         QStringList tags(webTagPanel->getSelectedTags());
         if(tags.count()==0) return;
-        GlobalObjects::animeLabelModel->addCustomTags(currentAnime->name(), tags);
+        LabelModel::instance()->addCustomTags(currentAnime->name(), tags);
         tagPanel->clear();
-        auto &tagMap=GlobalObjects::animeLabelModel->customTags();
+        auto &tagMap=LabelModel::instance()->customTags();
         tags.clear();
         for(auto iter=tagMap.begin();iter!=tagMap.end();++iter)
         {

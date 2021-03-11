@@ -20,7 +20,13 @@ public:
     };
 
     explicit LabelModel(QObject *parent = nullptr);
+
     ~LabelModel();
+    static LabelModel *instance()
+    {
+        static LabelModel animeLabelModel;
+        return &animeLabelModel;
+    }
 
     void loadLabels();
 
@@ -36,6 +42,7 @@ public:
     void removeTag(const QString &animeName, const QString &tag, TagNode::TagType type);
     void removeTag(const QString &animeName, const QString &airDate, const QString &scriptId);
     void removeTag(const QModelIndex &index);
+    const TagNode *getTag(const QModelIndex &index);
 
     // QAbstractItemModel interface
 public:

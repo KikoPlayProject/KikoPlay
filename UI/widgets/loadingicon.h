@@ -11,6 +11,7 @@ public:
     void show();
     void hide();
     void anglePerFrame(int nAngle) { angleSpeed = nAngle; }
+    void setMargin(int m);
 protected:
     virtual void paintEvent(QPaintEvent *);
     virtual void resizeEvent(QResizeEvent *);
@@ -18,6 +19,7 @@ private:
     QPixmap icon;
     QColor iconColor;
     int angle, angleSpeed;
+    int margin;
     QTimer *refreshTimer;
 
     void createIcon();
