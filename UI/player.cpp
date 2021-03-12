@@ -397,7 +397,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
 
     launch=new QPushButton(playControlPanel);
     launch->setFont(GlobalObjects::iconfont);
-    launch->setText(QChar(0xe6fd));
+    launch->setText(QChar(0xe947));
     launch->setFixedSize(buttonWidth,buttonHeight);
     launch->setToolTip(tr("Launch Danmu"));
     launch->setObjectName(QStringLiteral("widgetPlayControlButtons"));

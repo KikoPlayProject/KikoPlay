@@ -569,8 +569,9 @@ static int xrAddData(lua_State *L)
     QXmlStreamReader *reader = checkXmlReader(L);
     if(lua_gettop(L) > 1 && lua_type(L, 2)==LUA_TSTRING)
     {
-        const char *data = lua_tostring(L, 2);
-        reader->addData(data);
+        size_t len = 0;
+        const char *data = lua_tolstring(L, 2, &len);
+        reader->addData(QByteArray(data, len));
     }
     return 0;
 }
@@ -679,6 +680,17 @@ static HTMLParserSax *checkHTMLParser(lua_State *L)
     void *ud = luaL_checkudata(L, 1, "meta.kiko.htmlparser");
     luaL_argcheck(L, ud != NULL, 1, "`kiko.htmlparser' expected");
     return *(HTMLParserSax **)ud;
+}
+static int hpAddData(lua_State *L)
+{
+    HTMLParserSax *parser = checkHTMLParser(L);
+    if(lua_gettop(L) > 1 && lua_type(L, 2)==LUA_TSTRING)
+    {
+        size_t len = 0;
+        const char *data = lua_tolstring(L, 2, &len);
+        parser->addData(QByteArray(data, len));
+    }
+    return 0;
 }
 static int hpSeekTo(lua_State *L)
 {
@@ -801,6 +813,7 @@ static const luaL_Reg xmlreaderFuncs[] = {
     {nullptr, nullptr}
 };
 static const luaL_Reg htmlparserFuncs [] = {
+    {"adddata", hpAddData},
     {"seekto", hpSeekTo},
     {"atend", hpEnd},
     {"readnext", hpReadNext},

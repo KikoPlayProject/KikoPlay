@@ -104,7 +104,7 @@ void BackgroundWidget::setBgCache()
 }
 
 
-void BackgroundWidget::paintEvent(QPaintEvent *e)
+void BackgroundWidget::paintEvent(QPaintEvent *)
 {
     if(!img.isNull())
     {

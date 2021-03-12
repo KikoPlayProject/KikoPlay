@@ -77,14 +77,22 @@ void HTMLParserSax::skip()
 
 HTMLParserSax::HTMLParserSax(const QByteArray &content):cHtml(content), isStart(false)
 {
-    begin=content.cbegin();
-    end=content.cend();
+    begin=cHtml.cbegin();
+    end=cHtml.cend();
+}
+
+void HTMLParserSax::addData(const QByteArray &content)
+{
+    int cp =curPos();
+    cHtml.append(content);
+    begin = cHtml.cbegin()+cp;
+    end = cHtml.cend();
 }
 
 void HTMLParserSax::seekTo(int pos)
 {
     pos = qBound<int>(0, pos, cHtml.size());
-    begin=cHtml.begin()+pos;
+    begin=cHtml.cbegin()+pos;
     nodeName="";
     isStart=false;
     propertyMap.clear();

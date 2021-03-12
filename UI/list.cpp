@@ -1012,7 +1012,6 @@ QWidget *ListWindow::setupPlaylistPage()
          qDeleteAll(matchActions);
 		 matchActions.clear();
          matchSubMenu->removeAction(matchSep);
-         defaultMatchScriptMenu->hide();
          for(QAction *act : defaultMatchScriptMenu->actions())
          {
             matchCheckGroup->removeAction(act);
@@ -1021,7 +1020,6 @@ QWidget *ListWindow::setupPlaylistPage()
          if(matchProviders.count()>0)
          {
              QString defaultSctiptId = GlobalObjects::animeProvider->defaultMatchScript();
-             defaultMatchScriptMenu->show();
              matchSubMenu->addAction(matchSep);
              for(const auto &p : matchProviders)
              {

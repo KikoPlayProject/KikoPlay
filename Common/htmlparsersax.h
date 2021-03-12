@@ -4,7 +4,7 @@
 
 class HTMLParserSax
 {
-    const QByteArray cHtml;
+    QByteArray cHtml;
     QByteArray::const_iterator begin,end;
 
     QByteArray nodeName;
@@ -15,10 +15,11 @@ class HTMLParserSax
     void skip();
 public:
     HTMLParserSax(const QByteArray &content);
+    void addData(const QByteArray &content);
     void seekTo(int pos);
     void readNext();
     inline bool atEnd(){return begin==end;}
-    inline int curPos(){return begin-cHtml.begin();}
+    inline int curPos(){return begin-cHtml.cbegin();}
     const QByteArray readContentText();
     const QByteArray readContentUntil(const QString &node,bool isStart);
 
