@@ -88,8 +88,8 @@ ScriptState DanmuScript::getDanmu(const DanmuSource *item, DanmuSource **nItem, 
         comment->color = dobj.value("color", 0xFFFFFF).toInt();
         int fontsize = dobj.value("fontsize", 0).toInt();
         comment->fontSizeLevel = (fontsize == 1? DanmuComment::Small:(fontsize == 2? DanmuComment::Large : DanmuComment::Normal));
-        int type = dobj.value("type", 1).toInt();
-        comment->setType(type);
+        int type = dobj.value("type", (int)DanmuComment::Rolling).toInt();
+        comment->type = (DanmuComment::DanmuType)type;
         comment->date = dobj.value("date", 0).toLongLong();
         comment->sender = dobj.value("sender").toString();
         danmuList.append(comment);

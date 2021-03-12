@@ -14,7 +14,22 @@ private:
     {
         QString text, blockVar;
         int start=0, end=1, step=1;
+        bool cond = true;
     };
+    template<typename  T>
+    bool cp(const T &lhs, const T &rhs, char op, bool hasEq)
+    {
+        switch (op)
+        {
+        case '>':
+            return hasEq? lhs>=rhs : lhs>rhs;
+        case '<':
+            return hasEq? lhs<=rhs : lhs<rhs;
+        case '=':
+            return lhs == rhs;
+        }
+        return false;
+    }
     QString expandMediaInfo();
     void evalCommand(QList<QString> &commandStack, QList<TextBlock> &textStack);
 };

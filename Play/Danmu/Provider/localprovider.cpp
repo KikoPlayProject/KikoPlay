@@ -21,7 +21,11 @@ void LocalProvider::LoadXmlDanmuFile(QString filePath, QList<DanmuComment *> &li
                     danmu->text=reader.readElementText();
                     danmu->time = attrList[0].toFloat() * 1000;
                     danmu->originTime=danmu->time;
-                    danmu->setType(attrList[1].toInt());
+                    int mode = attrList[1].toInt();
+                    DanmuComment::DanmuType type = DanmuComment::Rolling;
+                    if(mode==4) type = DanmuComment::Bottom;
+                    else if(mode==5) type = DanmuComment::Top;
+                    danmu->type =type;
                     danmu->color=attrList[3].toInt();
                     if(attrList.length()>4)
                         danmu->date=attrList[4].toLongLong();

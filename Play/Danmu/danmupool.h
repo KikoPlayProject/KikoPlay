@@ -29,6 +29,7 @@ public:
     inline const StatisInfo &getStatisInfo(){return statisInfo;}
     inline void reset(){currentTime=0;currentPosition=0;}
     inline Pool *getPool() {return curPool;}
+    inline int getCurrentTime() const {return currentTime;}
 
     QSharedPointer<DanmuComment> getDanmu(const QModelIndex &index);
     void deleteDanmu(QSharedPointer<DanmuComment> danmu);

@@ -119,9 +119,7 @@ void DanmuObject::DeleteObjPool()
 
 QDataStream &operator<<(QDataStream &stream, const DanmuComment &danmu)
 {
-    static int type[3]={1,5,4};
-    static int fontSize[3]={25,18,36};
-    stream<<danmu.originTime<<type[danmu.type]<<fontSize[danmu.fontSizeLevel]<<danmu.color
+    stream<<danmu.originTime<<danmu.type<<danmu.fontSizeLevel<<danmu.color
          <<danmu.date<<danmu.sender<<danmu.source<<danmu.text;
     return stream;
 }
@@ -130,14 +128,7 @@ QDataStream &operator>>(QDataStream &stream, DanmuComment &danmu)
 {
     stream>>danmu.originTime;
     danmu.time=danmu.originTime;
-    int type,fontSize;
-    stream>>type>>fontSize;
-    danmu.setType(type);
-
-    if(fontSize==18) danmu.fontSizeLevel=DanmuComment::Small;
-    else if(fontSize==36) danmu.fontSizeLevel=DanmuComment::Large;
-    else danmu.fontSizeLevel=DanmuComment::Normal;
-
+    stream>>danmu.type>>danmu.fontSizeLevel;
     stream>>danmu.color>>danmu.date>>danmu.sender>>danmu.source>>danmu.text;
     return stream;
 }

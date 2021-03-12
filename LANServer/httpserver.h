@@ -32,6 +32,7 @@ public slots:
     void api_UpdateTimeline(QHttpEngine::Socket *socket);
     void api_Subtitle(QHttpEngine::Socket *socket);
     void api_Screenshot(QHttpEngine::Socket *socket);
+    void api_Launch(QHttpEngine::Socket *socket);
 };
 
 #endif // HTTPSERVER_H

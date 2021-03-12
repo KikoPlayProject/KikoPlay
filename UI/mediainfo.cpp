@@ -168,7 +168,53 @@ void MediaInfo::evalCommand(QList<QString> &commandStack, QList<TextBlock> &text
             textStack.back().text.append(content);
         }
         return;
-    }else {
+    } else if(command.startsWith("if:")) {
+        QString ifcond = command.mid(3);
+        int lhsPos = ifcond.indexOf(QRegExp("([<>=])|(>=)|(<=)"));
+        do
+        {
+            if(lhsPos <= 0) break;
+            QChar op = ifcond[lhsPos];
+            QString lhs = ifcond.left(lhsPos).trimmed();
+            if(lhs.isEmpty()) break;
+            int rhsPos = lhsPos + 1;
+            if(rhsPos >= ifcond.length()) break;
+            bool hasEq = false;
+            if(rhsPos + 1<ifcond.length() && ifcond[rhsPos]=='=')
+            {
+                rhsPos += 1;
+                hasEq = true;
+            }
+            QString rhs = ifcond.mid(rhsPos).trimmed();
+            if(rhs.isEmpty()) break;
+            bool lNum = true, rNum = true;
+            double ilhs = lhs.toDouble(&lNum);
+            double irhs = rhs.toDouble(&rNum);
+            TextBlock block;
+            if(lNum && rNum)
+            {
+                block.cond = cp(ilhs, irhs, op.toLatin1(), hasEq);
+            }
+            else
+            {
+                block.cond = cp(lhs, rhs, op.toLatin1(), hasEq);
+            }
+            textStack.push_back(block);
+        }while(false);
+        return;
+    } else if(command.startsWith("endif")) {
+           if(textStack.size()>1)
+           {
+               QString content = textStack.back().text;
+               bool cond = textStack.back().cond;
+               textStack.pop_back();
+               if(cond)
+               {
+                   textStack.back().text.append(content);
+               }
+           }
+           return;
+    } else {
         commandResult = QString("${%1}").arg(command);
     }
     if(commandStack.empty())

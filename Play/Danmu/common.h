@@ -20,26 +20,6 @@ struct DanmuComment
         Small,
         Large
     };
-    void setType(int mode)
-    {
-        switch (mode)
-        {
-        case 1:
-        case 2:
-        case 3:
-            type=Rolling;
-            break;
-        case 4:
-            type=Bottom;
-            break;
-        case 5:
-            type=Top;
-            break;
-        default:
-            type=Rolling;
-            break;
-        }
-    }
     QString text;
     QString sender;
     int color;

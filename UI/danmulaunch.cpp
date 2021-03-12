@@ -131,16 +131,13 @@ void DanmuLaunch::onAccept()
         showMessage(tr("Danmu Text Should not be empty"), NM_ERROR | NM_HIDE);
         return;
     }
-    const int types[] = {1, 5, 4};
-    int type = types[typeCombo->currentIndex()];
-    int fontSize = fontSizeCombo->currentIndex();
     QColor color = colorPicker->color();
     DanmuComment *comment = new DanmuComment;
     comment->originTime = comment->time = curTime * 1000;  //ms
     comment->color = (int)(color.red()<<16) | (color.green()<<8) | color.blue();
     comment->text = text;
-    comment->setType(type);
-    comment->fontSizeLevel = DanmuComment::FontSizeLevel(fontSize);
+    comment->type = (DanmuComment::DanmuType)typeCombo->currentIndex();
+    comment->fontSizeLevel = (DanmuComment::FontSizeLevel)fontSizeCombo->currentIndex();
     comment->date = QDateTime::currentDateTime().toSecsSinceEpoch();
     GlobalObjects::danmuProvider->launch(scriptIds, curPoolId, srcs, comment);
     textEdit->clear();

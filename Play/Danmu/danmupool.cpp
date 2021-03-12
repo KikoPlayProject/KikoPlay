@@ -379,7 +379,6 @@ void DanmuPool::mediaTimeElapsed(int newTime)
 {
     if(currentTime>newTime || newTime-currentTime>5000)
     {
-        QCoreApplication::instance()->processEvents();
         currentTime=newTime;
         currentPosition=std::lower_bound(finalPool.begin(),finalPool.end(),currentTime,DanmuComparer)-finalPool.begin();
         return;

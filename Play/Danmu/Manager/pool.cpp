@@ -361,16 +361,6 @@ QJsonObject Pool::exportFullJson()
     return poolObj;
 }
 
-/*QJsonObject Pool::exportJson()
-{
-    QJsonObject resposeObj
-    {
-        {"code", 0},
-        {"data", danmuArray}
-    };
-    return resposeObj;
-}*/
-
 QJsonArray Pool::exportJson(const QList<QSharedPointer<DanmuComment> > &danmuList, bool useOrigin)
 {
     QJsonArray danmuArray;
