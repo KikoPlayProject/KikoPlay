@@ -495,7 +495,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         }
         catch(TorrentError &err)
         {
-            QMessageBox::information(this,tr("Error"),err.errorInfo);
+            showMessage(err.errorInfo, NM_ERROR | NM_HIDE);
         }
     });
     QObject::connect(GlobalObjects::downloadModel,&DownloadModel::removeTask,[this](const QString &gid){
@@ -701,7 +701,7 @@ QWidget *DownloadWindow::setupFileInfoPage(QWidget *parent)
             QFileInfo info(dir,item->name);
             if(!info.exists())
             {
-                QMessageBox::information(this,"KikoPlay",tr("File Not Exist"));
+                showMessage(tr("File Not Exist"), NM_ERROR|NM_HIDE);
                 return;
             }
             if(info.isDir())return;

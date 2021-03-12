@@ -8,7 +8,6 @@
 #include <QLabel>
 #include <QMovie>
 #include <QToolButton>
-#include <QMessageBox>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QMouseEvent>

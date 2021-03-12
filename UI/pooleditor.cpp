@@ -6,7 +6,6 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QScrollArea>
-#include <QMessageBox>
 #include <QFileDialog>
 #include <QAction>
 #include <QApplication>
