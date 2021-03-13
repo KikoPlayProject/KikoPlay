@@ -76,6 +76,7 @@ HttpServer::HttpServer(QObject *parent) : QObject(parent)
     handler->addSubHandler(QRegExp("api/"), apiHandler);
 
     server = new QHttpEngine::Server(handler,this);
+    GlobalObjects::playlist->dumpJsonPlaylist(playlistDoc,mediaHash);
 }
 
 HttpServer::~HttpServer()

@@ -5,6 +5,7 @@
 #include "Common/htmlparsersax.h"
 #include "Common/notifier.h"
 #include "scriptlogger.h"
+#include <QSysInfo>
 #ifdef Q_OS_WIN
 #include <windows.h>
 #endif
@@ -543,6 +544,29 @@ static int simplifiedTraditionalTrans(lua_State *L)
     return 2;
 #endif
 }
+static int envInfo(lua_State *L)
+{
+    lua_newtable(L); // table
+
+    lua_pushstring(L, "os"); // table key
+    lua_pushstring(L, QSysInfo::productType().toStdString().c_str()); // tabel key value
+    lua_rawset(L, -3); //table
+
+    lua_pushstring(L, "os_version"); // table key
+    lua_pushstring(L, QSysInfo::productVersion().toStdString().c_str()); // tabel key value
+    lua_rawset(L, -3); //table
+
+    QFile version(":/res/version.json");
+    version.open(QIODevice::ReadOnly);
+    QJsonObject curVersionObj = QJsonDocument::fromJson(version.readAll()).object();
+    QString versionStr=curVersionObj.value("Version").toString();
+
+    lua_pushstring(L, "kikoplay"); // table key
+    lua_pushstring(L, versionStr.toStdString().c_str()); // tabel key value
+    lua_rawset(L, -3); //table
+
+    return 1;
+}
 // XmlReader-------------
 static int xmlreader (lua_State *L)
 {
@@ -795,6 +819,7 @@ static const luaL_Reg kikoFuncs[] = {
     {"message", message},
     {"dialog", dialog},
     {"sttrans", simplifiedTraditionalTrans},
+    {"envinfo", envInfo},
     {nullptr, nullptr}
 };
 static const luaL_Reg xmlreaderFuncs[] = {
