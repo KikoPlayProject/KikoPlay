@@ -7,6 +7,7 @@
 #include <QBrush>
 #define CountRole Qt::UserRole+1
 #define TypeRole Qt::UserRole+2
+#define TagNodeRole Qt::UserRole+3
 LabelModel::LabelModel(QObject *parent) : QAbstractItemModel(parent), root(nullptr)
 {
     QObject::connect(AnimeWorker::instance(), &AnimeWorker::renameEpTag, this, [=](const QString &oldAnimeName, const QString &newAnimeName){
@@ -302,6 +303,8 @@ QVariant LabelModel::data(const QModelIndex &index, int role) const
         return node->animeCount;
     case TypeRole:
         return node->tagType;
+    case TagNodeRole:
+        return QVariant::fromValue((void *)node);
     case Qt::ForegroundRole:
         return node->tagType==TagNode::TAG_ROOT_CATE?foregroundColor[BrushType::TopLevel]:foregroundColor[BrushType::ChildLevel];
     case Qt::CheckStateRole:
@@ -624,7 +627,19 @@ bool LabelProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right
         return lNode->tagTitle>rNode->tagTitle;
     case TagNode::TAG_FILE:
         return lNode->tagTitle<rNode->tagTitle;
+    case TagNode::TAG_CUSTOM:
+        if(lNode->subNodes)
+        {
+            if(rNode->subNodes)
+                return comparer.compare(lNode->tagTitle, rNode->tagTitle)<0;
+            return true;
+        }
+        else if(rNode->subNodes)
+        {
+            return false;
+        }
     default:
+
         if(lNode->animeCount==rNode->animeCount)
             return comparer.compare(lNode->tagTitle, rNode->tagTitle)<0;
         return lNode->animeCount>rNode->animeCount;

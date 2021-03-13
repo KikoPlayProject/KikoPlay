@@ -35,6 +35,7 @@
 #include "MediaLibrary/labelmodel.h"
 #include "MediaLibrary/labelitemdelegate.h"
 #include "MediaLibrary/animefilterproxymodel.h"
+#define TagNodeRole Qt::UserRole+3
 
 namespace
 {
@@ -330,7 +331,8 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     QObject::connect(actCopyTag,&QAction::triggered,[this](){
         QItemSelection selection=labelView->selectionModel()->selection();
         if(selection.size()==0)return;
-        const TagNode *tag = LabelModel::instance()->getTag(labelProxyModel->mapSelectionToSource(selection).indexes().first());
+        QModelIndex index = labelProxyModel->mapToSource(selection.indexes().first());
+        const TagNode *tag = (const TagNode *)LabelModel::instance()->data(index, TagNodeRole).value<void *>();
         QApplication::clipboard()->setText(tag->tagFilter);
     });
     labelView->addAction(actCopyTag);
