@@ -19,7 +19,7 @@ InputDialog::InputDialog(const QString &title, const QString &tip, const QString
    this->canEmpty=canEmpty;
 }
 
-InputDialog::InputDialog(const QString &title, const QString &tip, QWidget *parent): CFramelessDialog (title,parent), edit(nullptr)
+InputDialog::InputDialog(const QString &title, const QString &tip, QWidget *parent): CFramelessDialog (title,parent,true), edit(nullptr)
 {
     QLabel *tipLabel=new QLabel(tip,this);
     QVBoxLayout *inputVLayout=new QVBoxLayout(this);
@@ -53,7 +53,7 @@ InputDialog::InputDialog(const QByteArray &imgData, const QString &title, const 
     inputGLayout->setContentsMargins(0, 0, 0, 0);
 }
 
-InputDialog::InputDialog(const QByteArray &imgData, const QString &title, const QString &tip, QWidget *parent): CFramelessDialog (title,parent), edit(nullptr)
+InputDialog::InputDialog(const QByteArray &imgData, const QString &title, const QString &tip, QWidget *parent): CFramelessDialog (title,parent, true), edit(nullptr)
 {
     QLabel *imgLabel = new QLabel(this);
     QPixmap pixmap;

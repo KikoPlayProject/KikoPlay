@@ -135,7 +135,7 @@ struct DanmuSource
     void setTimeline(const QString &timelineStr);
     QString timelineStr() const;
 
-    QVariantMap toMap() const {return {{"title", title}, {"desc", desc}, {"scriptid", scriptId}, {"data", scriptData}, {"duration", duration}, {"delay", delay}};}
+    QVariantMap toMap() const {return {{"title", title}, {"desc", desc}, {"scriptId", scriptId}, {"data", scriptData}, {"duration", duration}, {"delay", delay}};}
     QString durationStr() const
     {
         int min=duration/60;

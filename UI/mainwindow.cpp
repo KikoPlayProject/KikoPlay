@@ -687,8 +687,8 @@ QVariant MainWindow::showDialog(const QVariant &inputs)
     if(!hasText && !hasImage)
     {
         InputDialog dialog(title, tip, this);
-        dialog.exec();
-        return QStringList{"reject", ""};
+        int ret = dialog.exec();
+        return QStringList{ret==QDialog::Accepted?"accept":"reject", ""};
     }
     else if(hasText && !hasImage)
     {
@@ -699,8 +699,8 @@ QVariant MainWindow::showDialog(const QVariant &inputs)
     else if(!hasText && hasImage)
     {
         InputDialog dialog(optMap.value("image").toByteArray(), title, tip, this);
-        dialog.exec();
-        return QStringList{"reject", ""};
+        int ret = dialog.exec();
+        return QStringList{ret==QDialog::Accepted?"accept":"reject", ""};
     }
     else
     {
