@@ -369,7 +369,7 @@ QJsonArray Pool::exportJson(const QList<QSharedPointer<DanmuComment> > &danmuLis
         if(danmu->blockBy!=-1) continue;
         if(useOrigin)
         {
-            danmuArray.append(QJsonArray({danmu->originTime/1000.0,danmu->type,danmu->color,danmu->source,danmu->text}));
+            danmuArray.append(QJsonArray({danmu->originTime/1000.0,danmu->type,danmu->color,danmu->source,danmu->text, danmu->sender}));
         }
         else
         {
