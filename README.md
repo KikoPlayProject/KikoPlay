@@ -21,6 +21,9 @@
  - 集成每日放送、资源搜索、aria2下载、自动下载等功能，在KikoPlay里即可完成下载、观看、管理等全部操作
  - .........
 
+任何人都可以为KikoPlay编写脚本来支持更多弹幕、视频资料以及资源来源，[脚本仓库](https://github.com/Protostars/KikoPlayScript)  
+还可以通过KikoPlay的Web API实现其他功能，[Web API参考](web/README.md)
+
 ## 编译
 
 KikoPlay基于以下项目：
@@ -52,13 +55,13 @@ Mac OS 系统可自行尝试
 如果有问题，欢迎创建issue或者联系我:
 dx_8820832#yeah.net（#→@），或者加QQ群874761809反馈
 
-## 做点贡献
+## 一起来让KikoPlay更好！
 
  - 为主程序贡献代码，包括但不限于新功能开发、BUG修复等等
  - 为KikoPlay编写脚本，支持更多弹幕、资料或者资源来源，脚本仓库在[这里](https://github.com/Protostars/KikoPlayScript)
  - 提升局域网网页访问体验，目前的网页是在[这里](https://github.com/Protostars/KikoPlay/tree/master/web)
  - 改进[Android局域网客户端]((https://github.com/Protostars/KikoPlay-Android-LAN))
- - 开发ios局域网客户端
+ - 开发其他平台上的局域网客户端
  - 测试，找出BUG并反馈
  - ......
  - Star or Fork
