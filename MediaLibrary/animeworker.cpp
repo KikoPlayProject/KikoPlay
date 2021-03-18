@@ -366,9 +366,24 @@ void AnimeWorker::updateEpTime(const QString &animeName, const QString &path, bo
     task.RunOnce([=](){
         QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
         if(finished)
-            query.prepare("update episode set FinishTime=? where LocalFile=?");
+        {
+            QSqlQuery checkQuery(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+            checkQuery.prepare("select LastPlayTime from episode where LocalFile=?");
+            checkQuery.bindValue(0, path);
+            checkQuery.exec();
+            if(checkQuery.first())
+            {
+                if(checkQuery.value(0).isNull())
+                {
+                    updateEpTime(animeName, path);
+                }
+            }
+            query.prepare("update episode set FinishTime=? where LocalFile=?");  
+        }
         else
+        {
             query.prepare("update episode set LastPlayTime=? where LocalFile=?");
+        }
         qint64 time = epTime==0?QDateTime::currentDateTime().toSecsSinceEpoch():epTime;
         query.bindValue(0,time);
         query.bindValue(1,path);
@@ -405,7 +420,7 @@ void AnimeWorker::updateEpPath(const QString &animeName, const QString &path, co
     task.RunOnce([=](){
         if(nPath==path) return;
         QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
-        query.prepare("select Anime episode where LocalFile=?");
+        query.prepare("select Anime from episode where LocalFile=?");
         query.bindValue(0, nPath);
         query.exec();
         if(query.first()) return;
