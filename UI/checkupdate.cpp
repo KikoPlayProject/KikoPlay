@@ -25,7 +25,7 @@ CheckUpdate::CheckUpdate(QWidget *parent) : CFramelessDialog(tr("Check For Updat
     QTimer::singleShot(500,[this,newVersionLabel,versionStr](){
         try
         {
-            QString updatePath(GlobalObjects::appSetting->value("KikoPlay/checkUpdateURL", "https://raw.githubusercontent.com/Protostars/KikoPlay/master/newVersion/version.json").toString());
+            QString updatePath(GlobalObjects::appSetting->value("KikoPlay/checkUpdateURL", "https://raw.githubusercontent.com/KikoPlayProject/KikoPlay/master/newVersion/version.json").toString());
             Network::Reply reply(Network::httpGet(updatePath,QUrlQuery()));
             if(reply.hasError) throw Network::NetworkError(reply.errInfo);
             QJsonObject newVersionObj(Network::toJson(reply.content).object());

@@ -107,7 +107,7 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
         typeCombo->setEnabled(true);
     });
 
-    QLabel *tip=new QLabel(QString("<a href = \"https://github.com/Protostars/KikoPlayScript\">%1</a>").arg(tr("More")),this);
+    QLabel *tip=new QLabel(QString("<a href = \"https://github.com/KikoPlayProject/KikoPlayScript\">%1</a>").arg(tr("More")),this);
     tip->setOpenExternalLinks(true);
 
     QGridLayout *scriptGLayout=new QGridLayout(this);
