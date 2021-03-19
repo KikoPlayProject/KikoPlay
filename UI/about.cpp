@@ -14,7 +14,7 @@ About::About(QWidget *parent) : CFramelessDialog("",parent)
     QJsonObject curVersionObj = QJsonDocument::fromJson(version.readAll()).object();
     QString versionStr=curVersionObj.value("Version").toString();
     QLabel *info=new QLabel(tr("KikoPlay - NOT ONLY A Full-Featured Danmu Player<br/>"
-                               "%1 (C) 2021 Kikyou <a href=\"https://protostars.github.io/KikoPlay/\">homepage</a> <a href=\"https://github.com/KikoPlayProject/KikoPlay\">github</a><br/>"
+                               "%1 (C) 2021 Kikyou <a href=\"https://kikoplayproject.github.io/\">homepage</a> <a href=\"https://github.com/KikoPlayProject/KikoPlay\">github</a><br/>"
                                "Exchange & BUG Report: 874761809(QQ Group)").arg(versionStr),this);
     info->setOpenExternalLinks(true);
     info->setAlignment(Qt::AlignCenter);
