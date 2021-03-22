@@ -50,7 +50,7 @@ namespace
             shadowEffect->setBlurRadius(12);
             shadowEffect->setColor(Qt::white);
             coverLabel->setGraphicsEffect(shadowEffect);
-            setFixedSize(150*logicalDpiX()/96,217*logicalDpiY()/96);
+            setFixedSize(160*logicalDpiX()/96,220*logicalDpiY()/96);
         }
         QPixmap getShadowPixmap(const QPixmap &cover)
         {
