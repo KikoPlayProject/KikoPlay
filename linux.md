@@ -69,15 +69,19 @@ ArchLinux 可以直接通过支持 AUR 的包管理工具安装（具体命令�
 
 ## Gentoo
 
-Gentoo上的编译安装流程：
+Gentoo上的编译与安装流程：
 
  1. 添加[Gentoo GURU overlay](https://github.com/gentoo/guru)
+
+     ```bash
+    sudo eselect repository enable guru && sudo emerge --sync
+    ```
  2. 直接安装 ``media-video/kikoplay``，会自动解决所有依赖关系以及编译好。
 
     ```bash
-    sudo layman -a guru
     sudo emerge media-video/kikoplay
     ```
+
 ## 备注
 
 编译成功后得到 `KikoPlay` 文件，可直接运行 `./KikoPlay`，如果提示缺少 libqhttpengine 等库，可尝试将编译 QHttpEngine 得到的库放到 `/usr/lib` 目录下，也可以将 `/usr/local/lib` 加入 `LD_LIBRARY_PATH` 环境变量中。下载功能需要 `aria2c`，可自行编译或者下载后放到 `KikoPlay` 同一目录下。
