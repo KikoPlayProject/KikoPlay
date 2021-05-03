@@ -21,6 +21,7 @@ private:
 public slots:
     void addEp(const QString &path);
     void removeEp(const QModelIndex &index);
+    int removeInvalidEp();
     void updateEpInfo(const QModelIndex &index, const EpInfo &nEpInfo);
     void updateFinishTime(const QModelIndex &index, qint64 nTime);
     // QAbstractItemModel interface

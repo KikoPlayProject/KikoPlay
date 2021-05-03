@@ -72,7 +72,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
             TimelineEdit timeLineEdit(&srcInfo,simpleDanmuList,this);
             if(QDialog::Accepted==timeLineEdit.exec())
             {
-                pool->setTimeline(srcNode->srcId,srcInfo.timelineInfo);
+                pool->setTimeline(srcNode->srcId,timeLineEdit.timelineInfo);
             }
         }
 

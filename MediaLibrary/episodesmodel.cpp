@@ -74,6 +74,35 @@ void EpisodesModel::removeEp(const QModelIndex &index)
     AnimeWorker::instance()->removeEp(currentAnime->name(), ep.localFile);
 }
 
+int EpisodesModel::removeInvalidEp()
+{
+    if(!currentAnime) return 0;
+    int invalidCount = 0;
+    for(int i=currentEps.size()-1;i>=0;--i)
+    {
+        QString epPath(currentEps[i].localFile);
+        QFileInfo info(epPath);
+        if(!info.exists())
+        {
+            ++invalidCount;
+            epMap.remove(epPath);
+            beginRemoveRows(QModelIndex(), i, i);
+            currentEps.removeAt(i);
+            endRemoveRows();
+            AnimeWorker::instance()->removeEp(currentAnime->name(), epPath);
+        }
+    }
+    if(invalidCount>0)
+    {
+        epMap.clear();
+        for(int i=0; i<currentEps.size(); ++i)
+        {
+            epMap[currentEps[i].localFile] = i;
+        }
+    }
+    return invalidCount;
+}
+
 void EpisodesModel::updateEpInfo(const QModelIndex &index, const EpInfo &nEpInfo)
 {
     if(!currentAnime || !index.isValid()) return;

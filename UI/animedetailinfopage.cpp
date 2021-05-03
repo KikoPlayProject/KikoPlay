@@ -339,6 +339,11 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
             epModel->removeEp(selection.last());
         }
     });
+    QAction *deleteInvalidAction=new QAction(tr("Delete Invalid Episodes"), this);
+    QObject::connect(deleteInvalidAction,&QAction::triggered,[this](){
+        Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Remove %1 invalid episodes").arg(epModel->removeInvalidEp()),
+                                             NotifyMessageFlag::NM_HIDE);
+    });
     QAction *addAction=new QAction(tr("Add to Playlist"), this);
     QObject::connect(addAction,&QAction::triggered,[episodeView,this](){
         auto selection = episodeView->selectionModel()->selectedRows((int)EpisodesModel::Columns::LOCALFILE);
@@ -393,6 +398,7 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
 #endif
     episodeView->addAction(addEpAction);
     episodeView->addAction(deleteAction);
+    episodeView->addAction(deleteInvalidAction);
     episodeView->addAction(autoGetEpNames);
 
     QHeaderView *epHeader = episodeView->header();

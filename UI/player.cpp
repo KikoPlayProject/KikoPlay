@@ -1089,6 +1089,7 @@ void PlayerWindow::setupPlaySettingPage()
 
     QLabel *subtitleTrackLabel=new QLabel(tr("Subtitle Track"),pagePlay);
     QComboBox *subtitleTrackCombo=new QComboBox(pagePlay);
+    subtitleTrackCombo->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     QObject::connect(subtitleTrackCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[subtitleTrackCombo, this](int index){
         if(updatingTrack)return;
         if(index==subtitleTrackCombo->count()-1)
