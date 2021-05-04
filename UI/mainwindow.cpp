@@ -804,11 +804,14 @@ void MainWindow::resizeEvent(QResizeEvent *)
 #ifdef Q_OS_WIN
     widgetTitlebar->setFixedHeight(36*logicalDpiY()/96);
 #endif
-    QSize pageButtonSize(100*logicalDpiX()/96,30*logicalDpiY()/96);
+    const QSize pageButtonSize(100*logicalDpiX()/96,30*logicalDpiY()/96);
     buttonPage_Play->setFixedSize(pageButtonSize);
     buttonPage_Library->setFixedSize(pageButtonSize);
     buttonPage_Downlaod->setFixedSize(pageButtonSize);
-
+    const QSize controlButtonSize(34*logicalDpiX()/96,32*logicalDpiY()/96);
+    maxButton->setMinimumSize(controlButtonSize);
+    minButton->setMinimumSize(controlButtonSize);
+    closeButton->setMinimumSize(controlButtonSize);
 }
 
 void MainWindow::showEvent(QShowEvent *)

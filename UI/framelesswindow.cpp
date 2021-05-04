@@ -226,7 +226,7 @@ bool CFramelessWindow::nativeEvent(const QByteArray &eventType, void *message, l
 
             //record frame area data
             double dpr = this->devicePixelRatioF();
-
+			
             m_frames.setLeft(abs(frame.left)/dpr+0.5);
             m_frames.setTop(abs(frame.bottom)/dpr+0.5);
             m_frames.setRight(abs(frame.right)/dpr+0.5);
