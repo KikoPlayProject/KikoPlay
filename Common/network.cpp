@@ -169,6 +169,7 @@ QList<Network::Reply> Network::httpGetBatch(const QStringList &urls, const QList
     Q_ASSERT(urls.size()==querys.size() || querys.size()==0);
     Q_ASSERT(urls.size()==headers.size() || headers.size()==0);
     QList<Reply> results;
+	if (urls.isEmpty()) return results;
     int finishCount=0;
     QEventLoop eventLoop;
     QNetworkAccessManager *manager(getManager());
