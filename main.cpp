@@ -104,7 +104,6 @@ int main(int argc, char *argv[])
 
     MainWindow w;
     GlobalObjects::mainWindow = &w;
-    decodeParam();
     QLocalServer *singleServer=new QLocalServer(&a);
     QObject::connect(singleServer, &QLocalServer::newConnection, [singleServer,&w](){
         QLocalSocket *localSocket = singleServer->nextPendingConnection();
@@ -141,6 +140,6 @@ int main(int argc, char *argv[])
         }
     }
     w.show();
-
+	decodeParam();
     return a.exec();
 }
