@@ -1175,6 +1175,9 @@ QTreeView#RuleLogView {
     color: rgb(240,240,240);
     alternate-background-color: transparent;
 }
+#AutoDownloadWindow {
+    qproperty-logGeneralColor: rgb(240,240,240);
+}
 QTreeView#RuleURLView {
     background-color: rgba(255,255,255,40);
     color: rgb(240,240,240);

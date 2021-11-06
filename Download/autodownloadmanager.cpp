@@ -1,6 +1,7 @@
 #include "autodownloadmanager.h"
 #include "../Script/resourcescript.h"
 #include "../Script/scriptmanager.h"
+#include "autodownloadmanager.h"
 #include "globalobjects.h"
 #include <QDateTime>
 #include <QBrush>
@@ -11,6 +12,7 @@ AutoDownloadManager::AutoDownloadManager(QObject *parent) : QAbstractItemModel(p
 {
     ruleFileName=GlobalObjects::dataPath+"downloadRules.xml";
     logModel = new LogModel(this);
+    logModel->setObjectName(QStringLiteral("AutoDownloadLogModel"));
     urlModel = new URLModel(this);
     QObject::connect(urlModel, &URLModel::ruleChanged, this, [this](){
        ruleChanged=true;
@@ -353,15 +355,15 @@ void DownloadRuleChecker::check()
         if(rule->state != 0) continue;
         if(!rule->lock.tryLock())
         {
-            emit log(DownloadRuleLog::setLog(rule.get(), 2, tr("The rule is in use. Cancel check")));
+            emit log(DownloadRuleLog::setLog(rule.get(), DownloadRuleLog::LOG_ERROR, tr("The rule is in use. Cancel check")));
             continue;
         }
         rule->state = 1;
-        emit log(DownloadRuleLog::setLog(rule.get(), 0, tr("Begin checking...")));
+        emit log(DownloadRuleLog::setLog(rule.get(), DownloadRuleLog::LOG_GENERAL, tr("Begin checking...")));
         emit updateState(rule);
         fetchInfo(rule.get());
         rule->state = 0;
-        emit log(DownloadRuleLog::setLog(rule.get(), 0, tr("Check done")));
+        emit log(DownloadRuleLog::setLog(rule.get(), DownloadRuleLog::LOG_GENERAL, tr("Check done")));
         emit updateState(rule);
         rule->lock.unlock();
     }
@@ -384,7 +386,7 @@ void DownloadRuleChecker::fetchInfo(DownloadRule *rule)
         auto curScript = GlobalObjects::scriptManager->getScript(rule->scriptId);
         if(!curScript || curScript->type()!=ScriptType::RESOURCE)
         {
-            emit log(DownloadRuleLog::setLog(rule, 2, tr("Error occur while checking: Script '%1' not exist").arg(rule->scriptId)));
+            emit log(DownloadRuleLog::setLog(rule, DownloadRuleLog::LOG_ERROR, tr("Error occur while checking: Script '%1' not exist").arg(rule->scriptId)));
             break;
         }
         ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
@@ -412,13 +414,13 @@ void DownloadRuleChecker::fetchInfo(DownloadRule *rule)
                     if(resScript->needGetDetail())
                         s = resScript->getDetail(item, item);
                     if(s)
-                        emit log(DownloadRuleLog::setLog(rule, 1, QString("%1 %2").arg(item.size, item.title), item.magnet));
+                        emit log(DownloadRuleLog::setLog(rule, DownloadRuleLog::LOG_RES_FINDED, QString("%1 %2").arg(item.size, item.title), item.magnet));
                 }
             }
         }
         else
         {
-            emit log(DownloadRuleLog::setLog(rule, 2, tr("Error occur while checking: %1").arg(state.info)));
+            emit log(DownloadRuleLog::setLog(rule, DownloadRuleLog::LOG_ERROR, tr("Error occur while checking: %1").arg(state.info)));
             break;
         }
         searchResults.clear();
@@ -463,7 +465,7 @@ bool DownloadRuleChecker::satisfyRule(ResourceItem *item, DownloadRule *rule, co
     return size>rule->minSize && size<rule->maxSize;
 }
 
-DownloadRuleLog DownloadRuleLog::setLog(DownloadRule *rule, int type, const QString &content, const QString &addition)
+DownloadRuleLog DownloadRuleLog::setLog(DownloadRule *rule, DownloadRuleLog::LogType type, const QString &content, const QString &addition)
 {
     DownloadRuleLog log;
     log.ruleId=rule->id;
@@ -507,6 +509,13 @@ QString LogModel::getLog(const QModelIndex &index)
     return QString("[%1][%2]%3").arg(log.name, QDateTime::fromSecsSinceEpoch(log.time).toString("yyyy-MM-dd hh:mm:ss"), log.content);
 }
 
+void LogModel::setLogColor(const QColor &color, DownloadRuleLog::LogType type)
+{
+    beginResetModel();
+    foregroundBrush[type] = color;
+    endResetModel();
+}
+
 QVariant LogModel::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid()) return QVariant();
@@ -520,10 +529,7 @@ QVariant LogModel::data(const QModelIndex &index, int role) const
         else if(col==1) return log.name;
         else return log.content;
     case Qt::ForegroundRole:
-    {
-        static QBrush foregroundBrush[] = {QColor(100,100,100),QColor(66,147,245),QColor(245,69,152)};
         return foregroundBrush[log.type];
-    }
     case DownloadRuleIdRole:
         return log.ruleId;
     }

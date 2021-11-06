@@ -364,6 +364,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         }
     });
     AutoDownloadWindow *autoDownloadWindow = new AutoDownloadWindow(containerWidget);
+    autoDownloadWindow->setObjectName(QStringLiteral("AutoDownloadWindow"));
     QObject::connect(autoDownloadWindow,&AutoDownloadWindow::addTask,this,[this](const QStringList &uris, bool directly, const QString &path){
         if(directly)
         {

@@ -7,6 +7,7 @@
 #include <QMutex>
 #include <QIcon>
 #include <QQueue>
+#include <QBrush>
 struct DownloadRule
 {
     DownloadRule():minSize(0),maxSize(0),lastCheckTime(0),searchInterval(10),state(0),download(true){}
@@ -32,9 +33,15 @@ struct DownloadRuleLog
     int ruleId;
     QString name;
     qint64 time;
-    int type;  //0: general  1: resource finded  2: error
+    enum LogType
+    {
+        LOG_GENERAL,
+        LOG_RES_FINDED,
+        LOG_ERROR
+    };
+    LogType type;
     QString content, addition;
-    static DownloadRuleLog setLog(DownloadRule *rule, int type, const QString &content, const QString &addition="");
+    static DownloadRuleLog setLog(DownloadRule *rule, DownloadRuleLog::LogType type, const QString &content, const QString &addition="");
 };
 struct ResourceItem;
 class DownloadRuleChecker : public QObject
@@ -56,15 +63,20 @@ private:
 class LogModel : public QAbstractItemModel
 {
     Q_OBJECT
+
 public:
     explicit LogModel(QObject *parent = nullptr):QAbstractItemModel(parent){}
 
     void addLog(const DownloadRuleLog &log);
     void removeLog(int ruleId);
     QString getLog(const QModelIndex &index);
+
+    void setLogColor(const QColor &color, DownloadRuleLog::LogType type);
+    QColor getLogColor(DownloadRuleLog::LogType type) const {return foregroundBrush[type];}
 private:
     QList<DownloadRuleLog> logList;
     const QStringList headers={tr("Time"),tr("Rule"),tr("Content")};
+    QList<QColor> foregroundBrush = {QColor(100,100,100),QColor(66,147,245),QColor(245,69,152)};
 
     // QAbstractItemModel interface
 public:

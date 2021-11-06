@@ -132,6 +132,36 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     setupActions();
 }
 
+QColor AutoDownloadWindow::getGeneralColor() const
+{
+    return GlobalObjects::autoDownloadManager->logModel->getLogColor(DownloadRuleLog::LOG_GENERAL);
+}
+
+void AutoDownloadWindow::setGeneralColor(const QColor &color)
+{
+    GlobalObjects::autoDownloadManager->logModel->setLogColor(color, DownloadRuleLog::LOG_GENERAL);
+}
+
+QColor AutoDownloadWindow::getResFindedColor() const
+{
+    return GlobalObjects::autoDownloadManager->logModel->getLogColor(DownloadRuleLog::LOG_RES_FINDED);
+}
+
+void AutoDownloadWindow::setResFindedColor(const QColor &color)
+{
+    GlobalObjects::autoDownloadManager->logModel->setLogColor(color, DownloadRuleLog::LOG_RES_FINDED);
+}
+
+QColor AutoDownloadWindow::getErrorColor() const
+{
+    return GlobalObjects::autoDownloadManager->logModel->getLogColor(DownloadRuleLog::LOG_ERROR);
+}
+
+void AutoDownloadWindow::setErrorColor(const QColor &color)
+{
+    GlobalObjects::autoDownloadManager->logModel->setLogColor(color, DownloadRuleLog::LOG_ERROR);
+}
+
 void AutoDownloadWindow::setupActions()
 {
     QAction *enbaleRule=new QAction(tr("Enable Rule(s)"), this);

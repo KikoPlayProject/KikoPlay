@@ -1180,3 +1180,6 @@ QListWidget#SettingPageList::item:selected{
     background: #1CA0E4;
     color: #ffffff;
 }
+#AutoDownloadWindow {
+    qproperty-logGeneralColor: rgb(100,100,100);
+}
