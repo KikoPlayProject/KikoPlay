@@ -31,7 +31,7 @@ signals:
 private:
     QList<QSharedPointer<ScriptBase>> scriptLists[ScriptType::UNKNOWN_STYPE];
     QHash<QString, QSharedPointer<ScriptBase>> id2scriptHash;
-
+    const char *subDirs[ScriptType::UNKNOWN_STYPE] = {"/danmu/", "/library/", "/resource/", "/bgm_calendar/"};
     QString getScriptPath();
 };
 

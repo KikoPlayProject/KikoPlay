@@ -857,52 +857,52 @@
 <context>
     <name>AutoDownloadManager</name>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="137"/>
+        <location filename="../../Download/autodownloadmanager.h" line="149"/>
         <source>Free</source>
         <translation>空闲</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="137"/>
+        <location filename="../../Download/autodownloadmanager.h" line="149"/>
         <source>Checking</source>
         <translation>检查中</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="137"/>
+        <location filename="../../Download/autodownloadmanager.h" line="149"/>
         <source>Stop</source>
         <translation>停止</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="137"/>
+        <location filename="../../Download/autodownloadmanager.h" line="149"/>
         <source>Editing</source>
         <translation>编辑中</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="139"/>
+        <location filename="../../Download/autodownloadmanager.h" line="151"/>
         <source>Status</source>
         <translation>状态</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="139"/>
+        <location filename="../../Download/autodownloadmanager.h" line="151"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="139"/>
+        <location filename="../../Download/autodownloadmanager.h" line="151"/>
         <source>SearchWord</source>
         <translation>搜索词</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="139"/>
+        <location filename="../../Download/autodownloadmanager.h" line="151"/>
         <source>FilterWord</source>
         <translation>过滤词</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="139"/>
+        <location filename="../../Download/autodownloadmanager.h" line="151"/>
         <source>Interval(min)</source>
         <translation>间隔(min)</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="139"/>
+        <location filename="../../Download/autodownloadmanager.h" line="151"/>
         <source>Last Check</source>
         <translation>上次检查</translation>
     </message>
@@ -925,47 +925,47 @@
         <translation>暂存URI</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="137"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="167"/>
         <source>Enable Rule(s)</source>
         <translation>启用规则</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="143"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="173"/>
         <source>Disable Rule(s)</source>
         <translation>禁用规则</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="149"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="179"/>
         <source>Check Immediately)</source>
         <translation>立即检查</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="155"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="185"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="170"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="200"/>
         <source>Remove Rule(s)</source>
         <translation>移除规则</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="205"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="235"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="215"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="245"/>
         <source>Add URI Task</source>
         <translation>添加URI任务</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="222"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="252"/>
         <source>Copy URI</source>
         <translation>复制下载链接</translation>
     </message>
     <message>
-        <location filename="../../UI/autodownloadwindow.cpp" line="230"/>
+        <location filename="../../UI/autodownloadwindow.cpp" line="260"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
@@ -1039,14 +1039,26 @@
 <context>
     <name>BgmList</name>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="184"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="242"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="186"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="221"/>
+        <source>Bangumi Calendar script not exist</source>
+        <translation>未找到番组日历脚本</translation>
+    </message>
+    <message>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="191"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="226"/>
+        <source>Select Bangumi Calendar: %1</source>
+        <translation>已选择番组日历：%1</translation>
+    </message>
+    <message>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="193"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="228"/>
         <source>Fetching Info...</source>
         <translation>获取信息...</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="234"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="305"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="200"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="258"/>
         <source>Fetch Failed: %1</source>
         <translation>获取失败：%1</translation>
     </message>
@@ -1059,29 +1071,29 @@
         <translation type="vanished">%1-%2 数量：%3%4</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="56"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="160"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="299"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="57"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="161"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="252"/>
         <source> Focus: %1</source>
         <translation> 关注：%1</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="168"/>
+        <location filename="../../Download/BgmList/bgmlist.h" line="30"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="168"/>
+        <location filename="../../Download/BgmList/bgmlist.h" line="30"/>
         <source>ShowDate/Time</source>
         <translation>放送开始/时间</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="168"/>
+        <location filename="../../Download/BgmList/bgmlist.h" line="30"/>
         <source>AirSites</source>
         <translation>放送站点</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="168"/>
+        <location filename="../../Download/BgmList/bgmlist.h" line="30"/>
         <source>Focus</source>
         <translation>关注</translation>
     </message>
@@ -1967,27 +1979,27 @@ Date: %2
 <context>
     <name>DownloadRuleChecker</name>
     <message>
-        <location filename="../../Download/autodownloadmanager.cpp" line="356"/>
+        <location filename="../../Download/autodownloadmanager.cpp" line="358"/>
         <source>The rule is in use. Cancel check</source>
         <translation>规则正在被占用，取消检查</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.cpp" line="360"/>
+        <location filename="../../Download/autodownloadmanager.cpp" line="362"/>
         <source>Begin checking...</source>
         <translation>开始检查...</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.cpp" line="364"/>
+        <location filename="../../Download/autodownloadmanager.cpp" line="366"/>
         <source>Check done</source>
         <translation>检查结束</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.cpp" line="387"/>
+        <location filename="../../Download/autodownloadmanager.cpp" line="389"/>
         <source>Error occur while checking: Script &apos;%1&apos; not exist</source>
         <translation>检查时出现错误： 脚本 &apos;%1&apos; 不存在</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.cpp" line="421"/>
+        <location filename="../../Download/autodownloadmanager.cpp" line="423"/>
         <source>Error occur while checking: %1</source>
         <translation>检查时出现错误：%1</translation>
     </message>
@@ -2039,15 +2051,15 @@ Date: %2
         <location filename="../../UI/downloadwindow.cpp" line="89"/>
         <location filename="../../UI/downloadwindow.cpp" line="95"/>
         <location filename="../../UI/downloadwindow.cpp" line="362"/>
-        <location filename="../../UI/downloadwindow.cpp" line="389"/>
-        <location filename="../../UI/downloadwindow.cpp" line="490"/>
+        <location filename="../../UI/downloadwindow.cpp" line="390"/>
+        <location filename="../../UI/downloadwindow.cpp" line="491"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
         <location filename="../../UI/downloadwindow.cpp" line="68"/>
         <location filename="../../UI/downloadwindow.cpp" line="362"/>
-        <location filename="../../UI/downloadwindow.cpp" line="389"/>
+        <location filename="../../UI/downloadwindow.cpp" line="390"/>
         <source>An error occurred while adding : URI:
  %1 
  %2</source>
@@ -2067,7 +2079,7 @@ Date: %2
     </message>
     <message>
         <location filename="../../UI/downloadwindow.cpp" line="89"/>
-        <location filename="../../UI/downloadwindow.cpp" line="490"/>
+        <location filename="../../UI/downloadwindow.cpp" line="491"/>
         <source>An error occurred while adding Torrent : 
  %1 </source>
         <translation>添加种子时出错：
@@ -2133,63 +2145,63 @@ Date: %2
         <translation>全局日志</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="449"/>
-        <location filename="../../UI/downloadwindow.cpp" line="956"/>
+        <location filename="../../UI/downloadwindow.cpp" line="450"/>
+        <location filename="../../UI/downloadwindow.cpp" line="957"/>
         <source>Blocks: %1 Size: %2</source>
         <translation>分块：%1 大小：%2</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="528"/>
+        <location filename="../../UI/downloadwindow.cpp" line="529"/>
         <source>Downloading</source>
         <translation>正在下载</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="535"/>
+        <location filename="../../UI/downloadwindow.cpp" line="536"/>
         <source>Completed</source>
         <translation>下载完成</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="540"/>
+        <location filename="../../UI/downloadwindow.cpp" line="541"/>
         <source>All</source>
         <translation>全部任务</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="545"/>
+        <location filename="../../UI/downloadwindow.cpp" line="546"/>
         <source>BgmList</source>
         <translation>每日放送</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="550"/>
+        <location filename="../../UI/downloadwindow.cpp" line="551"/>
         <source>ResSearch</source>
         <translation>资源搜索</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="555"/>
+        <location filename="../../UI/downloadwindow.cpp" line="556"/>
         <source>AutoDownload</source>
         <translation>自动下载</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="704"/>
+        <location filename="../../UI/downloadwindow.cpp" line="705"/>
         <source>File Not Exist</source>
         <translation>文件不存在</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="771"/>
+        <location filename="../../UI/downloadwindow.cpp" line="772"/>
         <source>Pause</source>
         <translation>暂停</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="790"/>
+        <location filename="../../UI/downloadwindow.cpp" line="791"/>
         <source>Start</source>
         <translation>开始</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="807"/>
+        <location filename="../../UI/downloadwindow.cpp" line="808"/>
         <source>Resume</source>
         <translation>继续下载</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="807"/>
+        <location filename="../../UI/downloadwindow.cpp" line="808"/>
         <source>Control file(*.aria2) does not exist, download the file all over again ?
 %1</source>
         <translation>控制文件(*.aria2)丢失，重新下载任务？
@@ -2200,59 +2212,59 @@ Date: %2
         <translation type="vanished">控制文件(*.aria2)丢失，重新下载任务？</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="824"/>
-        <location filename="../../UI/downloadwindow.cpp" line="829"/>
+        <location filename="../../UI/downloadwindow.cpp" line="825"/>
+        <location filename="../../UI/downloadwindow.cpp" line="830"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="829"/>
+        <location filename="../../UI/downloadwindow.cpp" line="830"/>
         <source>Delete the Downloaded Files?</source>
         <translation>同时删除下载文件？</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="844"/>
+        <location filename="../../UI/downloadwindow.cpp" line="845"/>
         <source>Pause All</source>
         <translation>全部暂停</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="848"/>
+        <location filename="../../UI/downloadwindow.cpp" line="849"/>
         <source>Start All</source>
         <translation>全部开始</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="864"/>
+        <location filename="../../UI/downloadwindow.cpp" line="865"/>
         <source>Browse File</source>
         <translation>资源管理器中浏览</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="875"/>
+        <location filename="../../UI/downloadwindow.cpp" line="876"/>
         <source>Add To PlayList</source>
         <translation>添加到播放列表</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="903"/>
+        <location filename="../../UI/downloadwindow.cpp" line="904"/>
         <source>Copy URI</source>
         <translation>复制下载链接</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="912"/>
-        <location filename="../../UI/downloadwindow.cpp" line="920"/>
+        <location filename="../../UI/downloadwindow.cpp" line="913"/>
+        <location filename="../../UI/downloadwindow.cpp" line="921"/>
         <source>Save Torrent</source>
         <translation>保存种子文件</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="952"/>
+        <location filename="../../UI/downloadwindow.cpp" line="953"/>
         <source>Create Time: %1 	 Finish Time: %2</source>
         <translation>创建时间：%1 	 完成时间：%2</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="997"/>
+        <location filename="../../UI/downloadwindow.cpp" line="998"/>
         <source>&lt;No Item has been Selected&gt;</source>
         <translation>&lt;没有选择项目&gt;</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="998"/>
+        <location filename="../../UI/downloadwindow.cpp" line="999"/>
         <source>Create Time: ---- 	 Finish Time: ----</source>
         <translation>创建时间：---- 	 完成时间：----</translation>
     </message>
@@ -3188,17 +3200,17 @@ KikoPlay资源代码会包含URI及和动画关联的弹幕池信息(单个弹�
 <context>
     <name>LogModel</name>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="67"/>
+        <location filename="../../Download/autodownloadmanager.h" line="78"/>
         <source>Time</source>
         <translation>时间</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="67"/>
+        <location filename="../../Download/autodownloadmanager.h" line="78"/>
         <source>Rule</source>
         <translation>规则</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="67"/>
+        <location filename="../../Download/autodownloadmanager.h" line="78"/>
         <source>Content</source>
         <translation>内容</translation>
     </message>
@@ -4844,7 +4856,7 @@ Folder Collection
     <message>
         <location filename="../../Common/network.cpp" line="73"/>
         <location filename="../../Common/network.cpp" line="128"/>
-        <location filename="../../Common/network.cpp" line="219"/>
+        <location filename="../../Common/network.cpp" line="220"/>
         <source>Replay Timeout</source>
         <translation>超时</translation>
     </message>
@@ -5213,6 +5225,11 @@ Eps: %2
         <location filename="../../Script/scriptmodel.h" line="22"/>
         <source>Resources</source>
         <translation>资源</translation>
+    </message>
+    <message>
+        <location filename="../../Script/scriptmodel.h" line="22"/>
+        <source>BgmCalendar</source>
+        <translation>番组日历</translation>
     </message>
 </context>
 <context>
@@ -5704,12 +5721,12 @@ Eps: %2
 <context>
     <name>URLModel</name>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="105"/>
+        <location filename="../../Download/autodownloadmanager.h" line="117"/>
         <source>Size/Title</source>
         <translation>大小/标题</translation>
     </message>
     <message>
-        <location filename="../../Download/autodownloadmanager.h" line="105"/>
+        <location filename="../../Download/autodownloadmanager.h" line="117"/>
         <source>URI</source>
         <translation></translation>
     </message>

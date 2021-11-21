@@ -153,14 +153,14 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
         bgmContextMenu->clear();
         bgmContextMenu->addAction(addToLibrary);
         bgmContextMenu->addAction(onBangumi);
-        QStringList sites(item.sitesName.split('|',QString::SkipEmptyParts));
-        if(sites.count()>0)
+        if(item.onAirSites.count()>0)
         {
             bgmContextMenu->addSeparator();
-            for(int i=0;i<sites.count();++i)
+            for(int i=0;i<item.onAirSites.count();++i)
             {
-                QAction *siteAction=new QAction(sites.at(i),bgmContextMenu);
-                QString url(item.onAirURL.at(i));
+                QAction *siteAction=new QAction(item.onAirSites.at(i),bgmContextMenu);
+                if(i>=item.onAirURLs.size()) break;
+                QString url(item.onAirURLs.at(i));
                 QObject::connect(siteAction,&QAction::triggered,siteAction,[url](){
                    QDesktopServices::openUrl(QUrl(url));
                 });

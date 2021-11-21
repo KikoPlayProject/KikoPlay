@@ -54,5 +54,17 @@
   "netflix": {
     "title": "Netflix",
     "urlTemplate": "https://www.netflix.com/"
+  },
+  "gamer": {
+    "title": "動畫瘋",
+    "urlTemplate": "https://acg.gamer.com.tw/"
+  },
+  "youtube": {
+    "title": "Youtube",
+    "urlTemplate": "https://www.youtube.com/"
+  },
+  "viu": {
+      "title": "Viu",
+      "urlTemplate": "https://www.viu.com/"
   }
 }

@@ -5,6 +5,7 @@
 #include "danmuscript.h"
 #include "libraryscript.h"
 #include "resourcescript.h"
+#include "bgmcalendarscript.h"
 #include "scriptlogger.h"
 
 ScriptManager::ScriptManager(QObject *parent) : QObject(parent)
@@ -15,13 +16,13 @@ ScriptManager::ScriptManager(QObject *parent) : QObject(parent)
     refreshScripts(ScriptType::DANMU);
     refreshScripts(ScriptType::LIBRARY);
     refreshScripts(ScriptType::RESOURCE);
+    refreshScripts(ScriptType::BGM_CALENDAR);
 }
 
 void ScriptManager::refreshScripts(ScriptType type)
 {
     if(type == ScriptType::UNKNOWN_STYPE) return;
     QString scriptPath(getScriptPath());
-    const char *subDirs[] = {"/danmu/", "/library/", "/resource/"};
     scriptPath += subDirs[type];
 
     QHash<QString, QSharedPointer<ScriptBase>> curScripts;
@@ -58,6 +59,7 @@ void ScriptManager::refreshScripts(ScriptType type)
                 if(type == ScriptType::DANMU) cs.reset(new DanmuScript);
                 else if(type == ScriptType::LIBRARY) cs.reset(new LibraryScript);
                 else if(type == ScriptType::RESOURCE) cs.reset(new ResourceScript);
+                else if(type == ScriptType::BGM_CALENDAR) cs.reset(new BgmCalendarScript);
                 if(cs)
                 {
                     ScriptState state = cs->loadScript(path);

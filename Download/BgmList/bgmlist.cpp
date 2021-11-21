@@ -2,6 +2,8 @@
 #include "globalobjects.h"
 #include "Common/network.h"
 #include "Common/threadtask.h"
+#include "Script/scriptmanager.h"
+#include "Script/scriptlogger.h"
 #include <QBrush>
 BgmList::BgmList(QObject *parent) : QAbstractItemModel (parent),inited(false),needSave(false),
     seasonsDownloaded(false), curSeasonDownloaded(false),curSeason(nullptr)
@@ -32,24 +34,23 @@ void BgmList::init()
     inited=true;
 }
 
-void BgmList::setSeason(const QString &id)
+void BgmList::setSeason(const QString &title)
 {
-    if(!bgmSeasons.contains(id)) return;
-    if(curSeason && curSeason->id==id) return;
+    if(!bgmSeasons.contains(title)) return;
+    if(curSeason && curSeason->title==title) return;
     beginResetModel();
     if(needSave && curSeason)
     {
         saveLocal(*curSeason);
         needSave=false;
     }
-    auto &season = bgmSeasons[id];
+    auto &season = bgmSeasons[title];
     if(season.bgmList.isEmpty())
     {
-        loadLocal(season);
-    }
-    if(!season.latestVersion.isEmpty() && season.latestVersion!=season.version)
-    {
-        fetchBgmList(season);
+        if(!loadLocal(season))
+        {
+            fetchBgmList(season);
+        }
     }
     curSeason=&season;
     emit bgmStatusUpdated(1,QString("%1/%2 %3").arg(season.newBgmCount).arg(season.bgmList.count()).
@@ -65,12 +66,9 @@ void BgmList::refresh()
     }
     if(!curSeasonDownloaded && curSeason)
     {
-        if(!curSeason->latestVersion.isEmpty() && curSeason->latestVersion!=curSeason->version)
-        {
-            beginResetModel();
-            fetchBgmList(*curSeason);
-            endResetModel();
-        }
+        beginResetModel();
+        fetchBgmList(*curSeason);
+        endResetModel();
     }
 }
 
@@ -92,23 +90,25 @@ QVariant BgmList::data(const QModelIndex &index, int role) const
 {
     if(!curSeason) return QVariant();
     if (!index.isValid()) return QVariant();
-    int col=index.column();
     const BgmItem &item=curSeason->bgmList.at(index.row());
+    Columns col=static_cast<Columns>(index.column());
     switch (role)
     {
     case Qt::DisplayRole:
     {
-        if(col==0)
+        if(col==Columns::TITLE)
         {
             return item.title;
         }
-        else if(col==1)
+        else if(col==Columns::DATETIME)
         {
-            return QString("%1, %2").arg(item.showDate).arg(item.time);
+            if(!item.airTime.isEmpty())
+                return QString("%1, %2").arg(item.airDate).arg(item.airTime);
+            return item.airDate;
         }
-        else if(col==2)
+        else if(col==Columns::AIRSITES)
         {
-            return item.sitesName;
+            return item.onAirSites.join('|');
         }
         break;
     }
@@ -123,16 +123,16 @@ QVariant BgmList::data(const QModelIndex &index, int role) const
     }
     case Qt::CheckStateRole:
     {
-        if(col==3)
+        if(col==Columns::FOCUS)
             return item.focus?Qt::Checked:Qt::Unchecked;
         break;
     }
     case Qt::ToolTipRole:
     {
-        if(col==0)
+        if(col==Columns::TITLE)
             return item.title;
-        else if(col==2)
-            return item.sitesName;
+        else if(col==Columns::AIRSITES)
+            return item.onAirSites.join('|');
         break;
     }
     }
@@ -142,7 +142,8 @@ QVariant BgmList::data(const QModelIndex &index, int role) const
 bool BgmList::setData(const QModelIndex &index, const QVariant &value, int )
 {
     if(!curSeason) return false;
-    if(index.column()==3)
+    Columns col=static_cast<Columns>(index.column());
+    if(col==Columns::FOCUS)
     {
         BgmItem &item=curSeason->bgmList[index.row()];
         if(value==Qt::Checked)
@@ -165,7 +166,6 @@ bool BgmList::setData(const QModelIndex &index, const QVariant &value, int )
 
 QVariant BgmList::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    static QStringList headers({tr("Title"),tr("ShowDate/Time"),tr("AirSites"),tr("Focus")});
     if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
     {
         if(section<4)return headers.at(section);
@@ -180,117 +180,70 @@ QVariant BgmList::headerData(int section, Qt::Orientation orientation, int role)
 
 bool BgmList::fetchMetaInfo()
 {
-    ThreadTask task(GlobalObjects::workThread);
-    emit bgmStatusUpdated(2,tr("Fetching Info..."));
-    QString ret = task.Run([this](){
-        try
-        {
-            QString bgmListPath(GlobalObjects::appSetting->value("BgmList/ListURL", "https://bgmlist.com/tempapi/archive.json").toString());
-            Network::Reply reply(Network::httpGet(bgmListPath,QUrlQuery()));
-            if(reply.hasError) throw Network::NetworkError(reply.errInfo);
-            QJsonObject archive(Network::toJson(reply.content).object());
-            archive=archive.value("data").toObject();
-            QStringList seasons;
-            for(auto iter=archive.begin();iter!=archive.end();++iter)
-            {
-                QString year(iter.key());
-                QJsonObject months(iter.value().toObject());
-                for(auto mIter=months.begin(); mIter!=months.end(); ++mIter)
-                {
-                    QString month(mIter.key());
-                    if(month.length()==1) month="0"+month;
-                    QJsonObject bgmSObj(mIter.value().toObject());
-                    QString id(year+'-'+month);
-                    seasons<<id;
-                    if(bgmSeasons.contains(id))
-                    {
-                        bgmSeasons[id].path=bgmSObj.value("path").toString();
-                        bgmSeasons[id].latestVersion=bgmSObj.value("version").toString();
-                    }
-                    else
-                    {
-                        BgmSeason bs;
-                        bs.id=id;
-                        bs.path=bgmSObj.value("path").toString();
-                        bs.latestVersion=bgmSObj.value("version").toString();
-                        bgmSeasons.insert(id, bs);
-                    }
-                }
-            }
-            seasons.sort();
-            this->seasons=seasons;
-            return QString();
-
-        } catch (Network::NetworkError &err) {
-            return err.errorInfo;
-        }
-    }).toString();
-    if(ret.isEmpty())
+    const auto &calendarScripts = GlobalObjects::scriptManager->scripts(ScriptType::BGM_CALENDAR);
+    if(calendarScripts.empty())
     {
-        seasonsDownloaded = true;
-        emit seasonsUpdated();
-        return true;
+        emit bgmStatusUpdated(3,tr("Bangumi Calendar script not exist"));
+        seasonsDownloaded = false;
+        return false;
     }
-    emit bgmStatusUpdated(3,tr("Fetch Failed: %1").arg(ret));
-    seasonsDownloaded = false;
-    return false;
+    auto bgmCalendar = calendarScripts.first().staticCast<BgmCalendarScript>();
+    ScriptLogger::instance()->appendInfo(tr("Select Bangumi Calendar: %1").arg(bgmCalendar->name()), bgmCalendar->id());
+    ThreadTask task(GlobalObjects::workThread);
+    emit bgmStatusUpdated(2, tr("Fetching Info..."));
+    QList<BgmSeason> bgmSeasonList;
+    ScriptState state = task.Run([&bgmCalendar, &bgmSeasonList](){
+        return QVariant::fromValue(bgmCalendar->getSeason(bgmSeasonList));
+    }).value<ScriptState>();
+    if(!state)
+    {
+        emit bgmStatusUpdated(3,tr("Fetch Failed: %1").arg(state.info));
+        seasonsDownloaded = false;
+        return false;
+    }
+    seasons.clear();
+    bgmSeasons.clear();
+    for(auto &s : bgmSeasonList)
+    {
+        seasons.append(s.title);
+        bgmSeasons.insert(s.title, s);
+    }
+    seasonsDownloaded = true;
+    emit seasonsUpdated();
+    return true;
 }
 
 bool BgmList::fetchBgmList(BgmSeason &season)
 {
+    const auto &calendarScripts = GlobalObjects::scriptManager->scripts(ScriptType::BGM_CALENDAR);
+    if(calendarScripts.empty())
+    {
+        emit bgmStatusUpdated(3,tr("Bangumi Calendar script not exist"));
+        curSeasonDownloaded = false;
+        return false;
+    }
+    auto bgmCalendar = calendarScripts.first().staticCast<BgmCalendarScript>();
+    ScriptLogger::instance()->appendInfo(tr("Select Bangumi Calendar: %1").arg(bgmCalendar->name()), bgmCalendar->id());
     ThreadTask task(GlobalObjects::workThread);
     emit bgmStatusUpdated(2,tr("Fetching Info..."));
-    QString ret = task.Run([&season,this](){
-        try
+    QString ret = task.Run([&season, this, &bgmCalendar](){
+        ScriptState state = bgmCalendar->getBgmList(season);
+        if(!state) return state.info;
+        int lastPos = seasons.indexOf(season.title)-1;
+        if(lastPos>=0 && season.focusSet.isEmpty())
         {
-            Network::Reply reply(Network::httpGet(season.path,QUrlQuery()));
-            if(reply.hasError) throw Network::NetworkError(reply.errInfo);
-            QJsonObject bgmListObj(Network::toJson(reply.content).object());
-            season.newBgmCount=0;
-            int lastPos = seasons.indexOf(season.id)-1;
-            if(lastPos>=0 && season.focusSet.isEmpty())
-            {
-                QString lastId(seasons.at(lastPos));
-                if(bgmSeasons[lastId].bgmList.isEmpty()) loadLocal(bgmSeasons[lastId]);
-                season.focusSet=bgmSeasons[lastId].focusSet;
-            }
-            QList<BgmItem> tmpBgms;
-            QSet<QString> titleSet;
-            for(auto iter=bgmListObj.constBegin();iter!=bgmListObj.constEnd();++iter)
-            {
-                QJsonObject bgmObj(iter->toObject());
-                BgmItem item;
-                item.isNew=bgmObj.value("newBgm").toBool();
-                if(item.isNew) season.newBgmCount++;
-                item.title=bgmObj.value("titleCN").toString();
-                titleSet<<item.title;
-                item.week=bgmObj.value("weekDayCN").toInt();
-                item.bgmId=bgmObj.value("bgmId").toInt();
-                item.showDate=bgmObj.value("showDate").toString();
-                QString time(bgmObj.value("timeCN").toString().isEmpty()?bgmObj.value("timeJP").toString():bgmObj.value("timeCN").toString());
-                item.time=time.left(2)+":"+time.right(2);
-                item.focus=season.focusSet.contains(item.title);
-                QJsonArray sites(bgmObj.value("onAirSite").toArray());
-                QStringList sitesList;
-                for (auto value:sites)
-                {
-                    QString url(value.toString());
-                    item.onAirURL<<url;
-                    QString name(getSiteName(url));
-                    if(!name.isEmpty()) sitesList<<getSiteName(url);
-                }
-                item.sitesName=sitesList.join('|');
-                tmpBgms<<item;
-            }
-            season.bgmList.swap(tmpBgms);
-            season.focusSet.intersect(titleSet);
-            season.version=season.latestVersion;
-            saveLocal(season);
-            return QString();
-        } catch (Network::NetworkError &err)
-        {
-            return err.errorInfo;
+            QString lastTitle(seasons.at(lastPos));
+            if(bgmSeasons[lastTitle].bgmList.isEmpty()) loadLocal(bgmSeasons[lastTitle]);
+            season.focusSet.unite(bgmSeasons[lastTitle].focusSet);
         }
+        QSet<QString> titleSet;
+        for(const BgmItem &bgm : season.bgmList)
+        {
+            titleSet.insert(bgm.title);
+        }
+        season.focusSet.intersect(titleSet);
+        saveLocal(season);
+        return QString();
     }).toString();
     if(ret.isEmpty())
     {
@@ -309,7 +262,7 @@ bool BgmList::fetchBgmList(BgmSeason &season)
 
 bool BgmList::loadLocal(BgmSeason &season)
 {
-    QFile localFile(GlobalObjects::dataPath+"/bgmlist/"+season.id+".xml");
+    QFile localFile(GlobalObjects::dataPath+"/bgmlist/"+season.title+".xml");
     localFile.open(QFile::ReadOnly);
     if(!localFile.isOpen()) return false;
     season.newBgmCount=0;
@@ -332,10 +285,6 @@ bool BgmList::loadLocal(BgmSeason &season)
                     season.focusSet<<title;
                 }
             }
-            else if(localStart && name=="version")
-            {
-                season.version=reader.readElementText();
-            }
             else if(name=="list")
             {
                 listStart=true;
@@ -344,22 +293,26 @@ bool BgmList::loadLocal(BgmSeason &season)
             {
                 BgmItem item;
                 item.title= reader.attributes().value("title").toString();
-                item.time= reader.attributes().value("time").toString();
-                item.week=reader.attributes().value("week").toInt();
-                item.bgmId=reader.attributes().value("bgmId").toInt();
-                item.showDate=reader.attributes().value("showDate").toString();
+                item.airTime= reader.attributes().value("time").toString();
+                item.weekDay=reader.attributes().value("week").toInt();
+                item.bgmId=reader.attributes().value("bgmId").toString();
+                item.airDate=reader.attributes().value("showDate").toString();
                 item.isNew=reader.attributes().value("isNew").toInt();
                 if(item.isNew) season.newBgmCount++;
-                item.onAirURL=reader.attributes().value("onAirURL").toString().split(';');
+                item.onAirURLs=reader.attributes().value("onAirURL").toString().split(';');
                 item.focus=season.focusSet.contains(item.title);
-                QStringList onAirURL(reader.attributes().value("onAirURL").toString().split(';'));
-                QStringList sites;
-                for(const QString &url:onAirURL)
+				QString airSites = reader.attributes().value("onAirSite").toString();
+				if (!airSites.isEmpty())
+				{
+					item.onAirSites = airSites.split(';', Qt::SkipEmptyParts);
+				}
+                if(!item.onAirURLs.empty() && item.onAirSites.isEmpty())
                 {
-                    QString name(getSiteName(url));
-                    if(!name.isEmpty()) sites<<getSiteName(url);
+                    std::transform(item.onAirURLs.begin(), item.onAirURLs.end(),
+                                   std::back_inserter(item.onAirSites), [this](const QString &url){
+                        return getSiteName(url);
+                    });
                 }
-                item.sitesName=sites.join('|');
                 season.bgmList<<item;
             }
         }
@@ -381,7 +334,7 @@ void BgmList::saveLocal(const BgmSeason &season)
     {
         dir.mkpath(GlobalObjects::dataPath+"/bgmlist/");
     }
-    QFile localFile(GlobalObjects::dataPath+"/bgmlist/"+season.id+".xml");
+    QFile localFile(GlobalObjects::dataPath+"/bgmlist/"+season.title+".xml");
     bool ret=localFile.open(QIODevice::WriteOnly|QIODevice::Text);
     if(!ret) return;
     QXmlStreamWriter writer(&localFile);
@@ -389,8 +342,6 @@ void BgmList::saveLocal(const BgmSeason &season)
     writer.writeStartDocument();
     writer.writeStartElement("bgmInfo");
     writer.writeStartElement("local");
-    writer.writeStartElement("version");
-    writer.writeCharacters(season.version);
     writer.writeEndElement();
     writer.writeStartElement("focus");
     writer.writeCharacters(season.focusSet.toList().join(";;"));
@@ -401,12 +352,13 @@ void BgmList::saveLocal(const BgmSeason &season)
     {
         writer.writeStartElement("item");
         writer.writeAttribute("title", item.title);
-        writer.writeAttribute("time", item.time);
-        writer.writeAttribute("week", QString::number(item.week));
-        writer.writeAttribute("bgmId", QString::number(item.bgmId));
-        writer.writeAttribute("showDate", item.showDate);
+        writer.writeAttribute("time", item.airTime);
+        writer.writeAttribute("week", QString::number(item.weekDay));
+        writer.writeAttribute("bgmId", item.bgmId);
+        writer.writeAttribute("showDate", item.airDate);
         writer.writeAttribute("isNew", QString::number(item.isNew?1:0));
-        writer.writeAttribute("onAirURL", item.onAirURL.join(';'));
+        writer.writeAttribute("onAirURL", item.onAirURLs.join(';'));
+        writer.writeAttribute("onAirSite", item.onAirSites.join(';'));
         writer.writeEndElement();
     }
     writer.writeEndElement();//list
@@ -425,11 +377,11 @@ bool BgmList::getLocalSeasons()
         QString fileName = fileInfo.fileName();
         if(re.indexIn(fileName)==-1) continue;
         if(re.matchedLength()!=fileName.length()) continue;
-        QString id(fileName.left(7));
-        seasons.append(id);
+        QString title(fileName.left(7));
+        seasons.append(title);
         BgmSeason bs;
-        bs.id=id;
-        bgmSeasons.insert(id, bs);
+        bs.title=title;
+        bgmSeasons.insert(title, bs);
     }
     return true;
 }
@@ -476,7 +428,7 @@ void BgmListFilterProxyModel::setNewBgmFilter(bool onlyNew)
 bool BgmListFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &) const
 {
     const BgmItem &item=static_cast<BgmList *>(sourceModel())->bgmList().at(source_row);
-    if(week>6 || item.week==week)
+    if(week>6 || item.weekDay==week)
     {
         return (onlyFocus?item.focus:true) && (onlyNew?item.isNew:true);
     }

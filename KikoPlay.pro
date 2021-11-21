@@ -42,6 +42,7 @@ SOURCES += \
     Play/Danmu/eventanalyzer.cpp \
     Play/Video/mpvpreview.cpp \
     Play/Video/simpleplayer.cpp \
+    Script/bgmcalendarscript.cpp \
     Script/danmuscript.cpp \
     Script/libraryscript.cpp \
     Script/resourcescript.cpp \
@@ -157,6 +158,7 @@ HEADERS += \
     Play/Danmu/eventanalyzer.h \
     Play/Video/mpvpreview.h \
     Play/Video/simpleplayer.h \
+    Script/bgmcalendarscript.h \
     Script/danmuscript.h \
     Script/libraryscript.h \
     Script/resourcescript.h \

@@ -3,28 +3,7 @@
 #include <QtCore>
 #include <QAbstractItemModel>
 #include <QColor>
-struct BgmItem
-{
-    QString title;
-    QString time;
-    QString showDate;
-    int bgmId;
-    int week;
-    QStringList onAirURL;
-    QString sitesName;
-    bool focus;
-    bool isNew;
-};
-struct BgmSeason
-{
-    QList<BgmItem> bgmList;
-    QSet<QString> focusSet;
-    QString id;
-    QString version;
-    QString path;
-    QString latestVersion;
-    int newBgmCount;
-};
+#include "Script/bgmcalendarscript.h"
 
 class BgmList : public QAbstractItemModel
 {
@@ -35,7 +14,7 @@ public:
     void init();
     const QStringList &seasonList(){return seasons;}
     const QList<BgmItem> &bgmList(){return curSeason->bgmList;}
-    void setSeason(const QString &id);
+    void setSeason(const QString &title);
     void refresh();
 
     QColor getHoverColor() const {return hoverColor;}
@@ -44,6 +23,11 @@ public:
     void setNormColor(const QColor& color);
 
 public:
+    enum class Columns
+    {
+        TITLE=0, DATETIME, AIRSITES, FOCUS
+    };
+    QStringList headers = {tr("Title"),tr("ShowDate/Time"),tr("AirSites"),tr("Focus")};
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
     inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:(curSeason?curSeason->bgmList.count():0);}
