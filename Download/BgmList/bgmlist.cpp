@@ -299,7 +299,11 @@ bool BgmList::loadLocal(BgmSeason &season)
                 item.airDate=reader.attributes().value("showDate").toString();
                 item.isNew=reader.attributes().value("isNew").toInt();
                 if(item.isNew) season.newBgmCount++;
-                item.onAirURLs=reader.attributes().value("onAirURL").toString().split(';');
+                QString airUrls = reader.attributes().value("onAirURL").toString();
+                if(!airUrls.isEmpty())
+                {
+                    item.onAirURLs=airUrls.split(';');
+                }
                 item.focus=season.focusSet.contains(item.title);
 				QString airSites = reader.attributes().value("onAirSite").toString();
 				if (!airSites.isEmpty())
@@ -342,7 +346,6 @@ void BgmList::saveLocal(const BgmSeason &season)
     writer.writeStartDocument();
     writer.writeStartElement("bgmInfo");
     writer.writeStartElement("local");
-    writer.writeEndElement();
     writer.writeStartElement("focus");
     writer.writeCharacters(season.focusSet.toList().join(";;"));
     writer.writeEndElement();

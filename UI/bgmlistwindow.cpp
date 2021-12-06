@@ -156,10 +156,9 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
         if(item.onAirSites.count()>0)
         {
             bgmContextMenu->addSeparator();
-            for(int i=0;i<item.onAirSites.count();++i)
+            for(int i=0;i<item.onAirSites.count() && i<item.onAirURLs.size();++i)
             {
                 QAction *siteAction=new QAction(item.onAirSites.at(i),bgmContextMenu);
-                if(i>=item.onAirURLs.size()) break;
                 QString url(item.onAirURLs.at(i));
                 QObject::connect(siteAction,&QAction::triggered,siteAction,[url](){
                    QDesktopServices::openUrl(QUrl(url));
