@@ -268,9 +268,13 @@ const QString AnimeWorker::addAnime(Anime *srcAnime, Anime *newAnime)
             emit renameEpTag(srcAnime->_name, newAnime->_name);
             Anime *animeInMap = animesMap.value(newAnime->_name, nullptr);
             QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
-            if(animeInMap || checkAnimeExist(newAnime->_name))  //newAnime exists, only merge episodes of srcAnime to newAnime
+            if(animeInMap || checkAnimeExist(newAnime->_name))  //newAnime exists, merge episodes of srcAnime to newAnime
             {
                 query.prepare("update episode set Anime=? where Anime=?");
+                query.bindValue(0,newAnime->_name);
+                query.bindValue(1,srcAnime->_name);
+                query.exec();
+                query.prepare("update image set Anime=? where Anime=?");
                 query.bindValue(0,newAnime->_name);
                 query.bindValue(1,srcAnime->_name);
                 query.exec();
