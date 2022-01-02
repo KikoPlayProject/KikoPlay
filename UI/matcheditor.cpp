@@ -493,6 +493,7 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
     animeView->setSelectionMode(QAbstractItemView::SingleSelection);
     animeView->setModel(animeModel);
     animeView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    animeView->header()->resizeSection(0, 200*logicalDpiX()/96);
 
     QAction *copy=new QAction(tr("Copy"), this);
     QObject::connect(copy, &QAction::triggered, this, [=](){

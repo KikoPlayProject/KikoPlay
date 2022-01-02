@@ -1140,6 +1140,7 @@ void PlayerWindow::setupPlaySettingPage()
     QObject::connect(delaySpinBox,&QSpinBox::editingFinished,[delaySpinBox](){
        GlobalObjects::mpvplayer->setSubDelay(delaySpinBox->value());
     });
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::subDelayChanged, delaySpinBox, &QSpinBox::setValue);
 
     QLabel *aspectLabel=new QLabel(tr("Aspect Ratio"),pagePlay);
     aspectRatioCombo=new QComboBox(playSettingPage);
@@ -1151,11 +1152,16 @@ void PlayerWindow::setupPlaySettingPage()
 
     QLabel *speedLabel=new QLabel(tr("Play Speed"),pagePlay);
     playSpeedCombo=new QComboBox(pagePlay);
+    playSpeedCombo->setInsertPolicy(QComboBox::NoInsert);
+	playSpeedCombo->setEditable(true);
     playSpeedCombo->addItems(GlobalObjects::mpvplayer->speedLevel);
     QObject::connect(playSpeedCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[](int index){
         GlobalObjects::mpvplayer->setSpeed(index);
     });
     playSpeedCombo->setCurrentIndex(GlobalObjects::appSetting->value("Play/PlaySpeed",GlobalObjects::mpvplayer->speedLevel.indexOf("1")).toInt());
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::speedChanged, [this](double val){
+        playSpeedCombo->setCurrentText(QString::number(val));
+    });
 
     QPushButton *editMpvOptions=new QPushButton(tr("MPV Parameter Settings"), pagePlay);
     QObject::connect(editMpvOptions,&QPushButton::clicked,[this](){
@@ -1238,6 +1244,7 @@ void PlayerWindow::setupPlaySettingPage()
         GlobalObjects::mpvplayer->setBrightness(val);
         brightnessSlider->setToolTip(QString::number(val));
     });
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::brightnessChanged, brightnessSlider, &QSlider::setValue);
     brightnessSlider->setValue(GlobalObjects::appSetting->value("Play/Brightness",0).toInt());
 
     QLabel *contrastLabel=new QLabel(tr("Contrast"),pageColor);
@@ -1247,6 +1254,7 @@ void PlayerWindow::setupPlaySettingPage()
         GlobalObjects::mpvplayer->setContrast(val);
         contrastSlider->setToolTip(QString::number(val));
     });
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::contrastChanged, contrastSlider, &QSlider::setValue);
     contrastSlider->setValue(GlobalObjects::appSetting->value("Play/Contrast",0).toInt());
 
     QLabel *saturationLabel=new QLabel(tr("Saturation"),pageColor);
@@ -1256,6 +1264,7 @@ void PlayerWindow::setupPlaySettingPage()
         GlobalObjects::mpvplayer->setSaturation(val);
         saturationSlider->setToolTip(QString::number(val));
     });
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::saturationChanged, saturationSlider, &QSlider::setValue);
     saturationSlider->setValue(GlobalObjects::appSetting->value("Play/Saturation",0).toInt());
 
     QLabel *gammaLabel=new QLabel(tr("Gamma"),pageColor);
@@ -1265,6 +1274,7 @@ void PlayerWindow::setupPlaySettingPage()
         GlobalObjects::mpvplayer->setGamma(val);
         gammaSlider->setToolTip(QString::number(val));
     });
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::gammaChanged, gammaSlider, &QSlider::setValue);
     gammaSlider->setValue(GlobalObjects::appSetting->value("Play/Gamma",0).toInt());
 
     QLabel *hueLabel=new QLabel(tr("Hue"),pageColor);
@@ -1274,6 +1284,7 @@ void PlayerWindow::setupPlaySettingPage()
         GlobalObjects::mpvplayer->setHue(val);
         hueSlider->setToolTip(QString::number(val));
     });
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::hueChanged, hueSlider, &QSlider::setValue);
     hueSlider->setValue(GlobalObjects::appSetting->value("Play/Hue",0).toInt());
 
     QLabel *sharpenLabel=new QLabel(tr("Sharpen"),pageColor);
@@ -1282,6 +1293,9 @@ void PlayerWindow::setupPlaySettingPage()
     QObject::connect(sharpenSlider,&QSlider::valueChanged,[this](int val){
         GlobalObjects::mpvplayer->setSharpen(val);
         sharpenSlider->setToolTip(QString::number(val));
+    });
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::sharpenChanged, [=](double val){
+        sharpenSlider->setValue(val*100);
     });
     sharpenSlider->setValue(GlobalObjects::appSetting->value("Play/Sharpen",0).toInt());
 
@@ -2119,6 +2133,13 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
         break;
 	default:
 		QWidget::keyPressEvent(event);
+    }
+    QString pressKeyStr = QKeySequence(event->modifiers()|event->key()).toString();
+    const auto &shortcuts = GlobalObjects::mpvplayer->getShortcuts();
+    if(shortcuts.contains(pressKeyStr))
+    {
+        int ret = GlobalObjects::mpvplayer->runShortcut(pressKeyStr);
+        showMessage(tr("%1 Command: %2, ret=%3").arg(pressKeyStr, shortcuts[pressKeyStr].second).arg(ret));
     }
 }
 

@@ -11,6 +11,7 @@ public:
     {
         PAGE_UI,
         PAGE_MPV,
+        PAGE_MPVSHORTCUT,
         PAGE_DOWN,
         PAGE_LAN,
         PAGE_SCRIPT,

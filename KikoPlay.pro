@@ -66,6 +66,7 @@ SOURCES += \
     UI/settings/downloadpage.cpp \
     UI/settings/lanserverpage.cpp \
     UI/settings/mpvpage.cpp \
+    UI/settings/mpvshortcutpage.cpp \
     UI/settings/scriptpage.cpp \
     UI/settings/stylepage.cpp \
     UI/snippetcapture.cpp \
@@ -189,6 +190,7 @@ HEADERS += \
     UI/settings/downloadpage.h \
     UI/settings/lanserverpage.h \
     UI/settings/mpvpage.h \
+    UI/settings/mpvshortcutpage.h \
     UI/settings/scriptpage.h \
     UI/settings/settingpage.h \
     UI/settings/stylepage.h \

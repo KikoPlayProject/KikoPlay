@@ -58,8 +58,12 @@ namespace
 
 DownloadPage::DownloadPage(QWidget *parent) : SettingPage(parent)
 {
+    QIntValidator *intValidator=new QIntValidator(this);
+    intValidator->setBottom(0);
+
     QLabel *maxDownSpeedLabel=new QLabel(tr("Max Download Limit(KB): "),this);
     maxDownSpeedLimit=new QLineEdit(this);
+    maxDownSpeedLimit->setValidator(intValidator);
     maxDownSpeedLimit->setText(QString::number(GlobalObjects::appSetting->value("Download/MaxDownloadLimit",0).toInt()));
     QObject::connect(maxDownSpeedLimit,&QLineEdit::textChanged,[this](){
        downSpeedChange=true;
@@ -67,6 +71,7 @@ DownloadPage::DownloadPage(QWidget *parent) : SettingPage(parent)
 
     QLabel *maxUpSpeedLabel=new QLabel(tr("Max Uploas Limit(KB): "),this);
     maxUpSpeedLimit=new QLineEdit(this);
+    maxUpSpeedLimit->setValidator(intValidator);
     maxUpSpeedLimit->setText(QString::number(GlobalObjects::appSetting->value("Download/MaxUploadLimit",0).toInt()));
     QObject::connect(maxUpSpeedLimit,&QLineEdit::textChanged,[this](){
        upSpeedChange=true;
@@ -74,6 +79,7 @@ DownloadPage::DownloadPage(QWidget *parent) : SettingPage(parent)
 
     QLabel *seedTimeLabel=new QLabel(tr("Seed Time(min): "),this);
     seedTime=new QLineEdit(this);
+    seedTime->setValidator(intValidator);
     seedTime->setText(QString::number(GlobalObjects::appSetting->value("Download/SeedTime",5).toInt()));
     QObject::connect(seedTime,&QLineEdit::textChanged,[this](){
        seedTimeChange=true;
@@ -81,6 +87,7 @@ DownloadPage::DownloadPage(QWidget *parent) : SettingPage(parent)
 
     QLabel *maxConcurrentLabel=new QLabel(tr("Max Concurrent Downloads: "),this);
     maxConcurrent=new QLineEdit(this);
+    maxConcurrent->setValidator(intValidator);
     maxConcurrent->setText(QString::number(GlobalObjects::appSetting->value("Download/ConcurrentDownloads",5).toInt()));
     QObject::connect(maxConcurrent,&QLineEdit::textChanged,[this](){
        concurrentChange=true;

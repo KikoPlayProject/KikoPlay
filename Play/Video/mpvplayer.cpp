@@ -94,16 +94,15 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     if (!mpv)
         throw std::runtime_error("could not create mpv context");
 
-    //mpv_set_option_string(mpv, "terminal", "yes");
-    //mpv_set_option_string(mpv, "msg-level", "all=v");
     if (mpv_initialize(mpv) < 0)
         throw std::runtime_error("could not initialize mpv context");
 
     mpv_request_log_messages(mpv, "v");
-    QStringList options=GlobalObjects::appSetting->value("Play/MPVParameters",
-                                                         "#Make sure the danmu is smooth\n"
-                                                         "vf=lavfi=\"fps=fps=60:round=down\"\n"
-                                                         "hwdec=auto").toString().split('\n');
+    QStringList options=GlobalObjects::appSetting->value(
+         "Play/MPVParameters",
+         "#Make sure the danmu is smooth\n"
+         "vf=lavfi=\"fps=fps=60:round=down\"\n"
+         "hwdec=auto").toString().split('\n');
     for(const QString &option:options)
     {
         QString opt(option.trimmed());
@@ -114,16 +113,15 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
         mpv::qt::set_option_variant(mpv, key, val);
         optionsMap.insert(key, val);
     }
+    using ShortCutInfo = QPair<QString, QPair<QString,QString>>;
+    auto shortcutList = GlobalObjects::appSetting->value("Play/MPVShortcuts").value<QList<ShortCutInfo>>();
+    for(auto &s : shortcutList)
+    {
+        modifyShortcut(s.first, s.first, s.second.first);
+    }
 
     mpv_set_option_string(mpv, "terminal", "yes");
     mpv_set_option_string(mpv, "keep-open", "yes");  
-
-    /* for svp test-------------------
-    mpv::qt::set_option_variant(mpv,"input-ipc-server","mpvpipe");
-    mpv::qt::set_option_variant(mpv,"hwdec-codecs","all");
-    mpv::qt::set_option_variant(mpv,"hr-seek-framedrop","no");
-    mpv::qt::set_option_variant(mpv,"no-resume-playback","");
-    */
 
     QObject::connect(this, &MPVPlayer::frameSwapped, this,&MPVPlayer::swapped);
 
@@ -133,6 +131,14 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     mpv_observe_property(mpv, 0, "eof-reached", MPV_FORMAT_FLAG);
     mpv_observe_property(mpv, 0, "track-list", MPV_FORMAT_NODE);
     mpv_observe_property(mpv, 0, "chapter-list", MPV_FORMAT_NODE);
+    mpv_observe_property(mpv, 0, "sub-delay", MPV_FORMAT_INT64);
+    mpv_observe_property(mpv, 0, "speed", MPV_FORMAT_DOUBLE);
+    mpv_observe_property(mpv, 0, "brightness", MPV_FORMAT_INT64);
+    mpv_observe_property(mpv, 0, "contrast", MPV_FORMAT_INT64);
+    mpv_observe_property(mpv, 0, "saturation", MPV_FORMAT_INT64);
+    mpv_observe_property(mpv, 0, "gamma", MPV_FORMAT_INT64);
+    mpv_observe_property(mpv, 0, "hue", MPV_FORMAT_INT64);
+    mpv_observe_property(mpv, 0, "sharpen", MPV_FORMAT_DOUBLE);
 
     mpv_set_wakeup_callback(mpv, MPVPlayer::wakeup, this);
     QObject::connect(&refreshTimer,&QTimer::timeout,[this](){
@@ -295,6 +301,88 @@ void MPVPlayer::drawTexture(QList<const DanmuObject *> &objList, float alpha)
     }
 }
 
+void MPVPlayer::modifyShortcut(const QString &key, const QString &newKey, const QString &command)
+{
+    if(key != newKey)
+    {
+        mpvShortcuts.remove(key);
+    }
+    if(newKey.isEmpty() || command.isEmpty()) return;
+    QList<QStringList> commands;
+    QStringList commandStrs = command.split(';', Qt::SkipEmptyParts);
+    for(const QString &cStr : commandStrs)
+    {
+        QStringList commandParts;
+        QString curPart;
+        int state = 0;
+        bool escape = false;
+        for(QChar c : cStr)
+        {
+            if(state==0) {
+                if(escape) {
+                    curPart.append('\\');
+                    curPart.append(c);
+                    escape = false;
+                } else if(c.isSpace()) {
+					if(!curPart.isEmpty())
+						commandParts.append(curPart);
+                    state = 1;
+                    curPart.clear();
+                } else if(c=='\'') {
+                    state = 2;
+                } else if(c=='"') {
+                    state = 3;
+                } else {
+                    curPart.append(c);
+                    escape = (c=='\\');
+                }
+            } else if(state==1) {
+                if(!c.isSpace()) {
+                    curPart.append(c);
+                    state = 0;
+                }
+            } else if(state==2) {
+                if(escape) {
+                    curPart.append('\\');
+                    curPart.append(c);
+                    escape = false;
+                } else if(c=='\'') {
+                    state = 0;
+                } else {
+                    curPart.append(c);
+                    escape = (c=='\\');
+                }
+            } else if(state==3) {
+                if(escape) {
+                    curPart.append('\\');
+                    curPart.append(c);
+                    escape = false;
+                } else if(c=='"') {
+                    state = 0;
+                } else {
+                    curPart.append(c);
+                    escape = (c=='\\');
+                }
+            }
+        }
+        if(!curPart.isEmpty()) commandParts.append(curPart);
+        commands.append(commandParts);
+    }
+    mpvShortcuts[newKey] = {commands, command};
+}
+
+int MPVPlayer::runShortcut(const QString &key)
+{
+    if(!mpvShortcuts.contains(key)) return -1;
+    const auto &shortcut = mpvShortcuts[key];
+    int ret = 0;
+    for(const auto &command : shortcut.first)
+    {
+        ret = setMPVCommand(command);
+    }
+    return ret;
+}
+
 void MPVPlayer::setMedia(const QString &file)
 {
     if(!setMPVCommand(QStringList() << "loadfile" << file))
@@ -425,39 +513,39 @@ void MPVPlayer::screenshot(const QString &filename)
 
 void MPVPlayer::setBrightness(int val)
 {
-    mpv::qt::set_option_variant(mpv, "brightness", qBound(-100, val, 100));
+    mpv::qt::set_property(mpv, "brightness", qBound(-100, val, 100));
 }
 
 void MPVPlayer::setContrast(int val)
 {
-    mpv::qt::set_option_variant(mpv, "contrast", qBound(-100, val, 100));
+    mpv::qt::set_property(mpv, "contrast", qBound(-100, val, 100));
 }
 
 void MPVPlayer::setSaturation(int val)
 {
-    mpv::qt::set_option_variant(mpv, "saturation", qBound(-100, val, 100));
+    mpv::qt::set_property(mpv, "saturation", qBound(-100, val, 100));
 }
 
 void MPVPlayer::setGamma(int val)
 {
-    mpv::qt::set_option_variant(mpv, "gamma", qBound(-100, val, 100));
+    mpv::qt::set_property(mpv, "gamma", qBound(-100, val, 100));
 }
 
 void MPVPlayer::setHue(int val)
 {
-    mpv::qt::set_option_variant(mpv, "hue", qBound(-100, val, 100));
+    mpv::qt::set_property(mpv, "hue", qBound(-100, val, 100));
 }
 
 void MPVPlayer::setSharpen(int val)
 {
-    mpv::qt::set_option_variant(mpv, "sharpen", qBound(-4.0, val / 100.0, 4.0));
+    mpv::qt::set_property(mpv, "sharpen", qBound(-4.0, val / 100.0, 4.0));
 }
 
 void MPVPlayer::initializeGL()
 {
     QOpenGLFunctions *glFuns=context()->functions();
     glFuns->initializeOpenGLFunctions();
-    mpv_opengl_init_params gl_init_params{get_proc_address, nullptr, nullptr};
+    mpv_opengl_init_params gl_init_params{get_proc_address, nullptr};
     mpv_render_param params[]{
         {MPV_RENDER_PARAM_API_TYPE, const_cast<char *>(MPV_RENDER_API_TYPE_OPENGL)},
         {MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, &gl_init_params},
@@ -570,21 +658,22 @@ void MPVPlayer::maybeUpdate()
 
 void MPVPlayer::handle_mpv_event(mpv_event *event)
 {
-    switch (event->event_id)
+    static QHash<QString, std::function<void()>> propertyFunc = {
     {
-    case MPV_EVENT_PROPERTY_CHANGE:
-    {
-        mpv_event_property *prop = (mpv_event_property *)event->data;
-        if (strcmp(prop->name, "playback-time") == 0)
-        {
+        "playback-time",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_DOUBLE)
             {
                 double time = *(double *)prop->data;
                 if(state==PlayState::Pause) emit positionChanged(time*1000);
             }
         }
-        else if (strcmp(prop->name, "duration") == 0)
-        {
+    },
+    {
+        "duration",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_DOUBLE)
             {
                 double time = *(double *)prop->data;
@@ -592,8 +681,11 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
                 emit durationChanged(time*1000);
             }
         }
-        else if (strcmp(prop->name, "pause") == 0)
-        {
+    },
+    {
+        "pause",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_FLAG)
             {
                 int flag = *(int *)prop->data;
@@ -610,8 +702,11 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
                 emit stateChanged(state);
             }
         }
-        else if (strcmp(prop->name, "eof-reached") == 0)
-        {
+    },
+    {
+        "eof-reached",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_FLAG)
             {
                 int flag = *(int *)prop->data;
@@ -619,12 +714,15 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
                 {
                     state = PlayState::EndReached;
                     refreshTimer.stop();
-					emit stateChanged(state);
+                    emit stateChanged(state);
                 }
             }
         }
-        else if (strcmp(prop->name, "chapter-list") == 0)
-        {
+    },
+    {
+        "chapter-list",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_NODE) {
                 QVariantList chapters=mpv::qt::node_to_variant((mpv_node *)prop->data).toList();
                 this->chapters.clear();
@@ -636,8 +734,11 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
                 emit chapterChanged();
             }
         }
-        else if (strcmp(prop->name, "track-list") == 0)
-        {
+    },
+    {
+        "track-list",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
             QVariantList allTracks=mpv::qt::node_to_variant((mpv_node *)prop->data).toList();
             audioTrack.desc_str.clear();
             audioTrack.ids.clear();
@@ -662,6 +763,97 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
             }
             emit trackInfoChange(0); //audio
             emit trackInfoChange(1); //subtitle
+        }
+    },
+    {
+        "sub-delay",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
+            if (prop->format == MPV_FORMAT_INT64) {
+                int64_t sub_delay = *(int64_t *)prop->data;
+                emit subDelayChanged(sub_delay);
+            }
+        }
+    },
+    {
+        "speed",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
+            if (prop->format == MPV_FORMAT_DOUBLE) {
+                double speed = *(double *)prop->data;
+                emit speedChanged(speed);
+            }
+        }
+    },
+    {
+        "brightness",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
+            if (prop->format == MPV_FORMAT_INT64) {
+                int64_t brightness = *(int64_t *)prop->data;
+                emit brightnessChanged(brightness);
+            }
+        }
+    },
+    {
+        "contrast",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
+            if (prop->format == MPV_FORMAT_INT64) {
+                int64_t contrast = *(int64_t *)prop->data;
+                emit contrastChanged(contrast);
+            }
+        }
+    },
+    {
+        "saturation",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
+            if (prop->format == MPV_FORMAT_INT64) {
+                int64_t saturation = *(int64_t *)prop->data;
+                emit saturationChanged(saturation);
+            }
+        }
+    },
+    {
+        "gamma",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
+            if (prop->format == MPV_FORMAT_INT64) {
+                int64_t gamma = *(int64_t *)prop->data;
+                emit gammaChanged(gamma);
+            }
+        }
+    },
+    {
+        "hue",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
+            if (prop->format == MPV_FORMAT_INT64) {
+                int64_t hue = *(int64_t *)prop->data;
+                emit hueChanged(hue);
+            }
+        }
+    },
+    {
+        "sharpen",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
+            if (prop->format == MPV_FORMAT_DOUBLE) {
+                double sharpen = *(double *)prop->data;
+                emit sharpenChanged(sharpen);
+            }
+        }
+    }
+    };
+    switch (event->event_id)
+    {
+    case MPV_EVENT_PROPERTY_CHANGE:
+    {
+        mpv_event_property *prop = (mpv_event_property *)event->data;
+        if(propertyFunc.contains(prop->name))
+        {
+            propertyFunc[prop->name]();
         }
         break;
     }
@@ -743,7 +935,7 @@ void MPVPlayer::loadChapters()
 
 int MPVPlayer::setMPVCommand(const QVariant &params)
 {
-    return mpv::qt::get_error(mpv::qt::command_variant(mpv, params));
+    return mpv::qt::get_error(mpv::qt::command(mpv, params));
 }
 
 void MPVPlayer::setMPVProperty(const QString &name, const QVariant &value)

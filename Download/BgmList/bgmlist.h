@@ -43,8 +43,8 @@ signals:
 private:
     bool inited;
     bool needSave;
+    bool seasonListDownloaded;
     QMap<QString,QString> sitesName;
-    bool seasonsDownloaded, curSeasonDownloaded;
     QMap<QString, BgmSeason> bgmSeasons;
     QStringList seasons;
     BgmSeason *curSeason;

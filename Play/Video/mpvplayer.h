@@ -16,7 +16,6 @@ class MPVPlayer : public QOpenGLWidget
 public:
     explicit MPVPlayer(QWidget *parent = nullptr);
     ~MPVPlayer();
-
     enum PlayState
     {
         Play,
@@ -57,11 +56,14 @@ public:
     inline const QString &getCurrentFile() const {return currentFile;}
     inline int getVolume() const {return volume;}
     QString getMPVProperty(const QString &property, bool &hasError);
+    const QHash<QString, QPair<QList<QStringList>, QString>> &getShortcuts() const{return mpvShortcuts;}
 
     VideoSizeInfo getVideoSizeInfo();
     QString expandMediaInfo(const QString &text);
     void setOptions();
     void drawTexture(QList<const DanmuObject *> &objList, float alpha);
+    void modifyShortcut(const QString &key, const QString &newKey, const QString &command);
+    int runShortcut(const QString &key);
 signals:
     void fileChanged();
     void durationChanged(int value);
@@ -70,6 +72,15 @@ signals:
     void stateChanged(PlayState state);
     void trackInfoChange(int type);
     void chapterChanged();
+    void subDelayChanged(int value);
+    void speedChanged(double value);
+    void brightnessChanged(int value);
+    void contrastChanged(int value);
+    void saturationChanged(int value);
+    void gammaChanged(int value);
+    void hueChanged(int value);
+    void sharpenChanged(double value);
+
     void initContext();
     void showLog(const QString &log);
     void refreshPreview(int time, QPixmap *pixmap);
@@ -126,6 +137,7 @@ private:
     QTimer refreshTimer;
     QElapsedTimer elapsedTimer;
     QMap<QString, QString> optionsMap;
+    QHash<QString, QPair<QList<QStringList>, QString>> mpvShortcuts;
 
     int currentDuration;
     TrackInfo audioTrack,subtitleTrack;

@@ -81,18 +81,6 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
                                            QApplication::style()->pixelMetric(QStyle::PixelMetric::PM_ScrollBarExtent) +
                                            seasonIdCombo->view()->autoScrollMargin());
     seasonIdCombo->addItems(bgmList->seasonList());
-    QObject::connect(seasonIdCombo, (void (QComboBox::*)(const QString &))&QComboBox::currentIndexChanged,this,[this](const QString &id){
-        seasonIdCombo->setEnabled(false);
-        bgmListView->setEnabled(false);
-        bgmList->setSeason(id);
-        seasonIdCombo->setEnabled(true);
-        bgmListView->setEnabled(true);
-    });
-    QObject::connect(bgmList, &BgmList::seasonsUpdated, this, [this](){
-       seasonIdCombo->clear();
-       seasonIdCombo->addItems(bgmList->seasonList());
-       seasonIdCombo->setCurrentIndex(seasonIdCombo->count()-1);
-    });
     btnHLayout->addWidget(seasonIdCombo);
 
     QLabel *infoLabel=new QLabel(this);
@@ -101,15 +89,32 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     QPushButton *refreshBtn=new QPushButton(tr("Refresh"),this);
     btnHLayout->addWidget(refreshBtn);
 
-    QObject::connect(refreshBtn,&QPushButton::clicked,this,[this,bgmListProxyModel](){
+    QObject::connect(seasonIdCombo, (void (QComboBox::*)(const QString &))&QComboBox::currentIndexChanged,this,
+     [this, refreshBtn](const QString &id){
         seasonIdCombo->setEnabled(false);
+        bgmListView->setEnabled(false);
+        refreshBtn->setEnabled(false);
+        bgmList->setSeason(id);
+        seasonIdCombo->setEnabled(true);
+        bgmListView->setEnabled(true);
+        refreshBtn->setEnabled(true);
+    });
+    QObject::connect(bgmList, &BgmList::seasonsUpdated, this, [this](){
+       seasonIdCombo->clear();
+       seasonIdCombo->addItems(bgmList->seasonList());
+       seasonIdCombo->setCurrentIndex(seasonIdCombo->count()-1);
+    });
+
+    QObject::connect(refreshBtn,&QPushButton::clicked,this,[=](){
+        seasonIdCombo->setEnabled(false);
+        refreshBtn->setEnabled(false);
         bgmList->refresh();
         bgmListProxyModel->invalidate();
         seasonIdCombo->setEnabled(true);
+        refreshBtn->setEnabled(true);
     });
-    QObject::connect(bgmList,&BgmList::bgmStatusUpdated,this,[infoLabel,refreshBtn](int type,const QString &msg){
+    QObject::connect(bgmList,&BgmList::bgmStatusUpdated,this,[infoLabel](int type,const QString &msg){
         infoLabel->setText(msg);
-        refreshBtn->setVisible(type==3);
     });
 
     bgmListView=new BgmTreeView(this);

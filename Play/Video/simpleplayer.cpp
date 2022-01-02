@@ -105,7 +105,7 @@ void SimplePlayer::initializeGL()
 {
     QOpenGLFunctions *glFuns=context()->functions();
     glFuns->initializeOpenGLFunctions();
-    mpv_opengl_init_params gl_init_params{get_proc_address, nullptr, nullptr};
+    mpv_opengl_init_params gl_init_params{get_proc_address, nullptr};
     mpv_render_param params[]{
         {MPV_RENDER_PARAM_API_TYPE, const_cast<char *>(MPV_RENDER_API_TYPE_OPENGL)},
         {MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, &gl_init_params},

@@ -59,7 +59,11 @@ void GlobalObjects::init()
 
     initDatabase(mt_db_names);
 
+    using ShortCutInfo = QPair<QString, QPair<QString,QString>>;
+    qRegisterMetaType<QList<ShortCutInfo>>("ShortCutList");
+    qRegisterMetaTypeStreamOperators<QList<ShortCutInfo>>("ShortCutList");
     appSetting=new QSettings(dataPath+"settings.ini",QSettings::IniFormat);
+
     QString transFile = GlobalObjects::appSetting->value("KikoPlay/Language", "").toString();
     transFile = QString(":/res/lang/%1.qm").arg(transFile.isEmpty()?QLocale::system().name().toLower():transFile);
     static QTranslator translator;
@@ -111,8 +115,8 @@ void GlobalObjects::clear()
     downloadModel->deleteLater();
     danmuManager->deleteLater();
     lanServer->deleteLater();
-    scriptManager->deleteLater();
     autoDownloadManager->deleteLater();
+    scriptManager->deleteLater();
     appSetting->deleteLater();
 }
 

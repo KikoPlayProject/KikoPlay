@@ -440,7 +440,7 @@ void ListWindow::initActions()
         QModelIndex selIndex(selection.indexes().first());
         const PlayListItem *item=GlobalObjects::playlist->getItem(selIndex);
         Pool *pool = nullptr;
-        if(!item->hasPool())
+        if(!item->hasPool() || !(pool = GlobalObjects::danmuManager->getPool(item->poolID, false)))
         {
             showMessage(tr("No pool associated"), NotifyMessageFlag::NM_HIDE);
             return;
@@ -472,7 +472,7 @@ void ListWindow::initActions()
         QModelIndex selIndex(selection.indexes().first());
         const PlayListItem *item=GlobalObjects::playlist->getItem(selIndex);
         Pool *pool = nullptr;
-        if(!item->hasPool())
+        if(!item->hasPool() || !(pool = GlobalObjects::danmuManager->getPool(item->poolID, false)))
         {
             showMessage(tr("No pool associated"), NotifyMessageFlag::NM_HIDE);
             return;

@@ -6,7 +6,7 @@
 #include "Script/scriptlogger.h"
 #include <QBrush>
 BgmList::BgmList(QObject *parent) : QAbstractItemModel (parent),inited(false),needSave(false),
-    seasonsDownloaded(false), curSeasonDownloaded(false),curSeason(nullptr)
+   seasonListDownloaded(false), curSeason(nullptr)
 {
     QFile sitesFile(":/res/onAirSites.json");
     sitesFile.open(QFile::ReadOnly);
@@ -60,11 +60,8 @@ void BgmList::setSeason(const QString &title)
 
 void BgmList::refresh()
 {
-    if(!seasonsDownloaded)
-    {
-        if(!fetchMetaInfo()) return;
-    }
-    if(!curSeasonDownloaded && curSeason)
+    if(!seasonListDownloaded && !fetchMetaInfo()) return;
+    if(curSeason)
     {
         beginResetModel();
         fetchBgmList(*curSeason);
@@ -184,7 +181,6 @@ bool BgmList::fetchMetaInfo()
     if(calendarScripts.empty())
     {
         emit bgmStatusUpdated(3,tr("Bangumi Calendar script not exist"));
-        seasonsDownloaded = false;
         return false;
     }
     auto bgmCalendar = calendarScripts.first().staticCast<BgmCalendarScript>();
@@ -198,7 +194,6 @@ bool BgmList::fetchMetaInfo()
     if(!state)
     {
         emit bgmStatusUpdated(3,tr("Fetch Failed: %1").arg(state.info));
-        seasonsDownloaded = false;
         return false;
     }
     seasons.clear();
@@ -208,13 +203,14 @@ bool BgmList::fetchMetaInfo()
         seasons.append(s.title);
         bgmSeasons.insert(s.title, s);
     }
-    seasonsDownloaded = true;
     emit seasonsUpdated();
+    seasonListDownloaded = true;
     return true;
 }
 
 bool BgmList::fetchBgmList(BgmSeason &season)
 {
+    bool curSeasonDownloaded = false;
     const auto &calendarScripts = GlobalObjects::scriptManager->scripts(ScriptType::BGM_CALENDAR);
     if(calendarScripts.empty())
     {

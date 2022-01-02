@@ -528,6 +528,7 @@ void DanmuManager::deletePool(const QList<DanmuPoolNode *> &deleteList)
             }
         }
         db.commit();
+        query.exec("VACUUM;");
         emit workerStateMessage("Done");
         return 0;
     });
