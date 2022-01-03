@@ -96,7 +96,7 @@ public slots:
     void setTrackId(int type,int id);
     void hideSubtitle(bool on);
     void setSubDelay(int delay);
-    void setSpeed(int index);
+    void setSpeed(double speed);
     void setVideoAspect(int index);
     void screenshot(const QString &filename);
     void setBrightness(int val);

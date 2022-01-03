@@ -494,10 +494,9 @@ void MPVPlayer::setSubDelay(int delay)
     setMPVProperty("sub-delay",delay);
 }
 
-void MPVPlayer::setSpeed(int index)
+void MPVPlayer::setSpeed(double speed)
 {
-    if(index>=speedLevel.count())return;
-	double speed = speedLevel.at(index).toDouble();
+    speed = std::max(speed, 0.0);
     setMPVProperty("speed",speed);
 }
 

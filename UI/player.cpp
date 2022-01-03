@@ -1155,10 +1155,12 @@ void PlayerWindow::setupPlaySettingPage()
     playSpeedCombo->setInsertPolicy(QComboBox::NoInsert);
 	playSpeedCombo->setEditable(true);
     playSpeedCombo->addItems(GlobalObjects::mpvplayer->speedLevel);
-    QObject::connect(playSpeedCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[](int index){
-        GlobalObjects::mpvplayer->setSpeed(index);
+    QObject::connect(playSpeedCombo,&QComboBox::currentTextChanged,[](const QString &text){
+        bool ok = false;
+        double speed = text.toDouble(&ok);
+        if(ok) GlobalObjects::mpvplayer->setSpeed(speed);
     });
-    playSpeedCombo->setCurrentIndex(GlobalObjects::appSetting->value("Play/PlaySpeed",GlobalObjects::mpvplayer->speedLevel.indexOf("1")).toInt());
+    playSpeedCombo->setCurrentText(GlobalObjects::appSetting->value("Play/PlaySpeed", "1").toString());
     QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::speedChanged, [this](double val){
         playSpeedCombo->setCurrentText(QString::number(val));
     });
@@ -2171,7 +2173,7 @@ void PlayerWindow::closeEvent(QCloseEvent *)
     GlobalObjects::appSetting->setValue("RandomSize",randomSize->isChecked());
     GlobalObjects::appSetting->setValue("DanmuFont",fontFamilyCombo->currentFont().family());
     GlobalObjects::appSetting->setValue("VidoeAspectRatio",aspectRatioCombo->currentIndex());
-    GlobalObjects::appSetting->setValue("PlaySpeed",playSpeedCombo->currentIndex());
+    GlobalObjects::appSetting->setValue("PlaySpeed",playSpeedCombo->currentText());
     GlobalObjects::appSetting->setValue("WindowSize",windowSizeGroup->actions().indexOf(windowSizeGroup->checkedAction()));
     GlobalObjects::appSetting->setValue("StayOnTop",stayOnTopGroup->actions().indexOf(stayOnTopGroup->checkedAction()));
     GlobalObjects::appSetting->setValue("Volume",volume->value());

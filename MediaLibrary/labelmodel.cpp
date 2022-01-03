@@ -418,7 +418,7 @@ TagNode *LabelModel::insertNode(TagNode *parent, const QString &strPath, int cou
     bool titleStart = strPath.startsWith(split);
     for(auto &title : titles)
     {
-        if(!curPath.isEmpty() | titleStart) curPath.append(split);
+        if(!curPath.isEmpty() || titleStart) curPath.append(split);
         curPath.append(title);
         if(!current->subNodes) current->subNodes = new QList<TagNode *>;
         auto iter = std::find_if(current->subNodes->begin(), current->subNodes->end(), [=](TagNode *node){return  node->tagTitle == title;});
@@ -453,7 +453,7 @@ TagNode *LabelModel::insertNodeIndex(TagNode *parent, const QString &strPath, in
     bool titleStart = strPath.startsWith(split);
     for(auto &title : titles)
     {
-        if(!curPath.isEmpty() | titleStart) curPath.append(split);
+        if(!curPath.isEmpty() || titleStart) curPath.append(split);
         curPath.append(title);
         if(!current->subNodes)
         {

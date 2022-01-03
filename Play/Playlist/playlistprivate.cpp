@@ -121,7 +121,7 @@ void PlayListPrivate::loadPlaylist()
 void PlayListPrivate::savePlaylist()
 {
     if(!playListChanged)return;
-    QFile playlistFile(plPath);
+    QFile playlistFile(plPath+".tmp");
     bool ret=playlistFile.open(QIODevice::WriteOnly|QIODevice::Text);
     if(!ret) return;
     QXmlStreamWriter writer(&playlistFile);
@@ -129,7 +129,12 @@ void PlayListPrivate::savePlaylist()
     writer.writeStartDocument();
     saveItem(writer, root);
     writer.writeEndDocument();
-    playListChanged=false;
+    ret = QFile::remove(plPath);
+    if(ret)
+    {
+        ret = playlistFile.rename(plPath);
+        if(ret) playListChanged=false;
+    }
 }
 
 void PlayListPrivate::incModifyCounter()
