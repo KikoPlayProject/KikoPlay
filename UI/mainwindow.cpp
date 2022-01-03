@@ -41,6 +41,11 @@ MainWindow::MainWindow(QWidget *parent)
     setMinimumSize(120*logicalDpiX()/96, 100*logicalDpiY()/96);
     miniGeo = GlobalObjects::appSetting->value("MainWindow/miniGeometry", defaultMiniGeo).toRect();
     originalGeo=geometry();
+    listWindowWidth = GlobalObjects::appSetting->value("MainWindow/ListWindowWidth", 0).toInt();
+    if(listWindowWidth == 0)
+    {
+        listWindowWidth = 200*logicalDpiX()/96;
+    }
     hideToTrayIcon = GlobalObjects::appSetting->value("MainWindow/hideToTrayIcon", false).toBool();
     trayIcon = new QSystemTrayIcon(windowIcon(), this);
     trayIcon->setToolTip("KikoPlay");
@@ -488,11 +493,9 @@ QWidget *MainWindow::setupPlayPage()
         {
             if(!isMaximized() && !isFullScreen())
             {
-                if(listWindowWidth==0)
-                    listWindowWidth=listWindow->width();
                 resize(listWindowWidth+width(),height());
             }
-            listWindow->show();      
+            listWindow->show();
         }
         else
         {
@@ -715,6 +718,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 	GlobalObjects::appSetting->setValue("MainWindow/miniGeometry", miniGeo);
     GlobalObjects::appSetting->setValue("MainWindow/hideToTrayIcon", hideToTrayIcon);
     GlobalObjects::appSetting->setValue("DialogSize/MPVLog",logWindow->size());
+    GlobalObjects::appSetting->setValue("MainWindow/ListWindowWidth", listWindowWidth);
     if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
     {
         GlobalObjects::appSetting->beginGroup("MainWindow");
