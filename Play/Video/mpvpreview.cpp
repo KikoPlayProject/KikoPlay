@@ -23,7 +23,6 @@ MPVPreview::MPVPreview(const QSize &previewSize, int pInterval, QObject *parent)
     mpv = mpv_create();
     if (!mpv)
         throw std::runtime_error("could not create mpv context");
-    mpv::qt::set_option_variant(mpv, "vo", "opengl-cb");
     if (mpv_initialize(mpv) < 0)
         throw std::runtime_error("could not initialize mpv context");
     mpv::qt::set_property(mpv, "ao-mute", true);

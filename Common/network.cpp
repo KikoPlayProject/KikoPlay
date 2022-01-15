@@ -243,23 +243,22 @@ int Network::gzipCompress(const QByteArray &input, QByteArray &output)
     ret = deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
                             MAX_WBITS + 16, 8, Z_DEFAULT_STRATEGY);
     if (ret != Z_OK) return ret;
-    unsigned char inBuf[chunkSize];
-    unsigned char outBuf[chunkSize];
+	static QVector<unsigned char> inBuf(chunkSize), outBuf(chunkSize);
     QDataStream inStream(input);
     int flush;
     while(!inStream.atEnd())
     {
-        stream.avail_in=inStream.readRawData((char *)&inBuf,chunkSize);
+        stream.avail_in=inStream.readRawData((char *)inBuf.data(),chunkSize);
         flush = stream.avail_in<chunkSize ? Z_FINISH : Z_NO_FLUSH;
-        stream.next_in = inBuf;
+        stream.next_in = inBuf.data();
         do
         {
             stream.avail_out = chunkSize;
-            stream.next_out = outBuf;
+            stream.next_out = outBuf.data();
             ret = deflate(&stream, flush);
             assert(ret != Z_STREAM_ERROR);
             have = chunkSize - stream.avail_out;
-            output.append((const char *)outBuf,have);
+            output.append((const char *)outBuf.constData(),have);
         } while (stream.avail_out == 0);
     }
     (void)deflateEnd(&stream);
@@ -279,8 +278,7 @@ int Network::gzipDecompress(const QByteArray &input, QByteArray &output)
     stream.next_in = Z_NULL;
     ret = inflateInit2(&stream, MAX_WBITS + 16);
     if (ret != Z_OK) return ret;
-    unsigned char inBuf[chunkSize];
-    unsigned char outBuf[chunkSize];
+	static QVector<unsigned char> inBuf(chunkSize), outBuf(chunkSize);
     static char dummy_head[2] = {
             0x8 + 0x7 * 0x10,
             (((0x8 + 0x7 * 0x10) * 0x100 + 30) / 31 * 31) & 0xFF,
@@ -288,14 +286,14 @@ int Network::gzipDecompress(const QByteArray &input, QByteArray &output)
     QDataStream inStream(input);
     while(!inStream.atEnd())
     {
-        stream.avail_in=inStream.readRawData((char *)&inBuf,chunkSize);
+        stream.avail_in=inStream.readRawData((char *)inBuf.data(),chunkSize);
         if (stream.avail_in == 0)
             break;
-        stream.next_in = inBuf;
+        stream.next_in = inBuf.data();
         do
         {
             stream.avail_out = chunkSize;
-            stream.next_out = outBuf;
+            stream.next_out = outBuf.data();
             ret = inflate(&stream, Z_NO_FLUSH);
             switch (ret)
             {
@@ -313,7 +311,7 @@ int Network::gzipDecompress(const QByteArray &input, QByteArray &output)
                 return ret;
             }
             have = chunkSize - stream.avail_out;
-            output.append((const char *)outBuf,have);
+            output.append((const char *)outBuf.constData(),have);
         } while (stream.avail_out == 0);
     }
     (void)inflateEnd(&stream);
@@ -333,19 +331,18 @@ int Network::decompress(const QByteArray &input, QByteArray &output)
     stream.next_in = Z_NULL;
     ret = inflateInit(&stream);
     if (ret != Z_OK) return ret;
-    unsigned char inBuf[chunkSize];
-    unsigned char outBuf[chunkSize];
+	static QVector<unsigned char> inBuf(chunkSize), outBuf(chunkSize);
     QDataStream inStream(input);
     while(!inStream.atEnd())
     {
-        stream.avail_in=inStream.readRawData((char *)&inBuf,chunkSize);
+        stream.avail_in=inStream.readRawData((char *)inBuf.data(),chunkSize);
         if (stream.avail_in == 0)
             break;
-        stream.next_in = inBuf;
+        stream.next_in = inBuf.data();
         do
         {
             stream.avail_out = chunkSize;
-            stream.next_out = outBuf;
+            stream.next_out = outBuf.data();
             ret = inflate(&stream, Z_NO_FLUSH);
             switch (ret)
             {
@@ -357,7 +354,7 @@ int Network::decompress(const QByteArray &input, QByteArray &output)
                 return ret;
             }
             have = chunkSize - stream.avail_out;
-            output.append((const char *)outBuf,have);
+            output.append((const char *)outBuf.constData(),have);
         } while (stream.avail_out == 0);
     }
     (void)inflateEnd(&stream);

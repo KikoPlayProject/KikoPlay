@@ -17,6 +17,8 @@ public:
     };
     void setOrder(OrderType oType);
     void setAscending(bool on);
+    bool isAscending() const {return ascending;}
+    OrderType getOrderType() const {return orderType;}
 
 signals:
     void animeMessage(const QString &msg, bool hasMore);

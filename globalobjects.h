@@ -44,9 +44,9 @@ public:
     static QMainWindow *mainWindow;
     static QString dataPath;
 
-    static const int Comment_DB=0;
-    static const int Bangumi_DB=1;
-    static const int Download_DB=2;
+    static constexpr const int Comment_DB=0;
+    static constexpr const int Bangumi_DB=1;
+    static constexpr const int Download_DB=2;
     static QSqlDatabase getDB(int db);
 
     static constexpr const char *normalFont = "Microsoft Yahei UI";

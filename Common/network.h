@@ -6,8 +6,8 @@
 #include <QtCore>
 namespace Network
 {
-    static const int timeout=10000;
-    static const int maxRedirectTimes=10;
+    static constexpr const int timeout=10000;
+    static constexpr const int maxRedirectTimes=10;
     struct Reply
     {
         int statusCode;

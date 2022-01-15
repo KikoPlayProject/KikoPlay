@@ -13,6 +13,7 @@ class QActionGroup;
 class QButtonGroup;
 class QSplitter;
 class AnimeModel;
+class AnimeFilterProxyModel;
 class LabelProxyModel;
 class AnimeItemDelegate;
 class AnimeDetailInfoPage;
@@ -79,6 +80,7 @@ public:
 
 private:
     AnimeModel *animeModel;
+    AnimeFilterProxyModel *proxyModel;
     LabelProxyModel *labelProxyModel;
     QListView *animeListView;
     LabelTreeView *labelView;

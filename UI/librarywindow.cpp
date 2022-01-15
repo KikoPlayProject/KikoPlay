@@ -96,12 +96,12 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     animeListView->setMouseTracking(true);
     animeListView->setContextMenuPolicy(Qt::CustomContextMenu);
     animeModel = new AnimeModel(this);
-    AnimeFilterProxyModel *proxyModel=new AnimeFilterProxyModel(animeModel, this);
+    proxyModel=new AnimeFilterProxyModel(animeModel, this);
     proxyModel->setSourceModel(animeModel);
     animeListView->setModel(proxyModel);
 
     QAction *act_delete=new QAction(tr("Delete"),this);
-    QObject::connect(act_delete,&QAction::triggered,[this,proxyModel](){
+    QObject::connect(act_delete,&QAction::triggered,[this](){
         QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
         if(selection.size()==0)return;
         Anime *anime = animeModel->getAnime(selection.indexes().first());
@@ -115,7 +115,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     act_delete->setEnabled(false);
 
     QAction *act_getDetailInfo=new QAction(tr("Search Details"),this);
-    QObject::connect(act_getDetailInfo,&QAction::triggered,[this,proxyModel](){
+    QObject::connect(act_getDetailInfo,&QAction::triggered,[this](){
         QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
         if(selection.size()==0)return;
         searchAddAnime(animeModel->getAnime(selection.indexes().first()));
@@ -123,7 +123,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     act_getDetailInfo->setEnabled(false);
 
     QAction *act_updateDetailInfo=new QAction(tr("Update"),this);
-    QObject::connect(act_updateDetailInfo,&QAction::triggered,[this,proxyModel](){
+    QObject::connect(act_updateDetailInfo,&QAction::triggered,[this](){
         QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
         if(selection.size()==0)return;
         Anime *currentAnime = animeModel->getAnime(selection.indexes().first());
@@ -188,6 +188,11 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     QObject::connect(ascDesc, &QActionGroup::triggered, this, [=](QAction *act){
         proxyModel->setAscending(act==actAsc);
     });
+    bool orderAsc = GlobalObjects::appSetting->value("Library/SortOrderAscending", false).toBool();
+    if(orderAsc)
+        actAsc->trigger();
+
+
     QActionGroup *orderTypes = new QActionGroup(orderSubMenu);
     QAction *actOrderAddTime = orderTypes->addAction(tr("Add Time"));
     QAction *actOrderName = orderTypes->addAction(tr("Anime Name"));
@@ -196,10 +201,14 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     actOrderName->setCheckable(true);
     actOrderDate->setCheckable(true);
     actOrderAddTime->setChecked(true);
-    QObject::connect(orderTypes, &QActionGroup::triggered, this, [=](QAction *act){
-        static QList<QAction *> acts({actOrderAddTime, actOrderName, actOrderDate});
+    static QList<QAction *> acts({actOrderAddTime, actOrderName, actOrderDate});
+    QObject::connect(orderTypes, &QActionGroup::triggered, this, [this](QAction *act){
         proxyModel->setOrder((AnimeFilterProxyModel::OrderType)acts.indexOf(act));
     });
+    AnimeFilterProxyModel::OrderType orderType =
+           AnimeFilterProxyModel::OrderType(GlobalObjects::appSetting->value("Library/SortOrderType", (int)AnimeFilterProxyModel::OrderType::O_AddTime).toInt());
+    if(orderType != AnimeFilterProxyModel::OrderType::O_AddTime)
+        acts[(int)orderType]->trigger();
 
     orderSubMenu->addAction(actAsc);
     orderSubMenu->addAction(actDesc);
@@ -439,6 +448,8 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
 
 void LibraryWindow::beforeClose()
 {
+    GlobalObjects::appSetting->setValue("Library/SortOrderAscending", proxyModel->isAscending());
+    GlobalObjects::appSetting->setValue("Library/SortOrderType", (int)proxyModel->getOrderType());
     GlobalObjects::appSetting->setValue("Library/SplitterState", splitter->saveState());
 }
 
