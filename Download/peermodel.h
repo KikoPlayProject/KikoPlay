@@ -10,7 +10,7 @@ public:
     PeerModel(QObject *parent = nullptr);
     void setPeers(const QJsonArray &statusObj, int numPieces);
     void clear();
-    static const int ProgressCluster = 1024;
+    static constexpr const int ProgressCluster = 1024;
     struct PeerInfo
     {
         QString client, ip;
