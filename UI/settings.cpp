@@ -53,7 +53,7 @@ Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings")
     gLayout->addLayout(pageSLayout, 0, 1);
     gLayout->setColumnStretch(1, 1);
 
-    resize(GlobalObjects::appSetting->value("DialogSize/Setting",QSize(400*logicalDpiX()/96,360*logicalDpiY()/96)).toSize());
+    setSizeSettingKey("DialogSize/Setting",QSize(400*logicalDpiX()/96,360*logicalDpiY()/96));
 }
 
 
@@ -63,7 +63,6 @@ void Settings::onAccept()
     {
         if(p) p->onAccept();
     }
-    GlobalObjects::appSetting->setValue("DialogSize/Setting",size());
     CFramelessDialog::onAccept();
 }
 
@@ -73,7 +72,6 @@ void Settings::onClose()
     {
         if(p) p->onClose();
     }
-    GlobalObjects::appSetting->setValue("DialogSize/Setting",size());
     CFramelessDialog::onClose();
 }
 

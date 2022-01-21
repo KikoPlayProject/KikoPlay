@@ -43,7 +43,7 @@ SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent):CFr
         for(auto &item:episodeResult)
         {
             item.delay=timeSum;
-            timeSum+=item.duration;
+            timeSum+=item.duration*1000;  //ms
             episodeWidget->topLevelItem(i++)->setData(2,0,QString::number(item.delay));
         }
         autoSetDelay=false;
@@ -69,10 +69,7 @@ SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent):CFr
 
     for(auto &item:episodeResult)
     {
-        int min=item.duration/60;
-        int sec=item.duration-min*60;
-        QString duration=QString("%1:%2").arg(min, 2, 10, QChar('0')).arg(sec, 2, 10, QChar('0'));
-        QTreeWidgetItem *widgetItem=new QTreeWidgetItem(episodeWidget,QStringList()<<item.title<<duration<<"0");
+        QTreeWidgetItem *widgetItem=new QTreeWidgetItem(episodeWidget,QStringList()<<item.title<<item.durationStr()<<"0");
         widgetItem->setCheckState(0,Qt::Unchecked);
 		item.delay = 0;
     }

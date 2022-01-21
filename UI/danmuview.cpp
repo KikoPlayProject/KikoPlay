@@ -64,13 +64,7 @@ void DanmuView::initView()
     viewGLayout->setRowStretch(1,1);
     viewGLayout->setColumnStretch(1,1);
     viewGLayout->setContentsMargins(0, 0, 0, 0);
-    resize(GlobalObjects::appSetting->value("DialogSize/DanmuView",QSize(600*logicalDpiX()/96,400*logicalDpiY()/96)).toSize());
-}
-
-void DanmuView::onClose()
-{
-    GlobalObjects::appSetting->setValue("DialogSize/DanmuView",size());
-    CFramelessDialog::onClose();
+    setSizeSettingKey("DialogSize/DanmuView",QSize(600*logicalDpiX()/96,400*logicalDpiY()/96));
 }
 
 DanmuFilterBox::DanmuFilterBox(QWidget *parent): QLineEdit(parent)

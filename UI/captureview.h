@@ -47,10 +47,6 @@ private:
 protected:
     virtual void resizeEvent(QResizeEvent *event);
 
-    // CFramelessDialog interface
-protected:
-    virtual void onClose();
-
     // QWidget interface
 protected:
     virtual void wheelEvent(QWheelEvent *event);

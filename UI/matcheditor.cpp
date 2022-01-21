@@ -412,7 +412,7 @@ MatchEditor::MatchEditor(const PlayListItem *item, QList<const PlayListItem *> *
     matchInfoLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     matchVLayout->addWidget(matchInfoLabel);
 
-    resize(GlobalObjects::appSetting->value("DialogSize/MatchEditor",QSize(400*logicalDpiX()/96,400*logicalDpiY()/96)).toSize());
+    setSizeSettingKey("DialogSize/MatchEditor",QSize(400*logicalDpiX()/96,400*logicalDpiY()/96));
     hitWords.clear();
 }
 
@@ -667,7 +667,6 @@ void MatchEditor::onAccept()
     if(!lastSearchCacheId.isEmpty())
         animeCache.put(lastSearchCacheId,  static_cast<AnimeModel *>(animeModel)->animeBases());
 
-    GlobalObjects::appSetting->setValue("DialogSize/MatchEditor",size());
     CFramelessDialog::onAccept();
 }
 
@@ -675,7 +674,6 @@ void MatchEditor::onClose()
 {
     if(!lastSearchCacheId.isEmpty())
         animeCache.put(lastSearchCacheId,  static_cast<AnimeModel *>(animeModel)->animeBases());
-    GlobalObjects::appSetting->setValue("DialogSize/MatchEditor",size());
     CFramelessDialog::onClose();
 }
 

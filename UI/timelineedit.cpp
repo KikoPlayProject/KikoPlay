@@ -147,11 +147,6 @@ TimelineEdit::TimelineEdit(const DanmuSource *source, const QList<SimpleDanmuInf
     viewSplitter->setSizes(QList<int>()<<timelineBar->width()/2<<timelineBar->width()/2);
 }
 
-void TimelineEdit::onAccept()
-{
-    CFramelessDialog::onAccept();
-}
-
 TimeLineBar::TimeLineBar(const QList<SimpleDanmuInfo> *sDanmuList, TimeLineInfoModel *timelineModel, QWidget *parent):QWidget(parent),simpleDanmuList(sDanmuList)
 {
     setMouseTracking(true);

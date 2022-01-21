@@ -1279,7 +1279,6 @@ int ListWindow::updateCurrentPool()
     int count=0;
     for(auto iter=sources.cbegin();iter!=sources.cend();++iter)
     {
-        QList<DanmuComment *> tmpList;
         showMessage(tr("Updating: %1").arg(iter.value().title),NotifyMessageFlag::NM_PROCESS);
         count+=GlobalObjects::danmuPool->getPool()->update(iter.key());
     }

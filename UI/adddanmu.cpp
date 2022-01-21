@@ -164,7 +164,7 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,
         themeWord=item->animeTitle;
         relWordWidget->setRelWordList(relCache->get(themeWord));
     }
-    resize(GlobalObjects::appSetting->value("DialogSize/AddDanmu",QSize(600*logicalDpiX()/96,500*logicalDpiY()/96)).toSize());
+    setSizeSettingKey("DialogSize/AddDanmu", QSize(600*logicalDpiX()/96, 500*logicalDpiY()/96));
 }
 
 void AddDanmu::search()
@@ -430,7 +430,6 @@ void AddDanmu::onAccept()
             danmuToPoolList.removeAt(i);
         }
     }
-    GlobalObjects::appSetting->setValue("DialogSize/AddDanmu",size());
     relCache->save();
     CFramelessDialog::onAccept();
 }
@@ -441,7 +440,6 @@ void AddDanmu::onClose()
     {
         qDeleteAll((*iter).second);
     }
-    GlobalObjects::appSetting->setValue("DialogSize/AddDanmu",size());
     relCache->save();
     CFramelessDialog::onClose();
 }

@@ -10,6 +10,7 @@
 #include <QGridLayout>
 #include <QFileDialog>
 #include <QProcess>
+#include <QSharedPointer>
 #include "globalobjects.h"
 #include "Common/notifier.h"
 
@@ -34,7 +35,7 @@ namespace
 
 SnippetCapture::SnippetCapture(QWidget *parent) : CFramelessDialog("",parent)
 {
-    smPlayer = new SimplePlayer();
+    smPlayer = QSharedPointer<SimplePlayer>::create();
     smPlayer->setWindowFlags(Qt::FramelessWindowHint);
     QWindow *native_wnd  = QWindow::fromWinId(smPlayer->winId());
     QWidget *playerWindowWidget=QWidget::createWindowContainer(native_wnd);
@@ -73,21 +74,21 @@ SnippetCapture::SnippetCapture(QWidget *parent) : CFramelessDialog("",parent)
     QObject::connect(retainAudioCheck, &QCheckBox::stateChanged, this, [=](int state){
        smPlayer->setMute(state!=Qt::Checked);
     });
-    QObject::connect(smPlayer, &SimplePlayer::positionChanged, this, [=](double val){
+    QObject::connect(smPlayer.data(), &SimplePlayer::positionChanged, this, [=](double val){
        int duration = durationSpin->value();
        if(val >= curTime + duration)
        {
            smPlayer->seek(curTime);
        }
     });
-    QObject::connect(smPlayer, &SimplePlayer::stateChanged, this, [=](SimplePlayer::PlayState state){
+    QObject::connect(smPlayer.data(), &SimplePlayer::stateChanged, this, [=](SimplePlayer::PlayState state){
        if(state == SimplePlayer::EndReached)
        {
            smPlayer->seek(curTime);
            smPlayer->setState(SimplePlayer::Play);
        }
     });
-    QObject::connect(smPlayer, &SimplePlayer::durationChanged, this, [=](){
+    QObject::connect(smPlayer.data(), &SimplePlayer::durationChanged, this, [=](){
         smPlayer->seek(curTime);
     });
     QObject::connect(saveFile, &QPushButton::clicked, this, [=](){
@@ -125,14 +126,9 @@ SnippetCapture::SnippetCapture(QWidget *parent) : CFramelessDialog("",parent)
     });
     smPlayer->setVolume(GlobalObjects::mpvplayer->getVolume());
     smPlayer->setMedia(GlobalObjects::mpvplayer->getCurrentFile());
-    resize(GlobalObjects::appSetting->value("DialogSize/SnippetCapture",QSize(500*logicalDpiX()/96,280*logicalDpiY()/96)).toSize());
+    setSizeSettingKey("DialogSize/SnippetCapture",QSize(500*logicalDpiX()/96,280*logicalDpiY()/96));
 }
 
-SnippetCapture::~SnippetCapture()
-{
-    GlobalObjects::appSetting->setValue("DialogSize/SnippetCapture",size());
-    smPlayer->deleteLater();
-}
 
 bool SnippetCapture::ffmpegCut(double start, const QString &input, int duration, bool retainAudio, const QString &out)
 {

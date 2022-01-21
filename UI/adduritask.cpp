@@ -31,7 +31,7 @@ void AddUriTask::onAccept()
         return;
     }
     this->dir=dirSelect->getDir();
-    QStringList uris=uriEdit->toPlainText().split('\n',QString::SkipEmptyParts);
+    QStringList uris=uriEdit->toPlainText().split('\n',Qt::SkipEmptyParts);
     for(auto iter=uris.begin();iter!=uris.end();)
     {
         if((*iter).trimmed().isEmpty())

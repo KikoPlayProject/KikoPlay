@@ -88,14 +88,13 @@ BlockEditor::BlockEditor(QWidget *parent) : CFramelessDialog(tr("Block Rules"),p
     blockHeader->resizeSection(static_cast<int>(Blocker::Columns::RELATION), 80*logicalDpiX()/96); //Relation
     blockHeader->resizeSection(static_cast<int>(Blocker::Columns::REGEXP), 100*logicalDpiX()/96); //RegExp
     blockHeader->resizeSection(static_cast<int>(Blocker::Columns::PREFILTER), 80*logicalDpiX()/96); //UsePreFilter
-    resize(GlobalObjects::appSetting->value("DialogSize/BlockEditor",QSize(700*logicalDpiX()/96,320*logicalDpiY()/96)).toSize());
+    setSizeSettingKey("DialogSize/BlockEditor",QSize(700*logicalDpiX()/96,320*logicalDpiY()/96));
 
 }
 
 void BlockEditor::onClose()
 {
     GlobalObjects::blocker->save();
-    GlobalObjects::appSetting->setValue("DialogSize/BlockEditor",size());
     CFramelessDialog::onClose();
 }
 

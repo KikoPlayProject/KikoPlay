@@ -39,10 +39,6 @@ private:
     DanmuFilterBox *filterEdit;
     QLabel *tipLabel;
     void initView();
-
-    // CFramelessDialog interface
-protected:
-    virtual void onClose();
 };
 
 

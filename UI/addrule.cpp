@@ -108,7 +108,7 @@ AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add
     addRuleGLayout->setColumnStretch(1,1);
 
     setupSignals();
-    resize(GlobalObjects::appSetting->value("DialogSize/AddRule",QSize(400*logicalDpiX()/96,600*logicalDpiY()/96)).toSize());
+    setSizeSettingKey("DialogSize/AddRule", QSize(400*logicalDpiX()/96,600*logicalDpiY()/96));
 }
 
 void AddRule::setupSignals()
@@ -192,14 +192,12 @@ void AddRule::onAccept()
         }
         showBusyState(false);
     }
-    GlobalObjects::appSetting->setValue("DialogSize/AddRule",size());
     CFramelessDialog::onAccept();
 }
 
 void AddRule::onClose()
 {
     if(addRule) delete curRule;
-    GlobalObjects::appSetting->setValue("DialogSize/AddRule",size());
     CFramelessDialog::onClose();
 }
 

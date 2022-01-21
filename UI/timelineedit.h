@@ -81,9 +81,6 @@ public:
 private:
     TimeLineInfoModel *timelineModel;
     int tmpStartTime;
-    // CFramelessDialog interface
-protected:
-    virtual void onAccept();
 };
 
 #endif // TIMELINEEDIT_H

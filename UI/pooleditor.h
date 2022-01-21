@@ -24,8 +24,6 @@ private:
     QVBoxLayout *poolItemVLayout;
     void refreshItems();
     QList<PoolItem *> poolItems;
-protected:
-    virtual void onClose();
 };
 
 #endif // POOLEDITOR_H

@@ -117,7 +117,7 @@ CaptureView::CaptureView(CaptureListModel *model, int curRow, QWidget *parent) :
     smPlayer->setContextMenuPolicy(Qt::ActionsContextMenu);
     smPlayer->addAction(actSave);
     smPlayer->addAction(actRemove);
-    resize(GlobalObjects::appSetting->value("DialogSize/CaptureView",QSize(600*logicalDpiX()/96,340*logicalDpiY()/96)).toSize());
+    setSizeSettingKey("DialogSize/CaptureView",QSize(600*logicalDpiX()/96,340*logicalDpiY()/96));
 }
 
 CaptureView::~CaptureView()
@@ -170,12 +170,6 @@ void CaptureView::resizeEvent(QResizeEvent *event)
 {
     CFramelessDialog::resizeEvent(event);
     view->resize();
-}
-
-void CaptureView::onClose()
-{
-    GlobalObjects::appSetting->setValue("DialogSize/CaptureView",size());
-    CFramelessDialog::onClose();
 }
 
 void CaptureView::wheelEvent(QWheelEvent *event)

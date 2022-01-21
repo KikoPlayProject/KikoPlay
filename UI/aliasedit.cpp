@@ -106,4 +106,5 @@ AliasEdit::AliasEdit(const QString &animeName, QWidget *parent) : CFramelessDial
     QHBoxLayout *aliasHLayout = new QHBoxLayout(this);
     aliasHLayout->setContentsMargins(0, 0, 0, 0);
     aliasHLayout->addWidget(aliasView);
+    setSizeSettingKey("DialogSize/AliasEdit", QSize(200*logicalDpiX()/96, 60*logicalDpiY()/96));
 }

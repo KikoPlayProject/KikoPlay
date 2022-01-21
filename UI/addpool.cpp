@@ -192,7 +192,7 @@ AddPool::AddPool(QWidget *parent, const QString &srcAnime, const EpInfo &ep) : C
 
     renamePool=(!srcAnime.isEmpty() && ep.type!=EpType::UNKNOWN);
     if(renamePool) setTitle(tr("Rename Danmu Pool"));
-    resize(GlobalObjects::appSetting->value("DialogSize/AddPool",QSize(400*logicalDpiX()/96,400*logicalDpiY()/96)).toSize());
+    setSizeSettingKey("DialogSize/AddPool", QSize(400*logicalDpiX()/96, 400*logicalDpiY()/96));
     hitWords.clear();
 }
 
@@ -434,7 +434,6 @@ void AddPool::onAccept()
     }
     if(!lastSearchCacheId.isEmpty())
         animeCache.put(lastSearchCacheId,  static_cast<AnimeModel *>(animeModel)->animeBases());
-    GlobalObjects::appSetting->setValue("DialogSize/AddPool",size());
     CFramelessDialog::onAccept();
 }
 
@@ -442,6 +441,5 @@ void AddPool::onClose()
 {
     if(!lastSearchCacheId.isEmpty())
         animeCache.put(lastSearchCacheId,  static_cast<AnimeModel *>(animeModel)->animeBases());
-    GlobalObjects::appSetting->setValue("DialogSize/AddPool",size());
     CFramelessDialog::onClose();
 }

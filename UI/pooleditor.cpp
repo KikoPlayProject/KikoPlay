@@ -79,7 +79,7 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),paren
     blockGLayout->setContentsMargins(0, 0, 0, 0);
 
     setMinimumSize(300*logicalDpiX()/96,120*logicalDpiY()/96);
-    resize(GlobalObjects::appSetting->value("DialogSize/PoolEdit",QSize(600*logicalDpiX()/96,320*logicalDpiY()/96)).toSize());
+    setSizeSettingKey("DialogSize/PoolEdit",QSize(600*logicalDpiX()/96,320*logicalDpiY()/96));
 }
 
 void PoolEditor::refreshItems()
@@ -98,11 +98,6 @@ void PoolEditor::refreshItems()
     }
 }
 
-void PoolEditor::onClose()
-{
-     GlobalObjects::appSetting->setValue("DialogSize/PoolEdit",size());
-     CFramelessDialog::onClose();
-}
 
 PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent)
 {

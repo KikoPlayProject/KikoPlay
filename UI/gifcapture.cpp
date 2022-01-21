@@ -9,12 +9,13 @@
 #include <QFileDialog>
 #include <QLineEdit>
 #include <QProcess>
+#include <QSharedPointer>
 #include "globalobjects.h"
 #include "Common/notifier.h"
 
 GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *parent) : CFramelessDialog(tr("GIF Capture"),parent)
 {
-    smPlayer = new SimplePlayer();
+    smPlayer = QSharedPointer<SimplePlayer>::create();
     smPlayer->setWindowFlags(Qt::FramelessWindowHint);
     QWindow *native_wnd  = QWindow::fromWinId(smPlayer->winId());
     QWidget *playerWindowWidget=QWidget::createWindowContainer(native_wnd);
@@ -79,7 +80,7 @@ GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *par
         QObject::connect(durationSpin,&QSpinBox::editingFinished,[=](){
            smPlayer->seek(curTime);
         });
-        QObject::connect(smPlayer, &SimplePlayer::positionChanged, this, [=](double val){
+        QObject::connect(smPlayer.data(), &SimplePlayer::positionChanged, this, [=](double val){
            int duration = durationSpin->value();
            if(val >= curTime + duration)
            {
@@ -87,14 +88,14 @@ GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *par
            }
         });
     }
-    QObject::connect(smPlayer, &SimplePlayer::stateChanged, this, [=](SimplePlayer::PlayState state){
+    QObject::connect(smPlayer.data(), &SimplePlayer::stateChanged, this, [=](SimplePlayer::PlayState state){
        if(state == SimplePlayer::EndReached)
        {
            smPlayer->seek(curTime);
            smPlayer->setState(SimplePlayer::Play);
        }
     });
-    QObject::connect(smPlayer, &SimplePlayer::durationChanged, this, [=](){
+    QObject::connect(smPlayer.data(), &SimplePlayer::durationChanged, this, [=](){
         smPlayer->seek(curTime);
         smPlayer->setMute(true);
         QSize videoSize = smPlayer->getVideoSize();
@@ -147,13 +148,7 @@ GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *par
         }
     });
     smPlayer->setMedia(fileName.isEmpty()?GlobalObjects::mpvplayer->getCurrentFile():fileName);
-    resize(GlobalObjects::appSetting->value("DialogSize/GIFCapture",QSize(500*logicalDpiX()/96,280*logicalDpiY()/96)).toSize());
-}
-
-GIFCapture::~GIFCapture()
-{
-    GlobalObjects::appSetting->setValue("DialogSize/GIFCapture",size());
-    smPlayer->deleteLater();
+    setSizeSettingKey("DialogSize/GIFCapture",QSize(500*logicalDpiX()/96,280*logicalDpiY()/96));
 }
 
 bool GIFCapture::ffmpegCut(const QString &input, const QString &output, int w, int h, int r, double start, int duration)

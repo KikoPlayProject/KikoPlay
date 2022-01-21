@@ -233,9 +233,10 @@ bool BgmList::fetchBgmList(BgmSeason &season)
             season.focusSet.unite(bgmSeasons[lastTitle].focusSet);
         }
         QSet<QString> titleSet;
-        for(const BgmItem &bgm : season.bgmList)
+        for(BgmItem &bgm : season.bgmList)
         {
             titleSet.insert(bgm.title);
+            bgm.focus=season.focusSet.contains(bgm.title);
         }
         season.focusSet.intersect(titleSet);
         saveLocal(season);
@@ -275,7 +276,7 @@ bool BgmList::loadLocal(BgmSeason &season)
             }
             else if(localStart && name=="focus")
             {
-                QStringList focusList(reader.readElementText().split(";;",QString::SkipEmptyParts));
+                QStringList focusList(reader.readElementText().split(";;",Qt::SkipEmptyParts));
                 for(const QString &title:focusList)
                 {
                     season.focusSet<<title;
