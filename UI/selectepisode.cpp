@@ -18,7 +18,7 @@ SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent):CFr
         {
             QVariant data=item->data(column,0);
             if(data.canConvert(QMetaType::Int))
-                this->episodeResult[index].delay=data.toInt();
+                this->episodeResult[index].delay=data.toInt()*1000;
         }
     });
     QObject::connect(episodeWidget,&QTreeWidget::itemDoubleClicked,[](QTreeWidgetItem *item, int column){
@@ -44,7 +44,7 @@ SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent):CFr
         {
             item.delay=timeSum;
             timeSum+=item.duration*1000;  //ms
-            episodeWidget->topLevelItem(i++)->setData(2,0,QString::number(item.delay));
+            episodeWidget->topLevelItem(i++)->setData(2,0,QString::number(item.delay/1000));
         }
         autoSetDelay=false;
     });

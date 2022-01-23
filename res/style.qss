@@ -916,6 +916,7 @@ QLabel#AnimeDetailTitle{
 }
 QLabel#AnimeDetailViewInfo{
     color: rgb(240,240,240);
+    background: transparent;
 }
 QLabel#AnimeItemTitle{
     color: rgb(0,0,0);

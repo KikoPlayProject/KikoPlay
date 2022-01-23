@@ -100,7 +100,8 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     coverLabel->addAction(actDownloadCover);
     coverLabel->setContextMenuPolicy(Qt::ActionsContextMenu);
 
-    titleLabel=new QLabel(this);
+    QWidget *titleContainer = new QWidget(this);
+    titleLabel=new QLabel(titleContainer);
     titleLabel->setObjectName(QStringLiteral("AnimeDetailTitle"));
     titleLabel->setFont(QFont(GlobalObjects::normalFont,20));
     titleLabel->setWordWrap(true);
@@ -116,17 +117,25 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     });
     titleLabel->setContextMenuPolicy(Qt::ActionsContextMenu);
     titleLabel->addAction(actEditAlias);
-    viewInfoLabel=new QLabel(this);
+    viewInfoLabel=new QLabel(titleContainer);
     viewInfoLabel->setObjectName(QStringLiteral("AnimeDetailViewInfo"));
     viewInfoLabel->setFont(QFont(GlobalObjects::normalFont,12));
     viewInfoLabel->setWordWrap(true);
     viewInfoLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
     viewInfoLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    QScrollArea *viewInfoScrollArea = new QScrollArea(titleContainer);
+    viewInfoScrollArea->setWidget(viewInfoLabel);
+    viewInfoScrollArea->setWidgetResizable(true);
 
-    QVBoxLayout *textVLayout = new QVBoxLayout;
+    QHBoxLayout *titleHLayout = new QHBoxLayout(titleContainer);
+    titleHLayout->setContentsMargins(0, 0, 0, 0);
+    titleHLayout->addWidget(coverLabel);
+    QVBoxLayout *textVLayout = new QVBoxLayout();
     textVLayout->addWidget(titleLabel);
-    textVLayout->addWidget(viewInfoLabel);
-    textVLayout->addStretch(1);
+    textVLayout->addSpacing(8*logicalDpiY()/96);
+    textVLayout->addWidget(viewInfoScrollArea);
+    textVLayout->setContentsMargins(0, 0, 0, 0);
+    titleHLayout->addItem(textVLayout);
 
     QWidget *pageContainer = new QWidget(this);
 
@@ -203,12 +212,9 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
 
     QGridLayout *pageGLayout=new QGridLayout(this);
     pageGLayout->setContentsMargins(5*logicalDpiY()/96,5*logicalDpiY()/96,0,0);
-    pageGLayout->addWidget(coverLabel,0, 0);
-    pageGLayout->addItem(new QSpacerItem(20*logicalDpiX()/96,1),0,1);
-    pageGLayout->addLayout(textVLayout, 0, 2);
-    pageGLayout->addWidget(pageContainer, 1, 0, 1, 3);
+    pageGLayout->addWidget(titleContainer, 0, 0);
+    pageGLayout->addWidget(pageContainer, 1, 0);
     pageGLayout->setRowStretch(1,1);
-    pageGLayout->setColumnStretch(2,1);
 }
 
 void AnimeDetailInfoPage::setAnime(Anime *anime)
@@ -228,23 +234,16 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
     coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->cover().isNull()?nullCover:currentAnime->cover()));
 
     titleLabel->setText(QString("<style> a {text-decoration: none} </style><a style='color: white;' href = \"%1\">%2</a>").arg(currentAnime->url(), currentAnime->name()));
-    QStringList stafflist, outlist;
-    int c = 0;
+    QStringList stafflist;
     for(const auto &p: currentAnime->staffList())
     {
-        if(c++ < 5)
-            stafflist.append(p.first+": "+p.second);
-        else
-            outlist.append(p.first+": "+p.second);
+        stafflist.append(p.first+": "+p.second);
     }
     viewInfoLabel->setToolTip("");
-    if(outlist.size() > 0)
-    {
-        stafflist.append("...");
-        viewInfoLabel->setToolTip(outlist.join('\n'));
-    }
     viewInfoLabel->setText(QObject::tr("Add Time: %1\nDate: %3\nEps: %2\n%4").arg(currentAnime->addTimeStr()).arg(currentAnime->epCount()).
                            arg(currentAnime->airDate()).arg(stafflist.join('\n')));
+    viewInfoLabel->adjustSize();
+
     descInfo->setText(currentAnime->description());
     epModel->setAnime(currentAnime);
     epDelegate->setAnime(currentAnime);
