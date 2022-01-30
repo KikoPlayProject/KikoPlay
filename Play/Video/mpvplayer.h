@@ -80,6 +80,8 @@ signals:
     void gammaChanged(int value);
     void hueChanged(int value);
     void sharpenChanged(double value);
+    void volumeChanged(int value);
+    void muteChanged(bool value);
 
     void initContext();
     void refreshPreview(int time, QPixmap *pixmap);

@@ -428,7 +428,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     volume->setObjectName(QStringLiteral("widgetVolumeSlider"));
     volume->setFixedWidth(90*logicalDpiX()/96);
     volume->setMinimum(0);
-    volume->setMaximum(100);
+    volume->setMaximum(150);
     volume->setSingleStep(1);
 
     ctrlPressCount=0;
@@ -1667,7 +1667,10 @@ void PlayerWindow::setupSignals()
         GlobalObjects::mpvplayer->setVolume(val);
         volume->setToolTip(QString::number(val));
     });
-    volume->setValue(GlobalObjects::appSetting->value("Play/Volume",30).toInt());
+    volume->setValue(GlobalObjects::appSetting->value("Play/Volume", 50).toInt());
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::volumeChanged, [this](int value){
+        volume->setValue(value);
+    });
 
     QObject::connect(mute,&QPushButton::clicked,[this](){
         if(GlobalObjects::mpvplayer->getMute())
@@ -1683,6 +1686,16 @@ void PlayerWindow::setupSignals()
     });
     if(GlobalObjects::appSetting->value("Play/Mute",false).toBool())
         mute->click();
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::muteChanged, [this](bool mute){
+        if(mute)
+        {
+            this->mute->setText(QChar(0xe61e));
+        }
+        else
+        {
+            this->mute->setText(QChar(0xe62c));
+        }
+    });
 
 
     QObject::connect(launch, &QPushButton::clicked, [this]() {
@@ -2181,7 +2194,7 @@ void PlayerWindow::closeEvent(QCloseEvent *)
     GlobalObjects::appSetting->setValue("MaxCount",maxDanmuCount->value());
     GlobalObjects::appSetting->setValue("Dense",denseLevel->currentIndex());
     GlobalObjects::appSetting->setValue("EnableMerge",enableMerge->isChecked());
-	GlobalObjects::appSetting->setValue("EnableAnalyze", enableAnalyze->isChecked());
+    GlobalObjects::appSetting->setValue("EnableAnalyze", enableAnalyze->isChecked());
     GlobalObjects::appSetting->setValue("EnlargeMerged",enlargeMerged->isChecked());
     GlobalObjects::appSetting->setValue("MergeInterval",mergeInterval->value());
     GlobalObjects::appSetting->setValue("MaxDiffCount",contentSimCount->value());
@@ -2272,7 +2285,7 @@ void PlayerWindow::dropEvent(QDropEvent *event)
 void PlayerWindow::wheelEvent(QWheelEvent *event)
 {
 	int val = volume->value();
-    if ((val > 0 && val < 100) || (val == 0 && event->angleDelta().y()>0) || (val == 100 && event->angleDelta().y() < 0))
+    if ((val > 0 && val < volume->maximum()) || (val == 0 && event->angleDelta().y()>0) || (val == 100 && event->angleDelta().y() < 0))
 	{
 		static bool inProcess = false;
 		if (!inProcess)

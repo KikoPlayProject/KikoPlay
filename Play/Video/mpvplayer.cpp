@@ -140,6 +140,8 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     mpv_observe_property(mpv, 0, "gamma", MPV_FORMAT_INT64);
     mpv_observe_property(mpv, 0, "hue", MPV_FORMAT_INT64);
     mpv_observe_property(mpv, 0, "sharpen", MPV_FORMAT_DOUBLE);
+    mpv_observe_property(mpv, 0, "volume", MPV_FORMAT_INT64);
+    mpv_observe_property(mpv, 0, "mute", MPV_FORMAT_FLAG);
 
     mpv_set_wakeup_callback(mpv, MPVPlayer::wakeup, this);
     QObject::connect(&refreshTimer,&QTimer::timeout,[this](){
@@ -454,7 +456,7 @@ void MPVPlayer::frameStep(bool forward)
 
 void MPVPlayer::setVolume(int vol)
 {
-    volume = qBound(0, vol, 100);
+    volume = qBound(0, vol, 130);
     setMPVProperty("volume",volume);
 }
 
@@ -842,6 +844,28 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
             if (prop->format == MPV_FORMAT_DOUBLE) {
                 double sharpen = *(double *)prop->data;
                 emit sharpenChanged(sharpen);
+            }
+        }
+    },
+    {
+        "volume",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
+            if (prop->format == MPV_FORMAT_INT64) {
+                int64_t volume = *(int64_t *)prop->data;
+                emit volumeChanged(volume);
+            }
+        }
+    },
+    {
+        "mute",
+        [this, event](){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
+            if (prop->format == MPV_FORMAT_FLAG)
+            {
+                int flag = *(int *)prop->data;
+                this->mute=flag;
+                emit muteChanged(flag);
             }
         }
     }
