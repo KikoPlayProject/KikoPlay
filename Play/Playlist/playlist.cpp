@@ -46,7 +46,6 @@ PlayList::PlayList(QObject *parent) : QAbstractItemModel(parent), d_ptr(new Play
     matchWorker=new MatchWorker();
     matchWorker->moveToThread(GlobalObjects::workThread);
     QObject::connect(GlobalObjects::workThread, &QThread::finished, matchWorker, &QObject::deleteLater);
-    //QObject::connect(matchWorker,&MatchWorker::message, this, &PlayList::message);
     QObject::connect(matchWorker, &MatchWorker::matchDown, this, [this](const QList<PlayListItem *> &matchedItems){
         Q_D(PlayList);
         d->playListChanged = true;
@@ -174,6 +173,7 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
         PlayListItem *newItem = new PlayListItem(parentItem, true, insertPosition++);
         newItem->title = title;
 		newItem->path = item;
+        newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
         d->fileItems.insert(newItem->path,newItem);
         if(d->autoMatch) matchItems<<newItem;
 	}
@@ -405,6 +405,7 @@ QModelIndex PlayList::addCollection(QModelIndex parent, QString title)
     beginInsertRows(parent, insertPosition, insertPosition);
     newCollection = new PlayListItem(parentItem,false,insertPosition);
 	newCollection->title = title;
+    newCollection->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
 	endInsertRows();
     d->playListChanged=true;
     d->needRefresh = true;
@@ -560,6 +561,7 @@ void PlayList::autoMoveToBgmCollection(const QModelIndex &index)
         bgmCollectionItem=new PlayListItem(parentItem,false,insertPosition);
         bgmCollectionItem->title = currentItem->animeTitle;
         bgmCollectionItem->isBgmCollection=true;
+        bgmCollectionItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
         endInsertRows();
         d->bgmCollectionItems.insert(bgmCollectionItem->title, bgmCollectionItem);
     }
@@ -619,31 +621,48 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
         return item->title;
     case Qt::ToolTipRole:
     {
+        QStringList tipContent;
         if(item->children)
         {
-            if(item->isBgmCollection) return tr("%1\nBangumi Collection").arg(item->title);
-            if(!item->folderPath.isEmpty()) return tr("%1\nFolder Collection\n%2").arg(item->title, item->folderPath);
-            return item->title;
+            tipContent<<item->title;
+            if(item->isBgmCollection)
+            {
+                tipContent<< tr("Bangumi Collection");
+            }
+            else if(!item->folderPath.isEmpty())
+            {
+                tipContent<< tr("Folder Collection");
+                tipContent<< item->folderPath;
+            }
+            if (item->addTime > 0)
+            {
+                QString addTime(QDateTime::fromSecsSinceEpoch(item->addTime).toString("yyyy-MM-dd hh:mm:ss"));
+                tipContent<< tr("Add Time: %1").arg(addTime);
+            }
         }
-
-        QStringList tipContent;
-
-        if(!item->animeTitle.isEmpty())
-            tipContent<<QString("%1-%2").arg(item->animeTitle, item->title);
-        else
-            tipContent<<QString("%1").arg(item->title);
-        tipContent<<item->path;
-        if(item->playTimeState==PlayListItem::UNPLAY)
-            tipContent<<tr("Unplayed");
-        else if(item->playTimeState==PlayListItem::FINISH)
-            tipContent<<tr("Finished");
         else
         {
-            int cmin=item->playTime/60;
-            int cls=item->playTime-cmin*60;
-            tipContent<<(tr("PlayTo: %1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')));
+            if(!item->animeTitle.isEmpty())
+                tipContent<<QString("%1-%2").arg(item->animeTitle, item->title);
+            else
+                tipContent<<QString("%1").arg(item->title);
+            tipContent<<item->path;
+            if (item->addTime > 0)
+            {
+                QString addTime(QDateTime::fromSecsSinceEpoch(item->addTime).toString("yyyy-MM-dd hh:mm:ss"));
+                tipContent<< tr("Add Time: %1").arg(addTime);
+            }
+            if(item->playTimeState==PlayListItem::UNPLAY)
+                tipContent<<tr("Unplayed");
+            else if(item->playTimeState==PlayListItem::FINISH)
+                tipContent<<tr("Finished");
+            else
+            {
+                int cmin=item->playTime/60;
+                int cls=item->playTime-cmin*60;
+                tipContent<<(tr("PlayTo: %1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')));
+            }
         }
-
         return tipContent.join('\n');
     }
     case Qt::ForegroundRole:
@@ -1263,7 +1282,6 @@ void MatchWorker::match(const QList<PlayListItem *> &items)
         matchedItems<<currentItem;
         notifier->showMessage(Notifier::LIST_NOTIFY, tr("Success: %1").arg(currentItem->title),NotifyMessageFlag::NM_PROCESS|NotifyMessageFlag::NM_SHOWCANCEL);
         AnimeWorker::instance()->addAnime(match);
-        //GlobalObjects::library->addToLibrary(currentItem->animeTitle,currentItem->title,currentItem->path);
     }
     QObject::disconnect(conn);
     emit matchDown(matchedItems);

@@ -10,11 +10,6 @@ LANServer::LANServer(QObject *parent) : QObject(parent)
     httpThread->start(QThread::NormalPriority);
     server=new HttpServer();
     server->moveToThread(httpThread);
-    QObject::connect(server,&HttpServer::showLog,this,[this](const QString &log){
-        if(logs.size()>99)logs.pop_front();
-        logs.append(log);
-        emit showLog(log);
-    },Qt::QueuedConnection);
     bool start=GlobalObjects::appSetting->value("Server/AutoStart",false).toBool();
     if(start)
     {
@@ -24,7 +19,6 @@ LANServer::LANServer(QObject *parent) : QObject(parent)
             GlobalObjects::appSetting->setValue("Server/AutoStart",false);
         }
     }
-
 }
 
 LANServer::~LANServer()

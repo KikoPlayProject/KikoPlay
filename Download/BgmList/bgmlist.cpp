@@ -3,7 +3,7 @@
 #include "Common/network.h"
 #include "Common/threadtask.h"
 #include "Script/scriptmanager.h"
-#include "Script/scriptlogger.h"
+#include "Common/logger.h"
 #include <QBrush>
 BgmList::BgmList(QObject *parent) : QAbstractItemModel (parent),inited(false),needSave(false),
    seasonListDownloaded(false), curSeason(nullptr)
@@ -184,7 +184,7 @@ bool BgmList::fetchMetaInfo()
         return false;
     }
     auto bgmCalendar = calendarScripts.first().staticCast<BgmCalendarScript>();
-    ScriptLogger::instance()->appendInfo(tr("Select Bangumi Calendar: %1").arg(bgmCalendar->name()), bgmCalendar->id());
+    Logger::logger()->log(Logger::Script, tr("[%1]Select Bangumi Calendar: %2").arg(bgmCalendar->id(), bgmCalendar->name()));
     ThreadTask task(GlobalObjects::workThread);
     emit bgmStatusUpdated(2, tr("Fetching Info..."));
     QList<BgmSeason> bgmSeasonList;
@@ -219,7 +219,7 @@ bool BgmList::fetchBgmList(BgmSeason &season)
         return false;
     }
     auto bgmCalendar = calendarScripts.first().staticCast<BgmCalendarScript>();
-    ScriptLogger::instance()->appendInfo(tr("Select Bangumi Calendar: %1").arg(bgmCalendar->name()), bgmCalendar->id());
+    Logger::logger()->log(Logger::Script, tr("[%1]Select Bangumi Calendar: %2").arg(bgmCalendar->id(), bgmCalendar->name()));
     ThreadTask task(GlobalObjects::workThread);
     emit bgmStatusUpdated(2,tr("Fetching Info..."));
     QString ret = task.Run([&season, this, &bgmCalendar](){

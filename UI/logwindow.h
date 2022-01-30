@@ -2,18 +2,16 @@
 #define MPVLOG_H
 
 #include "framelessdialog.h"
+#include "Common/logger.h"
 class QComboBox;
 class LogWindow : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    enum LogType
-    {
-        MPV, SCRIPT
-    };
+
     explicit LogWindow(QWidget *parent = nullptr);
 
-    void show(LogType lt = LogType::MPV);
+    void show(Logger::LogType lt = Logger::LogType::APP);
 private:
     QComboBox *logTypeCombo;
 };

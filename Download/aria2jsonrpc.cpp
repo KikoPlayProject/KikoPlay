@@ -4,6 +4,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QtCore>
+#include "Common/logger.h"
 #include "globalobjects.h"
 
 Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent)
@@ -80,7 +81,7 @@ QJsonObject Aria2JsonRPC::rpcCall(const QString &method, const QJsonArray &param
             }
             else
             {
-                emit showLog(QString("[%0]RPC Reply Error: %1").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"),method));
+                Logger::logger()->log(Logger::LogType::Aria2, QString("[%1]RPC Network Error: %2").arg(method, reply->errorString()));
             }
             reply->deleteLater();
         });
@@ -120,7 +121,7 @@ void Aria2JsonRPC::handleRPCReply(const QString &method, const QJsonObject &repl
         QJsonObject statusObj(replyObj.value("result").toObject());
         QString errMsg(statusObj.value("errorMessage").toString());
         if(!errMsg.isEmpty())
-            emit showLog(QString("[%1]%2").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"), errMsg));
+            Logger::logger()->log(Logger::LogType::Aria2, QString("[%1]%2").arg(method, errMsg));
         emit refreshStatus(statusObj);
     }
     else if(method=="aria2.getGlobalStat")

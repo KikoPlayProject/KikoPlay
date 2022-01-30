@@ -82,7 +82,6 @@ signals:
     void sharpenChanged(double value);
 
     void initContext();
-    void showLog(const QString &log);
     void refreshPreview(int time, QPixmap *pixmap);
 public slots:   
     void setMedia(const QString &file);

@@ -12,7 +12,7 @@
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Script/scriptmanager.h"
-#include "Script/scriptlogger.h"
+#include "Common/logger.h"
 #include "Common/notifier.h"
 #define ScriptIdRole Qt::UserRole+1
 
@@ -79,9 +79,8 @@ DanmuLaunch::DanmuLaunch(QWidget *parent) : CFramelessDialog(tr("Launch"), paren
         int cmin=c->originTime/1000/60;
         int cls=c->originTime/1000-cmin*60;
         QString commentInfo(QString("[%1:%2]%3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(c->text));
-        QString msg(QString("%1\n%2\n%3").arg(poolInfo, commentInfo, results.join('\n')));
-        Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, msg);
-        ScriptLogger::instance()->appendText(msg);
+        Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, results.join('\n'));
+        Logger::logger()->log(Logger::APP, tr("Danmu Launch\n  %1\n  %2\n  %3").arg(poolInfo, commentInfo, results.join('\n')));
         GlobalObjects::danmuPool->launch({QSharedPointer<DanmuComment>(c)});
     });
 }

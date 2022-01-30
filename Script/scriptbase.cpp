@@ -4,11 +4,13 @@
 #include "Common/network.h"
 #include "Common/htmlparsersax.h"
 #include "Common/notifier.h"
-#include "scriptlogger.h"
+#include "Common/logger.h"
 #include <QSysInfo>
 #ifdef Q_OS_WIN
 #include <windows.h>
 #endif
+#define LOG_INFO(info, scriptId) Logger::logger()->log(Logger::Script, QString("[%1]%2").arg(scriptId, info))
+#define LOG_ERROR(info, scriptId) Logger::logger()->log(Logger::Script, QString("[ERROR][%1]%2").arg(scriptId, info))
 namespace
 {
 static void pushNetworkReply(lua_State *L, const Network::Reply &reply)
@@ -446,7 +448,7 @@ static int logger(lua_State *L)
                 lua_pop(L, 1);
             }
         }
-        ScriptLogger::instance()->appendInfo(vals.join('\t'), script->id());
+        LOG_INFO(vals.join('\t'), script->id());
         return 0;
     }
     lua_pushvalue(L, 1);
@@ -456,12 +458,12 @@ static int logger(lua_State *L)
     if(val.type()==QVariant::List || val.type()==QVariant::Map)
     {
         QString json(QJsonDocument::fromVariant(val).toJson(QJsonDocument::JsonFormat::Indented));
-        ScriptLogger::instance()->appendInfo("Show Table: ", script->id());
-        ScriptLogger::instance()->appendText(json);
+        LOG_INFO("Show Table: ", script->id());
+        Logger::logger()->log(Logger::Script, json);
     }
     else
     {
-        ScriptLogger::instance()->appendInfo(val.toString(), script->id());
+        LOG_INFO(val.toString(), script->id());
     }
     return 0;
 }
@@ -966,13 +968,13 @@ QVariantList ScriptBase::call(const char *fname, const QVariantList &params, int
     if(!L)
     {
         errInfo = "Wrong Lua State";
-        ScriptLogger::instance()->appendError(errInfo, "Lua");
+        LOG_ERROR(errInfo, "Lua");
         return QVariantList();
     }
     if(lua_getglobal(L, fname) != LUA_TFUNCTION)
     {
         errInfo = QString("%1 is not founded").arg(fname);
-        ScriptLogger::instance()->appendError(errInfo, id());
+        LOG_ERROR(errInfo, id());
         return QVariantList();
     }
     for(auto &p : params)
@@ -983,7 +985,7 @@ QVariantList ScriptBase::call(const char *fname, const QVariantList &params, int
     {
         errInfo=QString(lua_tostring(L, -1));
         lua_pop(L,1);
-        ScriptLogger::instance()->appendError(errInfo, id());
+        LOG_ERROR(errInfo, id());
         return QVariantList();
     }
     QVariantList rets;
@@ -1184,7 +1186,7 @@ QString ScriptBase::loadMeta(const QString &scriptPath)
     if(!scriptInfo.canConvert(QVariant::Map))
     {
         errInfo = "Script Error: no info table";
-        ScriptLogger::instance()->appendError(errInfo, "KikoPlay");
+        LOG_ERROR(errInfo, "KikoPlay");
         return errInfo;
     }
     QVariantMap scriptInfoMap = scriptInfo.toMap();

@@ -6,7 +6,7 @@
 #include "libraryscript.h"
 #include "resourcescript.h"
 #include "bgmcalendarscript.h"
-#include "scriptlogger.h"
+#include "Common/logger.h"
 
 ScriptManager::ScriptManager(QObject *parent) : QObject(parent)
 {
@@ -71,7 +71,7 @@ void ScriptManager::refreshScripts(ScriptType type)
 					}
 					else
 					{
-                        ScriptLogger::instance()->appendError(state.info, path);
+                        Logger::logger()->log(Logger::Script, QString("[ERROR][%1]%2").arg(path, state.info));
 					}
                 }
 

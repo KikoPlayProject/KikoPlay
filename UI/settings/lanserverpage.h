@@ -15,9 +15,7 @@ public:
 private:
     QCheckBox *startServer, *syncUpdateTime;
     QLineEdit *portEdit;
-    QTextEdit *logInfo;
     bool syncTimeChanged, serverStateChanged, portChanged;
-    void printLog(const QString &log);
 };
 
 #endif // LANSERVERPAGE_H

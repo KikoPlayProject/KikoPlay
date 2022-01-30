@@ -36,6 +36,7 @@
 #include "autodownloadwindow.h"
 #include "widgets/fonticonbutton.h"
 #include "widgets/dialogtip.h"
+#include "Common/logger.h"
 
 DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nullptr)
 {
@@ -372,10 +373,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
             {
                 QString errInfo(GlobalObjects::downloadModel->addUriTask(uri,path,true));
                 if(!errInfo.isEmpty())
-                    logView->appendPlainText(QString("[%0]%1: %2").
-                                             arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss")).
-                                             arg(errInfo).
-                                             arg(uri));
+                    Logger::logger()->log(Logger::LogType::Aria2, QString("[AddTask]%1: %2").arg(uri, errInfo));
             }
         }
         else
@@ -460,7 +458,6 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
            peerModel->setPeers(peerArray, currentTask->numPieces);
        }
     });
-    QObject::connect(rpc,&Aria2JsonRPC::showLog,logView,&QPlainTextEdit::appendPlainText);
     QObject::connect(GlobalObjects::downloadModel,&DownloadModel::magnetDone,[this](const QString &path, const QString &magnet, bool directlyDownload){
         try
         {
@@ -473,11 +470,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
                 QString errInfo=GlobalObjects::downloadModel->addTorrentTask(decoder.rawContent,decoder.infoHash,
                                                                             torrentFile.absoluteDir().absolutePath(),model.getCheckedIndex(),magnet);
                 if(!errInfo.isEmpty())
-                    logView->appendPlainText(QString("[%0]%1: %2").
-                                             arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss")).
-                                             arg(errInfo).
-                                             arg(magnet));
-
+                    Logger::logger()->log(Logger::LogType::Aria2, QString("[AddTorrentTask]%1: %2").arg(magnet, errInfo));
             }
             else
             {
@@ -759,11 +752,20 @@ QWidget *DownloadWindow::setupConnectionPage(QWidget *parent)
 
 QWidget *DownloadWindow::setupGlobalLogPage(QWidget *parent)
 {
-    logView=new QPlainTextEdit(parent);
+    QPlainTextEdit *logView=new QPlainTextEdit(parent);
     logView->setReadOnly(true);
     logView->setCenterOnScroll(true);
     logView->setMaximumBlockCount(50);
     logView->setObjectName(QStringLiteral("TaskLogView"));
+    QObject::connect(Logger::logger(),&Logger::logAppend, this, [=](Logger::LogType type, const QString &log){
+        if(type == Logger::Aria2)
+        {
+            logView->appendPlainText(log);
+            QTextCursor cursor =logView->textCursor();
+            cursor.movePosition(QTextCursor::End);
+            logView->setTextCursor(cursor);
+        }
+    });
     return logView;
 }
 

@@ -5,41 +5,41 @@
 #include <QComboBox>
 #include <QStackedLayout>
 #include "globalobjects.h"
-#include "Script/scriptlogger.h"
+#include "Common/logger.h"
 #include "Play/Video/mpvplayer.h"
 LogWindow::LogWindow(QWidget *parent) : CFramelessDialog(tr("Log"),parent,false,true,false)
 {
-    QPlainTextEdit *mpvLogView=new QPlainTextEdit(this);
-    mpvLogView->setReadOnly(true);
-    mpvLogView->setMaximumBlockCount(1024);
-    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::showLog,[mpvLogView](const QString &log){
-        mpvLogView->appendPlainText(log.trimmed());
-        QTextCursor cursor = mpvLogView->textCursor();
-        cursor.movePosition(QTextCursor::End);
-        mpvLogView->setTextCursor(cursor);
-    });
+    setAttribute(Qt::WA_DeleteOnClose, true);
+    logTypeCombo = new QComboBox(this);
+    logTypeCombo->addItems(Logger::logger()->LogTypeNames);
 
-    QPlainTextEdit *scriptLogView=new QPlainTextEdit(this);
-    scriptLogView->setReadOnly(true);
-    scriptLogView->setMaximumBlockCount(1024);
-    for(const QString &log: ScriptLogger::instance()->getLogs())
+    QVector<QPlainTextEdit *> logEdits((int)Logger::LogType::UNKNOWN);
+    for(int i = 0; i < Logger::LogType::UNKNOWN; ++i)
     {
-        scriptLogView->appendPlainText(log);
+        logEdits[i] = new QPlainTextEdit(this);
+        logEdits[i]->setReadOnly(true);
+        logEdits[i]->setMaximumBlockCount(Logger::logger()->bufferSize);
+        for(const QString &log: Logger::logger()->getLogs(Logger::LogType(i)))
+        {
+            logEdits[i]->appendPlainText(log);
+        }
     }
 
-    QObject::connect(ScriptLogger::instance(),&ScriptLogger::logging,[=](const QString &log){
-        scriptLogView->appendPlainText(log.trimmed());
-        QTextCursor cursor = scriptLogView->textCursor();
-        cursor.movePosition(QTextCursor::End);
-        scriptLogView->setTextCursor(cursor);
+    QObject::connect(Logger::logger(),&Logger::logAppend, this, [=](Logger::LogType type, const QString &log){
+        if(type != Logger::UNKNOWN)
+        {
+            logEdits[type]->appendPlainText(log);
+            QTextCursor cursor = logEdits[type]->textCursor();
+            cursor.movePosition(QTextCursor::End);
+            logEdits[type]->setTextCursor(cursor);
+        }
     });
 
-    logTypeCombo = new QComboBox(this);
-    logTypeCombo->addItems({"MPV", "Script"});
-
     QStackedLayout *logSLayout = new QStackedLayout;
-    logSLayout->addWidget(mpvLogView);
-    logSLayout->addWidget(scriptLogView);
+    for(auto logView : logEdits)
+    {
+        logSLayout->addWidget(logView);
+    }
     logSLayout->setContentsMargins(0, 0, 0, 0);
     QObject::connect(logTypeCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged, logSLayout, &QStackedLayout::setCurrentIndex);
     logTypeCombo->setCurrentIndex(0);
@@ -47,7 +47,6 @@ LogWindow::LogWindow(QWidget *parent) : CFramelessDialog(tr("Log"),parent,false,
     QPushButton *cleanLog=new QPushButton(tr("Clean"),this);
     cleanLog->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
     QObject::connect(cleanLog,&QPushButton::clicked,this,[=](){
-        QPlainTextEdit *logEdits[] = {mpvLogView, scriptLogView};
         logEdits[logSLayout->currentIndex()]->clear();
     });
 
@@ -58,9 +57,10 @@ LogWindow::LogWindow(QWidget *parent) : CFramelessDialog(tr("Log"),parent,false,
     logGLayout->addLayout(logSLayout, 1, 0, 1, 2);
     logGLayout->setRowStretch(1, 1);
     logGLayout->setColumnStretch(1, 1);
+    setSizeSettingKey("DialogSize/LogWindow",QSize(400*logicalDpiX()/96,300*logicalDpiY()/96));
 }
 
-void LogWindow::show(LogWindow::LogType lt)
+void LogWindow::show(Logger::LogType lt)
 {
     logTypeCombo->setCurrentIndex(lt);
     CFramelessDialog::show();

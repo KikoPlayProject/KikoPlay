@@ -2,6 +2,7 @@
 #include <QIODevice>
 #include <QTimer>
 #include <QFileInfo>
+#include "Common/logger.h"
 #include "qhttpengine/socket.h"
 #include "qhttpengine/range.h"
 
@@ -217,5 +218,5 @@ void MediaHandler::processFile(QHttpEngine::Socket *socket, const QString &absol
     socket->writeHeaders();
 
     copier->start();
-    emit requestMedia(QString("[%1]Media%3: %2").arg(socket->peerAddress().toString(), absolutePath, range.isValid()?"(Range)":""));
+    Logger::logger()->log(Logger::LANServer, QString("[%1]Media%3: %2").arg(socket->peerAddress().toString(), absolutePath, range.isValid()?"(Range)":""));
 }

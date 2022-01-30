@@ -6,7 +6,7 @@
 PlayList* PlayListItem::playlist=nullptr;
 
 PlayListItem::PlayListItem(PlayListItem *p, bool leaf, int insertPosition):
-    parent(p),children(nullptr),playTime(0),playTimeState(UNPLAY),level(0),isBgmCollection(false), marker(M_NONE)
+    parent(p),children(nullptr),playTime(0),playTimeState(UNPLAY),level(0),isBgmCollection(false), marker(M_NONE), addTime(0)
 {
     if(!leaf)
     {

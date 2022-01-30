@@ -55,6 +55,8 @@ void PlayListPrivate::loadPlaylist()
                 int marker=PlayListItem::Marker::M_NONE;
                 if(reader.attributes().hasAttribute("marker"))
                     marker = reader.attributes().value("marker").toInt();
+                if(reader.attributes().hasAttribute("addTime"))
+                    collection->addTime = reader.attributes().value("addTime").toLongLong();
                 collection->marker = PlayListItem::Marker(marker);
                 parents.push_back(collection);
                 break;
@@ -69,13 +71,10 @@ void PlayListPrivate::loadPlaylist()
                 int marker=PlayListItem::Marker::M_NONE;
                 if(reader.attributes().hasAttribute("marker"))
                     marker = reader.attributes().value("marker").toInt();
+                qint64 addTime = 0;
+                if(reader.attributes().hasAttribute("addTime"))
+                    addTime = reader.attributes().value("addTime").toLongLong();
                 QString path = reader.readElementText().trimmed();
-                /*QFileInfo fileInfo(path);
-                if(!fileInfo.exists())
-                {
-                    playListChanged=true;
-                    break;
-                }*/
 
                 PlayListItem *item=new PlayListItem(parents.last(),true);
                 item->title=title;
@@ -84,6 +83,7 @@ void PlayListPrivate::loadPlaylist()
                 item->poolID = poolID;
                 item->playTimeState=PlayListItem::PlayState(playTimeState);
                 item->marker = PlayListItem::Marker(marker);
+                item->addTime = addTime;
                 fileItems.insert(item->path,item);
                 if(!animeTitle.isEmpty())item->animeTitle=animeTitle;
                 for(auto &pair :recentList)
@@ -163,6 +163,8 @@ void PlayListPrivate::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
             writer.writeAttribute("folderPath",item->folderPath);
         if(item->marker != PlayListItem::Marker::M_NONE)
             writer.writeAttribute("marker", QString::number((int)item->marker));
+        if(item->addTime > 0)
+            writer.writeAttribute("addTime", QString::number(item->addTime));
     }
     for(PlayListItem *child : *item->children)
     {
@@ -182,6 +184,8 @@ void PlayListPrivate::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
             writer.writeAttribute("playTimeState",QString::number((int)child->playTimeState));
             if(child->marker != PlayListItem::Marker::M_NONE)
                 writer.writeAttribute("marker", QString::number((int)child->marker));
+            if(item->addTime > 0)
+                writer.writeAttribute("addTime", QString::number(item->addTime));
             writer.writeCharacters(child->path);
             writer.writeEndElement();
         }
@@ -322,6 +326,7 @@ bool PlayListPrivate::addSubFolder(QString folderStr, PlayListItem *parent, int 
     PlayListItem *folderCollection = new PlayListItem();
     folderCollection->title = folder.dirName();
     folderCollection->folderPath = folderStr;
+    folderCollection->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
     for (QFileInfo fileInfo : folder.entryInfoList())
     {
         QString fileName = fileInfo.fileName();
@@ -335,6 +340,7 @@ bool PlayListPrivate::addSubFolder(QString folderStr, PlayListItem *parent, int 
                     int suffixPos = fileName.lastIndexOf('.'), pathPos = fileName.lastIndexOf('/') + 1;
                     newItem->title = fileName.mid(pathPos, suffixPos - pathPos);
                     newItem->path = fileInfo.filePath();
+                    newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
                     containsVideoFile = true;
                     itemCount++;
                     fileItems.insert(newItem->path,newItem);
@@ -386,6 +392,7 @@ int PlayListPrivate::refreshFolder(PlayListItem *folderItem, QList<PlayListItem 
                 int suffixPos = fileName.lastIndexOf('.'), pathPos = fileName.lastIndexOf('/') + 1;
                 newItem->title = fileName.mid(pathPos, suffixPos - pathPos);
                 newItem->path = filePath;
+                newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
                 fileItems.insert(newItem->path,newItem);
                 nItems<<newItem;
                 ++nCount;
@@ -401,6 +408,7 @@ int PlayListPrivate::refreshFolder(PlayListItem *folderItem, QList<PlayListItem 
                 PlayListItem *folderCollection = new PlayListItem();
                 folderCollection->title = fileName;
                 folderCollection->folderPath = filePath;
+                folderCollection->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
                 int c = refreshFolder(folderCollection, nItems);
                 if(c>0)
                 {

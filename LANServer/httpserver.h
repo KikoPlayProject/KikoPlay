@@ -16,10 +16,7 @@ public:
 private:
     QHttpEngine::Server *server;
     QHash<QString,QString> mediaHash;
-    void genLog(const QString &logInfo);
     QJsonDocument playlistDoc;
-signals:
-    void showLog(const QString &logInfo);
 public slots:
     bool startServer(quint16 port);
     void stopServer();

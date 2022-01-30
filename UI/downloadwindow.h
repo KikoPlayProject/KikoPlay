@@ -107,7 +107,6 @@ private:
 
     QSplitter *contentSplitter;
     QTreeView *downloadView;
-    QPlainTextEdit *logView;
     TorrentTreeView *fileInfoView;
     BlockWidget *blockView;
     CTorrentFileModel *selectedTFModel;

@@ -32,6 +32,7 @@ public:
     int level;
     bool isBgmCollection;
     Marker marker;
+    qint64 addTime;
 
     QString title;
     QString animeTitle;

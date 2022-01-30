@@ -9,6 +9,7 @@
 #include <QDebug>
 #include <QMap>
 #include <clocale>
+#include <Common/logger.h>
 #include "Play/Danmu/Render/danmurender.h"
 #include "globalobjects.h"
 namespace
@@ -869,7 +870,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     case MPV_EVENT_LOG_MESSAGE:
     {
         struct mpv_event_log_message *msg = (struct mpv_event_log_message *)event->data;
-        emit showLog(QString("[%1]%2: %3").arg(msg->prefix).arg(msg->level).arg(msg->text));
+        Logger::logger()->log(Logger::MPV, QString("[%1][%2]: %3").arg(msg->prefix, msg->level, msg->text).trimmed());
         break;
     }
     default:

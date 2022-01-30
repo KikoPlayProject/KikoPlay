@@ -8,6 +8,7 @@
 #include <QSettings>
 #include <QNetworkInterface>
 #include <QIntValidator>
+#include <QFont>
 #include "globalobjects.h"
 #include "LANServer/lanserver.h"
 
@@ -30,17 +31,11 @@ LANServerPage::LANServerPage(QWidget *parent) : SettingPage(parent)
     QPlainTextEdit *addressTip=new QPlainTextEdit(this);
     addressTip->setReadOnly(true);
     addressTip->appendPlainText(tr("KikoPlay Server Address:"));
+    addressTip->setFont(QFont(GlobalObjects::normalFont, 14));
     for(QHostAddress address : QNetworkInterface::allAddresses())
     {
        if(address.protocol() == QAbstractSocket::IPv4Protocol)
             addressTip->appendPlainText(address.toString());
-    }
-
-    logInfo=new QTextEdit(this);
-    logInfo->setReadOnly(true);
-    for(const QString &log:GlobalObjects::lanServer->getLog())
-    {
-        logInfo->append(log);
     }
 
     QObject::connect(startServer,&QCheckBox::clicked,[this](bool checked){
@@ -64,7 +59,6 @@ LANServerPage::LANServerPage(QWidget *parent) : SettingPage(parent)
     QObject::connect(portEdit, &QLineEdit::textChanged, this, [this](){
         portChanged = true;
     });
-    QObject::connect(GlobalObjects::lanServer,&LANServer::showLog,this,&LANServerPage::printLog);
 
     QGridLayout *pGLayout=new QGridLayout(this);
     pGLayout->setContentsMargins(0, 0, 0, 0);
@@ -73,8 +67,7 @@ LANServerPage::LANServerPage(QWidget *parent) : SettingPage(parent)
     pGLayout->addWidget(lbPort,1,0);
     pGLayout->addWidget(portEdit,1,1);
     pGLayout->addWidget(addressTip,2,0,1,2);
-    pGLayout->addWidget(logInfo,3,0,1,2);
-    pGLayout->setRowStretch(3,1);
+    pGLayout->setRowStretch(2,1);
     pGLayout->setColumnStretch(1,1);
 }
 
@@ -90,10 +83,3 @@ void LANServerPage::onClose()
 
 }
 
-void LANServerPage::printLog(const QString &log)
-{
-    logInfo->append(log.trimmed());
-    QTextCursor cursor = logInfo->textCursor();
-    cursor.movePosition(QTextCursor::End);
-    logInfo->setTextCursor(cursor);
-}

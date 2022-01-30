@@ -202,13 +202,19 @@ void MainWindow::setupUI()
     });
     buttonIcon->addAction(act_Settingse);
 
-    logWindow=new LogWindow(this);
-    logWindow->resize(GlobalObjects::appSetting->value("DialogSize/MPVLog",QSize(400*logicalDpiX()/96,300*logicalDpiY()/96)).toSize());
-    QAction *act_ShowScriptLog=new QAction(tr("Script Log"), this);
-    QObject::connect(act_ShowScriptLog,&QAction::triggered,[this](){
-        logWindow->show(LogWindow::LogType::SCRIPT);
+    logWindow = nullptr;
+    QAction *act_ShowLogCenter=new QAction(tr("Log Center"), this);
+    QObject::connect(act_ShowLogCenter,&QAction::triggered,[this](){
+        if(!logWindow)
+        {
+            logWindow=new LogWindow(this);
+            QObject::connect(logWindow, &LogWindow::destroyed, [this](){
+               logWindow = nullptr;
+            });
+        }
+        logWindow->show();
     });
-    buttonIcon->addAction(act_ShowScriptLog);
+    buttonIcon->addAction(act_ShowLogCenter);
 
     QAction *act_checkUpdate=new QAction(tr("Check For Updates"), this);
     QObject::connect(act_checkUpdate,&QAction::triggered,[this](){
@@ -631,7 +637,14 @@ QWidget *MainWindow::setupPlayPage()
         }
     });
     QObject::connect(playerWindow, &PlayerWindow::showMPVLog, this, [this](){
-        logWindow->show(LogWindow::LogType::MPV);
+        if(!logWindow)
+        {
+            logWindow=new LogWindow(this);
+            QObject::connect(logWindow, &LogWindow::destroyed, [this](){
+               logWindow = nullptr;
+            });
+        }
+        logWindow->show(Logger::LogType::MPV);
     });
 
     playSplitter->addWidget(playerWindowWidget);
@@ -717,7 +730,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
 	GlobalObjects::appSetting->setValue("MainWindow/miniGeometry", miniGeo);
     GlobalObjects::appSetting->setValue("MainWindow/hideToTrayIcon", hideToTrayIcon);
-    GlobalObjects::appSetting->setValue("DialogSize/MPVLog",logWindow->size());
     GlobalObjects::appSetting->setValue("MainWindow/ListWindowWidth", listWindowWidth);
     if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
     {

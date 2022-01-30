@@ -26,7 +26,6 @@ signals:
     void refreshStatus(const QJsonObject &statusObj);
     void refreshPeerStatus(const QJsonArray &peerArray);
     void refreshGlobalStatus(int downSpeed,int upSpeed,int numActive);
-    void showLog(const QString &logInfo);
 public slots:
     QString addUri(const QString &uri, const QJsonObject &options);
     QString addTorrent(const QString &base64Str, const QJsonObject &options);

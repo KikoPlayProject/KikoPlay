@@ -14,6 +14,7 @@
 #include "Download/autodownloadmanager.h"
 #include "UI/stylemanager.h"
 #include "Common/notifier.h"
+#include "Common/logger.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -57,12 +58,14 @@ void GlobalObjects::init()
     if(!dir.exists(dataPath))
         dir.mkpath(dataPath);
 
-    initDatabase(mt_db_names);
-
     using ShortCutInfo = QPair<QString, QPair<QString,QString>>;
     qRegisterMetaType<QList<ShortCutInfo>>("ShortCutList");
     qRegisterMetaTypeStreamOperators<QList<ShortCutInfo>>("ShortCutList");
     appSetting=new QSettings(dataPath+"settings.ini",QSettings::IniFormat);
+
+    Logger::logger();
+
+    initDatabase(mt_db_names);
 
     QString transFile = GlobalObjects::appSetting->value("KikoPlay/Language", "").toString();
     transFile = QString(":/res/lang/%1.qm").arg(transFile.isEmpty()?QLocale::system().name().toLower():transFile);

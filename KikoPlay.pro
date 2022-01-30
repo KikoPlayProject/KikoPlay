@@ -15,7 +15,7 @@ RC_FILE += kikoplay.rc
 RC_ICONS = kikoplay.ico
 
 TRANSLATIONS += res/lang/zh_CN.ts
-
+DEFINES += QT_MESSAGELOGCONTEXT
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -30,6 +30,7 @@ DEFINES += ZLIB_WINAPI
 CONFIG += C++11
 
 SOURCES += \
+    Common/logger.cpp \
     Common/notifier.cpp \
     Download/autodownloadmanager.cpp \
     Download/peermodel.cpp \
@@ -47,7 +48,6 @@ SOURCES += \
     Script/libraryscript.cpp \
     Script/resourcescript.cpp \
     Script/scriptbase.cpp \
-    Script/scriptlogger.cpp \
     Script/scriptmanager.cpp \
     Script/scriptmodel.cpp \
     Script/scriptsettingmodel.cpp \
@@ -145,6 +145,7 @@ SOURCES += \
     UI/tip.cpp
 
 HEADERS += \
+    Common/logger.h \
     Common/lrucache.h \
     Common/notifier.h \
     Download/autodownloadmanager.h \
@@ -164,7 +165,6 @@ HEADERS += \
     Script/libraryscript.h \
     Script/resourcescript.h \
     Script/scriptbase.h \
-    Script/scriptlogger.h \
     Script/scriptmanager.h \
     Script/scriptmodel.h \
     Script/scriptsettingmodel.h \
