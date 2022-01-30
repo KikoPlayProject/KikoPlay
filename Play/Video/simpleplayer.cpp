@@ -56,7 +56,7 @@ void SimplePlayer::setMedia(const QString &file)
         state = PlayState::Play;
         refreshTimer->start(timeRefreshInterval);
         setProperty("pause",false);
-        setProperty("ao-volume",volume);
+        setProperty("volume",volume);
         emit stateChanged(state);
     }
 }
@@ -88,7 +88,7 @@ void SimplePlayer::seek(double pos)
 void SimplePlayer::setVolume(int vol)
 {
     volume = qBound(0, vol, 100);
-    setProperty("ao-volume",volume);
+    setProperty("volume",volume);
 }
 
 void SimplePlayer::screenshot(const QString &fileName)
@@ -98,7 +98,7 @@ void SimplePlayer::screenshot(const QString &fileName)
 
 void SimplePlayer::setMute(bool mute)
 {
-    setProperty("ao-mute",mute);
+    setProperty("mute",mute);
 }
 
 void SimplePlayer::initializeGL()

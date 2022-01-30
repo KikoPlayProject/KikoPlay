@@ -392,8 +392,8 @@ void MPVPlayer::setMedia(const QString &file)
 		state = PlayState::Play;      
         refreshTimer.start(timeRefreshInterval);
         setMPVProperty("pause",false);
-        setMPVProperty("ao-volume",volume);
-        setMPVProperty("ao-mute", mute);
+        setMPVProperty("volume",volume);
+        setMPVProperty("mute", mute);
         if(mpvPreview) mpvPreview->reset(file);
         QCoreApplication::processEvents();
 		emit stateChanged(state);
@@ -455,12 +455,12 @@ void MPVPlayer::frameStep(bool forward)
 void MPVPlayer::setVolume(int vol)
 {
     volume = qBound(0, vol, 100);
-    setMPVProperty("ao-volume",volume);
+    setMPVProperty("volume",volume);
 }
 
 void MPVPlayer::setMute(bool mute)
 {
-    setMPVProperty("ao-mute",mute);
+    setMPVProperty("mute",mute);
     this->mute=mute;
 }
 
