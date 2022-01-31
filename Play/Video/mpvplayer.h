@@ -57,13 +57,15 @@ public:
     inline int getVolume() const {return volume;}
     QString getMPVProperty(const QString &property, bool &hasError);
     const QHash<QString, QPair<QList<QStringList>, QString>> &getShortcuts() const{return mpvShortcuts;}
+    inline bool enableDirectKey() const {return directKeyMode;}
 
     VideoSizeInfo getVideoSizeInfo();
     QString expandMediaInfo(const QString &text);
     void setOptions();
     void drawTexture(QList<const DanmuObject *> &objList, float alpha);
     void modifyShortcut(const QString &key, const QString &newKey, const QString &command);
-    int runShortcut(const QString &key);
+    int runShortcut(const QString &key, int keyEventType=0);  //0:press 1:down 2:up
+    void setDirectKeyMode(bool on);
 signals:
     void fileChanged();
     void durationChanged(int value);
@@ -137,6 +139,7 @@ private:
     QOpenGLShaderProgram danmuShader;
     QTimer refreshTimer;
     QElapsedTimer elapsedTimer;
+    bool directKeyMode;
     QMap<QString, QString> optionsMap;
     QHash<QString, QPair<QList<QStringList>, QString>> mpvShortcuts;
 

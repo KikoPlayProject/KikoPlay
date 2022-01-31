@@ -95,10 +95,7 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     if (!mpv)
         throw std::runtime_error("could not create mpv context");
 
-    if (mpv_initialize(mpv) < 0)
-        throw std::runtime_error("could not initialize mpv context");
-
-    mpv_request_log_messages(mpv, "v");
+    QSet<QString> optionsBeforeInit{"config", "config-dir", "input-conf", "load-scripts", "script"};
     QStringList options=GlobalObjects::appSetting->value(
          "Play/MPVParameters",
          "#Make sure the danmu is smooth\n"
@@ -111,9 +108,22 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
         int eqPos=opt.indexOf('=');
         if(eqPos==-1) eqPos = opt.length();
         QString key(opt.left(eqPos)), val(opt.mid(eqPos+1));
-        mpv::qt::set_option_variant(mpv, key, val);
-        optionsMap.insert(key, val);
+        if(optionsBeforeInit.contains(key))
+            mpv::qt::set_option_variant(mpv, key, val);
+        else
+            optionsMap.insert(key, val);
     }
+
+    if (mpv_initialize(mpv) < 0)
+        throw std::runtime_error("could not initialize mpv context");
+
+    mpv_request_log_messages(mpv, "v");
+    for(auto iter=optionsMap.cbegin(); iter!=optionsMap.cend(); ++iter)
+    {
+        mpv::qt::set_option_variant(mpv, iter.key(), iter.value());
+    }
+
+    directKeyMode = GlobalObjects::appSetting->value("Play/MPVDirectKeyMode", false).toBool();
     using ShortCutInfo = QPair<QString, QPair<QString,QString>>;
     auto shortcutList = GlobalObjects::appSetting->value("Play/MPVShortcuts").value<QList<ShortCutInfo>>();
     for(auto &s : shortcutList)
@@ -374,16 +384,37 @@ void MPVPlayer::modifyShortcut(const QString &key, const QString &newKey, const 
     mpvShortcuts[newKey] = {commands, command};
 }
 
-int MPVPlayer::runShortcut(const QString &key)
+int MPVPlayer::runShortcut(const QString &key, int keyEventType)
 {
-    if(!mpvShortcuts.contains(key)) return -1;
-    const auto &shortcut = mpvShortcuts[key];
-    int ret = 0;
-    for(const auto &command : shortcut.first)
+    if(directKeyMode)
     {
-        ret = setMPVCommand(command);
+        QStringList command;
+        if(keyEventType==1)
+            command << "keydown";
+        else if(keyEventType==2)
+            command << "keyup";
+        else
+            command << "keypress";
+        command << key;
+        return setMPVCommand(command);
     }
-    return ret;
+    else
+    {
+        if(!mpvShortcuts.contains(key)) return -1;
+        const auto &shortcut = mpvShortcuts[key];
+        int ret = 0;
+        for(const auto &command : shortcut.first)
+        {
+            ret = setMPVCommand(command);
+        }
+        return ret;
+    }
+}
+
+void MPVPlayer::setDirectKeyMode(bool on)
+{
+    directKeyMode = on;
+    GlobalObjects::appSetting->setValue("Play/MPVDirectKeyMode", directKeyMode);
 }
 
 void MPVPlayer::setMedia(const QString &file)

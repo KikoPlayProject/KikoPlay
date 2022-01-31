@@ -126,6 +126,7 @@ public:
     // QWidget interface
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override;
+    virtual void keyReleaseEvent(QKeyEvent *event);
     virtual void contextMenuEvent(QContextMenuEvent *event) override;
     virtual void closeEvent(QCloseEvent *event) override;
     virtual void dragEnterEvent(QDragEnterEvent *event) override;

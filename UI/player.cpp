@@ -2031,9 +2031,9 @@ bool PlayerWindow::eventFilter(QObject *watched, QEvent *event)
 
 void PlayerWindow::keyPressEvent(QKeyEvent *event)
 {
-	int key = event->key();
-	switch (key)
-	{
+    int key = event->key();
+    switch (key)
+    {
     case Qt::Key_Control:
     {
         if(altPressCount>0)
@@ -2093,11 +2093,11 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
         }
         break;
     }
-	case Qt::Key_Space:
-		actPlayPause->trigger();
-		break;
-	case Qt::Key_Enter:
-	case Qt::Key_Return:
+    case Qt::Key_Space:
+        actPlayPause->trigger();
+        break;
+    case Qt::Key_Enter:
+    case Qt::Key_Return:
         if(miniModeOn)
         {
             exitMiniMode();
@@ -2111,29 +2111,29 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
         else
             miniModeOn?exitMiniMode():actMiniMode->trigger();
         break;
-	case Qt::Key_Down:
-	case Qt::Key_Up:
-		QApplication::sendEvent(volume, event);
+    case Qt::Key_Down:
+    case Qt::Key_Up:
+        QApplication::sendEvent(volume, event);
         showMessage(tr("Volume: %0").arg(volume->value()));
-		break;
-	case Qt::Key_Right:
-		if (event->modifiers() == Qt::ControlModifier)
+        break;
+    case Qt::Key_Right:
+        if (event->modifiers() == Qt::ControlModifier)
         {
-			GlobalObjects::mpvplayer->frameStep();
+            GlobalObjects::mpvplayer->frameStep();
             showMessage(tr("Frame Step:Forward"));
         }
-		else
+        else
             GlobalObjects::mpvplayer->seek(jumpForwardTime, true);
-		break;
-	case Qt::Key_Left:
-		if (event->modifiers() == Qt::ControlModifier)
+        break;
+    case Qt::Key_Left:
+        if (event->modifiers() == Qt::ControlModifier)
         {
-			GlobalObjects::mpvplayer->frameStep(false);
+            GlobalObjects::mpvplayer->frameStep(false);
             showMessage(tr("Frame Step:Backward"));
         }
-		else
+        else
             GlobalObjects::mpvplayer->seek(-jumpBackwardTime, true);
-		break;
+        break;
     case Qt::Key_PageUp:
         actPrev->trigger();
         break;
@@ -2143,18 +2143,42 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_F5:
         emit refreshPool();
         break;
-    case Qt::Key_I:
-        mediaInfo->click();
-        break;
-	default:
-		QWidget::keyPressEvent(event);
+    default:
+        QWidget::keyPressEvent(event);
+    }
+    if(event->key()==Qt::Key_Control || event->key()==Qt::Key_Shift || event->key()==Qt::Key_Alt)
+        return;
+    QString pressKeyStr = QKeySequence(event->modifiers()|event->key()).toString();
+    if(GlobalObjects::mpvplayer->enableDirectKey())
+    {
+        GlobalObjects::mpvplayer->runShortcut(pressKeyStr.toLower(), 1);
+    }
+    else
+    {
+        const auto &shortcuts = GlobalObjects::mpvplayer->getShortcuts();
+        if(shortcuts.contains(pressKeyStr))
+        {
+            int ret = GlobalObjects::mpvplayer->runShortcut(pressKeyStr);
+            showMessage(tr("%1 Command: %2, ret = %3").arg(pressKeyStr, shortcuts[pressKeyStr].second).arg(ret));
+        }
+    }
+}
+
+void PlayerWindow::keyReleaseEvent(QKeyEvent *event)
+{
+    if(event->key()==Qt::Key_Control || event->key()==Qt::Key_Shift || event->key()==Qt::Key_Alt)
+    {
+        QWidget::keyReleaseEvent(event);
+        return;
     }
     QString pressKeyStr = QKeySequence(event->modifiers()|event->key()).toString();
-    const auto &shortcuts = GlobalObjects::mpvplayer->getShortcuts();
-    if(shortcuts.contains(pressKeyStr))
+    if(GlobalObjects::mpvplayer->enableDirectKey())
     {
-        int ret = GlobalObjects::mpvplayer->runShortcut(pressKeyStr);
-        showMessage(tr("%1 Command: %2, ret=%3").arg(pressKeyStr, shortcuts[pressKeyStr].second).arg(ret));
+        GlobalObjects::mpvplayer->runShortcut(pressKeyStr.toLower(), 2);
+    }
+    else
+    {
+        QWidget::keyReleaseEvent(event);
     }
 }
 

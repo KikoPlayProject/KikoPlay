@@ -4,6 +4,7 @@
 #include "Play/Video/mpvplayer.h"
 #include <QTreeView>
 #include <QPushButton>
+#include <QCheckBox>
 #include <QGridLayout>
 #include <QSettings>
 #include <QKeySequenceEdit>
@@ -27,13 +28,24 @@ MPVShortcutPage::MPVShortcutPage(QWidget *parent) : SettingPage(parent)
     shortcutView->header()->resizeSection(1, 200*logicalDpiX()/96);
     shortcutView->header()->setSectionResizeMode(2, QHeaderView::Stretch);
     QPushButton *addShortcut=new QPushButton(tr("Add"),this);
+    QCheckBox *directKeyMode=new QCheckBox(tr("Direct Key Mode"), this);
+    directKeyMode->setToolTip(tr("In direct mode, KikoPlay will pass key events directly to MPV"));
 
     QGridLayout *shortcutGLayout=new QGridLayout(this);
     shortcutGLayout->setContentsMargins(0, 0, 0, 0);
     shortcutGLayout->addWidget(addShortcut, 0, 0);
-    shortcutGLayout->addWidget(shortcutView, 1, 0, 1, 2);
+    shortcutGLayout->addWidget(directKeyMode, 0, 1);
+    shortcutGLayout->addWidget(shortcutView, 1, 0, 1, 3);
     shortcutGLayout->setRowStretch(1, 1);
-    shortcutGLayout->setColumnStretch(1, 1);
+    shortcutGLayout->setColumnStretch(2, 1);
+
+    QObject::connect(directKeyMode,&QCheckBox::stateChanged,[=](int state){
+       bool enable = state == Qt::Checked;
+       addShortcut->setEnabled(!enable);
+       shortcutView->setEnabled(!enable);
+       GlobalObjects::mpvplayer->setDirectKeyMode(enable);
+    });
+    directKeyMode->setChecked(GlobalObjects::mpvplayer->enableDirectKey());
 
     QObject::connect(addShortcut, &QPushButton::clicked, this, [=](){
         ShortcutEditDialog addShortcut(true, model, QModelIndex(), this);

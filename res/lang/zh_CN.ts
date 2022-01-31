@@ -3341,17 +3341,27 @@ The changes will take effect when KikoPlay is restarted</source>
 <context>
     <name>MPVShortcutPage</name>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="29"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="30"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="46"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="31"/>
+        <source>Direct Key Mode</source>
+        <translation>按键直传模式</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="32"/>
+        <source>In direct mode, KikoPlay will pass key events directly to MPV</source>
+        <translation>开启按键直传后，KikoPlay将直接传递按键事件到MPV</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="58"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="58"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="70"/>
         <source>Modify</source>
         <translation>修改</translation>
     </message>
@@ -4214,7 +4224,7 @@ Folder Collection
         <translation>已添加弹幕文件 [%1]</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="1792"/>
+        <location filename="../../UI/player.cpp" line="1805"/>
         <source>File not exist: %0</source>
         <translation>文件不存在：%0</translation>
     </message>
@@ -4371,6 +4381,11 @@ Folder Collection
         <translation>后方</translation>
     </message>
     <message>
+        <location filename="../../UI/player.cpp" line="2162"/>
+        <source>%1 Command: %2, ret = %3</source>
+        <translation></translation>
+    </message>
+    <message>
         <source>Merge</source>
         <translation type="vanished">合并</translation>
     </message>
@@ -4419,44 +4434,39 @@ Folder Collection
         <translation>已跳转到上次播放位置</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="2073"/>
+        <location filename="../../UI/player.cpp" line="2086"/>
         <source>Capture has been add to library: %1</source>
         <translation>截图已加入资料库：%1</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="2104"/>
-        <location filename="../../UI/player.cpp" line="2285"/>
+        <location filename="../../UI/player.cpp" line="2117"/>
+        <location filename="../../UI/player.cpp" line="2322"/>
         <source>Volume: %0</source>
         <translation>音量：%0</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="2110"/>
+        <location filename="../../UI/player.cpp" line="2123"/>
         <source>Frame Step:Forward</source>
         <translation>逐帧播放：向前</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="2119"/>
+        <location filename="../../UI/player.cpp" line="2132"/>
         <source>Frame Step:Backward</source>
         <translation>逐帧播放：向后</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="2144"/>
-        <source>%1 Command: %2, ret=%3</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../../UI/player.cpp" line="2227"/>
+        <location filename="../../UI/player.cpp" line="2264"/>
         <source>Subtitle has been added</source>
         <translation>已添加字幕</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="2240"/>
+        <location filename="../../UI/player.cpp" line="2277"/>
         <source>Danmu has been added</source>
         <translation>已添加弹幕</translation>
     </message>
     <message>
         <location filename="../../UI/player.cpp" line="1449"/>
-        <location filename="../../UI/player.cpp" line="2244"/>
+        <location filename="../../UI/player.cpp" line="2281"/>
         <source>Add Faied: Pool is busy</source>
         <translation>添加失败：弹幕池正忙</translation>
     </message>
@@ -5530,32 +5540,32 @@ Eps: %2
 <context>
     <name>ShortcutEditDialog</name>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="182"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="194"/>
         <source>Edit Shortcut Key</source>
         <translation>编辑快捷键</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="197"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="209"/>
         <source>Shortcut Key</source>
         <translation>快捷键</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="198"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="210"/>
         <source>MPV Command</source>
         <translation>MPV命令</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="199"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="211"/>
         <source>Description</source>
         <translation>描述</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="222"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="234"/>
         <source>Key/Command should not be empty</source>
         <translation>快捷键/命令不应为空</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="231"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="243"/>
         <source>Shortcut key conflicts with &quot;%1&quot;</source>
         <translation>快捷键冲突：&quot;%1&quot;</translation>
     </message>
