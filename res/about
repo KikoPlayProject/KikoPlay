@@ -1,6 +1,6 @@
-KikoPlay is based on the following projects:
+KikoPlay 基于这些项目:
 Qt 5.15.2
-libmpv 0.33.0
+libmpv 0.34.0
 aria2 1.34
 Qt-Nice-Frameless-Window
 zlib 1.2.11
