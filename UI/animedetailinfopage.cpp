@@ -96,8 +96,26 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
             Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NM_HIDE);
         }
     });
+    QAction *actLocalCover = new QAction(tr("Select From File"), this);
+    QObject::connect(actLocalCover, &QAction::triggered, this, [=](){
+        if(currentAnime)
+        {
+            QString fileName = QFileDialog::getOpenFileName(this, tr("Select Cover"), "", "JPEG Images (*.jpg);;PNG Images (*.png)");
+            if(!fileName.isEmpty())
+            {
+                QImage cover(fileName);
+                QByteArray imgBytes;
+                QBuffer bufferImage(&imgBytes);
+                bufferImage.open(QIODevice::WriteOnly);
+                cover.save(&bufferImage, "JPG");
+                currentAnime->setCover(imgBytes, true);
+                coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->cover()));
+            }
+        }
+    });
     coverLabel->addAction(actCopyCover);
     coverLabel->addAction(actDownloadCover);
+    coverLabel->addAction(actLocalCover);
     coverLabel->setContextMenuPolicy(Qt::ActionsContextMenu);
 
     QWidget *titleContainer = new QWidget(this);

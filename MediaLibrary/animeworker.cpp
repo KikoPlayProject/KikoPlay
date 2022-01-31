@@ -451,7 +451,7 @@ void AnimeWorker::updateCaptureInfo(const QString &animeName, qint64 timeId, con
     });
 }
 
-void AnimeWorker::updateCoverImage(const QString &animeName, const QByteArray &imageContent)
+void AnimeWorker::updateCoverImage(const QString &animeName, const QByteArray &imageContent, bool resetCoverURL)
 {
     ThreadTask task(GlobalObjects::workThread);
     task.RunOnce([=](){
@@ -460,6 +460,13 @@ void AnimeWorker::updateCoverImage(const QString &animeName, const QByteArray &i
         query.bindValue(0,imageContent);
         query.bindValue(1,animeName);
         query.exec();
+        if(resetCoverURL)
+        {
+            query.prepare("update anime set CoverURL=? where Anime=?");
+            query.bindValue(0, "");
+            query.bindValue(1,animeName);
+            query.exec();
+        }
     });
 }
 

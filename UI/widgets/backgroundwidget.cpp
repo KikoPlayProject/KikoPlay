@@ -90,6 +90,7 @@ void BackgroundWidget::setImg(const QImage &nImg)
 
 void BackgroundWidget::setBgCache()
 {
+    if(bgCacheSrc.isNull()) return;
     if(backBlurRadius <= 1)
     {
         bgCache = QPixmap::fromImage(bgCacheSrc);

@@ -165,7 +165,7 @@ public:
     Anime();
     bool isValid() const {return !_name.isEmpty();}
 
-    void setCover(const QByteArray &data);
+    void setCover(const QByteArray &data, bool resetCoverURL=false);
     void setCrtImage(const QString &name, const QByteArray &data);
     const QList<EpInfo> &epList();
     const QList<Character> &crList(bool loadImage = false);

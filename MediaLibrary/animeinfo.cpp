@@ -6,10 +6,11 @@ Anime::Anime() : _addTime(0), _epCount(0), crtImagesLoaded(false), epLoaded(fals
 
 }
 
-void Anime::setCover(const QByteArray &data)
+void Anime::setCover(const QByteArray &data, bool resetCoverURL)
 {
-    AnimeWorker::instance()->updateCoverImage(_name, data);
+    AnimeWorker::instance()->updateCoverImage(_name, data, resetCoverURL);
     _cover.loadFromData(data);
+    if(resetCoverURL) _coverURL = "";
 }
 
 void Anime::setCrtImage(const QString &name, const QByteArray &data)
