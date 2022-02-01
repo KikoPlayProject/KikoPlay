@@ -156,6 +156,7 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     mpv_set_wakeup_callback(mpv, MPVPlayer::wakeup, this);
     refreshTimestamp = QDateTime::currentMSecsSinceEpoch();
     QObject::connect(&refreshTimer,&QTimer::timeout,[this](){
+        if(currentFile.isEmpty()) return;
         qint64 ct = QDateTime::currentMSecsSinceEpoch();
         if(ct - refreshTimestamp > timeRefreshInterval)
         {
