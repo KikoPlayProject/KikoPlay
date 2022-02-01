@@ -154,9 +154,16 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     mpv_observe_property(mpv, 0, "mute", MPV_FORMAT_FLAG);
 
     mpv_set_wakeup_callback(mpv, MPVPlayer::wakeup, this);
+    refreshTimestamp = QDateTime::currentMSecsSinceEpoch();
     QObject::connect(&refreshTimer,&QTimer::timeout,[this](){
-       double curTime = mpv::qt::get_property(mpv,QStringLiteral("playback-time")).toDouble();
-       emit positionChanged(curTime*1000);
+        qint64 ct = QDateTime::currentMSecsSinceEpoch();
+        if(ct - refreshTimestamp > timeRefreshInterval)
+        {
+            qInfo()<<"force refresh delta: "<<ct-refreshTimestamp;
+            refreshTimestamp = ct;
+            double curTime = mpv::qt::get_property(mpv,QStringLiteral("playback-time")).toDouble();
+            emit positionChanged(curTime*1000);
+        }
     });
 
     if(GlobalObjects::appSetting->value("Play/ShowPreview", true).toBool())
@@ -422,7 +429,8 @@ void MPVPlayer::setMedia(const QString &file)
     if(!setMPVCommand(QStringList() << "loadfile" << file))
     {
         currentFile=file;
-		state = PlayState::Play;      
+        state = PlayState::Play;
+        refreshTimestamp = QDateTime::currentMSecsSinceEpoch();
         refreshTimer.start(timeRefreshInterval);
         setMPVProperty("pause",false);
         setMPVProperty("volume",volume);
@@ -698,8 +706,9 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_DOUBLE)
             {
+                refreshTimestamp = QDateTime::currentMSecsSinceEpoch();
                 double time = *(double *)prop->data;
-                if(state==PlayState::Pause) emit positionChanged(time*1000);
+                emit positionChanged(time*1000);
             }
         }
     },
@@ -730,6 +739,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
                 }
                 else
                 {
+                    refreshTimestamp = QDateTime::currentMSecsSinceEpoch();
                     refreshTimer.start(timeRefreshInterval);
                 }
                 emit stateChanged(state);

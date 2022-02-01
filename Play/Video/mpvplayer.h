@@ -129,7 +129,7 @@ private:
     static void wakeup(void *ctx);
     static void *get_proc_address(void *ctx, const char *name);
 
-    const int timeRefreshInterval=200;
+    const int timeRefreshInterval=400;
     PlayState state;
     bool mute;
     bool danmuHide;
@@ -138,6 +138,7 @@ private:
     QString currentFile;
     QOpenGLShaderProgram danmuShader;
     QTimer refreshTimer;
+    qint64 refreshTimestamp;
     QElapsedTimer elapsedTimer;
     bool directKeyMode;
     QMap<QString, QString> optionsMap;
