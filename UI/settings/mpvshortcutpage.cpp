@@ -29,7 +29,7 @@ MPVShortcutPage::MPVShortcutPage(QWidget *parent) : SettingPage(parent)
     shortcutView->header()->setSectionResizeMode(2, QHeaderView::Stretch);
     QPushButton *addShortcut=new QPushButton(tr("Add"),this);
     QCheckBox *directKeyMode=new QCheckBox(tr("Direct Key Mode"), this);
-    directKeyMode->setToolTip(tr("In direct mode, KikoPlay will pass key events directly to MPV"));
+    directKeyMode->setToolTip(tr("In direct mode, KikoPlay will pass key events directly to MPV\nSet shortcuts through MPV Parameter input-conf"));
 
     QGridLayout *shortcutGLayout=new QGridLayout(this);
     shortcutGLayout->setContentsMargins(0, 0, 0, 0);

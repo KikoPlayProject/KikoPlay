@@ -449,12 +449,16 @@ void CFramelessDialog::onAccept()
 {
     accept();
     if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
+    if(!sizeSettingKey.isEmpty())
+        GlobalObjects::appSetting->setValue(sizeSettingKey,size());
 }
 
 void CFramelessDialog::onClose()
 {
     reject();
     if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
+    if(!sizeSettingKey.isEmpty())
+        GlobalObjects::appSetting->setValue(sizeSettingKey,size());
 
 }
 
@@ -622,6 +626,11 @@ void CFramelessDialog::showMessage(const QString &msg, int type)
 {
     dialogTip->showMessage(msg, type);
     dialogTip->raise();
+}
+void CFramelessDialog::setSizeSettingKey(const QString &key, const QSize &initSize)
+{
+    sizeSettingKey = key;
+    resize(GlobalObjects::appSetting->value(sizeSettingKey, initSize).toSize());
 }
 void CFramelessDialog::reject()
 {

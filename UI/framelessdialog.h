@@ -110,6 +110,7 @@ private:
     QPoint oldPos;
 
     DialogTip *dialogTip;
+    QString sizeSettingKey;
 
     // QWidget interface
 protected:
@@ -122,6 +123,7 @@ protected:
     void showBusyState(bool busy);
     void setTitle(const QString &text);
     void showMessage(const QString &msg, int type=0);
+    void setSizeSettingKey(const QString &key, const QSize &initSize);
     // QDialog interface
 public slots:
     virtual void reject();

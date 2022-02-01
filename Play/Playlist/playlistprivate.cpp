@@ -24,6 +24,10 @@ PlayListPrivate::~PlayListPrivate()
 
 void PlayListPrivate::loadPlaylist()
 {
+    if(QFile::exists(plPath+".tmp") && !QFile::exists(plPath))
+    {
+        QFile::rename(plPath+".tmp", plPath);
+    }
     QFile playlistFile(plPath);
     bool ret=playlistFile.open(QIODevice::ReadOnly|QIODevice::Text);
     if(!ret) return;
@@ -130,7 +134,7 @@ void PlayListPrivate::savePlaylist()
     saveItem(writer, root);
     writer.writeEndDocument();
     ret = QFile::remove(plPath);
-    if(ret)
+    if(!QFile::exists(plPath) || ret)
     {
         ret = playlistFile.rename(plPath);
         if(ret) playListChanged=false;

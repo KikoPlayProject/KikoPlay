@@ -3362,8 +3362,14 @@ The changes will take effect when KikoPlay is restarted</source>
     </message>
     <message>
         <location filename="../../UI/settings/mpvshortcutpage.cpp" line="32"/>
+        <source>In direct mode, KikoPlay will pass key events directly to MPV
+Set shortcuts through MPV Parameter input-conf</source>
+        <translation>开启按键直传后，KikoPlay将直接传递按键事件到MPV
+需要通过MPV参数 input-conf 设置快捷键</translation>
+    </message>
+    <message>
         <source>In direct mode, KikoPlay will pass key events directly to MPV</source>
-        <translation>开启按键直传后，KikoPlay将直接传递按键事件到MPV</translation>
+        <translation type="vanished">开启按键直传后，KikoPlay将直接传递按键事件到MPV</translation>
     </message>
     <message>
         <location filename="../../UI/settings/mpvshortcutpage.cpp" line="58"/>
