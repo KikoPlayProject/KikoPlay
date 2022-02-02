@@ -87,7 +87,7 @@ void SimplePlayer::seek(double pos)
 
 void SimplePlayer::setVolume(int vol)
 {
-    volume = qBound(0, vol, 100);
+    volume = vol;
     setProperty("volume",volume);
 }
 

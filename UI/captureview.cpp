@@ -1,6 +1,7 @@
 #include "captureview.h"
 #include "MediaLibrary/capturelistmodel.h"
 #include "Play/Video/simpleplayer.h"
+#include "Play/Video/mpvplayer.h"
 #include "globalobjects.h"
 #include <QGraphicsPixmapItem>
 #include <QStackedLayout>
@@ -149,6 +150,7 @@ void CaptureView::setCapture()
         else
         {
             smPlayer->setMedia(snippetFile);
+            smPlayer->setVolume(GlobalObjects::mpvplayer->getVolume());
         }
         smPlayer->setFocus();
     }
