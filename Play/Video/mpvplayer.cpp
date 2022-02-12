@@ -520,7 +520,7 @@ void MPVPlayer::addSubtitle(const QString &path)
 
 void MPVPlayer::addAudioTrack(const QString &path)
 {
-    setMPVCommand(QVariantList() << "audio-add" << path << "auto");
+    setMPVCommand(QVariantList() << "audio-add" << path);
     loadTracks();
     emit trackInfoChange(AudioTrack);
 }
