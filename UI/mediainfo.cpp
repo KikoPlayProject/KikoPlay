@@ -114,7 +114,7 @@ void MediaInfo::evalCommand(QList<QString> &commandStack, QList<TextBlock> &text
     });
     QFileInfo fi(GlobalObjects::mpvplayer->getCurrentFile());
     kikoCommand["date-created"] = fi.birthTime().toString();
-    kikoCommand["audio-trackcount"] = QString::number(GlobalObjects::mpvplayer->getTrackList(0).size());
+    kikoCommand["audio-trackcount"] = QString::number(GlobalObjects::mpvplayer->getTrackList(MPVPlayer::AudioTrack).size());
     kikoCommand["dwidth"] = QString::number(GlobalObjects::mpvplayer->width());
     kikoCommand["dheight"] = QString::number(GlobalObjects::mpvplayer->height());
 

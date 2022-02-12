@@ -23,6 +23,12 @@ public:
         Stop,
         EndReached
     };
+    enum TrackType
+    {
+        AudioTrack,
+        SubTrack
+    };
+
     struct VideoSizeInfo
     {
         int width;
@@ -36,16 +42,17 @@ public:
         int position;
     };
 
-    const QStringList videoFileFormats = {"*.mp4","*.mkv","*.avi","*.flv","*.wmv"};
-    const QStringList subtitleFormats = {"*.sub","*.srt","*.ass","*.ssa","*.smi","*.rt","*.txt","*.mks","*.vtt","*.sup"};
-    const QStringList speedLevel={"0.5","0.75","1","1.25","1.5","2","2.5","3", "3.5", "4"};
-    const QStringList videoAspect={tr("Auto"),"4:3","16:9","2.35:1"};
+    const QStringList videoFileFormats{"*.mp4","*.mkv","*.avi","*.flv","*.wmv"};
+    const QStringList audioFormats{"*.mp3","*.wav","*.wma","*.ogg","*.flac","*.aac","*.ape","*.ac3","*.m4a","*.mka"};
+    const QStringList subtitleFormats{"*.sub","*.srt","*.ass","*.ssa","*.smi","*.rt","*.txt","*.mks","*.vtt","*.sup"};
+    const QStringList speedLevel{"0.5","0.75","1","1.25","1.5","2","2.5","3", "3.5", "4"};
+    const QStringList videoAspect{tr("Auto"),"4:3","16:9","2.35:1"};
 	const double videoAspcetVal[4] = { -1,4.0 / 3,16.0 / 9,2.35 / 1 };
 
     inline PlayState getState() const {return state;}
     inline bool getDanmuHide() const{return danmuHide;}
     inline bool getMute() const{return mute;}
-    inline const QStringList &getTrackList(int type){return type==0?audioTrack.desc_str:subtitleTrack.desc_str;}
+    inline const QStringList &getTrackList(TrackType type){return type==AudioTrack?audioTrack.desc_str:subtitleTrack.desc_str;}
     inline int getCurrentAudioTrack() const {return audioTrack.ids.indexOf(mpv::qt::get_property(mpv,"aid").toInt());}
     inline int getCurrentSubTrack() const{return subtitleTrack.ids.indexOf(mpv::qt::get_property(mpv,"sid").toInt());}
     inline double getTime() const{return mpv::qt::get_property(mpv,"playback-time").toDouble();}
@@ -72,7 +79,7 @@ signals:
     void positionChanged(int value);
     void positionJumped(int value);
     void stateChanged(PlayState state);
-    void trackInfoChange(int type);
+    void trackInfoChange(TrackType type);
     void chapterChanged();
     void subDelayChanged(int value);
     void speedChanged(double value);
@@ -96,6 +103,7 @@ public slots:
     void setMute(bool mute);
     void hideDanmu(bool hide);
     void addSubtitle(const QString &path);
+    void addAudioTrack(const QString &path);
     void setTrackId(int type,int id);
     void hideSubtitle(bool on);
     void setSubDelay(int delay);

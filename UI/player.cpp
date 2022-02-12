@@ -1086,6 +1086,19 @@ void PlayerWindow::setupPlaySettingPage()
         if(updatingTrack)return;
         GlobalObjects::mpvplayer->setTrackId(0,index);
     });
+    QPushButton *addAudioTrackButton=new QPushButton(tr("Add"),pagePlay);
+    QObject::connect(addAudioTrackButton,&QPushButton::clicked,[this](){
+        bool restorePlayState = false;
+        if (GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
+        {
+            restorePlayState = true;
+            GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
+        }
+        QString file(QFileDialog::getOpenFileName(this,tr("Select Audio File"),"",tr("Audio (%0);;All Files(*)").arg(GlobalObjects::mpvplayer->audioFormats.join(" "))));
+        if(!file.isEmpty())
+            GlobalObjects::mpvplayer->addAudioTrack(file);
+        if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
+    });
 
     QLabel *subtitleTrackLabel=new QLabel(tr("Subtitle Track"),pagePlay);
     QComboBox *subtitleTrackCombo=new QComboBox(pagePlay);
@@ -1110,24 +1123,24 @@ void PlayerWindow::setupPlaySettingPage()
             restorePlayState = true;
             GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
         }
-        QString file(QFileDialog::getOpenFileName(this,tr("Select Sub File"),"",tr("Subtitle (%0)").arg(GlobalObjects::mpvplayer->subtitleFormats.join(" "))));
+        QString file(QFileDialog::getOpenFileName(this,tr("Select Sub File"),"",tr("Subtitle (%0);;All Files(*)").arg(GlobalObjects::mpvplayer->subtitleFormats.join(" "))));
         if(!file.isEmpty())
-                GlobalObjects::mpvplayer->addSubtitle(file);
+            GlobalObjects::mpvplayer->addSubtitle(file);
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
     QLabel *subtitleDelayLabel=new QLabel(tr("Subtitle Delay(s)"),pagePlay);
-    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::trackInfoChange,[subtitleTrackCombo,audioTrackCombo,this](int type){
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::trackInfoChange, [=](MPVPlayer::TrackType type){
         updatingTrack=true;
-        if(type==0)
+        if(type == MPVPlayer::TrackType::AudioTrack)
         {
             audioTrackCombo->clear();
-            audioTrackCombo->addItems(GlobalObjects::mpvplayer->getTrackList(0));
+            audioTrackCombo->addItems(GlobalObjects::mpvplayer->getTrackList(type));
             audioTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentAudioTrack());
         }
-        else if(type==1)
+        else if(type == MPVPlayer::TrackType::SubTrack)
         {
             subtitleTrackCombo->clear();
-            subtitleTrackCombo->addItems(GlobalObjects::mpvplayer->getTrackList(1));
+            subtitleTrackCombo->addItems(GlobalObjects::mpvplayer->getTrackList(type));
             subtitleTrackCombo->addItem(tr("Hide"));;
             subtitleTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentSubTrack());
         }
@@ -1322,7 +1335,8 @@ void PlayerWindow::setupPlaySettingPage()
     //playSettingGLayout->setRowStretch(0, 1);
     //playSettingGLayout->setRowStretch(7, 1);
     playSettingGLayout->addWidget(audioTrackLabel,1,0);
-    playSettingGLayout->addWidget(audioTrackCombo,1,1,1,2);
+    playSettingGLayout->addWidget(audioTrackCombo,1,1);
+    playSettingGLayout->addWidget(addAudioTrackButton,1,2);
     playSettingGLayout->addWidget(subtitleTrackLabel,2,0);
     playSettingGLayout->addWidget(subtitleTrackCombo,2,1);
     playSettingGLayout->addWidget(addSubtitleButton,2,2);

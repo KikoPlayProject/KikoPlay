@@ -514,12 +514,15 @@ void MPVPlayer::hideDanmu(bool hide)
 void MPVPlayer::addSubtitle(const QString &path)
 {
 	setMPVCommand(QVariantList() << "sub-add" << path);
-	audioTrack.desc_str.clear();
-	audioTrack.ids.clear();
-	subtitleTrack.desc_str.clear();
-	subtitleTrack.ids.clear();
 	loadTracks();
-	emit trackInfoChange(1);
+    emit trackInfoChange(SubTrack);
+}
+
+void MPVPlayer::addAudioTrack(const QString &path)
+{
+    setMPVCommand(QVariantList() << "audio-add" << path << "auto");
+    loadTracks();
+    emit trackInfoChange(AudioTrack);
 }
 
 void MPVPlayer::setTrackId(int type, int id)
@@ -805,8 +808,8 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
                     subtitleTrack.ids.append(trackMap["id"].toInt());
                 }
             }
-            emit trackInfoChange(0); //audio
-            emit trackInfoChange(1); //subtitle
+            emit trackInfoChange(AudioTrack);
+            emit trackInfoChange(SubTrack);
         }
     },
     {
