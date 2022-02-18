@@ -635,7 +635,7 @@ static int regexMatchIterator(lua_State *L)
         auto next = regex->activeMatchGotoNext(key);
         auto groups = next.capturedTexts();
         int count=0;
-        for(;count<groups.size();count++) // include whole match every time
+        for(;count<groups.size();++count) // include whole match every time
         {
             lua_pushstring(L, groups.at(count).toStdString().c_str());
         }
@@ -669,14 +669,15 @@ static int regexSub(lua_State *L)
 {
     RegExMatcher *regex = checkRegex(L);
     int params = lua_gettop(L); // regex(kiko.regex) target(string) replacement(string/table/function)
-    if(params!=3 || lua_type(L, 2)!=LUA_TSTRING || lua_type(L, 3)<LUA_TSTRING || lua_type(L, 3)>LUA_TFUNCTION)
+    const int replParamType = (params==3 && lua_type(L, 2)==LUA_TSTRING) ? lua_type(L, 3) : LUA_TNONE;
+    if(replParamType!=LUA_TSTRING && replParamType!=LUA_TTABLE && replParamType!=LUA_TFUNCTION)
     {
         luaL_error(L, "expect: target(string), repl(string/table/function)");
         lua_pushnil(L);
         return 1;
     }
     QString target = QString(lua_tostring(L, 2));
-    if (lua_type(L, 3)==LUA_TSTRING)
+    if (replParamType==LUA_TSTRING)
     {
         lua_pushstring(L, regex->replace(target, QString(lua_tostring(L, 3))).toStdString().c_str());
         return 1;
@@ -689,25 +690,17 @@ static int regexSub(lua_State *L)
         lua_pushnil(L);
         return 1;
     }
-    QVariantMap replTable;
-    if(lua_type(L, 3)==LUA_TTABLE)
-        replTable = ScriptBase::getValue(L).toMap();
-    else
-    {
-        lua_pushvalue(L, 1);
-        lua_pushstring(L, id.toStdString().c_str());
-        lua_pushcclosure(L, &regexMatchIterator, 2);
-    }
+    const QVariantMap replTable = ScriptBase::getValue(L).toMap(); // empty if not table
     QString replResult;
     int lastCapturedEnd = 0;
     for(int matchCount=1;regex->activeMatchHasNext(id);matchCount++)
     {
-        const auto next = lua_type(L, 3)==LUA_TTABLE ? regex->activeMatchGotoNext(id) : regex->activeMatchPeekNext(id);
+        const auto next = regex->activeMatchGotoNext(id);
         replResult.append(target.mid(lastCapturedEnd, next.capturedStart()-lastCapturedEnd));
         QString replText;
         lastCapturedEnd = next.capturedEnd();
         const int nRet = next.capturedTexts().size();
-        if(lua_type(L, 3)==LUA_TTABLE)
+        if(replParamType==LUA_TTABLE)
         {
             replText = next.captured(); // load group 0
             QString groupReplText;
@@ -715,37 +708,35 @@ static int regexSub(lua_State *L)
             int cursor = start0, offset = 0, start, len;
             for(int i=1;i<=nRet && cursor<next.capturedEnd();++i) // unlike in Lua, look up every capturing group
             {
-                if(cursor>=next.capturedEnd(i)) continue;
+                if(cursor>=next.capturedEnd(i)) continue; // skip groups starting before cursor position
                 if(replTable.contains(next.captured(i)) && !replTable[next.captured(i)].toString().isNull())
                 {
-                    start = next.capturedStart(i)-start0+offset;
+                    start = next.capturedStart(i)-start0+offset; // adjust local start by last offset
                     len = next.capturedLength(i);
                     groupReplText = replTable[next.captured(i)].toString();
-                    offset = groupReplText.length()-len;
-                    replText.remove(start, len).insert(start, groupReplText);
+                    offset += groupReplText.length()-len; // update offset by length difference due to replacement
+                    replText.remove(start, len).insert(start, groupReplText); // replace
                     cursor = next.capturedEnd(i);
                 }
             }
         }
         else // LUA_TFUNCTION
         {
-            lua_pushvalue(L, -2); // duplicate replacement function
-            lua_pushvalue(L, -2); // duplicate gmatch function
-            if(lua_pcall(L, 0, LUA_MULTRET, 0)==0) // gmatch
+            lua_pushvalue(L, 3); // duplicate replacement function
+            for(int i=0;i<nRet;++i)
+                lua_pushstring(L, next.captured(i).toStdString().c_str()); // cf. gmatch
+            if(lua_pcall(L, nRet, 1, 0)==0) // replace
             {
-                if(lua_pcall(L, nRet, 1, 0)==0) // replace
-                {
-                    replText = QString(lua_tostring(L, -1));
-                    if(replText==NULL)
-                        replText = next.captured();
-                }
-                else
-                {
-                    luaL_error(L, "replacement function failed on match %d: %s", matchCount, lua_tostring(L, -1));
+                replText = QString(lua_tostring(L, -1));
+                if(replText==NULL) // fall back if return value not of type string
                     replText = next.captured();
-                }
-                lua_pop(L, 1);
             }
+            else
+            {
+                luaL_error(L, "replacement function failed on match %d: %s", matchCount, lua_tostring(L, -1));
+                replText = next.captured();
+            }
+            lua_pop(L, 1);
         }
         replResult.append(replText);
     }
