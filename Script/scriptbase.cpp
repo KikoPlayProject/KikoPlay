@@ -713,7 +713,7 @@ static int regexSub(lua_State *L)
             QString groupReplText;
             const int start0 = next.capturedStart();
             int cursor = start0, offset = 0, start, len;
-            for(int i=1;i<=nRet && cursor<next.capturedEnd();i++) // unlike in Lua, look up every capturing group
+            for(int i=1;i<=nRet && cursor<next.capturedEnd();++i) // unlike in Lua, look up every capturing group
             {
                 if(cursor>=next.capturedEnd(i)) continue;
                 if(replTable.contains(next.captured(i)) && !replTable[next.captured(i)].toString().isNull())

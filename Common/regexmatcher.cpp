@@ -1,5 +1,4 @@
 #include "regexmatcher.h"
-#include "logger.h"
 #define __I CaseInsensitiveOption
 #define __S DotMatchesEverythingOption
 #define __M MultilineOption
@@ -10,7 +9,7 @@ QRegularExpression::PatternOptions RegExMatcher::parsePatternOptions(const char 
 {
     auto flags = QRegularExpression::PatternOptions();
     if(options!=nullptr)
-        for(int i=0;options[i]!='\0';i++)
+        for(int i=0;options[i]!='\0';++i)
             switch(options[i])
             {
             case 'i': flags |= P_FLAG(I); break;
@@ -46,7 +45,7 @@ QString RegExMatcher::addNewMatch(const QString &s)
 QString RegExMatcher::randomId() const
 {
     QString randomString;
-    for(int i=0; i<randomStringLength; ++i)
+    for(int i=0;i<randomStringLength;++i)
     {
         int idx = qrand() % strlen(possibleCharacters);
         randomString.append(possibleCharacters[idx]);
