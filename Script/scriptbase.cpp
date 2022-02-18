@@ -603,7 +603,7 @@ static int regexSetPattern(lua_State *L)
     RegExMatcher *regex = checkRegex(L);
     const char *pattern = nullptr;
     const char *options = nullptr;
-    if(lua_gettop(L)<4 && lua_type(L, 2)==LUA_TSTRING)
+    if(lua_gettop(L)<4 && lua_type(L, 2)==LUA_TSTRING) // regex(kiko.regex) pattern(string) options(string)
     {
         pattern = lua_tostring(L, 2);
         if(lua_gettop(L)==3)
@@ -646,7 +646,7 @@ static int regexMatchIterator(lua_State *L)
 static int regexMatch(lua_State *L)
 {
     RegExMatcher *regex = checkRegex(L);
-    if(lua_gettop(L)!=2 || lua_type(L, 2)!=LUA_TSTRING)
+    if(lua_gettop(L)!=2 || lua_type(L, 2)!=LUA_TSTRING) // regex(kiko.regex) target(string)
     {
         luaL_error(L, "expect string as match target");
         lua_pushnil(L);
@@ -668,7 +668,7 @@ static int regexMatch(lua_State *L)
 static int regexSub(lua_State *L)
 {
     RegExMatcher *regex = checkRegex(L);
-    int params = lua_gettop(L); // regex(kiko.regex) target(string) repl(string)
+    int params = lua_gettop(L); // regex(kiko.regex) target(string) replacement(string/table/function)
     if(params!=3 || lua_type(L, 2)!=LUA_TSTRING || lua_type(L, 3)<LUA_TSTRING || lua_type(L, 3)>LUA_TFUNCTION)
     {
         luaL_error(L, "expect: target(string), repl(string/table/function)");
