@@ -3,6 +3,7 @@
 #include <QVariant>
 #include "Common/network.h"
 #include "Common/htmlparsersax.h"
+#include "Common/regexmatcher.h"
 #include "Common/notifier.h"
 #include "Common/logger.h"
 #include <QSysInfo>
@@ -569,7 +570,190 @@ static int envInfo(lua_State *L)
 
     return 1;
 }
-// XmlReader-------------
+//RegEx--------------------------
+static int regex(lua_State *L)
+{
+    int n = lua_gettop(L);
+    const char *pattern = nullptr;
+    const char *options = nullptr;
+    if(n > 0 && lua_type(L, 1)==LUA_TSTRING)
+    {
+        pattern = lua_tostring(L, 1);
+    }
+    if(n > 1)
+    {
+        luaL_argcheck(L, lua_type(L, 2)==LUA_TSTRING, 2, "expect string as pattern option");
+        options = lua_tostring(L, 2);
+        luaL_argcheck(L, n==2, 3, "too many arguments, 1-2 strings expected");
+    }
+    auto **regex = (RegExMatcher **)lua_newuserdata(L, sizeof(RegExMatcher *));
+    luaL_getmetatable(L, "meta.kiko.regex");
+    lua_setmetatable(L, -2);  // regex meta
+    *regex = new RegExMatcher(pattern, options); // meta
+    return 1;
+}
+static RegExMatcher *checkRegex(lua_State *L, int idx = 1)
+{
+    void *ud = luaL_checkudata(L, idx, "meta.kiko.regex");
+    luaL_argcheck(L, ud != NULL, idx, "`kiko.regex' expected");
+    return *(RegExMatcher **)ud;
+}
+static int regexSetPattern(lua_State *L)
+{
+    RegExMatcher *regex = checkRegex(L);
+    const char *pattern = nullptr;
+    const char *options = nullptr;
+    if(lua_gettop(L)<4 && lua_type(L, 2)==LUA_TSTRING)
+    {
+        pattern = lua_tostring(L, 2);
+        if(lua_gettop(L)==3)
+        {
+            luaL_argcheck(L, lua_type(L, 3)==LUA_TSTRING, 3, "expect string as pattern option");
+            options = lua_tostring(L, 3);
+            regex->setPatternOptions(options);
+        }
+    }
+    else
+    {
+        luaL_argerror(L, 4, "too many arguments or wrong type (expect string), setting pattern to none");
+    }
+    regex->setPattern(pattern);
+    return 0;
+}
+static int regexGC(lua_State *L) {
+    RegExMatcher *regex = checkRegex(L);
+    if(regex) delete regex;
+    return 0;
+}
+static int regexMatchIterator(lua_State *L)
+{
+    RegExMatcher *regex = checkRegex(L, lua_upvalueindex(1));
+    luaL_argcheck(L, lua_type(L, lua_upvalueindex(2))==LUA_TSTRING, lua_upvalueindex(2), "string expected");
+    const auto key = QString(lua_tostring(L, lua_upvalueindex(2)));
+    if(regex->activeMatchHasNext(key))
+    {
+        auto next = regex->activeMatchGotoNext(key);
+        auto groups = next.capturedTexts();
+        int count=0;
+        for(;count<groups.size();count++) // include whole match every time
+        {
+            lua_pushstring(L, groups.at(count).toStdString().c_str());
+        }
+        return count;
+    }
+    return 0;
+}
+static int regexMatch(lua_State *L)
+{
+    RegExMatcher *regex = checkRegex(L);
+    if(lua_gettop(L)!=2 || lua_type(L, 2)!=LUA_TSTRING)
+    {
+        luaL_error(L, "expect string as match target");
+        lua_pushnil(L);
+        return 1;
+    }
+    QString id;
+    try {
+        id = regex->addNewMatch(lua_tostring(L, 2));
+    } catch(std::exception &e) {
+        luaL_error(L, (QString(e.what())+", fix via method setpattern(<pattern>)").toStdString().c_str());
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_pushvalue(L, 1);
+    lua_pushstring(L, id.toStdString().c_str());
+    lua_pushcclosure(L, &regexMatchIterator, 2);
+    return 1;
+}
+static int regexSub(lua_State *L)
+{
+    RegExMatcher *regex = checkRegex(L);
+    int params = lua_gettop(L); // regex(kiko.regex) target(string) repl(string)
+    if(params!=3 || lua_type(L, 2)!=LUA_TSTRING || lua_type(L, 3)<LUA_TSTRING || lua_type(L, 3)>LUA_TFUNCTION)
+    {
+        luaL_error(L, "expect: target(string), repl(string/table/function)");
+        lua_pushnil(L);
+        return 1;
+    }
+    QString target = QString(lua_tostring(L, 2));
+    if (lua_type(L, 3)==LUA_TSTRING)
+    {
+        lua_pushstring(L, regex->replace(target, QString(lua_tostring(L, 3))).toStdString().c_str());
+        return 1;
+    }
+    QString id;
+    try {
+        id = regex->addNewMatch(lua_tostring(L, 2));
+    } catch(std::exception &e) {
+        luaL_error(L, (QString(e.what())+", fix via method setpattern(<pattern>)").toStdString().c_str());
+        lua_pushnil(L);
+        return 1;
+    }
+    QVariantMap replTable;
+    if(lua_type(L, 3)==LUA_TTABLE)
+        replTable = ScriptBase::getValue(L).toMap();
+    else
+    {
+        lua_pushvalue(L, 1);
+        lua_pushstring(L, id.toStdString().c_str());
+        lua_pushcclosure(L, &regexMatchIterator, 2);
+    }
+    QString replResult;
+    int lastCapturedEnd = 0;
+    for(int matchCount=1;regex->activeMatchHasNext(id);matchCount++)
+    {
+        const auto next = lua_type(L, 3)==LUA_TTABLE ? regex->activeMatchGotoNext(id) : regex->activeMatchPeekNext(id);
+        replResult.append(target.mid(lastCapturedEnd, next.capturedStart()-lastCapturedEnd));
+        QString replText;
+        lastCapturedEnd = next.capturedEnd();
+        const int nRet = next.capturedTexts().size();
+        if(lua_type(L, 3)==LUA_TTABLE)
+        {
+            replText = next.captured(); // load group 0
+            QString groupReplText;
+            const int start0 = next.capturedStart();
+            int cursor = start0, offset = 0, start, len;
+            for(int i=1;i<=nRet && cursor<next.capturedEnd();i++) // unlike in Lua, look up every capturing group
+            {
+                if(cursor>=next.capturedEnd(i)) continue;
+                if(replTable.contains(next.captured(i)) && !replTable[next.captured(i)].toString().isNull())
+                {
+                    start = next.capturedStart(i)-start0+offset;
+                    len = next.capturedLength(i);
+                    groupReplText = replTable[next.captured(i)].toString();
+                    offset = groupReplText.length()-len;
+                    replText.remove(start, len).insert(start, groupReplText);
+                    cursor = next.capturedEnd(i);
+                }
+            }
+        }
+        else // LUA_TFUNCTION
+        {
+            lua_pushvalue(L, -2); // duplicate replacement function
+            lua_pushvalue(L, -2); // duplicate gmatch function
+            if(lua_pcall(L, 0, LUA_MULTRET, 0)==0) // gmatch
+            {
+                if(lua_pcall(L, nRet, 1, 0)==0) // replace
+                {
+                    replText = QString(lua_tostring(L, -1));
+                    if(replText==NULL)
+                        replText = next.captured();
+                }
+                else
+                {
+                    luaL_error(L, "replacement function failed on match %d: %s", matchCount, lua_tostring(L, -1));
+                    replText = next.captured();
+                }
+                lua_pop(L, 1);
+            }
+        }
+        replResult.append(replText);
+    }
+    lua_pushstring(L, replResult.append(target.mid(lastCapturedEnd)).toStdString().c_str());
+    return 1;
+}
+//RegEx End----------------------
+//XmlReader----------------------
 static int xmlreader (lua_State *L)
 {
     int n = lua_gettop(L);
@@ -813,6 +997,7 @@ static const luaL_Reg kikoFuncs[] = {
     {"compress", compress},
     {"decompress", decompress},
     {"writesetting", writeSetting},
+    {"regex", regex},
     {"xmlreader", xmlreader},
     {"htmlparser", htmlparser},
     {"execute", execute},
@@ -822,6 +1007,13 @@ static const luaL_Reg kikoFuncs[] = {
     {"dialog", dialog},
     {"sttrans", simplifiedTraditionalTrans},
     {"envinfo", envInfo},
+    {nullptr, nullptr}
+};
+static const luaL_Reg regexFuncs[] = {
+    {"gmatch", regexMatch},
+    {"gsub", regexSub},
+    {"setpattern", regexSetPattern},
+    {"__gc", regexGC},
     {nullptr, nullptr}
 };
 static const luaL_Reg xmlreaderFuncs[] = {
@@ -861,6 +1053,13 @@ ScriptBase::ScriptBase() : L(nullptr), settingsUpdated(false),hasSetOptionFunc(f
     {
         luaL_openlibs(L);
         registerFuncs("kiko", kikoFuncs);
+
+        luaL_newmetatable(L, "meta.kiko.regex");
+        lua_pushstring(L, "__index");
+        lua_pushvalue(L, -2); // pushes the metatable
+        lua_rawset(L, -3); // metatable.__index = metatable
+        luaL_setfuncs(L, regexFuncs, 0);
+        lua_pop(L, 1);
 
         luaL_newmetatable(L, "meta.kiko.xmlreader");
         lua_pushstring(L, "__index");
