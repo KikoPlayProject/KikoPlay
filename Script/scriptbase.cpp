@@ -1,9 +1,9 @@
 #include "scriptbase.h"
 #include <QFile>
+#include <QRegularExpression>
 #include <QVariant>
 #include "Common/network.h"
 #include "Common/htmlparsersax.h"
-#include "Common/regexmatcher.h"
 #include "Common/notifier.h"
 #include "Common/logger.h"
 #include <QSysInfo>
@@ -571,6 +571,74 @@ static int envInfo(lua_State *L)
     return 1;
 }
 //RegEx--------------------------
+#define __I CaseInsensitiveOption
+#define __S DotMatchesEverythingOption
+#define __M MultilineOption
+#define __X ExtendedPatternSyntaxOption
+#define P_FLAG(f) QRegularExpression::__ ## f
+class RegExMatcher
+{
+    QRegularExpression re;
+    static QRegularExpression::PatternOptions parsePatternOptions(const char *options)
+    {
+        auto flags = QRegularExpression::PatternOptions();
+        if(options!=nullptr)
+            for(int i=0;options[i]!='\0';++i)
+                switch(options[i])
+                {
+                case 'i': flags |= P_FLAG(I); break;
+                case 's': flags |= P_FLAG(S); break;
+                case 'm': flags |= P_FLAG(M); break;
+                case 'x': flags |= P_FLAG(X); break;
+                } // ignore unsupported options
+        return flags;
+    }
+    QString errorMessage() const
+    {
+        return "invalid regex at "+QString::number(re.patternErrorOffset())+": "+re.errorString();
+    }
+public:
+    QVarLengthArray<QRegularExpressionMatchIterator *, 10> its;
+    explicit RegExMatcher(const char *pattern, const char *options = nullptr)
+        :re(QString(pattern),parsePatternOptions(options)),its(10){}
+    void setPattern(const char *pattern) {re.setPattern(QString(pattern));}
+    void setPattern(QString &pattern) {re.setPattern(pattern);}
+    void setPatternOptions(const char *options) {re.setPatternOptions(parsePatternOptions(options));}
+    const QString getPattern() const {return re.pattern();}
+    const QString getPatternOptions() const
+    {
+        QString options("");
+        auto flags = re.patternOptions();
+        if(flags.testFlag(P_FLAG(I))) options.append('i');
+        if(flags.testFlag(P_FLAG(S))) options.append('s');
+        if(flags.testFlag(P_FLAG(M))) options.append('m');
+        if(flags.testFlag(P_FLAG(X))) options.append('x');
+        return options;
+    };
+
+    QString replace(QString &s, const QString &after) {return s.replace(re, after);}
+    QRegularExpressionMatch matchOnce(const QString &s, int offset = 0) const {return re.match(s, offset);}
+    QRegularExpressionMatchIterator match(const QString &s) const
+    {
+        if(!re.isValid()) throw std::logic_error(errorMessage().toStdString());
+        return re.globalMatch(s);
+    }
+    int addMatch(const QString &s)
+    {
+        auto *it = new QRegularExpressionMatchIterator(match(s));
+        const int size = its.size();
+        for(int i=0;i<size;++i)
+        {
+            if(its.at(i)==nullptr)
+            {
+                its.insert(i, it);
+                return i;
+            }
+        }
+        its.insert(size, it);
+        return size;
+    }
+};
 static int regex(lua_State *L)
 {
     int n = lua_gettop(L);
@@ -672,11 +740,11 @@ static int regexFind(lua_State *L)
 static int regexMatchIterator(lua_State *L)
 {
     RegExMatcher *regex = checkRegex(L, lua_upvalueindex(1));
-    luaL_argcheck(L, lua_type(L, lua_upvalueindex(2))==LUA_TSTRING, lua_upvalueindex(2), "string expected");
-    const auto key = QString(lua_tostring(L, lua_upvalueindex(2)));
-    if(regex->activeMatchHasNext(key))
+    luaL_argcheck(L, lua_type(L, lua_upvalueindex(2))==LUA_TNUMBER, lua_upvalueindex(2), "number expected");
+    auto *it = regex->its.at(lua_tointeger(L, lua_upvalueindex(2)));
+    if(it->hasNext())
     {
-        const auto next = regex->activeMatchGotoNext(key);
+        const auto next = it->next();
         const auto groups = next.capturedTexts();
         int count = 0;
         for(;count<groups.size();++count) // include whole match every time
@@ -684,6 +752,10 @@ static int regexMatchIterator(lua_State *L)
             lua_pushstring(L, groups.at(count).toStdString().c_str());
         }
         return count;
+    }
+    else if(it!=nullptr)
+    {
+        delete it;
     }
     return 0;
 }
@@ -696,16 +768,16 @@ static int regexMatch(lua_State *L)
         lua_pushnil(L);
         return 1;
     }
-    QString id;
+    int itpos;
     try {
-        id = regex->addNewMatch(lua_tostring(L, 2));
+        itpos = regex->addMatch(lua_tostring(L, 2));
     } catch(std::exception &e) {
         luaL_error(L, (QString(e.what())+", fix via method setpattern(<pattern>)").toStdString().c_str());
         lua_pushnil(L);
         return 1;
     }
     lua_pushvalue(L, 1);
-    lua_pushstring(L, id.toStdString().c_str());
+    lua_pushinteger(L, itpos);
     lua_pushcclosure(L, &regexMatchIterator, 2);
     return 1;
 }
@@ -726,9 +798,9 @@ static int regexSub(lua_State *L)
         lua_pushstring(L, regex->replace(target, QString(lua_tostring(L, 3))).toStdString().c_str());
         return 1;
     }
-    QString id;
+    QRegularExpressionMatchIterator it;
     try {
-        id = regex->addNewMatch(lua_tostring(L, 2));
+        it = regex->match(lua_tostring(L, 2));
     } catch(std::exception &e) {
         luaL_error(L, (QString(e.what())+", fix via method setpattern(<pattern>)").toStdString().c_str());
         lua_pushnil(L);
@@ -737,9 +809,9 @@ static int regexSub(lua_State *L)
     const QVariantMap replTable = ScriptBase::getValue(L).toMap(); // empty if not table
     QString replResult;
     int lastCapturedEnd = 0;
-    for(int matchCount=1;regex->activeMatchHasNext(id);matchCount++)
+    for(int matchCount=1;it.hasNext();++matchCount)
     {
-        const auto next = regex->activeMatchGotoNext(id);
+        const auto next = it.next();
         replResult.append(target.mid(lastCapturedEnd, next.capturedStart()-lastCapturedEnd));
         QString replText;
         lastCapturedEnd = next.capturedEnd();

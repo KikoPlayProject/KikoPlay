@@ -105,7 +105,6 @@ SOURCES += \
     Play/Danmu/common.cpp \
     UI/about.cpp \
     Common/network.cpp \
-    Common/regexmatcher.cpp \
     Common/htmlparsersax.cpp \
     MediaLibrary/animeitemdelegate.cpp \
     UI/librarywindow.cpp \
@@ -224,7 +223,6 @@ HEADERS += \
     UI/mediainfo.h \
     UI/about.h \
     Common/network.h \
-    Common/regexmatcher.h \
     Common/htmlparsersax.h \
     MediaLibrary/animeinfo.h \
     MediaLibrary/animeitemdelegate.h \
