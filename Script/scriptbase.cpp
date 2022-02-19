@@ -571,12 +571,7 @@ static int envInfo(lua_State *L)
     return 1;
 }
 //RegEx--------------------------
-#define __I CaseInsensitiveOption
-#define __S DotMatchesEverythingOption
-#define __M MultilineOption
-#define __X ExtendedPatternSyntaxOption
-#define P_FLAG(f) QRegularExpression::__ ## f
-class RegExMatcher
+class RegEx
 {
     QRegularExpression re;
     static QRegularExpression::PatternOptions parsePatternOptions(const char *options)
@@ -586,10 +581,10 @@ class RegExMatcher
             for(int i=0;options[i]!='\0';++i)
                 switch(options[i])
                 {
-                case 'i': flags |= P_FLAG(I); break;
-                case 's': flags |= P_FLAG(S); break;
-                case 'm': flags |= P_FLAG(M); break;
-                case 'x': flags |= P_FLAG(X); break;
+                case 'i': flags |= QRegularExpression::CaseInsensitiveOption; break;
+                case 's': flags |= QRegularExpression::DotMatchesEverythingOption; break;
+                case 'm': flags |= QRegularExpression::MultilineOption; break;
+                case 'x': flags |= QRegularExpression::ExtendedPatternSyntaxOption; break;
                 } // ignore unsupported options
         return flags;
     }
@@ -598,21 +593,19 @@ class RegExMatcher
         return "invalid regex at "+QString::number(re.patternErrorOffset())+": "+re.errorString();
     }
 public:
-    QVarLengthArray<QRegularExpressionMatchIterator *, 10> its;
-    explicit RegExMatcher(const char *pattern, const char *options = nullptr)
-        :re(QString(pattern),parsePatternOptions(options)),its(10){}
+    explicit RegEx(const char *pattern, const char *options = nullptr)
+        :re(QString(pattern),parsePatternOptions(options)){}
     void setPattern(const char *pattern) {re.setPattern(QString(pattern));}
-    void setPattern(QString &pattern) {re.setPattern(pattern);}
     void setPatternOptions(const char *options) {re.setPatternOptions(parsePatternOptions(options));}
     const QString getPattern() const {return re.pattern();}
     const QString getPatternOptions() const
     {
         QString options("");
         auto flags = re.patternOptions();
-        if(flags.testFlag(P_FLAG(I))) options.append('i');
-        if(flags.testFlag(P_FLAG(S))) options.append('s');
-        if(flags.testFlag(P_FLAG(M))) options.append('m');
-        if(flags.testFlag(P_FLAG(X))) options.append('x');
+        if(flags.testFlag(QRegularExpression::CaseInsensitiveOption)) options.append('i');
+        if(flags.testFlag(QRegularExpression::DotMatchesEverythingOption)) options.append('s');
+        if(flags.testFlag(QRegularExpression::MultilineOption)) options.append('m');
+        if(flags.testFlag(QRegularExpression::ExtendedPatternSyntaxOption)) options.append('x');
         return options;
     };
 
@@ -622,21 +615,6 @@ public:
     {
         if(!re.isValid()) throw std::logic_error(errorMessage().toStdString());
         return re.globalMatch(s);
-    }
-    int addMatch(const QString &s)
-    {
-        auto *it = new QRegularExpressionMatchIterator(match(s));
-        const int size = its.size();
-        for(int i=0;i<size;++i)
-        {
-            if(its.at(i)==nullptr)
-            {
-                its.insert(i, it);
-                return i;
-            }
-        }
-        its.insert(size, it);
-        return size;
     }
 };
 static int regex(lua_State *L)
@@ -654,21 +632,21 @@ static int regex(lua_State *L)
         options = lua_tostring(L, 2);
         luaL_argcheck(L, n==2, 3, "too many arguments, 1-2 strings expected");
     }
-    auto **regex = (RegExMatcher **)lua_newuserdata(L, sizeof(RegExMatcher *));
+    auto **regex = (RegEx **)lua_newuserdata(L, sizeof(RegEx *));
     luaL_getmetatable(L, "meta.kiko.regex");
     lua_setmetatable(L, -2);  // regex meta
-    *regex = new RegExMatcher(pattern, options); // meta
+    *regex = new RegEx(pattern, options); // meta
     return 1;
 }
-static RegExMatcher *checkRegex(lua_State *L, int idx = 1)
+static RegEx *checkRegex(lua_State *L)
 {
-    void *ud = luaL_checkudata(L, idx, "meta.kiko.regex");
-    luaL_argcheck(L, ud != NULL, idx, "`kiko.regex' expected");
-    return *(RegExMatcher **)ud;
+    void *ud = luaL_checkudata(L, 1, "meta.kiko.regex");
+    luaL_argcheck(L, ud != NULL, 1, "`kiko.regex' expected");
+    return *(RegEx **)ud;
 }
 static int regexSetPattern(lua_State *L)
 {
-    RegExMatcher *regex = checkRegex(L);
+    RegEx *regex = checkRegex(L);
     int params = lua_gettop(L); // regex(kiko.regex) pattern(string) options(string)
     const char *pattern = nullptr;
     const char *options = nullptr;
@@ -690,13 +668,13 @@ static int regexSetPattern(lua_State *L)
     return 0;
 }
 static int regexGC(lua_State *L) {
-    RegExMatcher *regex = checkRegex(L);
+    RegEx *regex = checkRegex(L);
     if(regex) delete regex;
     return 0;
 }
 static int regexFind(lua_State *L)
 {
-    RegExMatcher *regex = checkRegex(L);
+    RegEx *regex = checkRegex(L);
     int params = lua_gettop(L); // regex(kiko.regex) target(string) initpos(number)
     const char *errMsg = nullptr;
     int initpos = 0;
@@ -737,11 +715,20 @@ static int regexFind(lua_State *L)
     lua_pushnil(L);
     return 1;
 }
+static QRegularExpressionMatchIterator *checkRegexMatch(lua_State *L, int idx)
+{
+    void *ud = luaL_checkudata(L, idx, "meta.kiko.regex.matchiter");
+    luaL_argcheck(L, ud != NULL, idx, "`kiko.regex.matchiter' expected");
+    return *(QRegularExpressionMatchIterator **)ud;
+}
+static int regexMatchGC(lua_State *L) {
+    auto *it = checkRegexMatch(L, 1);
+    if(it) delete it;
+    return 0;
+}
 static int regexMatchIterator(lua_State *L)
 {
-    RegExMatcher *regex = checkRegex(L, lua_upvalueindex(1));
-    luaL_argcheck(L, lua_type(L, lua_upvalueindex(2))==LUA_TNUMBER, lua_upvalueindex(2), "number expected");
-    auto *it = regex->its.at(lua_tointeger(L, lua_upvalueindex(2)));
+    auto *it = checkRegexMatch(L, lua_upvalueindex(1));
     if(it->hasNext())
     {
         const auto next = it->next();
@@ -753,37 +740,34 @@ static int regexMatchIterator(lua_State *L)
         }
         return count;
     }
-    else if(it!=nullptr)
-    {
-        delete it;
-    }
+    if(it) delete it;
     return 0;
 }
 static int regexMatch(lua_State *L)
 {
-    RegExMatcher *regex = checkRegex(L);
+    RegEx *regex = checkRegex(L);
     if(lua_gettop(L)!=2 || lua_type(L, 2)!=LUA_TSTRING) // regex(kiko.regex) target(string)
     {
         luaL_error(L, "expect string as match target");
         lua_pushnil(L);
         return 1;
     }
-    int itpos;
     try {
-        itpos = regex->addMatch(lua_tostring(L, 2));
+        auto *it = new QRegularExpressionMatchIterator(regex->match(lua_tostring(L, 2)));
+        auto **pit = (Q_TYPEOF(it) *)lua_newuserdata(L, sizeof(Q_TYPEOF(it)));
+        luaL_getmetatable(L, "meta.kiko.regex.matchiter");
+        lua_setmetatable(L, -2);  // matchiter meta
+        *pit = it; // meta
+        lua_pushcclosure(L, &regexMatchIterator, 1);
     } catch(std::exception &e) {
         luaL_error(L, (QString(e.what())+", fix via method setpattern(<pattern>)").toStdString().c_str());
         lua_pushnil(L);
-        return 1;
     }
-    lua_pushvalue(L, 1);
-    lua_pushinteger(L, itpos);
-    lua_pushcclosure(L, &regexMatchIterator, 2);
     return 1;
 }
 static int regexSub(lua_State *L)
 {
-    RegExMatcher *regex = checkRegex(L);
+    RegEx *regex = checkRegex(L);
     int params = lua_gettop(L); // regex(kiko.regex) target(string) repl(string/table/function)
     const int replParamType = (params==3 && lua_type(L, 2)==LUA_TSTRING) ? lua_type(L, 3) : LUA_TNONE;
     if(replParamType!=LUA_TSTRING && replParamType!=LUA_TTABLE && replParamType!=LUA_TFUNCTION)
@@ -1128,6 +1112,10 @@ static const luaL_Reg regexFuncs[] = {
     {"__gc", regexGC},
     {nullptr, nullptr}
 };
+static const luaL_Reg gmatchFuncs[] = {
+    {"__gc", regexMatchGC},
+    {nullptr, nullptr}
+};
 static const luaL_Reg xmlreaderFuncs[] = {
     {"adddata", xrAddData},
     {"clear", xrClear},
@@ -1171,6 +1159,13 @@ ScriptBase::ScriptBase() : L(nullptr), settingsUpdated(false),hasSetOptionFunc(f
         lua_pushvalue(L, -2); // pushes the metatable
         lua_rawset(L, -3); // metatable.__index = metatable
         luaL_setfuncs(L, regexFuncs, 0);
+        lua_pop(L, 1);
+
+        luaL_newmetatable(L, "meta.kiko.regex.matchiter");
+        lua_pushstring(L, "__index");
+        lua_pushvalue(L, -2); // pushes the metatable
+        lua_rawset(L, -3); // metatable.__index = metatable
+        luaL_setfuncs(L, gmatchFuncs, 0);
         lua_pop(L, 1);
 
         luaL_newmetatable(L, "meta.kiko.xmlreader");
