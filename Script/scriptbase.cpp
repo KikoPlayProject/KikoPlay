@@ -601,12 +601,13 @@ static RegExMatcher *checkRegex(lua_State *L, int idx = 1)
 static int regexSetPattern(lua_State *L)
 {
     RegExMatcher *regex = checkRegex(L);
+    int params = lua_gettop(L); // regex(kiko.regex) pattern(string) options(string)
     const char *pattern = nullptr;
     const char *options = nullptr;
-    if(lua_gettop(L)<4 && lua_type(L, 2)==LUA_TSTRING) // regex(kiko.regex) pattern(string) options(string)
+    if(params<4 && lua_type(L, 2)==LUA_TSTRING)
     {
         pattern = lua_tostring(L, 2);
-        if(lua_gettop(L)==3)
+        if(params==3)
         {
             luaL_argcheck(L, lua_type(L, 3)==LUA_TSTRING, 3, "expect string as pattern option");
             options = lua_tostring(L, 3);
@@ -625,6 +626,49 @@ static int regexGC(lua_State *L) {
     if(regex) delete regex;
     return 0;
 }
+static int regexFind(lua_State *L)
+{
+    RegExMatcher *regex = checkRegex(L);
+    int params = lua_gettop(L); // regex(kiko.regex) target(string) initpos(number)
+    const char *errMsg = nullptr;
+    int initpos = 0;
+    if(params<2 || lua_type(L, 2)!=LUA_TSTRING)
+    {
+        errMsg = "expect string as match target";
+    }
+    else if(params==3 && lua_type(L, 3)==LUA_TNUMBER)
+    {
+        initpos = lua_tonumber(L, 3);
+        if(initpos>0) initpos--; // 1-based
+    }
+    else if(params!=2)
+    {
+        errMsg = "expect number as initial matching position";
+    }
+    if(errMsg==nullptr)
+    {
+        const auto match = regex->matchOnce(QString(lua_tostring(L, 2)), initpos);
+        const auto groups = match.capturedTexts();
+        int count = 0;
+        for(;count<groups.size();++count)
+        {
+            lua_createtable(L, 3, 0);
+            lua_pushinteger(L, match.capturedStart(count)+1); // 1-based
+            lua_seti(L, -2, 1);
+            lua_pushinteger(L, match.capturedEnd(count)); // 0-based
+            lua_seti(L, -2, 2);
+            lua_pushstring(L, groups.at(count).toStdString().c_str());
+            lua_seti(L, -2, 3);
+        }
+        if(count>0) return count;
+    }
+    else
+    {
+        luaL_error(L, "expect: regex(kiko.regex) target(string) initpos(number)");
+    }
+    lua_pushnil(L);
+    return 1;
+}
 static int regexMatchIterator(lua_State *L)
 {
     RegExMatcher *regex = checkRegex(L, lua_upvalueindex(1));
@@ -632,9 +676,9 @@ static int regexMatchIterator(lua_State *L)
     const auto key = QString(lua_tostring(L, lua_upvalueindex(2)));
     if(regex->activeMatchHasNext(key))
     {
-        auto next = regex->activeMatchGotoNext(key);
-        auto groups = next.capturedTexts();
-        int count=0;
+        const auto next = regex->activeMatchGotoNext(key);
+        const auto groups = next.capturedTexts();
+        int count = 0;
         for(;count<groups.size();++count) // include whole match every time
         {
             lua_pushstring(L, groups.at(count).toStdString().c_str());
@@ -668,7 +712,7 @@ static int regexMatch(lua_State *L)
 static int regexSub(lua_State *L)
 {
     RegExMatcher *regex = checkRegex(L);
-    int params = lua_gettop(L); // regex(kiko.regex) target(string) replacement(string/table/function)
+    int params = lua_gettop(L); // regex(kiko.regex) target(string) repl(string/table/function)
     const int replParamType = (params==3 && lua_type(L, 2)==LUA_TSTRING) ? lua_type(L, 3) : LUA_TNONE;
     if(replParamType!=LUA_TSTRING && replParamType!=LUA_TTABLE && replParamType!=LUA_TFUNCTION)
     {
@@ -724,12 +768,16 @@ static int regexSub(lua_State *L)
         {
             lua_pushvalue(L, 3); // duplicate replacement function
             for(int i=0;i<nRet;++i)
+            {
                 lua_pushstring(L, next.captured(i).toStdString().c_str()); // cf. gmatch
+            }
             if(lua_pcall(L, nRet, 1, 0)==0) // replace
             {
                 replText = QString(lua_tostring(L, -1));
                 if(replText==NULL) // fall back if return value not of type string
+                {
                     replText = next.captured();
+                }
             }
             else
             {
@@ -1001,6 +1049,7 @@ static const luaL_Reg kikoFuncs[] = {
     {nullptr, nullptr}
 };
 static const luaL_Reg regexFuncs[] = {
+    {"find", regexFind},
     {"gmatch", regexMatch},
     {"gsub", regexSub},
     {"setpattern", regexSetPattern},

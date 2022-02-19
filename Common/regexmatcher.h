@@ -34,6 +34,7 @@ public:
     inline bool containsActiveMatch(const QString &k) {return itmap.contains(k);}
     inline int removeActiveMatch(const QString &k) {return itmap.remove(k);}
     inline QString replace(QString &s, const QString &after) {return s.replace(re, after);}
+    inline QRegularExpressionMatch matchOnce(const QString &s, int offset = 0) const {return re.match(s, offset);}
 };
 
 #endif // REGEXMATCHER_H
