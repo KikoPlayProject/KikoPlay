@@ -716,15 +716,14 @@ static int regexMatch(lua_State *L)
     QRegularExpressionMatchIterator iter = regex->globalMatch(lua_tostring(L, 2));
     if(!regex->isValid())
     {
-       QString errInfo("invalid regex at %1 : %2, fix via method setpattern(<pattern>)");
+       QString errInfo("invalid regex at %1: %2, fix via method setpattern(<pattern>)");
        errInfo = errInfo.arg(QString::number(regex->patternErrorOffset()), regex->errorString());
        luaL_error(L, errInfo.toStdString().c_str());
     }
-    auto *it = new QRegularExpressionMatchIterator(iter);
     auto **pit = (QRegularExpressionMatchIterator **)lua_newuserdata(L, sizeof(QRegularExpressionMatchIterator *));
     luaL_getmetatable(L, "meta.kiko.regex.matchiter");
     lua_setmetatable(L, -2);  // matchiter meta
-    *pit = it; // matchiter
+    *pit = new QRegularExpressionMatchIterator(iter); // matchiter
     lua_pushcclosure(L, &regexMatchIterator, 1);
     return 1;
 }
@@ -746,7 +745,7 @@ static int regexSub(lua_State *L)
     QRegularExpressionMatchIterator it = regex->globalMatch(lua_tostring(L, 2));
     if(!regex->isValid())
     {
-       QString errInfo("invalid regex at %1 : %2, fix via method setpattern(<pattern>)");
+       QString errInfo("invalid regex at %1: %2, fix via method setpattern(<pattern>)");
        errInfo = errInfo.arg(QString::number(regex->patternErrorOffset()), regex->errorString());
        luaL_error(L, errInfo.toStdString().c_str());
     }
@@ -764,7 +763,7 @@ static int regexSub(lua_State *L)
             const int captureGroupSize = match.capturedTexts().size();
             const int blockStart = match.capturedStart();
             int captureEnd = 0, cursor = match.capturedStart();
-            for(int i = 1; i < captureGroupSize; ++ i)
+            for(int i = 1; i < captureGroupSize; ++i)
             {
                 if(cursor >= match.capturedEnd(i)) continue; // skip groups starting before cursor position
                 const int start = match.capturedStart(i);
