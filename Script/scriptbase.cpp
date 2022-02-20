@@ -740,7 +740,6 @@ static int regexMatchIterator(lua_State *L)
         }
         return count;
     }
-    if(it) delete it;
     return 0;
 }
 static int regexMatch(lua_State *L)
