@@ -1,5 +1,6 @@
 #include "scriptbase.h"
 #include <QFile>
+#include <QRegularExpression>
 #include <QVariant>
 #include "Common/network.h"
 #include "Common/htmlparsersax.h"
@@ -569,7 +570,284 @@ static int envInfo(lua_State *L)
 
     return 1;
 }
-// XmlReader-------------
+//RegEx--------------------------
+class RegEx
+{
+    QRegularExpression re;
+    static QRegularExpression::PatternOptions parsePatternOptions(const char *options)
+    {
+        auto flags = QRegularExpression::PatternOptions();
+        if(options!=nullptr)
+            for(int i=0;options[i]!='\0';++i)
+                switch(options[i])
+                {
+                case 'i': flags |= QRegularExpression::CaseInsensitiveOption; break;
+                case 's': flags |= QRegularExpression::DotMatchesEverythingOption; break;
+                case 'm': flags |= QRegularExpression::MultilineOption; break;
+                case 'x': flags |= QRegularExpression::ExtendedPatternSyntaxOption; break;
+                } // ignore unsupported options
+        return flags;
+    }
+    QString errorMessage() const
+    {
+        return "invalid regex at "+QString::number(re.patternErrorOffset())+": "+re.errorString();
+    }
+public:
+    explicit RegEx(const char *pattern, const char *options = nullptr)
+        :re(QString(pattern),parsePatternOptions(options)){}
+    void setPattern(const char *pattern) {re.setPattern(QString(pattern));}
+    void setPatternOptions(const char *options) {re.setPatternOptions(parsePatternOptions(options));}
+    const QString getPattern() const {return re.pattern();}
+    const QString getPatternOptions() const
+    {
+        QString options("");
+        auto flags = re.patternOptions();
+        if(flags.testFlag(QRegularExpression::CaseInsensitiveOption)) options.append('i');
+        if(flags.testFlag(QRegularExpression::DotMatchesEverythingOption)) options.append('s');
+        if(flags.testFlag(QRegularExpression::MultilineOption)) options.append('m');
+        if(flags.testFlag(QRegularExpression::ExtendedPatternSyntaxOption)) options.append('x');
+        return options;
+    };
+
+    QString replace(QString &s, const QString &after) {return s.replace(re, after);}
+    QRegularExpressionMatch matchOnce(const QString &s, int offset = 0) const {return re.match(s, offset);}
+    QRegularExpressionMatchIterator match(const QString &s) const
+    {
+        if(!re.isValid()) throw std::logic_error(errorMessage().toStdString());
+        return re.globalMatch(s);
+    }
+};
+static int regex(lua_State *L)
+{
+    int n = lua_gettop(L);
+    const char *pattern = nullptr;
+    const char *options = nullptr;
+    if(n > 0 && lua_type(L, 1)==LUA_TSTRING)
+    {
+        pattern = lua_tostring(L, 1);
+    }
+    if(n > 1)
+    {
+        luaL_argcheck(L, lua_type(L, 2)==LUA_TSTRING, 2, "expect string as pattern option");
+        options = lua_tostring(L, 2);
+        luaL_argcheck(L, n==2, 3, "too many arguments, 1-2 strings expected");
+    }
+    auto **regex = (RegEx **)lua_newuserdata(L, sizeof(RegEx *));
+    luaL_getmetatable(L, "meta.kiko.regex");
+    lua_setmetatable(L, -2);  // regex meta
+    *regex = new RegEx(pattern, options); // meta
+    return 1;
+}
+static RegEx *checkRegex(lua_State *L)
+{
+    void *ud = luaL_checkudata(L, 1, "meta.kiko.regex");
+    luaL_argcheck(L, ud != NULL, 1, "`kiko.regex' expected");
+    return *(RegEx **)ud;
+}
+static int regexSetPattern(lua_State *L)
+{
+    RegEx *regex = checkRegex(L);
+    int params = lua_gettop(L); // regex(kiko.regex) pattern(string) options(string)
+    const char *pattern = nullptr;
+    const char *options = nullptr;
+    if(params<4 && lua_type(L, 2)==LUA_TSTRING)
+    {
+        pattern = lua_tostring(L, 2);
+        if(params==3)
+        {
+            luaL_argcheck(L, lua_type(L, 3)==LUA_TSTRING, 3, "expect string as pattern option");
+            options = lua_tostring(L, 3);
+            regex->setPatternOptions(options);
+        }
+    }
+    else
+    {
+        luaL_argerror(L, 4, "too many arguments or wrong type (expect string), setting pattern to none");
+    }
+    regex->setPattern(pattern);
+    return 0;
+}
+static int regexGC(lua_State *L) {
+    RegEx *regex = checkRegex(L);
+    if(regex) delete regex;
+    return 0;
+}
+static int regexFind(lua_State *L)
+{
+    RegEx *regex = checkRegex(L);
+    int params = lua_gettop(L); // regex(kiko.regex) target(string) initpos(number)
+    const char *errMsg = nullptr;
+    int initpos = 0;
+    if(params<2 || lua_type(L, 2)!=LUA_TSTRING)
+    {
+        errMsg = "expect string as match target";
+    }
+    else if(params==3 && lua_type(L, 3)==LUA_TNUMBER)
+    {
+        initpos = lua_tonumber(L, 3);
+        if(initpos>0) initpos--; // 1-based
+    }
+    else if(params!=2)
+    {
+        errMsg = "expect number as initial matching position";
+    }
+    if(errMsg==nullptr)
+    {
+        const auto match = regex->matchOnce(QString(lua_tostring(L, 2)), initpos);
+        const auto groups = match.capturedTexts();
+        int count = 0;
+        for(;count<groups.size();++count)
+        {
+            lua_createtable(L, 3, 0);
+            lua_pushinteger(L, match.capturedStart(count)+1); // 1-based
+            lua_seti(L, -2, 1);
+            lua_pushinteger(L, match.capturedEnd(count)); // 0-based
+            lua_seti(L, -2, 2);
+            lua_pushstring(L, groups.at(count).toStdString().c_str());
+            lua_seti(L, -2, 3);
+        }
+        if(count>0) return count;
+    }
+    else
+    {
+        luaL_error(L, "expect: regex(kiko.regex) target(string) initpos(number)");
+    }
+    lua_pushnil(L);
+    return 1;
+}
+static QRegularExpressionMatchIterator *checkRegexMatch(lua_State *L, int idx)
+{
+    void *ud = luaL_checkudata(L, idx, "meta.kiko.regex.matchiter");
+    luaL_argcheck(L, ud != NULL, idx, "`kiko.regex.matchiter' expected");
+    return *(QRegularExpressionMatchIterator **)ud;
+}
+static int regexMatchGC(lua_State *L) {
+    auto *it = checkRegexMatch(L, 1);
+    if(it) delete it;
+    return 0;
+}
+static int regexMatchIterator(lua_State *L)
+{
+    auto *it = checkRegexMatch(L, lua_upvalueindex(1));
+    if(it->hasNext())
+    {
+        const auto next = it->next();
+        const auto groups = next.capturedTexts();
+        int count = 0;
+        for(;count<groups.size();++count) // include whole match every time
+        {
+            lua_pushstring(L, groups.at(count).toStdString().c_str());
+        }
+        return count;
+    }
+    return 0;
+}
+static int regexMatch(lua_State *L)
+{
+    RegEx *regex = checkRegex(L);
+    if(lua_gettop(L)!=2 || lua_type(L, 2)!=LUA_TSTRING) // regex(kiko.regex) target(string)
+    {
+        luaL_error(L, "expect string as match target");
+        lua_pushnil(L);
+        return 1;
+    }
+    try {
+        auto *it = new QRegularExpressionMatchIterator(regex->match(lua_tostring(L, 2)));
+        auto **pit = (Q_TYPEOF(it) *)lua_newuserdata(L, sizeof(Q_TYPEOF(it)));
+        luaL_getmetatable(L, "meta.kiko.regex.matchiter");
+        lua_setmetatable(L, -2);  // matchiter meta
+        *pit = it; // meta
+        lua_pushcclosure(L, &regexMatchIterator, 1);
+    } catch(std::exception &e) {
+        luaL_error(L, (QString(e.what())+", fix via method setpattern(<pattern>)").toStdString().c_str());
+        lua_pushnil(L);
+    }
+    return 1;
+}
+static int regexSub(lua_State *L)
+{
+    RegEx *regex = checkRegex(L);
+    int params = lua_gettop(L); // regex(kiko.regex) target(string) repl(string/table/function)
+    const int replParamType = (params==3 && lua_type(L, 2)==LUA_TSTRING) ? lua_type(L, 3) : LUA_TNONE;
+    if(replParamType!=LUA_TSTRING && replParamType!=LUA_TTABLE && replParamType!=LUA_TFUNCTION)
+    {
+        luaL_error(L, "expect: target(string), repl(string/table/function)");
+        lua_pushnil(L);
+        return 1;
+    }
+    QString target = QString(lua_tostring(L, 2));
+    if (replParamType==LUA_TSTRING)
+    {
+        lua_pushstring(L, regex->replace(target, QString(lua_tostring(L, 3))).toStdString().c_str());
+        return 1;
+    }
+    QRegularExpressionMatchIterator it;
+    try {
+        it = regex->match(lua_tostring(L, 2));
+    } catch(std::exception &e) {
+        luaL_error(L, (QString(e.what())+", fix via method setpattern(<pattern>)").toStdString().c_str());
+        lua_pushnil(L);
+        return 1;
+    }
+    const QVariantMap replTable = ScriptBase::getValue(L).toMap(); // empty if not table
+    QString replResult;
+    int lastCapturedEnd = 0;
+    for(int matchCount=1;it.hasNext();++matchCount)
+    {
+        const auto next = it.next();
+        replResult.append(target.mid(lastCapturedEnd, next.capturedStart()-lastCapturedEnd));
+        QString replText;
+        lastCapturedEnd = next.capturedEnd();
+        const int nRet = next.capturedTexts().size();
+        if(replParamType==LUA_TTABLE)
+        {
+            replText = next.captured(); // load group 0
+            QString groupReplText;
+            const int start0 = next.capturedStart();
+            int cursor = start0, offset = 0, start, len;
+            for(int i=1;i<=nRet && cursor<next.capturedEnd();++i) // unlike in Lua, look up every capturing group
+            {
+                if(cursor>=next.capturedEnd(i)) continue; // skip groups starting before cursor position
+                if(replTable.contains(next.captured(i)) && !replTable[next.captured(i)].toString().isNull())
+                {
+                    start = next.capturedStart(i)-start0+offset; // adjust local start by last offset
+                    len = next.capturedLength(i);
+                    groupReplText = replTable[next.captured(i)].toString();
+                    offset += groupReplText.length()-len; // update offset by length difference due to replacement
+                    replText.remove(start, len).insert(start, groupReplText); // replace
+                    cursor = next.capturedEnd(i);
+                }
+            }
+        }
+        else // LUA_TFUNCTION
+        {
+            lua_pushvalue(L, 3); // duplicate replacement function
+            for(int i=0;i<nRet;++i)
+            {
+                lua_pushstring(L, next.captured(i).toStdString().c_str()); // cf. gmatch
+            }
+            if(lua_pcall(L, nRet, 1, 0)==0) // replace
+            {
+                replText = QString(lua_tostring(L, -1));
+                if(replText==NULL) // fall back if return value not of type string
+                {
+                    replText = next.captured();
+                }
+            }
+            else
+            {
+                luaL_error(L, "replacement function failed on match %d: %s", matchCount, lua_tostring(L, -1));
+                replText = next.captured();
+            }
+            lua_pop(L, 1);
+        }
+        replResult.append(replText);
+    }
+    lua_pushstring(L, replResult.append(target.mid(lastCapturedEnd)).toStdString().c_str());
+    return 1;
+}
+//RegEx End----------------------
+//XmlReader----------------------
 static int xmlreader (lua_State *L)
 {
     int n = lua_gettop(L);
@@ -813,6 +1091,7 @@ static const luaL_Reg kikoFuncs[] = {
     {"compress", compress},
     {"decompress", decompress},
     {"writesetting", writeSetting},
+    {"regex", regex},
     {"xmlreader", xmlreader},
     {"htmlparser", htmlparser},
     {"execute", execute},
@@ -822,6 +1101,18 @@ static const luaL_Reg kikoFuncs[] = {
     {"dialog", dialog},
     {"sttrans", simplifiedTraditionalTrans},
     {"envinfo", envInfo},
+    {nullptr, nullptr}
+};
+static const luaL_Reg regexFuncs[] = {
+    {"find", regexFind},
+    {"gmatch", regexMatch},
+    {"gsub", regexSub},
+    {"setpattern", regexSetPattern},
+    {"__gc", regexGC},
+    {nullptr, nullptr}
+};
+static const luaL_Reg gmatchFuncs[] = {
+    {"__gc", regexMatchGC},
     {nullptr, nullptr}
 };
 static const luaL_Reg xmlreaderFuncs[] = {
@@ -861,6 +1152,20 @@ ScriptBase::ScriptBase() : L(nullptr), settingsUpdated(false),hasSetOptionFunc(f
     {
         luaL_openlibs(L);
         registerFuncs("kiko", kikoFuncs);
+
+        luaL_newmetatable(L, "meta.kiko.regex");
+        lua_pushstring(L, "__index");
+        lua_pushvalue(L, -2); // pushes the metatable
+        lua_rawset(L, -3); // metatable.__index = metatable
+        luaL_setfuncs(L, regexFuncs, 0);
+        lua_pop(L, 1);
+
+        luaL_newmetatable(L, "meta.kiko.regex.matchiter");
+        lua_pushstring(L, "__index");
+        lua_pushvalue(L, -2); // pushes the metatable
+        lua_rawset(L, -3); // metatable.__index = metatable
+        luaL_setfuncs(L, gmatchFuncs, 0);
+        lua_pop(L, 1);
 
         luaL_newmetatable(L, "meta.kiko.xmlreader");
         lua_pushstring(L, "__index");
