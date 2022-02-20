@@ -2323,7 +2323,8 @@ void PlayerWindow::dropEvent(QDropEvent *event)
 void PlayerWindow::wheelEvent(QWheelEvent *event)
 {
 	int val = volume->value();
-    if ((val > 0 && val < volume->maximum()) || (val == 0 && event->angleDelta().y()>0) || (val == 100 && event->angleDelta().y() < 0))
+    if ((val > 0 && val < volume->maximum()) || (val == 0 && event->angleDelta().y()>0) ||
+            (val == volume->maximum() && event->angleDelta().y() < 0))
 	{
 		static bool inProcess = false;
 		if (!inProcess)

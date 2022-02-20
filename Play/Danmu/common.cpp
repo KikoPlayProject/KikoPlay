@@ -135,7 +135,7 @@ QDataStream &operator>>(QDataStream &stream, DanmuComment &danmu)
 
 void DanmuSource::setTimeline(const QString &timelineStr)
 {
-    QStringList timelineList(timelineStr.split(';',QString::SkipEmptyParts));
+    QStringList timelineList(timelineStr.split(';',Qt::SkipEmptyParts));
     QTextStream ts;
     timelineInfo.clear();
     for(QString &spaceInfo:timelineList)
