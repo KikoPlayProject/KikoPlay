@@ -983,13 +983,15 @@ QWidget *ListWindow::setupPlaylistPage()
             QAction *mCheckAct = defaultMatchScriptMenu->addAction(p.first);
             matchCheckGroup->addAction(mCheckAct);
             mCheckAct->setCheckable(true);
+            mCheckAct->setData(p.second);
             if(p.second == defaultSctiptId)
             {
                 mCheckAct->setChecked(true);
             }
         }
     }
-    QObject::connect(matchSubMenu, &QMenu::triggered, this, [this](QAction *act){
+    QObject::connect(matchSubMenu, &QMenu::triggered, this, [this, matchCheckGroup](QAction *act){
+        if(matchCheckGroup->actions().contains(act)) return;
         QString scriptId = act->data().toString();
         if(!scriptId.isEmpty())
         {
@@ -1030,6 +1032,7 @@ QWidget *ListWindow::setupPlaylistPage()
                  QAction *mCheckAct = defaultMatchScriptMenu->addAction(p.first);
                  matchCheckGroup->addAction(mCheckAct);
                  mCheckAct->setCheckable(true);
+                 mCheckAct->setData(p.second);
                  mCheckAct->setChecked(p.second == defaultSctiptId);
              }
          }
