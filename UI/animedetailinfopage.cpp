@@ -100,7 +100,7 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     QObject::connect(actLocalCover, &QAction::triggered, this, [=](){
         if(currentAnime)
         {
-            QString fileName = QFileDialog::getOpenFileName(this, tr("Select Cover"), "", "JPEG Images (*.jpg);;PNG Images (*.png)");
+            QString fileName = QFileDialog::getOpenFileName(this, tr("Select Cover"), "", "Image Files(*.jpg *.png);;All Files(*)");
             if(!fileName.isEmpty())
             {
                 QImage cover(fileName);

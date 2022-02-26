@@ -4,15 +4,16 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QCheckBox>
+#include <QAction>
 #include <QHeaderView>
-SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent):CFramelessDialog(tr("Select Episode"),parent,true),episodeResult(epResults),autoSetDelay(false)
+SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent)
+    :CFramelessDialog(tr("Select Episode"),parent,true), episodeResult(epResults)
 {
     episodeWidget=new QTreeWidget(this);
     episodeWidget->setRootIsDecorated(false);
     episodeWidget->setFont(font());
     episodeWidget->setHeaderLabels(QStringList()<<tr("Title")<<tr("Duration")<<tr("Delay(s)"));
     QObject::connect(episodeWidget,&QTreeWidget::itemChanged,[this](QTreeWidgetItem *item, int column){
-        if(autoSetDelay)return;
         int index= episodeWidget->indexOfTopLevelItem(item);
         if(column==2)
         {
@@ -39,26 +40,37 @@ SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent):CFr
     QObject::connect(setDelayButton,&QPushButton::clicked,[this](){
         int timeSum=0;
         int i=0;
-        autoSetDelay=true;
         for(auto &item:episodeResult)
         {
             item.delay=timeSum;
             timeSum+=item.duration*1000;  //ms
             episodeWidget->topLevelItem(i++)->setData(2,0,QString::number(item.delay/1000));
         }
-        autoSetDelay=false;
     });
     QPushButton *resetDelay=new QPushButton(tr("Reset Delay"),this);
     QObject::connect(resetDelay,&QPushButton::clicked,[this](){
-        autoSetDelay=true;
         int i=0;
         for(auto &item:episodeResult)
         {
             item.delay=0;
             episodeWidget->topLevelItem(i++)->setData(2,0,QString("0"));
         }
-        autoSetDelay=false;
     });
+    QAction *actDelay = new QAction(tr("Auto Set Delay from this Episode"), this);
+    episodeWidget->addAction(actDelay);
+    episodeWidget->setContextMenuPolicy(Qt::ContextMenuPolicy::ActionsContextMenu);
+    QObject::connect(actDelay, &QAction::triggered, this, [this](){
+        if(episodeWidget->selectedItems().isEmpty()) return;
+        int pos = episodeWidget->indexOfTopLevelItem(episodeWidget->selectedItems().first());
+        int timeSum=0;
+        for(++pos; pos < episodeWidget->topLevelItemCount(); ++pos)
+        {
+            episodeResult[pos].delay = timeSum;
+            timeSum += episodeResult[pos].duration*1000;  //ms
+            episodeWidget->topLevelItem(pos)->setData(2,0,QString::number(timeSum/1000));
+        }
+    });
+
     QGridLayout *episodeGLayout=new QGridLayout(this);
     episodeGLayout->addWidget(selectAllCheck,0,0);
     episodeGLayout->addWidget(setDelayButton,0,1);

@@ -58,16 +58,16 @@ namespace
                 QIcon()
             };
             QIcon *marker(nullptr);
-            if(index.data(PlayList::MarkRole::BgmCollectionRole).toBool())
+            if(index.data(PlayList::ItemRole::BgmCollectionRole).toBool())
             {
                 marker = &bgmCollectionIcon;
 
             }
-            else if(index.data(PlayList::MarkRole::FolderCollectionRole).toBool())
+            else if(index.data(PlayList::ItemRole::FolderCollectionRole).toBool())
             {
                 marker = &folderIcon;
             }
-            PlayListItem::Marker colorMarker = (PlayListItem::Marker)index.data(PlayList::MarkRole::ColorMarkerRole).toInt();
+            PlayListItem::Marker colorMarker = (PlayListItem::Marker)index.data(PlayList::ItemRole::ColorMarkerRole).toInt();
             if(marker || colorMarker != PlayListItem::Marker::M_NONE)
             {
                 QRect decoration = option.rect;
@@ -945,7 +945,8 @@ QWidget *ListWindow::setupPlaylistPage()
     playlistView->setModel(proxyModel);
 
     QObject::connect(filter,&FilterBox::filterChanged,[proxyModel,filter](){
-        QRegExp regExp(filter->text(),filter->caseSensitivity(),filter->patternSyntax());
+        QRegExp regExp(filter->text(),filter->caseSensitivity(), filter->patternSyntax());
+        proxyModel->setFilterRole(filter->searchType() == FilterBox::FilePath? PlayList::FilePathRole : Qt::DisplayRole);
         proxyModel->setFilterRegExp(regExp);
     });
 
@@ -1432,35 +1433,50 @@ void ListWindow::showMessage(const QString &msg,int flag)
     static_cast<InfoTip *>(infoTip)->showMessage(msg,flag);
 }
 
-FilterBox::FilterBox(QWidget *parent)
-    : QLineEdit(parent)
-    , m_patternGroup(new QActionGroup(this))
+FilterBox::FilterBox(QWidget *parent) :
+    QLineEdit(parent),
+    patternGroup(new QActionGroup(this)),
+    searchTypeGroup(new QActionGroup(this))
 {
     setClearButtonEnabled(true);
     setFont(QFont(GlobalObjects::normalFont,12));
     connect(this, &QLineEdit::textChanged, this, &FilterBox::filterChanged);
 
     QMenu *menu = new QMenu(this);
-    m_caseSensitivityAction = menu->addAction(tr("Case Sensitive"));
-    m_caseSensitivityAction->setCheckable(true);
-    connect(m_caseSensitivityAction, &QAction::toggled, this, &FilterBox::filterChanged);
+
+    searchTypeGroup->setExclusive(true);
+    QAction *searchTypeAction = menu->addAction(tr("Title"));
+    searchTypeAction->setData(QVariant(int(SearchType::Title)));
+    searchTypeAction->setCheckable(true);
+    searchTypeAction->setChecked(true);
+    searchTypeGroup->addAction(searchTypeAction);
+    searchTypeAction = menu->addAction(tr("File Path"));
+    searchTypeAction->setCheckable(true);
+    searchTypeAction->setData(QVariant(int(SearchType::FilePath)));
+    searchTypeGroup->addAction(searchTypeAction);
+    connect(searchTypeGroup, &QActionGroup::triggered, this, &FilterBox::filterChanged);
+    menu->addSeparator();
+
+    actCaseSensitivity = menu->addAction(tr("Case Sensitive"));
+    actCaseSensitivity->setCheckable(true);
+    connect(actCaseSensitivity, &QAction::toggled, this, &FilterBox::filterChanged);
 
     menu->addSeparator();
-    m_patternGroup->setExclusive(true);
+    patternGroup->setExclusive(true);
     QAction *patternAction = menu->addAction(tr("Fixed String"));
     patternAction->setData(QVariant(int(QRegExp::FixedString)));
     patternAction->setCheckable(true);
     patternAction->setChecked(true);
-    m_patternGroup->addAction(patternAction);
+    patternGroup->addAction(patternAction);
     patternAction = menu->addAction(tr("Regular Expression"));
     patternAction->setCheckable(true);
     patternAction->setData(QVariant(int(QRegExp::RegExp2)));
-    m_patternGroup->addAction(patternAction);
+    patternGroup->addAction(patternAction);
     patternAction = menu->addAction(tr("Wildcard"));
     patternAction->setCheckable(true);
     patternAction->setData(QVariant(int(QRegExp::Wildcard)));
-    m_patternGroup->addAction(patternAction);
-    connect(m_patternGroup, &QActionGroup::triggered, this, &FilterBox::filterChanged);
+    patternGroup->addAction(patternAction);
+    connect(patternGroup, &QActionGroup::triggered, this, &FilterBox::filterChanged);
 
     QToolButton *optionsButton = new QToolButton;
 

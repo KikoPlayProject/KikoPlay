@@ -674,12 +674,14 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
     }
     case Qt::DecorationRole:
         return item==d->currentItem?QIcon(":/res/images/playing.svg"):QVariant();
-    case MarkRole::BgmCollectionRole:
+    case ItemRole::BgmCollectionRole:
         return (item->isBgmCollection && item->children);
-    case MarkRole::FolderCollectionRole:
+    case ItemRole::FolderCollectionRole:
         return !item->folderPath.isEmpty();
-    case MarkRole::ColorMarkerRole:
+    case ItemRole::ColorMarkerRole:
         return item->marker;
+    case ItemRole::FilePathRole:
+        return item->children? item->folderPath : item->path;
     default:
         return QVariant();
     }

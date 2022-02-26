@@ -17,21 +17,28 @@ class FilterBox : public QLineEdit
 {
     Q_OBJECT
 public:
+    enum SearchType
+    {
+        Title, FilePath
+    };
     explicit FilterBox(QWidget *parent = nullptr);
     inline Qt::CaseSensitivity caseSensitivity() const
     {
-        return m_caseSensitivityAction->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
+        return actCaseSensitivity->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
     }
     inline QRegExp::PatternSyntax patternSyntax() const
     {
-        return static_cast<QRegExp::PatternSyntax>(m_patternGroup->checkedAction()->data().toInt());
+        return static_cast<QRegExp::PatternSyntax>(patternGroup->checkedAction()->data().toInt());
     }
-
+    inline SearchType searchType() const
+    {
+        return static_cast<SearchType>(searchTypeGroup->checkedAction()->data().toInt());
+    }
 signals:
     void filterChanged();
 private:
-    QAction *m_caseSensitivityAction;
-    QActionGroup *m_patternGroup;
+    QAction *actCaseSensitivity;
+    QActionGroup *patternGroup, *searchTypeGroup;
 };
 class ListWindow : public QWidget, public NotifyInterface
 {

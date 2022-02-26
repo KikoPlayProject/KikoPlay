@@ -2427,22 +2427,32 @@ Date: %2
 <context>
     <name>FilterBox</name>
     <message>
-        <location filename="../../UI/list.cpp" line="1441"/>
+        <location filename="../../UI/list.cpp" line="1448"/>
+        <source>Title</source>
+        <translation>标题</translation>
+    </message>
+    <message>
+        <location filename="../../UI/list.cpp" line="1453"/>
+        <source>File Path</source>
+        <translation>文件路径</translation>
+    </message>
+    <message>
+        <location filename="../../UI/list.cpp" line="1460"/>
         <source>Case Sensitive</source>
         <translation>区分大小写</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1447"/>
+        <location filename="../../UI/list.cpp" line="1466"/>
         <source>Fixed String</source>
         <translation>字符串</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1452"/>
+        <location filename="../../UI/list.cpp" line="1471"/>
         <source>Regular Expression</source>
         <translation>正则表达式</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1456"/>
+        <location filename="../../UI/list.cpp" line="1475"/>
         <source>Wildcard</source>
         <translation>通配符</translation>
     </message>
@@ -2993,7 +3003,7 @@ KikoPlay资源代码会包含URI及和动画关联的弹幕池信息(单个弹�
     <message>
         <location filename="../../UI/list.cpp" line="387"/>
         <location filename="../../UI/list.cpp" line="702"/>
-        <location filename="../../UI/list.cpp" line="1367"/>
+        <location filename="../../UI/list.cpp" line="1371"/>
         <source>Add Failed: Pool is busy</source>
         <translation>添加失败：弹幕池正忙</translation>
     </message>
@@ -3060,14 +3070,14 @@ KikoPlay资源代码会包含URI及和动画关联的弹幕池信息(单个弹�
         <translation>时间跳转</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1044"/>
-        <location filename="../../UI/list.cpp" line="1125"/>
+        <location filename="../../UI/list.cpp" line="1048"/>
+        <location filename="../../UI/list.cpp" line="1129"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
         <location filename="../../UI/list.cpp" line="573"/>
-        <location filename="../../UI/list.cpp" line="1135"/>
+        <location filename="../../UI/list.cpp" line="1139"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
@@ -3104,78 +3114,78 @@ KikoPlay资源代码会包含URI及和动画关联的弹幕池信息(单个弹�
         <translation>已屏蔽</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="959"/>
+        <location filename="../../UI/list.cpp" line="960"/>
         <source>Match</source>
         <translation>关联</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="960"/>
+        <location filename="../../UI/list.cpp" line="961"/>
         <source>Default Match Script</source>
         <translation>默认关联脚本</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1038"/>
+        <location filename="../../UI/list.cpp" line="1042"/>
         <source>Danmu</source>
         <translation>弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1058"/>
+        <location filename="../../UI/list.cpp" line="1062"/>
         <source>Mark</source>
         <translation>标记</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1062"/>
+        <location filename="../../UI/list.cpp" line="1066"/>
         <source>Red</source>
         <translation>红色</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1062"/>
+        <location filename="../../UI/list.cpp" line="1066"/>
         <source>Blue</source>
         <translation>蓝色</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1062"/>
+        <location filename="../../UI/list.cpp" line="1066"/>
         <source>Green</source>
         <translation>绿色</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1062"/>
+        <location filename="../../UI/list.cpp" line="1066"/>
         <source>Orange</source>
         <translation>橙色</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1062"/>
+        <location filename="../../UI/list.cpp" line="1066"/>
         <source>Pink</source>
         <translation>粉色</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1062"/>
+        <location filename="../../UI/list.cpp" line="1066"/>
         <source>Yellow</source>
         <translation>黄色</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1062"/>
+        <location filename="../../UI/list.cpp" line="1066"/>
         <source>None</source>
         <translation>无</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1092"/>
+        <location filename="../../UI/list.cpp" line="1096"/>
         <source>Move</source>
         <translation>移动</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1096"/>
-        <location filename="../../UI/list.cpp" line="1147"/>
+        <location filename="../../UI/list.cpp" line="1100"/>
+        <location filename="../../UI/list.cpp" line="1151"/>
         <source>Sort</source>
         <translation>排序</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1100"/>
+        <location filename="../../UI/list.cpp" line="1104"/>
         <source>Share</source>
         <translation>分享</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1156"/>
+        <location filename="../../UI/list.cpp" line="1160"/>
         <source>Loop Mode</source>
         <translation>循环模式</translation>
     </message>
@@ -3188,33 +3198,33 @@ KikoPlay资源代码会包含URI及和动画关联的弹幕池信息(单个弹�
         <translation type="vanished">当前没有播放项</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1237"/>
+        <location filename="../../UI/list.cpp" line="1241"/>
         <source>Add Danmu</source>
         <translation>添加弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1050"/>
-        <location filename="../../UI/list.cpp" line="1247"/>
+        <location filename="../../UI/list.cpp" line="1054"/>
+        <location filename="../../UI/list.cpp" line="1251"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1226"/>
+        <location filename="../../UI/list.cpp" line="1230"/>
         <source>Update Danmu Pool</source>
         <translation>更新弹幕池</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1282"/>
+        <location filename="../../UI/list.cpp" line="1286"/>
         <source>Updating: %1</source>
         <translation>正在更新：%1</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1285"/>
+        <location filename="../../UI/list.cpp" line="1289"/>
         <source>Add %1 Danmu</source>
         <translation>添加了 %1 条弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1254"/>
+        <location filename="../../UI/list.cpp" line="1258"/>
         <source>Position</source>
         <translation>定位</translation>
     </message>
@@ -3613,19 +3623,19 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">第%0话 %1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1263"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1296"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1265"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1298"/>
         <source>Match Start</source>
         <translation>开始关联...</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1276"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1278"/>
         <source>Failed: %1</source>
         <translation>失败：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1283"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1302"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1285"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1304"/>
         <source>Success: %1</source>
         <translation>成功：%1</translation>
     </message>
@@ -3634,8 +3644,8 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">需要手动关联：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1288"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1318"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1290"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1320"/>
         <source>Match Done</source>
         <translation>关联结束</translation>
     </message>
@@ -3847,7 +3857,7 @@ Folder Collection
         <translation>播放到：%1:%2</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="821"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="823"/>
         <source>File Not Exist</source>
         <translation>文件不存在</translation>
     </message>
@@ -3860,7 +3870,7 @@ Folder Collection
         <translation type="vanished">失败：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="962"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="964"/>
         <source>Success: %1</source>
         <translation>成功：%1</translation>
     </message>
@@ -3889,27 +3899,27 @@ Folder Collection
         <translation>添加时间：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1039"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1041"/>
         <source>Update Start</source>
         <translation>开始更新</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1055"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1057"/>
         <source>Updating: %1</source>
         <translation>正在更新：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1060"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1062"/>
         <source>Update Done</source>
         <translation>更新结束</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1174"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1176"/>
         <source>Exporting: %1</source>
         <translation>正在导出：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1182"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1184"/>
         <source>Export Down</source>
         <translation>导出完成</translation>
     </message>
@@ -4095,11 +4105,6 @@ Folder Collection
         <translation>选择字幕文件</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="1126"/>
-        <source>Subtitle (%0)</source>
-        <translation></translation>
-    </message>
-    <message>
         <location filename="../../UI/player.cpp" line="1131"/>
         <source>Subtitle Delay(s)</source>
         <translation>字幕延迟(s)</translation>
@@ -4164,6 +4169,16 @@ Folder Collection
         <location filename="../../UI/player.cpp" line="1052"/>
         <source>Color</source>
         <translation>颜色</translation>
+    </message>
+    <message>
+        <location filename="../../UI/player.cpp" line="1097"/>
+        <source>Audio (%0);;All Files(*)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../UI/player.cpp" line="1126"/>
+        <source>Subtitle (%0);;All Files(*)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../UI/player.cpp" line="1158"/>
@@ -4403,11 +4418,6 @@ Folder Collection
         <translation>选择音频文件</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="1097"/>
-        <source>Audio (%0)</source>
-        <translation></translation>
-    </message>
-    <message>
         <location filename="../../UI/player.cpp" line="2176"/>
         <source>%1 Command: %2, ret = %3</source>
         <translation></translation>
@@ -4467,7 +4477,7 @@ Folder Collection
     </message>
     <message>
         <location filename="../../UI/player.cpp" line="2131"/>
-        <location filename="../../UI/player.cpp" line="2336"/>
+        <location filename="../../UI/player.cpp" line="2337"/>
         <source>Volume: %0</source>
         <translation>音量：%0</translation>
     </message>
@@ -5421,39 +5431,44 @@ Eps: %2
 <context>
     <name>SelectEpisode</name>
     <message>
-        <location filename="../../UI/selectepisode.cpp" line="8"/>
+        <location filename="../../UI/selectepisode.cpp" line="10"/>
         <source>Select Episode</source>
         <translation>选择分集</translation>
     </message>
     <message>
-        <location filename="../../UI/selectepisode.cpp" line="13"/>
+        <location filename="../../UI/selectepisode.cpp" line="15"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../UI/selectepisode.cpp" line="13"/>
+        <location filename="../../UI/selectepisode.cpp" line="15"/>
         <source>Duration</source>
         <translation>时长</translation>
     </message>
     <message>
-        <location filename="../../UI/selectepisode.cpp" line="13"/>
+        <location filename="../../UI/selectepisode.cpp" line="15"/>
         <source>Delay(s)</source>
         <translation>延迟(s)</translation>
     </message>
     <message>
-        <location filename="../../UI/selectepisode.cpp" line="30"/>
+        <location filename="../../UI/selectepisode.cpp" line="31"/>
         <source>Select All</source>
         <translation>全选</translation>
     </message>
     <message>
-        <location filename="../../UI/selectepisode.cpp" line="38"/>
+        <location filename="../../UI/selectepisode.cpp" line="39"/>
         <source>Auto Set Delay</source>
         <translation>自动设置延迟</translation>
     </message>
     <message>
-        <location filename="../../UI/selectepisode.cpp" line="51"/>
+        <location filename="../../UI/selectepisode.cpp" line="50"/>
         <source>Reset Delay</source>
         <translation>重置延迟</translation>
+    </message>
+    <message>
+        <location filename="../../UI/selectepisode.cpp" line="59"/>
+        <source>Auto Set Delay from this Episode</source>
+        <translation>从当前分集自动设置延迟</translation>
     </message>
 </context>
 <context>

@@ -32,9 +32,12 @@ public:
         Loop_All,
         Random
     };
-    enum MarkRole
+    enum ItemRole
     {
-        BgmCollectionRole=Qt::UserRole+1,FolderCollectionRole,ColorMarkerRole
+        BgmCollectionRole = Qt::UserRole+1,
+        FolderCollectionRole,
+        ColorMarkerRole,
+        FilePathRole
     };
 
     const int maxRecentItems=4;

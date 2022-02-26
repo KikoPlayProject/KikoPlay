@@ -13,8 +13,6 @@ public:
 private:
     QTreeWidget *episodeWidget;
     QList<DanmuSource> &episodeResult;
-    bool autoSetDelay;
-signals:
 
 public slots:
     virtual void onAccept();
