@@ -53,6 +53,7 @@ private:
 
     DialogTip *dialogTip;
     QString sizeSettingKey;
+    QVector<std::function<void()>> onCloseCallback;
 
     // QWidget interface
 protected:
@@ -63,6 +64,7 @@ protected:
     void setTitle(const QString &text);
     void showMessage(const QString &msg, int type=1);
     void setSizeSettingKey(const QString &key, const QSize &initSize);
+    void addOnCloseCallback(const std::function<void()> &func);
     // QDialog interface
 public slots:
     virtual void reject();
@@ -111,6 +113,7 @@ private:
 
     DialogTip *dialogTip;
     QString sizeSettingKey;
+    QVector<std::function<void()>> onCloseCallback;
 
     // QWidget interface
 protected:
@@ -124,6 +127,7 @@ protected:
     void setTitle(const QString &text);
     void showMessage(const QString &msg, int type=0);
     void setSizeSettingKey(const QString &key, const QSize &initSize);
+    void addOnCloseCallback(const std::function<void()> &func);
     // QDialog interface
 public slots:
     virtual void reject();

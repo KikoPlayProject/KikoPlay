@@ -4,6 +4,8 @@
 #include "Script/scriptmanager.h"
 #include "Script/libraryscript.h"
 #include "globalobjects.h"
+#include <QImageReader>
+
 namespace
 {
     const char *setting_MatchScriptId = "Script/DefaultMatchScript";
@@ -119,7 +121,14 @@ ScriptState AnimeProvider::getDetail(const AnimeLite &base, Anime *anime)
             {
                 if(!results[i].hasError)
                 {
-                    crts[i]->image.loadFromData(results[i].content);
+                    QBuffer bufferImage(&results[i].content);
+                    bufferImage.open(QIODevice::ReadOnly);
+                    QImageReader reader(&bufferImage);
+                    QSize s = reader.size();
+                    int w = qMin(s.width(), s.height());
+                    reader.setScaledClipRect(QRect(0, 0, w, w));
+                    crts[i]->image = QPixmap::fromImageReader(&reader);
+                    Character::scale(crts[i]->image);
                 }
             }
         }

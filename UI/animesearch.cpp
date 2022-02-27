@@ -20,11 +20,15 @@ AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("B
     {
         scriptCombo->addItem(p.first, p.second);
     }
+    int animeScriptIndex = scriptCombo->findData(anime->scriptId());
+    if(animeScriptIndex != -1)
+    {
+        scriptCombo->setCurrentIndex(animeScriptIndex);
+    }
 
     searchWordEdit=new QLineEdit(anime?anime->name():"",this);
     searchButton=new QPushButton(tr("Search"),this);
     QObject::connect(searchButton,&QPushButton::clicked,this,&AnimeSearch::search);
-    //QObject::connect(searchWordEdit,&QLineEdit::returnPressed,this,&AnimeSearch::search);
 
     bangumiList=new QTreeWidget(this);
     bangumiList->setRootIsDecorated(false);
@@ -37,6 +41,7 @@ AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("B
     bgmHeader->setFont(font());
 
     QGridLayout *bgmGLayout=new QGridLayout(this);
+    bgmGLayout->setContentsMargins(0, 0, 0, 0);
     bgmGLayout->addWidget(scriptCombo, 0, 0);
     bgmGLayout->addWidget(searchWordEdit, 0, 1);
     bgmGLayout->addWidget(searchButton, 0, 2);
@@ -44,7 +49,7 @@ AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("B
     bgmGLayout->setRowStretch(1,1);
     bgmGLayout->setColumnStretch(1,1);
 
-    resize(460*logicalDpiX()/96, 320*logicalDpiY()/96);
+    setSizeSettingKey("DialogSize/AnimeSearch", QSize(460*logicalDpiX()/96, 320*logicalDpiY()/96));
 }
 
 void AnimeSearch::search()
@@ -63,6 +68,8 @@ void AnimeSearch::search()
         for(auto &anime : animes)
         {
             QTreeWidgetItem *item = new QTreeWidgetItem(bangumiList, {anime.name, anime.extras});
+            item->setToolTip(0, anime.name);
+            item->setToolTip(1, anime.extras);
             item->setData(0, AnimeRole, QVariant::fromValue(anime));
         }
     } else {

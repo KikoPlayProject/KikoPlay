@@ -356,7 +356,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     });
     QObject::connect(proxyModel,&AnimeFilterProxyModel::animeMessage,this, [=](const QString &msg, bool hasMore){
         totalCountLabel->setText(msg);
-        hasMore? loadMoreButton->show():loadMoreButton->hide();
+        loadMoreButton->isVisible() && hasMore? loadMoreButton->show():loadMoreButton->hide();
     });
 
     QPushButton *backButton =  new QPushButton(animeContainer);

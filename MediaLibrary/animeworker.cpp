@@ -803,7 +803,7 @@ bool AnimeWorker::updateAnimeInfo(Anime *anime)
         query.bindValue(3, c.link);
         query.bindValue(4, c.imgURL);
         QByteArray bytes;
-        if(!c.imgURL.isEmpty())
+        if(!c.image.isNull())
         {
             QBuffer buffer(&bytes);
             buffer.open(QIODevice::WriteOnly);

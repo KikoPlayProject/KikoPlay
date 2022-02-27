@@ -17,7 +17,6 @@ class ScriptSettingDialog : public CFramelessDialog
     Q_OBJECT
 public:
     ScriptSettingDialog(QSharedPointer<ScriptBase> script,  QWidget *parent = nullptr);
-    ~ScriptSettingDialog();
     QMap<int, QString> changedItems;
 
 };

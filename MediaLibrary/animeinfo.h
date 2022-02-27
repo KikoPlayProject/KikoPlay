@@ -97,6 +97,8 @@ struct Character
     QString link;
     QString imgURL;
     QPixmap image;
+
+    static void scale(QPixmap &img);
     QVariantMap toMap() const
     {
         return

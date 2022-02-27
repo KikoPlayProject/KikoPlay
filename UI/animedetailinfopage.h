@@ -27,6 +27,7 @@ private:
     QLabel *iconLabel;
 signals:
     void updateCharacter(CharacterWidget *crtItem);
+    void selectLocalImage(CharacterWidget *crtItem);
 };
 class TagPanel : public QWidget
 {

@@ -320,7 +320,7 @@ namespace
             if(!index.isValid()) return QVariant();
             int row = index.row();
             Columns col=static_cast<Columns>(index.column());
-            if(role==Qt::DisplayRole)
+            if(role==Qt::DisplayRole || role==Qt::ToolTipRole)
             {
                 switch (col)
                 {
@@ -632,8 +632,18 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
     matchView->addAction(actSelectAll);
     matchView->addAction(actAutoSetEp);
     matchView->addAction(copyEp);
-    QHeaderView *matchHeader = matchView->header();
-    matchHeader->resizeSections(QHeaderView::ResizeToContents);
+
+    QVariant headerState(GlobalObjects::appSetting->value("HeaderViewState/MatchEditAnimeView"));
+    if(!headerState.isNull())
+        animeView->header()->restoreState(headerState.toByteArray());
+    headerState = GlobalObjects::appSetting->value("HeaderViewState/MatchEditMatchView");
+    if(!headerState.isNull())
+        matchView->header()->restoreState(headerState.toByteArray());
+
+    addOnCloseCallback([animeView, matchView](){
+        GlobalObjects::appSetting->setValue("HeaderViewState/MatchEditAnimeView", animeView->header()->saveState());
+        GlobalObjects::appSetting->setValue("HeaderViewState/MatchEditMatchView", matchView->header()->saveState());
+    });
 
     return pageContainer;
 }

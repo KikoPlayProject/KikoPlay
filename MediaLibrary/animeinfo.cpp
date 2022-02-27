@@ -47,7 +47,7 @@ void Anime::assign(const Anime *anime)
 void Anime::setStaffs(const QString &staffStrs)
 {
     staff.clear();
-    QStringList staffs(staffStrs.split(';',QString::SkipEmptyParts));
+    QStringList staffs(staffStrs.split(';', Qt::SkipEmptyParts));
     for(int i=0;i<staffs.count();++i)
     {
         int pos=staffs.at(i).indexOf(':');
@@ -233,4 +233,12 @@ bool operator==(const EpInfo &ep1, const EpInfo &ep2)
 bool operator!=(const EpInfo &ep1, const EpInfo &ep2)
 {
     return !(ep1==ep2);
+}
+
+void Character::scale(QPixmap &img)
+{
+    if(img.isNull()) return;
+    const int maxSize = 600;
+    int w = qMin(qMin(img.width(), img.height()), maxSize);
+    img = img.scaled(w, w, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
 }

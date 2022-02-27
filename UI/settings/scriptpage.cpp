@@ -152,10 +152,14 @@ ScriptSettingDialog::ScriptSettingDialog(QSharedPointer<ScriptBase> script, QWid
     scriptGLayout->setRowStretch(0,1);
     scriptGLayout->setColumnStretch(0,1);
 
-    resize(GlobalObjects::appSetting->value("DialogSize/ScriptSetting",QSize(300*logicalDpiX()/96,200*logicalDpiY()/96)).toSize());
+    QVariant headerState(GlobalObjects::appSetting->value("HeaderViewState/ScriptSettingView"));
+    if(!headerState.isNull())
+        scriptView->header()->restoreState(headerState.toByteArray());
+
+    addOnCloseCallback([scriptView](){
+        GlobalObjects::appSetting->setValue("HeaderViewState/ScriptSettingView", scriptView->header()->saveState());
+    });
+
+    setSizeSettingKey("DialogSize/ScriptSetting", QSize(300*logicalDpiX()/96,200*logicalDpiY()/96));
 }
 
-ScriptSettingDialog::~ScriptSettingDialog()
-{
-    GlobalObjects::appSetting->setValue("DialogSize/ScriptSetting",size());
-}

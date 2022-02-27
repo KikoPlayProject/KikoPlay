@@ -108,7 +108,7 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
                 QBuffer bufferImage(&imgBytes);
                 bufferImage.open(QIODevice::WriteOnly);
                 cover.save(&bufferImage, "JPG");
-                currentAnime->setCover(imgBytes, true);
+                currentAnime->setCover(imgBytes);
                 coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->cover()));
             }
         }
@@ -279,9 +279,38 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
                 Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, reply.errInfo, NM_HIDE | NM_ERROR);
                 return;
             }
-            currentAnime->setCrtImage(crtItem->crt->name, reply.content);
+
+            QBuffer bufferImage(&reply.content);
+            bufferImage.open(QIODevice::ReadOnly);
+            QImageReader reader(&bufferImage);
+            QSize s = reader.size();
+            int w = qMin(s.width(), s.height());
+            reader.setScaledClipRect(QRect(0, 0, w, w));
+
+            QPixmap tmp = QPixmap::fromImageReader(&reader);
+            Character::scale(tmp);
+            QByteArray imgBytes;
+            bufferImage.close();
+            bufferImage.setBuffer(&imgBytes);
+            bufferImage.open(QIODevice::WriteOnly);
+            tmp.save(&bufferImage, "JPG");
+
+            currentAnime->setCrtImage(crtItem->crt->name, imgBytes);
             crtItem->refreshIcon();
             Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NotifyMessageFlag::NM_HIDE);
+        });
+        QObject::connect(crtItem, &CharacterWidget::selectLocalImage, this, [this](CharacterWidget *crtItem){
+            QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), "", "Image Files(*.jpg *.png);;All Files(*)");
+            if(!fileName.isEmpty())
+            {
+                QImage cover(fileName);
+                QByteArray imgBytes;
+                QBuffer bufferImage(&imgBytes);
+                bufferImage.open(QIODevice::WriteOnly);
+                cover.save(&bufferImage, "JPG");
+                currentAnime->setCrtImage(crtItem->crt->name, imgBytes);
+                crtItem->refreshIcon();
+            }
         });
         QListWidgetItem *listItem=new QListWidgetItem(characterList);
         characterList->setItemWidget(listItem, crtItem);
@@ -692,9 +721,14 @@ CharacterWidget::CharacterWidget(const Character *character, QWidget *parent) : 
         if(!crt->imgURL.isEmpty())
             emit updateCharacter(this);
     });
+    QAction *actLocalImage = new QAction(tr("Select From File"), this);
+    QObject::connect(actLocalImage, &QAction::triggered, this, [=](){
+        emit selectLocalImage(this);
+    });
 
     iconLabel->addAction(actCopyImage);
     iconLabel->addAction(actDownloadImage);
+    iconLabel->addAction(actLocalImage);
     iconLabel->setContextMenuPolicy(Qt::ActionsContextMenu);
 
     refreshIcon();

@@ -123,6 +123,8 @@ void CFramelessDialog::onAccept()
         GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     if(!sizeSettingKey.isEmpty())
         GlobalObjects::appSetting->setValue(sizeSettingKey,size());
+    for(auto &func : onCloseCallback)
+        func();
 }
 
 void CFramelessDialog::onClose()
@@ -132,6 +134,8 @@ void CFramelessDialog::onClose()
         GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     if(!sizeSettingKey.isEmpty())
         GlobalObjects::appSetting->setValue(sizeSettingKey,size());
+    for(auto &func : onCloseCallback)
+        func();
 }
 
 void CFramelessDialog::addIgnoreWidget(QWidget* widget)
@@ -344,6 +348,11 @@ void CFramelessDialog::setSizeSettingKey(const QString &key, const QSize &initSi
     resize(GlobalObjects::appSetting->value(sizeSettingKey, initSize).toSize());
 }
 
+void CFramelessDialog::addOnCloseCallback(const std::function<void ()> &func)
+{
+    onCloseCallback.append(func);
+}
+
 void CFramelessDialog::reject()
 {
     QDialog::reject();
@@ -451,6 +460,8 @@ void CFramelessDialog::onAccept()
     if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     if(!sizeSettingKey.isEmpty())
         GlobalObjects::appSetting->setValue(sizeSettingKey,size());
+    for(auto &func : onCloseCallback)
+        func();
 }
 
 void CFramelessDialog::onClose()
@@ -459,6 +470,8 @@ void CFramelessDialog::onClose()
     if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     if(!sizeSettingKey.isEmpty())
         GlobalObjects::appSetting->setValue(sizeSettingKey,size());
+    for(auto &func : onCloseCallback)
+        func();
 
 }
 
@@ -631,6 +644,10 @@ void CFramelessDialog::setSizeSettingKey(const QString &key, const QSize &initSi
 {
     sizeSettingKey = key;
     resize(GlobalObjects::appSetting->value(sizeSettingKey, initSize).toSize());
+}
+void CFramelessDialog::addOnCloseCallback(const std::function<void ()> &func)
+{
+    onCloseCallback.append(func);
 }
 void CFramelessDialog::reject()
 {
