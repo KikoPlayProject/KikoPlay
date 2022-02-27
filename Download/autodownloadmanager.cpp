@@ -390,7 +390,7 @@ void DownloadRuleChecker::fetchInfo(DownloadRule *rule)
             break;
         }
         ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
-        ScriptState state = resScript->search(rule->searchWord, page, pageCount, searchResults);
+        ScriptState state = resScript->search(rule->searchWord, page, pageCount, searchResults, "auto-download");
         if(state)
         {
             if(page==1)
@@ -412,7 +412,7 @@ void DownloadRuleChecker::fetchInfo(DownloadRule *rule)
                 {
                     ScriptState s;
                     if(resScript->needGetDetail())
-                        s = resScript->getDetail(item, item);
+                        s = resScript->getDetail(item, item, "auto-download");
                     if(s)
                         emit log(DownloadRuleLog::setLog(rule, DownloadRuleLog::LOG_RES_FINDED, QString("%1 %2").arg(item.size, item.title), item.magnet));
                 }

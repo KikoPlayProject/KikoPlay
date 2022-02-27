@@ -19,6 +19,7 @@
 #include "widgets/dialogtip.h"
 #include "Common/notifier.h"
 #include "globalobjects.h"
+#include "stylemanager.h"
 namespace
 {
     QMap<int,QList<ResourceItem> > pageCache;
@@ -99,7 +100,6 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
 
     searchListView=new QTreeView(this);
     searchListView->setObjectName(QStringLiteral("SearchListView"));
-    searchListView->setProperty("cScrollStyle", true);
     searchListView->setModel(searchProxyModel);
     searchListView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
     searchListView->setRootIsDecorated(false);
@@ -107,6 +107,12 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     searchListView->setFont(QFont(GlobalObjects::normalFont,10));
     searchListView->setIndentation(0);
     searchListView->setContextMenuPolicy(Qt::ActionsContextMenu);
+
+    QObject::connect(StyleManager::getStyleManager(), &StyleManager::styleModelChanged, this, [=](StyleManager::StyleMode mode){
+        bool setScrollStyle = (mode==StyleManager::BG_COLOR || mode==StyleManager::DEFAULT_BG);
+        searchListView->setProperty("cScrollStyle", setScrollStyle);
+    });
+
     QObject::connect(searchListView, &QTreeView::doubleClicked,[this,searchProxyModel](const QModelIndex &index){
         QModelIndex selIndex = searchProxyModel->mapToSource(index);
         emit addTask(searchListModel->getMagnetList({selIndex.siblingAtColumn((int)SearchListModel::Columns::TIME)}));

@@ -2,6 +2,7 @@
 #include "widgets/fonticonbutton.h"
 #include "globalobjects.h"
 #include "Download/autodownloadmanager.h"
+#include "stylemanager.h"
 #include <QAction>
 #include <QTreeView>
 #include <QGridLayout>
@@ -34,7 +35,6 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
 
     ruleView = new QTreeView(this);
     ruleView->setObjectName(QStringLiteral("RuleListView"));
-    ruleView->setProperty("cScrollStyle", true);
     ruleView->setRootIsDecorated(false);
     ruleView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ruleView->setAlternatingRowColors(true);
@@ -50,7 +50,6 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
 
     logView = new QTreeView(this);
     logView->setRootIsDecorated(false);
-    logView->setProperty("cScrollStyle", true);
     logView->setSelectionMode(QAbstractItemView::SingleSelection);
     logView->setAlternatingRowColors(true);
     logView->setFont(QFont(GlobalObjects::normalFont,10));
@@ -65,7 +64,6 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
 
     urlView = new QTreeView(this);
     urlView->setRootIsDecorated(false);
-    urlView->setProperty("cScrollStyle", true);
     urlView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     urlView->setAlternatingRowColors(true);
     urlView->setFont(QFont(GlobalObjects::normalFont,10));
@@ -74,6 +72,14 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     urlView->header()->resizeSection(0, 500 * logicalDpiX() / 96);
     urlView->setContextMenuPolicy(Qt::ActionsContextMenu);
     QObject::connect(GlobalObjects::autoDownloadManager->urlModel, &URLModel::rowsInserted,urlView, &QTreeView::scrollToBottom);
+
+    QObject::connect(StyleManager::getStyleManager(), &StyleManager::styleModelChanged, this, [=](StyleManager::StyleMode mode){
+        bool setScrollStyle = (mode==StyleManager::BG_COLOR || mode==StyleManager::DEFAULT_BG);
+        ruleView->setProperty("cScrollStyle", setScrollStyle);
+        logView->setProperty("cScrollStyle", setScrollStyle);
+        urlView->setProperty("cScrollStyle", setScrollStyle);
+    });
+
 
     int pageBtnHeight=28*logicalDpiY()/96;
 
