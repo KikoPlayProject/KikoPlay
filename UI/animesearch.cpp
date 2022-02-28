@@ -20,11 +20,14 @@ AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("B
     {
         scriptCombo->addItem(p.first, p.second);
     }
-    int animeScriptIndex = scriptCombo->findData(anime->scriptId());
-    if(animeScriptIndex != -1)
-    {
-        scriptCombo->setCurrentIndex(animeScriptIndex);
-    }
+	if (anime)
+	{
+		int animeScriptIndex = scriptCombo->findData(anime->scriptId());
+		if (animeScriptIndex != -1)
+		{
+			scriptCombo->setCurrentIndex(animeScriptIndex);
+		}
+	}
 
     searchWordEdit=new QLineEdit(anime?anime->name():"",this);
     searchButton=new QPushButton(tr("Search"),this);
