@@ -87,7 +87,8 @@ int AnimeWorker::fetchAnimes(QList<Anime *> *animes, int offset, int limit)
             anime->_scriptData=query.value(scriptDataNo).toString();
             anime->setStaffs(query.value(staffNo).toString());
             anime->_coverURL=query.value(coverURLNo).toString();
-            anime->_cover.loadFromData(query.value(coverNo).toByteArray());
+			anime->_coverData = query.value(coverNo).toByteArray();
+            //anime->_cover.loadFromData(query.value(coverNo).toByteArray());
 
             crtQuery.bindValue(0,anime->_name);
             crtQuery.exec();
@@ -451,22 +452,25 @@ void AnimeWorker::updateCaptureInfo(const QString &animeName, qint64 timeId, con
     });
 }
 
-void AnimeWorker::updateCoverImage(const QString &animeName, const QByteArray &imageContent, bool resetCoverURL)
+void AnimeWorker::updateCoverImage(const QString &animeName, const QByteArray &imageContent, const QString &coverURL)
 {
     ThreadTask task(GlobalObjects::workThread);
     task.RunOnce([=](){
         QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
-        query.prepare("update anime set Cover=? where Anime=?");
-        query.bindValue(0,imageContent);
-        query.bindValue(1,animeName);
-        query.exec();
-        if(resetCoverURL)
+        if(coverURL != Anime::emptyCoverURL)
         {
-            query.prepare("update anime set CoverURL=? where Anime=?");
-            query.bindValue(0, "");
-            query.bindValue(1,animeName);
-            query.exec();
+            query.prepare("update anime set Cover=?, CoverURL=? where Anime=?");
+            query.bindValue(0,imageContent);
+            query.bindValue(1,coverURL);
+            query.bindValue(2,animeName);
         }
+        else
+        {
+            query.prepare("update anime set Cover=? where Anime=?");
+            query.bindValue(0,imageContent);
+            query.bindValue(1,animeName);
+        }
+        query.exec();
     });
 }
 
@@ -782,11 +786,7 @@ bool AnimeWorker::updateAnimeInfo(Anime *anime)
     query.bindValue(5,anime->_scriptData);
     query.bindValue(6,anime->staffToStr());
     query.bindValue(7,anime->_coverURL);
-    QByteArray bytes;
-    QBuffer buffer(&bytes);
-    buffer.open(QIODevice::WriteOnly);
-    anime->_cover.save(&buffer,"jpg");
-    query.bindValue(8,bytes);
+    query.bindValue(8,anime->_coverData);
     query.bindValue(9,anime->_name);
     query.exec();
 

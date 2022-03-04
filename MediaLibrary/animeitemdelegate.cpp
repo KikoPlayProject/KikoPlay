@@ -9,9 +9,10 @@
 #include <QToolTip>
 #include "animeinfo.h"
 #define AnimeRole Qt::UserRole+1
+int AnimeItemDelegate::ItemWidth = 0;
+int AnimeItemDelegate::ItemHeight = 0;
 namespace
 {
-int ItemWidth,ItemHeight;
 class AnimeItemWidget : public QWidget
 {
 public:
@@ -33,15 +34,15 @@ public:
         shadowEffect->setOffset(0, 0);
         shadowEffect->setBlurRadius(12);
         imgLabel->setGraphicsEffect(shadowEffect);
-        ItemWidth=130*logicalDpiX()/96;
-        ItemHeight=185*logicalDpiY()/96;
-        setFixedSize(ItemWidth,ItemHeight);
-        titleLabel->setMaximumWidth(ItemWidth-20*logicalDpiX()/96);
+        AnimeItemDelegate::ItemWidth=130*logicalDpiX()/96;
+        AnimeItemDelegate::ItemHeight=185*logicalDpiY()/96;
+        setFixedSize(AnimeItemDelegate::ItemWidth, AnimeItemDelegate::ItemHeight);
+        titleLabel->setMaximumWidth(AnimeItemDelegate::ItemWidth-20*logicalDpiX()/96);
     }
     void setTitle(const QString &title)
     {
         QFontMetrics fm(font());
-        titleLabel->setText(fm.elidedText(title,Qt::ElideRight,ItemWidth-30*logicalDpiX()/96));
+        titleLabel->setText(fm.elidedText(title,Qt::ElideRight, AnimeItemDelegate::ItemWidth-30*logicalDpiX()/96));
     }
     void setCover(const QPixmap &pixmap)
     {
@@ -76,7 +77,7 @@ private:
 };
 }
 AnimeItemDelegate::AnimeItemDelegate(QObject *parent):QStyledItemDelegate(parent),
-    contentWidget(new AnimeItemWidget()),pixmap(ItemWidth,ItemHeight)
+    contentWidget(new AnimeItemWidget()),pixmap(ItemWidth,ItemHeight), blockCoverFetch(false)
 {
 
 }
@@ -87,8 +88,8 @@ void AnimeItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     QStyleOptionViewItem viewOption(option);
     initStyleOption(&viewOption,index);
     AnimeItemWidget *animeItemWidget=static_cast<AnimeItemWidget *>(contentWidget.data());
-	const Anime *anime = (const Anime *)index.data(AnimeRole).value<void *>();
-    animeItemWidget->setCover(anime->cover());
+	Anime *anime = (Anime *)index.data(AnimeRole).value<void *>();
+    animeItemWidget->setCover(anime->cover(blockCoverFetch));
     animeItemWidget->setTitle(index.data(Qt::DisplayRole).toString());
     animeItemWidget->setSelected(viewOption.state.testFlag(QStyle::State_Selected));
     animeItemWidget->setHover(viewOption.state.testFlag(QStyle::State_MouseOver));

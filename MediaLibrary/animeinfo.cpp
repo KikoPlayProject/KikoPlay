@@ -1,16 +1,56 @@
 #include "animeinfo.h"
 #include "animeworker.h"
+#include "animeitemdelegate.h"
+#include "Common/lrucache.h"
+#include <QImageReader>
+
+namespace
+{
+LRUCache<Anime *, QSharedPointer<QPixmap>> coverCache{256}, rawCoverCache{16};
+}
+const QPixmap &Anime::cover(bool onlyCache)
+{
+    static QPixmap emptyCover;
+    if(_coverData.isEmpty()) return emptyCover;
+    QSharedPointer<QPixmap> cover = coverCache.get(this);
+    if(cover) return *cover;
+    if(onlyCache) return emptyCover;
+    QBuffer bufferImage(&_coverData);
+    bufferImage.open(QIODevice::ReadOnly);
+    QImageReader reader(&bufferImage);
+    reader.setScaledSize(QSize(AnimeItemDelegate::ItemWidth, AnimeItemDelegate::ItemHeight));
+    cover = QSharedPointer<QPixmap>::create(QPixmap::fromImageReader(&reader));
+    coverCache.put(this, cover);
+    return *cover;
+}
+
+const QPixmap &Anime::rawCover()
+{
+    QSharedPointer<QPixmap> cover = rawCoverCache.get(this);
+    if(cover) return *cover;
+    QPixmap tmp;
+    if(!_coverData.isEmpty())
+    {
+        tmp.loadFromData(_coverData);
+    }
+    cover = QSharedPointer<QPixmap>::create(tmp);
+    rawCoverCache.put(this, cover);
+    return *cover;
+}
 
 Anime::Anime() : _addTime(0), _epCount(0), crtImagesLoaded(false), epLoaded(false), posterLoaded(false)
 {
 
 }
 
-void Anime::setCover(const QByteArray &data, bool resetCoverURL)
+void Anime::setCover(const QByteArray &data, bool updateDB, const QString &coverURL)
 {
-    AnimeWorker::instance()->updateCoverImage(_name, data, resetCoverURL);
-    _cover.loadFromData(data);
-    if(resetCoverURL) _coverURL = "";
+    if(updateDB)
+        AnimeWorker::instance()->updateCoverImage(_name, data, coverURL);
+    _coverData = data;
+    coverCache.remove(this);
+    rawCoverCache.remove(this);
+    if(coverURL != emptyCoverURL) _coverURL = coverURL;
 }
 
 void Anime::setCrtImage(const QString &name, const QByteArray &data)
@@ -35,13 +75,15 @@ void Anime::assign(const Anime *anime)
     _url = anime->_url;
     _airDate = anime->_airDate;
     _coverURL = anime->_coverURL;
-    _cover = anime->_cover;
+    _coverData = anime->_coverData;
     _scriptId = anime->_scriptId;
     _scriptData = anime->_scriptData;
     _epCount = anime->_epCount;
     staff = anime->staff;
     characters = anime->characters;
     crtImagesLoaded = anime->crtImagesLoaded;
+    coverCache.remove(this);
+    rawCoverCache.remove(this);
 }
 
 void Anime::setStaffs(const QString &staffStrs)

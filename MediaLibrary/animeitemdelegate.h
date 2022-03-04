@@ -6,6 +6,8 @@ class AnimeItemDelegate : public QStyledItemDelegate
     Q_OBJECT
 public:
     explicit AnimeItemDelegate(QObject *parent = nullptr);
+    static int ItemWidth, ItemHeight;
+    void setBlockCoverFetch(bool on) { blockCoverFetch = on; }
 
     // QAbstractItemDelegate interface
 public:
@@ -17,7 +19,7 @@ signals:
 private:
     QScopedPointer<QWidget> contentWidget;
     mutable QPixmap pixmap;
-
+    bool blockCoverFetch;
 };
 
 #endif // ANIMEITEMDELEGATE_H

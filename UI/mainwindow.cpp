@@ -31,6 +31,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : CFramelessWindow(parent),hasBackground(false),hasCoverBg(false),curPage(0),listWindowWidth(0),isMini(false),hideToTrayIcon(false)
 {
+    setObjectName(QStringLiteral("MainWindow"));
     Notifier::getNotifier()->addNotify(Notifier::MAIN_DIALOG_NOTIFY, this);
     setupUI();
     setWindowIcon(QIcon(":/res/kikoplay.ico"));

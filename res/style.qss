@@ -368,6 +368,9 @@ QFrame#PoolItem{
     background-color:rgba(1,157,255,80);
     padding: 2px;
 }
+QMainWindow#MainWindow {
+    background-color:rgb(230,230,230);
+}
 QDialog#framelessDialog{
     background-color:rgb(245,245,245);
 }

@@ -75,9 +75,9 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
 
     QAction *actCopyCover = new QAction(tr("Copy Cover"), this);
     QObject::connect(actCopyCover, &QAction::triggered, this, [=](){
-        if(currentAnime && !currentAnime->cover().isNull())
+        if(currentAnime && !currentAnime->rawCover().isNull())
         {
-            QApplication::clipboard()->setPixmap(currentAnime->cover());
+            QApplication::clipboard()->setPixmap(currentAnime->rawCover());
         }
     });
     QAction *actDownloadCover = new QAction(tr("Re-Download Cover"), this);
@@ -92,7 +92,7 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
                 return;
             }
             currentAnime->setCover(reply.content);
-            coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->cover()));
+            coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->rawCover()));
             Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NM_HIDE);
         }
     });
@@ -109,7 +109,7 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
                 bufferImage.open(QIODevice::WriteOnly);
                 cover.save(&bufferImage, "JPG");
                 currentAnime->setCover(imgBytes);
-                coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->cover()));
+                coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->rawCover()));
             }
         }
     });
@@ -249,7 +249,7 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
         return;
     }
     static QPixmap nullCover(":/res/images/cover.png");
-    coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->cover().isNull()?nullCover:currentAnime->cover()));
+    coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->rawCover().isNull()?nullCover:currentAnime->rawCover()));
 
     titleLabel->setText(QString("<style> a {text-decoration: none} </style><a style='color: white;' href = \"%1\">%2</a>").arg(currentAnime->url(), currentAnime->name()));
     QStringList stafflist;

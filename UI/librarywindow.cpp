@@ -100,6 +100,18 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     proxyModel->setSourceModel(animeModel);
     animeListView->setModel(proxyModel);
 
+    QTimer *refreshBlockTimer = new QTimer(this);
+    QObject::connect(refreshBlockTimer, &QTimer::timeout, this, [=](){
+        itemDelegate->setBlockCoverFetch(false);
+        animeListView->update();
+        refreshBlockTimer->stop();
+    });
+    connect(animeListView->verticalScrollBar(), &QScrollBar::valueChanged, this, [=](){
+        refreshBlockTimer->stop();
+        refreshBlockTimer->start(10);
+        itemDelegate->setBlockCoverFetch(true);
+    });
+
     QAction *act_delete=new QAction(tr("Delete"),this);
     QObject::connect(act_delete,&QAction::triggered,[this](){
         QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
@@ -403,7 +415,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     QObject::connect(detailPage,&AnimeDetailInfoPage::playFile,this,&LibraryWindow::playFile);
     QObject::connect(itemDelegate,&AnimeItemDelegate::ItemClicked,[=](const QModelIndex &index){
         Anime * anime = animeModel->getAnime(static_cast<AnimeFilterProxyModel *>(animeListView->model())->mapToSource(index));
-        emit switchBackground(anime->cover(), true);
+        emit switchBackground(anime->rawCover(), true);
         detailPage->setAnime(anime);
         backButton->show();
         selectedLabelTip->hide();
@@ -444,6 +456,8 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         splitter->restoreState(splitterState);
         if(splitter->sizes()[0] == 0)  libraryVLayout->setContentsMargins(5*logicalDpiX()/96,0,10*logicalDpiX()/96,0);
     }
+
+    animeModel->init();
 }
 
 void LibraryWindow::beforeClose()

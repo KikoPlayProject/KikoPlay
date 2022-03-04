@@ -4,6 +4,7 @@
 #include "loadingicon.h"
 #include <QPropertyAnimation>
 #include <QGraphicsOpacityEffect>
+#include <QResizeEvent>
 #include "globalobjects.h"
 #include "Common/notifier.h"
 #include "backgroundfadewidget.h"
@@ -17,6 +18,7 @@ DialogTip::DialogTip(QWidget *parent):QWidget(parent), moveHide(false)
 
     bgDarkWidget = new BackgroundFadeWidget(parent);
     bgDarkWidget->hide();
+    parent->installEventFilter(this);
     moveAnime = new QPropertyAnimation(this, "pos");
     moveAnime->setDuration(animeDuration);
     moveAnime->setEasingCurve(QEasingCurve::OutExpo);
@@ -91,4 +93,17 @@ void DialogTip::showMessage(const QString &msg, int type)
         moveHide = false;
         moveAnime->start();
     }
+}
+
+bool DialogTip::eventFilter(QObject *obj, QEvent *event)
+{
+    if(obj == parent() && event->type() == QEvent::Resize)
+    {
+        QResizeEvent *ev = static_cast<QResizeEvent *>(event);
+        if(!bgDarkWidget->isHidden())
+            bgDarkWidget->resize(ev->size());
+        if(!isHidden())
+            move((parentWidget()->width()-width())/2,y());
+    }
+    return QWidget::eventFilter(obj, event);
 }

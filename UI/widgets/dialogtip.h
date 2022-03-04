@@ -20,5 +20,7 @@ private:
     bool moveHide;
     const int animeDuration = 500;
     const int showDuration = 2500;
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
 };
 #endif // DIALOGTIP_H

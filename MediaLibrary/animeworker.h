@@ -35,7 +35,7 @@ public:
     void updateEpPath(const QString &animeName, const QString &path, const QString &nPath);
     void updateCaptureInfo(const QString &animeName, qint64 timeId, const QString &newInfo);
 
-    void updateCoverImage(const QString &animeName, const QByteArray &imageContent, bool resetCoverURL=false);
+    void updateCoverImage(const QString &animeName, const QByteArray &imageContent, const QString &coverURL=Anime::emptyCoverURL);
     void updateCrtImage(const QString &animeName, const QString &crtName, const QByteArray &imageContent);
     void saveCapture(const QString &animeName, const QString &info, const QImage &image);
     void saveSnippet(const QString &animeName, const QString &info, qint64 timeId, const QImage &image);

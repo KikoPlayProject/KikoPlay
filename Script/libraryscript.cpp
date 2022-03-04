@@ -110,12 +110,11 @@ ScriptState LibraryScript::getDetail(const AnimeLite &base, Anime *anime)
     anime->_airDate = airdate;
     anime->_epCount = aobj.value("epcount", 0).toInt();
     anime->_coverURL = aobj.value("coverurl").toString();
-    anime->_cover = QPixmap();
     anime->staff.clear();
     if(aobj.contains("staff"))
     {
         QString staffstr = aobj.value("staff").toString();
-        auto strs = staffstr.split(';', QString::SkipEmptyParts);
+        auto strs = staffstr.split(';', Qt::SkipEmptyParts);
         for(const auto &s : strs)
         {
             int pos = s.indexOf(':');

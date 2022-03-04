@@ -85,15 +85,16 @@ ScriptState AnimeProvider::getDetail(const AnimeLite &base, Anime *anime)
             {
                 QFile coverFile(anime->coverURL());
                 if(coverFile.open(QIODevice::ReadOnly))
-                    anime->_cover.loadFromData(coverFile.readAll());
-                anime->_coverURL = "";
+                {
+                    anime->setCover(coverFile.readAll(), false, "");
+                }
             }
             else
             {
                 Network::Reply reply(Network::httpGet(anime->coverURL(), QUrlQuery()));
                 if(!reply.hasError)
                 {
-                    anime->_cover.loadFromData(reply.content);
+                    anime->setCover(reply.content, false);
                 }
             }
             QStringList urls;

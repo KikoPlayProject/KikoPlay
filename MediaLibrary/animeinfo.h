@@ -134,7 +134,7 @@ class Anime
     QString _airDate;
     QString _url;
     QString _coverURL;
-    QPixmap _cover;
+    QByteArray _coverData;
     QString _scriptId;
     QString _scriptData;
 
@@ -160,14 +160,17 @@ public:
     const QString &scriptData() const {return _scriptData;}
     qint64 addTime() const {return _addTime;}
     QString addTimeStr() const {return QDateTime::fromSecsSinceEpoch(_addTime).toString("yyyy-MM-dd hh:mm:ss");}
-    const QPixmap &cover() const {return _cover;}
+    const QPixmap &cover(bool onlyCache=false);
+    const QPixmap &rawCover();
     const QString &coverURL() const {return _coverURL;}
+
+    constexpr static const char *emptyCoverURL = "<empty>";
 
 public:
     Anime();
     bool isValid() const {return !_name.isEmpty();}
 
-    void setCover(const QByteArray &data, bool resetCoverURL=false);
+    void setCover(const QByteArray &data, bool updateDB=true, const QString &coverURL=emptyCoverURL);
     void setCrtImage(const QString &name, const QByteArray &data);
     const QList<EpInfo> &epList();
     const QList<Character> &crList(bool loadImage = false);

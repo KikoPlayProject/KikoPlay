@@ -2,15 +2,40 @@
 #include "globalobjects.h"
 #include "animeworker.h"
 #include "Common/notifier.h"
+#include "Common/threadtask.h"
 #define AnimeRole Qt::UserRole+1
 
 AnimeModel::AnimeModel(QObject *parent):QAbstractItemModel(parent),
-    currentOffset(0),active(false),firstActive(true), hasMoreAnimes(true)
+    currentOffset(0), totalCount(0), active(false), firstActive(true), inited(false), hasMoreAnimes(false)
 {
-    limitCount = GlobalObjects::appSetting->value("Library/BatchSize", 128).toInt();
+    limitCount = GlobalObjects::appSetting->value("Library/BatchSize", 1024).toInt();
     limitCount = qMax(limitCount, 8);
     QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeAdded, this, &AnimeModel::addAnime);
     QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeRemoved, this, &AnimeModel::removeAnime);
+}
+
+void AnimeModel::init()
+{
+    if(inited) return;
+    inited = true;
+    Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching..."), NM_PROCESS | NM_DARKNESS_BACK);
+    ThreadTask task(GlobalObjects::workThread);
+    task.RunOnce([this](){
+        totalCount += AnimeWorker::instance()->animeCount();
+        QSharedPointer<QList<Anime *>> animes = QSharedPointer<QList<Anime *>>::create();
+        animes->reserve(limitCount);
+        AnimeWorker::instance()->fetchAnimes(animes.get(), 0, limitCount);
+        ThreadTask task(this->thread());
+        task.RunOnce([animes, this](){
+            beginInsertRows(QModelIndex(), 0, animes->count()-1);
+            this->animes.append(*animes);
+            endInsertRows();
+            currentOffset+=animes->count();
+            hasMoreAnimes = animes->count() >= limitCount;
+            showStatisMessage();
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Down"), NM_HIDE);
+        });
+    });
 }
 
 void AnimeModel::setActive(bool isActive)
@@ -41,9 +66,10 @@ void AnimeModel::deleteAnime(const QModelIndex &index)
     beginRemoveRows(QModelIndex(), index.row(), index.row());
     animes.removeAt(index.row());
     endRemoveRows();
-    currentOffset--;
-    AnimeWorker::instance()->deleteAnime(anime);
+    --totalCount;
+    --currentOffset;
     showStatisMessage();
+    AnimeWorker::instance()->deleteAnime(anime);
 }
 
 Anime *AnimeModel::getAnime(const QModelIndex &index)
@@ -58,6 +84,7 @@ void AnimeModel::addAnime(Anime *anime)
     if(!active)
     {
         tmpAnimes.append(anime);
+        ++totalCount;
     }
     else
     {
@@ -77,8 +104,6 @@ void AnimeModel::removeAnime(Anime *anime)
 
 void AnimeModel::showStatisMessage()
 {
-    int totalCount=animes.count();
-    if(hasMoreAnimes) totalCount = AnimeWorker::instance()->animeCount();
     emit animeCountInfo(animes.count(), totalCount);
 }
 
@@ -113,7 +138,7 @@ void AnimeModel::fetchMore(const QModelIndex &)
         beginInsertRows(QModelIndex(),animes.count(),animes.count()+moreAnimes.count()-1);
         animes.append(moreAnimes);
         endInsertRows();
-        currentOffset+=moreAnimes.count();
+        currentOffset += moreAnimes.count();
         showStatisMessage();
     }
     if(!firstActive)
