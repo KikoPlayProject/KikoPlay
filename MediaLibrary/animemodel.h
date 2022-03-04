@@ -31,7 +31,6 @@ private:
     std::atomic<int> totalCount;
     QList<Anime *> animes, tmpAnimes;
     bool active;
-    bool firstActive;
     bool inited;
     bool hasMoreAnimes;
     void addAnime(Anime *anime);
