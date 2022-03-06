@@ -67,10 +67,10 @@ void GlobalObjects::init()
 
     initDatabase(mt_db_names);
 
-    QString transFile = GlobalObjects::appSetting->value("KikoPlay/Language", "").toString();
-    transFile = QString(":/res/lang/%1.qm").arg(transFile.isEmpty()?QLocale::system().name().toLower():transFile);
+    QString locName = GlobalObjects::appSetting->value("KikoPlay/Language", "").toString();
+    auto loc = locName.isEmpty()? QLocale():QLocale(locName);
     static QTranslator translator;
-    if(translator.load(transFile))
+    if(translator.load(loc, "", "", ":/res/lang"))
         qApp->installTranslator(&translator);
     Notifier::getNotifier();
     workThread=new QThread();
