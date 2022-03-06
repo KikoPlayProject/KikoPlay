@@ -35,10 +35,10 @@ namespace
             animeBaseList = nList;
             endResetModel();
         }
-        void fillEpInfo(const QModelIndex &index, const QList<EpInfo> &epList)
+        void fillEpInfo(const QModelIndex &index, const QVector<EpInfo> &epList)
         {
             if(!index.isValid()) return;
-            animeBaseList[index.row()].epList.reset(new QList<EpInfo>(epList));
+            animeBaseList[index.row()].epList.reset(new QVector<EpInfo>(epList));
         }
         const QList<AnimeLite> animeBases() const {return animeBaseList;}
         enum class Columns
@@ -333,7 +333,7 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
         else
         {
             QScopedPointer<Anime> anime(animeLite.toAnime());
-            QList<EpInfo> results;
+			QVector<EpInfo> results;
             animePage->setEnabled(false);
             showBusyState(true);
             ScriptState state = GlobalObjects::animeProvider->getEp(anime.data(), results);

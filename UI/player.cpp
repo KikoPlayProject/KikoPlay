@@ -1448,7 +1448,7 @@ void PlayerWindow::setupSignals()
                 QFileInfo fi(danmuFile);
                 if(!contains && fi.exists())
                 {
-                    QList<DanmuComment *> tmplist;
+					QVector<DanmuComment *> tmplist;
                     LocalProvider::LoadXmlDanmuFile(danmuFile,tmplist);
                     DanmuSource sourceInfo;
                     sourceInfo.scriptData = fi.filePath();
@@ -2280,7 +2280,7 @@ void PlayerWindow::dropEvent(QDropEvent *event)
                 }
                 else if("xml"==fi.suffix())
                 {
-                    QList<DanmuComment *> tmplist;
+					QVector<DanmuComment *> tmplist;
                     LocalProvider::LoadXmlDanmuFile(fi.filePath(),tmplist);
                     DanmuSource sourceInfo;
                     sourceInfo.scriptData = fi.filePath();

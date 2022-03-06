@@ -215,7 +215,7 @@ void AddDanmu::addSearchItem(QList<DanmuSource> &sources)
     ScriptState retState(ScriptState::S_NORM);
     if(sources.size() == 1)
     {
-        QList<DanmuComment *> tmplist;
+        QVector<DanmuComment *> tmplist;
         DanmuSource *nSrc = nullptr;
         auto ret = GlobalObjects::danmuProvider->downloadDanmu(&sources.first(), tmplist, &nSrc);
         if(ret)
@@ -240,7 +240,7 @@ void AddDanmu::addSearchItem(QList<DanmuSource> &sources)
         {
             for(auto &sourceItem:sources)
             {
-                QList<DanmuComment *> tmplist;
+                QVector<DanmuComment *> tmplist;
                 DanmuSource *nSrc = nullptr;
                 auto ret = GlobalObjects::danmuProvider->downloadDanmu(&sourceItem,tmplist, &nSrc);
                 if(ret)

@@ -10,7 +10,7 @@
 #include <QWidgetAction>
 #include "globalobjects.h"
 #include "Play/Danmu/danmuviewmodel.h"
-DanmuView::DanmuView(const QList<DanmuComment *> *danmuList, QWidget *parent, int sourceId):CFramelessDialog (tr("View Danmu"),parent)
+DanmuView::DanmuView(const QVector<DanmuComment *> *danmuList, QWidget *parent, int sourceId):CFramelessDialog (tr("View Danmu"),parent)
 {
     initView();
     DanmuViewModel<DanmuComment *> *model=new DanmuViewModel<DanmuComment *>(danmuList,this);
@@ -27,7 +27,7 @@ DanmuView::DanmuView(const QList<DanmuComment *> *danmuList, QWidget *parent, in
     });
 }
 
-DanmuView::DanmuView(const QList<QSharedPointer<DanmuComment> > *danmuList, QWidget *parent, int sourceId):CFramelessDialog (tr("View Danmu"),parent)
+DanmuView::DanmuView(const QVector<QSharedPointer<DanmuComment> > *danmuList, QWidget *parent, int sourceId):CFramelessDialog (tr("View Danmu"),parent)
 {
     initView();
     DanmuViewModel<QSharedPointer<DanmuComment> > *model=new DanmuViewModel<QSharedPointer<DanmuComment> >(danmuList,this);

@@ -66,7 +66,7 @@ struct AnimeLite
     QString extras;
     QString scriptId;
     QString scriptData;
-    QSharedPointer<QList<EpInfo>> epList;
+    QSharedPointer<QVector<EpInfo>> epList;
     Anime* toAnime() const;
     QVariantMap toMap() const
     {
@@ -137,18 +137,15 @@ class Anime
     QByteArray _coverData;
     QString _scriptId;
     QString _scriptData;
-
     qint64 _addTime;
+
+    QVector<QPair<QString,QString>> staff;
+    QVector<EpInfo> epInfoList;
+    QVector<Character> characters;
+
     int _epCount;
-
-
-    QList<QPair<QString,QString>> staff;
-    QList<EpInfo> epInfoList;
-    QList<Character> characters;
-
     bool crtImagesLoaded;
     bool epLoaded;
-    bool posterLoaded;
 
 public:
     const QString &name() const {return _name;}
@@ -172,10 +169,10 @@ public:
 
     void setCover(const QByteArray &data, bool updateDB=true, const QString &coverURL=emptyCoverURL);
     void setCrtImage(const QString &name, const QByteArray &data);
-    const QList<EpInfo> &epList();
-    const QList<Character> &crList(bool loadImage = false);
+    const QVector<EpInfo> &epList();
+    const QVector<Character> &crList(bool loadImage = false);
     const QStringList &tagList();
-    const QList<QPair<QString,QString>> &staffList() const {return staff;}
+    const QVector<QPair<QString,QString>> &staffList() const {return staff;}
 private:
     void addEp(const EpInfo &ep);
     void updateEpTime(const QString &path, qint64 time, bool isFinished);

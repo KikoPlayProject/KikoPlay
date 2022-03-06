@@ -16,7 +16,7 @@ public:
 
     ScriptState animeSearch(const QString &scriptId, const QString &keyword, QList<AnimeLite> &results);
     ScriptState getDetail(const AnimeLite &base, Anime *anime);
-    ScriptState getEp(Anime *anime, QList<EpInfo> &results);
+    ScriptState getEp(Anime *anime, QVector<EpInfo> &results);
     ScriptState getTags(Anime *anime, QStringList &results);
 
     ScriptState match(const QString &scriptId, const QString &path, MatchResult &result);

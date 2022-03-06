@@ -226,7 +226,7 @@ int DanmuManager::importKdFile(const QString &fileName, QWidget *parent)
             EpType epType;
             double epIndex;
             QList<DanmuSource> srcInfoList;
-            QHash<int, QPair<DanmuSource,QList<DanmuComment *>>> danmuInfo;
+            QHash<int, QPair<DanmuSource,QVector<DanmuComment *>>> danmuInfo;
             int danmuConut=0;
 
             ds>>curAnime>>epType>>epIndex>>curEp>>file16MD5>>srcInfoList>>danmuConut;
@@ -246,7 +246,7 @@ int DanmuManager::importKdFile(const QString &fileName, QWidget *parent)
                 }
                 else delete danmu;
             }
-            QStringList file16Md5List(file16MD5.split(';',QString::SkipEmptyParts));
+            QStringList file16Md5List(file16MD5.split(';',Qt::SkipEmptyParts));
             QString pid(this->createPool(curAnime,epType, epIndex, curEp,file16Md5List.count()==1?file16Md5List.first():""));
             if(file16Md5List.count()>1)
             {
@@ -314,7 +314,7 @@ void DanmuManager::localSearch(const QString &keyword, QList<AnimeLite> &results
     {
         AnimeLite anime;
         anime.name = iter.key();
-        anime.epList.reset(new QList<EpInfo>);
+        anime.epList.reset(new QVector<EpInfo>);
         for(auto p : iter.value())
         {
             EpInfo ep;
@@ -604,9 +604,9 @@ void DanmuManager::updateSourceDelay(const QString &pid, const DanmuSource *sour
     });
 }
 
-QList<DanmuComment *> DanmuManager::updateSource(const DanmuSource *sourceInfo, const QSet<QString> &danmuHashSet)
+QVector<DanmuComment *> DanmuManager::updateSource(const DanmuSource *sourceInfo, const QSet<QString> &danmuHashSet)
 {
-    QList<DanmuComment *> tmpList;
+    QVector<DanmuComment *> tmpList;
     auto ret = GlobalObjects::danmuProvider->downloadDanmu(sourceInfo, tmpList);
     if(!ret)return tmpList;
     GlobalObjects::blocker->preFilter(tmpList);
@@ -747,7 +747,7 @@ void DanmuManager::loadPool(Pool *pool)
     });
 }
 
-void DanmuManager::updatePool(Pool *pool, QList<DanmuComment *> &outList, int sourceId)
+void DanmuManager::updatePool(Pool *pool, QVector<DanmuComment *> &outList, int sourceId)
 {
     ThreadTask task(GlobalObjects::workThread);
     task.Run([pool,&outList,sourceId,this](){
@@ -768,7 +768,7 @@ void DanmuManager::updatePool(Pool *pool, QList<DanmuComment *> &outList, int so
     });
 }
 
-void DanmuManager::saveSource(const QString &pid, const DanmuSource *source, const QList<QSharedPointer<DanmuComment> > &danmuList)
+void DanmuManager::saveSource(const QString &pid, const DanmuSource *source, const QVector<QSharedPointer<DanmuComment> > &danmuList)
 {
     ThreadTask task(GlobalObjects::workThread);
     DanmuSource src;

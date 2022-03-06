@@ -55,7 +55,7 @@ ScriptState LibraryScript::search(const QString &keyword, QList<AnimeLite> &resu
         ab.scriptData = robj.value("data").toString();
         if(robj.contains("eps") && robj.value("eps").type()==QVariant::List)
         {
-            QList<EpInfo> *epList = new QList<EpInfo>;
+            QVector<EpInfo> *epList = new QVector<EpInfo>;
             auto eps = robj.value("eps").toList();
             QMap<EpType, QPair<double, QSet<double>>> reOrderMap;
             for(auto e: eps)
@@ -142,7 +142,7 @@ ScriptState LibraryScript::getDetail(const AnimeLite &base, Anime *anime)
     return ScriptState(ScriptState::S_NORM);
 }
 
-ScriptState LibraryScript::getEp(Anime *anime, QList<EpInfo> &results)
+ScriptState LibraryScript::getEp(Anime *anime, QVector<EpInfo> &results)
 {
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);

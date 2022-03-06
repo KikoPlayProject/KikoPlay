@@ -31,7 +31,7 @@ struct DanmuComment
     int blockBy;
     int source;
 
-    QList<QSharedPointer<DanmuComment> > *mergedList;
+    QVector<QSharedPointer<DanmuComment> > *mergedList;
     DanmuComment *m_parent;
     QVariantMap toMap() const {return {{"text", text}, {"time", originTime}, {"color", color}, {"fontsize", fontSizeLevel}, {"date", QString::number(date)}, {"type", type}, {"sender", sender}};}
 };
@@ -45,17 +45,14 @@ struct SimpleDanmuInfo
     int originTime;
     QString text;
 };
-class DanmuDrawInfo
+struct DanmuDrawInfo
 {
-public:
     int width;
     int height;
     int useCount;
     GLuint texture;
     GLfloat l,r,t,b;
-    //QMutex useCountLock;
-    //QImage *img=nullptr;
-    //~DanmuDrawInfo(){if(img)delete img;}
+    bool cacheFlag;
 };
 class DanmuObject
 {

@@ -52,7 +52,7 @@ ScriptState DanmuScript::getURLInfo(const QString &url, QList<DanmuSource> &resu
     return ScriptState(errInfo.isEmpty()?ScriptState::S_NORM:ScriptState::S_ERROR, errInfo);
 }
 
-ScriptState DanmuScript::getDanmu(const DanmuSource *item, DanmuSource **nItem, QList<DanmuComment *> &danmuList)
+ScriptState DanmuScript::getDanmu(const DanmuSource *item, DanmuSource **nItem, QVector<DanmuComment *> &danmuList)
 {
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);

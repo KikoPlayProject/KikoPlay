@@ -137,7 +137,7 @@ ScriptState AnimeProvider::getDetail(const AnimeLite &base, Anime *anime)
     }).value<ScriptState>();
 }
 
-ScriptState AnimeProvider::getEp(Anime *anime, QList<EpInfo> &results)
+ScriptState AnimeProvider::getEp(Anime *anime, QVector<EpInfo> &results)
 {
     auto script = GlobalObjects::scriptManager->getScript(anime->scriptId()).staticCast<LibraryScript>();
     if(!script) return "Script invalid";

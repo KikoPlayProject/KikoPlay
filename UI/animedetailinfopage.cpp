@@ -69,7 +69,6 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     coverLabel=new QLabel(this);
     coverLabel->setAlignment(Qt::AlignCenter);
     coverLabel->setScaledContents(true);
-    //coverLabel->setFixedSize(140*logicalDpiX()/96,205*logicalDpiY()/96);
 
     coverLabelShadow = new ShadowLabel();
 

@@ -4,7 +4,7 @@
 class LocalProvider
 {
 public:
-    static void LoadXmlDanmuFile(QString filePath, QList<DanmuComment *> &list);
+    static void LoadXmlDanmuFile(QString filePath, QVector<DanmuComment *> &list);
 };
 
 #endif // LOCALPROVIDER_H

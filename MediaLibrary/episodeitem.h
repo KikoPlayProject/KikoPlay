@@ -11,11 +11,11 @@ class EpInfoEditWidget : public QWidget
     Q_OBJECT
 public:
     EpInfoEditWidget(QWidget *parent=nullptr);
-    void setEpInfo(const EpInfo &curEp, const QList<EpInfo> &eps);
+    void setEpInfo(const EpInfo &curEp, const QVector<EpInfo> &eps);
     const EpInfo getEp() const;
 private:
     const int EpRole = Qt::UserRole + 1;
-    QList<EpInfo> epList;
+	QVector<EpInfo> epList;
     QComboBox *epTypeCombo;
     QLineEdit *epIndexEdit;
     QComboBox *epNameEdit;

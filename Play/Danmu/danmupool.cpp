@@ -29,7 +29,8 @@ namespace
     } DanmuSPCompare;
 }
 DanmuPool::DanmuPool(QObject *parent) : QAbstractItemModel(parent),curPool(nullptr), emptyPool(new Pool("","","",EpType::UNKNOWN,0,this)),
-    currentPosition(0),currentTime(0),enableAnalyze(true),enableMerged(true),mergeInterval(15*1000),maxContentUnsimCount(4),minMergeCount(3)
+    currentPosition(0),currentTime(0),extendPos(0),enableAnalyze(true),enableMerged(true),mergeInterval(15*1000),
+    maxContentUnsimCount(4),minMergeCount(3)
 {
     analyzer=new EventAnalyzer(this);
 	setConnect(emptyPool);
@@ -122,15 +123,15 @@ void DanmuPool::deleteDanmu(QSharedPointer<DanmuComment> danmu)
 void DanmuPool::launch(const QList<QSharedPointer<DanmuComment> > userComments)
 {
     if(!hasPool() || userComments.isEmpty()) return;
-    QList<DrawTask> *prepareList(nullptr);
-    prepareList=prepareListPool.isEmpty()?new QList<DrawTask>:prepareListPool.takeFirst();
+    QVector<DrawTask> *prepareList(nullptr);
+    prepareList=prepareListPool.isEmpty()?new QVector<DrawTask>:prepareListPool.takeFirst();
     for(auto &c : userComments)
     {
         prepareList->append({ c,nullptr,true });
         if(prepareList->size()>=bundleSize)
         {
             GlobalObjects::danmuRender->prepareDanmu(prepareList);
-            prepareList=prepareListPool.isEmpty()?new QList<DrawTask> :prepareListPool.takeFirst();
+            prepareList=prepareListPool.isEmpty()?new QVector<DrawTask> :prepareListPool.takeFirst();
         }
     }
     if(prepareList->size()>0)
@@ -161,7 +162,7 @@ void DanmuPool::setMerged()
     if(enableMerged)
     {
         finalPool.clear();
-        QList<QSharedPointer<DanmuComment> > slideWindow;
+        QVector<QSharedPointer<DanmuComment> > slideWindow;
         for(auto iter=danmuPool.cbegin();iter!=danmuPool.cend();++iter)
         {
             DanmuComment *cc((*iter).data());
@@ -194,7 +195,7 @@ void DanmuPool::setMerged()
                 {
                     Q_ASSERT(!(*iter)->mergedList);
                     cc->m_parent=sw;
-                    if(!sw->mergedList) sw->mergedList=new QList<QSharedPointer<DanmuComment> >();
+                    if(!sw->mergedList) sw->mergedList=new QVector<QSharedPointer<DanmuComment> >();
                     sw->mergedList->append((*iter));
                     merged=true;
                     break;
@@ -384,8 +385,8 @@ void DanmuPool::mediaTimeElapsed(int newTime)
         return;
     }
     currentTime=newTime;
-    QList<DrawTask> *prepareList(nullptr);
-    prepareList=prepareListPool.isEmpty()?new QList<DrawTask>:prepareListPool.takeFirst();
+    QVector<DrawTask> *prepareList(nullptr);
+    prepareList=prepareListPool.isEmpty()?new QVector<DrawTask>:prepareListPool.takeFirst();
     for(;currentPosition<finalPool.length();++currentPosition)
     {
         int curTime=finalPool.at(currentPosition)->time;
@@ -399,26 +400,26 @@ void DanmuPool::mediaTimeElapsed(int newTime)
                 if(prepareList->size()>=bundleSize)
                 {
                     GlobalObjects::danmuRender->prepareDanmu(prepareList);
-                    prepareList=prepareListPool.isEmpty()?new QList<DrawTask> :prepareListPool.takeFirst();
+                    prepareList=prepareListPool.isEmpty()?new QVector<DrawTask> :prepareListPool.takeFirst();
                 }
 			}
         }
         else
             break;
     }
-    if(prepareList->size()>0)
+    if(extendPos < currentPosition) extendPos = currentPosition;
+    if(extendPos - currentPosition < bundleSize*1.5)
     {
-        int extendPos = currentPosition;
-        while(prepareList->size()<bundleSize && extendPos<finalPool.size())
+#ifdef QT_DEBUG
+        if(extendPos<finalPool.size())
+            qDebug()<<"extend cache: pos: " << extendPos << ", " << currentPosition;
+#endif
+        while(prepareList->size()<bundleSize*2 && extendPos<finalPool.size())
         {
             prepareList->append({ finalPool.at(extendPos++),nullptr,false });
         }
-        GlobalObjects::danmuRender->prepareDanmu(prepareList);
     }
-	else
-	{
-		recyclePrepareList(prepareList);
-	}
+    prepareList->size()>0? GlobalObjects::danmuRender->prepareDanmu(prepareList) : recyclePrepareList(prepareList);
 }
 
 void DanmuPool::mediaTimeJumped(int newTime)
@@ -428,6 +429,7 @@ void DanmuPool::mediaTimeJumped(int newTime)
 #endif
     currentTime=newTime;
     currentPosition=std::lower_bound(finalPool.begin(),finalPool.end(),newTime,DanmuComparer)-finalPool.begin();
+    extendPos = currentPosition;
     GlobalObjects::danmuRender->cleanup();
 #ifdef QT_DEBUG
     qDebug()<<"pool:media time jumped,currentPos"<<currentPosition;

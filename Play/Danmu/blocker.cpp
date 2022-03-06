@@ -187,7 +187,7 @@ void Blocker::save()
     }
 }
 
-void Blocker::preFilter(QList<DanmuComment *> &danmuList)
+void Blocker::preFilter(QVector<DanmuComment *> &danmuList)
 {
     QList<BlockRule *> preFilterRules;
     for(BlockRule *rule:blockList)

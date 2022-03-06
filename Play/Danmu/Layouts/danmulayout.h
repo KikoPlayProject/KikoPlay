@@ -4,7 +4,7 @@
 #include <QtGui>
 class DanmuRender;
 struct DanmuComment;
-class DanmuDrawInfo;
+struct DanmuDrawInfo;
 class DanmuLayout
 {
 protected:

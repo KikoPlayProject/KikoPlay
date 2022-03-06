@@ -41,7 +41,7 @@ DanmuRender::DanmuRender()
     QObject::connect(&cacheThread, &QThread::finished, cacheWorker, &QObject::deleteLater);
     QObject::connect(this,&DanmuRender::cacheDanmu,cacheWorker,&CacheWorker::beginCache);
     QObject::connect(this,&DanmuRender::refCountChanged,cacheWorker,&CacheWorker::changeRefCount);
-    QObject::connect(cacheWorker,&CacheWorker::recyleRefList,[this](QList<DanmuDrawInfo *> *drList){
+    QObject::connect(cacheWorker,&CacheWorker::recyleRefList,[this](QVector<DanmuDrawInfo *> *drList){
         drListPool.append(drList);
     });
     QObject::connect(cacheWorker,&CacheWorker::cacheDone,this,&DanmuRender::addDanmu);
@@ -127,7 +127,7 @@ void DanmuRender::refDesc(DanmuDrawInfo *drawInfo)
     {
         if(drListPool.isEmpty())
         {
-            currentDrList=new QList<DanmuDrawInfo *>();
+            currentDrList=new QVector<DanmuDrawInfo *>();
             currentDrList->reserve(drSize);
         }
         else
@@ -138,7 +138,7 @@ void DanmuRender::refDesc(DanmuDrawInfo *drawInfo)
     currentDrList->append(drawInfo);
     if(currentDrList->size()>=drSize)
     {
-        QList<DanmuDrawInfo *> *tmp=currentDrList;
+        QVector<DanmuDrawInfo *> *tmp=currentDrList;
         currentDrList=nullptr;
         emit refCountChanged(tmp);
     }
@@ -227,7 +227,7 @@ void DanmuRender::setEnlargeMerged(bool enlarge)
     danmuStyle.enlargeMerged=enlarge;
 }
 
-void DanmuRender::prepareDanmu(QList<DrawTask> *prepareList)
+void DanmuRender::prepareDanmu(QVector<DrawTask> *prepareList)
 {
     if(maxCount!=-1)
     {
@@ -242,7 +242,7 @@ void DanmuRender::prepareDanmu(QList<DrawTask> *prepareList)
     emit cacheDanmu(prepareList);
 }
 
-void DanmuRender::addDanmu(QList<DrawTask> *newDanmu)
+void DanmuRender::addDanmu(QVector<DrawTask> *newDanmu)
 {
     if(GlobalObjects::playlist->getCurrentItem()!=nullptr)
     {

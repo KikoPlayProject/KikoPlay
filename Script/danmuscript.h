@@ -17,7 +17,7 @@ public:
     ScriptState search(const QString &keyword, QList<DanmuSource> &results);
     ScriptState getEpInfo(const DanmuSource *source, QList<DanmuSource> &results);
     ScriptState getURLInfo(const QString &url, QList<DanmuSource> &results);
-    ScriptState getDanmu(const DanmuSource *item, DanmuSource **nItem, QList<DanmuComment *> &danmuList);
+    ScriptState getDanmu(const DanmuSource *item, DanmuSource **nItem, QVector<DanmuComment *> &danmuList);
     ScriptState hasSourceToLaunch(const QList<DanmuSource> &sources, bool &result);
     ScriptState launch(const QList<DanmuSource> &sources, const DanmuComment *comment);
     bool supportURL(const QString &url);

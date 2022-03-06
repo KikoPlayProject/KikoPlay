@@ -49,16 +49,16 @@ public:
     void addBlockRule(BlockRule *rule);
     void resetBlockCount();
     void removeBlockRule(const QModelIndexList &deleteIndexes);
-    template<typename T>
-    void checkDanmu(QList<T> &danmuList)
+    template<typename Iter>
+    void checkDanmu(Iter begin, Iter end)
     {
-        for(T &danmu:danmuList)
+        for(Iter i = begin; i != end; ++i)
         {
             for(BlockRule *rule:blockList)
             {
-                if(rule->blockTest(&(*danmu)))
+                if(rule->blockTest(&(**i)))
                 {
-                    danmu->blockBy=rule->id;
+                    (*i)->blockBy=rule->id;
                     break;
                 }
             }
@@ -67,7 +67,7 @@ public:
 
     bool isBlocked(DanmuComment *danmu);
     void save();
-    void preFilter(QList<DanmuComment *> &danmuList);
+    void preFilter(QVector<DanmuComment *> &danmuList);
     int exportRules(const QString &fileName);
     int importRules(const QString &fileName);
 private:

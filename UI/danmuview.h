@@ -29,9 +29,9 @@ class DanmuView : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit DanmuView(const QList<DanmuComment *> *danmuList, QWidget *parent = nullptr,
+    explicit DanmuView(const QVector<DanmuComment *> *danmuList, QWidget *parent = nullptr,
                        int sourceId=-1);
-    explicit DanmuView(const QList<QSharedPointer<DanmuComment> > *danmuList, QWidget *parent = nullptr,
+    explicit DanmuView(const QVector<QSharedPointer<DanmuComment> > *danmuList, QWidget *parent = nullptr,
                        int sourceId=-1);
 
 private:

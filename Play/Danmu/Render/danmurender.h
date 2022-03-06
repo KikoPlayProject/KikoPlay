@@ -35,9 +35,9 @@ private:
     DanmuStyle danmuStyle;
     QThread cacheThread;
     CacheWorker *cacheWorker;
-    QList<QList<DanmuDrawInfo *> *> drListPool;
-    QList<DanmuDrawInfo *>  *currentDrList;
-    QList<const DanmuObject *> objList;
+    QVector<QVector<DanmuDrawInfo *> *> drListPool;
+    QVector<DanmuDrawInfo *>  *currentDrList;
+    QVector<const DanmuObject *> objList;
     void refreshDMRect();
 public:
     void setBottomSubtitleProtect(bool bottomOn);
@@ -53,12 +53,12 @@ public:
     void setMergeCountPos(int pos);
     void setEnlargeMerged(bool enlarge);
 signals:
-    void cacheDanmu(QList<DrawTask> *newDanmu);
+    void cacheDanmu(QVector<DrawTask> *newDanmu);
     void danmuStyleChanged();
-    void refCountChanged(QList<DanmuDrawInfo *> *descList);
+    void refCountChanged(QVector<DanmuDrawInfo *> *descList);
 public slots:
-    void prepareDanmu(QList<DrawTask> *prepareList);
-    void addDanmu(QList<DrawTask> *newDanmu);
+    void prepareDanmu(QVector<DrawTask> *prepareList);
+    void addDanmu(QVector<DrawTask> *newDanmu);
 };
 
 #endif // DANMURENDER_H

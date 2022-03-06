@@ -15,7 +15,7 @@
 
 namespace
 {
-    LRUCache<QString, QList<EpInfo>> epCache;
+    LRUCache<QString, QVector<EpInfo>> epCache;
     class EpComboItemDelegate : public QStyledItemDelegate
     {
     public:
@@ -72,7 +72,7 @@ EpInfoEditWidget::EpInfoEditWidget(QWidget *parent) : QWidget(parent)
     editGLayout->addWidget(epNameEdit, 0, 2);
 }
 
-void EpInfoEditWidget::setEpInfo(const EpInfo &curEp, const QList<EpInfo> &eps)
+void EpInfoEditWidget::setEpInfo(const EpInfo &curEp, const QVector<EpInfo> &eps)
 {
     epList = eps;
     epNameEdit->clear();
@@ -159,7 +159,7 @@ void EpItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) co
         if(!epCache.contains(curAnime->name()) && autoGetEpInfo)
         {
             Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Episode List...."), NotifyMessageFlag::NM_DARKNESS_BACK|NotifyMessageFlag::NM_PROCESS);
-            QList<EpInfo> results;
+			QVector<EpInfo> results;
             ScriptState state = GlobalObjects::animeProvider->getEp(curAnime, results);
             if(state)
             {

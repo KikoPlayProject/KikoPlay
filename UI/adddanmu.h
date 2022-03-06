@@ -68,7 +68,7 @@ private:
     QList<ItemInfo> items;
     QStringList *danmuToPoolList;
     QList<bool> *danmuCheckedList;
-    QList<QPair<DanmuSource,QList<DanmuComment *>>> *selectedDanmuList;
+    QList<QPair<DanmuSource,QVector<DanmuComment *>>> *selectedDanmuList;
     bool hasPoolInfo;
     QString nPool;
 public:
@@ -107,7 +107,7 @@ class AddDanmu : public CFramelessDialog
     Q_OBJECT
 public:
     explicit AddDanmu(const PlayListItem *item, QWidget *parent = nullptr, bool autoPauseVideo=true, const QStringList &poolList=QStringList());
-    QList<QPair<DanmuSource,QList<DanmuComment *>>> selectedDanmuList;
+    QList<QPair<DanmuSource, QVector<DanmuComment *>>> selectedDanmuList;
     QList<bool> danmuCheckedList;
     QStringList danmuToPoolList;
 private:

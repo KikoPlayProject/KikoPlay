@@ -30,6 +30,7 @@ DEFINES += ZLIB_WINAPI
 CONFIG += C++11
 
 SOURCES += \
+    Common/counter.cpp \
     Common/logger.cpp \
     Common/notifier.cpp \
     Download/autodownloadmanager.cpp \
@@ -145,6 +146,7 @@ SOURCES += \
     UI/tip.cpp
 
 HEADERS += \
+    Common/counter.h \
     Common/logger.h \
     Common/lrucache.h \
     Common/notifier.h \

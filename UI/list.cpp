@@ -334,7 +334,7 @@ void ListWindow::initActions()
             {
                 Pool *pool=GlobalObjects::danmuManager->getPool(poolIdMap.value(addDanmuDialog.danmuToPoolList.at(i++)));
                 DanmuSource &sourceInfo=(*iter).first;
-                QList<DanmuComment *> &danmuList=(*iter).second;
+				QVector<DanmuComment *> &danmuList=(*iter).second;
                 if(pool)
                 {
                     showMessage(tr("Adding: %1").arg(pool->epTitle()),NotifyMessageFlag::NM_PROCESS);
@@ -375,7 +375,7 @@ void ListWindow::initActions()
         {
             for(auto &file: files)
             {
-                QList<DanmuComment *> tmplist;
+				QVector<DanmuComment *> tmplist;
                 LocalProvider::LoadXmlDanmuFile(file,tmplist);
                 DanmuSource sourceInfo;
                 sourceInfo.scriptData = file;
@@ -668,7 +668,7 @@ void ListWindow::initActions()
             for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
             {
                 DanmuSource &sourceInfo=(*iter).first;
-                QList<DanmuComment *> &danmuList=(*iter).second;
+				QVector<DanmuComment *> &danmuList=(*iter).second;
                 if(pool->addSource(sourceInfo,danmuList,iter==addDanmuDialog.selectedDanmuList.end()-1)<0)
                 {
                     qDeleteAll(danmuList);
@@ -690,7 +690,7 @@ void ListWindow::initActions()
         {
             for(auto &file: files)
             {
-                QList<DanmuComment *> tmplist;
+				QVector<DanmuComment *> tmplist;
                 LocalProvider::LoadXmlDanmuFile(file,tmplist);
                 DanmuSource sourceInfo;
                 sourceInfo.title=file.mid(file.lastIndexOf('/')+1);
@@ -1360,7 +1360,7 @@ void ListWindow::dropEvent(QDropEvent *event)
                 QFileInfo fi(url.toLocalFile());
                 if(fi.isFile() && "xml"==fi.suffix())
                 {
-                    QList<DanmuComment *> tmplist;
+					QVector<DanmuComment *> tmplist;
                     LocalProvider::LoadXmlDanmuFile(fi.filePath(),tmplist);
                     DanmuSource sourceInfo;
                     sourceInfo.title=fi.fileName();

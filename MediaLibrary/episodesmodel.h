@@ -15,7 +15,7 @@ public:
     static const int EpRole = Qt::UserRole+1;
 private:
     Anime *currentAnime;
-    QList<EpInfo> currentEps;
+    QVector<EpInfo> currentEps;
     QMap<QString, int> epMap;
     const QStringList headers={tr("Title"),tr("Last Play"), tr("Finish Time"), tr("LocalFile")};
 public slots:

@@ -213,7 +213,7 @@ namespace
     {
     public:
         EpComboDelegate(QObject *parent = nullptr):QStyledItemDelegate(parent){}
-        void setEpList(const QList<EpInfo> &eps) {epList = eps;}
+        void setEpList(const QVector<EpInfo> &eps) {epList = eps;}
 
         QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override
         {
@@ -264,7 +264,7 @@ namespace
             editor->setGeometry(option.rect);
         }
     private:
-        QList<EpInfo> epList;
+        QVector<EpInfo> epList;
         void addParentItem(QComboBox *combo, const QString& text) const
         {
             QStandardItem* item = new QStandardItem(text);
@@ -296,10 +296,10 @@ namespace
             animeBaseList = nList;
             endResetModel();
         }
-        void fillEpInfo(const QModelIndex &index, const QList<EpInfo> &epList)
+        void fillEpInfo(const QModelIndex &index, const QVector<EpInfo> &epList)
         {
             if(!index.isValid()) return;
-            animeBaseList[index.row()].epList.reset(new QList<EpInfo>(epList));
+            animeBaseList[index.row()].epList.reset(new QVector<EpInfo>(epList));
         }
         const QList<AnimeLite> animeBases() const {return animeBaseList;}
         enum class Columns
@@ -584,7 +584,7 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
         else
         {
             QScopedPointer<Anime> anime(animeLite.toAnime());
-            QList<EpInfo> results;
+			QVector<EpInfo> results;
             searchSubPage->setEnabled(false);
             showBusyState(true);
             ScriptState state = GlobalObjects::animeProvider->getEp(anime.data(), results);

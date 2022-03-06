@@ -23,11 +23,11 @@ public:
     inline bool hasPool() const {return curPool!=emptyPool;}
     //inline QString getPoolID() const { return poolID; }
     inline QModelIndex getCurrentIndex(){return (currentPosition >= 0 && currentPosition < finalPool.count())?createIndex(currentPosition, 0,finalPool.at(currentPosition).data()):QModelIndex();}
-    inline void recyclePrepareList(QList<DrawTask> *list){list->clear();prepareListPool.append(list);}
+    inline void recyclePrepareList(QVector<DrawTask> *list){list->clear();prepareListPool.append(list);}
     inline bool isEmpty() const{return danmuPool.isEmpty();}
     inline int totalCount() const {return danmuPool.count();}
     inline const StatisInfo &getStatisInfo(){return statisInfo;}
-    inline void reset(){currentTime=0;currentPosition=0;}
+    inline void reset(){currentTime=0;currentPosition=0;extendPos=0;}
     inline Pool *getPool() {return curPool;}
     inline int getCurrentTime() const {return currentTime;}
 
@@ -37,13 +37,14 @@ public:
 
 private:
     Pool *curPool,*emptyPool;
-    QList<QSharedPointer<DanmuComment> > danmuPool;
-    QList<QSharedPointer<DanmuComment> > finalPool;
-    QList<QList<DrawTask> *> prepareListPool;
+    QVector<QSharedPointer<DanmuComment> > danmuPool;
+    QVector<QSharedPointer<DanmuComment> > finalPool;
+    QVector<QVector<DrawTask> *> prepareListPool;
     StatisInfo statisInfo;
     EventAnalyzer *analyzer;
     int currentPosition;
     int currentTime;
+    int extendPos;
     const int bundleSize=32;
 
     bool enableAnalyze;

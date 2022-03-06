@@ -14,10 +14,12 @@ LogWindow::LogWindow(QWidget *parent) : CFramelessDialog(tr("Log"),parent,false,
     logTypeCombo->addItems(Logger::logger()->LogTypeNames);
 
     QVector<QPlainTextEdit *> logEdits((int)Logger::LogType::UNKNOWN);
+    QFont logFont("Consolas", 10);
     for(int i = 0; i < Logger::LogType::UNKNOWN; ++i)
     {
         logEdits[i] = new QPlainTextEdit(this);
         logEdits[i]->setReadOnly(true);
+        logEdits[i]->setFont(logFont);
         logEdits[i]->setMaximumBlockCount(Logger::logger()->bufferSize);
         for(const QString &log: Logger::logger()->getLogs(Logger::LogType(i)))
         {

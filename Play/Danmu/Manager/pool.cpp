@@ -28,11 +28,11 @@ bool Pool::load()
         PoolStateLock locker;
         if(!locker.tryLock(pid)) return false;
         GlobalObjects::danmuManager->loadPool(this);
-        GlobalObjects::blocker->checkDanmu(commentList);
+        GlobalObjects::blocker->checkDanmu(commentList.begin(), commentList.end());
         isLoaded=true;
         return true;
     }
-    GlobalObjects::blocker->checkDanmu(commentList);
+    GlobalObjects::blocker->checkDanmu(commentList.begin(), commentList.end());
     return false;
 }
 
@@ -40,21 +40,21 @@ bool Pool::clean()
 {
     PoolStateLock locker;
     if(!locker.tryLock(pid)) return false;
-    QList<QSharedPointer<DanmuComment> > emptyList;
+    QVector<QSharedPointer<DanmuComment> > emptyList;
     commentList.swap(emptyList);
     isLoaded=false;
     return true;
 }
 
-int Pool::update(int sourceId, QList<QSharedPointer<DanmuComment> > *incList)
+int Pool::update(int sourceId, QVector<QSharedPointer<DanmuComment> > *incList)
 {
     if(sourcesTable.isEmpty()) return 0;
     if(sourceId!=-1 && !sourcesTable.contains(sourceId)) return 0;
     PoolStateLock locker;
     if(!locker.tryLock(pid)) return 0;
-    QList<DanmuComment *> tList;
+    QVector<DanmuComment *> tList;
     GlobalObjects::danmuManager->updatePool(this,tList,sourceId);
-    QList<QSharedPointer<DanmuComment> > spList;
+    QVector<QSharedPointer<DanmuComment> > spList;
     if(sourceId!=-1)
     {
         sourcesTable[sourceId].count+=tList.count();
@@ -77,7 +77,7 @@ int Pool::update(int sourceId, QList<QSharedPointer<DanmuComment> > *incList)
             setDelay(comment);
         }
     }
-    GlobalObjects::blocker->checkDanmu(tList);
+    GlobalObjects::blocker->checkDanmu(tList.begin(), tList.end());
     if(incList!=nullptr) *incList=spList;
     if(!pid.isEmpty()) GlobalObjects::danmuManager->saveSource(pid,nullptr,spList);
     if(tList.count()>0 && used)
@@ -88,7 +88,7 @@ int Pool::update(int sourceId, QList<QSharedPointer<DanmuComment> > *incList)
     return tList.count();
 }
 
-int Pool::addSource(const DanmuSource &sourceInfo, QList<DanmuComment *> &danmuList, bool reset)
+int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool reset)
 {
     PoolStateLock locker;
     if(!locker.tryLock(pid)) return -1;
@@ -134,8 +134,8 @@ int Pool::addSource(const DanmuSource &sourceInfo, QList<DanmuComment *> &danmuL
         sourcesTable.insert(newSource.id,newSource);
         source = &sourcesTable[newSource.id];
     }
-    GlobalObjects::blocker->checkDanmu(danmuList);
-    QList<QSharedPointer<DanmuComment> > tmpList;
+    GlobalObjects::blocker->checkDanmu(danmuList.begin(), danmuList.end());
+    QVector<QSharedPointer<DanmuComment> > tmpList;
     for(DanmuComment *danmu:danmuList)
     {
         danmu->source=source->id;
@@ -361,7 +361,7 @@ QJsonObject Pool::exportFullJson()
     return poolObj;
 }
 
-QJsonArray Pool::exportJson(const QList<QSharedPointer<DanmuComment> > &danmuList, bool useOrigin)
+QJsonArray Pool::exportJson(const QVector<QSharedPointer<DanmuComment> > &danmuList, bool useOrigin)
 {
     QJsonArray danmuArray;
     for(const auto &danmu:danmuList)
@@ -469,7 +469,7 @@ void Pool::addSourceJson(const QJsonArray &array)
     srcInfo.delay=array[3].toInt();
     srcInfo.count=0;
     srcInfo.setTimeline(array[3].toString());
-    QList<DanmuComment *> emptyList;
+    QVector<DanmuComment *> emptyList;
     addSource(srcInfo,emptyList);
 }
 

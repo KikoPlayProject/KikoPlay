@@ -72,7 +72,7 @@ ScriptState DanmuProvider::getURLInfo(const QString &url, QList<DanmuSource> &re
     }).value<ScriptState>();
 }
 
-ScriptState DanmuProvider::downloadDanmu(const DanmuSource *item, QList<DanmuComment *> &danmuList, DanmuSource **nItem)
+ScriptState DanmuProvider::downloadDanmu(const DanmuSource *item, QVector<DanmuComment *> &danmuList, DanmuSource **nItem)
 {
     auto script = GlobalObjects::scriptManager->getScript(item->scriptId).staticCast<DanmuScript>();
     if(!script) return "Script invalid";

@@ -1,7 +1,7 @@
 #include "localprovider.h"
 
 
-void LocalProvider::LoadXmlDanmuFile(QString filePath, QList<DanmuComment *> &list)
+void LocalProvider::LoadXmlDanmuFile(QString filePath, QVector<DanmuComment *> &list)
 {
     QFile xmlFile(filePath);
     bool ret=xmlFile.open(QIODevice::ReadOnly|QIODevice::Text);

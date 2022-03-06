@@ -12,6 +12,9 @@
 #include <Common/logger.h>
 #include "Play/Danmu/Render/danmurender.h"
 #include "globalobjects.h"
+#ifdef QT_DEBUG
+#include "Common/counter.h"
+#endif
 namespace
 {
 const char *vShaderDanmu =
@@ -232,7 +235,7 @@ void MPVPlayer::setOptions()
     }
 }
 
-void MPVPlayer::drawTexture(QList<const DanmuObject *> &objList, float alpha)
+void MPVPlayer::drawTexture(QVector<const DanmuObject *> &objList, float alpha)
 {
     static QVector<GLfloat> vtx(6*2*64),tex(6*2*64),texId(6*64);
     static int Textures[] ={GL_TEXTURE0,GL_TEXTURE1,GL_TEXTURE2,GL_TEXTURE3,
@@ -298,7 +301,9 @@ void MPVPlayer::drawTexture(QList<const DanmuObject *> &objList, float alpha)
 
             i+=12;
         }
-
+#ifdef QT_DEBUG
+        Counter::instance()->countValue("texture.frame", textureId);
+#endif
         danmuShader.bind();
         danmuShader.setUniformValue("alpha", alpha);
         danmuShader.setAttributeArray(0, vtx.constData(), 2);

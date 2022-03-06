@@ -36,13 +36,13 @@ private:
     QPen danmuStrokePen;
     void cleanCache();
     void createImage(CacheMiddleInfo &midInfo);
-    void createTexture(QList<CacheMiddleInfo> &midInfo);
+    void createTexture(QVector<CacheMiddleInfo> &midInfo);
 signals:
-    void cacheDone(QList<DrawTask> *danmus);
-    void recyleRefList(QList<DanmuDrawInfo *> *descList);
+    void cacheDone(QVector<DrawTask> *danmus);
+    void recyleRefList(QVector<DanmuDrawInfo *> *descList);
 public slots:
-    void beginCache(QList<DrawTask> *danmus);
-    void changeRefCount(QList<DanmuDrawInfo *> *descList);
+    void beginCache(QVector<DrawTask> *danmus);
+    void changeRefCount(QVector<DanmuDrawInfo *> *descList);
     void changeDanmuStyle();
 };
 #endif // CACHEWORKER_H

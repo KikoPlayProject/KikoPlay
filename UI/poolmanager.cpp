@@ -109,7 +109,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                 Pool *pool=GlobalObjects::danmuManager->getPool(curNode->idInfo);
                 Q_ASSERT(pool);
                 DanmuSource &sourceInfo=(*iter).first;
-                QList<DanmuComment *> &danmuList=(*iter).second;
+                QVector<DanmuComment *> &danmuList=(*iter).second;
                 int srcId=pool->addSource(sourceInfo,danmuList,true);
 				sourceInfo.id = srcId;
                 if(srcId<0)

@@ -38,7 +38,7 @@ const QPixmap &Anime::rawCover()
     return *cover;
 }
 
-Anime::Anime() : _addTime(0), _epCount(0), crtImagesLoaded(false), epLoaded(false), posterLoaded(false)
+Anime::Anime() : _addTime(0), _epCount(0), crtImagesLoaded(false), epLoaded(false)
 {
 
 }
@@ -105,7 +105,7 @@ QString Anime::staffToStr() const
     return staffStrList.join(';');
 }
 
-const QList<EpInfo> &Anime::epList()
+const QVector<EpInfo> &Anime::epList()
 {
     if(!epLoaded)
     {
@@ -116,7 +116,7 @@ const QList<EpInfo> &Anime::epList()
     return epInfoList;
 }
 
-const QList<Character> &Anime::crList(bool loadImage)
+const QVector<Character> &Anime::crList(bool loadImage)
 {
     if(!crtImagesLoaded && loadImage)
     {
@@ -249,7 +249,7 @@ const AnimeLite Anime::toLite() const
     lite.name = _name;
     lite.scriptId = _scriptId;
     lite.scriptData = _scriptData;
-    if(epLoaded) lite.epList.reset(new QList<EpInfo>(epInfoList));
+    if(epLoaded) lite.epList.reset(new QVector<EpInfo>(epInfoList));
     return lite;
 }
 

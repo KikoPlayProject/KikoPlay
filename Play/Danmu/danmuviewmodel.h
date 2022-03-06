@@ -8,12 +8,12 @@ template<typename T>
 class DanmuViewModel : public QAbstractItemModel
 {
 public:
-    explicit DanmuViewModel(const QList<T> *danmuList, QObject *parent = nullptr): QAbstractItemModel(parent)
+    explicit DanmuViewModel(const QVector<T> *danmuList, QObject *parent = nullptr): QAbstractItemModel(parent)
     {
         this->danmuList=danmuList;
     }
 private:
-    const QList<T> *danmuList;
+    const QVector<T> *danmuList;
 public:
     inline virtual int columnCount(const QModelIndex &) const {return 5;}
     virtual QModelIndex index(int row, int column, const QModelIndex &parent) const {return parent.isValid()?QModelIndex():createIndex(row,column);}

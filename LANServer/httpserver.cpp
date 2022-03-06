@@ -152,7 +152,7 @@ void HttpServer::api_Danmu(QHttpEngine::Socket *socket)
     {
         if(update)
         {
-            QList<QSharedPointer<DanmuComment> > incList;
+			QVector<QSharedPointer<DanmuComment> > incList;
             pool->update(-1,&incList);
             danmuArray=Pool::exportJson(incList);
         }
@@ -191,7 +191,7 @@ void HttpServer::api_DanmuFull(QHttpEngine::Socket *socket)
     {
         if(update)
         {
-            QList<QSharedPointer<DanmuComment> > incList;
+			QVector<QSharedPointer<DanmuComment> > incList;
             pool->update(-1,&incList);
             resposeObj=
             {
