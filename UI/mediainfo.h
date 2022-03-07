@@ -31,7 +31,7 @@ private:
         return false;
     }
     QString expandMediaInfo();
-    void evalCommand(QList<QString> &commandStack, QList<TextBlock> &textStack);
+    void evalCommand(QStringList &commandStack, QVector<TextBlock> &textStack);
 };
 
 #endif // MEDIAINFO_H

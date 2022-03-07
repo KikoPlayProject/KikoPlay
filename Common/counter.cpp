@@ -15,9 +15,9 @@ Counter *Counter::instance()
 void Counter::countValue(const QString &key, int val)
 {
     if(key.isEmpty()) return;
-    QMutexLocker lock(&hashMutex);
     if(!counterKV.contains(key))
     {
+        QMutexLocker lock(&hashMutex);
         counterKV[key] = QSharedPointer<CountStat>::create();
     }
     counterKV[key]->num++;

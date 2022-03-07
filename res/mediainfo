@@ -70,6 +70,14 @@ ${if:${mpv:track-list/count}>0}
     ${endloop}
 ${endif}
 
+${if:${mpv:edition-list/count}>1}
+<font size=4 face="${kiko:normalfont}" color="#18C0F1">${kiko:tr:editions}</font><br />
+    ${loop:i=0,${mpv:edition-list/count},1}
+        <font size="3" face="${kiko:normalfont}" color="#ECCC1E">edition ${var:i}</font>
+        :<font size="3" face="${kiko:normalfont}"> ${edition-list/${var:i}/title}</font><br />
+    ${endloop}
+${endif}
+
 ${if:${mpv:chapter-list/count}>0}
 <font size=4 face="${kiko:normalfont}" color="#18C0F1">${kiko:tr:chapters}</font><br />
     ${loop:i=0,${mpv:chapter-list/count},1}

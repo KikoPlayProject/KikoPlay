@@ -6,7 +6,7 @@
 #include <QHash>
 #include <QTimer>
 #include <QMutex>
-
+#include <QSharedPointer>
 
 class Counter : public QObject
 {

@@ -24,12 +24,16 @@ public:
         imgLabel->setScaledContents(true);
         imgLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
         titleLabel=new QLabel(this);
-        titleLabel->setAlignment(Qt::AlignCenter);
         titleLabel->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
         titleLabel->setObjectName(QStringLiteral("AnimeItemTitle"));
         QVBoxLayout *aiVLayout=new QVBoxLayout(this);
         aiVLayout->addWidget(imgLabel);
-        aiVLayout->addWidget(titleLabel);
+        QHBoxLayout *titleHLayout = new QHBoxLayout;
+        titleHLayout->addStretch(1);
+        titleHLayout->addWidget(titleLabel);
+        titleHLayout->addStretch(1);
+        titleHLayout->setContentsMargins(0, 0, 0, 0);
+        aiVLayout->addItem(titleHLayout);
         shadowEffect = new QGraphicsDropShadowEffect(this);
         shadowEffect->setOffset(0, 0);
         shadowEffect->setBlurRadius(12);

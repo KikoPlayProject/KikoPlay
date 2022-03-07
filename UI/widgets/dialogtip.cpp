@@ -14,6 +14,7 @@ DialogTip::DialogTip(QWidget *parent):QWidget(parent), moveHide(false)
     infoText=new QLabel(this);
     infoText->setObjectName(QStringLiteral("DialogTipLabel"));
     infoText->setFont(QFont(GlobalObjects::normalFont,10));
+    infoText->setOpenExternalLinks(true);
     infoText->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
 
     bgDarkWidget = new BackgroundFadeWidget(parent);

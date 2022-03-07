@@ -11,7 +11,7 @@ Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent)
 {
     aria2Process = new QProcess(this);
 #ifdef Q_OS_WIN
-    aria2Process->start("taskkill /im aria2c.exe /f");
+    aria2Process->start("taskkill", {"/im", "aria2c.exe" "/f"});
 #else
     aria2Process->start("pkill -f aria2c");
 #endif
@@ -30,20 +30,26 @@ Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent)
     args << "--rpc-listen-port=6800";
     //args << "rpc-save-upload-metadata","false");
 
-
-#ifdef Q_OS_WIN
-    aria2Process->start(QCoreApplication::applicationDirPath()+"\\aria2c.exe", args);
-#else
-    QFileInfo check_file(QCoreApplication::applicationDirPath()+"/aria2c");
-    /* check if file exists and if yes: Is it really a file and no directory? */
-    if (check_file.exists() && check_file.isFile()) {
-        aria2Process->start(QCoreApplication::applicationDirPath()+"/aria2c", args);
-    } else {
-        aria2Process->start("aria2c", args);
+    QStringList aria2PathList = {
+        GlobalObjects::appSetting->value("Download/Aria2Path","").toString(),
+        QCoreApplication::applicationDirPath()+"\\aria2c.exe",
+        QCoreApplication::applicationDirPath()+"/aria2c",
+        "aria2c",
+        "/usr/local/bin/aria2c",
+        "/usr/bin/aria2c"
+    };
+    bool succ = false;
+    for(const QString &aria2Path : aria2PathList)
+    {
+        aria2Process->start(aria2Path, args);
+        succ = aria2Process->waitForStarted(-1);
+        if(succ)
+        {
+            Logger::logger()->log(Logger::LogType::Aria2, QString("Aria2 Start: %1").arg(aria2Path));
+            break;
+        }
     }
-
-#endif
-    aria2Process->waitForStarted(-1);
+    if(!succ) Logger::logger()->log(Logger::LogType::Aria2, QString("[WARN]Aria2 Not Found"));
 }
 
 void Aria2JsonRPC::exit()

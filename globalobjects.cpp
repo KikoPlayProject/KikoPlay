@@ -70,6 +70,7 @@ void GlobalObjects::init()
     QString locName = GlobalObjects::appSetting->value("KikoPlay/Language", "").toString();
     auto loc = locName.isEmpty()? QLocale():QLocale(locName);
     static QTranslator translator;
+	auto nn = loc.uiLanguages();
     if(translator.load(loc, "", "", ":/res/lang"))
         qApp->installTranslator(&translator);
     Notifier::getNotifier();
@@ -157,7 +158,7 @@ void GlobalObjects::setDatabase(const char *name, const char *file)
         sqlFile.open(QFile::ReadOnly);
         if(sqlFile.isOpen())
         {
-            QStringList sqls=QString(sqlFile.readAll()).split(';',QString::SkipEmptyParts);
+            QStringList sqls=QString(sqlFile.readAll()).split(';', Qt::SkipEmptyParts);
             for(const QString &sql:sqls)
             {
                 query.exec(sql);

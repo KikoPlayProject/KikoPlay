@@ -28,8 +28,8 @@ QString MediaInfo::expandMediaInfo()
         }
     }
     int state = 0;
-    QList<TextBlock> textStack;
-    QList<QString> commandStack;
+    QVector<TextBlock> textStack;
+    QStringList commandStack;
     textStack.push_back(TextBlock());
 
     for(QChar c : mediaInfoTemplate)
@@ -83,7 +83,7 @@ QString MediaInfo::expandMediaInfo()
     return GlobalObjects::mpvplayer->expandMediaInfo(textStack.back().text);
 }
 
-void MediaInfo::evalCommand(QList<QString> &commandStack, QList<TextBlock> &textStack)
+void MediaInfo::evalCommand(QStringList &commandStack, QVector<TextBlock> &textStack)
 {
     static QHash<QString, QString> kikoCommand({
         {"normalfont", GlobalObjects::normalFont},
@@ -110,7 +110,8 @@ void MediaInfo::evalCommand(QList<QString> &commandStack, QList<TextBlock> &text
         {"tr:chapters", tr("Chapters")},
         {"tr:tracks", tr("Tracks")},
         {"tr:language", tr("Language")},
-        {"tr:selected", tr("Selected")}
+        {"tr:selected", tr("Selected")},
+        {"tr:editions", tr("Editions")}
     });
     QFileInfo fi(GlobalObjects::mpvplayer->getCurrentFile());
     kikoCommand["date-created"] = fi.birthTime().toString();

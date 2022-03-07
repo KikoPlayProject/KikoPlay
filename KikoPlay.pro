@@ -14,7 +14,7 @@ TEMPLATE = app
 RC_FILE += kikoplay.rc
 RC_ICONS = kikoplay.ico
 
-TRANSLATIONS += res/lang/zh_Hans.ts
+TRANSLATIONS += res/lang/zh_CN.ts
 DEFINES += QT_MESSAGELOGCONTEXT
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
