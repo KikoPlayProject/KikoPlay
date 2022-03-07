@@ -70,7 +70,6 @@ void GlobalObjects::init()
     QString locName = GlobalObjects::appSetting->value("KikoPlay/Language", "").toString();
     auto loc = locName.isEmpty()? QLocale():QLocale(locName);
     static QTranslator translator;
-	auto nn = loc.uiLanguages();
     if(translator.load(loc, "", "", ":/res/lang"))
         qApp->installTranslator(&translator);
     Notifier::getNotifier();
