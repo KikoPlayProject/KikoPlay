@@ -155,9 +155,6 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     titleHLayout->addItem(textVLayout);
 
     QWidget *pageContainer = new QWidget(this);
-	QFontMetrics fm(font());
-	int h = fm.height();
-	int w = fm.width(tr("Description"));
 
     QSize pageButtonSize(80 *logicalDpiX()/96,32*logicalDpiY()/96);
     QToolButton *descPageButton=new QToolButton(pageContainer);
