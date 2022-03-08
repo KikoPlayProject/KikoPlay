@@ -92,6 +92,9 @@ QToolButton#ListEditButton:checked{
        color:#FFFFFF;
        margin-top:2px;
 }
+QToolButton[hideMenuIndicator="true"]::menu-indicator {
+    image: none;
+}
 QWidget#widgetTitlebar{
     background-color: rgba(60, 65,68,180);
 }

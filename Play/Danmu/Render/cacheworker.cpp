@@ -270,7 +270,7 @@ void CacheWorker::createTexture(QVector<CacheMiddleInfo> &midInfo)
                 auto &mInfo = midInfo[i];
                 painter.drawImage(mInfo.texX, mInfo.texY, *mInfo.img);
             }
-            test.save("tt.jpg");
+            test.save("texture_test.jpg");
         }
 #endif
 #ifdef TEXTURE_MAIN_THREAD

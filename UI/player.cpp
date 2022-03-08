@@ -289,49 +289,36 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     titleLabel->setObjectName(QStringLiteral("labelTitle"));
     titleLabel->setFont(normalFont);
 
+    constexpr const int infoBtnCount = 4;
+    QPair<QChar, QString> infoButtonTexts[infoBtnCount] = {
+        {QChar(0xe727), tr("Media Info")},
+        {QChar(0xe720), tr("Window Size")},
+        {QChar(0xe741), tr("Screenshot")},
+        {QChar(0xe65a), tr("On Top")}
+    };
+    QToolButton **infoBtnPtrs[infoBtnCount] = {
+        &mediaInfo, &windowSize, &screenshot, &stayOnTop
+    };
     GlobalObjects::iconfont.setPointSize(12);
-
-    mediaInfo=new QToolButton(playInfoPanel);
-    mediaInfo->setFont(GlobalObjects::iconfont);
-    mediaInfo->setText(QChar(0xe727));
-    mediaInfo->setObjectName(QStringLiteral("ListEditButton"));
-    mediaInfo->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    mediaInfo->setPopupMode(QToolButton::InstantPopup);
-    mediaInfo->setToolTip(tr("Media Info"));
-
-    windowSize=new QToolButton(playInfoPanel);
-    windowSize->setFont(GlobalObjects::iconfont);
-    windowSize->setText(QChar(0xe720));
-    windowSize->setObjectName(QStringLiteral("ListEditButton"));
-    windowSize->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    windowSize->setPopupMode(QToolButton::InstantPopup);
-    windowSize->setToolTip(tr("Window Size"));
-
-    screenshot=new QToolButton(playInfoPanel);
-    screenshot->setFont(GlobalObjects::iconfont);
-    screenshot->setText(QChar(0xe741));
-    screenshot->setObjectName(QStringLiteral("ListEditButton"));
-    screenshot->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    screenshot->setPopupMode(QToolButton::InstantPopup);
-    screenshot->setToolTip(tr("Screenshot"));
-
-    stayOnTop=new QToolButton(playInfoPanel);
-    stayOnTop->setFont(GlobalObjects::iconfont);
-    stayOnTop->setText(QChar(0xe65a));
-    stayOnTop->setObjectName(QStringLiteral("ListEditButton"));
-    stayOnTop->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    stayOnTop->setPopupMode(QToolButton::InstantPopup);
-    stayOnTop->setToolTip(tr("On Top"));
-
     QHBoxLayout *infoHLayout=new QHBoxLayout(playInfoPanel);
     infoHLayout->setSpacing(0);
     infoHLayout->addWidget(titleLabel);
     infoHLayout->addStretch(1);
-    infoHLayout->addWidget(mediaInfo);
-    infoHLayout->addWidget(windowSize);
-    infoHLayout->addWidget(screenshot);
-    infoHLayout->addWidget(stayOnTop);
-
+    for(int i = 0; i < infoBtnCount; ++i)
+    {
+        *infoBtnPtrs[i] = new QToolButton(playInfoPanel);
+        QToolButton *tb = *infoBtnPtrs[i];
+        tb->setFont(GlobalObjects::iconfont);
+        tb->setText(infoButtonTexts[i].first);
+        tb->setToolTip(infoButtonTexts[i].second);
+        tb->setObjectName(QStringLiteral("ListEditButton"));
+        tb->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        tb->setPopupMode(QToolButton::InstantPopup);
+        infoHLayout->addWidget(tb);
+#ifdef Q_OS_MACOS
+        tb->setProperty("hideMenuIndicator", true);
+#endif
+    }
 
     playControlPanel=new QWidget(contralContainer);
     playControlPanel->setObjectName(QStringLiteral("widgetPlayControl"));

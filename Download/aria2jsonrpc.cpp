@@ -11,7 +11,7 @@ Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent)
 {
     aria2Process = new QProcess(this);
 #ifdef Q_OS_WIN
-    aria2Process->start("taskkill", {"/im", "aria2c.exe" "/f"});
+    aria2Process->start("taskkill", {"/im", "aria2c.exe", "/f"});
 #else
     aria2Process->start("pkill -f aria2c");
 #endif

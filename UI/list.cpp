@@ -1116,57 +1116,40 @@ QWidget *ListWindow::setupPlaylistPage()
 
     playlistPageVLayout->addWidget(playlistView);
 
+    constexpr const int tbBtnCount = 4;
+    QPair<QChar, QString> tbButtonTexts[tbBtnCount] = {
+        {QChar(0xe6f3), tr("Add")},
+        {QChar(0xe68e), tr("Remove")},
+        {QChar(0xe60e), tr("Sort")},
+        {QChar(0xe608), tr("Loop Mode")}
+    };
+    QList<QAction *> tbActions[tbBtnCount] = {
+        {act_addCollection, act_addItem, act_addFolder},
+        {act_remove, act_clear},
+        {act_sortSelectionAscending, act_sortSelectionDescending, act_sortAllAscending, act_sortAllDescending},
+        {loopModeGroup->actions()}
+    };
+
     GlobalObjects::iconfont.setPointSize(14);
-    QToolButton *tb_add=new QToolButton(playlistPage);
-    tb_add->setFont(GlobalObjects::iconfont);
-    tb_add->setText(QChar(0xe6f3));
-    tb_add->setObjectName(QStringLiteral("ListEditButton"));
-    tb_add->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    tb_add->addAction(act_addCollection);
-    tb_add->addAction(act_addItem);
-    tb_add->addAction(act_addFolder);
-    tb_add->setPopupMode(QToolButton::InstantPopup);
-    tb_add->setToolTip(tr("Add"));
-
-    QToolButton *tb_remove=new QToolButton(playlistPage);
-    tb_remove->setFont(GlobalObjects::iconfont);
-    tb_remove->setText(QChar(0xe68e));
-    tb_remove->setObjectName(QStringLiteral("ListEditButton"));
-    tb_remove->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    tb_remove->addAction(act_remove);
-    tb_remove->addAction(act_clear);
-    tb_remove->setPopupMode(QToolButton::InstantPopup);
-    tb_remove->setToolTip(tr("Remove"));
-
-    QToolButton *tb_sort=new QToolButton(playlistPage);
-    tb_sort->setFont(GlobalObjects::iconfont);
-    tb_sort->setText(QChar(0xe60e));
-    tb_sort->setObjectName(QStringLiteral("ListEditButton"));
-    tb_sort->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    tb_sort->addAction(act_sortSelectionAscending);
-    tb_sort->addAction(act_sortSelectionDescending);
-    tb_sort->addAction(act_sortAllAscending);
-    tb_sort->addAction(act_sortAllDescending);
-    tb_sort->setPopupMode(QToolButton::InstantPopup);
-    tb_sort->setToolTip(tr("Sort"));
-
-    QToolButton *tb_playmode=new QToolButton(playlistPage);
-    tb_playmode->setFont(GlobalObjects::iconfont);
-    tb_playmode->setText(QChar(0xe608));
-    tb_playmode->setObjectName(QStringLiteral("ListEditButton"));
-    tb_playmode->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    tb_playmode->setPopupMode(QToolButton::InstantPopup);
-    tb_playmode->addActions(loopModeGroup->actions());
-    tb_playmode->setToolTip(tr("Loop Mode"));
-
     QHBoxLayout *listEditHLayout=new QHBoxLayout();
     listEditHLayout->setContentsMargins(0,0,0,0);
-    listEditHLayout->addWidget(tb_add);
-    listEditHLayout->addWidget(tb_remove);
-    listEditHLayout->addWidget(tb_sort);
-    listEditHLayout->addWidget(tb_playmode);
-    listEditHLayout->addStretch(1);
 
+    for(int i = 0; i < tbBtnCount; ++i)
+    {
+        QToolButton *tb = new QToolButton(playlistPage);
+        tb->setFont(GlobalObjects::iconfont);
+        tb->setText(tbButtonTexts[i].first);
+        tb->setToolTip(tbButtonTexts[i].second);
+        tb->addActions(tbActions[i]);
+        tb->setObjectName(QStringLiteral("ListEditButton"));
+        tb->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        tb->setPopupMode(QToolButton::InstantPopup);
+        listEditHLayout->addWidget(tb);
+#ifdef Q_OS_MACOS
+        tb->setProperty("hideMenuIndicator", true);
+#endif
+    }
+    listEditHLayout->addStretch(1);
     playlistPageVLayout->addLayout(listEditHLayout);
 
     return playlistPage;
@@ -1218,58 +1201,51 @@ QWidget *ListWindow::setupDanmulistPage()
     QHeaderView *danmulistHeader=danmulistView->header();
     danmulistHeader->setFont(normalFont);
     QFontMetrics fontMetrics(normalFont);
-    danmulistHeader->resizeSection(0,fontMetrics.width("00:00")+10);
+    danmulistHeader->resizeSection(0,fontMetrics.horizontalAdvance("00:00")+10);
     danmulistPageVLayout->addWidget(danmulistView);
 
+    constexpr const int tbBtnCount = 4;
+    QPair<QChar, QString> tbButtonTexts[tbBtnCount] = {
+        {QChar(0xe636), tr("Update Danmu Pool")},
+        {QChar(0xe667), tr("Add Danmu")},
+        {QChar(0xe60a), tr("Edit")},
+        {QChar(0xe602), tr("Position")}
+    };
+    QList<QAction *> tbActions[tbBtnCount] = {
+        {},
+        {act_addOnlineDanmu, act_addLocalDanmu},
+        {act_editPool, act_editBlock},
+        {}
+    };
+
+    QVector<QToolButton *> btns(tbBtnCount);
     GlobalObjects::iconfont.setPointSize(14);
-    QToolButton *updatePool=new QToolButton(danmulistPage);
-    updatePool->setFont(GlobalObjects::iconfont);
-    updatePool->setText(QChar(0xe636));
-    updatePool->setObjectName(QStringLiteral("ListEditButton"));
-    updatePool->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    updatePool->setToolTip(tr("Update Danmu Pool"));
-    QObject::connect(updatePool,&QToolButton::clicked, this, &ListWindow::updateCurrentPool);
-
-    QToolButton *addDanmu=new QToolButton(danmulistPage);
-    addDanmu->setFont(GlobalObjects::iconfont);
-    addDanmu->setText(QChar(0xe667));
-    addDanmu->setObjectName(QStringLiteral("ListEditButton"));
-    addDanmu->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    addDanmu->addAction(act_addOnlineDanmu);
-    addDanmu->addAction(act_addLocalDanmu);
-    addDanmu->setPopupMode(QToolButton::InstantPopup);
-    addDanmu->setToolTip(tr("Add Danmu"));
-
-    QToolButton *edit=new QToolButton(danmulistPage);
-    edit->setFont(GlobalObjects::iconfont);
-    edit->setText(QChar(0xe60a));
-    edit->setObjectName(QStringLiteral("ListEditButton"));
-    edit->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    edit->addAction(act_editPool);
-    edit->addAction(act_editBlock);
-    edit->setPopupMode(QToolButton::InstantPopup);
-    edit->setToolTip(tr("Edit"));
-
-    QToolButton *locatePosition=new QToolButton(danmulistPage);
-    locatePosition->setFont(GlobalObjects::iconfont);
-    locatePosition->setText(QChar(0xe602));
-    locatePosition->setObjectName(QStringLiteral("ListEditButton"));
-    locatePosition->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    locatePosition->setToolTip(tr("Position"));
-	QObject::connect(locatePosition, &QToolButton::clicked, [this]() {
-        danmulistView->scrollTo(GlobalObjects::danmuPool->getCurrentIndex(), QAbstractItemView::PositionAtTop);
-	});
-
-
     QHBoxLayout *poolEditHLayout=new QHBoxLayout();
-    //poolEditHLayout->setSpacing(2);
-    poolEditHLayout->addWidget(updatePool);
-    poolEditHLayout->addWidget(addDanmu);
-    poolEditHLayout->addWidget(edit);
-    poolEditHLayout->addWidget(locatePosition);
-    QSpacerItem *listHSpacer = new QSpacerItem(0, 10, QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
-    poolEditHLayout->addItem(listHSpacer);
+    for(int i = 0; i < tbBtnCount; ++i)
+    {
+        QToolButton *tb = new QToolButton(danmulistPage);
+        btns[i] = tb;
+        tb->setFont(GlobalObjects::iconfont);
+        tb->setText(tbButtonTexts[i].first);
+        tb->setToolTip(tbButtonTexts[i].second);
+        tb->addActions(tbActions[i]);
+        tb->setObjectName(QStringLiteral("ListEditButton"));
+        tb->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        tb->setPopupMode(QToolButton::InstantPopup);
+        poolEditHLayout->addWidget(tb);
+#ifdef Q_OS_MACOS
+        tb->setProperty("hideMenuIndicator", true);
+#endif
+    }
+    poolEditHLayout->addStretch(1);
     danmulistPageVLayout->addLayout(poolEditHLayout);
+
+    constexpr const int Index_UpdatePool = 0;
+    constexpr const int Index_LocatePosition = 3;
+    QObject::connect(btns[Index_UpdatePool], &QToolButton::clicked, this, &ListWindow::updateCurrentPool);
+    QObject::connect(btns[Index_LocatePosition], &QToolButton::clicked, [this]() {
+        danmulistView->scrollTo(GlobalObjects::danmuPool->getCurrentIndex(), QAbstractItemView::PositionAtTop);
+    });
 
     return danmulistPage;
 }

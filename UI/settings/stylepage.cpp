@@ -166,7 +166,7 @@ void StylePage::setBgList(QListWidget *bgImgView)
     QObject::connect(actAdd, &QAction::triggered, this, [this, bgImgView](bool)
     {
         QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), "",
-                                                        "JPEG Images (*.jpg);;PNG Images (*.png)");
+                                                        "Image Files(*.jpg *.png);;All Files(*)");
         if(!fileName.isEmpty())
         {
             QPixmap thumb(getThumb(fileName));

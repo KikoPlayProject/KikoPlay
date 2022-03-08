@@ -21,3 +21,4 @@ kikoplay
 qrc_res.cpp
 moc_*.cpp
 moc_predefs.h
+texture_test.jpg
