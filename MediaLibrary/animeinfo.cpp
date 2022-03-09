@@ -18,7 +18,7 @@ const QPixmap &Anime::cover(bool onlyCache)
     QBuffer bufferImage(&_coverData);
     bufferImage.open(QIODevice::ReadOnly);
     QImageReader reader(&bufferImage);
-    reader.setScaledSize(QSize(AnimeItemDelegate::ItemWidth, AnimeItemDelegate::ItemHeight));
+    reader.setScaledSize(QSize(AnimeItemDelegate::CoverWidth, AnimeItemDelegate::CoverHeight));
     cover = QSharedPointer<QPixmap>::create(QPixmap::fromImageReader(&reader));
     coverCache.put(this, cover);
     return *cover;

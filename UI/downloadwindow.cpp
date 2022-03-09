@@ -262,6 +262,54 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         proxyModel->setFilterRegExp(keyword);
     });
 
+    QStringList pageButtonTexts = {
+        tr("General"),
+        tr("File"),
+        tr("Block"),
+        tr("Connection"),
+        tr("Log")
+    };
+    QFontMetrics fm = QToolButton().fontMetrics();
+    int btnHeight = fm.height() + 10*logicalDpiY()/96;
+    int btnWidth = 0;
+    for(const QString &t : pageButtonTexts)
+    {
+        btnWidth = qMax(btnWidth, fm.horizontalAdvance(t));
+    }
+    btnWidth += 30*logicalDpiX()/96;
+
+    QHBoxLayout *pageBarHLayout=new QHBoxLayout();
+    pageBarHLayout->setSpacing(0);
+    pageBarHLayout->setContentsMargins(0,0,0,2*logicalDpiY()/96);
+    QButtonGroup *pageButtonGroup=new QButtonGroup(downloadContainer);
+    for(int i = 0; i < pageButtonTexts.size(); ++i)
+    {
+        QToolButton *btn = new QToolButton(downloadContainer);
+        btn->setText(pageButtonTexts[i]);
+        btn->setCheckable(true);
+        btn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        btn->setObjectName(QStringLiteral("DownloadInfoPage"));
+        btn->setFixedSize(QSize(btnWidth, btnHeight));
+        pageBarHLayout->addWidget(btn);
+        pageButtonGroup->addButton(btn, i);
+    }
+    pageBarHLayout->addStretch(1);
+
+    QWidget *detailInfoContent=new QWidget(downloadContainer);
+    detailInfoContent->setContentsMargins(0,0,0,0);
+    QStackedLayout *detailInfoSLayout=new QStackedLayout(detailInfoContent);
+    detailInfoSLayout->addWidget(setupGeneralInfoPage(detailInfoContent));
+    detailInfoSLayout->addWidget(setupFileInfoPage(detailInfoContent));
+    detailInfoSLayout->addWidget(setupBlockPage(detailInfoContent));
+    detailInfoSLayout->addWidget(setupConnectionPage(detailInfoContent));
+    detailInfoSLayout->addWidget(setupGlobalLogPage(detailInfoContent));
+
+    QObject::connect(pageButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[detailInfoSLayout](int id, bool checked){
+        if(checked)detailInfoSLayout->setCurrentIndex(id);
+    });
+    pageButtonGroup->button(0)->setChecked(true);
+
+    /*
     int pageBtnHeight=30*logicalDpiY()/96;
     QToolButton *generalInfoPage=new QToolButton(downloadContainer);
     generalInfoPage->setObjectName(QStringLiteral("DownloadInfoPage"));
@@ -293,8 +341,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     logPage->setText(tr("Global Log"));
     logPage->setCheckable(true);
 
-    QHBoxLayout *pageBarHLayout=new QHBoxLayout();
-    pageBarHLayout->setContentsMargins(0,0,0,2*logicalDpiY()/96);
+
     pageBarHLayout->addWidget(generalInfoPage);
     pageBarHLayout->addWidget(fileInfoPage);
     pageBarHLayout->addWidget(blockPage);
@@ -302,7 +349,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     pageBarHLayout->addWidget(logPage);
     pageBarHLayout->addStretch(1);
 
-    QButtonGroup *pageButtonGroup=new QButtonGroup(downloadContainer);
+
     pageButtonGroup->addButton(generalInfoPage,0);
     pageButtonGroup->addButton(fileInfoPage,1);
     pageButtonGroup->addButton(blockPage,2);
@@ -311,19 +358,8 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 
     generalInfoPage->setChecked(true);
 
+*/
 
-    QWidget *detailInfoContent=new QWidget(downloadContainer);
-    detailInfoContent->setContentsMargins(0,0,0,0);
-    QStackedLayout *detailInfoSLayout=new QStackedLayout(detailInfoContent);
-    detailInfoSLayout->addWidget(setupGeneralInfoPage(detailInfoContent));
-    detailInfoSLayout->addWidget(setupFileInfoPage(detailInfoContent));
-    detailInfoSLayout->addWidget(setupBlockPage(detailInfoContent));
-    detailInfoSLayout->addWidget(setupConnectionPage(detailInfoContent));
-    detailInfoSLayout->addWidget(setupGlobalLogPage(detailInfoContent));
-
-    QObject::connect(pageButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[detailInfoSLayout](int id, bool checked){
-        if(checked)detailInfoSLayout->setCurrentIndex(id);
-    });
 
     QWidget *bottomContent=new QWidget(downloadContainer);
     QVBoxLayout *bvLayout=new QVBoxLayout(bottomContent);

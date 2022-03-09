@@ -9,8 +9,9 @@
 #include <QToolTip>
 #include "animeinfo.h"
 #define AnimeRole Qt::UserRole+1
-int AnimeItemDelegate::ItemWidth = 0;
-int AnimeItemDelegate::ItemHeight = 0;
+int AnimeItemDelegate::CoverWidth = 0;
+int AnimeItemDelegate::CoverHeight = 0;
+int AnimeItemDelegate::TitleHeight = 0;
 namespace
 {
 class AnimeItemWidget : public QWidget
@@ -38,15 +39,16 @@ public:
         shadowEffect->setOffset(0, 0);
         shadowEffect->setBlurRadius(12);
         imgLabel->setGraphicsEffect(shadowEffect);
-        AnimeItemDelegate::ItemWidth=130*logicalDpiX()/96;
-        AnimeItemDelegate::ItemHeight=185*logicalDpiY()/96;
-        setFixedSize(AnimeItemDelegate::ItemWidth, AnimeItemDelegate::ItemHeight);
-        titleLabel->setMaximumWidth(AnimeItemDelegate::ItemWidth-20*logicalDpiX()/96);
+        AnimeItemDelegate::CoverWidth = 130*logicalDpiX()/96;
+        AnimeItemDelegate::TitleHeight = titleLabel->fontMetrics().height();
+        AnimeItemDelegate::CoverHeight = 180*logicalDpiY()/96;
+        setFixedSize(AnimeItemDelegate::CoverWidth, AnimeItemDelegate::CoverHeight + AnimeItemDelegate::TitleHeight);
+        titleLabel->setMaximumWidth(AnimeItemDelegate::CoverWidth-20*logicalDpiX()/96);
     }
     void setTitle(const QString &title)
     {
-        QFontMetrics fm(font());
-        titleLabel->setText(fm.elidedText(title,Qt::ElideRight, AnimeItemDelegate::ItemWidth-30*logicalDpiX()/96));
+        QFontMetrics fm(titleLabel->fontMetrics());
+        titleLabel->setText(fm.elidedText(title,Qt::ElideRight, AnimeItemDelegate::CoverWidth-30*logicalDpiX()/96));
     }
     void setCover(const QPixmap &pixmap)
     {
@@ -81,7 +83,7 @@ private:
 };
 }
 AnimeItemDelegate::AnimeItemDelegate(QObject *parent):QStyledItemDelegate(parent),
-    contentWidget(new AnimeItemWidget()),pixmap(ItemWidth,ItemHeight), blockCoverFetch(false)
+    contentWidget(new AnimeItemWidget()),pixmap(CoverWidth,CoverHeight+TitleHeight), blockCoverFetch(false)
 {
 
 }
@@ -132,7 +134,7 @@ bool AnimeItemDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, co
     return QStyledItemDelegate::editorEvent(event,model,option,index);
 }
 
-QSize AnimeItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
+QSize AnimeItemDelegate::sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const
 {
-    return QSize(ItemWidth,ItemHeight);
+    return QSize(CoverWidth,CoverHeight+TitleHeight);
 }

@@ -156,52 +156,40 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
 
     QWidget *pageContainer = new QWidget(this);
 
-    QSize pageButtonSize(80 *logicalDpiX()/96,32*logicalDpiY()/96);
-    QToolButton *descPageButton=new QToolButton(pageContainer);
-    descPageButton->setText(tr("Description"));
-    descPageButton->setCheckable(true);
-    descPageButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    descPageButton->setObjectName(QStringLiteral("AnimeInfoPage"));
-    descPageButton->setFixedSize(pageButtonSize);
-
-    QToolButton *episodesPageButton=new QToolButton(pageContainer);
-    episodesPageButton->setText(tr("Episodes"));
-    episodesPageButton->setCheckable(true);
-    episodesPageButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    episodesPageButton->setObjectName(QStringLiteral("AnimeInfoPage"));
-    episodesPageButton->setFixedSize(pageButtonSize);
-
-    QToolButton *characterPageButton=new QToolButton(pageContainer);
-    characterPageButton->setText(tr("Characters"));
-    characterPageButton->setCheckable(true);
-    characterPageButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    characterPageButton->setObjectName(QStringLiteral("AnimeInfoPage"));
-    characterPageButton->setFixedSize(pageButtonSize);
-
-    QToolButton *tagPageButton=new QToolButton(pageContainer);
-    tagPageButton->setText(tr("Tag"));
-    tagPageButton->setCheckable(true);
-    tagPageButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    tagPageButton->setObjectName(QStringLiteral("AnimeInfoPage"));
-    tagPageButton->setFixedSize(pageButtonSize);
-
-    QToolButton *capturePageButton=new QToolButton(pageContainer);
-    capturePageButton->setText(tr("Capture"));
-    capturePageButton->setCheckable(true);
-    capturePageButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    capturePageButton->setObjectName(QStringLiteral("AnimeInfoPage"));
-    capturePageButton->setFixedSize(pageButtonSize);
+    QStringList pageButtonTexts = {
+        tr("Description"),
+        tr("Episodes"),
+        tr("Characters"),
+        tr("Tag"),
+        tr("Capture")
+    };
+    QFontMetrics fm = QToolButton().fontMetrics();
+    int btnHeight = fm.height() + 10*logicalDpiY()/96;
+    int btnWidth = 0;
+    for(const QString &t : pageButtonTexts)
+    {
+        btnWidth = qMax(btnWidth, fm.horizontalAdvance(t));
+    }
+    btnWidth += 40*logicalDpiX()/96;
 
     QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
     pageButtonHLayout->setContentsMargins(0,0,0,0);
     pageButtonHLayout->setSpacing(0);
-    pageButtonHLayout->addWidget(descPageButton);
-    pageButtonHLayout->addWidget(episodesPageButton);
-    pageButtonHLayout->addWidget(characterPageButton);
-    pageButtonHLayout->addWidget(tagPageButton);
-    pageButtonHLayout->addWidget(capturePageButton);
-    pageButtonHLayout->addStretch(1);
 
+    QButtonGroup *btnGroup = new QButtonGroup(this);
+
+    for(int i = 0; i < pageButtonTexts.size(); ++i)
+    {
+        QToolButton *btn = new QToolButton(pageContainer);
+        btn->setText(pageButtonTexts[i]);
+        btn->setCheckable(true);
+        btn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        btn->setObjectName(QStringLiteral("AnimeInfoPage"));
+        btn->setFixedSize(QSize(btnWidth, btnHeight));
+        pageButtonHLayout->addWidget(btn);
+        btnGroup->addButton(btn, i);
+    }
+    pageButtonHLayout->addStretch(1);
     QStackedLayout *contentStackLayout=new QStackedLayout();
     contentStackLayout->setContentsMargins(0,0,0,0);
     contentStackLayout->addWidget(setupDescriptionPage());
@@ -209,17 +197,12 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     contentStackLayout->addWidget(setupCharacterPage());
     contentStackLayout->addWidget(setupTagPage());
     contentStackLayout->addWidget(setupCapturePage());
-    QButtonGroup *btnGroup = new QButtonGroup(this);
-    btnGroup->addButton(descPageButton, 0);
-    btnGroup->addButton(episodesPageButton, 1);
-    btnGroup->addButton(characterPageButton, 2);
-    btnGroup->addButton(tagPageButton, 3);
-    btnGroup->addButton(capturePageButton,4);
+
     QObject::connect(btnGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, [contentStackLayout](int id, bool checked) {
         if (checked)
             contentStackLayout->setCurrentIndex(id);
     });
-    descPageButton->setChecked(true);
+    btnGroup->button(0)->setChecked(true);
 
     QVBoxLayout *pageVLayout = new QVBoxLayout(pageContainer);
     pageVLayout->setContentsMargins(0,0,0,0);
