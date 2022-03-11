@@ -13,6 +13,7 @@ private:
     QWidget *buttonContainer;
     QLabel *imgLabel;
     double aspectRatio;
+    int hExtend;
     // QWidget interface
 protected:
     virtual void resizeEvent(QResizeEvent *event);

@@ -173,11 +173,14 @@ void MainWindow::setupUI()
     widgetTitlebar = new DropableWidget(centralContainer);
     widgetTitlebar->setAcceptDrops(true);
     widgetTitlebar->setObjectName(QStringLiteral("widgetTitlebar"));
-#ifdef Q_OS_WIN
-    widgetTitlebar->setFixedHeight(36*logicalDpiY()/96);
-#endif
-
     QFont normalFont(GlobalObjects::normalFont,12);
+#ifdef Q_OS_WIN
+    {
+    QFontMetrics fm(normalFont);
+    //widgetTitlebar->setFixedHeight(36*logicalDpiY()/96);
+    widgetTitlebar->setFixedHeight(fm.height() * 1.2);
+    }
+#endif
     buttonIcon = new QToolButton(widgetTitlebar);
     buttonIcon->setFont(normalFont);
 #ifdef Q_OS_WIN
@@ -251,41 +254,42 @@ void MainWindow::setupUI()
         close();
     });
     buttonIcon->addAction(act_exit);
-    QSize pageButtonSize(100*logicalDpiX()/96,30*logicalDpiY()/96);
+
+    QStringList pageButtonTexts = {
+        tr("Player"),
+        tr("Library"),
+        tr("Download")
+    };
+    QToolButton **infoBtnPtrs[] = {
+        &buttonPage_Play, &buttonPage_Library, &buttonPage_Downlaod
+    };
+    QFontMetrics fm(normalFont);
+    int btnHeight = fm.height() + 10*logicalDpiY()/96;
+    int btnWidth = 0;
+    for(const QString &t : pageButtonTexts)
+    {
+        btnWidth = qMax(btnWidth, fm.horizontalAdvance(t));
+    }
+    btnWidth += 40*logicalDpiX()/96;
 #ifdef Q_OS_WIN
     #define pageBtnObjName "PageButton"
 #else
     #define pageBtnObjName "PageButton_O"
 #endif
-    buttonPage_Play = new QToolButton(widgetTitlebar);
-    buttonPage_Play->setFont(normalFont);
-    buttonPage_Play->setText(tr("Player"));
-    buttonPage_Play->setObjectName(QStringLiteral(pageBtnObjName));
-    buttonPage_Play->setCheckable(true);
-    buttonPage_Play->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    buttonPage_Play->setFixedSize(pageButtonSize);
-    buttonPage_Play->setChecked(true);
-
-    buttonPage_Library = new QToolButton(widgetTitlebar);
-    buttonPage_Library->setFont(normalFont);
-    buttonPage_Library->setText(tr("Library"));
-    buttonPage_Library->setObjectName(QStringLiteral(pageBtnObjName));
-    buttonPage_Library->setCheckable(true);
-    buttonPage_Library->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    buttonPage_Library->setFixedSize(pageButtonSize);
-
-    buttonPage_Downlaod = new QToolButton(widgetTitlebar);
-    buttonPage_Downlaod->setFont(normalFont);
-    buttonPage_Downlaod->setText(tr("Download"));
-    buttonPage_Downlaod->setObjectName(QStringLiteral(pageBtnObjName));
-    buttonPage_Downlaod->setCheckable(true);
-    buttonPage_Downlaod->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    buttonPage_Downlaod->setFixedSize(pageButtonSize);
-
     QButtonGroup *btnGroup=new QButtonGroup(this);
-    btnGroup->addButton(buttonPage_Play,0);
-    btnGroup->addButton(buttonPage_Library,1);
-    btnGroup->addButton(buttonPage_Downlaod,2);
+    for(int i = 0; i < pageButtonTexts.size(); ++i)
+    {
+        *infoBtnPtrs[i] = new QToolButton(this);
+        QToolButton *tb = *infoBtnPtrs[i];
+        tb->setFont(normalFont);
+        tb->setText(pageButtonTexts[i]);
+        tb->setCheckable(true);
+        tb->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        tb->setFixedSize(QSize(btnWidth, btnHeight));
+        tb->setObjectName(QStringLiteral(pageBtnObjName));
+        btnGroup->addButton(tb, i);
+    }
+    buttonPage_Play->setChecked(true);
     QObject::connect(btnGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[this](int id, bool checked){
         if(checked)
         {
@@ -321,7 +325,8 @@ void MainWindow::setupUI()
 
 
     GlobalObjects::iconfont.setPointSize(10);
-    const QSize controlButtonSize(34*logicalDpiX()/96,32*logicalDpiY()/96);
+    const int cBtnH = widgetTitlebar->height() - 4*logicalDpiY()/96;
+    const QSize controlButtonSize(cBtnH, cBtnH);
     minButton=new QToolButton(widgetTitlebar);
     minButton->setFont(GlobalObjects::iconfont);
     minButton->setText(QChar(0xe651));

@@ -80,23 +80,25 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
         urlView->setProperty("cScrollStyle", setScrollStyle);
     });
 
-
-    int pageBtnHeight=28*logicalDpiY()/96;
-
     QToolButton *logPage=new QToolButton(this);
     logPage->setObjectName(QStringLiteral("DownloadInfoPage"));
     logPage->setText(tr("Log"));
-    logPage->setFixedHeight(pageBtnHeight);
     logPage->setCheckable(true);
 
     QToolButton *urlPage=new QToolButton(this);
     urlPage->setObjectName(QStringLiteral("DownloadInfoPage"));
-    urlPage->setFixedHeight(pageBtnHeight);
     urlPage->setText(tr("Staging URI"));
     urlPage->setCheckable(true);
 
+    QFontMetrics fm(logPage->fontMetrics());
+    int pageBtnHeight = fm.height() + 10*logicalDpiY()/96;
+    int pageBtnWidth = qMax(fm.horizontalAdvance(logPage->text()), fm.horizontalAdvance(urlPage->text())) * 1.5;
+    logPage->setFixedSize(pageBtnWidth, pageBtnHeight);
+    urlPage->setFixedSize(pageBtnWidth, pageBtnHeight);
+
     QHBoxLayout *pageBarHLayout=new QHBoxLayout();
     pageBarHLayout->setContentsMargins(0,0,0,2*logicalDpiY()/96);
+    pageBarHLayout->setSpacing(0);
     pageBarHLayout->addWidget(logPage);
     pageBarHLayout->addWidget(urlPage);
     pageBarHLayout->addStretch(1);

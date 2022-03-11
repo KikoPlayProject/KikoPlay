@@ -101,7 +101,7 @@ void GlobalObjects::init()
     int fontId = QFontDatabase::addApplicationFont(":/res/iconfont.ttf");
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
     iconfont.setFamily(fontFamilies.at(0));
-	QApplication::setFont(QFont("Microsoft Yahei UI", 10));
+    QApplication::setFont(QFont("Microsoft Yahei UI", 10));
 }
 
 void GlobalObjects::clear()

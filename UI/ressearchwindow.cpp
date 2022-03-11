@@ -85,7 +85,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     QIntValidator* pageRangeValidator=new QIntValidator(this);
     pageEdit=new QLineEdit("0",this);
     pageEdit->setObjectName(QStringLiteral("PageEdit"));
-    pageEdit->setFixedWidth(30*logicalDpiX()/96);
+    pageEdit->setFixedWidth(pageEdit->fontMetrics().horizontalAdvance("000"));
     pageEdit->setAlignment(Qt::AlignCenter);
     pageEdit->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
     pageEdit->setValidator(pageRangeValidator);

@@ -108,7 +108,7 @@ private:
     QPoint mousePressPos;
 
     bool resizeMouseDown;
-    bool left, right, bottom;
+    bool left, right, top, bottom;
     QPoint oldPos;
 
     DialogTip *dialogTip;
@@ -117,11 +117,12 @@ private:
 
     // QWidget interface
 protected:
-    bool eventFilter(QObject *obj, QEvent *e);
-    void mouseMoveEvent(QMouseEvent *e);
-    void mousePressEvent(QMouseEvent *e);
-    void mouseReleaseEvent(QMouseEvent *e);
-    virtual void resizeEvent(QResizeEvent *event);
+    void showEvent(QShowEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
+    virtual void resizeEvent(QResizeEvent *event) override;
     void keyPressEvent(QKeyEvent *) override;
     void showBusyState(bool busy);
     void setTitle(const QString &text);

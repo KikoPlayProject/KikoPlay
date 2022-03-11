@@ -96,39 +96,41 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,
     danmuVLayout->setSpacing(0);
 
     QFont normalFont(GlobalObjects::normalFont,12);
-    QSize pageButtonSize(90 *logicalDpiX()/96,36*logicalDpiY()/96);
-    onlineDanmuPage=new QToolButton(this);
-    onlineDanmuPage->setFont(normalFont);
-    onlineDanmuPage->setText(tr("Search"));
-    onlineDanmuPage->setCheckable(true);
-    onlineDanmuPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    onlineDanmuPage->setFixedSize(pageButtonSize);
-    onlineDanmuPage->setObjectName(QStringLiteral("DialogPageButton"));
-	onlineDanmuPage->setChecked(true);
-
-    urlDanmuPage=new QToolButton(this);
-    urlDanmuPage->setFont(normalFont);
-    urlDanmuPage->setText(tr("URL"));
-    urlDanmuPage->setCheckable(true);
-    urlDanmuPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    urlDanmuPage->setFixedSize(pageButtonSize);
-    urlDanmuPage->setObjectName(QStringLiteral("DialogPageButton"));
-
-    selectedDanmuPage=new QToolButton(this);
-    selectedDanmuPage->setFont(normalFont);
-    selectedDanmuPage->setText(tr("Selected"));
-    selectedDanmuPage->setCheckable(true);
-    selectedDanmuPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    selectedDanmuPage->setFixedHeight(pageButtonSize.height());
-    selectedDanmuPage->setObjectName(QStringLiteral("DialogPageButton"));
-
+    QStringList pageButtonTexts = {
+        tr("Search"),
+        tr("URL"),
+        tr("Selected")
+    };
+    QToolButton **infoBtnPtrs[] = {
+        &onlineDanmuPage, &urlDanmuPage, &selectedDanmuPage
+    };
+    QFontMetrics fm(normalFont);
+    int btnHeight = fm.height() + 10*logicalDpiY()/96;
+    int btnWidth = 0;
+    for(const QString &t : pageButtonTexts)
+    {
+        btnWidth = qMax(btnWidth, fm.horizontalAdvance(t));
+    }
+    btnWidth += 40*logicalDpiX()/96;
 
     QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
     pageButtonHLayout->setContentsMargins(0,0,0,0);
     pageButtonHLayout->setSpacing(0);
-    pageButtonHLayout->addWidget(onlineDanmuPage);
-    pageButtonHLayout->addWidget(urlDanmuPage);
-    pageButtonHLayout->addWidget(selectedDanmuPage);   
+    QButtonGroup *btnGroup = new QButtonGroup(this);
+    for(int i = 0; i < pageButtonTexts.size(); ++i)
+    {
+        *infoBtnPtrs[i] = new QToolButton(this);
+        QToolButton *tb = *infoBtnPtrs[i];
+        tb->setFont(normalFont);
+        tb->setText(pageButtonTexts[i]);
+        tb->setCheckable(true);
+        tb->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        tb->setFixedSize(QSize(btnWidth, btnHeight));
+        tb->setObjectName(QStringLiteral("DialogPageButton"));
+        pageButtonHLayout->addWidget(tb);
+        btnGroup->addButton(tb, i);
+    }
+    onlineDanmuPage->setChecked(true);
     pageButtonHLayout->addStretch(1);
     danmuVLayout->addLayout(pageButtonHLayout);
 
@@ -138,17 +140,13 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,
     contentStackLayout->addWidget(setupURLPage());
     contentStackLayout->addWidget(setupSelectedPage());
     danmuVLayout->addLayout(contentStackLayout);
+    QObject::connect(btnGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, [contentStackLayout](int id, bool checked) {
+        if (checked)
+        {
+            contentStackLayout->setCurrentIndex(id);
+        }
+    });
 
-	QButtonGroup *btnGroup = new QButtonGroup(this);
-	btnGroup->addButton(onlineDanmuPage, 0);
-	btnGroup->addButton(urlDanmuPage, 1);
-	btnGroup->addButton(selectedDanmuPage, 2);
-	QObject::connect(btnGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, [contentStackLayout](int id, bool checked) {
-		if (checked)
-		{
-			contentStackLayout->setCurrentIndex(id);
-		}
-	});
     QString itemInfo(item?(item->animeTitle.isEmpty()?item->title:QString("%1-%2").arg(item->animeTitle).arg(item->title)):"");
     QLabel *itemInfoLabel=new QLabel(itemInfo,this);
     itemInfoLabel->setFont(QFont(GlobalObjects::normalFont,10,QFont::Bold));

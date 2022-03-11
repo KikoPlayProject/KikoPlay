@@ -51,9 +51,10 @@ Capture::Capture(QImage &captureImage, QWidget *parent, const PlayListItem *item
     QHBoxLayout *btnHLayout=new QHBoxLayout(buttonContainer);
     btnHLayout->addWidget(copyToClipboard);
     btnHLayout->addWidget(addToLibrary);
-    btnHLayout->addItem(new QSpacerItem(1,1,QSizePolicy::MinimumExpanding));
+    btnHLayout->addStretch(1);
     btnHLayout->addWidget(saveToFile);
-    resize(w+4,h+50*logicalDpiY()/96);
+    hExtend = copyToClipboard->fontMetrics().height() + 20*logicalDpiY()/96;
+    resize(w+4,h+hExtend);
 }
 
 void Capture::resizeEvent(QResizeEvent *event)
@@ -62,6 +63,6 @@ void Capture::resizeEvent(QResizeEvent *event)
     double h=w/aspectRatio;
     imgLabel->setGeometry(2,2,w,h);
     imgLabel->lower();
-    buttonContainer->setGeometry(0,h+2,w,50*logicalDpiY()/96);
+    buttonContainer->setGeometry(0,h+2,w,hExtend);
     CFramelessDialog::resizeEvent(event);
 }

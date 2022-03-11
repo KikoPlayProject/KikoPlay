@@ -180,8 +180,6 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
     });
 
     QPushButton *deleteButton=new QPushButton(tr("Delete"),this);
-    //deleteButton->setFont(normalFont);
-    deleteButton->setFixedWidth(80*logicalDpiX()/96);
     deleteButton->setObjectName(QStringLiteral("DialogButton"));
     QObject::connect(deleteButton,&QPushButton::clicked,[this,sourceInfo](){
         GlobalObjects::danmuPool->getPool()->deleteSource(sourceInfo->id);
@@ -189,7 +187,6 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
         this->deleteLater();
     });
     QPushButton *updateButton=new QPushButton(tr("Update"),this);
-    updateButton->setFixedWidth(80*logicalDpiX()/96);
     updateButton->setObjectName(QStringLiteral("DialogButton"));
     QObject::connect(updateButton,&QPushButton::clicked,[this,sourceInfo,updateButton,deleteButton,
                      editTimeline,delaySpinBox,name](){
@@ -218,7 +215,6 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
     });
 
     QPushButton *exportButton=new QPushButton(tr("Export"),this);
-    exportButton->setFixedWidth(80*logicalDpiX()/96);
     exportButton->setObjectName(QStringLiteral("DialogButton"));
     QObject::connect(exportButton,&QPushButton::clicked,[this,sourceInfo](){
         QString fileName = QFileDialog::getSaveFileName(this, tr("Save Danmu"),sourceInfo->title,tr("Xml File (*.xml)"));
@@ -227,6 +223,13 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
             GlobalObjects::danmuPool->getPool()->exportPool(fileName,true,true,QList<int>()<<sourceInfo->id);
         }
     });
+
+    QFontMetrics fm(deleteButton->fontMetrics());
+    int btnW = qMax(fm.horizontalAdvance(deleteButton->text()), fm.horizontalAdvance(updateButton->text()));
+    btnW = qMax(btnW, fm.horizontalAdvance(exportButton->text())) * 1.5;
+    deleteButton->setFixedWidth(btnW);
+    updateButton->setFixedWidth(btnW);
+    exportButton->setFixedWidth(btnW);
 
     QHBoxLayout *itemControlHLayout2=new QHBoxLayout();
     itemControlHLayout2->addWidget(delayLabel);

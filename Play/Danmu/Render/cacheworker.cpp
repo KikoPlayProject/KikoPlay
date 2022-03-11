@@ -237,7 +237,11 @@ void CacheWorker::createTexture(QVector<CacheMiddleInfo> &midInfo)
             }
             if(!insert)
             {
-                if(y + mInfo.drawInfo->height > 2048) break;
+                if(y + mInfo.drawInfo->height > 1024)
+                {
+                    if(mInfo.drawInfo->height*(midInfo.size()-endPos) < 512) break;
+                }
+                else if(y + mInfo.drawInfo->height > 2048) break;
                 mInfo.texX = 0;
                 mInfo.texY = y;
                 levels.append({mInfo.drawInfo->height, mInfo.drawInfo->width});

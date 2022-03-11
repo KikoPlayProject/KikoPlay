@@ -27,11 +27,20 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
 
     setWindowFlags((windowFlags() | Qt::Dialog | Qt::FramelessWindowHint) & ~Qt::WindowSystemMenuHint);
     setObjectName(QStringLiteral("framelessDialog"));
-    GlobalObjects::iconfont.setPointSize(10);
     backWidget = new QWidget(this);
-    titleBar=new QWidget(backWidget);
+    titleBar = new QWidget(backWidget);
 
-    QSize btnSize(20*logicalDpiX()/96,20*logicalDpiY()/96);
+    title=new QLabel(titleStr, titleBar);
+    title->setFont(QFont(GlobalObjects::normalFont,10));
+    title->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
+    title->setOpenExternalLinks(true);
+
+    GlobalObjects::iconfont.setPointSize(title->font().pointSize());
+
+    QFontMetrics fm(GlobalObjects::iconfont);
+    int btnH = qMax(fm.horizontalAdvance(QChar(0xe60b)), fm.horizontalAdvance(QChar(0xe680)));
+    btnH = qMax(btnH, fm.height())*2;
+    QSize btnSize(btnH, btnH);
 
     closeButton=new QPushButton(titleBar);
     closeButton->setObjectName(QStringLiteral("DialogCloseButton"));
@@ -62,18 +71,13 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
     downloadingIcon->start();
     busyLabel->hide();
 
-
-    title=new QLabel(titleStr, titleBar);
-    title->setFont(QFont(GlobalObjects::normalFont,10));
-    title->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
-    //title->setGeometry(10,10,title->width(),title->height());
-    title->setOpenExternalLinks(true);
-
     QHBoxLayout *titleHBLayout=new QHBoxLayout(titleBar);
     titleHBLayout->setContentsMargins(8*logicalDpiX()/96, 8*logicalDpiY()/96, 8*logicalDpiX()/96, 8*logicalDpiY()/96);
     titleHBLayout->addWidget(title, 0, Qt::AlignVCenter);
     titleHBLayout->addWidget(busyLabel);
+    titleHBLayout->addSpacing(btnH * 0.1);
     titleHBLayout->addWidget(acceptButton);
+    titleHBLayout->addSpacing(btnH * 0.1);
     titleHBLayout->addWidget(closeButton);
 
     QVBoxLayout *vbLayout = new QVBoxLayout(backWidget);
@@ -82,8 +86,6 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
     vbLayout->setContentsMargins(0, 0, 0, 0);
     addIgnoreWidget(titleBar);
     addIgnoreWidget(title);
-
-    //setContentsMargins(6*logicalDpiX()/96,38*logicalDpiY()/96,6*logicalDpiX()/96,6*logicalDpiY()/96);
 
     if (autoPauseVideo && GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
 	{
@@ -384,12 +386,25 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
     setWindowFlags((Qt::Dialog| Qt::FramelessWindowHint));
     setObjectName(QStringLiteral("framelessDialog_O"));
     setMouseTracking(true);
-    GlobalObjects::iconfont.setPointSize(10);
-    titleBar=new QWidget(this);
-    backWidget = new QWidget(this);
+
+    titleBar = new QWidget(this);
+    titleBar->setMouseTracking(true);
     titleBar->installEventFilter(this);
 
-    QSize btnSize(20*logicalDpiX()/96,20*logicalDpiY()/96);
+    backWidget = new QWidget(this);
+    backWidget->setMouseTracking(true);
+    backWidget->installEventFilter(this);
+
+    title=new QLabel(titleStr, titleBar);
+    title->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
+    title->setOpenExternalLinks(true);
+
+    GlobalObjects::iconfont.setPointSize(title->font().pointSize());
+
+    QFontMetrics fm(GlobalObjects::iconfont);
+    int btnH = qMax(fm.horizontalAdvance(QChar(0xe60b)), fm.horizontalAdvance(QChar(0xe680)));
+    btnH = qMax(btnH, fm.height()) + 8*logicalDpiX()/96;
+    QSize btnSize(btnH, btnH);
 
     closeButton=new QPushButton(titleBar);
     closeButton->setObjectName(QStringLiteral("DialogCloseButton"));
@@ -420,24 +435,19 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
     downloadingIcon->start();
     busyLabel->hide();
 
-    title=new QLabel(titleStr, titleBar);
-    title->setFont(QFont(GlobalObjects::normalFont,10));
-    title->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
-    title->setOpenExternalLinks(true);
-
     QHBoxLayout *titleHBLayout=new QHBoxLayout(titleBar);
     titleHBLayout->setContentsMargins(8*logicalDpiX()/96, 8*logicalDpiY()/96, 8*logicalDpiX()/96, 8*logicalDpiY()/96);
     titleHBLayout->addWidget(title, 0, Qt::AlignVCenter);
     titleHBLayout->addWidget(busyLabel);
+    titleHBLayout->addSpacing(btnH * 0.1);
     titleHBLayout->addWidget(acceptButton);
+    titleHBLayout->addSpacing(btnH * 0.1);
     titleHBLayout->addWidget(closeButton);
 
     QVBoxLayout *vbLayout = new QVBoxLayout(backWidget);
     vbLayout->addWidget(titleBar);
     vbLayout->addStretch(1);
     vbLayout->setContentsMargins(0, 0, 0, 0);
-
-    setContentsMargins(8*logicalDpiX()/96,titleBar->height(),8*logicalDpiX()/96,8*logicalDpiY()/96);
 
     if (autoPauseVideo && GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
     {
@@ -510,12 +520,23 @@ void CFramelessDialog::getContentsMargins(int *left, int *top, int *right, int *
     }
 }
 
+void CFramelessDialog::showEvent(QShowEvent *e)
+{
+    setContentsMargins(8*logicalDpiX()/96,titleBar->height(),8*logicalDpiX()/96,8*logicalDpiY()/96);
+    QDialog::showEvent(e);
+}
+
 bool CFramelessDialog::eventFilter(QObject *obj, QEvent *e)
 {
     if(obj==titleBar)
     {
         if(e->type() == QEvent::MouseButtonPress)
         {
+            if(left || right || top)
+            {
+                QApplication::sendEvent(this, e);
+                return true;
+            }
             QMouseEvent *event = static_cast<QMouseEvent*>(e);
             if(event->button() == Qt::LeftButton)
             {
@@ -524,9 +545,19 @@ bool CFramelessDialog::eventFilter(QObject *obj, QEvent *e)
                 return true;
             }
         }
-        else
+        else if(e->type() == QEvent::MouseMove)
         {
-            return false;
+            QApplication::sendEvent(this, e);
+            return true;
+        }
+    }
+    else if(obj==backWidget)
+    {
+        if(e->type() == QEvent::MouseButtonPress || e->type() == QEvent::MouseButtonRelease ||
+           e->type() == QEvent::MouseMove)
+        {
+            QApplication::sendEvent(this, e);
+            return true;
         }
     }
     return QObject::eventFilter(obj,e);
@@ -557,32 +588,40 @@ void CFramelessDialog::mouseMoveEvent(QMouseEvent *e)
             g.setLeft(g.left() + dx);
         if (right)
             g.setRight(g.right() + dx);
+        if (top)
+            g.setTop(g.top() + dy);
         if (bottom)
             g.setBottom(g.bottom() + dy);
         setGeometry(g);
-        oldPos = QPoint(!left ? e->x() : oldPos.x(), e->y());
+        oldPos = QPoint(left? oldPos.x() : e->x(), top? oldPos.y() : e->y());
     }
     else
     {
         QRect r = rect();
         left = qAbs(x - r.left()) <= 5;
         right = qAbs(x - r.right()) <= 5;
+        top = qAbs(y - r.top()) <= 5;
         bottom = qAbs(y - r.bottom()) <= 5;
-        bool hor = left | right;
+        bool hor = left | right, ver = top | bottom;
+        qDebug() << "l,r,t,b: " << left << right << top << bottom;
 
-        if (hor && bottom)
+        if(hor && bottom)
         {
-            if (left)
-                setCursor(Qt::SizeBDiagCursor);
-            else
-                setCursor(Qt::SizeFDiagCursor);
-        } else if (hor)
+            setCursor(left? Qt::SizeBDiagCursor : Qt::SizeFDiagCursor);
+        }
+        else if(hor && top)
+        {
+            setCursor(left? Qt::SizeFDiagCursor : Qt::SizeBDiagCursor);
+        }
+        else if(hor)
         {
             setCursor(Qt::SizeHorCursor);
-        } else if (bottom)
+        }
+        else if(ver)
         {
             setCursor(Qt::SizeVerCursor);
-        } else
+        }
+        else
         {
             setCursor(Qt::ArrowCursor);
         }
@@ -593,6 +632,7 @@ void CFramelessDialog::mousePressEvent(QMouseEvent *e)
 {
     oldPos = e->pos();
     resizeMouseDown = e->button() == Qt::LeftButton;
+    grabMouse();
     QDialog::mousePressEvent(e);
 }
 
@@ -600,12 +640,14 @@ void CFramelessDialog::mouseReleaseEvent(QMouseEvent *e)
 {
     isMousePressed=false;
     resizeMouseDown = false;
+    releaseMouse();
     QDialog::mouseReleaseEvent(e);
 }
 
 void CFramelessDialog::resizeEvent(QResizeEvent *)
 {
-    backWidget->setGeometry(0,0,width(),height());
+    // backWidget->setGeometry(8*logicalDpiX()/96,0,width()-16*logicalDpiX()/96,height()-8*logicalDpiY()/96);
+     backWidget->setGeometry(0,0,width(),height());
     dialogTip->move((width()-dialogTip->width())/2,dialogTip->y());
 }
 void CFramelessDialog::keyPressEvent(QKeyEvent *event)

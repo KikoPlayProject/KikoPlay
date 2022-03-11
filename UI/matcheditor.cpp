@@ -357,13 +357,10 @@ MatchEditor::MatchEditor(const PlayListItem *item, QList<const PlayListItem *> *
 
     setFont(QFont(GlobalObjects::normalFont,12));
 
-    QSize pageButtonSize(90 *logicalDpiX()/96,36*logicalDpiY()/96);
-
     searchPage=new QToolButton(this);
     searchPage->setText(tr("Search"));
     searchPage->setCheckable(true);
     searchPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    searchPage->setFixedSize(pageButtonSize);
     searchPage->setObjectName(QStringLiteral("DialogPageButton"));
     searchPage->setChecked(true);
 
@@ -371,8 +368,14 @@ MatchEditor::MatchEditor(const PlayListItem *item, QList<const PlayListItem *> *
     customPage->setText(tr("Custom"));
     customPage->setCheckable(true);
     customPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    customPage->setFixedSize(pageButtonSize);
     customPage->setObjectName(QStringLiteral("DialogPageButton"));
+
+    QFontMetrics fm(fontMetrics());
+    int btnH = fm.height() + 10 * logicalDpiY()/96;
+    int btnW = qMax(fm.horizontalAdvance(customPage->text()), fm.horizontalAdvance(searchPage->text()));
+    QSize pageButtonSize(btnW*2, btnH);
+    searchPage->setFixedSize(pageButtonSize);
+    customPage->setFixedSize(pageButtonSize);
 
     QString animeTitle;
     EpInfo ep;

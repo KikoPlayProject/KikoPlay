@@ -309,58 +309,6 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     });
     pageButtonGroup->button(0)->setChecked(true);
 
-    /*
-    int pageBtnHeight=30*logicalDpiY()/96;
-    QToolButton *generalInfoPage=new QToolButton(downloadContainer);
-    generalInfoPage->setObjectName(QStringLiteral("DownloadInfoPage"));
-    generalInfoPage->setText(tr("General"));
-    generalInfoPage->setFixedHeight(pageBtnHeight);
-    generalInfoPage->setCheckable(true);
-
-    QToolButton *fileInfoPage=new QToolButton(downloadContainer);
-    fileInfoPage->setObjectName(QStringLiteral("DownloadInfoPage"));
-    fileInfoPage->setText(tr("File"));
-    fileInfoPage->setFixedHeight(pageBtnHeight);
-    fileInfoPage->setCheckable(true);
-
-    QToolButton *blockPage=new QToolButton(downloadContainer);
-    blockPage->setObjectName(QStringLiteral("DownloadInfoPage"));
-    blockPage->setText(tr("Block"));
-    blockPage->setFixedHeight(pageBtnHeight);
-    blockPage->setCheckable(true);
-
-    QToolButton *connectionPage=new QToolButton(downloadContainer);
-    connectionPage->setObjectName(QStringLiteral("DownloadInfoPage"));
-    connectionPage->setText(tr("Connection"));
-    connectionPage->setFixedHeight(pageBtnHeight);
-    connectionPage->setCheckable(true);
-
-    QToolButton *logPage=new QToolButton(downloadContainer);
-    logPage->setObjectName(QStringLiteral("DownloadInfoPage"));
-    logPage->setFixedHeight(pageBtnHeight);
-    logPage->setText(tr("Global Log"));
-    logPage->setCheckable(true);
-
-
-    pageBarHLayout->addWidget(generalInfoPage);
-    pageBarHLayout->addWidget(fileInfoPage);
-    pageBarHLayout->addWidget(blockPage);
-    pageBarHLayout->addWidget(connectionPage);
-    pageBarHLayout->addWidget(logPage);
-    pageBarHLayout->addStretch(1);
-
-
-    pageButtonGroup->addButton(generalInfoPage,0);
-    pageButtonGroup->addButton(fileInfoPage,1);
-    pageButtonGroup->addButton(blockPage,2);
-    pageButtonGroup->addButton(connectionPage,3);
-    pageButtonGroup->addButton(logPage,4);
-
-    generalInfoPage->setChecked(true);
-
-*/
-
-
     QWidget *bottomContent=new QWidget(downloadContainer);
     QVBoxLayout *bvLayout=new QVBoxLayout(bottomContent);
     bvLayout->setContentsMargins(0,0,0,0);

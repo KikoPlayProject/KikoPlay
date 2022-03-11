@@ -413,7 +413,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
 
     volume=new QSlider(Qt::Horizontal,playControlPanel);
     volume->setObjectName(QStringLiteral("widgetVolumeSlider"));
-    volume->setFixedWidth(90*logicalDpiX()/96);
+    volume->setFixedWidth(100*logicalDpiX()/96);
     volume->setMinimum(0);
     volume->setMaximum(150);
     volume->setSingleStep(1);
@@ -728,7 +728,6 @@ void PlayerWindow::setupDanmuSettingPage()
     generalPage->setText(tr("General"));
     generalPage->setCheckable(true);
     generalPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    generalPage->setMaximumHeight(28 * logicalDpiY()/96);
     generalPage->setObjectName(QStringLiteral("DialogPageButton"));
     generalPage->setChecked(true);
 
@@ -736,15 +735,18 @@ void PlayerWindow::setupDanmuSettingPage()
     appearancePage->setText(tr("Appearance"));
     appearancePage->setCheckable(true);
     appearancePage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    appearancePage->setMaximumHeight(28 * logicalDpiY()/96);
     appearancePage->setObjectName(QStringLiteral("DialogPageButton"));
 
     QToolButton *advancedPage=new QToolButton(danmuSettingPage);
     advancedPage->setText(tr("Advanced"));
     advancedPage->setCheckable(true);
     advancedPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    advancedPage->setMaximumHeight(28 * logicalDpiY()/96);
     advancedPage->setObjectName(QStringLiteral("DialogPageButton"));
+
+    const int btnH = generalPage->fontMetrics().height() + 10*logicalDpiY()/96;
+    generalPage->setFixedHeight(btnH);
+    appearancePage->setFixedHeight(btnH);
+    advancedPage->setFixedHeight(btnH);
 
     QStackedLayout *danmuSettingSLayout=new QStackedLayout();
     QButtonGroup *btnGroup=new QButtonGroup(this);
@@ -1024,7 +1026,6 @@ void PlayerWindow::setupPlaySettingPage()
     playPage->setText(tr("Play"));
     playPage->setCheckable(true);
     playPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    playPage->setMaximumHeight(28 * logicalDpiY()/96);
     playPage->setObjectName(QStringLiteral("DialogPageButton"));
     playPage->setChecked(true);
 
@@ -1032,15 +1033,18 @@ void PlayerWindow::setupPlaySettingPage()
     behaviorPage->setText(tr("Behavior"));
     behaviorPage->setCheckable(true);
     behaviorPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    behaviorPage->setMaximumHeight(28 * logicalDpiY()/96);
     behaviorPage->setObjectName(QStringLiteral("DialogPageButton"));
 
     QToolButton *colorPage=new QToolButton(playSettingPage);
     colorPage->setText(tr("Color"));
     colorPage->setCheckable(true);
     colorPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    colorPage->setMaximumHeight(28 * logicalDpiY()/96);
     colorPage->setObjectName(QStringLiteral("DialogPageButton"));
+
+    const int btnH = playPage->fontMetrics().height() + 10*logicalDpiY()/96;
+    playPage->setFixedHeight(btnH);
+    behaviorPage->setFixedHeight(btnH);
+    colorPage->setFixedHeight(btnH);
 
     QStackedLayout *playSettingSLayout=new QStackedLayout();
     QButtonGroup *btnGroup = new QButtonGroup(this);
