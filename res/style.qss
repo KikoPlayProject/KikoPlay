@@ -1,71 +1,76 @@
+/* ------------------- QToolButton ------------------- */
 QToolButton#PageButton{
-       border-style:none;
-       border-radius:0px;
-       padding:5px;
-       color:#989898;
-       background:#484d50;
+    border-style:none;
+    border-radius:0px;
+    padding:5px;
+    color:#989898;
+    background:#484d50;
 }
 QToolButton#PageButton:hover,
 QToolButton#PageButton:pressed,
 QToolButton#PageButton:checked{
-       border-style:solid;
-       border-width:0px 0px 0px 0px;
-       border-color:#1CA0E4;
-       color:#FFFFFF;
-       background:#666a6e;
+    border-style:solid;
+    border-width:0px 0px 0px 0px;
+    border-color:#1CA0E4;
+    color:#FFFFFF;
+    background:#666a6e;
 }
 QToolButton#PageButton_O{
-       border-style:none;
-       border-radius:0px;
-       padding:5px;
-       color:#989898;
-       background:#484d50;
+    border-style:none;
+    border-radius:0px;
+    padding:5px;
+    color:#989898;
+    background:#484d50;
 }
 QToolButton#PageButton_O:hover,
 QToolButton#PageButton_O:pressed,
 QToolButton#PageButton_O:checked{
-       border-style:none;
-       color:#FFFFFF;
-       background:#666a6e;
+    border-style:none;
+    color:#FFFFFF;
+    background:#666a6e;
 }
 QToolButton#ListPageButton{
-       border-style:none;
-       border-radius:0px;
-       padding:5px;
-       color:#989898;
-       background:#363636;
+    border-style:none;
+    border-radius:0px;
+    padding:5px;
+    color:#989898;
+    background:#363636;
 }
 QToolButton#ListPageButton:hover,
 QToolButton#ListPageButton:pressed,
 QToolButton#ListPageButton:checked{
-       border-style:solid;
-       border-width:0px 0px 2px 0px;
-       border-color:#32a7fe;
-       color:#FFFFFF;
-       /*background:#666a6e;*/
+    border-style:solid;
+    border-width:0px 0px 2px 0px;
+    border-color:#32a7fe;
+    color:#FFFFFF;
+    /*background:#666a6e;*/
 }
 QToolButton#DialogPageButton{
-       border-style:none;
-       border-radius:0px;
-       padding:5px;
-       color:#989898;
-       background:transparent;
+    border-style:none;
+    border-radius:0px;
+    padding:5px;
+    color:#989898;
+    background:transparent;
 }
 QToolButton#DialogPageButton:hover,
 QToolButton#DialogPageButton:pressed,
 QToolButton#DialogPageButton:checked{
-       border-style:solid;
-       border-width:0px 0px 5px 0px;
-       border-color:#1CA0E4;
-       color:#000000;
-       background:transparent;
+    border-style:solid;
+    border-width:0px 0px 5px 0px;
+    border-color:#1CA0E4;
+    background:transparent;
+@if{DarkMode}
+    color:#ffffff;
+@else
+    color:#000000;
+@endif
 }
 QToolButton#ListEditButton{
-       border-style:none;
-       border-radius:0px;
-       padding:5px;
-       color:#989898;
-       background:none;
+    border-style:none;
+    border-radius:0px;
+    padding:5px;
+    color:#989898;
+    background:none;
 }
 QToolButton#AnimeInfoPage{
     border-style:none;
@@ -95,30 +100,183 @@ QToolButton#ListEditButton:checked{
 QToolButton[hideMenuIndicator="true"]::menu-indicator {
     image: none;
 }
+QToolButton#ControlButton{
+    border-style:none;
+    border-radius:0px,0px,5px,5px;
+    color:#c8c8c8;
+    background:none;
+}
+QToolButton#ControlButton:hover,
+QToolButton#ControlButton:pressed,
+QToolButton#ControlButton:checked{
+    border-color:#1CA0E4;
+    color:#FFFFFF;
+    background:#666a6e;
+}
+QToolButton#closelButton{
+    border-style:none;
+    border-radius:0px,0px,5px,5px;
+    color:#c8c8c8;
+    background:none;
+}
+QToolButton#closelButton:hover,
+QToolButton#closelButton:pressed,
+QToolButton#closelButton:checked{
+    border-color:#1CA0E4;
+    color:#fa3605;
+    background:#666a6e;
+}
+QToolButton#LogoButton {
+    background:transparent;
+    border-style:none;
+    color:rgb(200,200,200);
+}
+QToolButton#LogoButton:menu-indicator{
+    subcontrol-position: right center;
+    subcontrol-origin: padding;
+}
+QToolButton#LogoButton:hover {
+    color:rgb(255,255,255);
+}
+QWidget#PopupPage QToolButton#DialogPageButton{
+    border-style:none;
+    border-radius:0px;
+    padding:5px;
+    color:#989898;
+    background:transparent;
+}
+QWidget#PopupPage QToolButton#DialogPageButton:hover,
+QWidget#PopupPage QToolButton#DialogPageButton:pressed,
+QWidget#PopupPage QToolButton#DialogPageButton:checked{
+    border-style:solid;
+    border-width:0px 0px 5px 0px;
+    border-color:#1CA0E4;
+    color:#ffffff;
+    background:transparent;
+}
+QToolButton#FilterOptionButton{
+    border:none;
+    color: rgb(0, 0, 0);
+}
+QToolButton#FilterOptionButton:hover, QToolButton#AnimeFilterOptionButton:hover{
+    color:#0000ff;
+}
+QToolButton#FilterOptionButton::menu-indicator,
+QToolButton#AnimeFilterOptionButton::menu-indicato{
+      width:0px;
+}
+QToolButton#AnimeFilterOptionButton{
+    border:none;
+@if{DarkMode}
+    color: rgb(214, 214, 214);
+@else
+    color: rgb(0, 0, 0);
+@endif
+}
+QToolButton#DownloadInfoPage{
+    border-style:none;
+    border-radius:0px;
+    padding:5px;
+    color:#989898;
+    background:transparent;
+}
+QToolButton#DownloadInfoPage:hover,
+QToolButton#DownloadInfoPage:pressed,
+QToolButton#DownloadInfoPage:checked{
+    border-style:solid;
+    border-width:0px 0px 5px 0px;
+    border-color:#1CA0E4;
+    background:transparent;
+@if{DarkMode}
+    color:#ffffff;
+@else
+    color:#000000;
+@endif
+}
+
+
+/* ------------------- QWidget ------------------- */
 QWidget#widgetTitlebar{
-    background-color: rgb(60, 65,68);
+    background-color: rgb(60, 65, 68);
 }
 QWidget#widgetPagePlay{
-    background-color: rgb(60, 65,68);
+    background-color: rgb(60, 65, 68);
 }
 QWidget#widgetPlayContent{
-    background-color: rgba(0, 0,200,200);
+    background-color: rgba(0, 0, 200, 200);
 }
 QWidget#widgetPlayControl{
-    background-color: rgba(0, 0,0,150);
+    background-color: rgba(0, 0, 0, 150);
 }
 QWidget#widgetPlayInfo{
-    background-color: rgba(0, 0,0,150);
+    background-color: rgba(0, 0, 0, 150);
 }
-QLineEdit#filterBox{
-    background-color: rgb(100, 100,100);
-    color:rgb(255,255,255);
-    border-color: rgb(100, 100,100);
+QWidget#ListInfoBar{
+    background-color:rgb(0, 168, 226);
+}
+QWidget#PlayInfoBar{
+    border-color: rgb(100, 100, 100);
     border-style:solid;
     border-width:1px;
+    background-color:rgb(50,50,50);
 }
-QLineEdit#filterBox:hover{
-    background-color: rgb(150, 150,150);
+QWidget#PopupPage{
+    background-color: rgba(0, 0,0,150);;
+    border:1px solid #9d9d9d;
+}
+QWidget#PopupPage QWidget{
+    color:#f2f2f2;
+}
+QWidget#RecentItem{
+       border-style:none;
+       color:#c8c8c8;
+       background:transparent;
+       padding:-2px;
+}
+QWidget#RecentItem:hover,
+QWidget#RecentItem:pressed,
+QWidget#RecentItem:checked{
+       border-color:#1CA0E4;
+       background:#666a6e;
+       border-radius:2px;
+       border:1px solid #fcfcfc;
+}
+QWidget#DanmuStatisBar{
+    qproperty-barColor: rgba(51,168,255,200);
+    qproperty-bgColor: rgba(0,0,0,150);
+}
+QWidget#AnimeItemBg{
+    background-color:rgba(0,0,0,0);
+}
+QWidget#AutoDownloadWindow {
+    qproperty-logGeneralColor: rgb(100,100,100);
+}
+QWidget#DownloadLeftPanel{
+@if{DarkMode}
+    background-color: rgba(57, 58, 60,200);
+@else
+    background-color: rgb(60, 73,82);
+@endif
+}
+QWidget#TaskBlockView{
+    qproperty-borderColor: rgb(200,200,200);
+    qproperty-fColor: rgb(12, 167, 250);
+    qproperty-uColor: rgb(200,200,200);
+}
+QWidget#TaskPeerView{
+    qproperty-borderColor: rgb(200,200,200);
+    qproperty-barColor: rgba(51,168,255,200);
+    qproperty-backgroundColor: rgba(255,255,255,120);
+}
+
+
+/* ------------------- QLabel ------------------- */
+QLabel {
+@if{DarkMode}
+    color: rgb(214,214,214);
+@else
+    color: rgb(0,0,0);
+@endif
 }
 QLabel#labelTime{
     color:#ffffff;
@@ -133,15 +291,6 @@ QLabel#labelPoolInfo{
 QLabel#labelListInfo{
     color:#ffffff;
 }
-QWidget#ListInfoBar{
-    background-color:rgb(0,168,226);
-}
-QWidget#PlayInfoBar{
-    border-color: rgb(100, 100, 100);
-    border-style:solid;
-    border-width:1px;
-    background-color:rgb(50,50,50);
-}
 QLabel#labelPlayInfo{
     color:#ffffff;
 }
@@ -149,43 +298,74 @@ QLabel#DialogTipLabel{
     color:#ffffff;
 }
 QDialog QLabel {
+@if{DarkMode}
+    color: rgb(214,214,214);
+@else
     color: rgb(0,0,0);
+@endif
 }
-QDialog QCheckBox {
-    color: rgb(0,0,0);
+QLabel#RecentItemLabel{
+    color:#ffffff;
 }
-QScrollArea#PoolItemContainer{
-    border-color: rgb(200,200,200);
+QLabel#TimeInfoTip{
+    border-color: rgb(150, 150,150);
     border-style:solid;
-    border-width:1px;
+    border-width:0px;
+    color:rgb(255,255,255);
+    background-color:rgba(0,0,0,150);
+    padding: 1px;
 }
-QToolButton#ControlButton{
-       border-style:none;
-       border-radius:0px,0px,5px,5px;
-       color:#c8c8c8;
-       background:none;
+QLabel#ProgressPreview{
+    border-color: rgb(150, 150,150);
+    border-style:solid;
+    border-width:0px;
 }
-QToolButton#ControlButton:hover,
-QToolButton#ControlButton:pressed,
-QToolButton#ControlButton:checked{
-       border-color:#1CA0E4;
-       color:#FFFFFF;
-       background:#666a6e;
+QLabel#CrtIcon{
+    border:1px solid #a0a0a0;
 }
-QToolButton#closelButton{
-       border-style:none;
-       border-radius:0px,0px,5px,5px;
-       color:#c8c8c8;
-       background:none;
+QLabel#LibraryCountTip, QLabel#SelectedLabelTip{
+@if{DarkMode}
+    color: rgb(250,250,250);
+@else
+    color: rgb(0,0,0);
+@endif
 }
-QToolButton#closelButton:hover,
-QToolButton#closelButton:pressed,
-QToolButton#closelButton:checked{
-       border-color:#1CA0E4;
-       color:#fa3605;
-       background:#666a6e;
+QLabel#AnimeDetailTitle{
+    color: rgb(250,250,250);
+}
+QLabel#AnimeDetailViewInfo{
+    color: rgb(240,240,240);
+    background: transparent;
+}
+QLabel#AnimeItemTitle{
+@if{DarkMode}
+    color: rgb(250,250,250);
+@else
+    color: rgb(0,0,0);
+@endif
+}
+QLabel#SpaceTip{
+    color:#119be3;
+}
+QLabel#DownSpeedIcon{
+    color:#79a81a;
+}
+QLabel#UpSpeedIcon{
+    color:#287de8;
+}
+QLabel#DownSpeedLabel,QLabel#UpSpeedLabel{
+@if{DarkMode}
+    color: rgb(214,214,214);
+@else
+    color: rgb(0,0,0);
+@endif
+}
+QLabel#AnimeDetailCharactorTitle{
+    color: rgb(240,240,240);
 }
 
+
+/* ------------------- QSlider ------------------- */
 QSlider#widgetProcessSlider{
     border-color: #bcbcbc;
     qproperty-cColor2: rgb(67,156,243);
@@ -278,34 +458,47 @@ QSlider#ColorSlider::handle:horizontal {
 QSlider#ColorSlider::handle:horizontal:hover {
    background: #eeeeee;
 }
-QPushButton#widgetPlayControlButtons{
-    background:none;
-    border-style:none;
-    color:#ffffff;
+QWidget#PopupPage QSlider{
+    margin-top: 4px;
+    margin-bottom: 4px;
 }
-QPushButton#widgetPlayControlButtons:hover,
-QPushButton#widgetPlayControlButtons:pressed,
-QPushButton#widgetPlayControlButtons:checked{
-    border-style:none;
-    border-width:2px;
-    border-color:#ffffff;
-    color:#1CA0E4;
-    background:none;
+QWidget#PopupPage QSlider::groove:horizontal {
+    height: 5px;
+    background-color:rgb(237,237,237);
+    left: 8px; right: 8px;
 }
-QPushButton#widgetPlayListCollapse{
-    border-style:none;
-    background-color: rgba(0, 0,0,150);
-    color:#989898;
+
+QWidget#PopupPage QSlider::handle:horizontal {
+    height: 18px;
+    width:18px;
+    border-image: url(:/res/images/slider-normal.png);
+    margin-top:-7px;
+    margin-bottom:-7px;
 }
-QPushButton#widgetPlayListCollapse:hover,
-QPushButton#widgetPlayListCollapse:pressed,
-QPushButton#widgetPlayListCollapse:checked{
-    color:#FFFFFF;
-    background:#666a6e;
+QWidget#PopupPage QSlider::handle:hover {
+    border-image: url(:/res/images/slider-hover.png);
 }
-QWidget#PopupPage{
-    background-color: rgba(0, 0,0,150);;
-    border:1px solid #9d9d9d;
+QWidget#PopupPage QSlider::handle:pressed {
+    border-image: url(:/res/images/slider-pressed.png);
+}
+QWidget#PopupPage QSlider::add-page:horizontal{
+    background-color: rgb(237, 237, 237);
+}
+QWidget#PopupPage QSlider::sub-page:horizontal{
+    background-color: rgb(237, 237, 237);
+}
+
+
+/* ------------------- QTreeView ------------------- */
+QTreeView {
+@if{DarkMode}
+    background-color:rgb(50, 50, 50);
+    color:rgb(214, 214, 214);
+    alternate-background-color: rgb(40, 40, 40);
+@else
+    background-color:rgb(255, 255, 255);
+    color:rgb(0, 0, 0);
+@endif
 }
 QTreeView#playlist {
     border: 0px solid rgb(50, 50, 50);
@@ -358,130 +551,6 @@ QTreeView#danmulist::item:hover, QTreeView#danmulist::branch:hover {
 QTreeView#danmulist::item:selected, QTreeView#danmulist::branch:selected{
     background-color: rgba(255, 255, 255, 40);
 }
-QHeaderView{
-    background-color: rgb(100,100,100);
-}
-QHeaderView::section {
-    background-color: rgb(100,100,100);
-    color: white;
-    padding-left: 4px;
-    border: 1px solid #6c6c6c;
-}
-QFrame#PoolItem{
-    background-color:rgba(1,157,255,80);
-    padding: 2px;
-}
-QMainWindow#MainWindow {
-    background-color:rgb(230,230,230);
-}
-QDialog#framelessDialog{
-    background-color:rgb(245,245,245);
-}
-QDialog#framelessDialog_O{
-    border:2px solid #a2aab1;
-    background-color:rgb(245,245,245);
-}
-QSpinBox#Delay{
-    border:none;
-    border-color:rgb(200,200,200);
-    background:transparent;
-}
-QSpinBox#Delay::up-button {
-    subcontrol-origin:border;
-    subcontrol-position:right;
-    image: url(:/res/images/border.svg);
-    width: 20px; height: 20px;
-}
-QSpinBox#Delay::down-button {
-     subcontrol-origin:border;
-     subcontrol-position:left;
-     image: url(:/res/images/border.svg);
-     width: 20px; height: 20px;
-}
-QSpinBox#Delay::up-button:pressed {
-    margin:2px;
-}
-QSpinBox#Delay::down-button:pressed {
-    margin:2px;
-}
-QPushButton#DialogButton{
-    border:1px solid;
-    border-color:rgb(221,221,221);
-    background-color:rgb(250,250,250);
-}
-QPushButton#DialogButton:hover{
-    border:1px solid;
-    border-color:rgb(150,150,150);
-    background-color:rgb(255,255,255);
-}
-QPushButton#DialogButton:pressed{
-    border:1px solid;
-    border-color:rgb(150,150,150);
-    background-color:rgb(231,231,231);
-}
-QPushButton#DialogCloseButton{
-    border:none;
-    background-color:transparent;
-    color:rgb(153,153,153);
-}
-QPushButton#DialogCloseButton:hover{
-    background-color:rgb(250,54,5);
-    color:rgb(255,255,255);
-}
-QPushButton#DialogCloseButton:pressed{
-    background-color:rgb(218,46,3);
-    color:rgb(255,255,255);
-}
-QPushButton#DialogAcceptButton{
-    border:none;
-    background-color:transparent;
-    color:rgb(153,153,153);
-}
-QPushButton#DialogAcceptButton:hover{
-    background-color:rgb(84,195,23);
-    color:rgb(255,255,255);
-}
-QPushButton#DialogAcceptButton:pressed{
-    background-color:rgb(0,171,47);
-    color:rgb(255,255,255);
-}
-QScrollArea{
-    background: transparent;
-    border:none;
-}
-QMenu {
-    background-color: #f2f3f4;
-    border: 1px solid #adbac2;
-}
-QMenu::item {
-    background-color: transparent;
-    padding: 5px 35px 5px 25px;
-    color: rgb(0,0,0);
-}
-QMenu::item:disabled {
-    color: rgb(100,100,100);
-}
-QMenu::separator {
-     height: 1px;
-     background: #cecfd1;
-     margin: 1px 0px 1px 0px;
-}
-QMenu::item:selected:enabled {
-    background-color: #32a7fe;
-    color:#ffffff;
-}
-QMenu::indicator {
-    width:20px;
-    height:20px;
-    margin:1px;
-    padding:2px 0px 2px 4px;
-}
-QMenu::indicator:checked {
-  image: url(:/res/images/check-normal.svg);
-}
-QMenu::indicator:checked:selected {
-  image: url(:/res/images/check-hover.svg);
-}
 QTreeView#playlist QScrollBar:vertical,QTreeView#danmulist QScrollBar:vertical {
     background: transparent;
     width: 10px;
@@ -507,562 +576,20 @@ QTreeView#playlist QScrollBar::add-page:vertical,QTreeView#danmulist QScrollBar:
 QTreeView#playlist QScrollBar::sub-page:vertical,QTreeView#danmulist QScrollBar::sub-page:vertical {
     background: none;
 }
-QToolButton#LogoButton {
-    background:transparent;
-    border-style:none;
-    color:rgb(200,200,200);
-}
-QToolButton#LogoButton:menu-indicator{
-    subcontrol-position: right center;
-    subcontrol-origin: padding;
-}
-QToolButton#LogoButton:hover {
-    color:rgb(255,255,255);
-}
-QSplitter::handle {
-    background-color:rgb(100,100,100);
-}
-QSplitter#NormalSplitter::handle {
-    background-color:transparent;
-}
-QSplitter#LabelSplitter::handle {
-    background-color:transparent;
-}
-QSplitter#DownloadSpliter::handle {
-    background-color:transparent;
-}
-QCheckBox {
-    spacing: 5px;
-}
-
-QCheckBox::indicator {
-    width: 20px;
-    height: 20px;
-}
-
-QCheckBox::indicator:unchecked {
-    image: url(:/res/images/checkbox-uncheck.svg);
-}
-
-QCheckBox::indicator:unchecked:hover {
-    image: url(:/res/images/checkbox-hover.svg);
-}
-
-QCheckBox::indicator:checked {
-    image: url(:/res/images/checkbox-check.svg);
-}
-QPlainTextEdit,QTextEdit {
-    border: 1px solid #dcdcdc;
-}
-QLineEdit,QSpinBox {
-    background-color:#fafafa;
-    border: 1px solid #dddddd;
-    padding: 2px 2px 2px 2px;
-    color: rgb(0,0,0);
-}
-QLineEdit:hover,QSpinBox:hover {
-    background-color:#fdfdfd;
-    border: 1px solid #bcbcbc;
-}
-QLineEdit:focus,QSpinBox:focus,QPlainTextEdit:focus,QTextEdit:focus {
-    background-color: #ffffff;
-    border: 1px solid #2BA9EC;
-}
-
-QSpinBox::up-button {
-    subcontrol-origin: border;
-    subcontrol-position: top right; /* position at the top right corner */
-
-    width: 16px; /* 16 + 2*1px border-width = 15px padding + 3px parent border */
-    border-image: url(:/res/images/up-arrow.svg) 1;
-    border-width: 1px;
-}
-
-QSpinBox::up-button:hover {
-    border-image: url(:/res/images/up-arrow-dark-hover.svg) 1;
-}
-QSpinBox::down-button {
-    subcontrol-origin: border;
-    subcontrol-position: bottom right; /* position at bottom right corner */
-
-    width: 16px;
-    border-image: url(:/res/images/down-arrow.svg) 1;
-    border-width: 1px;
-    border-top-width: 0;
-}
-QSpinBox::down-button:hover {
-    border-image: url(:/res/images/down-arrow-dark-hover.svg) 1;
-}
-QComboBox {
-    background-color:#fafafa;
-    border: 1px solid #dddddd;
-    padding: 2px 2px 2px 2px;
-    color: rgb(0,0,0);
-}
-QComboBox:hover {
-    background-color:#fdfdfd;
-    border: 1px solid #bcbcbc;
-}
-QComboBox::drop-down {
-    subcontrol-origin: padding;
-    subcontrol-position: top right;
-    width: 28px;
-    border:0px;
-}
-QComboBox::down-arrow {
-     image: url(:/res/images/down.svg);
-     width:20px;
-     height:20px;
-}
-QComboBox::down-arrow:hover {
-     image: url(:/res/images/down-hover.svg);
-     width:20px;
-     height:20px;
-}
-QComboBox QAbstractItemView {
-      border: 1px solid #cbdbe8;
-      selection-background-color: #019aff;
-}
-QPushButton{
-    border:1px solid;
-    border-color:rgb(221,221,221);
-    background-color:rgb(250,250,250);
-    padding:4px 4px 4px 4px;
-    color: rgb(0,0,0);
-}
-QPushButton:disabled{
-    color: rgb(100,100,100);
-}
-QPushButton:hover{
-    border-color:rgb(150,150,150);
-    background-color:rgb(255,255,255);
-}
-QPushButton:pressed{
-    border-color:rgb(150,150,150);
-    background-color:rgb(231,231,231);
-}
-QPushButton#LinkFlatButton{
-    border:1px solid #ebebeb;
-    background-color:transparent;
-    color:#47a0e9;
-    padding:4px 4px 4px 4px;
-}
-QPushButton#LinkFlatButton:hover{
-    border:1px solid #dddddd;
-    background-color:rgb(255,255,255);
-}
-QPushButton#LinkFlatButton:pressed{
-    border-color:rgb(150,150,150);
-    background-color:rgb(231,231,231);
-}
-QWidget#PopupPage QCheckBox::indicator:unchecked {
-    image: url(:/res/images/checkbox-uncheck-light.svg);
-}
-QWidget#PopupPage QPushButton {
-    background-color: #2b3849 ;
-    border: 1px solid #9e9e9e;
-    color: #FaFaFa;
-    padding: 4px;
-    outline: none;
-}
-QWidget#PopupPage QPushButton:pressed {
-    background-color: #223144 ;
-    border: 1px solid #19232D;
-}
-QWidget#PopupPage QPushButton:hover{
-    background-color: #38485e;
-    border: 1px solid #6195db;
-    color: #eeeeee;
-}
-QWidget#PopupPage QSlider{
-    margin-top: 4px;
-    margin-bottom: 4px;
-}
-QWidget#PopupPage QSlider::groove:horizontal {
-    height: 5px;
-    background-color:rgb(237,237,237);
-    left: 8px; right: 8px;
-}
-
-QWidget#PopupPage QSlider::handle:horizontal {
-    height: 18px;
-    width:18px;
-    border-image: url(:/res/images/slider-normal.png);
-    margin-top:-7px;
-    margin-bottom:-7px;
-}
-QWidget#PopupPage QSlider::handle:hover {
-    border-image: url(:/res/images/slider-hover.png);
-}
-QWidget#PopupPage QSlider::handle:pressed {
-    border-image: url(:/res/images/slider-pressed.png);
-}
-QWidget#PopupPage QSlider::add-page:horizontal{
-    background-color: rgb(237, 237, 237);
-}
-QWidget#PopupPage QSlider::sub-page:horizontal{
-    background-color: rgb(237, 237, 237);
-}
-QWidget#PopupPage QToolButton#DialogPageButton{
-       border-style:none;
-       border-radius:0px;
-       padding:5px;
-       color:#989898;
-       background:transparent;
-}
-QWidget#PopupPage QToolButton#DialogPageButton:hover,
-QWidget#PopupPage QToolButton#DialogPageButton:pressed,
-QWidget#PopupPage QToolButton#DialogPageButton:checked{
-       border-style:solid;
-       border-width:0px 0px 5px 0px;
-       border-color:#1CA0E4;
-       color:#ffffff;
-       background:transparent;
-}
-QWidget#PopupPage QWidget{
-    color:#f2f2f2;
-}
-
-QWidget#PopupPage QComboBox {
-    border: 1px solid #9e9e9e;
-    selection-background-color: #1464A0;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    padding-left: 4px;
-    padding-right: 4px;
-
-    background-color: rgba(0,0,0,150);
-    color: #F0F0F0;
-}
-
-QWidget#PopupPage QComboBox:disabled {
-    background-color: #19232D;
-    color: #787878;
-}
-
-QWidget#PopupPage QComboBox:hover{
-    border: 1px solid #148CD2;
-}
-
-QWidget#PopupPage QComboBox:on {
-    selection-background-color: #19232D;
-}
-
-QWidget#PopupPage QComboBox QAbstractItemView {
-    background-color: #19232D;
-    border: 1px solid #32414B;
-    selection-color: #148CD2;
-    selection-background-color: #32414B;
-    color:#F0F0F0;
-}
-
-QWidget#PopupPage QComboBox::drop-down {
-    subcontrol-origin: padding;
-    subcontrol-position: top right;
-    width: 28px;
-    border-left-width: 0px;
-    border-left-color: #32414B;
-    border-left-style: solid;
-    border-top-right-radius: 3px;
-    border-bottom-right-radius: 3px;
-}
-
-QWidget#PopupPage QComboBox::down-arrow {
-    image: url(:/res/images/down-light.svg);
-    width:20px;
-    height:20px;
-}
-
-QWidget#PopupPage QComboBox::down-arrow:hover {
-    image: url(:/res/images/down-light-hover.svg);
-    width:20px;
-    height:20px;
-}
-
-QWidget#PopupPage QSpinBox::up-button:hover {
-    border-image: url(:/res/images/up-arrow-hover.svg) 1;
-}
-QWidget#PopupPage QSpinBox::down-button:hover {
-    border-image: url(:/res/images/down-arrow-hover.svg) 1;
-}
-
-QPushButton#RecentItemDeleteButton{
-       border-style:none;
-       color:#c8c8c8;
-       background:transparent;
-       padding:1px;
-}
-QPushButton#RecentItemDeleteButton:hover,
-QPushButton#RecentItemDeleteButton:pressed,
-QPushButton#RecentItemDeleteButton:checked{
-       color:#fa3605;
-       background:#666a6e;
-       border-radius:2px;
-       border:1px solid #fcfcfc;
-}
-QLabel#RecentItemLabel{
-    color:#ffffff;
-}
-QWidget#RecentItem{
-       border-style:none;
-       color:#c8c8c8;
-       background:transparent;
-       padding:-2px;
-}
-QWidget#RecentItem:hover,
-QWidget#RecentItem:pressed,
-QWidget#RecentItem:checked{
-       border-color:#1CA0E4;
-       background:#666a6e;
-       border-radius:2px;
-       border:1px solid #fcfcfc;
-}
-
-QWidget#DanmuStatisBar{
-    qproperty-barColor: rgba(51,168,255,200);
-    qproperty-bgColor: rgba(0,0,0,150);
-}
-QLabel#TimeInfoTip{
-    border-color: rgb(150, 150,150);
-    border-style:solid;
-    border-width:0px;
-    color:rgb(255,255,255);
-    background-color:rgba(0,0,0,150);
-    padding: 1px;
-}
-QLabel#ProgressPreview{
-    border-color: rgb(150, 150,150);
-    border-style:solid;
-    border-width:0px;
-}
-QWidget#AnimeItemBg{
-    background-color:rgba(0,0,0,0);
-}
-QListView#AnimesContent{
-    border-style:none;
-    background:transparent;
-}
-QPushButton#TagButton{
-    border:1px solid #cccccc;
-    background:transparent;
-    color:rgb(240,240,240);
-}
-QPushButton#TagButton:hover{
-    background-color:#84b8f3;
-}
-QPushButton#TagButton:checked{
-    background-color:#4595ef;
-    color:#ffffff;
-}
-QLabel#CrtIcon{
-    border:1px solid #a0a0a0;
-}
-
-/* ScrollBar Setting */
-QWidget[cScrollStyle="true"] QScrollBar:horizontal{
-    background: transparent;
-    height: 10px;
-}
-QWidget[cScrollStyle="true"] QScrollBar::handle:horizontal{
-    background: rgba(255,255,255,180);
-    min-height: 70px;
-    border-radius: 1px;
-}
-QWidget[cScrollStyle="true"] QScrollBar::handle:horizontal:hover{
-    background: rgba(255,255,255,255);
-}
-QWidget[cScrollStyle="true"] QScrollBar::handle:horizontal:pressed{
-    background: rgba(255,255,255,200);
-}
-QWidget[cScrollStyle="true"] QScrollBar::add-line:horizontal{
-    background: none;
-}
-QWidget[cScrollStyle="true"] QScrollBar::sub-line:horizontal{
-    background: none;
-}
-QWidget[cScrollStyle="true"] QScrollBar::add-page:horizontal,
-QWidget[cScrollStyle="true"] QScrollBar::sub-page:horizontal{
-    background: none;
-}
-
-
-QWidget[cScrollStyle="true"] QScrollBar:vertical{
-    background: transparent;
-    width: 10px;
-}
-QWidget[cScrollStyle="true"] QScrollBar::handle:vertical{
-    background: rgba(255,255,255,180);
-    min-height: 70px;
-    border-radius: 1px;
-}
-QWidget[cScrollStyle="true"] QScrollBar::handle:vertical:hover {
-    background: rgba(255,255,255,255);
-}
-QWidget[cScrollStyle="true"] QScrollBar::handle:vertical:pressed {
-    background: rgba(255,255,255,200);
-}
-QWidget[cScrollStyle="true"] QScrollBar::add-line:vertical{
-    background: none;
-}
-QWidget[cScrollStyle="true"] QScrollBar::sub-line:vertical{
-    background: none;
-}
-QWidget[cScrollStyle="true"] QScrollBar::add-page:vertical,
-QWidget[cScrollStyle="true"] QScrollBar::sub-page:vertical{
-    background: none;
-}
-/* --ScrollBar Setting-- */
-
-
-QLabel#LibraryCountTip, QLabel#SelectedLabelTip{
-    color: rgb(0,0,0);
-}
-QLabel#AnimeDetailTitle{
-    color: rgb(250,250,250);
-}
-QLabel#AnimeDetailViewInfo{
-    color: rgb(240,240,240);
-    background: transparent;
-}
-QLabel#AnimeItemTitle{
-    color: rgb(0,0,0);
-}
 QTreeView#AnimeDetailEpisode{
     background-color: rgba(255,255,255,40);
     color: rgb(240,240,240);
     alternate-background-color: transparent;
 }
-QListWidget#AnimeDetailCharacterList{
-    background-color: rgba(255,255,255,40);
-    color: rgb(240,240,240);
-    alternate-background-color: transparent;
-}
-QLabel#AnimeDetailCharactorTitle{
-    color: rgb(240,240,240);
-}
-QPushButton#AnimeDetailBack{
-    border:none;
-    color:rgb(220,220,220);
-    background: transparent;
-}
-QPushButton#AnimeDetailBack:hover{
-    color:rgb(255,255,255);
-}
-QPushButton#AnimeDetailBack:pressed{
-    color:rgb(220,220,220);
-}
-QTextEdit#AnimeDetailDesc{
-    background-color: rgba(255,255,255,40);
-    color: rgb(240,240,240);
-}
-QToolButton#FilterOptionButton{
-    border:none;
-}
-QToolButton#FilterOptionButton:hover{
-    color:#0000ff;
-}
-QToolButton#FilterOptionButton::menu-indicator {
-      width:0px;
-}
-QWidget#DownloadLeftPanel{
-    background-color: rgb(60, 73,82);
-}
-QPushButton#TaskTypeToolButton{
-    border-style:none;
-    border-radius:0px;
-    padding:5px;
-    color:#c5c5c5;
-    background:transparent;
-    qproperty-normColor: rgb(192,192,192);
-    qproperty-hoverColor: rgb(103,155,204);
-}
-QPushButton#TaskTypeToolButton:hover,
-QPushButton#TaskTypeToolButton:pressed,
-QPushButton#TaskTypeToolButton:checked{
-    border-style:solid;
-    border-width:0px 0px 0px 4px;
-    border-color:#1CA0E4;
-    color:#679bcc;
-    background:#2d3641;
-}
-QPushButton#DownloadToolButton{
-    border-style:none;
-    border-radius:0px;
-    padding:5px;
-    background:transparent;
-    qproperty-normColor: rgb(96,96,96);
-    qproperty-hoverColor: rgb(69,153,247);
-}
-QPushButton#DownloadToolButton:hover,
-QPushButton#DownloadToolButton:pressed,
-QPushButton#DownloadToolButton:checked{
-    border-style:solid;
-    border-width:1px;
-    border-color:#b9b9b9;
-    color:#679bcc;
-    background:#c5c7c9;
-}
-QPushButton#DownloadToolButton:pressed{
-    margin:1px;
-}
-QPushButton#BgmFilterBtn{
-    border-style:none;
-    padding:5px;
-    background:transparent;
-}
-QPushButton#BgmFilterBtn:hover{
-    border-style:solid;
-    border-width:1px;
-    border-color:#b9b9b9;
-    color:#679bcc;
-}
-QPushButton#BgmFilterBtn:checked{
-    border-style:none;
-    color:#679bcc;
-    background:#c5c7c9;
-}
-QToolButton#DownloadInfoPage{
-    border-style:none;
-    border-radius:0px;
-    padding:5px;
-    color:#989898;
-    background:transparent;
-}
-QToolButton#DownloadInfoPage:hover,
-QToolButton#DownloadInfoPage:pressed,
-QToolButton#DownloadInfoPage:checked{
-    border-style:solid;
-    border-width:0px 0px 5px 0px;
-    border-color:#1CA0E4;
-    color:#000000;
-    background:transparent;
-}
-QProgressBar {
-    border: 1px solid #5ca3b7;
-    text-align: center;
-    border-radius:2px;
-}
-
-QProgressBar::chunk {
-    background-color: #25b3df;
-}
-QLabel#SpaceTip{
-    color:#119be3;
-}
-QLabel#DownSpeedIcon{
-    color:#79a81a;
-}
-QLabel#UpSpeedIcon{
-    color:#287de8;
-}
-QLabel#DownSpeedLabel,QLabel#UpSpeedLabel{
-    color:#000000;
-}
 QTreeView#DownloadView{
     outline:0px;
 }
 QTreeView#DownloadView::item:selected{
+@if{DarkMode}
+    color: rgb(255, 255, 255);
+@else
     color: rgb(0, 0, 0);
+@endif
 }
 QTreeView#LabelView {
     border: 0px solid rgb(50, 50, 50);
@@ -1117,23 +644,56 @@ QTreeView#BgmListView {
     selection-color: rgb(0, 160, 230);
     show-decoration-selected: 1;
     outline:0px;
+@if{DarkMode}
+    qproperty-normColor: rgb(180, 180, 180);
+@else
     qproperty-normColor: rgb(100,100,100);
+@endif
     qproperty-hoverColor: rgb(0,155,255);
 }
 QTreeView#BgmListView::item {
     border: none;
-    background-color: #f2faf8;
+    background-color:transparent;
     padding-top:8px;
     padding-bottom:8px;
 }
 QTreeView#BgmListView::item:hover, QTreeView#BgmListView::branch:hover {
+@if{DarkMode}
+    background-color: #466961;
+@else
     background-color: #cbfdf1;
+@endif
 }
 QTreeView#BgmListView::item:selected, QTreeView#BgmListView::branch:selected{
+@if{DarkMode}
+    background-color: #466961;
+@else
     background-color: #cbfdf1;
+@endif
 }
 QTreeView#BgmListView::branch {
     background-color: #f2faf8;
+}
+QTreeView#TaskFileInfoView {
+@if{DarkMode}
+    qproperty-normColor: rgb(255,255, 255);
+    qproperty-ignoreColor: rgb(160,160,160);
+@else
+    qproperty-normColor: rgb(0,0,0);
+    qproperty-ignoreColor: rgb(200,200,200);
+@endif
+}
+
+
+/* ------------------- QHeaderView ------------------- */
+QHeaderView{
+    background-color: rgb(100,100,100);
+}
+QHeaderView::section {
+    background-color: rgb(100,100,100);
+    color: white;
+    padding-left: 4px;
+    border: 1px solid #6c6c6c;
 }
 QHeaderView#BgmListHeader{
     background-color: #1abc9c;
@@ -1144,31 +704,670 @@ QHeaderView#BgmListHeader::section {
     padding-left: 4px;
     border: none;
 }
-QLineEdit#PageEdit{
-     border-style:solid;
-     border-width:0px 0px 2px 0px;
-     border-color:#1CA0E4;
-     background:transparent;
-     padding-bottom:-1px;
+
+QFrame#PoolItem{
+    background-color:rgba(1,157,255,80);
+    padding: 2px;
 }
-QListView#captureView,QListView#captureImageView{
-    border-style:none;
+
+
+/* ------------------- Window, Dialog ------------------- */
+QMainWindow#MainWindow {
+@if{DarkMode}
+    background-color:rgb(40, 40, 40);
+@else
+    background-color:rgb(230,230,230);
+@endif
+}
+QDialog{
+@if{DarkMode}
+    background-color:rgb(60,60,60);
+@else
+    background-color:rgb(245,245,245);
+@endif
+}
+QDialog#framelessDialog_O{
+    border:2px solid #a2aab1;
+@if{DarkMode}
+    background-color:rgb(60,60,60);
+@else
+    background-color:rgb(245,245,245);
+@endif
+}
+
+
+/* ------------------- QScrollArea ------------------- */
+QScrollArea{
     background: transparent;
+    border:none;
+}
+QScrollArea > QWidget > QWidget{
+    background: transparent;
+}
+QScrollArea#PoolItemContainer{
+    border-color: rgb(200,200,200);
+    border-style:solid;
+    border-width:1px;
+}
+
+/* ------------------- QMenu ------------------- */
+QMenu {
+@if{DarkMode}
+    background-color: rgb(80, 80, 80);
+@else
+    background-color: #f2f3f4;
+@endif
+    border: 1px solid #adbac2;
+}
+QMenu::item {
+    background-color: transparent;
+    padding: 5px 35px 5px 25px;
+@if{DarkMode}
+    color: rgb(240,240,240);
+@else
+    color: rgb(0,0,0);
+@endif
+}
+QMenu::item:disabled {
+@if{DarkMode}
+    color: rgb(150,150,150);
+@else
+    color: rgb(100,100,100);
+@endif
+}
+QMenu::separator {
+     height: 1px;
+     background: #cecfd1;
+     margin: 1px 0px 1px 0px;
+}
+QMenu::item:selected:enabled {
+    background-color: #32a7fe;
+    color:#ffffff;
+}
+QMenu::indicator {
+    width:20px;
+    height:20px;
+    margin:1px;
+    padding:2px 0px 2px 4px;
+}
+QMenu::indicator:checked {
+@if{DarkMode}
+    image: url(:/res/images/check-hover.svg);
+@else
+    image: url(:/res/images/check-normal.svg);
+@endif
+}
+QMenu::indicator:checked:selected {
+  image: url(:/res/images/check-hover.svg);
+}
+
+
+/* ------------------- QSplitter ------------------- */
+QSplitter::handle {
+    background-color:rgb(100,100,100);
+}
+QSplitter#NormalSplitter::handle {
+    background-color:transparent;
+}
+QSplitter#LabelSplitter::handle {
+    background-color:transparent;
+}
+QSplitter#DownloadSpliter::handle {
+    background-color:transparent;
+}
+
+
+/* ------------------- CheckBox ------------------- */
+QCheckBox {
+    spacing: 5px;
+}
+QCheckBox::indicator {
+    width: 20px;
+    height: 20px;
+}
+QCheckBox::indicator:unchecked {
+@if{DarkMode}
+    image: url(:/res/images/checkbox-darkmode-uncheck.svg);
+@else
+    image: url(:/res/images/checkbox-uncheck.svg);
+@endif
+}
+QCheckBox::indicator:unchecked:hover {
+    image: url(:/res/images/checkbox-hover.svg);
+}
+QCheckBox::indicator:checked {
+    image: url(:/res/images/checkbox-check.svg);
+}
+QWidget#PopupPage QCheckBox::indicator:unchecked {
+    image: url(:/res/images/checkbox-uncheck-light.svg);
+}
+QDialog QCheckBox {
+@if{DarkMode}
+    color: rgb(214,214,214);
+@else
+    color: rgb(0,0,0);
+@endif
+}
+
+
+/* ------------------- LineEdit, TextEdit, PlainTextEdit SpinBox ------------------- */
+QPlainTextEdit,QTextEdit {
+    border: 1px solid #dcdcdc;
+@if{DarkMode}
+    background-color:rgb(50, 50, 50);
+    color: rgb(214,214,214);
+@else
+    background-color:#fafafa;
+    color: rgb(0,0,0);
+@endif
+}
+QLineEdit,QSpinBox {
+    border: 1px solid #dddddd;
+    padding: 2px 2px 2px 2px;
+@if{DarkMode}
+    background-color:rgb(50, 50, 50);
+    color: rgb(214,214,214);
+@else
+    background-color:#fafafa;
+    color: rgb(0,0,0);
+@endif
+}
+
+QLineEdit:hover,QSpinBox:hover {
+@if{DarkMode}
+    background-color:rgb(60, 60, 60);
+@else
+    background-color:#fdfdfd;
+@endif
+    border: 1px solid #bcbcbc;
+}
+QLineEdit:focus,QSpinBox:focus {
+@if{DarkMode}
+    background-color: rgb(70, 70, 70);
+    color: rgb(255,255,255);
+@else
+    background-color: #ffffff;
+@endif
+    border: 1px solid #2BA9EC;
+}
+QTextEdit#AnimeDetailDesc{
+    background-color: rgba(255,255,255,40);
     color: rgb(240,240,240);
 }
-QTreeView#TaskFileInfoView {
-    qproperty-normColor: rgb(0,0,0);
-    qproperty-ignoreColor: rgb(200,200,200);
+QPlainTextEdit:focus,QTextEdit:focus {
+    border: 1px solid #2BA9EC;
 }
-QWidget#TaskBlockView{
-    qproperty-borderColor: rgb(200,200,200);
-    qproperty-fColor: rgb(12, 167, 250);
-    qproperty-uColor: rgb(200,200,200);
+QLineEdit#filterBox{
+    background-color: rgb(100, 100,100);
+    color:rgb(255,255,255);
+    border-color: rgb(100, 100,100);
+    border-style:solid;
+    border-width:1px;
 }
-QWidget#TaskPeerView{
-    qproperty-borderColor: rgb(200,200,200);
-    qproperty-barColor: rgba(51,168,255,200);
-    qproperty-backgroundColor: rgba(255,255,255,120);
+QLineEdit#filterBox:hover{
+    background-color: rgb(150, 150,150);
+}
+QLineEdit#PageEdit{
+    border-style:solid;
+    border-width:0px 0px 2px 0px;
+    border-color:#1CA0E4;
+    background:transparent;
+    padding-bottom:-1px;
+}
+QSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: top right; /* position at the top right corner */
+
+    width: 16px; /* 16 + 2*1px border-width = 15px padding + 3px parent border */
+    border-image: url(:/res/images/up-arrow.svg) 1;
+    border-width: 1px;
+}
+QSpinBox::up-button:hover {
+@if{DarkMode}
+    border-image: url(:/res/images/up-arrow-darkmode-hover.svg) 1;
+@else
+    border-image: url(:/res/images/up-arrow-dark-hover.svg) 1;
+@endif
+}
+QSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right; /* position at bottom right corner */
+
+    width: 16px;
+    border-image: url(:/res/images/down-arrow.svg) 1;
+    border-width: 1px;
+    border-top-width: 0;
+}
+QSpinBox::down-button:hover {
+@if{DarkMode}
+    border-image: url(:/res/images/down-arrow-darkmode-hover.svg) 1;
+@else
+    border-image: url(:/res/images/down-arrow-dark-hover.svg) 1;
+@endif
+}
+QWidget#PopupPage QSpinBox::up-button:hover {
+    border-image: url(:/res/images/up-arrow-hover.svg) 1;
+}
+QWidget#PopupPage QSpinBox::down-button:hover {
+    border-image: url(:/res/images/down-arrow-hover.svg) 1;
+}
+QSpinBox#Delay{
+    border:none;
+    border-color:rgb(200,200,200);
+    background:transparent;
+}
+QSpinBox#Delay::up-button {
+    subcontrol-origin:border;
+    subcontrol-position:right;
+    image: url(:/res/images/border.svg);
+    width: 20px; height: 20px;
+}
+QSpinBox#Delay::down-button {
+     subcontrol-origin:border;
+     subcontrol-position:left;
+     image: url(:/res/images/border.svg);
+     width: 20px; height: 20px;
+}
+QSpinBox#Delay::up-button:pressed {
+    margin:2px;
+}
+QSpinBox#Delay::down-button:pressed {
+    margin:2px;
+}
+
+
+/* ------------------- QComboBox ------------------- */
+QComboBox {
+    border: 1px solid #dddddd;
+    padding: 2px 2px 2px 2px;
+    color: rgb(0,0,0);
+@if{DarkMode}
+    background-color:rgb(50, 50, 50);
+    color: rgb(214,214,214);
+@else
+    background-color:#fafafa;
+    color: rgb(0,0,0);
+@endif    
+}
+QComboBox:hover {
+    border: 1px solid #bcbcbc;
+@if{DarkMode}
+    background-color:rgb(60, 60, 60);
+@else
+    background-color:#fdfdfd;
+@endif
+}
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 28px;
+    border:0px;
+}
+QComboBox::down-arrow {
+@if{DarkMode}
+    image: url(:/res/images/down-darkmode.svg);
+@else
+    image: url(:/res/images/down.svg);
+@endif
+    width:20px;
+    height:20px;
+}
+QComboBox::down-arrow:hover {
+@if{DarkMode}
+    image: url(:/res/images/down-darkmode-hover.svg);
+@else
+    image: url(:/res/images/down-hover.svg);
+@endif
+    width:20px;
+    height:20px;
+}
+QComboBox QAbstractItemView {
+@if{DarkMode}
+    background-color: #1f2a35;
+    border: 1px solid #32414B;
+    selection-color: #148CD2;
+    selection-background-color: #2c3841;
+    color:#F0F0F0;
+@else
+    border: 1px solid #cbdbe8;
+    selection-background-color: #019aff;
+    selection-color: #ffffff;
+    background-color: #ffffff;
+    color:#000000;
+@endif
+}
+QWidget#PopupPage QComboBox {
+    border: 1px solid #9e9e9e;
+    selection-background-color: #1464A0;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+    background-color: rgba(0,0,0,150);
+    color: #F0F0F0;
+}
+QWidget#PopupPage QComboBox:disabled {
+    background-color: #19232D;
+    color: #787878;
+}
+QWidget#PopupPage QComboBox:hover{
+    border: 1px solid #148CD2;
+}
+QWidget#PopupPage QComboBox:on {
+    selection-background-color: #19232D;
+}
+QWidget#PopupPage QComboBox QAbstractItemView {
+    background-color: #19232D;
+    border: 1px solid #32414B;
+    selection-color: #148CD2;
+    selection-background-color: #32414B;
+    color:#F0F0F0;
+}
+QWidget#PopupPage QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 28px;
+    border-left-width: 0px;
+    border-left-color: #32414B;
+    border-left-style: solid;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+QWidget#PopupPage QComboBox::down-arrow {
+    image: url(:/res/images/down-light.svg);
+    width:20px;
+    height:20px;
+}
+QWidget#PopupPage QComboBox::down-arrow:hover {
+    image: url(:/res/images/down-light-hover.svg);
+    width:20px;
+    height:20px;
+}
+
+
+/* ------------------- QPushButton ------------------- */
+QPushButton#widgetPlayControlButtons{
+    background:none;
+    border-style:none;
+    color:#ffffff;
+}
+QPushButton#widgetPlayControlButtons:hover,
+QPushButton#widgetPlayControlButtons:pressed,
+QPushButton#widgetPlayControlButtons:checked{
+    border-style:none;
+    border-width:2px;
+    border-color:#ffffff;
+    color:#1CA0E4;
+    background:none;
+}
+QPushButton#widgetPlayListCollapse{
+    border-style:none;
+    background-color: rgba(0, 0,0,150);
+    color:#989898;
+}
+QPushButton#widgetPlayListCollapse:hover,
+QPushButton#widgetPlayListCollapse:pressed,
+QPushButton#widgetPlayListCollapse:checked{
+    color:#FFFFFF;
+    background:#666a6e;
+}
+QPushButton#DialogCloseButton{
+    border:none;
+    background-color:transparent;
+    color:rgb(153,153,153);
+}
+QPushButton#DialogCloseButton:hover{
+    background-color:rgb(250,54,5);
+    color:rgb(255,255,255);
+}
+QPushButton#DialogCloseButton:pressed{
+    background-color:rgb(218,46,3);
+    color:rgb(255,255,255);
+}
+QPushButton#DialogAcceptButton{
+    border:none;
+    background-color:transparent;
+    color:rgb(153,153,153);
+}
+QPushButton#DialogAcceptButton:hover{
+    background-color:rgb(84,195,23);
+    color:rgb(255,255,255);
+}
+QPushButton#DialogAcceptButton:pressed{
+    background-color:rgb(0,171,47);
+    color:rgb(255,255,255);
+}
+QPushButton{
+    border:1px solid;
+    border-color:rgb(221,221,221);
+    padding:4px 4px 4px 4px;
+@if{DarkMode}
+    background-color: rgb(50, 50, 50);
+    color: rgb(214, 214, 214);
+@else
+    background-color:rgb(250,250,250);
+    color: rgb(0,0,0);
+@endif
+}
+QPushButton:disabled{
+    color: rgb(100,100,100);
+}
+QPushButton:hover{
+    border-color:rgb(150,150,150);
+@if{DarkMode}
+    background-color: rgb(70, 70, 70);
+@else
+    background-color:rgb(255,255,255);
+@endif
+}
+QPushButton:pressed{
+    border-color:rgb(150,150,150);
+    margin-top:2px;
+@if{DarkMode}
+    background-color: rgb(60, 60, 60);
+@else
+    background-color:rgb(231,231,231);
+@endif
+}
+QPushButton#LinkFlatButton{
+    border:1px solid #ebebeb;
+    background-color:transparent;
+    color:#47a0e9;
+    padding:4px 4px 4px 4px;
+}
+QPushButton#LinkFlatButton:hover{
+    border:1px solid #dddddd;
+@if{DarkMode}
+    background:#606060;
+@else
+    background-color:rgb(255,255,255);
+@endif
+}
+QPushButton#LinkFlatButton:pressed{
+    border-color:rgb(150,150,150);
+@if{DarkMode}
+    background-color:rgb(60, 60, 60);
+@else
+    background-color:rgb(231,231,231);
+@endif
+}
+QWidget#PopupPage QPushButton {
+    background-color: #2b3849;
+    border: 1px solid #9e9e9e;
+    color: #FaFaFa;
+    padding: 4px;
+    outline: none;
+}
+QWidget#PopupPage QPushButton:pressed {
+    background-color: #223144;
+    border: 1px solid #19232D;
+}
+QWidget#PopupPage QPushButton:hover{
+    background-color: #38485e;
+    border: 1px solid #6195db;
+    color: #eeeeee;
+}
+QPushButton#AnimeDetailBack{
+    border:none;
+    color:rgb(220,220,220);
+    background: transparent;
+}
+QPushButton#AnimeDetailBack:hover{
+    color:rgb(255,255,255);
+}
+QPushButton#AnimeDetailBack:pressed{
+    color:rgb(220,220,220);
+}
+QPushButton#RecentItemDeleteButton{
+    border-style:none;
+    color:#c8c8c8;
+    background:transparent;
+    padding:1px;
+}
+QPushButton#RecentItemDeleteButton:hover,
+QPushButton#RecentItemDeleteButton:pressed,
+QPushButton#RecentItemDeleteButton:checked{
+    color:#fa3605;
+    background:#666a6e;
+    border-radius:2px;
+    border:1px solid #fcfcfc;
+}
+QPushButton#TaskTypeToolButton{
+    border-style:none;
+    border-radius:0px;
+    padding:5px;
+    color:#c5c5c5;
+    background:transparent;
+    qproperty-normColor: rgb(192,192,192);
+    qproperty-hoverColor: rgb(103,155,204);
+}
+QPushButton#TaskTypeToolButton:hover,
+QPushButton#TaskTypeToolButton:pressed,
+QPushButton#TaskTypeToolButton:checked{
+    border-style:solid;
+    border-width:0px 0px 0px 4px;
+    border-color:#1CA0E4;
+    color:#679bcc;
+    background:#2d3641;
+}
+QPushButton#DownloadToolButton{
+    border-style:none;
+    border-radius:0px;
+    padding:5px;
+    background:transparent;
+@if{DarkMode}
+    qproperty-normColor: rgb(214,214,214);
+@else
+    qproperty-normColor: rgb(96,96,96);
+@endif
+    qproperty-hoverColor: rgb(69,153,247);
+}
+QPushButton#DownloadToolButton:hover,
+QPushButton#DownloadToolButton:pressed,
+QPushButton#DownloadToolButton:checked{
+    border-style:solid;
+    border-width:1px;
+    border-color:#b9b9b9;
+    color:#679bcc;
+@if{DarkMode}
+    background:#5f5f5f;
+@else
+    background:#c5c7c9;
+@endif
+}
+QPushButton#DownloadToolButton:pressed{
+    margin:1px;
+}
+QPushButton#BgmFilterBtn{
+    border-style:none;
+    padding:5px;
+    background:transparent;
+}
+QPushButton#BgmFilterBtn:hover{
+    border-style:solid;
+    border-width:1px;
+    border-color:#b9b9b9;
+    color:#679bcc;
+}
+QPushButton#BgmFilterBtn:checked{
+    border-style:none;
+    color:#679bcc;
+@if{DarkMode}
+    background:#505050;
+@else
+    background:#c5c7c9;
+@endif
+}
+
+
+/* ------------------- QScrollBar Setting ------------------- */
+QWidget[cScrollStyle="true"] QScrollBar:horizontal{
+    background: transparent;
+    height: 10px;
+}
+QWidget[cScrollStyle="true"] QScrollBar::handle:horizontal{
+    background: rgba(255,255,255,180);
+    min-height: 70px;
+    border-radius: 1px;
+}
+QWidget[cScrollStyle="true"] QScrollBar::handle:horizontal:hover{
+    background: rgba(255,255,255,255);
+}
+QWidget[cScrollStyle="true"] QScrollBar::handle:horizontal:pressed{
+    background: rgba(255,255,255,200);
+}
+QWidget[cScrollStyle="true"] QScrollBar::add-line:horizontal{
+    background: none;
+}
+QWidget[cScrollStyle="true"] QScrollBar::sub-line:horizontal{
+    background: none;
+}
+QWidget[cScrollStyle="true"] QScrollBar::add-page:horizontal,
+QWidget[cScrollStyle="true"] QScrollBar::sub-page:horizontal{
+    background: none;
+}
+
+QWidget[cScrollStyle="true"] QScrollBar:vertical{
+    background: transparent;
+    width: 10px;
+}
+QWidget[cScrollStyle="true"] QScrollBar::handle:vertical{
+    background: rgba(255,255,255,180);
+    min-height: 70px;
+    border-radius: 1px;
+}
+QWidget[cScrollStyle="true"] QScrollBar::handle:vertical:hover {
+    background: rgba(255,255,255,255);
+}
+QWidget[cScrollStyle="true"] QScrollBar::handle:vertical:pressed {
+    background: rgba(255,255,255,200);
+}
+QWidget[cScrollStyle="true"] QScrollBar::add-line:vertical{
+    background: none;
+}
+QWidget[cScrollStyle="true"] QScrollBar::sub-line:vertical{
+    background: none;
+}
+QWidget[cScrollStyle="true"] QScrollBar::add-page:vertical,
+QWidget[cScrollStyle="true"] QScrollBar::sub-page:vertical{
+    background: none;
+}
+
+
+/* ------------------- QListView, QListWidget ------------------- */
+QListWidget, QListView {
+@if{DarkMode}
+    background-color:rgb(50, 50, 50);
+    color:rgb(214, 214, 214);
+@else
+    background-color:rgb(255, 255, 255);
+    color:rgb(0, 0, 0);
+@endif
+}
+QListWidget#AnimeDetailCharacterList{
+    background-color: rgba(255,255,255,40);
+    color: rgb(240,240,240);
+    alternate-background-color: transparent;
 }
 QListWidget#SettingPageList {
     show-decoration-selected: 1;
@@ -1178,6 +1377,11 @@ QListWidget#SettingPageList::item {
     border: none;
     background-color: transparent;
     padding: 6px;
+@if{DarkMode}
+    color:rgb(214, 214, 214);
+@else
+    color:rgb(0, 0, 0);
+@endif
 }
 QListWidget#SettingPageList::item:hover {
     background: #1CA0E4;
@@ -1187,6 +1391,23 @@ QListWidget#SettingPageList::item:selected{
     background: #1CA0E4;
     color: #ffffff;
 }
-#AutoDownloadWindow {
-    qproperty-logGeneralColor: rgb(100,100,100);
+QListView#AnimesContent{
+    border-style:none;
+    background:transparent;
+}
+QListView#captureView,QListView#captureImageView{
+    border-style:none;
+    background: transparent;
+    color: rgb(240,240,240);
+}
+
+
+/* ------------------- QProgressBar ------------------- */
+QProgressBar {
+    border: 1px solid #5ca3b7;
+    text-align: center;
+    border-radius:2px;
+}
+QProgressBar::chunk {
+    background-color: #25b3df;
 }

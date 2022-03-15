@@ -336,7 +336,6 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
 
     GlobalObjects::iconfont.setPointSize(24);
 
-    int buttonWidth=36*logicalDpiX()/96,buttonHeight=36*logicalDpiY()/96;
     timeLabel=new QLabel("00:00/00:00",playControlPanel);
     timeLabel->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
     timeLabel->setObjectName(QStringLiteral("labelTime"));
@@ -351,6 +350,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     playPause->setToolTip(tr("Play/Pause(Space)"));
 
     GlobalObjects::iconfont.setPointSize(20);
+    int buttonWidth=36*logicalDpiX()/96,buttonHeight=36*logicalDpiY()/96;
 
     prev=new QPushButton(playControlPanel);
     prev->setFont(GlobalObjects::iconfont);

@@ -43,6 +43,12 @@ AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("B
     bgmHeader->resizeSection(1, 170*logicalDpiX()/96);
     bgmHeader->setFont(font());
 
+    QObject::connect(bangumiList, &QTreeWidget::itemDoubleClicked,[=](QTreeWidgetItem *item, int ){
+        if(!item) return;
+        curSelectedAnime = item->data(0, AnimeRole).value<AnimeLite>();
+        CFramelessDialog::onAccept();
+    });
+
     QGridLayout *bgmGLayout=new QGridLayout(this);
     bgmGLayout->setContentsMargins(0, 0, 0, 0);
     bgmGLayout->addWidget(scriptCombo, 0, 0);

@@ -425,6 +425,7 @@ void MainWindow::setupUI()
     {
         themeColor = GlobalObjects::appSetting->value("MainWindow/CustomColorHSV", QColor::fromHsv(180, 255, 100)).value<QColor>();
     }
+    StyleManager::getStyleManager()->setCondVariable("DarkMode", GlobalObjects::appSetting->value("MainWindow/DarkMode", false).toBool(), false);
     setBackground(GlobalObjects::appSetting->value("MainWindow/Background", "").toString(), true, false);
 }
 

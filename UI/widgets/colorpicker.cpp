@@ -87,9 +87,9 @@ ColorMenu::ColorMenu(const QList<QColor> &colorList, QWidget *parent) : QMenu(pa
     QGridLayout *btnGLayout = new QGridLayout(this);
     btnGLayout->setSpacing(0);
     btnGLayout->setMargin(5);
-    moreColor = new QToolButton(this);
+    moreColor = new QPushButton(this);
     moreColor->setText(tr("More Colors"));
-    QObject::connect(moreColor, &QToolButton::clicked, this, [=](){
+    QObject::connect(moreColor, &QPushButton::clicked, this, [=](){
         QColor c = QColorDialog::getColor();
         if(!c.isValid()) return;
         setColor(c);

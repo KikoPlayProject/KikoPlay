@@ -87,6 +87,7 @@ private:
     QSplitter *splitter;
     DialogTip *dialogTip;
     AnimeDetailInfoPage *detailPage;
+    bool animeViewing;
     void searchAddAnime(Anime *srcAnime = nullptr);
 signals:
     void playFile(const QString &file);

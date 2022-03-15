@@ -223,8 +223,7 @@ ShortcutEditDialog::ShortcutEditDialog(bool add, ShortcutModel *model, const QMo
     shortcutGLayout->addWidget(descEdit,2,1);
     // shortcutGLayout->setRowStretch(1,1);
     shortcutGLayout->setColumnStretch(1,1);
-
-    resize(GlobalObjects::appSetting->value("DialogSize/ShortcutEdit",QSize(400*logicalDpiX()/96,120*logicalDpiY()/96)).toSize());
+    setSizeSettingKey("DialogSize/ShortcutEdit", QSize(400*logicalDpiX()/96, 120*logicalDpiY()/96));
 }
 
 void ShortcutEditDialog::onAccept()
@@ -243,7 +242,6 @@ void ShortcutEditDialog::onAccept()
         showMessage(tr("Shortcut key conflicts with \"%1\"").arg(shortcutHash[key].first), NM_ERROR | NM_HIDE);
         return;
     }
-    GlobalObjects::appSetting->setValue("DialogSize/ShortcutEdit",size());
     CFramelessDialog::onAccept();
 }
 
@@ -261,7 +259,8 @@ QDataStream &operator>>(QDataStream &in, QList<ShortCutInfo> &l) {
     if (s)
     {
         l.reserve(s);
-        for (int i = 0; i < s; ++i) {
+        for (int i = 0; i < s; ++i)
+        {
             QString key, command, desc;
             in >> key >> command >> desc;
             l.append({key, {command, desc}});

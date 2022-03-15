@@ -60,7 +60,6 @@
         <file>res/images/down-light-hover.svg</file>
         <file>res/images/down-arrow-dark-hover.svg</file>
         <file>res/images/up-arrow-dark-hover.svg</file>
-        <file>res/images/loading-spinner.gif</file>
         <file>res/images/label-check.svg</file>
         <file>res/images/label-uncheck.svg</file>
         <file>res/images/label-partially.svg</file>
@@ -70,5 +69,10 @@
         <file>res/images/mark_pink.svg</file>
         <file>res/images/mark_red.svg</file>
         <file>res/images/mark_yellow.svg</file>
+        <file>res/images/down-darkmode.svg</file>
+        <file>res/images/down-darkmode-hover.svg</file>
+        <file>res/images/checkbox-darkmode-uncheck.svg</file>
+        <file>res/images/down-arrow-darkmode-hover.svg</file>
+        <file>res/images/up-arrow-darkmode-hover.svg</file>
     </qresource>
 </RCC>

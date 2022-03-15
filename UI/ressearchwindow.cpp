@@ -109,9 +109,18 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     searchListView->setContextMenuPolicy(Qt::ActionsContextMenu);
 
     QObject::connect(StyleManager::getStyleManager(), &StyleManager::styleModelChanged, this, [=](StyleManager::StyleMode mode){
-        bool setScrollStyle = (mode==StyleManager::BG_COLOR || mode==StyleManager::DEFAULT_BG);
+        bool setScrollStyle = (mode==StyleManager::BG_COLOR || mode==StyleManager::DEFAULT_BG ||
+                               StyleManager::getStyleManager()->getCondVariable("DarkMode"));
         searchListView->setProperty("cScrollStyle", setScrollStyle);
     });
+    QObject::connect(StyleManager::getStyleManager(), &StyleManager::condVariableChanged, this, [=](const QString &name, bool val){
+        if(StyleManager::getStyleManager()->currentMode()==StyleManager::NO_BG)
+        {
+            bool setScrollStyle = (name == "DarkMode" && val);
+            searchListView->setProperty("cScrollStyle", setScrollStyle);
+        }
+    });
+
 
     QObject::connect(searchListView, &QTreeView::doubleClicked,[this,searchProxyModel](const QModelIndex &index){
         QModelIndex selIndex = searchProxyModel->mapToSource(index);

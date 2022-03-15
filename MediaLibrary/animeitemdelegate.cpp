@@ -8,6 +8,7 @@
 #include <QMouseEvent>
 #include <QToolTip>
 #include "animeinfo.h"
+#include "globalobjects.h"
 #define AnimeRole Qt::UserRole+1
 int AnimeItemDelegate::CoverWidth = 0;
 int AnimeItemDelegate::CoverHeight = 0;
@@ -27,6 +28,7 @@ public:
         titleLabel=new QLabel(this);
         titleLabel->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
         titleLabel->setObjectName(QStringLiteral("AnimeItemTitle"));
+        titleLabel->setFont(QFont(GlobalObjects::normalFont, 10));
         QVBoxLayout *aiVLayout=new QVBoxLayout(this);
         aiVLayout->addWidget(imgLabel);
         QHBoxLayout *titleHLayout = new QHBoxLayout;

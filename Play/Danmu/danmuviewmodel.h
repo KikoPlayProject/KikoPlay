@@ -3,6 +3,7 @@
 
 #include <QAbstractItemModel>
 #include "common.h"
+#include "UI/stylemanager.h"
 static const int SourceRole = Qt::UserRole+1;
 template<typename T>
 class DanmuViewModel : public QAbstractItemModel
@@ -71,7 +72,7 @@ public:
         case Qt::ForegroundRole:
         {
             static QBrush normalBrush;
-            int c=(comment->color==0xffffff?0:comment->color);
+            int c=(comment->color==0xffffff && !StyleManager::getStyleManager()->getCondVariable("DarkMode")?0:comment->color);
             normalBrush.setColor(QColor((c>>16)&0xff,(c>>8)&0xff,c&0xff));
             return normalBrush;
         }

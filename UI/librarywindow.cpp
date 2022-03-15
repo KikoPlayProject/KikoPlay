@@ -66,7 +66,7 @@ namespace
     };
 }
 
-LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
+LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(false)
 {
     setObjectName(QStringLiteral("LibraryWindow"));
     dialogTip = new DialogTip(this);
@@ -368,7 +368,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
     });
     QObject::connect(proxyModel,&AnimeFilterProxyModel::animeMessage,this, [=](const QString &msg, bool hasMore){
         totalCountLabel->setText(msg);
-        loadMoreButton->isVisible() && hasMore? loadMoreButton->show():loadMoreButton->hide();
+        !animeViewing && hasMore? loadMoreButton->show():loadMoreButton->hide();
     });
 
     QPushButton *backButton =  new QPushButton(animeContainer);
@@ -423,6 +423,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         if(animeModel->canFetchMore(QModelIndex())) loadMoreButton->hide();
         filterBox->hide();
         viewSLayout->setCurrentIndex(1);
+        animeViewing = true;
     });
     QObject::connect(backButton, &QPushButton::clicked, this, [=](){
         emit switchBackground(QPixmap(), false);
@@ -432,6 +433,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent)
         filterBox->show();
         if(animeModel->canFetchMore(QModelIndex())) loadMoreButton->show();
         viewSLayout->setCurrentIndex(0);
+        animeViewing = false;
     });
     splitter->addWidget(labelView);
     splitter->addWidget(animeContainer);
@@ -588,7 +590,7 @@ AnimeFilterBox::AnimeFilterBox(QWidget *parent)
     optionsButton->setCursor(Qt::ArrowCursor);
 
     optionsButton->setFocusPolicy(Qt::NoFocus);
-    optionsButton->setObjectName(QStringLiteral("FilterOptionButton"));
+    optionsButton->setObjectName(QStringLiteral("AnimeFilterOptionButton"));
     GlobalObjects::iconfont.setPointSize(14);
     optionsButton->setFont(GlobalObjects::iconfont);
     optionsButton->setText(QChar(0xe609));

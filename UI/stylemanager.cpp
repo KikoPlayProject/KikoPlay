@@ -20,6 +20,7 @@ void StyleManager::setQSS(StyleMode mode, const QColor &color)
 {
     if(mode == this->mode && color == themeColor) return;
     emit styleModelChanged(mode);
+    this->mode = mode;
     if(mode == StyleMode::BG_COLOR)
     {
         if(color.isValid())
@@ -27,15 +28,36 @@ void StyleManager::setQSS(StyleMode mode, const QColor &color)
             themeColor = color;
         }
         setColorHash();
-        qApp->setStyleSheet(setQSSColor(bgQSS));
+        qApp->setStyleSheet(setQSS(bgQSS));
     }
     else if(mode == StyleMode::DEFAULT_BG)
     {
-        qApp->setStyleSheet(defaultBgQSS);
+        qApp->setStyleSheet(setQSS(defaultBgQSS));
     }
     else if(mode == StyleMode::NO_BG)
     {
-        qApp->setStyleSheet(normalQSS);
+        qApp->setStyleSheet(setQSS(normalQSS));
+    }
+}
+
+void StyleManager::setCondVariable(const QString &name, bool val, bool refresh)
+{
+    if(condHash.contains(name) && condHash[name] == val) return;
+    condHash[name] = val;
+    emit condVariableChanged(name, val);
+    if(!refresh) return;
+    if(mode == StyleMode::BG_COLOR)
+    {
+        setColorHash();
+        qApp->setStyleSheet(setQSS(bgQSS));
+    }
+    else if(mode == StyleMode::DEFAULT_BG)
+    {
+        qApp->setStyleSheet(setQSS(defaultBgQSS));
+    }
+    else if(mode == StyleMode::NO_BG)
+    {
+        qApp->setStyleSheet(setQSS(normalQSS));
     }
 }
 
@@ -96,10 +118,11 @@ QColor StyleManager::getColorPalette(const QColor &color, int index)
     return QColor::fromHsv(h, s, v);
 }
 
-QString StyleManager::setQSSColor(const QString &qss)
+QString StyleManager::setQSS(const QString &qss)
 {
-    QString replacedQSS, curName;
+    QVector<QPair<QString, bool>> replacedStack{{"", true}};
     int state = 0;
+    QString curCond, curName;
     for(const QChar c: qss)
     {
         if(state == 0)
@@ -109,20 +132,68 @@ QString StyleManager::setQSSColor(const QString &qss)
                 state = 1;
                 curName = "";
             }
-            else replacedQSS.append(c);
+            else replacedStack.back().first.append(c);
         }
         else if(state == 1)
         {
-            if(c == ')' || c == ',')
+            if(c == ')' || c == ',' || c == '{' || c == '\n')
             {
-                replacedQSS.append(colorHash.value(curName, curName));
-                replacedQSS.append(c);
-                state = 0;
+                if(curName.trimmed() == "if")
+                {
+                    state = 2;
+                    curCond = "";
+                }
+                else if(curName.trimmed() == "else")
+                {
+                    bool condSatisfy = replacedStack.back().second;
+                    QString block = replacedStack.back().first;
+                    replacedStack.pop_back();
+                    if(condSatisfy)
+                    {
+                        assert(!replacedStack.empty());
+                        replacedStack.back().first.append(block);
+                        replacedStack.append({"", false});
+                    }
+                    else
+                    {
+                        replacedStack.append({"", true});
+                    }
+                    state = 0;
+                }
+                else if(curName.trimmed() == "endif")
+                {
+                    bool condSatisfy = replacedStack.back().second;
+                    QString block = replacedStack.back().first;
+                    replacedStack.pop_back();
+                    if(condSatisfy)
+                    {
+                        assert(!replacedStack.empty());
+                        replacedStack.back().first.append(block);
+                    }
+                    state = 0;
+                }
+                else
+                {
+                    replacedStack.back().first.append(colorHash.value(curName, curName));
+                    replacedStack.back().first.append(c);
+                    state = 0;
+                }
             }
             else curName.append(c);
         }
+        else if(state == 2)
+        {
+            if(c == '}')
+            {
+               bool cond = condHash.value(curCond, false);
+               replacedStack.append({"", cond});
+               state = 0;
+            }
+            else curCond.append(c);
+        }
     }
-    return replacedQSS;
+    if(replacedStack.size() > 1) return "";
+    return replacedStack.back().first;
 }
 
 QString StyleManager::toString(const QColor &color)

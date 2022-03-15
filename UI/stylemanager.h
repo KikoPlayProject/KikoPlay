@@ -16,8 +16,12 @@ public:
     };
     static StyleManager *getStyleManager();
     void setQSS(StyleMode mode, const QColor &color=QColor());
+    void setCondVariable(const QString &name, bool val, bool refresh=true);
+    bool getCondVariable(const QString &name) const {return condHash.value(name, false);}
+    StyleMode currentMode() const {return mode;}
 signals:
     void styleModelChanged(StyleMode newMode);
+    void condVariableChanged(const QString &name, bool val);
 private:
     StyleManager();
     StyleManager(const StyleManager &)=delete;
@@ -28,10 +32,11 @@ private:
     QColor themeColor;
     StyleMode mode;
     QHash<QString, QString> colorHash;
+    QHash<QString, bool> condHash;
 
     void setColorHash();
     QColor getColorPalette(const QColor &color, int index);
-    QString setQSSColor(const QString &qss);
+    QString setQSS(const QString &qss);
     inline QString toString(const QColor &color);
 
 };

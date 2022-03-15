@@ -1,5 +1,6 @@
 #ifndef COLORPICKER_H
 #define COLORPICKER_H
+#include <QPushButton>
 #include <QToolButton>
 #include <QMenu>
 
@@ -30,7 +31,7 @@ private:
     void resetGrid();
     void clean();
     QButtonGroup *btnGroup;
-    QToolButton *moreColor;
+    QPushButton *moreColor;
     QList<ColorButton *> buttons;
 };
 

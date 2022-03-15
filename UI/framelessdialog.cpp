@@ -3,6 +3,7 @@
 #include <QPoint>
 #include <QSize>
 #include "widgets/dialogtip.h"
+#include "widgets/loadingicon.h"
 #ifdef Q_OS_WIN
 
 #include <windows.h>
@@ -62,13 +63,8 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
     acceptButton->setDefault(false);
     acceptButton->setAutoDefault(false);
 
-    QMovie *downloadingIcon=new QMovie(this);
-    busyLabel=new QLabel(this);
-    busyLabel->setMovie(downloadingIcon);
-    downloadingIcon->setFileName(":/res/images/loading-spinner.gif");
+    busyLabel = new LoadingIcon(QColor(153, 153, 153), this);
     busyLabel->setFixedSize(btnSize);
-    busyLabel->setScaledContents(true);
-    downloadingIcon->start();
     busyLabel->hide();
 
     QHBoxLayout *titleHBLayout=new QHBoxLayout(titleBar);
@@ -403,7 +399,7 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
 
     QFontMetrics fm(GlobalObjects::iconfont);
     int btnH = qMax(fm.horizontalAdvance(QChar(0xe60b)), fm.horizontalAdvance(QChar(0xe680)));
-    btnH = qMax(btnH, fm.height()) + 8*logicalDpiX()/96;
+    btnH = qMax(btnH, fm.height())*2;
     QSize btnSize(btnH, btnH);
 
     closeButton=new QPushButton(titleBar);
@@ -426,13 +422,8 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
     acceptButton->setDefault(false);
     acceptButton->setAutoDefault(false);
 
-    QMovie *downloadingIcon=new QMovie(this);
-    busyLabel=new QLabel(this);
-    busyLabel->setMovie(downloadingIcon);
-    downloadingIcon->setFileName(":/res/images/loading-spinner.gif");
+    busyLabel = new LoadingIcon(QColor(153, 153, 153), this);
     busyLabel->setFixedSize(btnSize);
-    busyLabel->setScaledContents(true);
-    downloadingIcon->start();
     busyLabel->hide();
 
     QHBoxLayout *titleHBLayout=new QHBoxLayout(titleBar);

@@ -107,7 +107,7 @@ DanmuFilterBox::DanmuFilterBox(QWidget *parent): QLineEdit(parent)
     optionsButton->setCursor(Qt::ArrowCursor);
 
     optionsButton->setFocusPolicy(Qt::NoFocus);
-    optionsButton->setObjectName(QStringLiteral("FilterOptionButton"));
+    optionsButton->setObjectName(QStringLiteral("AnimeFilterOptionButton"));
     GlobalObjects::iconfont.setPointSize(14);
     optionsButton->setFont(GlobalObjects::iconfont);
     optionsButton->setText(QChar(0xe609));

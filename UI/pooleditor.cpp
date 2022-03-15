@@ -180,14 +180,12 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
     });
 
     QPushButton *deleteButton=new QPushButton(tr("Delete"),this);
-    deleteButton->setObjectName(QStringLiteral("DialogButton"));
     QObject::connect(deleteButton,&QPushButton::clicked,[this,sourceInfo](){
         GlobalObjects::danmuPool->getPool()->deleteSource(sourceInfo->id);
         items->removeOne(this);
         this->deleteLater();
     });
     QPushButton *updateButton=new QPushButton(tr("Update"),this);
-    updateButton->setObjectName(QStringLiteral("DialogButton"));
     QObject::connect(updateButton,&QPushButton::clicked,[this,sourceInfo,updateButton,deleteButton,
                      editTimeline,delaySpinBox,name](){
         QList<DanmuComment *> tmpList;
@@ -215,7 +213,6 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
     });
 
     QPushButton *exportButton=new QPushButton(tr("Export"),this);
-    exportButton->setObjectName(QStringLiteral("DialogButton"));
     QObject::connect(exportButton,&QPushButton::clicked,[this,sourceInfo](){
         QString fileName = QFileDialog::getSaveFileName(this, tr("Save Danmu"),sourceInfo->title,tr("Xml File (*.xml)"));
         if(!fileName.isEmpty())

@@ -3,6 +3,7 @@
 #include "util.h"
 #include <QAbstractItemModel>
 #include <QColor>
+#include <QTreeView>
 class TorrentError
 {
 public:
@@ -65,5 +66,31 @@ public:
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     inline virtual int columnCount(const QModelIndex &) const {return 4;}
+};
+class TorrentTreeView : public QTreeView
+{
+    Q_OBJECT
+    Q_PROPERTY(QColor ignoreColor READ getIgnoreColor WRITE setIgnoreColor)
+    Q_PROPERTY(QColor normColor READ getNormColor WRITE setNormColor)
+public:
+    using QTreeView::QTreeView;
+
+    QColor getIgnoreColor() const {return ignoreColor;}
+    void setIgnoreColor(const QColor& color)
+    {
+        ignoreColor =  color;
+        emit ignoreColorChanged(ignoreColor);
+    }
+    QColor getNormColor() const {return normColor;}
+    void setNormColor(const QColor& color)
+    {
+        normColor = color;
+        emit normColorChanged(normColor);
+    }
+signals:
+    void ignoreColorChanged(const QColor &color);
+    void normColorChanged(const QColor &color);
+private:
+    QColor ignoreColor, normColor;
 };
 #endif // TORRENTDECODER_H

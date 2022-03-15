@@ -11,6 +11,7 @@
 #include <QHoverEvent>
 #include <QStylePainter>
 #include "../mainwindow.h"
+#include "../stylemanager.h"
 #include "globalobjects.h"
 #include "../widgets/colorslider.h"
 #include "Common/threadtask.h"
@@ -53,8 +54,10 @@ StylePage::StylePage(QWidget *parent) : SettingPage(parent)
     setSlide();
 
     hideToTray = new QCheckBox(tr("Hide to Tray Icon when Minimize"), this);
+    darkMode = new QCheckBox(tr("Dark Mode"), this);
     enableBg = new QCheckBox(tr("Enable Background"), this);
     customColor = new QCheckBox(tr("Custom Color"), this);
+    darkMode->setChecked(GlobalObjects::appSetting->value("MainWindow/DarkMode", false).toBool());
     enableBg->setChecked(!GlobalObjects::appSetting->value("MainWindow/Background").toString().isEmpty());
     customColor->setChecked(GlobalObjects::appSetting->value("MainWindow/CustomColor", false).toBool());
 
@@ -64,14 +67,15 @@ StylePage::StylePage(QWidget *parent) : SettingPage(parent)
     QGridLayout *styleGLayout = new QGridLayout(this);
     styleGLayout->setContentsMargins(0, 0, 0, 0);
     styleGLayout->addWidget(hideToTray, 0, 0, 1, 3);
-    styleGLayout->addWidget(enableBg, 1, 0, 1, 3);
-    styleGLayout->addWidget(bgLightnessTip, 2, 0);
-    styleGLayout->addWidget(sliderBgDarkness, 2, 1, 1, 2);
-    styleGLayout->addWidget(bgImgView, 3, 0, 1, 3);
-    styleGLayout->addWidget(customColor, 4, 0, 1, 3);
-    styleGLayout->addWidget(sliderHue, 5, 0, 1, 2);
-    styleGLayout->addWidget(colorPreview, 5, 2, 2, 1);
-    styleGLayout->addWidget(sliderLightness, 6, 0, 1, 2);
+    styleGLayout->addWidget(darkMode, 1, 0, 1, 3);
+    styleGLayout->addWidget(enableBg, 2, 0, 1, 3);
+    styleGLayout->addWidget(bgLightnessTip, 3, 0);
+    styleGLayout->addWidget(sliderBgDarkness, 3, 1, 1, 2);
+    styleGLayout->addWidget(bgImgView, 5, 0, 1, 3);
+    styleGLayout->addWidget(customColor, 6, 0, 1, 3);
+    styleGLayout->addWidget(sliderHue, 7, 0, 1, 2);
+    styleGLayout->addWidget(colorPreview, 8, 2, 2, 1);
+    styleGLayout->addWidget(sliderLightness, 9, 0, 1, 2);
     styleGLayout->setRowStretch(1, 1);
     styleGLayout->setColumnStretch(1, 1);
 
@@ -126,6 +130,10 @@ StylePage::StylePage(QWidget *parent) : SettingPage(parent)
             emit setThemeColor(QColor());
         }
     });
+    QObject::connect(darkMode, &QCheckBox::stateChanged, this, [this](int state){
+        darkModeChanged = true;
+        StyleManager::getStyleManager()->setCondVariable("DarkMode", state==Qt::Checked);
+    });
 
     MainWindow *mW = static_cast<MainWindow *>(GlobalObjects::mainWindow);
     QObject::connect(this, &StylePage::setBackground, mW, (void (MainWindow::*)(const QString &, const QColor &))&MainWindow::setBackground);
@@ -138,6 +146,7 @@ void StylePage::onAccept()
 {
     if(bgDarknessChanged) GlobalObjects::appSetting->setValue("MainWindow/BackgroundDarkness", sliderBgDarkness->value());
     if(bgChanged) GlobalObjects::appSetting->setValue("MainWindow/HistoryBackgrounds", historyBgs);
+    if(darkModeChanged) GlobalObjects::appSetting->setValue("MainWindow/DarkMode", darkMode->isChecked());
     if(colorChanged)
     {
         GlobalObjects::appSetting->setValue("MainWindow/CustomColorHSV", QColor::fromHsv(sliderHue->value(), 255, sliderLightness->value()));

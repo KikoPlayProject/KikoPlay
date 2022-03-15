@@ -9,6 +9,7 @@
 #include <QTimer>
 class QLabel;
 class DialogTip;
+class LoadingIcon;
 #ifdef Q_OS_WIN
 class CFramelessDialog : public QDialog
 {
@@ -45,7 +46,7 @@ private:
     bool m_bResizeable;
     bool inited;
     QPushButton *closeButton,*acceptButton;
-    QLabel *busyLabel;
+    LoadingIcon *busyLabel;
     QLabel *title;
     QWidget *titleBar, *backWidget;
 	bool restorePlayState;
@@ -99,7 +100,7 @@ private:
 
     bool m_bResizeable;
     QPushButton *closeButton,*acceptButton;
-    QLabel *busyLabel;
+    LoadingIcon *busyLabel;
     QLabel *title;
     QWidget *titleBar, *backWidget;
     bool restorePlayState;
@@ -126,7 +127,7 @@ protected:
     void keyPressEvent(QKeyEvent *) override;
     void showBusyState(bool busy);
     void setTitle(const QString &text);
-    void showMessage(const QString &msg, int type=0);
+    void showMessage(const QString &msg, int type=1);
     void setSizeSettingKey(const QString &key, const QSize &initSize);
     void addOnCloseCallback(const std::function<void()> &func);
     // QDialog interface

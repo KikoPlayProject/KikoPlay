@@ -21,12 +21,12 @@ private:
     QPixmap getThumb(const QString &path);
     void setSlide();
     static QHash<QString, QPixmap> bgThumb;
-    bool bgChanged = false, bgDarknessChanged = false, colorChanged = false;
+    bool darkModeChanged = false, bgChanged = false, bgDarknessChanged = false, colorChanged = false;
     const int maxBgCount = 32;
     QStringList historyBgs;
     QSize thumbSize;
     ColorSlider *sliderBgDarkness, *sliderHue, *sliderLightness;
-    QCheckBox *enableBg, *customColor, *hideToTray;
+    QCheckBox *darkMode, *enableBg, *customColor, *hideToTray;
     QWidget *colorPreview;
 };
 

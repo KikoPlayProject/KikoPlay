@@ -10,15 +10,18 @@
 #include "widgets/dirselectwidget.h"
 #include "Download/torrent.h"
 SelectTorrentFile::SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *parent) : CFramelessDialog(tr("Add Torrent"),parent,true),model(nullptr)
-{
+{   
     model=new TorrentFileModel(torrentFileTree,this);
-    QTreeView *torrentFileView=new QTreeView(this);
+    TorrentTreeView *torrentFileView=new TorrentTreeView(this);
+    torrentFileView->setObjectName(QStringLiteral("TaskFileInfoView"));
     torrentFileView->setAlternatingRowColors(true);
     torrentFileView->setModel(model);
     torrentFileView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     torrentFileView->header()->resizeSection(0,240*logicalDpiX()/96);
     torrentFileView->header()->resizeSection(1,50*logicalDpiX()/96);
     torrentFileView->header()->resizeSection(2,50*logicalDpiX()/96);
+    QObject::connect(torrentFileView, &TorrentTreeView::ignoreColorChanged, model, &TorrentFileModel::setIgnoreColor);
+    QObject::connect(torrentFileView, &TorrentTreeView::normColorChanged, model, &TorrentFileModel::setNormColor);
 
 
     QCheckBox *selectAll=new QCheckBox(tr("Select All"),this);
