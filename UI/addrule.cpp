@@ -314,7 +314,7 @@ QVariant PreviewModel::data(const QModelIndex &index, int role) const
     }
     else if(role==Qt::BackgroundRole)
     {
-        static QBrush matchedBrush(QColor(176,245,69));
+        static QBrush matchedBrush(QColor(132,209,13,200));
         if(item.matched) return matchedBrush;
     }
     return QVariant();

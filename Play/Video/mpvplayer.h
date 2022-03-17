@@ -42,7 +42,7 @@ public:
         int position;
     };
 
-    const QStringList videoFileFormats{"*.mp4","*.mkv","*.avi","*.flv","*.wmv"};
+    const QStringList videoFileFormats{"*.mp4","*.mkv","*.avi","*.flv","*.wmv","*.webm","*.vob","*.mts","*.ts","*.m2ts","*.mov","*.rm","*.rmvb","*.asf","*.m4v","*.mpg","*.mp2","*.mpeg","*.mpe","*.mpv","*.m2v","*.m4v","*.3gp","*.f4v"};
     const QStringList audioFormats{"*.mp3","*.wav","*.wma","*.ogg","*.flac","*.aac","*.ape","*.ac3","*.m4a","*.mka"};
     const QStringList subtitleFormats{"*.sub","*.srt","*.ass","*.ssa","*.smi","*.rt","*.txt","*.mks","*.vtt","*.sup"};
     const QStringList speedLevel{"0.5","0.75","1","1.25","1.5","2","2.5","3", "3.5", "4"};

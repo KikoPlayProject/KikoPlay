@@ -162,7 +162,7 @@ QToolButton#FilterOptionButton:hover, QToolButton#AnimeFilterOptionButton:hover{
     color:#0000ff;
 }
 QToolButton#FilterOptionButton::menu-indicator,
-QToolButton#AnimeFilterOptionButton::menu-indicato{
+QToolButton#AnimeFilterOptionButton::menu-indicator{
       width:0px;
 }
 QToolButton#AnimeFilterOptionButton{
