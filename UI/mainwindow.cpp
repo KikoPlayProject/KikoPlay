@@ -297,7 +297,7 @@ void MainWindow::setupUI()
             if(id == 1 && hasCoverBg)
             {
                 if(!coverPixmap.isNull()) bgWidget->setBackground(coverPixmap);
-                bgWidget->setBgDarkness(curDarkness * 1.5);
+                bgWidget->setBgDarkness(curDarkness + 10);
                 bgWidget->setBlurAnimation(20., 60.);
             }
             else if(curPage == 1 && hasCoverBg)
@@ -695,7 +695,7 @@ QWidget *MainWindow::setupLibraryPage()
             hasCoverBg = true;
             coverPixmap = pixmap;
             if(!pixmap.isNull()) bgWidget->setBackground(pixmap);
-            bgWidget->setBgDarkness(curDarkness + 40);
+            bgWidget->setBgDarkness(curDarkness + 10);
             bgWidget->setBlurAnimation(20., 60.);
         }
     });

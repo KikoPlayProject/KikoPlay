@@ -6,6 +6,7 @@
 #include <QRandomGenerator>
 
 #include "globalobjects.h"
+#include "Common/logger.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 
@@ -32,7 +33,7 @@ void PlayListPrivate::loadPlaylist()
     bool ret=playlistFile.open(QIODevice::ReadOnly|QIODevice::Text);
     if(!ret) return;
     QXmlStreamReader reader(&playlistFile);
-    QList<PlayListItem *> parents;
+    QVector<PlayListItem *> parents;
     QHash<QString,int> nodeNameHash = {
         {"playlist",0},
         {"collection",1},
@@ -112,6 +113,10 @@ void PlayListPrivate::loadPlaylist()
                 parents.pop_back();
         }
         reader.readNext();
+    }
+    if(parents.size() > 1 || reader.hasError())
+    {
+        Logger::logger()->log(Logger::APP, QString("Playlist File is corrupted: %1").arg(reader.errorString()));
     }
     for(auto iter= recentList.begin();iter!=recentList.end();)
     {
