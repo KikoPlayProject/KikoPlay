@@ -167,8 +167,17 @@ public:
     Anime();
     bool isValid() const {return !_name.isEmpty();}
 
+    void setAirDate(const QString &newAirDate);
+    void setStaffs(const QVector<QPair<QString,QString>> &staffs);
+    void setDesc(const QString &desc);
+    void setEpCount(int epCount);
     void setCover(const QByteArray &data, bool updateDB=true, const QString &coverURL=emptyCoverURL);
+
     void setCrtImage(const QString &name, const QByteArray &data);
+    void addCharacter(const Character &newCrtInfo);
+    void removeCharacter(const QString &name);
+    void modifyCharacterInfo(const QString &srcName, const Character &newCrtInfo);
+
     const QVector<EpInfo> &epList();
     const QVector<Character> &crList(bool loadImage = false);
     const QStringList &tagList();
@@ -189,6 +198,7 @@ private:
     void assign(const Anime *anime);
     void setStaffs(const QString &staffStrs);
     QString staffToStr() const;
+    static QString staffListToStr(const QVector<QPair<QString,QString>> &staffs);
 };
 
 struct AnimeInfoTag

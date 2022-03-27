@@ -59,8 +59,8 @@ void GlobalObjects::init()
         dir.mkpath(dataPath);
 
     using ShortCutInfo = QPair<QString, QPair<QString,QString>>;
-    qRegisterMetaType<QList<ShortCutInfo>>("ShortCutList");
-    qRegisterMetaTypeStreamOperators<QList<ShortCutInfo>>("ShortCutList");
+    qRegisterMetaType<QList<ShortCutInfo>>("QList<ShortCutInfo>");
+    qRegisterMetaTypeStreamOperators<QList<ShortCutInfo>>("QList<ShortCutInfo>");
     appSetting=new QSettings(dataPath+"settings.ini",QSettings::IniFormat);
 
     Logger::logger();

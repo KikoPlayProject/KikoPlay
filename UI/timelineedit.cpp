@@ -18,7 +18,7 @@ namespace
         return QString("%0%1:%2").arg(mSec<0?"-":"").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0'));
     }
 }
-TimelineEdit::TimelineEdit(const DanmuSource *source, const QList<SimpleDanmuInfo> &simpleDanmuList, QWidget *parent, int curTime):
+TimelineEdit::TimelineEdit(const DanmuSource *source, const QVector<SimpleDanmuInfo> &simpleDanmuList, QWidget *parent, int curTime):
     CFramelessDialog(tr("Timeline Edit"),parent,true)
 {
     timelineInfo = source->timelineInfo;
@@ -147,7 +147,7 @@ TimelineEdit::TimelineEdit(const DanmuSource *source, const QList<SimpleDanmuInf
     viewSplitter->setSizes(QList<int>()<<timelineBar->width()/2<<timelineBar->width()/2);
 }
 
-TimeLineBar::TimeLineBar(const QList<SimpleDanmuInfo> *sDanmuList, TimeLineInfoModel *timelineModel, QWidget *parent):QWidget(parent),simpleDanmuList(sDanmuList)
+TimeLineBar::TimeLineBar(const QVector<SimpleDanmuInfo> *sDanmuList, TimeLineInfoModel *timelineModel, QWidget *parent):QWidget(parent),simpleDanmuList(sDanmuList)
 {
     setMouseTracking(true);
     currentState=-1;
@@ -320,7 +320,7 @@ void TimeLineBar::keyPressEvent(QKeyEvent *event)
     update();
 }
 
-TimeLineInfoModel::TimeLineInfoModel(QList<QPair<int, int> > *timelines, QObject *parent):QAbstractItemModel(parent), timelineInfo(timelines)
+TimeLineInfoModel::TimeLineInfoModel(QVector<QPair<int, int>> *timelines, QObject *parent):QAbstractItemModel(parent), timelineInfo(timelines)
 {
 
 }
@@ -365,7 +365,7 @@ QVariant TimeLineInfoModel::headerData(int section, Qt::Orientation orientation,
     return QVariant();
 }
 
-SimpleDanumPool::SimpleDanumPool(QList<SimpleDanmuInfo> sDanmuList, QObject *parent):QAbstractItemModel(parent),simpleDanmuList(sDanmuList)
+SimpleDanumPool::SimpleDanumPool(const QVector<SimpleDanmuInfo> &sDanmuList, QObject *parent):QAbstractItemModel(parent),simpleDanmuList(sDanmuList)
 {
     std::sort(simpleDanmuList.begin(),simpleDanmuList.end(),
                  [](const SimpleDanmuInfo &danmu1,const SimpleDanmuInfo &danmu2){return danmu1.originTime<danmu2.originTime;});
@@ -378,7 +378,7 @@ QModelIndex SimpleDanumPool::getIndex(int time)
     return createIndex(pos,0);
 }
 
-void SimpleDanumPool::refreshTimeline(const QList<QPair<int, int>> &timelineInfo)
+void SimpleDanumPool::refreshTimeline(const QVector<QPair<int, int>> &timelineInfo)
 {
     beginResetModel();
     int timelinePos=0,currentDelay=0;

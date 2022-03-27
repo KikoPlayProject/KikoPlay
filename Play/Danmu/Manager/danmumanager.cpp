@@ -18,7 +18,7 @@
 DanmuManager *PoolStateLock::manager=nullptr;
 DanmuManager::DanmuManager(QObject *parent) : QObject(parent),countInited(false)
 {
-    poolCache.reset(new LRUCache<QString, Pool *>([](Pool *p){return !p->used && p->clean();}));
+    poolCache.reset(new LRUCache<QString, Pool *>("DanmuPool", [](Pool *p){return !p->used && p->clean();}));
     PoolStateLock::manager=this;
     loadAllPool();
 }

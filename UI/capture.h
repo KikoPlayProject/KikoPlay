@@ -2,7 +2,7 @@
 #define CAPTURE_H
 
 #include "framelessdialog.h"
-class PlayListItem;
+struct PlayListItem;
 class Capture : public CFramelessDialog
 {
     Q_OBJECT

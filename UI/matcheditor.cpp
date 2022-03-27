@@ -29,7 +29,7 @@ namespace
     QSet<QString> hitWords;
     static QCollator comparer;
     QString lastSearchCacheId;
-    LRUCache<QString, QList<AnimeLite>> animeCache{64};
+    LRUCache<QString, QList<AnimeLite>> animeCache{"MatchAnime", 64};
 
     class EpComboItemDelegate : public QStyledItemDelegate
     {

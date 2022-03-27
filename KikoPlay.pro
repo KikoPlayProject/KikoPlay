@@ -54,10 +54,11 @@ SOURCES += \
     Script/scriptsettingmodel.cpp \
     UI/addpool.cpp \
     UI/addrule.cpp \
-    UI/aliasedit.cpp \
     UI/animedetailinfopage.cpp \
+    UI/animeinfoeditor.cpp \
     UI/animesearch.cpp \
     UI/autodownloadwindow.cpp \
+    UI/charactereditor.cpp \
     UI/danmulaunch.cpp \
     UI/danmuview.cpp \
     UI/gifcapture.cpp \
@@ -172,10 +173,11 @@ HEADERS += \
     Script/scriptsettingmodel.h \
     UI/addpool.h \
     UI/addrule.h \
-    UI/aliasedit.h \
     UI/animedetailinfopage.h \
+    UI/animeinfoeditor.h \
     UI/animesearch.h \
     UI/autodownloadwindow.h \
+    UI/charactereditor.h \
     UI/danmulaunch.h \
     UI/danmuview.h \
     UI/gifcapture.h \

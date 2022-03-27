@@ -23,7 +23,7 @@ public:
 private:
     QVBoxLayout *poolItemVLayout;
     void refreshItems();
-    QList<PoolItem *> poolItems;
+    QVector<PoolItem *> poolItems;
 };
 
 #endif // POOLEDITOR_H

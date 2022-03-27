@@ -71,7 +71,7 @@ public:
     int exportRules(const QString &fileName);
     int importRules(const QString &fileName);
 private:
-    QList<BlockRule *> blockList;
+    QVector<BlockRule *> blockList;
     int maxId;
     bool ruleChanged;
     QString blockFileName;

@@ -128,7 +128,7 @@ struct DanmuSource
     int duration = 0;
     bool show = true;
 
-    QList<QPair<int,int> >timelineInfo;
+    QVector<QPair<int,int>> timelineInfo;
     void setTimeline(const QString &timelineStr);
     QString timelineStr() const;
 

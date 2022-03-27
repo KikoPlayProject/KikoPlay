@@ -2,18 +2,26 @@
 #define LRUCACHE_H
 #include <QHash>
 #include <QMutex>
+#include <QDateTime>
+#include <QSharedPointer>
 template <typename K, typename V>
 class LRUCache
 {
 public:
-    explicit LRUCache(int mSize = 32, bool lock = false):maxSize(mSize), useLock(lock), deleter(nullptr), h(nullptr), t(nullptr){}
-
-    template<typename Deleter>
-    explicit LRUCache(Deleter deleter, int mSize = 32, bool lock = false):maxSize(mSize), useLock(lock), h(nullptr), t(nullptr)
+    using Deleter = std::function<bool (V)>;
+    explicit LRUCache(const char *name, size_t mSize = 32, bool dynamicSize = false, bool lock = false)
+        : cacheName(name), maxSize(mSize), useLock(lock), dynamicAdjust(dynamicSize), dynamicMaxSize(mSize),
+          cleanTimestamp(0), deleter(nullptr), h(nullptr), t(nullptr)
     {
-        this->deleter = new CustomDeleter<Deleter>(deleter);
+        if(mSize < 2) maxSize = dynamicMaxSize = 2;
     }
-    ~LRUCache() { if(deleter) delete deleter; }
+    explicit LRUCache(const char *name, Deleter deleter, int mSize = 32, bool dynamicSize = false, bool lock = false)
+        : cacheName(name), maxSize(mSize), useLock(lock), dynamicAdjust(dynamicSize), dynamicMaxSize(mSize),
+          cleanTimestamp(0), h(nullptr), t(nullptr)
+    {
+        if(mSize < 2) maxSize = dynamicMaxSize = 2;
+        this->deleter = QSharedPointer<Deleter>::create(deleter);
+    }
 
     bool contains(const K &key)
     {
@@ -40,7 +48,7 @@ public:
             node->key=&nIter.key();
         }
         prepend(node);
-        if(hash.count()>maxSize) clean();
+        if(hash.count()>dynamicMaxSize) clean();
     }
     V &refVal(const K &key)
     {
@@ -66,7 +74,7 @@ public:
         Node *node = &iter.value();
         if(deleter && useDeleter)
         {
-            if(!deleter->exec(node->value)) return;
+            if(!(*deleter)(node->value)) return;
         }
         take(node);
         hash.remove(key);
@@ -82,22 +90,13 @@ private:
         MutexLocker(MutexLocker &);
     };
 
-    struct CustomData
-    {
-        virtual bool exec(V val) = 0;
-    };
-    template<typename Deleter>
-    struct CustomDeleter : public CustomData
-    {
-        Deleter d;
-        CustomDeleter(Deleter deleter):d(deleter){}
-        bool exec(V val){return d(val);}
-    };
-
-    int maxSize;
+    const char *cacheName = "";
+    size_t maxSize, dynamicMaxSize;
     QMutex lock{QMutex::Recursive};
     bool useLock;
-    CustomData *deleter;
+    bool dynamicAdjust;
+    qint64 cleanTimestamp;
+    QSharedPointer<Deleter> deleter;
 
     struct Node
     {
@@ -126,12 +125,23 @@ private:
     }
     void clean()
     {
-        int i=maxSize/2;
+        if(dynamicAdjust)
+        {
+            qint64 ts = QDateTime::currentDateTime().toMSecsSinceEpoch();
+            if (ts - cleanTimestamp < 1000 && dynamicMaxSize < maxSize * 4)
+            {
+                dynamicMaxSize <<= 1;
+                qInfo("Cache[%s] Adjust To: %d", cacheName, dynamicMaxSize);
+                return;
+            }
+            cleanTimestamp = ts;
+        }
+        size_t i = dynamicMaxSize >> 1;
         Node *cur=t;
         while(i>0 && cur)
         {
             Node *n=cur->p;
-            if((deleter && deleter->exec(cur->value)) || !deleter)
+            if((deleter && (*deleter)(cur->value)) || !deleter)
             {
                 if(n) n->n=nullptr;
                 hash.remove(*cur->key);
@@ -143,6 +153,7 @@ private:
             --i;
         }
         t=cur;
+        qInfo("Cache[%s] Clean, Cache Size: %d, Left: %d", cacheName, dynamicMaxSize, hash.size());
     }
 };
 

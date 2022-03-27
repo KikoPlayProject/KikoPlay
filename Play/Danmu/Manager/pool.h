@@ -22,13 +22,13 @@ public:
     int addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool reset=false);
     bool deleteSource(int sourceId, bool applyDB=true);
     bool deleteDanmu(int pos);
-    bool setTimeline(int sourceId, const QList<QPair<int, int>> &timelineInfo);
+    bool setTimeline(int sourceId, const QVector<QPair<int, int> > &timelineInfo);
     bool setDelay(int sourceId, int delay);
     void setUsed(bool on);
     void setSourceVisibility(int srcId, bool show);
     void exportPool(const QString &fileName, bool useTimeline=true, bool applyBlockRule=false, const QList<int> &ids=QList<int>());
     void exportKdFile(QDataStream &stream, const QList<int> &ids=QList<int>());
-    void exportSimpleInfo(int srcId, QList<SimpleDanmuInfo> &simpleDanmuList);
+    void exportSimpleInfo(int srcId, QVector<SimpleDanmuInfo> &simpleDanmuList);
     QJsonArray exportJson();
     QJsonObject exportFullJson();
     static QJsonArray exportJson(const QVector<QSharedPointer<DanmuComment> > &danmuList, bool useOrigin=false);

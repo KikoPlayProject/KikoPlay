@@ -8,12 +8,12 @@ class TimeLineInfoModel : public QAbstractItemModel
 {
     Q_OBJECT
 public:
-    explicit TimeLineInfoModel(QList<QPair<int,int>> *timelines,QObject *parent=nullptr);
+    explicit TimeLineInfoModel(QVector<QPair<int, int>> *timelines, QObject *parent=nullptr);
     void addSpace(int start,int duration);
     void removeSpace(const QModelIndex &index);
-    inline const QList<QPair<int,int>> *getTimeLine(){return timelineInfo;}
+    inline const QVector<QPair<int,int>> *getTimeLine(){return timelineInfo;}
 private:
-    QList<QPair<int,int>> *timelineInfo;
+    QVector<QPair<int,int>> *timelineInfo;
     // QAbstractItemModel interface
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
@@ -27,12 +27,12 @@ class SimpleDanumPool : public QAbstractItemModel
 {
     Q_OBJECT
 public:
-    explicit SimpleDanumPool(QList<SimpleDanmuInfo> sDanmuList, QObject *parent=nullptr);
-    inline const QList<SimpleDanmuInfo> *getDanmuList(){return &simpleDanmuList;}
+    explicit SimpleDanumPool(const QVector<SimpleDanmuInfo> &sDanmuList, QObject *parent=nullptr);
+    inline const QVector<SimpleDanmuInfo> *getDanmuList(){return &simpleDanmuList;}
     QModelIndex getIndex(int time);
-    void refreshTimeline(const QList<QPair<int,int> > &timelineInfo);
+    void refreshTimeline(const QVector<QPair<int, int> > &timelineInfo);
 private:
-    QList<SimpleDanmuInfo> simpleDanmuList;
+    QVector<SimpleDanmuInfo> simpleDanmuList;
     // QAbstractItemModel interface
 public:
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
@@ -46,10 +46,10 @@ class TimeLineBar : public QWidget
 {
     Q_OBJECT
 public:
-    explicit TimeLineBar(const QList<SimpleDanmuInfo> *sDanmuList, TimeLineInfoModel *timelineModel, QWidget *parent=nullptr);
+    explicit TimeLineBar(const QVector<SimpleDanmuInfo> *sDanmuList, TimeLineInfoModel *timelineModel, QWidget *parent=nullptr);
     void updateInfo();
 private:
-    const QList<SimpleDanmuInfo> *simpleDanmuList;
+    const QVector<SimpleDanmuInfo> *simpleDanmuList;
     TimeLineInfoModel *timelineModel;
     StatisInfo statisInfo;
     int duration;
@@ -75,9 +75,9 @@ class TimelineEdit : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    TimelineEdit(const DanmuSource *source, const QList<SimpleDanmuInfo> &simpleDanmuList, QWidget *parent = nullptr,int curTime=-1);
+    TimelineEdit(const DanmuSource *source, const QVector<SimpleDanmuInfo> &simpleDanmuList, QWidget *parent = nullptr,int curTime=-1);
 
-    QList<QPair<int,int>> timelineInfo;
+    QVector<QPair<int,int>> timelineInfo;
 private:
     TimeLineInfoModel *timelineModel;
     int tmpStartTime;

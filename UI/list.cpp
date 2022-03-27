@@ -924,6 +924,7 @@ QWidget *ListWindow::setupPlaylistPage()
 
     playlistView=new QTreeView(playlistPage);
     playlistView->setObjectName(QStringLiteral("playlist"));
+    playlistView->setAnimated(true);
     playlistView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     playlistView->setEditTriggers(QAbstractItemView::SelectedClicked);
     playlistView->setDragEnabled(true);
@@ -1167,6 +1168,7 @@ QWidget *ListWindow::setupDanmulistPage()
 
     danmulistView=new QTreeView(danmulistPage);
     danmulistView->setObjectName(QStringLiteral("danmulist"));
+    danmulistView->setAnimated(true);
     danmulistView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     danmulistView->setRootIsDecorated(false);
     danmulistView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

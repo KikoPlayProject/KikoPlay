@@ -24,6 +24,7 @@
 #include "Common/notifier.h"
 #include "animesearch.h"
 #include "episodeeditor.h"
+#include "inputdialog.h"
 #include "widgets/dialogtip.h"
 #include "animedetailinfopage.h"
 #include "Script/scriptmanager.h"
@@ -185,10 +186,20 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(fa
     });
     act_updateDetailInfo->setEnabled(false);
 
-    QAction *act_searchAdd=new QAction(tr("Add Anime"), this);
-    QObject::connect(act_searchAdd,&QAction::triggered, this, [this](){
+    QMenu *addSubMenu = new QMenu(tr("Add Anime"), animeListView);
+    QAction *act_searchAdd=new QAction(tr("Search Add"), this);
+    QObject::connect(act_searchAdd, &QAction::triggered, this, [this](){
         searchAddAnime();
     });
+    QAction *act_directAdd=new QAction(tr("Direct Add"), this);
+    QObject::connect(act_directAdd,&QAction::triggered, this, [this](){
+        LineInputDialog input(tr("Add Anime"), tr("Anime Name"), "", "DialogSize/DirectAddAnime", false, this);
+        if(QDialog::Accepted == input.exec())
+        {
+            AnimeWorker::instance()->addAnime(input.text);
+        }
+    });
+    addSubMenu->addActions({act_searchAdd, act_directAdd});
 
     QMenu *orderSubMenu = new QMenu(tr("Sort Order"), animeListView);
     QActionGroup *ascDesc = new QActionGroup(orderSubMenu);
@@ -230,7 +241,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(fa
     orderSubMenu->addAction(actOrderDate);
 
     QMenu *animeListContextMenu=new QMenu(animeListView);
-    animeListContextMenu->addAction(act_searchAdd);
+    animeListContextMenu->addMenu(addSubMenu);
     animeListContextMenu->addAction(act_getDetailInfo);
     animeListContextMenu->addAction(act_updateDetailInfo);
     animeListContextMenu->addAction(act_delete);
@@ -289,6 +300,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(fa
     labelView=new LabelTreeView(splitter);
     labelView->setObjectName(QStringLiteral("LabelView"));
     labelView->setProperty("cScrollStyle", true);
+    labelView->setAnimated(true);
     labelView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
     labelView->header()->hide();
     labelView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

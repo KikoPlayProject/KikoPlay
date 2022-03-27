@@ -54,9 +54,5 @@ struct DanmuPoolSourceNode : public DanmuPoolNode
     bool isSameSource(const DanmuSource &src) const { return idInfo==src.scriptId && scriptData==src.scriptData; }
     int srcId, delay;
     QString scriptData;
-
-    //QString timeline;
-   // DanmuSourceInfo toSourceInfo();
-   //void setTimeline(const DanmuSourceInfo &srcInfo);
 };
 #endif // NODEINFO_H

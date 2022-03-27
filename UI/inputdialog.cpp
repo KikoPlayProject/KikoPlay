@@ -1,5 +1,6 @@
 #include "inputdialog.h"
 #include <QPlainTextEdit>
+#include <QLineEdit>
 #include <QLabel>
 #include <QGridLayout>
 #include "Common/notifier.h"
@@ -90,6 +91,36 @@ void InputDialog::onAccept()
             showMessage(tr("Can't be empty"), NM_ERROR | NM_HIDE);
             return;
         }
+    }
+    CFramelessDialog::onAccept();
+}
+
+LineInputDialog::LineInputDialog(const QString &title, const QString &tip, const QString &text, const QString &sizeKey, bool canEmpty, QWidget *parent)
+    : CFramelessDialog(title,parent,true)
+{
+    QLabel *tipLabel=new QLabel(tip,this);
+    edit=new QLineEdit(text,this);
+    QObject::connect(edit, &QLineEdit::returnPressed, this, &LineInputDialog::onAccept);
+    QGridLayout *inputGLayout=new QGridLayout(this);
+    inputGLayout->addWidget(tipLabel, 0, 0);
+    inputGLayout->addWidget(edit, 0, 1);
+    inputGLayout->setRowStretch(0, 1);
+    inputGLayout->setColumnStretch(1, 1);
+    inputGLayout->setContentsMargins(0, 0, 0, 0);
+    this->canEmpty=canEmpty;
+    if(!sizeKey.isEmpty())
+    {
+        setSizeSettingKey(sizeKey,QSize(200*logicalDpiX()/96,30*logicalDpiY()/96));
+    }
+}
+
+void LineInputDialog::onAccept()
+{
+    text=edit->text().trimmed();
+    if(!canEmpty && text.isEmpty())
+    {
+        showMessage(tr("Can't be empty"), NM_ERROR | NM_HIDE);
+        return;
     }
     CFramelessDialog::onAccept();
 }

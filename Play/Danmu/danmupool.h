@@ -5,7 +5,7 @@
 #include "common.h"
 struct StatisInfo
 {
-    QList<QPair<int,int> > countOfSecond;
+    QVector<QPair<int,int> > countOfSecond;
     int maxCountOfMinute;
     int totalCount;
     int blockCount;
@@ -70,7 +70,7 @@ public:
 
 signals:
     void statisInfoChange();
-    void eventAnalyzeFinished(const QList<DanmuEvent> &);
+    void eventAnalyzeFinished(const QVector<DanmuEvent> &);
 public slots:
     void mediaTimeElapsed(int newTime);
     void mediaTimeJumped(int newTime);

@@ -98,7 +98,7 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     if (!mpv)
         throw std::runtime_error("could not create mpv context");
 
-    QSet<QString> optionsBeforeInit{"config", "config-dir", "input-conf", "load-scripts", "script"};
+    QSet<QString> optionsBeforeInit{"config", "config-dir", "input-conf", "load-scripts", "script", "scripts"};
     QStringList options=GlobalObjects::appSetting->value(
          "Play/MPVParameters",
          "#Make sure the danmu is smooth\n"

@@ -36,6 +36,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     QTreeView *poolView=new QTreeView(this);
     poolView->setSelectionMode(QAbstractItemView::SingleSelection);
     poolView->setFont(this->font());
+    poolView->setAnimated(true);
     poolView->setAlternatingRowColors(true);
     poolView->header()->setSortIndicator(0, Qt::SortOrder::AscendingOrder);
 
@@ -63,7 +64,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         if(indexList.size()==0)return;
         DanmuPoolSourceNode *srcNode=managerModel->getSourceNode(proxyModel->mapToSource(indexList.first()));
         if(!srcNode)return;
-        QList<SimpleDanmuInfo> simpleDanmuList;
+        QVector<SimpleDanmuInfo> simpleDanmuList;
         Pool *pool=GlobalObjects::danmuManager->getPool(srcNode->parent->idInfo);
         if(pool)
         {

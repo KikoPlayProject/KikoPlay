@@ -452,6 +452,66 @@ void AnimeWorker::updateCaptureInfo(const QString &animeName, qint64 timeId, con
     });
 }
 
+std::function<void (QSqlQuery *)> AnimeWorker::updateAirDate(const QString &animeName, const QString &newAirDate, const QString &srcAirDate)
+{
+    return [=](QSqlQuery *query){
+        query->prepare("update anime set AirDate=? where Anime=?");
+        query->bindValue(0, newAirDate);
+        query->bindValue(1, animeName);
+        if(query->exec())
+        {
+            emit removeTimeTag(srcAirDate);
+            emit addTimeTag(newAirDate);
+        }
+    };
+}
+
+std::function<void (QSqlQuery *)> AnimeWorker::updateEpCount(const QString &animeName, int newEpCount)
+{
+    return [=](QSqlQuery *query){
+        query->prepare("update anime set EpCount=? where Anime=?");
+        query->bindValue(0, newEpCount);
+        query->bindValue(1, animeName);
+        query->exec();
+    };
+}
+
+std::function<void (QSqlQuery *)> AnimeWorker::updateStaffInfo(const QString &animeName, const QVector<QPair<QString, QString> > &staffs)
+{
+    QString staffStr = Anime::staffListToStr(staffs);
+    return [=](QSqlQuery *query){
+        query->prepare("update anime set Staff=? where Anime=?");
+        query->bindValue(0, staffStr);
+        query->bindValue(1, animeName);
+        query->exec();
+    };
+}
+
+std::function<void (QSqlQuery *)> AnimeWorker::updateDescription(const QString &animeName, const QString &desc)
+{
+    return [=](QSqlQuery *query){
+        query->prepare("update anime set Desc=? where Anime=?");
+        query->bindValue(0, desc);
+        query->bindValue(1, animeName);
+        query->exec();
+    };
+}
+
+bool AnimeWorker::runQueryGroup(const QVector<std::function<void (QSqlQuery *)> > &queries)
+{
+    ThreadTask task(GlobalObjects::workThread);
+    return task.Run([=](){
+        QSqlDatabase db=GlobalObjects::getDB(GlobalObjects::Bangumi_DB);
+        db.transaction();
+        QSqlQuery query(db);
+        for(const auto &q : queries)
+        {
+            q(&query);
+        }
+        return db.commit();
+    }).toBool();
+}
+
 void AnimeWorker::updateCoverImage(const QString &animeName, const QByteArray &imageContent, const QString &coverURL)
 {
     ThreadTask task(GlobalObjects::workThread);
@@ -483,6 +543,47 @@ void AnimeWorker::updateCrtImage(const QString &animeName, const QString &crtNam
         query.bindValue(0,imageContent);
         query.bindValue(1,animeName);
         query.bindValue(2,crtName);
+        query.exec();
+    });
+}
+
+void AnimeWorker::addCharacter(const QString &animeName, const Character &crt)
+{
+    ThreadTask task(GlobalObjects::workThread);
+    task.RunOnce([=](){
+        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+        query.prepare("insert into character(Anime,Name,Actor,Link) values(?,?,?,?)");
+        query.bindValue(0, animeName);
+        query.bindValue(1, crt.name);
+        query.bindValue(2, crt.actor);
+        query.bindValue(3, crt.link);
+        query.exec();
+    });
+}
+
+void AnimeWorker::modifyCharacter(const QString &animeName, const QString &srcCrtName, const Character &crtInfo)
+{
+    ThreadTask task(GlobalObjects::workThread);
+    task.RunOnce([=](){
+        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+        query.prepare("update character set Name=?, Actor=?, Link=? where Anime=? and Name=?");
+        query.bindValue(0, crtInfo.name);
+        query.bindValue(1, crtInfo.actor);
+        query.bindValue(2, crtInfo.link);
+        query.bindValue(3, animeName);
+        query.bindValue(4, srcCrtName);
+        query.exec();
+    });
+}
+
+void AnimeWorker::removeCharacter(const QString &animeName, const QString &crtName)
+{
+    ThreadTask task(GlobalObjects::workThread);
+    task.RunOnce([=](){
+        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+        query.prepare("delete from character where Anime=? and Name=?");
+        query.bindValue(0,animeName);
+        query.bindValue(1,crtName);
         query.exec();
     });
 }

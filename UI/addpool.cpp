@@ -22,7 +22,7 @@
 namespace
 {
     QSet<QString> hitWords;
-    LRUCache<QString, QList<AnimeLite>> animeCache{64};
+    LRUCache<QString, QList<AnimeLite>> animeCache{"PoolAnime", 64};
     QString lastSearchCacheId;
 
     class AnimeModel : public QAbstractItemModel

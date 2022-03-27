@@ -10,7 +10,7 @@ PlayListItem::PlayListItem(PlayListItem *p, bool leaf, int insertPosition):
 {
     if(!leaf)
     {
-        children=new QList<PlayListItem *>();
+        children=new QVector<PlayListItem *>();
     }
     if(parent)
     {

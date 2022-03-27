@@ -76,10 +76,10 @@ Anime *AnimeModel::getAnime(const QModelIndex &index)
 
 void AnimeModel::addAnime(Anime *anime)
 {
+    ++totalCount;
     if(!active)
     {
-        tmpAnimes.append(anime);
-        ++totalCount;
+        tmpAnimes.append(anime); 
     }
     else
     {

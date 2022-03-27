@@ -10,7 +10,7 @@ class QToolButton;
 class QComboBox;
 class QListWidget;
 class QTreeView;
-class PlayListItem;
+struct PlayListItem;
 class AddDanmu;
 class SearchItemWidget:public QWidget
 {

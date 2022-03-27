@@ -23,9 +23,9 @@ EventAnalyzer::EventAnalyzer(QObject *parent):QObject(parent),curPool(nullptr),l
     qRegisterMetaType<QList<DanmuEvent> >("QList<DanmuEvent>");
 }
 
-QList<DanmuEvent> EventAnalyzer::analyze(Pool *pool)
+QVector<DanmuEvent> EventAnalyzer::analyze(Pool *pool)
 {
-    if(!pool) return QList<DanmuEvent>();
+    if(!pool) return QVector<DanmuEvent>();
     // Assert that the pool has been sorted
     curPool = pool;
     int count = curPool->comments().count();
@@ -39,7 +39,7 @@ QList<DanmuEvent> EventAnalyzer::analyze(Pool *pool)
         return postProcess(zScoreThresholding());
     }while(false);
     curPool = nullptr;
-    return QList<DanmuEvent>();
+    return QVector<DanmuEvent>();
 }
 
 void EventAnalyzer::moveAverage()
@@ -79,9 +79,9 @@ void EventAnalyzer::moveAverage()
     }
 }
 
-QList<int> EventAnalyzer::zScoreThresholding()
+QVector<int> EventAnalyzer::zScoreThresholding()
 {
-    QList<int> eventPoints;
+    QVector<int> eventPoints;
     int count = timeSeries.size();
     if(count<lag) return eventPoints;
     QVector<float> filteredWindow(lag);
@@ -107,9 +107,9 @@ QList<int> EventAnalyzer::zScoreThresholding()
     return eventPoints;
 }
 
-QList<DanmuEvent> EventAnalyzer::postProcess(const QList<int> &eventPoints)
+QVector<DanmuEvent> EventAnalyzer::postProcess(const QVector<int> &eventPoints)
 {
-    QList<DanmuEvent> events;
+    QVector<DanmuEvent> events;
 	if (eventPoints.isEmpty()) return events;
     DanmuEvent curEvent({-1,0,""});
     const int mergeInterval = 8;
@@ -153,7 +153,7 @@ QList<DanmuEvent> EventAnalyzer::postProcess(const QList<int> &eventPoints)
     return events;
 }
 
-void EventAnalyzer::setEventDescription(QList<DanmuEvent> &eventList)
+void EventAnalyzer::setEventDescription(QVector<DanmuEvent> &eventList)
 {
     for(auto &event:eventList)
     {

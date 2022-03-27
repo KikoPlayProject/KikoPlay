@@ -6,7 +6,8 @@
 
 namespace
 {
-LRUCache<Anime *, QSharedPointer<QPixmap>> coverCache{256}, rawCoverCache{16};
+LRUCache<Anime *, QSharedPointer<QPixmap>> coverCache{"PreviewCover", 128, true},
+    rawCoverCache{"RawCover", 16};
 }
 const QPixmap &Anime::cover(bool onlyCache)
 {
@@ -43,6 +44,26 @@ Anime::Anime() : _addTime(0), _epCount(0), crtImagesLoaded(false), epLoaded(fals
 
 }
 
+void Anime::setAirDate(const QString &newAirDate)
+{
+    _airDate = newAirDate;
+}
+
+void Anime::setStaffs(const QVector<QPair<QString, QString> > &staffs)
+{
+    staff = staffs;
+}
+
+void Anime::setDesc(const QString &desc)
+{
+    _desc = desc;
+}
+
+void Anime::setEpCount(int epCount)
+{
+    _epCount = epCount;
+}
+
 void Anime::setCover(const QByteArray &data, bool updateDB, const QString &coverURL)
 {
     if(updateDB)
@@ -65,6 +86,40 @@ void Anime::setCrtImage(const QString &name, const QByteArray &data)
                 crt.image.loadFromData(data);
                 break;
             }
+        }
+    }
+}
+
+void Anime::addCharacter(const Character &newCrtInfo)
+{
+    AnimeWorker::instance()->addCharacter(_name, newCrtInfo);
+    Character crt;
+    crt.name = newCrtInfo.name;
+    crt.actor = newCrtInfo.actor;
+    crt.link = newCrtInfo.link;
+    characters.append(crt);
+}
+
+void Anime::removeCharacter(const QString &name)
+{
+    AnimeWorker::instance()->removeCharacter(_name, name);
+    auto pos = std::remove_if(characters.begin(), characters.end(), [=](const Character &crt){
+        return crt.name == name;
+    });
+    characters.erase(pos, characters.end());
+}
+
+void Anime::modifyCharacterInfo(const QString &srcName, const Character &newCrtInfo)
+{
+    for(auto &crt : characters)
+    {
+        if(crt.name == srcName)
+        {
+            AnimeWorker::instance()->modifyCharacter(_name, crt.name, newCrtInfo);
+            crt.name = newCrtInfo.name;
+            crt.actor = newCrtInfo.actor;
+            crt.link = newCrtInfo.link;
+            break;
         }
     }
 }
@@ -99,8 +154,13 @@ void Anime::setStaffs(const QString &staffStrs)
 
 QString Anime::staffToStr() const
 {
+    return staffListToStr(staff);
+}
+
+QString Anime::staffListToStr(const QVector<QPair<QString, QString>> &staffs)
+{
     QStringList staffStrList;
-    for(const auto &p : staff)
+    for(const auto &p : staffs)
         staffStrList.append(p.first+":"+p.second);
     return staffStrList.join(';');
 }

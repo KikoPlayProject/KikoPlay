@@ -246,7 +246,7 @@ void DanmuPool::setAnalyzation()
     QElapsedTimer timer;
     timer.start();
 #endif
-    emit eventAnalyzeFinished(enableAnalyze?analyzer->analyze(curPool):QList<DanmuEvent>());
+    emit eventAnalyzeFinished(enableAnalyze?analyzer->analyze(curPool):QVector<DanmuEvent>());
 #ifdef QT_DEBUG
     qDebug()<<"Analyze time:"<<timer.elapsed();
 #endif

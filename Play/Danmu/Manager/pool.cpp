@@ -188,7 +188,7 @@ bool Pool::deleteDanmu(int pos)
     return false;
 }
 
-bool Pool::setTimeline(int sourceId, const QList<QPair<int, int>> &timelineInfo)
+bool Pool::setTimeline(int sourceId, const QVector<QPair<int, int>> &timelineInfo)
 {
     if(!sourcesTable.contains(sourceId)) return false;
     PoolStateLock locker;
@@ -313,7 +313,7 @@ void Pool::exportKdFile(QDataStream &stream, const QList<int> &ids)
 	Q_ASSERT(i == count);
 }
 
-void Pool::exportSimpleInfo(int srcId, QList<SimpleDanmuInfo> &simpleDanmuList)
+void Pool::exportSimpleInfo(int srcId, QVector<SimpleDanmuInfo> &simpleDanmuList)
 {
     for(const auto &danmu:commentList)
     {

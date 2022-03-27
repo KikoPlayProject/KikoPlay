@@ -6,7 +6,7 @@ TagNode::TagNode(const QString &title, TagNode *p, int count, TagNode::TagType t
 {
     if(p)
     {
-        if(!p->subNodes) p->subNodes=new QList<TagNode *>();
+        if(!p->subNodes) p->subNodes=new QVector<TagNode *>();
         p->subNodes->append(this);
         if(count>0) p->setAnimeCount(p->animeCount + count);
     }

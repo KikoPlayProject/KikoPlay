@@ -1410,8 +1410,8 @@ void PlayerWindow::setupSignals()
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::fileChanged,[this](){
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
         Q_ASSERT(currentItem);
-        progress->setEventMark(QList<DanmuEvent>());
-        progress->setChapterMark(QList<MPVPlayer::ChapterInfo>());
+        progress->setEventMark(QVector<DanmuEvent>());
+        progress->setChapterMark(QVector<MPVPlayer::ChapterInfo>());
         if(currentItem->animeTitle.isEmpty())
         {
             QString mediaTitle(GlobalObjects::mpvplayer->getMediaTitle());
@@ -1560,8 +1560,8 @@ void PlayerWindow::setupSignals()
             playPause->setText(QChar(0xe606));
             progress->setValue(0);
             progress->setRange(0, 0);
-            progress->setEventMark(QList<DanmuEvent>());
-            progress->setChapterMark(QList<MPVPlayer::ChapterInfo>());
+            progress->setEventMark(QVector<DanmuEvent>());
+            progress->setChapterMark(QVector<MPVPlayer::ChapterInfo>());
             miniProgress->setValue(0);
             miniProgress->setRange(0, 0);
             previewLabel->clear();

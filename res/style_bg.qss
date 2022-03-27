@@ -240,11 +240,14 @@ QWidget#RecentItem:checked{
     border:1px solid #fcfcfc;
 }
 QWidget#DanmuStatisBar{
- qproperty-barColor: rgba(@ThemeColorL1,200);
- qproperty-bgColor: rgba(@ThemeColorD5, 120);
+    qproperty-barColor: rgba(@ThemeColorL1,200);
+    qproperty-bgColor: rgba(@ThemeColorD5, 120);
 }
 QWidget#AnimeItemBg{
     background-color:rgba(0,0,0,0);
+}
+QWidget#CharacterWidget {
+    background:transparent;
 }
 QWidget#DownloadLeftPanel{
     background-color: rgba(@ThemeColorD3,80);
@@ -350,6 +353,9 @@ QLabel#AnimeDetailViewInfo{
     color: rgb(240,240,240);
 }
 QLabel#AnimeDetailCharactorTitle{
+    color: rgb(240,240,240);
+}
+QLabel#CharacterPlaceholderIcon {
     color: rgb(240,240,240);
 }
 
@@ -477,6 +483,7 @@ QWidget#PopupPage QSlider::sub-page:horizontal{
 
 /* ------------------- QTreeView ------------------- */
 QTreeView {
+    border: 1px solid #dcdcdc;
 @if{DarkMode}
     background-color:rgb(50, 50, 50);
     color:rgb(214, 214, 214);
@@ -855,10 +862,10 @@ QWidget#PopupPage QCheckBox::indicator:unchecked {
 
 
 /* ------------------- LineEdit, TextEdit, PlainTextEdit SpinBox ------------------- */
-QPlainTextEdit,QTextEdit,QListWidget {
+QPlainTextEdit,QTextEdit {
     border: 1px solid #dcdcdc;
 }
-QDialog QPlainTextEdit, QDialog QTextEdit, QDialog QListWidget {
+QDialog QPlainTextEdit, QDialog QTextEdit {
     border: 1px solid #dcdcdc;
 @if{DarkMode}
     background-color:rgb(50, 50, 50);
@@ -882,7 +889,7 @@ QLineEdit,QSpinBox {
     padding: 2px 2px 2px 2px;
     color: rgb(0,0,0);
 }
-QDialog QLineEdit,QDialog QSpinBox {
+QDialog QLineEdit,QDialog QSpinBox,QDialog QDateEdit {
     border: 1px solid #dcdcdc;
     padding: 2px 2px 2px 2px;
 @if{DarkMode}
@@ -905,7 +912,7 @@ QLineEdit:hover,QSpinBox:hover {
     background-color:rgba(250,250,250,160);
     border: 1px solid rgb(@ThemeColorL1);
 }
-QDialog QLineEdit:hover,QDialog QSpinBox:hover {
+QDialog QLineEdit:hover,QDialog QSpinBox:hover,QDialog QDateEdit:hover {
 @if{DarkMode}
     background-color:rgb(60, 60, 60);
 @else
@@ -920,7 +927,7 @@ QLineEdit:focus,QSpinBox:focus {
 QPlainTextEdit:focus,QTextEdit:focus {
     border: 1px solid rgb(@ThemeColorL1);
 }
-QDialog QLineEdit:focus,QDialog QSpinBox:focus {
+QDialog QLineEdit:focus,QDialog QSpinBox:focus,QDialog QDateEdit:focus {
 @if{DarkMode}
     background-color: rgb(70, 70, 70);
     color: rgb(255,255,255);
@@ -939,21 +946,21 @@ QLineEdit#filterBox{
 QLineEdit#filterBox:hover{
     background-color: rgba(255, 255,255, 100);
 }
-QSpinBox::up-button {
+QSpinBox::up-button,QDateEdit::up-button {
     subcontrol-origin: border;
     subcontrol-position: top right; /* position at the top right corner */
     width: 16px; /* 16 + 2*1px border-width = 15px padding + 3px parent border */
     border-image: url(:/res/images/up-arrow.svg) 1;
     border-width: 1px;
 }
-QSpinBox::up-button:hover {
+QSpinBox::up-button:hover,QDateEdit::up-button:hover {
 @if{DarkMode}
     border-image: url(:/res/images/up-arrow-darkmode-hover.svg) 1;
 @else
     border-image: url(:/res/images/up-arrow-dark-hover.svg) 1;
 @endif
 }
-QSpinBox::down-button {
+QSpinBox::down-button,QDateEdit::down-button {
     subcontrol-origin: border;
     subcontrol-position: bottom right; /* position at bottom right corner */
     width: 16px;
@@ -961,7 +968,7 @@ QSpinBox::down-button {
     border-width: 1px;
     border-top-width: 0;
 }
-QSpinBox::down-button:hover {
+QSpinBox::down-button:hover,QDateEdit::down-button:hover {
 @if{DarkMode}
     border-image: url(:/res/images/down-arrow-darkmode-hover.svg) 1;
 @else
@@ -1318,7 +1325,6 @@ QPushButton#DownloadToolButton{
     qproperty-hoverColor: rgb(@ThemeColorL1);
 }
 QPushButton#DownloadToolButton:hover,
-QPushButton#DownloadToolButton:pressed,
 QPushButton#DownloadToolButton:checked{
     border-style:solid;
     border-width:1px;
@@ -1355,6 +1361,16 @@ QPushButton#AnimeDetailBack:hover{
 }
 QPushButton#AnimeDetailBack:pressed{
     color:rgb(@ThemeColorL1);
+}
+QPushButton#CharacterPlaceholder{
+    background:transparent;
+    border-style:none;
+}
+QPushButton#CharacterPlaceholder:hover{
+    background:transparent;
+}
+QPushButton#CharacterPlaceholder:pressed{
+    margin-top:2px;
 }
 
 
@@ -1413,6 +1429,7 @@ QWidget[cScrollStyle="true"] QScrollBar::sub-page:vertical{
 
 /* ------------------- QListView, QListWidget ------------------- */
 QListWidget, QListView {
+    border: 1px solid #dcdcdc;
 @if{DarkMode}
     background-color:rgb(50, 50, 50);
     color:rgb(214, 214, 214);
@@ -1430,7 +1447,7 @@ QListView#AnimesContent{
     border-style:none;
     background:transparent;
 }
-QListWidget#AnimeDetailCharacterList{
+QListView#AnimeDetailCharacterList{
     background-color: rgba(255,255,255,40);
     color: rgb(240,240,240);
     alternate-background-color: transparent;

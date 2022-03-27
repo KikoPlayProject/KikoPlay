@@ -4,7 +4,7 @@
 #include "framelessdialog.h"
 #include "MediaLibrary/animeinfo.h"
 
-class PlayListItem;
+struct PlayListItem;
 class QToolButton;
 class QLineEdit;
 class MatchEditor;

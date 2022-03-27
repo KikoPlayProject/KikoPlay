@@ -23,7 +23,7 @@ private:
     QList<AnimeImage> captureList;
     // QAbstractItemModel interface
 public:
-    virtual int rowCount(const QModelIndex &parent) const override{return parent.isValid()?0:captureList.count();};
+    virtual int rowCount(const QModelIndex &parent) const override{return parent.isValid()?0:captureList.count();}
     virtual QVariant data(const QModelIndex &index, int role) const override;
     virtual void fetchMore(const QModelIndex &parent) override;
     virtual bool canFetchMore(const QModelIndex &) const override {return hasMoreCaptures;};

@@ -2,6 +2,7 @@
 #define ANIMEWORKER_H
 #include "animeinfo.h"
 #include "tagnode.h"
+class QSqlQuery;
 class AnimeWorker : public QObject
 {
     Q_OBJECT
@@ -35,8 +36,18 @@ public:
     void updateEpPath(const QString &animeName, const QString &path, const QString &nPath);
     void updateCaptureInfo(const QString &animeName, qint64 timeId, const QString &newInfo);
 
+    std::function<void (QSqlQuery *)> updateAirDate(const QString &animeName, const QString &newAirDate, const QString &srcAirDate);
+    std::function<void (QSqlQuery *)> updateEpCount(const QString &animeName, int newEpCount);
+    std::function<void (QSqlQuery *)> updateStaffInfo(const QString &animeName, const QVector<QPair<QString, QString>> &staffs);
+    std::function<void (QSqlQuery *)> updateDescription(const QString &animeName, const QString &desc);
+    bool runQueryGroup(const QVector<std::function<void (QSqlQuery *)>> &queries);
     void updateCoverImage(const QString &animeName, const QByteArray &imageContent, const QString &coverURL=Anime::emptyCoverURL);
+
     void updateCrtImage(const QString &animeName, const QString &crtName, const QByteArray &imageContent);
+    void addCharacter(const QString &animeName, const Character &crt);
+    void modifyCharacter(const QString &animeName, const QString &srcCrtName, const Character &crtInfo);
+    void removeCharacter(const QString &animeName, const QString &crtName);
+
     void saveCapture(const QString &animeName, const QString &info, const QImage &image);
     void saveSnippet(const QString &animeName, const QString &info, qint64 timeId, const QImage &image);
     const QPixmap getAnimeImageData(const QString &animeName, AnimeImage::ImageType type, qint64 timeId);

@@ -16,6 +16,7 @@
 #include <QToolButton>
 #include <QMenu>
 #include <QApplication>
+#include <QDesktopServices>
 #include "Common/notifier.h"
 #include "MediaLibrary/animeinfo.h"
 #include "MediaLibrary/episodesmodel.h"
@@ -29,9 +30,14 @@
 #include "Common/flowlayout.h"
 #include "Common/network.h"
 #include "captureview.h"
-#include "aliasedit.h"
 #include "gifcapture.h"
+#include "charactereditor.h"
+#include "animeinfoeditor.h"
 #include "globalobjects.h"
+
+int CharacterWidget::maxCrtItemWidth = 0;
+int CharacterWidget::crtItemHeight = 0;
+
 namespace
 {
     class ShadowLabel : public QWidget
@@ -122,18 +128,45 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     titleLabel->setObjectName(QStringLiteral("AnimeDetailTitle"));
     titleLabel->setFont(QFont(GlobalObjects::normalFont,20));
     titleLabel->setWordWrap(true);
-    titleLabel->setOpenExternalLinks(true);
     titleLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
-    QAction *actEditAlias = new QAction(tr("Edit Alias"), this);
-    QObject::connect(actEditAlias, &QAction::triggered, this, [=](){
-        if(currentAnime)
+    QObject::connect(titleLabel, &QLabel::linkActivated, this, [=](const QString &url){
+        if(url == editAnimeURL && currentAnime)
         {
-            AliasEdit aliasEdit(currentAnime->name(), this);
-            aliasEdit.exec();
+            AnimeInfoEditor editor(currentAnime, this);
+            if(QDialog::Accepted == editor.exec())
+            {
+                QVector<std::function<void (QSqlQuery *)>> queries;
+                if(editor.airDateChanged)
+                {
+                    queries.append(AnimeWorker::instance()->updateAirDate(currentAnime->name(), editor.airDate(), currentAnime->airDate()));
+                    currentAnime->setAirDate(editor.airDate());
+                }
+                if(editor.epsChanged)
+                {
+                    queries.append(AnimeWorker::instance()->updateEpCount(currentAnime->name(), editor.epCount()));
+                    currentAnime->setEpCount(editor.epCount());
+                }
+                if(editor.staffChanged)
+                {
+                    queries.append(AnimeWorker::instance()->updateStaffInfo(currentAnime->name(), editor.staffs()));
+                    currentAnime->setStaffs(editor.staffs());
+                }
+                if(editor.descChanged)
+                {
+                    queries.append(AnimeWorker::instance()->updateDescription(currentAnime->name(), editor.desc()));
+                    currentAnime->setDesc(editor.desc());
+                }
+                if(!queries.isEmpty())
+                {
+                    AnimeWorker::instance()->runQueryGroup(queries);
+                    refreshCurInfo();
+                }
+            }
+            return;
         }
+        QDesktopServices::openUrl(QUrl(url));
     });
-    titleLabel->setContextMenuPolicy(Qt::ActionsContextMenu);
-    titleLabel->addAction(actEditAlias);
+
     viewInfoLabel=new QLabel(titleContainer);
     viewInfoLabel->setObjectName(QStringLiteral("AnimeDetailViewInfo"));
     viewInfoLabel->setFont(QFont(GlobalObjects::normalFont,12));
@@ -230,84 +263,19 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
     {
         return;
     }
+
     static QPixmap nullCover(":/res/images/cover.png");
     coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->rawCover().isNull()?nullCover:currentAnime->rawCover()));
 
-    titleLabel->setText(QString("<style> a {text-decoration: none} </style><a style='color: white;' href = \"%1\">%2</a>").arg(currentAnime->url(), currentAnime->name()));
-    QStringList stafflist;
-    for(const auto &p: currentAnime->staffList())
-    {
-        stafflist.append(p.first+": "+p.second);
-    }
-    viewInfoLabel->setToolTip("");
-    viewInfoLabel->setText(QObject::tr("Add Time: %1\nDate: %3\nEps: %2\n%4").arg(currentAnime->addTimeStr()).arg(currentAnime->epCount()).
-                           arg(currentAnime->airDate()).arg(stafflist.join('\n')));
-    viewInfoLabel->adjustSize();
+    refreshCurInfo();
 
-    descInfo->setText(currentAnime->description());
     epModel->setAnime(currentAnime);
     epDelegate->setAnime(currentAnime);
-    for(auto &character: currentAnime->crList(true))
-    {
-        CharacterWidget *crtItem=new CharacterWidget(&character);
-        QObject::connect(crtItem,&CharacterWidget::updateCharacter,this,[this](CharacterWidget *crtItem){
-            if(crtItem->crt->imgURL.isEmpty()) return;
-            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Character Image..."), NotifyMessageFlag::NM_PROCESS | NotifyMessageFlag::NM_DARKNESS_BACK);
-            crtItem->setEnabled(false);
-            Network::Reply reply(Network::httpGet(crtItem->crt->imgURL, QUrlQuery()));
-            crtItem->setEnabled(true);
-            if(reply.hasError)
-            {
-                Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, reply.errInfo, NM_HIDE | NM_ERROR);
-                return;
-            }
 
-            QBuffer bufferImage(&reply.content);
-            bufferImage.open(QIODevice::ReadOnly);
-            QImageReader reader(&bufferImage);
-            QSize s = reader.size();
-            int w = qMin(s.width(), s.height());
-            reader.setScaledClipRect(QRect(0, 0, w, w));
-
-            QPixmap tmp = QPixmap::fromImageReader(&reader);
-            Character::scale(tmp);
-            QByteArray imgBytes;
-            bufferImage.close();
-            bufferImage.setBuffer(&imgBytes);
-            bufferImage.open(QIODevice::WriteOnly);
-            tmp.save(&bufferImage, "JPG");
-
-            currentAnime->setCrtImage(crtItem->crt->name, imgBytes);
-            crtItem->refreshIcon();
-            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NotifyMessageFlag::NM_HIDE);
-        });
-        QObject::connect(crtItem, &CharacterWidget::selectLocalImage, this, [this](CharacterWidget *crtItem){
-            QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), "", "Image Files(*.jpg *.png);;All Files(*)");
-            if(!fileName.isEmpty())
-            {
-                QImage cover(fileName);
-                QByteArray imgBytes;
-                QBuffer bufferImage(&imgBytes);
-                bufferImage.open(QIODevice::WriteOnly);
-                cover.save(&bufferImage, "JPG");
-                currentAnime->setCrtImage(crtItem->crt->name, imgBytes);
-                crtItem->refreshIcon();
-            }
-        });
-        QListWidgetItem *listItem=new QListWidgetItem(characterList);
-        characterList->setItemWidget(listItem, crtItem);
-        listItem->setSizeHint(crtItem->sizeHint());
-    }
-    auto &tagMap=LabelModel::instance()->customTags();
-    QStringList tags;
-    for(auto iter=tagMap.begin();iter!=tagMap.end();++iter)
-    {
-        if(iter.value().contains(currentAnime->name()))
-            tags<<iter.key();
-    }
-    tagPanel->addTag(tags);
-    tagContainerSLayout->setCurrentIndex(0);
     captureModel->setAnimeName(currentAnime->name());
+
+    setCharacters();
+    setTags();
 }
 
 
@@ -685,22 +653,210 @@ QWidget *AnimeDetailInfoPage::setupCapturePage()
     return captureView;
 }
 
-CharacterWidget::CharacterWidget(const Character *character, QWidget *parent) : QWidget(parent), crt(character)
+void AnimeDetailInfoPage::refreshCurInfo()
 {
+    titleLabel->setText(QString("<style> a {text-decoration: none} </style><a style='color: white;' href = \"%1\">%2</a> &nbsp;&nbsp;"
+                                "<font face=\"%3\"><a style='color: white;' href = \"%4\">%5</a></font>")
+                        .arg(currentAnime->url(), currentAnime->name(), GlobalObjects::iconfont.family(), editAnimeURL, "&#xe60a;"));
+    QStringList stafflist;
+    for(const auto &p: currentAnime->staffList())
+    {
+        stafflist.append(p.first+": "+p.second);
+    }
+    viewInfoLabel->setText(QObject::tr("Add Time: %1\nDate: %3\nEps: %2\n%4").arg(currentAnime->addTimeStr()).arg(currentAnime->epCount()).
+                           arg(currentAnime->airDate()).arg(stafflist.join('\n')));
+    viewInfoLabel->adjustSize();
+
+    descInfo->setText(currentAnime->description());
+}
+
+CharacterWidget *AnimeDetailInfoPage::createCharacterWidget(const Character &crt)
+{
+    CharacterWidget *crtItem=new CharacterWidget(crt);
+    QObject::connect(crtItem, &CharacterWidget::updateCharacter, this, &AnimeDetailInfoPage::updateCharacter);
+    QObject::connect(crtItem, &CharacterWidget::selectLocalImage, this, &AnimeDetailInfoPage::selectLocalCharacterImage);
+    QObject::connect(crtItem, &CharacterWidget::modifyCharacter, this, &AnimeDetailInfoPage::modifyCharacter);
+    QObject::connect(crtItem, &CharacterWidget::removeCharacter, this, &AnimeDetailInfoPage::removeCharacter);
+    return crtItem;
+}
+
+void AnimeDetailInfoPage::setCharacters()
+{
+    CharacterPlaceholderWidget *addCharacter = new CharacterPlaceholderWidget;
+    QObject::connect(addCharacter, &CharacterPlaceholderWidget::addCharacter, this, &AnimeDetailInfoPage::addCharacter);
+    CharacterWidget::maxCrtItemWidth = addCharacter->sizeHint().width();
+    CharacterWidget::crtItemHeight = 0;
+    QVector<CharacterWidget *> crtWidgets;
+    for(auto &character: currentAnime->crList(true))
+    {
+        CharacterWidget *crtItem = createCharacterWidget(character);
+        CharacterWidget::maxCrtItemWidth = qMax(CharacterWidget::maxCrtItemWidth, crtItem->sizeHint().width());
+        CharacterWidget::crtItemHeight = crtItem->sizeHint().height();
+        crtWidgets.append(crtItem);
+    }
+
+    CharacterWidget::maxCrtItemWidth = qMin(CharacterWidget::maxCrtItemWidth, 240 * logicalDpiX()/96);
+    CharacterWidget::crtItemHeight = qMax(CharacterWidget::crtItemHeight, 70 * logicalDpiY() / 96);
+
+    for(auto crtItem: crtWidgets)
+    {
+        QListWidgetItem *listItem=new QListWidgetItem(characterList);
+        characterList->setItemWidget(listItem, crtItem);
+        listItem->setSizeHint(QSize(CharacterWidget::maxCrtItemWidth, CharacterWidget::crtItemHeight));
+    }
+
+    QListWidgetItem *listItem=new QListWidgetItem(characterList);
+    characterList->setItemWidget(listItem, addCharacter);
+    listItem->setSizeHint(QSize(CharacterWidget::maxCrtItemWidth, CharacterWidget::crtItemHeight));
+}
+
+void AnimeDetailInfoPage::setTags()
+{
+    auto &tagMap=LabelModel::instance()->customTags();
+    QStringList tags;
+    for(auto iter=tagMap.begin();iter!=tagMap.end();++iter)
+    {
+        if(iter.value().contains(currentAnime->name()))
+            tags<<iter.key();
+    }
+    tagPanel->addTag(tags);
+    tagContainerSLayout->setCurrentIndex(0);
+}
+
+void AnimeDetailInfoPage::updateCharacter(CharacterWidget *crtItem)
+{
+    if(crtItem->crt.imgURL.isEmpty()) return;
+    Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Character Image..."), NotifyMessageFlag::NM_PROCESS | NotifyMessageFlag::NM_DARKNESS_BACK);
+    crtItem->setEnabled(false);
+    Network::Reply reply(Network::httpGet(crtItem->crt.imgURL, QUrlQuery()));
+    crtItem->setEnabled(true);
+    if(reply.hasError)
+    {
+        Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, reply.errInfo, NM_HIDE | NM_ERROR);
+        return;
+    }
+
+    QBuffer bufferImage(&reply.content);
+    bufferImage.open(QIODevice::ReadOnly);
+    QImageReader reader(&bufferImage);
+    QSize s = reader.size();
+    int w = qMin(s.width(), s.height());
+    reader.setScaledClipRect(QRect(0, 0, w, w));
+
+    QPixmap tmp = QPixmap::fromImageReader(&reader);
+    Character::scale(tmp);
+    QByteArray imgBytes;
+    bufferImage.close();
+    bufferImage.setBuffer(&imgBytes);
+    bufferImage.open(QIODevice::WriteOnly);
+    tmp.save(&bufferImage, "JPG");
+
+    currentAnime->setCrtImage(crtItem->crt.name, imgBytes);
+    crtItem->refreshIcon(imgBytes);
+    Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NotifyMessageFlag::NM_HIDE);
+}
+
+void AnimeDetailInfoPage::selectLocalCharacterImage(CharacterWidget *crtItem)
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), "", "Image Files(*.jpg *.png);;All Files(*)");
+    if(!fileName.isEmpty())
+    {
+        QImage cover(fileName);
+        QByteArray imgBytes;
+        QBuffer bufferImage(&imgBytes);
+        bufferImage.open(QIODevice::WriteOnly);
+        cover.save(&bufferImage, "JPG");
+        currentAnime->setCrtImage(crtItem->crt.name, imgBytes);
+        crtItem->refreshIcon(imgBytes);
+    }
+}
+
+void AnimeDetailInfoPage::addCharacter()
+{
+    if(!currentAnime) return;
+    CharacterEditor editor(currentAnime, nullptr, this);
+    if(QDialog::Accepted == editor.exec())
+    {
+        delete characterList->item(characterList->count()-1);
+        Character newCrt;
+        newCrt.name = editor.name;
+        newCrt.link = editor.link;
+        newCrt.actor = editor.actor;
+        currentAnime->addCharacter(newCrt);
+
+        CharacterWidget *crtItem = createCharacterWidget(newCrt);
+        QListWidgetItem *listItem=new QListWidgetItem(characterList);
+        characterList->setItemWidget(listItem, crtItem);
+        listItem->setSizeHint(QSize(CharacterWidget::maxCrtItemWidth, CharacterWidget::crtItemHeight));
+
+        CharacterPlaceholderWidget *addCharacter = new CharacterPlaceholderWidget;
+        QObject::connect(addCharacter, &CharacterPlaceholderWidget::addCharacter, this, &AnimeDetailInfoPage::addCharacter);
+        QListWidgetItem *placeholderItem=new QListWidgetItem(characterList);
+        characterList->setItemWidget(placeholderItem, addCharacter);
+        placeholderItem->setSizeHint(QSize(CharacterWidget::maxCrtItemWidth, CharacterWidget::crtItemHeight));
+    }
+}
+
+void AnimeDetailInfoPage::modifyCharacter(CharacterWidget *crtItem)
+{
+    if(!currentAnime) return;
+    CharacterEditor editor(currentAnime, &crtItem->crt, this);
+    if(QDialog::Accepted == editor.exec())
+    {
+        Character &srcCrt = crtItem->crt;
+        bool modified = editor.name != srcCrt.name || editor.link != srcCrt.link ||
+            editor.actor != srcCrt.actor;
+        if(modified)
+        {
+            Character newCrt;
+            newCrt.name = editor.name;
+            newCrt.link = editor.link;
+            newCrt.actor = editor.actor;
+            currentAnime->modifyCharacterInfo(srcCrt.name, newCrt);
+
+            srcCrt.name = editor.name;
+            srcCrt.link = editor.link;
+            srcCrt.actor = editor.actor;
+            crtItem->refreshText();
+        }
+    }
+}
+
+void AnimeDetailInfoPage::removeCharacter(CharacterWidget *crtItem)
+{
+    if(!currentAnime) return;
+    currentAnime->removeCharacter(crtItem->crt.name);
+    delete characterList->currentItem();
+}
+
+CharacterWidget::CharacterWidget(const Character &character, QWidget *parent) : QWidget(parent), crt(character)
+{
+    QAction *actModify = new QAction(tr("Modify"), this);
+    QObject::connect(actModify, &QAction::triggered, this, [=](){
+        emit modifyCharacter(this);
+    });
+    QAction *actRemove = new QAction(tr("Remove"), this);
+    QObject::connect(actRemove, &QAction::triggered, this, [=](){
+        emit removeCharacter(this);
+    });
+    setContextMenuPolicy(Qt::ActionsContextMenu);
+    addAction(actModify);
+    addAction(actRemove);
+
     iconLabel=new QLabel(this);
     iconLabel->setScaledContents(true);
     iconLabel->setObjectName(QStringLiteral("CrtIcon"));
-    iconLabel->setFixedSize(60*logicalDpiX()/96,60*logicalDpiY()/96);
+    iconLabel->setFixedSize(iconSize*logicalDpiX()/96, iconSize*logicalDpiY()/96);
     iconLabel->setAlignment(Qt::AlignCenter);
 
     QAction *actCopyImage = new QAction(tr("Copy Image"), this);
     QObject::connect(actCopyImage, &QAction::triggered, this, [=](){
-        if(crt->image.isNull()) return;
-        QApplication::clipboard()->setPixmap(crt->image);
+        if(crt.image.isNull()) return;
+        QApplication::clipboard()->setPixmap(crt.image);
     });
     QAction *actDownloadImage = new QAction(tr("Re-Download Image"), this);
     QObject::connect(actDownloadImage, &QAction::triggered, this, [=](){
-        if(!crt->imgURL.isEmpty())
+        if(!crt.imgURL.isEmpty())
             emit updateCharacter(this);
     });
     QAction *actLocalImage = new QAction(tr("Select From File"), this);
@@ -713,18 +869,14 @@ CharacterWidget::CharacterWidget(const Character *character, QWidget *parent) : 
     iconLabel->addAction(actLocalImage);
     iconLabel->setContextMenuPolicy(Qt::ActionsContextMenu);
 
-    refreshIcon();
-    QLabel *nameLabel=new QLabel(this);
+    nameLabel=new QLabel(this);
     nameLabel->setOpenExternalLinks(true);
-    nameLabel->setText(QString("<a style='color: rgb(96, 208, 252);' href = \"%1\">%2</a>")
-                       .arg(character->link).arg(character->name));
-    nameLabel->setFixedWidth(200*logicalDpiX()/96);
-    nameLabel->setToolTip(character->name);
 
-    QLabel *infoLabel=new QLabel(this);
+    infoLabel=new QLabel(this);
     infoLabel->setObjectName(QStringLiteral("AnimeDetailCharactorTitle"));
-    infoLabel->setText(character->actor);
-    infoLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+
+    refreshIcon();
+    refreshText();
 
     QHBoxLayout *itemHLayout=new QHBoxLayout(this);
     itemHLayout->addWidget(iconLabel);
@@ -732,19 +884,36 @@ CharacterWidget::CharacterWidget(const Character *character, QWidget *parent) : 
     infoVLayout->addWidget(nameLabel);
     infoVLayout->addWidget(infoLabel);
     itemHLayout->addLayout(infoVLayout);
+    itemHLayout->addStretch(1);
 }
 
-void CharacterWidget::refreshIcon()
+void CharacterWidget::refreshIcon(const QByteArray &imgBytes)
 {
-    if(crt->image.isNull())
+    if(!imgBytes.isEmpty())
+    {
+        crt.image.loadFromData(imgBytes);
+    }
+    if(crt.image.isNull())
     {
         static QPixmap nullIcon(":/res/images/kikoplay-4.png");
         iconLabel->setPixmap(nullIcon);
     }
     else
     {
-        iconLabel->setPixmap(crt->image);
+        iconLabel->setPixmap(crt.image);
     }
+}
+
+void CharacterWidget::refreshText()
+{
+    QFontMetrics fm(nameLabel->fontMetrics());
+    nameLabel->setText(QString("<a style='color: rgb(96, 208, 252);' href = \"%1\">%2</a>")
+                       .arg(crt.link)
+                       .arg(fm.elidedText(crt.name, Qt::ElideRight, 160*logicalDpiX()/96)));
+    nameLabel->setToolTip(crt.name);
+
+    infoLabel->setText(fm.elidedText(crt.actor, Qt::ElideRight, 160*logicalDpiX()/96));
+    infoLabel->setToolTip(crt.actor);
 }
 
 TagPanel::TagPanel(QWidget *parent, bool allowDelete, bool checkAble, bool allowAdd):QWidget(parent),
@@ -855,4 +1024,46 @@ QStringList TagPanel::getSelectedTags()
         if(iter.value()->isChecked()) tags<<iter.key();
     }
     return tags;
+}
+
+CharacterPlaceholderWidget::CharacterPlaceholderWidget(QWidget *parent) : QWidget(parent)
+{
+    setObjectName(QStringLiteral("CharacterPlaceholder"));
+    QLabel *iconLabel=new QLabel(this);
+    GlobalObjects::iconfont.setPointSize(24);
+    iconLabel->setFont(GlobalObjects::iconfont);
+    iconLabel->setText(QChar(0xe6f3));
+    iconLabel->setAlignment(Qt::AlignCenter);
+    iconLabel->setObjectName(QStringLiteral("CharacterPlaceholderIcon"));
+
+    QLabel *infoLabel=new QLabel(tr("Add Character"), this);
+    infoLabel->setFont(QFont(GlobalObjects::normalFont, 10));
+    infoLabel->setObjectName(QStringLiteral("AnimeDetailCharactorTitle"));
+
+    QHBoxLayout *itemHLayout=new QHBoxLayout(this);
+    itemHLayout->addWidget(iconLabel);
+    itemHLayout->addSpacing(4*logicalDpiX()/96);
+    itemHLayout->addWidget(infoLabel);
+    itemHLayout->addStretch(1);
+}
+
+void CharacterPlaceholderWidget::mousePressEvent(QMouseEvent *event)
+{
+    if(event->button() == Qt::LeftButton)
+    {
+        QMargins margins = layout()->contentsMargins();
+        margins.setTop(margins.top() + 4);
+        layout()->setContentsMargins(margins);
+    }
+}
+
+void CharacterPlaceholderWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+    if(event->button() == Qt::LeftButton)
+    {
+        QMargins margins = layout()->contentsMargins();
+        margins.setTop(margins.top() - 4);
+        layout()->setContentsMargins(margins);
+        emit addCharacter();
+    }
 }

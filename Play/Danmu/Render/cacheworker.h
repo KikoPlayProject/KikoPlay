@@ -5,12 +5,12 @@
 struct DanmuStyle
 {
     int *fontSizeTable;
-    float strokeWidth;
-    bool bold;
     QString fontFamily;
-    bool randomSize;
+    float strokeWidth;
     int mergeCountPos;
+    bool randomSize;
     bool enlargeMerged;
+    bool bold;
 };
 struct CacheMiddleInfo
 {
@@ -27,7 +27,7 @@ class CacheWorker : public QObject
 public:
     explicit CacheWorker(const DanmuStyle *style);
 private:
-    const int max_cache=512;
+    const int max_cache = 512;
     bool init = false;
     QHash<QString,DanmuDrawInfo *> danmuCache;
     QHash<GLuint,int> textureRef;

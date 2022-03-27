@@ -3,12 +3,12 @@
 #include <QStyleOptionSlider>
 #include <QStylePainter>
 
-void ClickSlider::setEventMark(const QList<DanmuEvent> &eventList)
+void ClickSlider::setEventMark(const QVector<DanmuEvent> &eventList)
 {
     this->eventList=eventList;
 }
 
-void ClickSlider::setChapterMark(const QList<MPVPlayer::ChapterInfo> &chapters)
+void ClickSlider::setChapterMark(const QVector<MPVPlayer::ChapterInfo> &chapters)
 {
     this->chapters=chapters;
 }

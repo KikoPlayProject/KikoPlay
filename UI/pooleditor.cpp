@@ -18,8 +18,8 @@
 #include "danmuview.h"
 namespace
 {
-    QList<QPair<int,int> > timelineClipBoard;
-    QList<PoolItem *> *items;
+    QVector<QPair<int,int> > timelineClipBoard;
+    QVector<PoolItem *> *items;
     PoolEditor *editor;
 }
 PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),parent)
@@ -170,7 +170,7 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
     //editTimeline->setFixedWidth(80*logicalDpiX()/96);
     QObject::connect(editTimeline,&QPushButton::clicked,[sourceInfo,this](){
         int curTime=GlobalObjects::mpvplayer->getTime();
-        QList<SimpleDanmuInfo> list;
+        QVector<SimpleDanmuInfo> list;
         GlobalObjects::danmuPool->getPool()->exportSimpleInfo(sourceInfo->id,list);
         TimelineEdit timelineEdit(sourceInfo,list,this,curTime);
         if(QDialog::Accepted==timelineEdit.exec())

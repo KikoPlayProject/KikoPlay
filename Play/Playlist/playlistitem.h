@@ -3,9 +3,8 @@
 #include <QObject>
 
 class PlayList;
-class PlayListItem
+struct PlayListItem
 {
-public:
     PlayListItem(PlayListItem *p = nullptr, bool leaf = false, int insertPosition = -1);
     ~PlayListItem();
 
@@ -16,7 +15,7 @@ public:
     static PlayList *playlist;
 
     PlayListItem *parent;
-    QList<PlayListItem *> *children;
+    QVector<PlayListItem *> *children;
 
     enum PlayState
     {
@@ -29,7 +28,7 @@ public:
 
     int playTime;
     PlayState playTimeState;
-    int level;
+    short level;
     bool isBgmCollection;
     Marker marker;
     qint64 addTime;

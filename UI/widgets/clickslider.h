@@ -12,8 +12,8 @@ class ClickSlider: public QSlider
     Q_PROPERTY(QColor cColor2 READ getCColor2 WRITE setCColor2)
 public:
     explicit ClickSlider(QWidget *parent=nullptr):QSlider(Qt::Horizontal,parent),mousePos(0){}
-    void setEventMark(const QList<DanmuEvent> &eventList);
-    void setChapterMark(const QList<MPVPlayer::ChapterInfo> &chapters);
+    void setEventMark(const QVector<DanmuEvent> &eventList);
+    void setChapterMark(const QVector<MPVPlayer::ChapterInfo> &chapters);
     inline int curMousePos() const {return mousePos;}
     inline int curMouseX() const {return mouseX;}
 
@@ -27,8 +27,8 @@ public:
     void setCColor2(const QColor& color) { cColor2 = color; }
 
 private:
-    QList<DanmuEvent> eventList;
-    QList<MPVPlayer::ChapterInfo> chapters;
+    QVector<DanmuEvent> eventList;
+    QVector<MPVPlayer::ChapterInfo> chapters;
     int mousePos, mouseX;
     QColor eColor1{255,117,0}, eColor2{0xff,0xff,0x00}, cColor1{0xbc,0xbc,0xbc}, cColor2{0x43,0x9c,0xf3};
 signals:

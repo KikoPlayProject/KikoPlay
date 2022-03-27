@@ -18,7 +18,7 @@ struct TagNode
     int animeCount;
     TagType tagType;
     TagNode *parent;
-    QList<TagNode *> *subNodes;
+    QVector<TagNode *> *subNodes;
     int checkStatus;
 };
 

@@ -15,7 +15,7 @@
 
 namespace
 {
-    LRUCache<QString, QVector<EpInfo>> epCache;
+    LRUCache<QString, QVector<EpInfo>> epCache{"EpInfo"};
     class EpComboItemDelegate : public QStyledItemDelegate
     {
     public:
