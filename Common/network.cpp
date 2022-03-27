@@ -2,20 +2,18 @@
 #include "Common/zlib.h"
 #include <QNetworkCookie>
 #include <QNetworkCookieJar>
+#include <QThreadStorage>
+#include <QSharedPointer>
 namespace
 {
-    QHash<QThread *,QNetworkAccessManager *> managerMap;
-    QMutex locker;
+    static QThreadStorage<QSharedPointer<QNetworkAccessManager>> managers;
     QNetworkAccessManager *getManager()
     {
-        QMutexLocker lock(&locker);
-        QNetworkAccessManager *manager=managerMap.value(QThread::currentThread());
-        if(!manager)
+        if(!managers.hasLocalData())
         {
-            manager=new QNetworkAccessManager();
-            managerMap.insert(QThread::currentThread(),manager);
+            managers.setLocalData(QSharedPointer<QNetworkAccessManager>::create());
         }
-        return manager;
+        return managers.localData().get();
     }
 }
 
