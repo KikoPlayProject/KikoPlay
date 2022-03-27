@@ -3536,7 +3536,7 @@ Set shortcuts through MPV Parameter input-conf</source>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="197"/>
+        <location filename="../../UI/mainwindow.cpp" line="203"/>
         <source>Danmu Pool Manager</source>
         <translation>管理弹幕池</translation>
     </message>
@@ -3549,7 +3549,7 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">界面设置</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="205"/>
+        <location filename="../../UI/mainwindow.cpp" line="211"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
@@ -3558,54 +3558,55 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">脚本日志</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="213"/>
+        <location filename="../../UI/mainwindow.cpp" line="219"/>
         <source>Log Center</source>
         <translation>日志中心</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="226"/>
+        <location filename="../../UI/mainwindow.cpp" line="232"/>
         <source>Check For Updates</source>
         <translation>检查更新</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="233"/>
+        <location filename="../../UI/mainwindow.cpp" line="239"/>
         <source>Useage Tip</source>
         <translation>使用提示</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="243"/>
+        <location filename="../../UI/mainwindow.cpp" line="247"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="252"/>
+        <location filename="../../UI/mainwindow.cpp" line="64"/>
+        <location filename="../../UI/mainwindow.cpp" line="256"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="259"/>
+        <location filename="../../UI/mainwindow.cpp" line="261"/>
         <source>Player</source>
         <translation>播放</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="260"/>
+        <location filename="../../UI/mainwindow.cpp" line="262"/>
         <source>Library</source>
         <translation>资料</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="261"/>
+        <location filename="../../UI/mainwindow.cpp" line="263"/>
         <source>Download</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="647"/>
-        <location filename="../../UI/mainwindow.cpp" line="807"/>
+        <location filename="../../UI/mainwindow.cpp" line="657"/>
+        <location filename="../../UI/mainwindow.cpp" line="817"/>
         <source>Updating...</source>
         <translation>更新中...</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="652"/>
-        <location filename="../../UI/mainwindow.cpp" line="812"/>
+        <location filename="../../UI/mainwindow.cpp" line="662"/>
+        <location filename="../../UI/mainwindow.cpp" line="822"/>
         <source>Add %1 Danmu</source>
         <translation>添加了 %1 条弹幕</translation>
     </message>
@@ -5888,42 +5889,61 @@ Eps: %2
 <context>
     <name>StylePage</name>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="56"/>
         <source>Hide to Tray Icon when Minimize</source>
-        <translation>最小化时隐藏到托盘</translation>
+        <translation type="vanished">最小化时隐藏到托盘</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="57"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="56"/>
+        <source>Hide To Tray</source>
+        <translation>隐藏到托盘</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/stylepage.cpp" line="58"/>
+        <source>None</source>
+        <translation>无</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/stylepage.cpp" line="58"/>
+        <source>Minimize</source>
+        <translation>最小化</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/stylepage.cpp" line="58"/>
+        <source>Close Window</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/stylepage.cpp" line="63"/>
         <source>Dark Mode</source>
         <translation>深色模式</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="58"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="64"/>
         <source>Enable Background</source>
         <translation>启用背景图</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="59"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="65"/>
         <source>Custom Color</source>
         <translation>自定义颜色</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="64"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="70"/>
         <source>Background Darkness</source>
         <translation>背景暗度</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="174"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="182"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="177"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="185"/>
         <source>Select Image</source>
         <translation>选择图片</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="198"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="206"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>

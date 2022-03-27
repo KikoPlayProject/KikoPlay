@@ -2,7 +2,7 @@
 #include "globalobjects.h"
 #include <QFontDatabase>
 #include <QSplitter>
-#include <QDebug>
+#include <QMenu>
 #include <QLabel>
 #include <QApplication>
 #include <QDesktopWidget>
@@ -29,7 +29,8 @@
 #include "Play/Danmu/Render/danmurender.h"
 
 MainWindow::MainWindow(QWidget *parent)
-    : CFramelessWindow(parent),hasBackground(false),hasCoverBg(false),curPage(0),listWindowWidth(0),isMini(false),hideToTrayIcon(false)
+    : CFramelessWindow(parent),hasBackground(false),hasCoverBg(false),curPage(0),listWindowWidth(0),
+      isMini(false),hideToTrayType(HideToTrayType::NONE)
 {
     setObjectName(QStringLiteral("MainWindow"));
     Notifier::getNotifier()->addNotify(Notifier::MAIN_DIALOG_NOTIFY, this);
@@ -47,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent)
     {
         listWindowWidth = 200*logicalDpiX()/96;
     }
-    hideToTrayIcon = GlobalObjects::appSetting->value("MainWindow/hideToTrayIcon", false).toBool();
+    hideToTrayType = static_cast<HideToTrayType>(GlobalObjects::appSetting->value("MainWindow/hideToTrayType", 0).toInt());
     trayIcon = new QSystemTrayIcon(windowIcon(), this);
     trayIcon->setToolTip("KikoPlay");
     QObject::connect(trayIcon, &QSystemTrayIcon::activated, this, [=](QSystemTrayIcon::ActivationReason reason){
@@ -59,6 +60,11 @@ MainWindow::MainWindow(QWidget *parent)
             trayIcon->hide();
         }
     });
+    QMenu *trayMenu = new QMenu(this);
+    QAction *actTrayExit=new QAction(tr("Exit"), trayMenu);
+    QObject::connect(actTrayExit,&QAction::triggered, this, &MainWindow::close);
+    trayMenu->addAction(actTrayExit);
+    trayIcon->setContextMenu(trayMenu);
     QVariant splitterState(GlobalObjects::appSetting->value("MainWindow/SplitterState"));
     if(!splitterState.isNull())
         playSplitter->restoreState(splitterState.toByteArray());
@@ -149,9 +155,9 @@ void MainWindow::setThemeColor(const QColor &color)
         StyleManager::getStyleManager()->setQSS(StyleManager::NO_BG);
 }
 
-void MainWindow::setHideToTray(bool on)
+void MainWindow::setHideToTrayType(HideToTrayType type)
 {
-    hideToTrayIcon = on;
+    hideToTrayType = type;
 }
 
 void MainWindow::setupUI()
@@ -233,9 +239,7 @@ void MainWindow::setupUI()
     QAction *act_useTip=new QAction(tr("Useage Tip"), this);
     QObject::connect(act_useTip,&QAction::triggered,[this](){
         Tip tip(buttonIcon);
-        QRect geo(0,0,400,400);
-        geo.moveCenter(this->geometry().center());
-        tip.move(geo.topLeft());
+        tip.resize(500*logicalDpiX()/96, 400*logicalDpiY()/96);
         tip.exec();
     });
     buttonIcon->addAction(act_useTip);
@@ -250,9 +254,7 @@ void MainWindow::setupUI()
     });
     buttonIcon->addAction(act_about);
     QAction *act_exit=new QAction(tr("Exit"),this);
-    QObject::connect(act_exit,&QAction::triggered,[this](){
-        close();
-    });
+    QObject::connect(act_exit,&QAction::triggered, this, &MainWindow::close);
     buttonIcon->addAction(act_exit);
 
     QStringList pageButtonTexts = {
@@ -333,7 +335,7 @@ void MainWindow::setupUI()
     minButton->setObjectName(QStringLiteral("ControlButton"));
     minButton->setMinimumSize(controlButtonSize);
     QObject::connect(minButton,&QToolButton::clicked,this, [=](){
-        if(hideToTrayIcon)
+        if(hideToTrayType == HideToTrayType::MINIMIZE)
         {
             this->hide();
             trayIcon->show();
@@ -368,7 +370,15 @@ void MainWindow::setupUI()
     closeButton->setObjectName(QStringLiteral("closelButton"));
     closeButton->setMinimumSize(controlButtonSize);
     QObject::connect(closeButton,&QToolButton::clicked,[this](){
-       this->close();
+        if(hideToTrayType == HideToTrayType::CLOSE)
+        {
+            this->hide();
+            trayIcon->show();
+        }
+        else
+        {
+            this->close();
+        }
     });
     QHBoxLayout *layout = new QHBoxLayout(widgetTitlebar);
     layout->setSpacing(0);
@@ -745,7 +755,7 @@ QVariant MainWindow::showDialog(const QVariant &inputs)
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	GlobalObjects::appSetting->setValue("MainWindow/miniGeometry", miniGeo);
-    GlobalObjects::appSetting->setValue("MainWindow/hideToTrayIcon", hideToTrayIcon);
+    GlobalObjects::appSetting->setValue("MainWindow/hideToTrayType", static_cast<int>(hideToTrayType));
     GlobalObjects::appSetting->setValue("MainWindow/ListWindowWidth", listWindowWidth);
     if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
     {
@@ -774,7 +784,7 @@ void MainWindow::changeEvent(QEvent *event)
             maxButton->setText(QChar(0xe93d));
         else
             maxButton->setText(QChar(0xe93c));
-        if(this->isMinimized() && hideToTrayIcon)
+        if(this->isMinimized() && hideToTrayType == HideToTrayType::MINIMIZE)
         {
             this->hide();
             trayIcon->show();

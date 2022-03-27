@@ -4,6 +4,7 @@
 class ColorSlider;
 class QListWidget;
 class QCheckBox;
+class QComboBox;
 class StylePage : public SettingPage
 {
     Q_OBJECT
@@ -26,7 +27,8 @@ private:
     QStringList historyBgs;
     QSize thumbSize;
     ColorSlider *sliderBgDarkness, *sliderHue, *sliderLightness;
-    QCheckBox *darkMode, *enableBg, *customColor, *hideToTray;
+    QComboBox *hideToTrayCombo;
+    QCheckBox *darkMode, *enableBg, *customColor;
     QWidget *colorPreview;
 };
 

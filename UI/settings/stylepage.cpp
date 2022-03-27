@@ -10,6 +10,7 @@
 #include <QPainter>
 #include <QHoverEvent>
 #include <QStylePainter>
+#include <QComboBox>
 #include "../mainwindow.h"
 #include "../stylemanager.h"
 #include "globalobjects.h"
@@ -52,8 +53,13 @@ StylePage::StylePage(QWidget *parent) : SettingPage(parent)
     bgImgView->setMovement(QListView::Static);
 
     setSlide();
-
-    hideToTray = new QCheckBox(tr("Hide to Tray Icon when Minimize"), this);
+    QLabel *hideToTrayTip = new QLabel(tr("Hide To Tray"), this);
+    hideToTrayCombo = new QComboBox(this);
+    QStringList hideTypes{tr("None"), tr("Minimize"), tr("Close Window")};
+    for(int i = 0; i < static_cast<int>(MainWindow::HideToTrayType::UNKNOWN); ++i)
+    {
+        hideToTrayCombo->addItem(hideTypes[i], i);
+    }
     darkMode = new QCheckBox(tr("Dark Mode"), this);
     enableBg = new QCheckBox(tr("Enable Background"), this);
     customColor = new QCheckBox(tr("Custom Color"), this);
@@ -66,18 +72,19 @@ StylePage::StylePage(QWidget *parent) : SettingPage(parent)
 
     QGridLayout *styleGLayout = new QGridLayout(this);
     styleGLayout->setContentsMargins(0, 0, 0, 0);
-    styleGLayout->addWidget(hideToTray, 0, 0, 1, 3);
-    styleGLayout->addWidget(darkMode, 1, 0, 1, 3);
-    styleGLayout->addWidget(enableBg, 2, 0, 1, 3);
+    styleGLayout->addWidget(hideToTrayTip, 0, 0);
+    styleGLayout->addWidget(hideToTrayCombo, 0, 1);
+    styleGLayout->addWidget(darkMode, 1, 0, 1, 4);
+    styleGLayout->addWidget(enableBg, 2, 0, 1, 4);
     styleGLayout->addWidget(bgLightnessTip, 3, 0);
-    styleGLayout->addWidget(sliderBgDarkness, 3, 1, 1, 2);
-    styleGLayout->addWidget(bgImgView, 5, 0, 1, 3);
+    styleGLayout->addWidget(sliderBgDarkness, 3, 1, 1, 3);
+    styleGLayout->addWidget(bgImgView, 5, 0, 1, 4);
     styleGLayout->addWidget(customColor, 6, 0, 1, 3);
-    styleGLayout->addWidget(sliderHue, 7, 0, 1, 2);
-    styleGLayout->addWidget(colorPreview, 8, 2, 2, 1);
-    styleGLayout->addWidget(sliderLightness, 9, 0, 1, 2);
+    styleGLayout->addWidget(sliderHue, 7, 0, 1, 3);
+    styleGLayout->addWidget(colorPreview, 7, 3, 2, 1);
+    styleGLayout->addWidget(sliderLightness, 8, 0, 1, 3);
     styleGLayout->setRowStretch(1, 1);
-    styleGLayout->setColumnStretch(1, 1);
+    styleGLayout->setColumnStretch(2, 1);
 
     setBgList(bgImgView);
     bgImgView->setEnabled(enableBg->isChecked());
@@ -139,7 +146,7 @@ StylePage::StylePage(QWidget *parent) : SettingPage(parent)
     QObject::connect(this, &StylePage::setBackground, mW, (void (MainWindow::*)(const QString &, const QColor &))&MainWindow::setBackground);
     QObject::connect(this, &StylePage::setBgDarkness, mW, &MainWindow::setBgDarkness);
     QObject::connect(this, &StylePage::setThemeColor, mW, &MainWindow::setThemeColor);
-    hideToTray->setChecked(mW->isHideToTray());
+    hideToTrayCombo->setCurrentIndex(static_cast<int>(mW->getHideToTrayType()));
 }
 
 void StylePage::onAccept()
@@ -152,7 +159,8 @@ void StylePage::onAccept()
         GlobalObjects::appSetting->setValue("MainWindow/CustomColorHSV", QColor::fromHsv(sliderHue->value(), 255, sliderLightness->value()));
         GlobalObjects::appSetting->setValue("MainWindow/CustomColor", customColor->isChecked());
     }
-    static_cast<MainWindow *>(GlobalObjects::mainWindow)->setHideToTray(hideToTray->isChecked());
+    static_cast<MainWindow *>(GlobalObjects::mainWindow)->setHideToTrayType(
+                static_cast<MainWindow::HideToTrayType>(hideToTrayCombo->currentData().toInt()));
 }
 
 void StylePage::onClose()

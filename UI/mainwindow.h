@@ -39,13 +39,19 @@ class MainWindow : public CFramelessWindow, public NotifyInterface
 public:
     MainWindow(QWidget *parent = nullptr);
 
+    enum class HideToTrayType
+    {
+        NONE, MINIMIZE, CLOSE, UNKNOWN
+    };
+
     void setBackground(const QString &path, const QColor &color);
     void setBgDarkness(int val);
     void setThemeColor(const QColor &color);
-    void setHideToTray(bool on);
-    bool isHideToTray() const {return hideToTrayIcon;}
+    void setHideToTrayType(HideToTrayType type);
+    HideToTrayType getHideToTrayType() const {return hideToTrayType;}
 
     ListWindow *getList() const {return listWindow;}
+
 private:
     DropableWidget *widgetTitlebar;
     BackgroundWidget *bgWidget;
@@ -77,7 +83,7 @@ private:
     bool isMini;
     QPoint miniPressPos;
     QSystemTrayIcon *trayIcon;
-    bool hideToTrayIcon;
+    HideToTrayType hideToTrayType;
 
     void setupUI();
     void switchToPlay(const QString &fileToPlay);
