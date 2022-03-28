@@ -21,7 +21,6 @@ public:
     virtual ~DanmuPool();
 
     inline bool hasPool() const {return curPool!=emptyPool;}
-    //inline QString getPoolID() const { return poolID; }
     inline QModelIndex getCurrentIndex(){return (currentPosition >= 0 && currentPosition < finalPool.count())?createIndex(currentPosition, 0,finalPool.at(currentPosition).data()):QModelIndex();}
     inline void recyclePrepareList(QVector<DrawTask> *list){list->clear();prepareListPool.append(list);}
     inline bool isEmpty() const{return danmuPool.isEmpty();}
@@ -34,12 +33,14 @@ public:
     QSharedPointer<DanmuComment> getDanmu(const QModelIndex &index);
     void deleteDanmu(QSharedPointer<DanmuComment> danmu);
     void launch(const QList<QSharedPointer<DanmuComment>> userComments);
+    bool addLocalDanmuFile(const QString &fileName);
 
 private:
     Pool *curPool,*emptyPool;
     QVector<QSharedPointer<DanmuComment> > danmuPool;
     QVector<QSharedPointer<DanmuComment> > finalPool;
     QVector<QVector<DrawTask> *> prepareListPool;
+    QVector<int> tmpSourceIds;
     StatisInfo statisInfo;
     EventAnalyzer *analyzer;
     int currentPosition;

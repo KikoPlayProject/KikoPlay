@@ -11,6 +11,8 @@
 #include "Manager/danmumanager.h"
 #include "Manager/pool.h"
 #include "Play/Playlist/playlist.h"
+#include "Provider/localprovider.h"
+#include "Common/notifier.h"
 namespace
 {
     struct
@@ -141,6 +143,45 @@ void DanmuPool::launch(const QList<QSharedPointer<DanmuComment> > userComments)
         recyclePrepareList(prepareList);
     }
 
+}
+
+bool DanmuPool::addLocalDanmuFile(const QString &fileName)
+{
+    bool contains = false;
+    for(auto &src : curPool->sources())
+    {
+        if(src.scriptId.isEmpty() && src.scriptData == fileName)
+        {
+            contains = true;
+            break;
+        }
+    }
+    QFileInfo fi(fileName);
+    if(!contains && fi.exists())
+    {
+        QVector<DanmuComment *> tmplist;
+        LocalProvider::LoadXmlDanmuFile(fileName, tmplist);
+        DanmuSource sourceInfo;
+        sourceInfo.scriptData = fi.filePath();
+        sourceInfo.title=fi.fileName();
+        sourceInfo.count=tmplist.count();
+        int srcId = curPool->addSource(sourceInfo,tmplist,true);
+        if(srcId >= 0)
+        {
+            if(curPool == emptyPool)
+            {
+                tmpSourceIds.append(srcId);
+            }
+            Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tr("Danmu File [%1] has been added").arg(fi.fileName()));
+            return true;
+        }
+        else
+        {
+            qDeleteAll(tmplist);
+            Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tr("Add Faied: Pool is busy"));
+        }
+    }
+    return false;
 }
 void DanmuPool::setMerged()
 {
@@ -369,6 +410,14 @@ void DanmuPool::setMinMergeCount(int val)
 
 void DanmuPool::setPoolID(const QString &pid)
 {
+    if(pid.isEmpty())
+    {
+        for(int tmpSrc : tmpSourceIds)
+        {
+            emptyPool->deleteSource(tmpSrc);
+        }
+        tmpSourceIds.clear();
+    }
     if(pid==curPool->id()) return;
     GlobalObjects::blocker->resetBlockCount();
     Pool *pool = GlobalObjects::danmuManager->getPool(pid);

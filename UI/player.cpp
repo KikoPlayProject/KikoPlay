@@ -1423,44 +1423,21 @@ void PlayerWindow::setupSignals()
         {
             GlobalObjects::danmuPool->setPoolID(currentItem->poolID);
             GlobalObjects::danmuProvider->checkSourceToLaunch(currentItem->poolID);
-            if(autoLoadLocalDanmu)
-            {
-                QString danmuFile(currentItem->path.mid(0, currentItem->path.lastIndexOf('.'))+".xml");
-                Pool *pool=GlobalObjects::danmuPool->getPool();
-                bool contains = false;
-                for(auto &src : pool->sources())
-                {
-                    if(src.scriptId.isEmpty() && src.scriptData == danmuFile)
-                    {
-                        contains = true;
-                        break;
-                    }
-                }
-                QFileInfo fi(danmuFile);
-                if(!contains && fi.exists())
-                {
-					QVector<DanmuComment *> tmplist;
-                    LocalProvider::LoadXmlDanmuFile(danmuFile,tmplist);
-                    DanmuSource sourceInfo;
-                    sourceInfo.scriptData = fi.filePath();
-                    sourceInfo.title=fi.fileName();
-                    sourceInfo.count=tmplist.count();
-                    Pool *pool=GlobalObjects::danmuPool->getPool();
-                    if(pool->addSource(sourceInfo,tmplist,true)>=0)
-                        showMessage(tr("Danmu File [%1] has been added").arg(fi.fileName()));
-                    else
-                    {
-                        qDeleteAll(tmplist);
-                        showMessage(tr("Add Faied: Pool is busy"));
-                    }
-                }
-            }
         }
         else
         {
             launch->hide();
             showMessage(tr("File is not associated with Danmu Pool"));
             GlobalObjects::danmuPool->setPoolID("");
+        }
+        if(autoLoadLocalDanmu)
+        {
+            QString danmuFile(currentItem->path.mid(0, currentItem->path.lastIndexOf('.'))+".xml");
+            QFileInfo fi(danmuFile);
+            if(fi.exists())
+            {
+                GlobalObjects::danmuPool->addLocalDanmuFile(danmuFile);
+            }
         }
 #ifdef QT_DEBUG
         qDebug()<<"File Changed,Current Item: "<<currentItem->title;
