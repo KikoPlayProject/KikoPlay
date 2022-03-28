@@ -144,7 +144,11 @@ GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *par
         if(saveFileName.isEmpty()) return;
         if(ffmpegCut(inputFile, saveFileName, w, h, rate, curTime, duration))
         {
+#ifdef Q_OS_WIN
             QProcess::startDetached("Explorer", {"/select,", QDir::toNativeSeparators(saveFileName)});
+#else
+            QDesktopServices::openUrl(QUrl("file:///" + QDir::toNativeSeparators(QFileInfo(saveFileName).absolutePath())));
+#endif
         }
     });
     smPlayer->setMedia(fileName.isEmpty()?GlobalObjects::mpvplayer->getCurrentFile():fileName);

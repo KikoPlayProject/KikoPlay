@@ -867,8 +867,11 @@ void DownloadWindow::initActions()
         DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(model->mapToSource(selectedRows.last()));
         QFileInfo info(task->dir,task->title);
         if(!info.exists())return;
-		QString command("Explorer /select," + QDir::toNativeSeparators(info.absoluteFilePath()));
-        QProcess::startDetached(command);
+#ifdef Q_OS_WIN
+        QProcess::startDetached("Explorer", {"/select,",  QDir::toNativeSeparators(info.absoluteFilePath())});
+#else
+        QDesktopServices::openUrl(QUrl("file:///" + QDir::toNativeSeparators(info.absolutePath())));
+#endif
     });
     act_addToPlayList=new QAction(tr("Add To PlayList"),this);
     QObject::connect(act_addToPlayList,&QAction::triggered,[this](){

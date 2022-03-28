@@ -378,7 +378,11 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
             Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("File Not Exist"), NotifyMessageFlag::NM_ERROR|NotifyMessageFlag::NM_HIDE);
             return;
         }
+#ifdef Q_OS_WIN
         QProcess::startDetached("Explorer", {"/select,", QDir::toNativeSeparators(info.absoluteFilePath())});
+#else
+        QDesktopServices::openUrl(QUrl("file:///" + QDir::toNativeSeparators(info.absolutePath())));
+#endif
     });
 
     QAction *autoGetEpNames=new QAction(tr("Auto Get Epsoide Names"),this);
@@ -389,9 +393,7 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
     episodeView->setContextMenuPolicy(Qt::ActionsContextMenu);
     episodeView->addAction(playAction);
     episodeView->addAction(addAction);
-#ifdef Q_OS_WIN
     episodeView->addAction(explorerViewAction);
-#endif
     episodeView->addAction(addEpAction);
     episodeView->addAction(deleteAction);
     episodeView->addAction(deleteInvalidAction);
@@ -605,7 +607,11 @@ QWidget *AnimeDetailInfoPage::setupCapturePage()
         if(!snippetFilePath.isEmpty())
         {
             QFileInfo snippetFile(snippetFilePath);
+#ifdef Q_OS_WIN
             QProcess::startDetached("Explorer", {"/select,", QDir::toNativeSeparators(snippetFile.absoluteFilePath())});
+#else
+            QDesktopServices::openUrl(QUrl("file:///" + QDir::toNativeSeparators(snippetFile.absolutePath())));
+#endif
         }
     });
 

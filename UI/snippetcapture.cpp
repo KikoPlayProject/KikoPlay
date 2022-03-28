@@ -96,7 +96,11 @@ SnippetCapture::SnippetCapture(QWidget *parent) : CFramelessDialog("",parent)
         if(fileName.isEmpty()) return;
         if(ffmpegCut(curTime, GlobalObjects::mpvplayer->getCurrentFile(), durationSpin->value(), retainAudioCheck->isChecked(), fileName))
         {
+#ifdef Q_OS_WIN
             QProcess::startDetached("Explorer", {"/select,", QDir::toNativeSeparators(fileName)});
+#else
+            QDesktopServices::openUrl(QUrl("file:///" + QDir::toNativeSeparators(QFileInfo(fileName).absolutePath())));
+#endif
         }
     });
     QObject::connect(addToLibrary, &QPushButton::clicked, this, [=](){
