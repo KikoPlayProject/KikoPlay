@@ -8,6 +8,12 @@
 #include <QCheckBox>
 #include <QIntValidator>
 #include <QSyntaxHighlighter>
+#include <QPushButton>
+#include <QTreeView>
+#include <QAction>
+#include <QHeaderView>
+#include "Download/trackersubscriber.h"
+#include "../inputdialog.h"
 #include "globalobjects.h"
 namespace
 {
@@ -105,6 +111,11 @@ DownloadPage::DownloadPage(QWidget *parent) : SettingPage(parent)
     QObject::connect(btTrackers,&QPlainTextEdit::textChanged,[this](){
        btTrackerChange=true;
     });
+    QPushButton *trackerSubscribe = new QPushButton(tr("Tracker Subscribe"), this);
+    QObject::connect(trackerSubscribe, &QPushButton::clicked, this, [=](){
+        TrackerSubscribeDialog dialog(this);
+        dialog.exec();
+    });
 
     QLabel *startupArgsLabel=new QLabel(tr("Aria2 Startup Args: "), this);
     args = new QTextEdit(this);
@@ -118,18 +129,19 @@ DownloadPage::DownloadPage(QWidget *parent) : SettingPage(parent)
     QGridLayout *settingGLayout=new QGridLayout(this);
     settingGLayout->setContentsMargins(0, 0, 0, 0);
     settingGLayout->addWidget(maxDownSpeedLabel,0,0);
-    settingGLayout->addWidget(maxDownSpeedLimit,0,1);
+    settingGLayout->addWidget(maxDownSpeedLimit,0,1,1,2);
     settingGLayout->addWidget(maxUpSpeedLabel,1,0);
-    settingGLayout->addWidget(maxUpSpeedLimit,1,1);
+    settingGLayout->addWidget(maxUpSpeedLimit,1,1,1,2);
     settingGLayout->addWidget(seedTimeLabel,2,0);
-    settingGLayout->addWidget(seedTime,2,1);
+    settingGLayout->addWidget(seedTime,2,1,1,2);
     settingGLayout->addWidget(maxConcurrentLabel,3,0);
-    settingGLayout->addWidget(maxConcurrent,3,1);
-    settingGLayout->addWidget(autoAddtoPlaylist,4,0,1,2);
+    settingGLayout->addWidget(maxConcurrent,3,1,1,2);
+    settingGLayout->addWidget(autoAddtoPlaylist,4,0,1,3);
     settingGLayout->addWidget(btTrackerLabel,5,0);
-    settingGLayout->addWidget(btTrackers,6,0,1,2);
+    settingGLayout->addWidget(trackerSubscribe, 5, 2);
+    settingGLayout->addWidget(btTrackers,6,0,1,3);
     settingGLayout->addWidget(startupArgsLabel,7,0);
-    settingGLayout->addWidget(args,8,0,1,2);
+    settingGLayout->addWidget(args,8,0,1,3);
     settingGLayout->setRowStretch(6,1);
     settingGLayout->setRowStretch(8,1);
     settingGLayout->setColumnStretch(1,1);
@@ -164,7 +176,7 @@ void DownloadPage::onAccept()
     }
     if(btTrackerChange)
     {
-        QStringList trackers = btTrackers->toPlainText().split('\n',QString::SkipEmptyParts);
+        QStringList trackers = btTrackers->toPlainText().split('\n', Qt::SkipEmptyParts);
         changedValues["btTracker"] = trackers;
         GlobalObjects::appSetting->setValue("Download/Trackers", trackers);
     }
@@ -177,4 +189,90 @@ void DownloadPage::onAccept()
 void DownloadPage::onClose()
 {
 
+}
+
+TrackerSubscribeDialog::TrackerSubscribeDialog(QWidget *parent) :
+     CFramelessDialog(tr("Tracker Subscribe"), parent)
+{
+    QPushButton *addTrackerSource = new QPushButton(tr("Add"), this);
+    QPushButton *checkAll = new QPushButton(tr("Check All"), this);
+    QCheckBox *autoCheck = new QCheckBox(tr("Auto Check"), this);
+    QTreeView *trackerSrcView = new QTreeView(this);
+    trackerSrcView->setRootIsDecorated(false);
+    QGridLayout *tsGLayout = new QGridLayout(this);
+    QPlainTextEdit *trackerText = new QPlainTextEdit(this);
+    trackerText->setReadOnly(true);
+    tsGLayout->addWidget(addTrackerSource, 0, 0);
+    tsGLayout->addWidget(autoCheck, 0, 2);
+    tsGLayout->addWidget(checkAll, 0, 3);
+    tsGLayout->addWidget(trackerSrcView, 1, 0, 1, 4);
+    tsGLayout->addWidget(trackerText, 2, 0, 1, 4);
+    tsGLayout->setRowStretch(1, 1);
+    tsGLayout->setRowStretch(2, 1);
+    tsGLayout->setColumnStretch(1, 1);
+    tsGLayout->setContentsMargins(0, 0, 0, 0);
+
+    QObject::connect(addTrackerSource, &QPushButton::clicked, this, [=](){
+        LineInputDialog input(tr("Subscirbe"), tr("URL"), "", "DialogSize/AddTrackerSubscribe", false, this);
+        if(QDialog::Accepted == input.exec())
+        {
+            TrackerSubscriber::subscriber()->add(input.text);
+        }
+    });
+    QObject::connect(checkAll, &QPushButton::clicked, this, [=](){
+        TrackerSubscriber::subscriber()->check(-1);
+    });
+    QObject::connect(autoCheck,&QCheckBox::stateChanged,[](int state){
+        TrackerSubscriber::subscriber()->setAutoCheck(state == Qt::CheckState::Checked);
+    });
+    autoCheck->setChecked(GlobalObjects::appSetting->value("Download/TrackerSubscriberAutoCheck", true).toBool());
+
+    trackerSrcView->setModel(TrackerSubscriber::subscriber());
+    trackerSrcView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    trackerSrcView->setSelectionMode(QAbstractItemView::SingleSelection);
+    QAction *actRemoveSubscirbe = new QAction(tr("Remove Subscribe"), trackerSrcView);
+    QObject::connect(actRemoveSubscirbe, &QAction::triggered, this, [=](){
+        auto selection = trackerSrcView->selectionModel()->selectedRows();
+        if(selection.size()==0) return;
+        TrackerSubscriber::subscriber()->remove(selection.first().row());
+    });
+    QAction *actCheck = new QAction(tr("Check"), trackerSrcView);
+    QObject::connect(actCheck, &QAction::triggered, this, [=](){
+        auto selection = trackerSrcView->selectionModel()->selectedRows();
+        if(selection.size()==0) return;
+        TrackerSubscriber::subscriber()->check(selection.first().row());
+    });
+    trackerSrcView->addAction(actCheck);
+    trackerSrcView->addAction(actRemoveSubscirbe);
+    QObject::connect(trackerSrcView->selectionModel(), &QItemSelectionModel::selectionChanged,this, [=](){
+        auto selection = trackerSrcView->selectionModel()->selectedRows();
+        if(selection.size()==0)
+        {
+            trackerText->clear();
+        }
+        else
+        {
+            QStringList trackers = TrackerSubscriber::subscriber()->getTrackers(selection.first().row());
+            trackerText->setPlainText(trackers.join('\n'));
+        }
+
+    });
+    QObject::connect(TrackerSubscriber::subscriber(), &TrackerSubscriber::checkStateChanged, this, [=](bool checking){
+        addTrackerSource->setEnabled(!checking);
+        checkAll->setEnabled(!checking);
+        autoCheck->setEnabled(!checking);
+        trackerSrcView->setEnabled(!checking);
+    });
+    QObject::connect(TrackerSubscriber::subscriber(), &TrackerSubscriber::trackerListChanged, this, [=](int index){
+        auto selection = trackerSrcView->selectionModel()->selectedRows();
+        if(selection.size()==0 || selection.first().row()!=index) return;
+        QStringList trackers = TrackerSubscriber::subscriber()->getTrackers(selection.first().row());
+        trackerText->setPlainText(trackers.join('\n'));
+    });
+
+    addOnCloseCallback([=](){
+         GlobalObjects::appSetting->setValue("Download/TrackerSubscriberAutoCheck", autoCheck->isChecked());
+    });
+    setSizeSettingKey("DialogSize/TrackerSubscribe", QSize(400*logicalDpiX()/96,300*logicalDpiY()/96));
+    trackerSrcView->header()->resizeSection(0, width()/2);
 }

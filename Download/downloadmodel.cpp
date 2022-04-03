@@ -1,6 +1,7 @@
 #include "downloadmodel.h"
 #include "globalobjects.h"
 #include "aria2jsonrpc.h"
+#include "trackersubscriber.h"
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include "Common/network.h"
@@ -12,12 +13,12 @@ DownloadModel::DownloadModel(QObject *parent) : QAbstractItemModel(parent),curre
 {
     downloadWorker=new DownloadWorker();
     downloadWorker->moveToThread(GlobalObjects::workThread);
+    TrackerSubscriber::subscriber()->setAutoCheck(GlobalObjects::appSetting->value("Download/TrackerSubscriberAutoCheck", true).toBool());
 }
 
 DownloadModel::~DownloadModel()
 {
     saveItemStatus();
-    //rpc->switchAllPauseStatus(true);
     qDeleteAll(downloadTasks);
 }
 
@@ -56,8 +57,9 @@ QString DownloadModel::addUriTask(const QString &uri, const QString &dir, bool d
     options.insert("bt-metadata-only","true");
     options.insert("bt-save-metadata","true");
 	options.insert("seed-time", QString::number(GlobalObjects::appSetting->value("Download/SeedTime", 5).toInt()));
-	options.insert("bt-tracker", GlobalObjects::appSetting->value("Download/Trackers", QStringList()).toStringList().join(','));
-
+    QStringList trackers(GlobalObjects::appSetting->value("Download/Trackers",QStringList()).toStringList());
+    trackers.append(TrackerSubscriber::subscriber()->allTrackers());
+    options.insert("bt-tracker", trackers.join(','));
     try
     {
        QString gid=rpc->addUri(nUri,options);
@@ -89,7 +91,9 @@ QString DownloadModel::addTorrentTask(const QByteArray &torrentContent, const QS
     options.insert("rpc-save-upload-metadata","false");
     options.insert("select-file",selIndexes);
     options.insert("seed-time",QString::number(GlobalObjects::appSetting->value("Download/SeedTime",5).toInt()));
-    options.insert("bt-tracker",GlobalObjects::appSetting->value("Download/Trackers",QStringList()).toStringList().join(','));
+    QStringList trackers(GlobalObjects::appSetting->value("Download/Trackers",QStringList()).toStringList());
+    trackers.append(TrackerSubscriber::subscriber()->allTrackers());
+    options.insert("bt-tracker", trackers.join(','));
     try
     {
         QString gid=rpc->addTorrent(torrentContent.toBase64(),options);
@@ -496,7 +500,7 @@ QVariant DownloadModel::headerData(int section, Qt::Orientation orientation, int
 
 void DownloadModel::fetchMore(const QModelIndex &)
 {
-    QList<DownloadTask *> moreTasks;
+    QVector<DownloadTask *> moreTasks;
     QEventLoop eventLoop;
     QObject::connect(downloadWorker, &DownloadWorker::loadDone, &eventLoop, &QEventLoop::quit);
     hasMoreTasks = false;
@@ -514,7 +518,7 @@ void DownloadModel::fetchMore(const QModelIndex &)
     }
 }
 
-void DownloadWorker::loadTasks(QList<DownloadTask *> &items, int offset, int limit)
+void DownloadWorker::loadTasks(QVector<DownloadTask *> &items, int offset, int limit)
 {
     QSqlQuery query(QSqlDatabase::database("Download_W"));
     query.exec(QString("select * from task order by CTime desc limit %1 offset %2").arg(limit).arg(offset));
@@ -585,11 +589,17 @@ void DownloadWorker::deleteTask(DownloadTask *task, bool deleteFile)
             if(fi.isDir())
             {
                 QDir dir(fi.absoluteFilePath());
-                dir.removeRecursively();
+                if(!dir.removeRecursively())
+                {
+                    qInfo() << "delete failed: " << fi.absoluteFilePath();
+                }
             }
             else
             {
-                fi.dir().remove(fi.fileName());
+                if(!fi.dir().remove(fi.fileName()))
+                {
+                    qInfo() << "delete failed: " << fi.fileName();
+                }
             }
         }
         fi.setFile(task->dir,task->title+".aria2");

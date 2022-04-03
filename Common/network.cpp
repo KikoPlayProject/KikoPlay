@@ -162,9 +162,9 @@ QJsonValue Network::getValue(QJsonObject &obj, const QString &path)
     return value;
 }
 
-QList<Network::Reply> Network::httpGetBatch(const QStringList &urls, const QList<QUrlQuery> &querys, const QList<QStringList> &headers, bool redirect)
+QList<Network::Reply> Network::httpGetBatch(const QStringList &urls, const QList<QUrlQuery> &queries, const QList<QStringList> &headers, bool redirect)
 {
-    Q_ASSERT(urls.size()==querys.size() || querys.size()==0);
+    Q_ASSERT(urls.size()==queries.size() || queries.size()==0);
     Q_ASSERT(urls.size()==headers.size() || headers.size()==0);
     QList<Reply> results;
 	if (urls.isEmpty()) return results;
@@ -175,7 +175,7 @@ QList<Network::Reply> Network::httpGetBatch(const QStringList &urls, const QList
     {
         results.append(Reply());
         QUrl queryUrl(urls.at(i));
-        if(!querys.isEmpty()) queryUrl.setQuery(querys.at(i));
+        if(!queries.isEmpty()) queryUrl.setQuery(queries.at(i));
         QNetworkRequest request;
         request.setUrl(queryUrl);
         request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, redirect);

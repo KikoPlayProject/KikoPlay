@@ -35,6 +35,7 @@ SOURCES += \
     Common/notifier.cpp \
     Download/autodownloadmanager.cpp \
     Download/peermodel.cpp \
+    Download/trackersubscriber.cpp \
     LANServer/mediahandler.cpp \
     MediaLibrary/animeinfo.cpp \
     MediaLibrary/animeprovider.cpp \
@@ -154,6 +155,7 @@ HEADERS += \
     Download/autodownloadmanager.h \
     Download/peerid.h \
     Download/peermodel.h \
+    Download/trackersubscriber.h \
     LANServer/mediahandler.h \
     MediaLibrary/animeprovider.h \
     MediaLibrary/episodeitem.h \

@@ -1,6 +1,7 @@
 #ifndef DOWNLOADPAGE_H
 #define DOWNLOADPAGE_H
 #include "settingpage.h"
+#include "../framelessdialog.h"
 class QLineEdit;
 class QPlainTextEdit;
 class QCheckBox;
@@ -24,6 +25,13 @@ private:
     bool concurrentChange = false;
     bool seedTimeChange = false;
     bool argChange = false;
+};
+class TrackerSubscribeDialog : public CFramelessDialog
+{
+    Q_OBJECT
+public:
+    TrackerSubscribeDialog(QWidget *parent = nullptr);
+
 };
 
 #endif // DOWNLOADPAGE_H

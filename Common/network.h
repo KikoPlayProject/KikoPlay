@@ -19,7 +19,7 @@ namespace Network
 
     Reply httpGet(const QString &url, const QUrlQuery &query, const QStringList &header=QStringList(), bool redirect=true);
     Reply httpPost(const QString &url, const QByteArray &data, const QStringList &header=QStringList());
-    QList<Reply> httpGetBatch(const QStringList &urls, const QList<QUrlQuery> &querys, const QList<QStringList> &headers=QList<QStringList>(), bool redirect=true);
+    QList<Reply> httpGetBatch(const QStringList &urls, const QList<QUrlQuery> &queries, const QList<QStringList> &headers=QList<QStringList>(), bool redirect=true);
     QJsonDocument toJson(const QString &str);
     QJsonValue getValue(QJsonObject &obj, const QString &path);
     int decompress(const QByteArray &input, QByteArray &output);

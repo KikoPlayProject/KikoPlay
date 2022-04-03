@@ -12,7 +12,7 @@ public:
 private:
 
 public slots:
-    void loadTasks(QList<DownloadTask *> &items, int offset, int limit);
+    void loadTasks(QVector<DownloadTask *> &items, int offset, int limit);
     void addTask(DownloadTask *task);
     void deleteTask(DownloadTask *task, bool deleteFile);
     void updateTaskInfo(const DownloadTask *task);
@@ -41,9 +41,9 @@ public:
 
     void setRPC(Aria2JsonRPC *aria2RPC);
     const QMap<QString, DownloadTask *> &getItems() const{return gidMap;}
-    QList<DownloadTask *> &getAllTask() {return downloadTasks;}
+    QVector<DownloadTask *> &getAllTask() {return downloadTasks;}
 private:
-    QList<DownloadTask *> downloadTasks;
+    QVector<DownloadTask *> downloadTasks;
     QMap<QString ,DownloadTask *> gidMap;
     const QStringList headers={tr("Status"),tr("Title"),tr("Progress"),tr("Size"),tr("DownSpeed"),tr("Time Left"), tr("UpSpeed"), tr("Connections"), tr("Seeders"), tr("Dir")};
     const QStringList status={tr("Downloading"),tr("Seeding"),tr("Waiting"),tr("Paused"),tr("Complete"),tr("Error")};
