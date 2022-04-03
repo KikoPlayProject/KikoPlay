@@ -133,6 +133,11 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     {
         modifyShortcut(s.first, s.first, s.second.first);
     }
+    auto keyMapping = GlobalObjects::appSetting->value("Play/MPVDirectModeKeyMapping").value<QVector<QPair<QString, QString>>>();
+    for(auto &pair : keyMapping)
+    {
+        directModeKeyMapping[pair.first] = pair.second;
+    }
 
     mpv_set_option_string(mpv, "terminal", "yes");
     mpv_set_option_string(mpv, "keep-open", "yes");  
@@ -408,7 +413,7 @@ int MPVPlayer::runShortcut(const QString &key, int keyEventType)
             command << "keyup";
         else
             command << "keypress";
-        command << key;
+        command << directModeKeyMapping.value(key, key);
         return setMPVCommand(command);
     }
     else
@@ -428,6 +433,18 @@ void MPVPlayer::setDirectKeyMode(bool on)
 {
     directKeyMode = on;
     GlobalObjects::appSetting->setValue("Play/MPVDirectKeyMode", directKeyMode);
+}
+
+void MPVPlayer::setDirectModeKeyMapping(const QString &key, const QString *val)
+{
+    if(!val)
+    {
+        directModeKeyMapping.remove(key);
+    }
+    else
+    {
+        directModeKeyMapping[key] = *val;
+    }
 }
 
 void MPVPlayer::setMedia(const QString &file)

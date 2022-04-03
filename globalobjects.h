@@ -53,5 +53,6 @@ public:
 private:
     static void initDatabase(const char *db_names[]);
     static void setDatabase(const char *name, const char *file);
+    static void registerCustomSettingType();
 };
 #endif // GLOBALOBJECTS_H

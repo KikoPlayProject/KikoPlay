@@ -2715,6 +2715,42 @@ Date: %2
     </message>
 </context>
 <context>
+    <name>KeyMappigModel</name>
+    <message>
+        <location filename="../../UI/settings/mpvshortcutpage.h" line="58"/>
+        <source>Shortcut Key</source>
+        <translation>快捷键</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/mpvshortcutpage.h" line="58"/>
+        <source>Mapping</source>
+        <translation>映射</translation>
+    </message>
+</context>
+<context>
+    <name>KeyMappingEditDialog</name>
+    <message>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="437"/>
+        <source>Edit Key Mapping</source>
+        <translation>编辑按键映射</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="447"/>
+        <source>Shortcut Key</source>
+        <translation>快捷键</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="448"/>
+        <source>Mapping</source>
+        <translation>映射</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="477"/>
+        <source>Mapping key exists</source>
+        <translation>按键映射已经存在</translation>
+    </message>
+</context>
+<context>
     <name>LANServerPage</name>
     <message>
         <location filename="../../UI/settings/lanserverpage.cpp" line="17"/>
@@ -3517,33 +3553,46 @@ The changes will take effect when KikoPlay is restarted</source>
 <context>
     <name>MPVShortcutPage</name>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="30"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="32"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="113"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="31"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="33"/>
         <source>Direct Key Mode</source>
         <translation>按键直传模式</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="32"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="34"/>
         <source>In direct mode, KikoPlay will pass key events directly to MPV
 Set shortcuts through MPV Parameter input-conf</source>
         <translation>开启按键直传后，KikoPlay将直接传递按键事件到MPV
 需要通过MPV参数 input-conf 设置快捷键</translation>
     </message>
     <message>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="44"/>
+        <source>Key Mapping</source>
+        <translation>按键映射</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="45"/>
+        <source>In direct mode, you can map KikoPlay key to other keys in MPV, such as backspace to bs</source>
+        <translation>在直传模式中，你可以将KikoPlay传递的按键映射为MPV的其他按键，比如将backspace映射为bs</translation>
+    </message>
+    <message>
         <source>In direct mode, KikoPlay will pass key events directly to MPV</source>
         <translation type="vanished">开启按键直传后，KikoPlay将直接传递按键事件到MPV</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="58"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="78"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="121"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="70"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="90"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="133"/>
         <source>Modify</source>
         <translation>修改</translation>
     </message>
@@ -5742,32 +5791,32 @@ Eps: %2
 <context>
     <name>ShortcutEditDialog</name>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="194"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="258"/>
         <source>Edit Shortcut Key</source>
         <translation>编辑快捷键</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="209"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="268"/>
         <source>Shortcut Key</source>
         <translation>快捷键</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="210"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="269"/>
         <source>MPV Command</source>
         <translation>MPV命令</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="211"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="270"/>
         <source>Description</source>
         <translation>描述</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="233"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="291"/>
         <source>Key/Command should not be empty</source>
         <translation>快捷键/命令不应为空</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="242"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="309"/>
         <source>Shortcut key conflicts with &quot;%1&quot;</source>
         <translation>快捷键冲突：&quot;%1&quot;</translation>
     </message>
@@ -5775,17 +5824,17 @@ Eps: %2
 <context>
     <name>ShortcutModel</name>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.h" line="29"/>
+        <location filename="../../UI/settings/mpvshortcutpage.h" line="28"/>
         <source>Shortcut Key</source>
         <translation>快捷键</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.h" line="29"/>
+        <location filename="../../UI/settings/mpvshortcutpage.h" line="28"/>
         <source>MPV Command</source>
         <translation>MPV命令</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.h" line="29"/>
+        <location filename="../../UI/settings/mpvshortcutpage.h" line="28"/>
         <source>Description</source>
         <translation>描述</translation>
     </message>
@@ -6122,15 +6171,12 @@ Eps: %2
 <context>
     <name>TrackerSubscriber</name>
     <message>
-        <location filename="../../Download/trackersubscriber.cpp" line="12"/>
-        <location filename="../../Download/trackersubscriber.cpp" line="18"/>
         <source>Tracker Subsciber start checking...</source>
-        <translation>Tracker订阅开始检查...</translation>
+        <translation type="vanished">Tracker订阅开始检查...</translation>
     </message>
     <message>
-        <location filename="../../Download/trackersubscriber.cpp" line="94"/>
         <source>Tracker Subsciber checking faild: %1, %2</source>
-        <translation>Tracker订阅检查失败：%1，%2</translation>
+        <translation type="vanished">Tracker订阅检查失败：%1，%2</translation>
     </message>
     <message>
         <location filename="../../Download/trackersubscriber.cpp" line="164"/>

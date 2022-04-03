@@ -9,13 +9,13 @@ TrackerSubscriber::TrackerSubscriber(QObject *parent) : QAbstractItemModel(paren
 {
     loadTrackerListSource();
     QObject::connect(&checkTimer, &QTimer::timeout, this, [this](){
-        Logger::logger()->log(Logger::APP, tr("Tracker Subsciber start checking..."));
+        Logger::logger()->log(Logger::APP, QString("Tracker Subsciber start checking..."));
         check(-1);
     });
     if(QDateTime::currentSecsSinceEpoch() - lastCheckTime > checkInterval/1000)
     {
         QTimer::singleShot(1000, this, [this](){
-            Logger::logger()->log(Logger::APP, tr("Tracker Subsciber start checking..."));
+            Logger::logger()->log(Logger::APP, QString("Tracker Subsciber start checking..."));
             check(-1);
         });
     }
@@ -91,7 +91,7 @@ void TrackerSubscriber::check(int index)
         Network::Reply &reply = replies[indexes[i]];
         if(reply.hasError)
         {
-            Logger::logger()->log(Logger::APP, tr("Tracker Subsciber checking faild: %1, %2").arg(src.url, reply.errInfo));
+            Logger::logger()->log(Logger::APP, QString("Tracker Subsciber checking faild: %1, %2").arg(src.url, reply.errInfo));
         }
         else
         {

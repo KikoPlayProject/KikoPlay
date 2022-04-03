@@ -1374,7 +1374,60 @@ QPushButton#CharacterPlaceholder:pressed{
 }
 
 
-/* ------------------- QScrollBar Setting ------------------- */ 
+/* ------------------- QScrollBar Setting ------------------- */
+@if{DarkMode}
+QWidget QScrollBar:horizontal{
+    background: transparent;
+    height: 10px;
+}
+QWidget QScrollBar::handle:horizontal{
+    background: rgba(255,255,255,180);
+    min-height: 70px;
+    border-radius: 1px;
+}
+QWidget QScrollBar::handle:horizontal:hover{
+    background: rgba(255,255,255,255);
+}
+QWidget QScrollBar::handle:horizontal:pressed{
+    background: rgba(255,255,255,200);
+}
+QWidget QScrollBar::add-line:horizontal{
+    background: none;
+}
+QWidget QScrollBar::sub-line:horizontal{
+    background: none;
+}
+QWidget QScrollBar::add-page:horizontal,
+QWidget QScrollBar::sub-page:horizontal{
+    background: none;
+}
+
+QWidget QScrollBar:vertical{
+    background: transparent;
+    width: 10px;
+}
+QWidget QScrollBar::handle:vertical{
+    background: rgba(255,255,255,180);
+    min-height: 70px;
+    border-radius: 1px;
+}
+QWidget QScrollBar::handle:vertical:hover {
+    background: rgba(255,255,255,255);
+}
+QWidget QScrollBar::handle:vertical:pressed {
+    background: rgba(255,255,255,200);
+}
+QWidget QScrollBar::add-line:vertical{
+    background: none;
+}
+QWidget QScrollBar::sub-line:vertical{
+    background: none;
+}
+QWidget QScrollBar::add-page:vertical,
+QWidget QScrollBar::sub-page:vertical{
+    background: none;
+}
+@else
 QWidget[cScrollStyle="true"] QScrollBar:horizontal{
     background: transparent;
     height: 10px;
@@ -1425,6 +1478,7 @@ QWidget[cScrollStyle="true"] QScrollBar::add-page:vertical,
 QWidget[cScrollStyle="true"] QScrollBar::sub-page:vertical{
     background: none;
 }
+@endif
 
 
 /* ------------------- QListView, QListWidget ------------------- */

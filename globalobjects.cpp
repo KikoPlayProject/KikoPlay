@@ -58,9 +58,7 @@ void GlobalObjects::init()
     if(!dir.exists(dataPath))
         dir.mkpath(dataPath);
 
-    using ShortCutInfo = QPair<QString, QPair<QString,QString>>;
-    qRegisterMetaType<QList<ShortCutInfo>>("QList<ShortCutInfo>");
-    qRegisterMetaTypeStreamOperators<QList<ShortCutInfo>>("QList<ShortCutInfo>");
+    registerCustomSettingType();
     appSetting=new QSettings(dataPath+"settings.ini",QSettings::IniFormat);
 
     Logger::logger();
@@ -164,5 +162,15 @@ void GlobalObjects::setDatabase(const char *name, const char *file)
             }
         }
     }
+}
+
+void GlobalObjects::registerCustomSettingType()
+{
+    using ShortCutInfo = QPair<QString, QPair<QString,QString>>;
+    qRegisterMetaType<QList<ShortCutInfo>>("QList<ShortCutInfo>");
+    qRegisterMetaTypeStreamOperators<QList<ShortCutInfo>>("QList<ShortCutInfo>");
+
+    qRegisterMetaType<QVector<QPair<QString, QString>>>("QVector<QPair<QString, QString>>");
+    qRegisterMetaTypeStreamOperators<QVector<QPair<QString, QString>>>("QVector<QPair<QString, QString>>");
 }
 
