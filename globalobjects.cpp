@@ -71,7 +71,11 @@ void GlobalObjects::init()
     }
     static QTranslator translator;
     for(const auto &locName:locNames) {
-        if(translator.load(QLocale(locName), "", "", ":/res/lang")) {
+        auto loc = QLocale(locName);
+        if(loc.uiLanguages().first().startsWith("en-")) {
+            break;
+        }
+        if(translator.load(loc, "", "", ":/res/lang")) {
             qApp->installTranslator(&translator);
             break;
         }
