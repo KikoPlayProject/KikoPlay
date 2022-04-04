@@ -65,11 +65,17 @@ void GlobalObjects::init()
 
     initDatabase(mt_db_names);
 
-    QString locName = GlobalObjects::appSetting->value("KikoPlay/Language", "").toString();
-    auto loc = locName.isEmpty()? QLocale():QLocale(locName);
+    auto locNames = GlobalObjects::appSetting->value("KikoPlay/Language", "").toStringList();
+    if(locNames.join("").isEmpty()) {
+        locNames = QLocale().uiLanguages();
+    }
     static QTranslator translator;
-    if(translator.load(loc, "", "", ":/res/lang"))
-        qApp->installTranslator(&translator);
+    for(const auto &locName:locNames) {
+        if(translator.load(QLocale(locName), "", "", ":/res/lang")) {
+            qApp->installTranslator(&translator);
+            break;
+        }
+    }
     Notifier::getNotifier();
     workThread=new QThread();
     workThread->setObjectName(QStringLiteral("workThread"));
