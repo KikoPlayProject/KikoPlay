@@ -462,6 +462,11 @@ KeyMappingEditDialog::KeyMappingEditDialog(bool add, KeyMappigModel *model, cons
 
 void KeyMappingEditDialog::onAccept()
 {
+    if(keyEdit->keySequence().isEmpty())
+    {
+        showMessage(tr("Key should not be empty"), NM_ERROR | NM_HIDE);
+        return;
+    }
     const auto &keyMappings = keyMappingModel->keyMappings();
     QSet<QString> existKeys;
     for(const auto &pair : keyMappings)

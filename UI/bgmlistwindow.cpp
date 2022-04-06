@@ -13,7 +13,9 @@
 #include <QApplication>
 #include <QStyledItemDelegate>
 #include "globalobjects.h"
+#include "Common/logger.h"
 #include "MediaLibrary/animeworker.h"
+#include "Script/scriptmanager.h"
 namespace
 {
     class TextColorDelegate: public QStyledItemDelegate
@@ -43,6 +45,33 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     BgmListFilterProxyModel *bgmListProxyModel=new BgmListFilterProxyModel(this);
     bgmListProxyModel->setSourceModel(bgmList);
     QHBoxLayout *btnHLayout=new QHBoxLayout();
+
+    bgmListScriptCombo=new QComboBox(this);
+    bgmListScriptCombo->setProperty("cScrollStyle", true);
+
+    btnHLayout->addWidget(bgmListScriptCombo);
+    bgmListScriptCombo->hide();
+    QObject::connect(GlobalObjects::scriptManager, &ScriptManager::scriptChanged, this, [=](ScriptType type){
+        if(type==ScriptType::BGM_CALENDAR)
+        {
+            bgmListScriptCombo->clear();
+            const auto &calendarScripts = GlobalObjects::scriptManager->scripts(ScriptType::BGM_CALENDAR);
+            int sIndex = -1, i = 0;
+            QString curScriptId = bgmList->getScriptId();
+            for(const auto &s : calendarScripts)
+            {
+                if(s->id() == curScriptId)
+                {
+                    sIndex = i;
+                }
+                bgmListScriptCombo->addItem(s->name(), s->id());
+                ++i;
+            }
+            bgmListScriptCombo->count() <= 1? bgmListScriptCombo->hide() : bgmListScriptCombo->show();
+            bgmListScriptCombo->setCurrentIndex(sIndex);
+        }
+    });
+
     QButtonGroup *filterButtonGroup=new QButtonGroup(this);
     weekDay=QDate::currentDate().dayOfWeek()%7;
     for(int i=0;i<8;++i)
@@ -69,7 +98,7 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
        bgmListProxyModel->setNewBgmFilter(checked);
     });
 
-    QObject::connect(filterButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[bgmListProxyModel,focusBtn](int id, bool checked){
+    QObject::connect(filterButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[bgmListProxyModel](int id, bool checked){
         if(checked) bgmListProxyModel->setWeekFilter(id);
     });
     filterButtonGroup->button(weekDay)->setChecked(true);
@@ -80,7 +109,7 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     seasonIdCombo->view()->setMinimumWidth(seasonIdCombo->view()->fontMetrics().horizontalAdvance("0000-00") +
                                            QApplication::style()->pixelMetric(QStyle::PixelMetric::PM_ScrollBarExtent) +
                                            seasonIdCombo->view()->autoScrollMargin());
-    seasonIdCombo->addItems(bgmList->seasonList());
+    seasonIdCombo->addItem("0000-00");  //placeholder
     btnHLayout->addWidget(seasonIdCombo);
 
     QLabel *infoLabel=new QLabel(this);
@@ -89,15 +118,18 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     QPushButton *refreshBtn=new QPushButton(tr("Refresh"),this);
     btnHLayout->addWidget(refreshBtn);
 
-    QObject::connect(seasonIdCombo, (void (QComboBox::*)(const QString &))&QComboBox::currentIndexChanged,this,
-     [this, refreshBtn](const QString &id){
-        seasonIdCombo->setEnabled(false);
-        bgmListView->setEnabled(false);
-        refreshBtn->setEnabled(false);
-        bgmList->setSeason(id);
-        seasonIdCombo->setEnabled(true);
-        bgmListView->setEnabled(true);
-        refreshBtn->setEnabled(true);
+    auto setControlEnable = [=](bool on){
+        bgmListScriptCombo->setEnabled(on);
+        seasonIdCombo->setEnabled(on);
+        bgmListView->setEnabled(on);
+        refreshBtn->setEnabled(on);
+    };
+
+    QObject::connect(seasonIdCombo, (void (QComboBox::*)(int))&QComboBox::currentIndexChanged,this,
+                     [=](int index){
+        setControlEnable(false);
+        bgmList->setSeason(seasonIdCombo->itemText(index));
+        setControlEnable(true);
     });
     QObject::connect(bgmList, &BgmList::seasonsUpdated, this, [this](){
        seasonIdCombo->clear();
@@ -106,12 +138,10 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     });
 
     QObject::connect(refreshBtn,&QPushButton::clicked,this,[=](){
-        seasonIdCombo->setEnabled(false);
-        refreshBtn->setEnabled(false);
+        setControlEnable(false);
         bgmList->refresh();
         bgmListProxyModel->invalidate();
-        seasonIdCombo->setEnabled(true);
-        refreshBtn->setEnabled(true);
+        setControlEnable(true);
     });
     QObject::connect(bgmList,&BgmList::bgmStatusUpdated,this,[infoLabel](int type,const QString &msg){
         infoLabel->setText(msg);
@@ -175,6 +205,15 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     });
     bgmListView->addAction(addToLibrary);
 
+    QObject::connect(bgmListScriptCombo, (void (QComboBox::*)(int ))&QComboBox::currentIndexChanged,this,
+                     [=](const int index){
+        setControlEnable(false);
+        QString scriptId = bgmListScriptCombo->itemData(index).toString();
+        bgmList->setScriptId(scriptId);
+        GlobalObjects::appSetting->setValue("BgmCalendar/DefaultScriptId", scriptId);
+        setControlEnable(true);
+    });
+
     QGridLayout *bgmWindowGLayout=new QGridLayout(this);
     bgmWindowGLayout->addLayout(btnHLayout,0,0);
     bgmWindowGLayout->addWidget(bgmListView,1,0);
@@ -188,9 +227,30 @@ void BgmListWindow::showEvent(QShowEvent *)
         {
             seasonIdCombo->setEnabled(false);
             firstShow = false;
+            QString curScriptId = GlobalObjects::appSetting->value("BgmCalendar/DefaultScriptId", "Kikyou.b.Bgmlist").toString();
+            const auto &calendarScripts = GlobalObjects::scriptManager->scripts(ScriptType::BGM_CALENDAR);
+            int sIndex = -1, i = 0;
+            for(const auto &s : calendarScripts)
+            {
+                if(s->id() == curScriptId)
+                {
+                    sIndex = i;
+                }
+                bgmListScriptCombo->addItem(s->name(), s->id());
+                ++i;
+            }
+            if(sIndex == -1)
+            {
+                Logger::logger()->log(Logger::Script, tr("Bangumi Calendar Lost: %1").arg(curScriptId));
+                if(!calendarScripts.empty())
+                {
+                    sIndex = 0;
+                }
+            }
+            if(bgmListScriptCombo->count() > 1) bgmListScriptCombo->show();
+            bgmListScriptCombo->setCurrentIndex(sIndex);
+            seasonIdCombo->setEnabled(true);
         }
-        bgmList->init();
-        seasonIdCombo->setEnabled(true);
         int cWeekDay=QDate::currentDate().dayOfWeek()%7;
         if(weekDay!=cWeekDay)
         {

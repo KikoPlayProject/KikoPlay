@@ -12,10 +12,12 @@ public:
     explicit BgmList(QObject *parent = nullptr);
     ~BgmList();
     void init();
-    const QStringList &seasonList(){return seasons;}
+    const QStringList &seasonList(){return seasons[curScriptId];}
     const QList<BgmItem> &bgmList(){return curSeason->bgmList;}
+    void setScriptId(const QString &scriptId);
     void setSeason(const QString &title);
     void refresh();
+    QString getScriptId() const {return curScriptId;}
 
     QColor getHoverColor() const {return hoverColor;}
     void setHoverColor(const QColor& color);
@@ -45,9 +47,10 @@ private:
     bool needSave;
     bool seasonListDownloaded;
     QMap<QString,QString> sitesName;
-    QMap<QString, BgmSeason> bgmSeasons;
-    QStringList seasons;
+    QMap<QString, QMap<QString, BgmSeason>> bgmSeasons;
+    QMap<QString, QStringList> seasons;
     BgmSeason *curSeason;
+    QString curScriptId;
     QColor hoverColor, normColor;
 
     bool fetchMetaInfo();
@@ -56,6 +59,7 @@ private:
     void saveLocal(const BgmSeason &season);
     bool getLocalSeasons();
 
+    inline QString curLocalPath() const;
     QString getSiteName(const QString &url);
 
 };

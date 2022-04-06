@@ -40,7 +40,7 @@ public:
     explicit BgmListWindow(QWidget *parent = nullptr);
 private:
     BgmTreeView *bgmListView;
-    QComboBox *seasonIdCombo;
+    QComboBox *seasonIdCombo, *bgmListScriptCombo;
     BgmList *bgmList;
     QList<QPushButton *> weekDayBtnList;
     QStringList btnTitles={tr("Sun"),tr("Mon"),tr("Tue"),tr("Wed"),tr("Thu"),tr("Fri"),tr("Sat"),tr("All")};

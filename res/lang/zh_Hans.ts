@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="zh_Hans">
+<TS version="2.1" language="zh">
 <context>
     <name>About</name>
     <message>
@@ -1105,8 +1105,8 @@
 <context>
     <name>BgmList</name>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="183"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="217"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="199"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="232"/>
         <source>Bangumi Calendar script not exist</source>
         <translation>未找到番组日历脚本</translation>
     </message>
@@ -1115,20 +1115,20 @@
         <translation type="vanished">已选择番组日历：%1</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="187"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="222"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="202"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="237"/>
         <source>[%1]Select Bangumi Calendar: %2</source>
         <translation>[%1]已选择番组日历：%2</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="189"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="224"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="204"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="239"/>
         <source>Fetching Info...</source>
         <translation>获取信息...</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="196"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="255"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="211"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="270"/>
         <source>Fetch Failed: %1</source>
         <translation>获取失败：%1</translation>
     </message>
@@ -1141,29 +1141,29 @@
         <translation type="vanished">%1-%2 数量：%3%4</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="57"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="158"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="249"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="72"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="174"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="264"/>
         <source> Focus: %1</source>
         <translation> 关注：%1</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.h" line="30"/>
+        <location filename="../../Download/BgmList/bgmlist.h" line="32"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.h" line="30"/>
+        <location filename="../../Download/BgmList/bgmlist.h" line="32"/>
         <source>ShowDate/Time</source>
         <translation>放送开始/时间</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.h" line="30"/>
+        <location filename="../../Download/BgmList/bgmlist.h" line="32"/>
         <source>AirSites</source>
         <translation>放送站点</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.h" line="30"/>
+        <location filename="../../Download/BgmList/bgmlist.h" line="32"/>
         <source>Focus</source>
         <translation>关注</translation>
     </message>
@@ -1211,35 +1211,40 @@
         <translation>全部</translation>
     </message>
     <message>
-        <location filename="../../UI/bgmlistwindow.cpp" line="50"/>
-        <location filename="../../UI/bgmlistwindow.cpp" line="199"/>
+        <location filename="../../UI/bgmlistwindow.cpp" line="79"/>
+        <location filename="../../UI/bgmlistwindow.cpp" line="259"/>
         <source>(Today)</source>
         <translation>（今天）</translation>
     </message>
     <message>
-        <location filename="../../UI/bgmlistwindow.cpp" line="57"/>
+        <location filename="../../UI/bgmlistwindow.cpp" line="86"/>
         <source>Focus</source>
         <translation>关注</translation>
     </message>
     <message>
-        <location filename="../../UI/bgmlistwindow.cpp" line="64"/>
+        <location filename="../../UI/bgmlistwindow.cpp" line="93"/>
         <source>New</source>
         <translation>新番</translation>
     </message>
     <message>
-        <location filename="../../UI/bgmlistwindow.cpp" line="89"/>
+        <location filename="../../UI/bgmlistwindow.cpp" line="118"/>
         <source>Refresh</source>
         <translation>刷新</translation>
     </message>
     <message>
-        <location filename="../../UI/bgmlistwindow.cpp" line="138"/>
+        <location filename="../../UI/bgmlistwindow.cpp" line="168"/>
         <source>Add To Library</source>
         <translation>添加到资料库</translation>
     </message>
     <message>
-        <location filename="../../UI/bgmlistwindow.cpp" line="146"/>
+        <location filename="../../UI/bgmlistwindow.cpp" line="176"/>
         <source>Bangumi Info</source>
         <translation>Bangumi信息</translation>
+    </message>
+    <message>
+        <location filename="../../UI/bgmlistwindow.cpp" line="244"/>
+        <source>Bangumi Calendar Lost: %1</source>
+        <translation>番组日历脚本丢失：%1</translation>
     </message>
 </context>
 <context>
@@ -2745,7 +2750,12 @@ Date: %2
         <translation>映射</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="477"/>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="467"/>
+        <source>Key should not be empty</source>
+        <translation>按键不能为空</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/mpvshortcutpage.cpp" line="482"/>
         <source>Mapping key exists</source>
         <translation>按键映射已经存在</translation>
     </message>

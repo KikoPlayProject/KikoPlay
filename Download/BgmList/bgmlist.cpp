@@ -19,6 +19,7 @@ BgmList::BgmList(QObject *parent) : QAbstractItemModel (parent),inited(false),ne
             sitesName.insert(site.value("urlTemplate").toString(),site.value("title").toString());
         }
     }
+
     getLocalSeasons();
 }
 
@@ -34,9 +35,23 @@ void BgmList::init()
     inited=true;
 }
 
+void BgmList::setScriptId(const QString &scriptId)
+{
+    if(scriptId == curScriptId || scriptId.isEmpty()) return;
+    curScriptId = scriptId;
+    if(!seasons.contains(curScriptId))
+    {
+        seasonListDownloaded = false;
+        getLocalSeasons();
+        fetchMetaInfo();
+    }
+    emit seasonsUpdated();
+}
+
 void BgmList::setSeason(const QString &title)
 {
-    if(!bgmSeasons.contains(title)) return;
+    if(curScriptId.isEmpty()) return;
+    if(!bgmSeasons[curScriptId].contains(title)) return;
     if(curSeason && curSeason->title==title) return;
     beginResetModel();
     if(needSave && curSeason)
@@ -44,7 +59,7 @@ void BgmList::setSeason(const QString &title)
         saveLocal(*curSeason);
         needSave=false;
     }
-    auto &season = bgmSeasons[title];
+    auto &season = bgmSeasons[curScriptId][title];
     if(season.bgmList.isEmpty())
     {
         if(!loadLocal(season))
@@ -60,6 +75,7 @@ void BgmList::setSeason(const QString &title)
 
 void BgmList::refresh()
 {
+    if(curScriptId.isEmpty()) return;
     if(!seasonListDownloaded && !fetchMetaInfo()) return;
     if(curSeason)
     {
@@ -177,13 +193,12 @@ QVariant BgmList::headerData(int section, Qt::Orientation orientation, int role)
 
 bool BgmList::fetchMetaInfo()
 {
-    const auto &calendarScripts = GlobalObjects::scriptManager->scripts(ScriptType::BGM_CALENDAR);
-    if(calendarScripts.empty())
+    auto bgmCalendar = GlobalObjects::scriptManager->getScript(curScriptId).staticCast<BgmCalendarScript>();
+    if(!bgmCalendar)
     {
         emit bgmStatusUpdated(3,tr("Bangumi Calendar script not exist"));
         return false;
     }
-    auto bgmCalendar = calendarScripts.first().staticCast<BgmCalendarScript>();
     Logger::logger()->log(Logger::Script, tr("[%1]Select Bangumi Calendar: %2").arg(bgmCalendar->id(), bgmCalendar->name()));
     ThreadTask task(GlobalObjects::workThread);
     emit bgmStatusUpdated(2, tr("Fetching Info..."));
@@ -196,14 +211,13 @@ bool BgmList::fetchMetaInfo()
         emit bgmStatusUpdated(3,tr("Fetch Failed: %1").arg(state.info));
         return false;
     }
-    seasons.clear();
-    bgmSeasons.clear();
+    seasons[curScriptId].clear();
+    bgmSeasons[curScriptId].clear();
     for(auto &s : bgmSeasonList)
     {
-        seasons.append(s.title);
-        bgmSeasons.insert(s.title, s);
+        seasons[curScriptId].append(s.title);
+        bgmSeasons[curScriptId].insert(s.title, s);
     }
-    emit seasonsUpdated();
     seasonListDownloaded = true;
     return true;
 }
@@ -211,26 +225,27 @@ bool BgmList::fetchMetaInfo()
 bool BgmList::fetchBgmList(BgmSeason &season)
 {
     bool curSeasonDownloaded = false;
-    const auto &calendarScripts = GlobalObjects::scriptManager->scripts(ScriptType::BGM_CALENDAR);
-    if(calendarScripts.empty())
+
+    auto bgmCalendar = GlobalObjects::scriptManager->getScript(curScriptId).staticCast<BgmCalendarScript>();
+    if(!bgmCalendar)
     {
         emit bgmStatusUpdated(3,tr("Bangumi Calendar script not exist"));
         curSeasonDownloaded = false;
         return false;
     }
-    auto bgmCalendar = calendarScripts.first().staticCast<BgmCalendarScript>();
+
     Logger::logger()->log(Logger::Script, tr("[%1]Select Bangumi Calendar: %2").arg(bgmCalendar->id(), bgmCalendar->name()));
     ThreadTask task(GlobalObjects::workThread);
     emit bgmStatusUpdated(2,tr("Fetching Info..."));
     QString ret = task.Run([&season, this, &bgmCalendar](){
         ScriptState state = bgmCalendar->getBgmList(season);
         if(!state) return state.info;
-        int lastPos = seasons.indexOf(season.title)-1;
+        int lastPos = seasons[curScriptId].indexOf(season.title)-1;
         if(lastPos>=0 && season.focusSet.isEmpty())
         {
-            QString lastTitle(seasons.at(lastPos));
-            if(bgmSeasons[lastTitle].bgmList.isEmpty()) loadLocal(bgmSeasons[lastTitle]);
-            season.focusSet.unite(bgmSeasons[lastTitle].focusSet);
+            QString lastTitle(seasons[curScriptId].at(lastPos));
+            if(bgmSeasons[curScriptId][lastTitle].bgmList.isEmpty()) loadLocal(bgmSeasons[curScriptId][lastTitle]);
+            season.focusSet.unite(bgmSeasons[curScriptId][lastTitle].focusSet);
         }
         QSet<QString> titleSet;
         for(BgmItem &bgm : season.bgmList)
@@ -259,7 +274,8 @@ bool BgmList::fetchBgmList(BgmSeason &season)
 
 bool BgmList::loadLocal(BgmSeason &season)
 {
-    QFile localFile(GlobalObjects::dataPath+"/bgmlist/"+season.title+".xml");
+    QString curPath = curLocalPath();
+    QFile localFile(curPath + season.title+".xml");
     localFile.open(QFile::ReadOnly);
     if(!localFile.isOpen()) return false;
     season.newBgmCount=0;
@@ -330,12 +346,13 @@ bool BgmList::loadLocal(BgmSeason &season)
 
 void BgmList::saveLocal(const BgmSeason &season)
 {
+    QString curPath = curLocalPath();
     QDir dir;
-    if(!dir.exists(GlobalObjects::dataPath+"/bgmlist/"))
+    if(!dir.exists(curPath))
     {
-        dir.mkpath(GlobalObjects::dataPath+"/bgmlist/");
+        dir.mkpath(curPath);
     }
-    QFile localFile(GlobalObjects::dataPath+"/bgmlist/"+season.title+".xml");
+    QFile localFile(curPath + season.title+".xml");
     bool ret=localFile.open(QIODevice::WriteOnly|QIODevice::Text);
     if(!ret) return;
     QXmlStreamWriter writer(&localFile);
@@ -344,7 +361,7 @@ void BgmList::saveLocal(const BgmSeason &season)
     writer.writeStartElement("bgmInfo");
     writer.writeStartElement("local");
     writer.writeStartElement("focus");
-    writer.writeCharacters(season.focusSet.toList().join(";;"));
+    writer.writeCharacters(QStringList(season.focusSet.begin(), season.focusSet.end()).join(";;"));
     writer.writeEndElement();
     writer.writeEndElement();//local
     writer.writeStartElement("list");
@@ -368,22 +385,27 @@ void BgmList::saveLocal(const BgmSeason &season)
 
 bool BgmList::getLocalSeasons()
 {
-    QDir bgmlistFolder(GlobalObjects::dataPath+"/bgmlist");
+    if(curScriptId.isEmpty()) return false;
+    QString curPath = curLocalPath();
+    if(!QFileInfo::exists(curLocalPath())) return false;
+    QDir bgmlistFolder(curPath);
     bgmlistFolder.setSorting(QDir::Name);
-    QRegExp re("\\d{4}-\\d{2}\\.xml");
     for (QFileInfo fileInfo : bgmlistFolder.entryInfoList())
     {
         if(!fileInfo.isFile()) continue;
-        QString fileName = fileInfo.fileName();
-        if(re.indexIn(fileName)==-1) continue;
-        if(re.matchedLength()!=fileName.length()) continue;
-        QString title(fileName.left(7));
-        seasons.append(title);
+        if(fileInfo.suffix().toLower() != "xml") continue;
+        QString title(fileInfo.baseName());
+        seasons[curScriptId].append(title);
         BgmSeason bs;
         bs.title=title;
-        bgmSeasons.insert(title, bs);
+        bgmSeasons[curScriptId].insert(title, bs);
     }
     return true;
+}
+
+QString BgmList::curLocalPath() const
+{
+    return GlobalObjects::dataPath + "/calendar/" + curScriptId + "/";
 }
 
 QString BgmList::getSiteName(const QString &url)
