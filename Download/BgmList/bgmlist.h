@@ -43,7 +43,6 @@ signals:
     void bgmStatusUpdated(int type, const QString &msg);
     void seasonsUpdated();
 private:
-    bool inited;
     bool needSave;
     bool seasonListDownloaded;
     QMap<QString,QString> sitesName;

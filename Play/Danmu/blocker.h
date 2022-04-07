@@ -68,8 +68,10 @@ public:
     bool isBlocked(DanmuComment *danmu);
     void save();
     void preFilter(QVector<DanmuComment *> &danmuList);
-    int exportRules(const QString &fileName);
-    int importRules(const QString &fileName);
+    bool exportRules(const QString &fileName);
+    bool importRules(const QString &fileName);
+    bool exportXmlRules(const QString &fileName);
+    bool importXmlRules(const QString &fileName);
 private:
     QVector<BlockRule *> blockList;
     int maxId;

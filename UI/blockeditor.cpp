@@ -40,19 +40,21 @@ BlockEditor::BlockEditor(QWidget *parent) : CFramelessDialog(tr("Block Rules"),p
     QObject::connect(remove, &QPushButton::clicked, actRemove, &QAction::trigger);
     QPushButton *importRule=new QPushButton(tr("Import"),this);
     QObject::connect(importRule,&QPushButton::clicked,[this](){
-        QString fileName = QFileDialog::getOpenFileName(this,tr("Select KikoPlay Block Rule File"),"","Block Rule(*.kbr)");
+        QString fileName = QFileDialog::getOpenFileName(this,tr("Select KikoPlay Block Rule File"),"","Block Rule(*.kbr);;Xml Rule(*.xml)");
         if(!fileName.isEmpty())
         {
-            if(GlobalObjects::blocker->importRules(fileName)<0)
+            auto func = fileName.endsWith(".kbr")? &Blocker::importRules : &Blocker::importXmlRules;
+            if(!(GlobalObjects::blocker->*func)(fileName))
                 showMessage(tr("Import Failed: File Error"));
         }
     });
     QPushButton *exportRule=new QPushButton(tr("Export"),this);
     QObject::connect(exportRule,&QPushButton::clicked,[this](){
-        QString fileName = QFileDialog::getSaveFileName(this, tr("Exopot Block Rules"),"","Block Rule(*.kbr)");
+        QString fileName = QFileDialog::getSaveFileName(this, tr("Exopot Block Rules"),"","Block Rule(*.kbr);;Xml Rule(*.xml)");
         if(!fileName.isEmpty())
         {
-            if(GlobalObjects::blocker->exportRules(fileName)<0)
+            auto func = fileName.endsWith(".kbr")? &Blocker::exportRules : &Blocker::exportXmlRules;
+            if(!(GlobalObjects::blocker->*func)(fileName))
                 showMessage(tr("Export Failed: File Error"));
         }
     });

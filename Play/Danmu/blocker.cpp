@@ -217,11 +217,11 @@ void Blocker::preFilter(QVector<DanmuComment *> &danmuList)
     }
 }
 
-int Blocker::exportRules(const QString &fileName)
+bool Blocker::exportRules(const QString &fileName)
 {
     QFile kbrFile(fileName);
     bool ret=kbrFile.open(QIODevice::WriteOnly);
-    if(!ret) return -1;
+    if(!ret) return ret;
     QByteArray content;
     QBuffer buffer(&content);
     buffer.open(QIODevice::WriteOnly);
@@ -236,14 +236,14 @@ int Blocker::exportRules(const QString &fileName)
     Network::gzipCompress(content,compressedContent);
     QDataStream fs(&kbrFile);
     fs<<QString("kbr")<<compressedContent;
-    return 0;
+    return true;
 }
 
-int Blocker::importRules(const QString &fileName)
+bool Blocker::importRules(const QString &fileName)
 {
     QFile kbr(fileName);
     bool ret=kbr.open(QIODevice::ReadOnly);
-    if(!ret) return -1;
+    if(!ret) return ret;
     QDataStream fs(&kbr);
     QString head,comment;
     fs>>head;
@@ -270,12 +270,79 @@ int Blocker::importRules(const QString &fileName)
                      >>rule->usePreFilter>>rule->content;
         rule->blockField=BlockRule::Field(field);
         rule->relation=BlockRule::Relation(relation);
+        rule->blockCount = 0;
 		blockList << rule;
         GlobalObjects::danmuPool->testBlockRule(rule);
     }
     endInsertRows();
     saveBlockRules();
-    return 0;
+    return true;
+}
+
+bool Blocker::exportXmlRules(const QString &fileName)
+{
+    QFile xmlFile(fileName);
+    bool ret=xmlFile.open(QIODevice::WriteOnly|QIODevice::Text);
+    if(!ret) return ret;
+    QXmlStreamWriter writer(&xmlFile);
+    writer.setAutoFormatting(true);
+    writer.writeStartDocument();
+    writer.writeStartElement("filters");
+    for(BlockRule *rule:blockList)
+    {
+        if(!rule->name.isEmpty()) writer.writeComment(rule->name);
+        writer.writeStartElement("item");
+        writer.writeAttribute("enabled", rule->enable? "true" : "false");
+        QString content;
+        if(rule->blockField == BlockRule::Field::DanmuSender)
+        {
+            content = "u=";
+        }
+        else
+        {
+            content = (rule->isRegExp? "r=" : "t=");
+        }
+        content.append(rule->content);
+        writer.writeCharacters(content);
+        writer.writeEndElement();
+    }
+    writer.writeEndElement();
+    writer.writeEndDocument();
+    return true;
+}
+
+bool Blocker::importXmlRules(const QString &fileName)
+{
+    QFile xmlFile(fileName);
+    bool ret=xmlFile.open(QIODevice::ReadOnly|QIODevice::Text);
+    if(!ret) return ret;
+    QXmlStreamReader reader(&xmlFile);
+    while(!reader.atEnd())
+    {
+        if(reader.isStartElement() && reader.name()=="item")
+        {
+            bool enable = (reader.attributes().value("enabled").toString().toLower() == "true");
+            QString content = reader.readElementText();
+
+            BlockRule *rule=new BlockRule;
+            rule->id=maxId++;
+            rule->isRegExp = content.startsWith("r=");
+            rule->blockField = content.startsWith("u=")? BlockRule::Field::DanmuSender : BlockRule::Field::DanmuText;
+            rule->enable = enable;
+            rule->relation = BlockRule::Relation::Contain;
+            rule->usePreFilter = false;
+            rule->content = content.mid(2);
+            rule->blockCount = 0;
+
+            beginInsertRows(QModelIndex(), blockList.size(), blockList.size());
+            blockList << rule;
+            GlobalObjects::danmuPool->testBlockRule(rule);
+            endInsertRows();
+        }
+        reader.readNext();
+    }
+    saveBlockRules();
+    return true;
 }
 
 void Blocker::saveBlockRules()

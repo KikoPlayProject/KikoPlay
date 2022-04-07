@@ -5,7 +5,7 @@
 #include "Script/scriptmanager.h"
 #include "Common/logger.h"
 #include <QBrush>
-BgmList::BgmList(QObject *parent) : QAbstractItemModel (parent),inited(false),needSave(false),
+BgmList::BgmList(QObject *parent) : QAbstractItemModel (parent),needSave(false),
    seasonListDownloaded(false), curSeason(nullptr)
 {
     QFile sitesFile(":/res/onAirSites.json");
@@ -26,13 +26,6 @@ BgmList::BgmList(QObject *parent) : QAbstractItemModel (parent),inited(false),ne
 BgmList::~BgmList()
 {
     if(needSave && curSeason) saveLocal(*curSeason);
-}
-
-void BgmList::init()
-{
-    if(inited) return;
-    fetchMetaInfo();
-    inited=true;
 }
 
 void BgmList::setScriptId(const QString &scriptId)
@@ -341,7 +334,7 @@ bool BgmList::loadLocal(BgmSeason &season)
         }
         reader.readNext();
     }
-    return true;
+    return reader.hasError();
 }
 
 void BgmList::saveLocal(const BgmSeason &season)
