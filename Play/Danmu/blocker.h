@@ -69,9 +69,9 @@ public:
     void save();
     void preFilter(QVector<DanmuComment *> &danmuList);
     bool exportRules(const QString &fileName);
-    bool importRules(const QString &fileName);
+    int importRules(const QString &fileName);
     bool exportXmlRules(const QString &fileName);
-    bool importXmlRules(const QString &fileName);
+    int importXmlRules(const QString &fileName);
 private:
     QVector<BlockRule *> blockList;
     int maxId;

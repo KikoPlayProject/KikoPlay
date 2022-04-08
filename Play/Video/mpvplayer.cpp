@@ -107,12 +107,18 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     for(const QString &option:options)
     {
         QString opt(option.trimmed());
-        if(opt.startsWith('#'))continue;
+        if(opt.isEmpty() || opt.startsWith('#'))continue;
         int eqPos=opt.indexOf('=');
         if(eqPos==-1) eqPos = opt.length();
         QString key(opt.left(eqPos)), val(opt.mid(eqPos+1));
         if(optionsBeforeInit.contains(key))
-            mpv::qt::set_option_variant(mpv, key, val);
+        {
+            int ret = mpv::qt::set_option_variant(mpv, key, val);
+            if(ret != MPV_ERROR_SUCCESS)
+            {
+                Logger::logger()->log(Logger::MPV, QString("[kiko][option error]: %1, %2").arg(key, QString::number(ret)));
+            }
+        }
         else
             optionsMap.insert(key, val);
     }
@@ -123,7 +129,11 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     mpv_request_log_messages(mpv, "v");
     for(auto iter=optionsMap.cbegin(); iter!=optionsMap.cend(); ++iter)
     {
-        mpv::qt::set_option_variant(mpv, iter.key(), iter.value());
+        int ret = mpv::qt::set_option_variant(mpv, iter.key(), iter.value());
+        if(ret != MPV_ERROR_SUCCESS)
+        {
+            Logger::logger()->log(Logger::MPV, QString("[kiko][option error]: %1, %2").arg(iter.key(), QString::number(ret)));
+        }
     }
 
     directKeyMode = GlobalObjects::appSetting->value("Play/MPVDirectKeyMode", false).toBool();

@@ -8,6 +8,7 @@
 #include <QAction>
 #include "globalobjects.h"
 #include "Play/Danmu/blocker.h"
+#include "Common/notifier.h"
 
 BlockEditor::BlockEditor(QWidget *parent) : CFramelessDialog(tr("Block Rules"),parent)
 {
@@ -44,8 +45,9 @@ BlockEditor::BlockEditor(QWidget *parent) : CFramelessDialog(tr("Block Rules"),p
         if(!fileName.isEmpty())
         {
             auto func = fileName.endsWith(".kbr")? &Blocker::importRules : &Blocker::importXmlRules;
-            if(!(GlobalObjects::blocker->*func)(fileName))
-                showMessage(tr("Import Failed: File Error"));
+            int c = (GlobalObjects::blocker->*func)(fileName);
+            if(c < 0) showMessage(tr("Import Failed: File Error"), NM_ERROR | NM_HIDE);
+            else showMessage(tr("Import %1 rule(s)").arg(c));
         }
     });
     QPushButton *exportRule=new QPushButton(tr("Export"),this);

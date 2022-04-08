@@ -239,11 +239,11 @@ bool Blocker::exportRules(const QString &fileName)
     return true;
 }
 
-bool Blocker::importRules(const QString &fileName)
+int Blocker::importRules(const QString &fileName)
 {
     QFile kbr(fileName);
     bool ret=kbr.open(QIODevice::ReadOnly);
-    if(!ret) return ret;
+    if(!ret) return -1;
     QDataStream fs(&kbr);
     QString head,comment;
     fs>>head;
@@ -255,9 +255,10 @@ bool Blocker::importRules(const QString &fileName)
     QBuffer buffer(&content);
     buffer.open(QIODevice::ReadOnly);
     QDataStream ds(&buffer);
-    int count=0;
+    int count = 0;
     ds>>count;
     if(count<=0) return 0;
+    int ruleCount = count;
 
     int insertPosition = blockList.count();
     beginInsertRows(QModelIndex(), insertPosition, insertPosition+count-1);
@@ -276,7 +277,7 @@ bool Blocker::importRules(const QString &fileName)
     }
     endInsertRows();
     saveBlockRules();
-    return true;
+    return ruleCount;
 }
 
 bool Blocker::exportXmlRules(const QString &fileName)
@@ -311,12 +312,13 @@ bool Blocker::exportXmlRules(const QString &fileName)
     return true;
 }
 
-bool Blocker::importXmlRules(const QString &fileName)
+int Blocker::importXmlRules(const QString &fileName)
 {
     QFile xmlFile(fileName);
     bool ret=xmlFile.open(QIODevice::ReadOnly|QIODevice::Text);
-    if(!ret) return ret;
+    if(!ret) return -1;
     QXmlStreamReader reader(&xmlFile);
+    int count = 0;
     while(!reader.atEnd())
     {
         if(reader.isStartElement() && reader.name()=="item")
@@ -336,13 +338,14 @@ bool Blocker::importXmlRules(const QString &fileName)
 
             beginInsertRows(QModelIndex(), blockList.size(), blockList.size());
             blockList << rule;
+            ++count;
             GlobalObjects::danmuPool->testBlockRule(rule);
             endInsertRows();
         }
         reader.readNext();
     }
     saveBlockRules();
-    return true;
+    return count;
 }
 
 void Blocker::saveBlockRules()

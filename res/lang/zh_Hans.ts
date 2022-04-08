@@ -1105,8 +1105,8 @@
 <context>
     <name>BgmList</name>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="199"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="232"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="192"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="225"/>
         <source>Bangumi Calendar script not exist</source>
         <translation>未找到番组日历脚本</translation>
     </message>
@@ -1115,20 +1115,20 @@
         <translation type="vanished">已选择番组日历：%1</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="202"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="237"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="195"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="230"/>
         <source>[%1]Select Bangumi Calendar: %2</source>
         <translation>[%1]已选择番组日历：%2</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="204"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="239"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="197"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="232"/>
         <source>Fetching Info...</source>
         <translation>获取信息...</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="211"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="270"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="204"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="263"/>
         <source>Fetch Failed: %1</source>
         <translation>获取失败：%1</translation>
     </message>
@@ -1141,9 +1141,9 @@
         <translation type="vanished">%1-%2 数量：%3%4</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="72"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="174"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="264"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="65"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="167"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="257"/>
         <source> Focus: %1</source>
         <translation> 关注：%1</translation>
     </message>
@@ -1257,48 +1257,53 @@
 <context>
     <name>BlockEditor</name>
     <message>
-        <location filename="../../UI/blockeditor.cpp" line="12"/>
+        <location filename="../../UI/blockeditor.cpp" line="13"/>
         <source>Block Rules</source>
         <translation>屏蔽规则</translation>
     </message>
     <message>
-        <location filename="../../UI/blockeditor.cpp" line="26"/>
+        <location filename="../../UI/blockeditor.cpp" line="27"/>
         <source>Add Rule</source>
         <translation>添加规则</translation>
     </message>
     <message>
-        <location filename="../../UI/blockeditor.cpp" line="28"/>
-        <location filename="../../UI/blockeditor.cpp" line="39"/>
+        <location filename="../../UI/blockeditor.cpp" line="29"/>
+        <location filename="../../UI/blockeditor.cpp" line="40"/>
         <source>Remove Rule(s)</source>
         <translation>移除规则</translation>
     </message>
     <message>
-        <location filename="../../UI/blockeditor.cpp" line="41"/>
+        <location filename="../../UI/blockeditor.cpp" line="42"/>
         <source>Import</source>
         <translation>导入</translation>
     </message>
     <message>
-        <location filename="../../UI/blockeditor.cpp" line="43"/>
+        <location filename="../../UI/blockeditor.cpp" line="44"/>
         <source>Select KikoPlay Block Rule File</source>
         <translation>选择KikoPlay屏蔽规则文件</translation>
     </message>
     <message>
-        <location filename="../../UI/blockeditor.cpp" line="47"/>
+        <location filename="../../UI/blockeditor.cpp" line="49"/>
         <source>Import Failed: File Error</source>
         <translation>导入失败：文件错误</translation>
     </message>
     <message>
         <location filename="../../UI/blockeditor.cpp" line="50"/>
+        <source>Import %1 rule(s)</source>
+        <translation>导入%1条规则</translation>
+    </message>
+    <message>
+        <location filename="../../UI/blockeditor.cpp" line="53"/>
         <source>Export</source>
         <translation>导出</translation>
     </message>
     <message>
-        <location filename="../../UI/blockeditor.cpp" line="52"/>
+        <location filename="../../UI/blockeditor.cpp" line="55"/>
         <source>Exopot Block Rules</source>
         <translation>导出规则</translation>
     </message>
     <message>
-        <location filename="../../UI/blockeditor.cpp" line="56"/>
+        <location filename="../../UI/blockeditor.cpp" line="60"/>
         <source>Export Failed: File Error</source>
         <translation>导出失败：文件错误</translation>
     </message>
@@ -1393,7 +1398,7 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="../../Play/Danmu/blocker.cpp" line="353"/>
+        <location filename="../../Play/Danmu/blocker.cpp" line="423"/>
         <source>After pre-filtering is enabled, block rules will be applied when downloading danmu, which will not be added to the database</source>
         <translation>预过滤开启后，下载弹幕后会应用屏蔽规则，被屏蔽的弹幕不会加入数据库</translation>
     </message>
