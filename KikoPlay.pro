@@ -48,6 +48,12 @@ SOURCES += \
     Script/bgmcalendarscript.cpp \
     Script/danmuscript.cpp \
     Script/libraryscript.cpp \
+    Script/modules/lua_htmlparser.cpp \
+    Script/modules/lua_net.cpp \
+    Script/modules/lua_regex.cpp \
+    Script/modules/lua_util.cpp \
+    Script/modules/lua_xmlreader.cpp \
+    Script/modules/modulebase.cpp \
     Script/resourcescript.cpp \
     Script/scriptbase.cpp \
     Script/scriptmanager.cpp \
@@ -168,6 +174,12 @@ HEADERS += \
     Script/bgmcalendarscript.h \
     Script/danmuscript.h \
     Script/libraryscript.h \
+    Script/modules/lua_htmlparser.h \
+    Script/modules/lua_net.h \
+    Script/modules/lua_regex.h \
+    Script/modules/lua_util.h \
+    Script/modules/lua_xmlreader.h \
+    Script/modules/modulebase.h \
     Script/resourcescript.h \
     Script/scriptbase.h \
     Script/scriptmanager.h \
