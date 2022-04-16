@@ -908,6 +908,15 @@ QTextEdit#AnimeDetailDesc{
 QPlainTextEdit:focus,QTextEdit:focus {
     border: 1px solid #2BA9EC;
 }
+QPlainTextEdit#LuaCodeEditor{
+@if{DarkMode}
+    qproperty-hoverColor: rgba(92, 92, 92, 200);
+    qproperty-lineNumberColor: rgb(220, 220, 220);
+@else
+    qproperty-hoverColor: rgba(248, 236, 126, 200);
+    qproperty-lineNumberColor: rgb(40, 40, 40);
+@endif
+}
 QLineEdit#filterBox{
     background-color: rgb(100, 100,100);
     color:rgb(255,255,255);

@@ -74,5 +74,6 @@
         <file>res/images/checkbox-darkmode-uncheck.svg</file>
         <file>res/images/down-arrow-darkmode-hover.svg</file>
         <file>res/images/up-arrow-darkmode-hover.svg</file>
+        <file>res/scriptPlayground</file>
     </qresource>
 </RCC>

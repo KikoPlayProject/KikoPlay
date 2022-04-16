@@ -1,0 +1,6 @@
+--你可以在这里测试KiKoPlay的各种脚本API
+print("------KikoPlay Script Playground------")
+local envinfo = kiko.envinfo()
+for k, v in pairs(envinfo) do
+    print(string.format("%s:\t%s", k, v))
+end

@@ -103,10 +103,7 @@ int LuaUtil::writeSetting(lua_State *L)
         lua_pushnil(L);
         return 2;
     }
-    lua_pushstring(L, "kiko_scriptobj");
-    lua_gettable(L, LUA_REGISTRYINDEX);
-    ScriptBase *script = (ScriptBase *)lua_topointer(L, -1);
-    lua_pop(L, 1);
+    ScriptBase *script = ScriptBase::getScript(L);
     QString errInfo = script->setOption(lua_tostring(L, 1), lua_tostring(L, 2), false);
     if(errInfo.isEmpty()) lua_pushnil(L);
     else lua_pushstring(L, errInfo.toStdString().c_str());
@@ -204,10 +201,7 @@ int LuaUtil::logger(lua_State *L)
 {
     int params = lua_gettop(L);
     if(params==0) return 0;
-    lua_pushstring(L, "kiko_scriptobj");
-    lua_gettable(L, LUA_REGISTRYINDEX);
-    ScriptBase *script = (ScriptBase *)lua_topointer(L, -1);
-    lua_pop(L, 1);
+    ScriptBase *script = ScriptBase::getScript(L);
     if(params > 1)
     {
         QStringList vals;
@@ -248,10 +242,7 @@ int LuaUtil::message(lua_State *L)
 {
     int params = lua_gettop(L);
     if(params==0 || lua_type(L, 1)!=LUA_TSTRING) return 0;
-    lua_pushstring(L, "kiko_scriptobj");
-    lua_gettable(L, LUA_REGISTRYINDEX);
-    ScriptBase *script = (ScriptBase *)lua_topointer(L, -1);
-    lua_pop(L, 1);
+    ScriptBase *script = ScriptBase::getScript(L);
     QString message(lua_tostring(L, 1));
     int flags = NotifyMessageFlag::NM_HIDE;
     if(params > 1 && lua_type(L, 2)==LUA_TNUMBER)

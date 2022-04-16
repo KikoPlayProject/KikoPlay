@@ -35,7 +35,7 @@ Q_DECLARE_METATYPE(ScriptState)
 
 enum ScriptType
 {
-    DANMU, LIBRARY, RESOURCE, BGM_CALENDAR, UNKNOWN_STYPE
+    DANMU, LIBRARY, RESOURCE, BGM_CALENDAR, UNKNOWN_STYPE, PLAYGROUND
 };
 Q_DECLARE_METATYPE(ScriptType)
 
@@ -87,10 +87,12 @@ protected:
     QString loadMeta(const QString &scriptPath);
     void loadSettings(const QString &scriptPath);
     void registerFuncs(const char *tname, const luaL_Reg *funcs);
+    ScriptState loadScriptStr(const QString &content);
 public:
     static void pushValue(lua_State *L, const QVariant &val);
     static QVariant getValue(lua_State *L, bool useString=true);
     static int getTableLength(lua_State *L, int pos);
+    static ScriptBase *getScript(lua_State *L);
 };
 
 #endif // SCRIPTBASE_H

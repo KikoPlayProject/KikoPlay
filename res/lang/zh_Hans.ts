@@ -3615,7 +3615,7 @@ Set shortcuts through MPV Parameter input-conf</source>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="203"/>
+        <location filename="../../UI/mainwindow.cpp" line="204"/>
         <source>Danmu Pool Manager</source>
         <translation>管理弹幕池</translation>
     </message>
@@ -3628,7 +3628,7 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">界面设置</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="211"/>
+        <location filename="../../UI/mainwindow.cpp" line="212"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
@@ -3637,55 +3637,60 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">脚本日志</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="219"/>
+        <location filename="../../UI/mainwindow.cpp" line="231"/>
         <source>Log Center</source>
         <translation>日志中心</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="232"/>
+        <location filename="../../UI/mainwindow.cpp" line="244"/>
         <source>Check For Updates</source>
         <translation>检查更新</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="239"/>
+        <location filename="../../UI/mainwindow.cpp" line="251"/>
         <source>Useage Tip</source>
         <translation>使用提示</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="247"/>
+        <location filename="../../UI/mainwindow.cpp" line="259"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="64"/>
-        <location filename="../../UI/mainwindow.cpp" line="256"/>
+        <location filename="../../UI/mainwindow.cpp" line="65"/>
+        <location filename="../../UI/mainwindow.cpp" line="268"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="261"/>
+        <location filename="../../UI/mainwindow.cpp" line="220"/>
+        <source>Script Playground</source>
+        <translation>脚本测试场</translation>
+    </message>
+    <message>
+        <location filename="../../UI/mainwindow.cpp" line="273"/>
         <source>Player</source>
         <translation>播放</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="262"/>
+        <location filename="../../UI/mainwindow.cpp" line="274"/>
         <source>Library</source>
         <translation>资料</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="263"/>
+        <location filename="../../UI/mainwindow.cpp" line="275"/>
         <source>Download</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="657"/>
-        <location filename="../../UI/mainwindow.cpp" line="817"/>
+        <location filename="../../UI/mainwindow.cpp" line="669"/>
+        <location filename="../../UI/mainwindow.cpp" line="829"/>
         <source>Updating...</source>
         <translation>更新中...</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="662"/>
-        <location filename="../../UI/mainwindow.cpp" line="822"/>
+        <location filename="../../UI/mainwindow.cpp" line="674"/>
+        <location filename="../../UI/mainwindow.cpp" line="834"/>
         <source>Add %1 Danmu</source>
         <translation>添加了 %1 条弹幕</translation>
     </message>
@@ -5588,6 +5593,19 @@ Eps: %2
         <location filename="../../UI/settings/scriptpage.cpp" line="110"/>
         <source>More</source>
         <translation>更多</translation>
+    </message>
+</context>
+<context>
+    <name>ScriptPlayground</name>
+    <message>
+        <location filename="../../UI/scriptplayground.cpp" line="471"/>
+        <source>Script Playground</source>
+        <translation>脚本测试场</translation>
+    </message>
+    <message>
+        <location filename="../../UI/scriptplayground.cpp" line="473"/>
+        <source>Run</source>
+        <translation>执行</translation>
     </message>
 </context>
 <context>

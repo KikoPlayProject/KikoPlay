@@ -13,6 +13,7 @@
 class QSplitter;
 class BackgroundWidget;
 class LogWindow;
+class ScriptPlayground;
 
 class DropableWidget : public QWidget
 {
@@ -76,6 +77,7 @@ private:
     LibraryWindow *library;
     DownloadWindow *download;
     LogWindow *logWindow;
+    ScriptPlayground *scriptPlayground;
     int listWindowWidth;
     QStackedLayout *contentStackLayout;
     QRect originalGeo, miniGeo;

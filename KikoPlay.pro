@@ -54,6 +54,7 @@ SOURCES += \
     Script/modules/lua_util.cpp \
     Script/modules/lua_xmlreader.cpp \
     Script/modules/modulebase.cpp \
+    Script/playgroundscript.cpp \
     Script/resourcescript.cpp \
     Script/scriptbase.cpp \
     Script/scriptmanager.cpp \
@@ -71,6 +72,7 @@ SOURCES += \
     UI/gifcapture.cpp \
     UI/inputdialog.cpp \
     UI/logwindow.cpp \
+    UI/scriptplayground.cpp \
     UI/settings.cpp \
     UI/settings/downloadpage.cpp \
     UI/settings/lanserverpage.cpp \
@@ -180,6 +182,7 @@ HEADERS += \
     Script/modules/lua_util.h \
     Script/modules/lua_xmlreader.h \
     Script/modules/modulebase.h \
+    Script/playgroundscript.h \
     Script/resourcescript.h \
     Script/scriptbase.h \
     Script/scriptmanager.h \
@@ -204,6 +207,7 @@ HEADERS += \
     Play/Danmu/Layouts/rolllayout.h \
     Play/Danmu/Layouts/toplayout.h \
     Play/Danmu/danmupool.h \
+    UI/scriptplayground.h \
     UI/settings.h \
     UI/settings/downloadpage.h \
     UI/settings/lanserverpage.h \

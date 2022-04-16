@@ -22,6 +22,7 @@
 #include "settings.h"
 #include "inputdialog.h"
 #include "logwindow.h"
+#include "scriptplayground.h"
 #include "widgets/backgroundwidget.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
@@ -214,6 +215,17 @@ void MainWindow::setupUI()
         settings.exec();
     });
     buttonIcon->addAction(act_Settingse);
+
+    scriptPlayground = nullptr;
+    QAction *act_ScriptPlayground=new QAction(tr("Script Playground"), this);
+    QObject::connect(act_ScriptPlayground,&QAction::triggered,[this](){
+        if(!scriptPlayground)
+        {
+            scriptPlayground = new ScriptPlayground(this);
+        }
+        scriptPlayground->show();
+    });
+    buttonIcon->addAction(act_ScriptPlayground);
 
     logWindow = nullptr;
     QAction *act_ShowLogCenter=new QAction(tr("Log Center"), this);

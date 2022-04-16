@@ -101,13 +101,8 @@ ScriptState ScriptBase::loadScript(const QString &path)
     luaFile.open(QFile::ReadOnly);
     if(!luaFile.isOpen()) return "Open Script File Failed";
     QString luaScript(luaFile.readAll());
-    QString errInfo;
-    if(luaL_loadstring(L,luaScript.toStdString().c_str()) || lua_pcall(L,0,0,0))
-    {
-        errInfo="Script Error: "+ QString(lua_tostring(L, -1));
-        lua_pop(L,1);
-        return errInfo;
-    }
+    QString errInfo = loadScriptStr(luaScript);
+    if(!errInfo.isEmpty()) return errInfo;
     errInfo = loadMeta(path);
     if(!errInfo.isEmpty()) return errInfo;
     loadSettings(path);
@@ -330,6 +325,15 @@ int ScriptBase::getTableLength(lua_State *L, int pos)
     return length;
 }
 
+ScriptBase *ScriptBase::getScript(lua_State *L)
+{
+    lua_pushstring(L, "kiko_scriptobj");
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    ScriptBase *script = (ScriptBase *)lua_topointer(L, -1);
+    lua_pop(L, 1);
+    return script;
+}
+
 QString ScriptBase::loadMeta(const QString &scriptPath)
 {
     QString errInfo;
@@ -422,4 +426,16 @@ void ScriptBase::registerFuncs(const char *tname, const luaL_Reg *funcs)
     }
     luaL_setfuncs(L, funcs, 0);
     lua_setglobal(L, tname);
+}
+
+ScriptState ScriptBase::loadScriptStr(const QString &content)
+{
+    QString errInfo;
+    if(luaL_loadstring(L, content.toStdString().c_str()) || lua_pcall(L,0,0,0))
+    {
+        errInfo="Script Error: "+ QString(lua_tostring(L, -1));
+        lua_pop(L,1);
+        return errInfo;
+    }
+    return errInfo;
 }
