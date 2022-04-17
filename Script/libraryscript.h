@@ -11,7 +11,7 @@ public:
     ScriptState loadScript(const QString &scriptPath);
 public:
     bool supportMatch() const {return matchSupported;}
-    const QList<QPair<QString, QString>> &getMenuItems() const {return menuItems;}
+    const QVector<QPair<QString, QString>> &getMenuItems() const {return menuItems;}
 public:
     ScriptState search(const QString &keyword, QList<AnimeLite> &results);
     ScriptState getDetail(const AnimeLite &base, Anime *anime);
@@ -29,7 +29,7 @@ private:
     const char *menuFunc = "menuclick";
 
     bool matchSupported, hasTagFunc;
-    QList<QPair<QString, QString>> menuItems; // (title, id)
+    QVector<QPair<QString, QString>> menuItems; // (title, id)
 };
 
 #endif // LIBRARYSCRIPT_H

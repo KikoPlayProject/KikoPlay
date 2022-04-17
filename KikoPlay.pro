@@ -48,6 +48,7 @@ SOURCES += \
     Script/bgmcalendarscript.cpp \
     Script/danmuscript.cpp \
     Script/libraryscript.cpp \
+    Script/luatablemodel.cpp \
     Script/modules/lua_htmlparser.cpp \
     Script/modules/lua_net.cpp \
     Script/modules/lua_regex.cpp \
@@ -72,6 +73,7 @@ SOURCES += \
     UI/gifcapture.cpp \
     UI/inputdialog.cpp \
     UI/logwindow.cpp \
+    UI/luatableviewer.cpp \
     UI/scriptplayground.cpp \
     UI/settings.cpp \
     UI/settings/downloadpage.cpp \
@@ -176,6 +178,7 @@ HEADERS += \
     Script/bgmcalendarscript.h \
     Script/danmuscript.h \
     Script/libraryscript.h \
+    Script/luatablemodel.h \
     Script/modules/lua_htmlparser.h \
     Script/modules/lua_net.h \
     Script/modules/lua_regex.h \
@@ -200,6 +203,7 @@ HEADERS += \
     UI/gifcapture.h \
     UI/inputdialog.h \
     UI/logwindow.h \
+    UI/luatableviewer.h \
     UI/mainwindow.h \
     UI/framelesswindow.h \
     Play/Danmu/Layouts/bottomlayout.h \

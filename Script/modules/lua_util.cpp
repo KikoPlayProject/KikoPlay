@@ -1,5 +1,6 @@
 #include "lua_util.h"
 #include "../scriptbase.h"
+#include "../luatablemodel.h"
 #include "Common/network.h"
 #include "Common/notifier.h"
 #include "Common/logger.h"
@@ -19,11 +20,13 @@ void LuaUtil::setup()
         {"writesetting", writeSetting},
         {"execute", execute},
         {"hashdata", hashData},
+        {"base64", base64},
         {"log", logger},
         {"message", message},
         {"dialog", dialog},
         {"sttrans", simplifiedTraditionalTrans},
         {"envinfo", envInfo},
+        {"viewtable", viewTable},
         {nullptr, nullptr}
     };
     registerFuncs("kiko", commonFuncs);
@@ -197,6 +200,30 @@ int LuaUtil::hashData(lua_State *L)
     return 2;
 }
 
+int LuaUtil::base64(lua_State *L)
+{
+    int params = lua_gettop(L);  // string, <type=from/to>
+    if(params==0 || params>2 || lua_type(L, 1)!=LUA_TSTRING)
+    {
+        lua_pushstring(L, "base64: param error, expect: data(string), <type(string, from/to, default=from)>");
+        lua_pushnil(L);
+        return 2;
+    }
+    size_t len = 0;
+    const char *pd = lua_tolstring(L, 1, &len);
+    bool from = true;
+    if(params > 1)  //has type
+    {
+        const char *type = lua_tostring(L, 2);
+        from = strcmp(type, "from") == 0;
+    }
+    QByteArray input(pd, len);
+    QByteArray result = from? QByteArray::fromBase64(input) : input.toBase64();
+    lua_pushnil(L);
+    lua_pushlstring(L, result.data(), result.size());
+    return 2;
+}
+
 int LuaUtil::logger(lua_State *L)
 {
     int params = lua_gettop(L);
@@ -339,6 +366,75 @@ int LuaUtil::envInfo(lua_State *L)
     lua_rawset(L, -3); //table
 
     return 1;
+}
+
+void buildLuaItemTree(lua_State *L, LuaItem *parent, QSet<quintptr> &tableHash)
+{
+    if(!L) return;
+    if(lua_gettop(L)==0) return;
+    if(lua_type(L, -1) != LUA_TTABLE) return;
+    lua_pushnil(L); // t nil
+    auto getLuaValue = [](lua_State *L, int pos) -> QString {
+        switch (lua_type(L, pos))
+        {
+        case LUA_TNIL:
+            return "nil";
+        case LUA_TNUMBER:
+        {
+            double d = lua_tonumber(L, pos);
+            return QString::number(d);
+        }
+        case LUA_TBOOLEAN:
+        {
+            return bool(lua_toboolean(L, pos))? "true" : "false";
+        }
+        case LUA_TSTRING:
+        {
+            size_t len = 0;
+            const char *s = (const char *)lua_tolstring(L, pos, &len);
+            return QByteArray(s, len);
+        }
+        default:
+            return "";
+        }
+    };
+    while (lua_next(L, -2)) // t key value
+    {
+        LuaItem *item = new LuaItem(parent);
+        item->keyType = static_cast<LuaItem::LuaType>(lua_type(L, -2));
+        item->key = getLuaValue(L, -2);
+        item->valType = static_cast<LuaItem::LuaType>(lua_type(L, -1));
+        if(lua_type(L, -1) == LUA_TTABLE)
+        {
+            quintptr tablePtr = reinterpret_cast<quintptr>(lua_topointer(L, -1));
+            if(!tableHash.contains(tablePtr))
+            {
+				tableHash.insert(tablePtr);
+                buildLuaItemTree(L, item, tableHash);
+            }
+        }
+        else
+        {
+            item->value = getLuaValue(L, -1);
+        }
+        lua_pop(L, 1); // key
+    }
+}
+int LuaUtil::viewTable(lua_State *L)
+{
+    int params = lua_gettop(L);
+    if(params==0 || lua_type(L, 1)!=LUA_TTABLE) return 0;
+    LuaItem *root = new LuaItem;
+    QSet<quintptr> tableHash;
+    buildLuaItemTree(L, root, tableHash);
+    LuaTableModel model;
+    model.setRoot(root);
+    QVariantMap dialogParam = {
+        {"_type", "luaTabelViewer"},
+        {"_modelPtr", QVariant::fromValue<void *>(&model)}
+    };
+    Notifier::getNotifier()->showDialog(Notifier::MAIN_DIALOG_NOTIFY, dialogParam);
+    return 0;
 }
 
 }

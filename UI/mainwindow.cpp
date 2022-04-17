@@ -23,6 +23,7 @@
 #include "inputdialog.h"
 #include "logwindow.h"
 #include "scriptplayground.h"
+#include "luatableviewer.h"
 #include "widgets/backgroundwidget.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
@@ -735,6 +736,13 @@ QWidget *MainWindow::setupDownloadPage()
 QVariant MainWindow::showDialog(const QVariant &inputs)
 {
     QVariantMap optMap = inputs.toMap();
+    if(optMap.contains("_type") && optMap["_type"]=="luaTabelViewer")
+    {
+        LuaTableModel *model = static_cast<LuaTableModel *>(optMap["_modelPtr"].value<void *>());
+        LuaTableViewer viewer(model, this);
+        viewer.exec();
+        return "";
+    }
     QString title = optMap.value("title", "KikoPlay").toString();
     QString tip = optMap.value("tip").toString();
     bool hasText = optMap.contains("text"), hasImage = optMap.contains("image");

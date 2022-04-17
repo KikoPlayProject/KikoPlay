@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <QComboBox>
 #include <QAction>
+#include <QMenu>
 #include <QHeaderView>
 #include "Common/threadtask.h"
 #include "Script/scriptmodel.h"
@@ -49,6 +50,20 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
             }
         }
     });
+    QObject::connect(scriptView, &QTreeView::doubleClicked,[=](const QModelIndex &sindex){
+        if(!sindex.isValid()) return;
+        auto index = proxyModel->mapToSource(sindex).siblingAtColumn((int)ScriptModel::Columns::ID);
+        auto s = GlobalObjects::scriptManager->getScript(index.data().toString());
+        if(s->settings().size()==0) return;
+        ScriptSettingDialog dialog(s, this);
+        if(QDialog::Accepted==dialog.exec())
+        {
+            for(auto iter = dialog.changedItems.begin(); iter!=dialog.changedItems.end();++iter)
+            {
+                s->setOption(iter.key(), iter.value());
+            }
+        }
+    });
     QAction *actRemove = new QAction(tr("Remove"), this);
     QObject::connect(actRemove, &QAction::triggered, this, [=](){
         auto selection = scriptView->selectionModel()->selectedRows((int)ScriptModel::Columns::ID);
@@ -60,9 +75,56 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
             GlobalObjects::scriptManager->deleteScript(index.data().toString());
         }
     });
-    scriptView->setContextMenuPolicy(Qt::ContextMenuPolicy::ActionsContextMenu);
-    scriptView->addAction(actSetting);
-    scriptView->addAction(actRemove);
+
+    QMenu *scriptViewContextMenu=new QMenu(scriptView);
+    scriptViewContextMenu->addAction(actSetting);
+    scriptViewContextMenu->addAction(actRemove);
+    QAction *menuSep = new QAction(this);
+    menuSep->setSeparator(true);
+    static QVector<QAction *> scriptActions;
+    QObject::connect(scriptView, &QTreeView::customContextMenuRequested,[=](){
+        auto selection = scriptView->selectionModel()->selectedRows((int)ScriptModel::Columns::ID);
+        for(QAction *act : scriptActions)
+            scriptViewContextMenu->removeAction(act);
+        scriptViewContextMenu->removeAction(menuSep);
+        qDeleteAll(scriptActions);
+        scriptActions.clear();
+        if(selection.size()>0)
+        {
+            auto index = proxyModel->mapToSource(selection.last());
+            auto script = GlobalObjects::scriptManager->getScript(index.data().toString());
+            if(script)
+            {
+                const auto &menuItems = script->getScriptMenuItems();
+                if(menuItems.size()>0)
+                {
+                    scriptViewContextMenu->addAction(menuSep);
+                    for(auto &p : menuItems)
+                    {
+                        QAction *scriptAct = new QAction(p.first);
+                        scriptAct->setData(p.second);
+                        scriptViewContextMenu->addAction(scriptAct);
+                        scriptActions.append(scriptAct);
+                    }
+                }
+            }
+
+        }
+        scriptViewContextMenu->exec(QCursor::pos());
+    });
+    QObject::connect(scriptViewContextMenu, &QMenu::triggered, this, [=](QAction *act){
+        if(!act->data().isNull())
+        {
+            auto selection = scriptView->selectionModel()->selectedRows((int)ScriptModel::Columns::ID);
+            if (selection.size() == 0)return;
+            auto index = proxyModel->mapToSource(selection.last());
+            auto s = GlobalObjects::scriptManager->getScript(index.data().toString());
+            s->scriptMenuClick(act->data().toString());
+        }
+    });
+
+    scriptView->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+
     QObject::connect(scriptView->selectionModel(), &QItemSelectionModel::selectionChanged,this, [=](){
         auto selection = scriptView->selectionModel()->selectedRows((int)ScriptModel::Columns::ID);
         if (selection.size() == 0)

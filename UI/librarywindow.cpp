@@ -249,7 +249,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(fa
 
     QAction *menuSep = new QAction(this);
     menuSep->setSeparator(true);
-    static QList<QAction *> scriptActions;
+    static QVector<QAction *> scriptActions;
     QObject::connect(animeListView,&QListView::customContextMenuRequested,[=](){
         QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
         for(QAction *act : scriptActions)

@@ -43,7 +43,7 @@ public:
 signals:
     void itemChanged(const QString &key, int index,  const QString &val);
 private:
-    QList<ScriptBase::ScriptSettingItem> settingItems;
+    QVector<ScriptBase::ScriptSettingItem> settingItems;
 };
 
 #endif // SCRIPTSETTINGMODEL_H

@@ -94,6 +94,16 @@ ScriptState ScriptBase::setOption(const QString &key, const QString &value, bool
     return errInfo;
 }
 
+ScriptState ScriptBase::scriptMenuClick(const QString &mid)
+{
+    MutexLocker locker(scriptLock);
+    if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
+    QString errInfo;
+    call(scriptMenuFunc, {mid}, 0, errInfo);
+    if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
+    return ScriptState(ScriptState::S_NORM);
+}
+
 ScriptState ScriptBase::loadScript(const QString &path)
 {
     if(!L) return "Script Error: Wrong Lua State";
@@ -106,6 +116,7 @@ ScriptState ScriptBase::loadScript(const QString &path)
     errInfo = loadMeta(path);
     if(!errInfo.isEmpty()) return errInfo;
     loadSettings(path);
+    loadScriptMenus();
     return errInfo;
 }
 
@@ -414,6 +425,26 @@ void ScriptBase::loadSettings(const QString &scriptPath)
         lua_settable(L, -3);
     }
     lua_setglobal(L, luaSettingsTable);
+}
+
+void ScriptBase::loadScriptMenus()
+{
+    scriptMenuItems.clear();
+    QVariant menus = get(scriptMenuTable); //[{title=xx, id=xx}...]
+    if(menus.type() == QVariant::List)
+    {
+        auto mlist = menus.toList();
+        for(auto &m : mlist)
+        {
+            if(m.type() == QVariant::Map)
+            {
+                auto mObj = m.toMap();
+                QString title = mObj.value("title").toString(), id =mObj.value("id").toString();
+                if(title.isEmpty() || id.isEmpty()) continue;
+                scriptMenuItems.append({title, id});
+            }
+        }
+    }
 }
 
 void ScriptBase::registerFuncs(const char *tname, const luaL_Reg *funcs)

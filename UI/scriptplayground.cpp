@@ -405,7 +405,7 @@ void CodeEditor::keyPressEvent(QKeyEvent *event)
         {
             ++indentation;
         }
-        static QStringList endsText = {"do", "else", "{"};
+        static QStringList endsText = {"do", "then", "else", "{"};
         for(const QString &t : endsText)
         {
             if(text.endsWith(t))

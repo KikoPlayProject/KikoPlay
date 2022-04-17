@@ -54,7 +54,8 @@ public:
         QString key;
         QString value;
     };
-    const QList<ScriptSettingItem> &settings() const {return scriptSettings;}
+    const QVector<ScriptSettingItem> &settings() const {return scriptSettings;}
+    const QVector<QPair<QString, QString>> &getScriptMenuItems() const {return scriptMenuItems;}
     virtual ScriptState setOption(int index, const QString &value, bool callLua=true);
     virtual ScriptState setOption(const QString &key, const QString &value, bool callLua=true);
     virtual QString id() const {return scriptMeta.value("id");}
@@ -63,6 +64,7 @@ public:
     virtual QString version() const {return scriptMeta.value("version");}
     virtual QString getValue(const QString &key) const {return scriptMeta.value(key);}
     virtual ScriptType type() const {return sType;}
+    ScriptState scriptMenuClick(const QString &mid);
 
     virtual ScriptState loadScript(const QString &path);
 
@@ -70,11 +72,14 @@ protected:
     const char *luaSettingsTable = "settings";
     const char *luaMetaTable = "info";
     const char *luaSetOptionFunc = "setoption";
+    const char *scriptMenuTable = "scriptmenus";
+    const char *scriptMenuFunc = "scriptmenuclick";
 
     lua_State *L;
     QMutex scriptLock;
     QHash<QString, QString> scriptMeta;
-    QList<ScriptSettingItem> scriptSettings;
+    QVector<ScriptSettingItem> scriptSettings;
+    QVector<QPair<QString, QString>> scriptMenuItems; // (title, id)
     bool settingsUpdated, hasSetOptionFunc;
     ScriptType sType;
 
@@ -86,6 +91,7 @@ protected:
 
     QString loadMeta(const QString &scriptPath);
     void loadSettings(const QString &scriptPath);
+    void loadScriptMenus();
     void registerFuncs(const char *tname, const luaL_Reg *funcs);
     ScriptState loadScriptStr(const QString &content);
 public:
