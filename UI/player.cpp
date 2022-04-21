@@ -33,8 +33,10 @@
 #include "globalobjects.h"
 namespace
 {
+class InfoTips;
 class InfoTip : public QWidget
 {
+    friend class InfoTips;
 public:
     explicit InfoTip(QWidget *parent=nullptr):QWidget(parent)
     {
@@ -45,19 +47,13 @@ public:
         infoText->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
         QHBoxLayout *infoBarHLayout=new QHBoxLayout(this);
         infoBarHLayout->addWidget(infoText);
-        QObject::connect(&hideTimer,&QTimer::timeout,this,&InfoTip::hide);
         eff = new QGraphicsOpacityEffect(this);
     }
     void showMessage(const QString &msg)
     {
-        if(hideTimer.isActive())
-            hideTimer.stop();
-        hideTimer.setSingleShot(true);
-        hideTimer.start(2500);
         infoText->setText(msg);
         infoText->adjustSize();
         adjustSize();
-        //QGraphicsOpacityEffect *eff = new QGraphicsOpacityEffect(this);
         setGraphicsEffect(eff);
         eff->setOpacity(0);
         show();
@@ -71,8 +67,101 @@ public:
 private:
     QGraphicsOpacityEffect *eff;
     QLabel *infoText;
+    QString type;
+    int timeout;
+};
+class InfoTips : public QObject
+{
+public:
+    InfoTips(QWidget *parent) : QObject(parent), parentWidget(parent), minBottom(0)
+    {
+        QObject::connect(&hideTimer,&QTimer::timeout,this, [this](){
+            bool changed = false;
+            for(auto iter = showTips.begin(); iter != showTips.end();)
+            {
+                (*iter)->timeout -= timerInterval;
+                if((*iter)->timeout <= 0)
+                {
+                    (*iter)->hide();
+                    hideTips.append(*iter);
+                    iter = showTips.erase(iter);
+                    changed = true;
+                }
+                else
+                {
+                    ++iter;
+                }
+            }
+            if(changed)
+            {
+                updatePosition();
+            }
+            if(showTips.empty()) hideTimer.stop();
+        });
+    }
+    void showMessage(const QString &msg, const QString &type = "")
+    {
+        InfoTip *targetInfoTip = nullptr;
+        for(InfoTip *tip : showTips)
+        {
+            if(!type.isEmpty() && tip->type == type)
+            {
+                targetInfoTip = tip;
+                break;
+            }
+        }
+        if(!targetInfoTip && showTips.size() > 3)
+        {
+            for(InfoTip *tip : showTips)
+            {
+                if(tip->type.isEmpty())
+                {
+                    targetInfoTip = tip;
+                    break;
+                }
+            }
+        }
+        if(!targetInfoTip)
+        {
+            targetInfoTip = hideTips.empty()? new InfoTip(parentWidget) : hideTips.takeLast();
+            targetInfoTip->type = type;
+            targetInfoTip->hide();
+            showTips.append(targetInfoTip);
+        }
+        targetInfoTip->timeout = timeout;
+        targetInfoTip->showMessage(msg);
+        updatePosition();
+        if(!hideTimer.isActive()) hideTimer.start(timerInterval);
+    }
+    void updatePosition()
+    {
+        int curBottom = minBottom;
+        int width = parentWidget->width();
+        const int tipSpace = 4 * parentWidget->logicalDpiY() / 96;
+        for(InfoTip *tip : showTips)
+        {
+            int x = (width-tip->width())/2;
+            int y = curBottom - tip->height() - tipSpace;
+            tip->move(x, y);
+            tip->show();
+            tip->raise();
+            curBottom = y;
+        }
+    }
+    void setBottom(int bottom)
+    {
+        minBottom = bottom;
+    }
+
+private:
+    QVector<InfoTip *> showTips, hideTips;
+    QWidget *parentWidget;
+    int minBottom;
+    const int timeout = 2500;
+    const int timerInterval = 500;
     QTimer hideTimer;
 };
+
 class RecentItem : public QWidget
 {
 public:
@@ -211,8 +300,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
 
     launchWindow = new DanmuLaunch(this);
 
-    playInfo=new InfoTip(centralWidget);
-    playInfo->hide();
+    playInfo=new InfoTips(centralWidget);
 
     progressInfo=new QWidget(centralWidget);
     QStackedLayout *piSLayout = new QStackedLayout(progressInfo);
@@ -1765,12 +1853,21 @@ void PlayerWindow::setPlayTime()
 void PlayerWindow::showMessage(const QString &msg, int flag)
 {
     Q_UNUSED(flag)
-    static_cast<InfoTip *>(playInfo)->showMessage(msg);
+    showMessage(msg, "");
+    /*
     int x = (width()-playInfo->width())/2, y;
     if(miniModeOn) y = height()-miniProgress->height()-playInfo->height()-20;
     else y = height()-playControlPanel->height()-playInfo->height()-20;
     playInfo->move(x, y);
     playInfo->raise();
+    */
+}
+
+void PlayerWindow::showMessage(const QString &msg, const QString &type)
+{
+    int y = height() - 20*logicalDpiY()/96 - (miniModeOn? miniProgress->height() : playControlPanel->height());
+    static_cast<InfoTips *>(playInfo)->setBottom(y);
+    static_cast<InfoTips *>(playInfo)->showMessage(msg, type);
 }
 
 void PlayerWindow::switchItem(bool prev, const QString &nullMsg)
@@ -1970,7 +2067,9 @@ void PlayerWindow::resizeEvent(QResizeEvent *)
 	}
     playerContent->resize(400*logicalDpiX()/96, 400*logicalDpiY()/96);
     playerContent->move((width()-playerContent->width())/2,(height()-playerContent->height())/2);
-    playInfo->move((width()-playInfo->width())/2,height()-playControlPanel->height()-playInfo->height()-20);
+    int y = height() - 20*logicalDpiY()/96 - (miniModeOn? miniProgress->height() : playControlPanel->height());
+    static_cast<InfoTips *>(playInfo)->setBottom(y);
+    static_cast<InfoTips *>(playInfo)->updatePosition();
 }
 
 void PlayerWindow::leaveEvent(QEvent *)
@@ -2096,13 +2195,13 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Down:
     case Qt::Key_Up:
         QApplication::sendEvent(volume, event);
-        showMessage(tr("Volume: %0").arg(volume->value()));
+        showMessage(tr("Volume: %0").arg(volume->value()), "playerInfo");
         break;
     case Qt::Key_Right:
         if (event->modifiers() == Qt::ControlModifier)
         {
             GlobalObjects::mpvplayer->frameStep();
-            showMessage(tr("Frame Step:Forward"));
+            showMessage(tr("Frame Step:Forward"), "playerInfo");
         }
         else
             GlobalObjects::mpvplayer->seek(jumpForwardTime, true);
@@ -2111,7 +2210,7 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
         if (event->modifiers() == Qt::ControlModifier)
         {
             GlobalObjects::mpvplayer->frameStep(false);
-            showMessage(tr("Frame Step:Backward"));
+            showMessage(tr("Frame Step:Backward"), "playerInfo");
         }
         else
             GlobalObjects::mpvplayer->seek(-jumpBackwardTime, true);
@@ -2302,6 +2401,6 @@ void PlayerWindow::wheelEvent(QWheelEvent *event)
 			inProcess = false;
 		}
 	}
-    showMessage(tr("Volume: %0").arg(volume->value()));
+    showMessage(tr("Volume: %0").arg(volume->value()), "playerInfo");
 }
 

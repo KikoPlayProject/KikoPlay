@@ -25,10 +25,12 @@ public:
     void toggleListCollapseState(bool on);
     void toggleFullScreenState(bool on);
     virtual void showMessage(const QString &msg, int flag = 0) override;
+    void showMessage(const QString &msg, const QString &type);
 
 private:
      QWidget *playControlPanel,*playInfoPanel;
-     QWidget *playInfo,*playerContent,*danmuStatisBar;
+     QWidget *playerContent,*danmuStatisBar;
+     QObject *playInfo;
      QPushButton *playListCollapseButton;
      QLabel *timeInfoTip, *previewLabel;
      QWidget *progressInfo;
@@ -126,7 +128,7 @@ public:
     // QWidget interface
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override;
-    virtual void keyReleaseEvent(QKeyEvent *event);
+    virtual void keyReleaseEvent(QKeyEvent *event) override;
     virtual void contextMenuEvent(QContextMenuEvent *event) override;
     virtual void closeEvent(QCloseEvent *event) override;
     virtual void dragEnterEvent(QDragEnterEvent *event) override;
