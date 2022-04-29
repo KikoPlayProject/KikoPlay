@@ -2,7 +2,6 @@
 #define GLOBALOBJECTS_H
 #include <QString>
 #include <QSqlDatabase>
-#include <QColor>
 class MPVPlayer;
 class DanmuPool;
 class DanmuRender;

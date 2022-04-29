@@ -1,24 +1,15 @@
-#include "httpserver.h"
-#include "qhttpengine/qobjecthandler.h"
-#include "qhttpengine/handler.h"
-#include "mediahandler.h"
-
+#include "apihandler.h"
+#include "globalobjects.h"
+#include "Play/Playlist/playlist.h"
 #include "Common/network.h"
 #include "Common/logger.h"
-#include "Play/Playlist/playlist.h"
 #include "Play/Danmu/common.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Danmu/danmupool.h"
-#include "Play/Video/mpvpreview.h"
-#include "MediaLibrary/animeworker.h"
 #include "Script/scriptmanager.h"
 #include "Script/danmuscript.h"
-#include "globalobjects.h"
-
-#include <QCoreApplication>
-#include <QMimeDatabase>
-#include <QFileInfo>
+#include "MediaLibrary/animeworker.h"
 
 namespace
 {
@@ -38,97 +29,69 @@ namespace
         }
     }
 }
-HttpServer::HttpServer(QObject *parent) : QObject(parent)
+
+APIHandler::APIHandler(QHash<QString, QString> &mediaHash, QObject *parent) : stefanfrings::HttpRequestHandler(parent), mediaHashTable(mediaHash)
 {
-    MediaHandler *handler=new MediaHandler(&mediaHash,this);
-    const QString strApp(QCoreApplication::applicationDirPath()+"/web");
-#ifdef CONFIG_UNIX_DATA
-    const QString strHome(QDir::homePath()+"/.config/kikoplay/web");
-    const QString strSys("/usr/share/kikoplay/web");
+    GlobalObjects::playlist->dumpJsonPlaylist(playlistDoc, mediaHashTable);
+}
 
-    const QFileInfo fileinfoHome(strHome);
-    const QFileInfo fileinfoSys(strSys);
-    const QFileInfo fileinfoApp(strApp);
-
-    if (fileinfoHome.exists() || fileinfoHome.isDir()) {
-        handler->setDocumentRoot(strHome);
-    } else if (fileinfoSys.exists() || fileinfoSys.isDir()) {
-        handler->setDocumentRoot(strSys);
-    } else {
-        handler->setDocumentRoot(strApp);
+void APIHandler::service(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
+{
+    QByteArray path = request.getPath();
+    if(!path.startsWith("/api/"))
+    {
+        response.setStatus(stefanfrings::HttpResponse::BadRequest);
+        return;
     }
-#else
-    handler->setDocumentRoot(strApp);
-#endif
-    handler->addRedirect(QRegExp("^$"), "/index.html");
-
-    QHttpEngine::QObjectHandler *apiHandler=new QHttpEngine::QObjectHandler(this);
-    apiHandler->registerMethod("playlist", this, &HttpServer::api_Playlist);
-    apiHandler->registerMethod("updateTime", this, &HttpServer::api_UpdateTime);
-    apiHandler->registerMethod("danmu/v3/", this, &HttpServer::api_Danmu);
-    apiHandler->registerMethod("subtitle", this, &HttpServer::api_Subtitle);
-    apiHandler->registerMethod("danmu/full/", this, &HttpServer::api_DanmuFull);
-    apiHandler->registerMethod("updateDelay", this, &HttpServer::api_UpdateDelay);
-    apiHandler->registerMethod("updateTimeline", this, &HttpServer::api_UpdateTimeline);
-    apiHandler->registerMethod("screenshot", this, &HttpServer::api_Screenshot);
-    apiHandler->registerMethod("danmu/launch", this, &HttpServer::api_Launch);
-    handler->addSubHandler(QRegExp("api/"), apiHandler);
-
-    server = new QHttpEngine::Server(handler,this);
-    GlobalObjects::playlist->dumpJsonPlaylist(playlistDoc,mediaHash);
+    path = path.mid(5);
+    using Func = void(APIHandler::*)(stefanfrings::HttpRequest &, stefanfrings::HttpResponse &);
+    static QMap<QString, Func> routeTable = {
+        {"playlist", &APIHandler::apiPlaylist},
+        {"updateTime", &APIHandler::apiUpdateTime},
+        {"subtitle", &APIHandler::apiSubtitle},
+        {"updateDelay", &APIHandler::apiUpdateDelay},
+        {"updateTimeline", &APIHandler::apiUpdateTimeline},
+        {"screenshot", &APIHandler::apiScreenshot},
+        {"danmu/v3/", &APIHandler::apiDanmu},
+        {"danmu/full/", &APIHandler::apiDanmuFull},
+        {"danmu/launch", &APIHandler::apiLaunch}
+    };
+    auto api = routeTable.value(path, nullptr);
+    if(!api)
+    {
+        response.setStatus(stefanfrings::HttpResponse::BadRequest);
+        return;
+    }
+    (this->*api)(request, response);
 }
 
-HttpServer::~HttpServer()
-{
-    server->close();
-}
-
-bool HttpServer::startServer(quint16 port)
-{
-
-   if(server->isListening())return true;
-   bool r = server->listen(QHostAddress::AnyIPv4,port);
-   Logger::logger()->log(Logger::LANServer, r?"Server start":server->errorString());
-   if(!r) server->close();
-   return r;
-}
-
-void HttpServer::stopServer()
-{
-    server->close();
-    Logger::logger()->log(Logger::LANServer, "Server close");
-}
-
-void HttpServer::api_Playlist(QHttpEngine::Socket *socket)
+void APIHandler::apiPlaylist(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
 {
     QMetaObject::invokeMethod(GlobalObjects::playlist,[this](){
-        GlobalObjects::playlist->dumpJsonPlaylist(playlistDoc,mediaHash);
+        GlobalObjects::playlist->dumpJsonPlaylist(playlistDoc, mediaHashTable);
     },Qt::BlockingQueuedConnection);
-    Logger::logger()->log(Logger::LANServer, QString("[%1]Playlist").arg(socket->peerAddress().toString()));
+    Logger::logger()->log(Logger::LANServer, QString("[%1]Playlist").arg(request.getPeerAddress().toString()));
 
     QByteArray data = playlistDoc.toJson();
     QByteArray compressedBytes;
     Network::gzipCompress(data,compressedBytes);
-
-    socket->setHeader("Content-Length", QByteArray::number(compressedBytes.length()));
-    socket->setHeader("Content-Type", "application/json");
-    socket->setHeader("Content-Encoding", "gzip");
-    socket->writeHeaders();
-    socket->write(compressedBytes);
-    socket->close();
+    response.setHeader("Content-Type", "application/json");
+    response.setHeader("Content-Encoding", "gzip");
+    response.write(compressedBytes, true);
 }
 
-void HttpServer::api_UpdateTime(QHttpEngine::Socket *socket)
+void APIHandler::apiUpdateTime(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
 {
+    Q_UNUSED(response)
     bool syncPlayTime=GlobalObjects::appSetting->value("Server/SyncPlayTime",true).toBool();
     if(syncPlayTime)
     {
         QJsonDocument document;
-        if (socket->readJson(document))
+        if(readJson(request.getBody(), document))
         {
-            Logger::logger()->log(Logger::LANServer, QString("[%1]UpdateTime").arg(socket->peerAddress().toString()));
+            Logger::logger()->log(Logger::LANServer, QString("[%1]UpdateTime").arg(request.getPeerAddress().toString()));
             QVariantMap data = document.object().toVariantMap();
-            QString mediaPath=mediaHash.value(data.value("mediaId").toString());
+            QString mediaPath = mediaHashTable.value(data.value("mediaId").toString());
             int playTime=data.value("playTime").toInt();
             PlayListItem::PlayState playTimeState=PlayListItem::PlayState(data.value("playTimeState").toInt());
             QMetaObject::invokeMethod(GlobalObjects::playlist,[mediaPath,playTime,playTimeState](){
@@ -136,23 +99,23 @@ void HttpServer::api_UpdateTime(QHttpEngine::Socket *socket)
             },Qt::QueuedConnection);
         }
     }
-    socket->close();
 }
 
-void HttpServer::api_Danmu(QHttpEngine::Socket *socket)
-{ 
-    QString poolId=socket->queryString().value("id");
-    bool update=(socket->queryString().value("update").toLower()=="true");
-    Pool *pool=GlobalObjects::danmuManager->getPool(poolId);
-    Logger::logger()->log(Logger::LANServer, QString("[%1]Danmu %2%3").arg(socket->peerAddress().toString(),
-                                                   pool?pool->epTitle():"",
-                                                   update?", update=true":""));
+void APIHandler::apiDanmu(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
+{
+    QString poolId = request.getParameter("id");
+    bool update = (request.getParameter("update").toLower()=="true");
+    Pool *pool = GlobalObjects::danmuManager->getPool(poolId);
+    Logger::logger()->log(Logger::LANServer,
+                          QString("[%1]Danmu %2%3").arg(request.getPeerAddress().toString(),
+                          pool?pool->epTitle():"",
+                          update?", update=true":""));
     QJsonArray danmuArray;
     if(pool)
     {
         if(update)
         {
-			QVector<QSharedPointer<DanmuComment> > incList;
+            QVector<QSharedPointer<DanmuComment> > incList;
             pool->update(-1,&incList);
             danmuArray=Pool::exportJson(incList);
         }
@@ -170,28 +133,26 @@ void HttpServer::api_Danmu(QHttpEngine::Socket *socket)
     QByteArray data = QJsonDocument(resposeObj).toJson();
     QByteArray compressedBytes;
     Network::gzipCompress(data,compressedBytes);
-    socket->setHeader("Content-Length", QByteArray::number(compressedBytes.length()));
-    socket->setHeader("Content-Type", "application/json");
-    socket->setHeader("Content-Encoding", "gzip");
-    socket->writeHeaders();
-    socket->write(compressedBytes);
-    socket->close();
+    response.setHeader("Content-Type", "application/json");
+    response.setHeader("Content-Encoding", "gzip");
+    response.write(compressedBytes, true);
 }
 
-void HttpServer::api_DanmuFull(QHttpEngine::Socket *socket)
+void APIHandler::apiDanmuFull(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
 {
-    QString poolId=socket->queryString().value("id");
-    bool update=(socket->queryString().value("update").toLower()=="true");
-    Pool *pool=GlobalObjects::danmuManager->getPool(poolId);
-    Logger::logger()->log(Logger::LANServer, QString("[%1]Danmu(Full) %2%3").arg(socket->peerAddress().toString(),
-                                                        pool?pool->epTitle():"",
-                                                        update?", update=true":""));
+    QString poolId = request.getParameter("id");
+    bool update = (request.getParameter("update").toLower()=="true");
+    Pool *pool = GlobalObjects::danmuManager->getPool(poolId);
+    Logger::logger()->log(Logger::LANServer,
+                          QString("[%1]Danmu(Full) %2%3").arg(request.getPeerAddress().toString(),
+                          pool?pool->epTitle():"",
+                          update?", update=true":""));
     QJsonObject resposeObj;
     if(pool)
     {
         if(update)
         {
-			QVector<QSharedPointer<DanmuComment> > incList;
+            QVector<QSharedPointer<DanmuComment> > incList;
             pool->update(-1,&incList);
             resposeObj=
             {
@@ -224,60 +185,58 @@ void HttpServer::api_DanmuFull(QHttpEngine::Socket *socket)
     QByteArray data = QJsonDocument(resposeObj).toJson();
     QByteArray compressedBytes;
     Network::gzipCompress(data,compressedBytes);
-    socket->setHeader("Content-Length", QByteArray::number(compressedBytes.length()));
-    socket->setHeader("Content-Type", "application/json");
-    socket->setHeader("Content-Encoding", "gzip");
-    socket->writeHeaders();
-    socket->write(compressedBytes);
-    socket->close();
+    response.setHeader("Content-Type", "application/json");
+    response.setHeader("Content-Encoding", "gzip");
+    response.write(compressedBytes, true);
 }
 
-void HttpServer::api_UpdateDelay(QHttpEngine::Socket *socket)
+void APIHandler::apiUpdateDelay(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
 {
+    Q_UNUSED(response)
     QJsonDocument document;
-    if (socket->readJson(document))
+    if (readJson(request.getBody(), document))
     {
         QVariantMap data = document.object().toVariantMap();
         QString poolId=data.value("danmuPool").toString();
         int delay=data.value("delay").toInt();  //ms
         int sourceId=data.value("source").toInt();
-        Logger::logger()->log(Logger::LANServer, QString("[%1]UpdateDelay, SourceId: %2").arg(socket->peerAddress().toString(),QString::number(sourceId)));
+        Logger::logger()->log(Logger::LANServer, QString("[%1]UpdateDelay, SourceId: %2").arg(request.getPeerAddress().toString(),QString::number(sourceId)));
         Pool *pool=GlobalObjects::danmuManager->getPool(poolId,false);
         if(pool) pool->setDelay(sourceId, delay);
     }
-    socket->close();
 }
 
-void HttpServer::api_UpdateTimeline(QHttpEngine::Socket *socket)
+void APIHandler::apiUpdateTimeline(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
 {
+    Q_UNUSED(response)
     QJsonDocument document;
-    if (socket->readJson(document))
+    if (readJson(request.getBody(), document))
     {
         QVariantMap data = document.object().toVariantMap();
         QString poolId=data.value("danmuPool").toString();
         QString timelineStr=data.value("timeline").toString();
         int sourceId=data.value("source").toInt();
-        Logger::logger()->log(Logger::LANServer, QString("[%1]UpdateTimeline, SourceId: %2").arg(socket->peerAddress().toString(),QString::number(sourceId)));
+        Logger::logger()->log(Logger::LANServer, QString("[%1]UpdateTimeline, SourceId: %2").arg(request.getPeerAddress().toString(),QString::number(sourceId)));
         Pool *pool=GlobalObjects::danmuManager->getPool(poolId,false);
         DanmuSource srcInfo;
         srcInfo.setTimeline(timelineStr);
         if(pool) pool->setTimeline(sourceId, srcInfo.timelineInfo);
     }
-    socket->close();
 }
 
-void HttpServer::api_Subtitle(QHttpEngine::Socket *socket)
+void APIHandler::apiSubtitle(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
 {
-    QString mediaId=socket->queryString().value("id");
-    QString mediaPath=mediaHash.value(mediaId);
+    QString mediaId = request.getParameter("id");
+    QString mediaPath = mediaHashTable.value(mediaId);
     QFileInfo fi(mediaPath);
-    QString dir=fi.absolutePath(),name=fi.baseName();
+    QString dir=fi.absolutePath(), name=fi.fileName();
+    name = name.mid(0, name.lastIndexOf('.'));
     static QStringList supportedSubFormats={"","ass","ssa","srt"};
-    Logger::logger()->log(Logger::LANServer, QString("[%1]Subtitle - %2").arg(socket->peerAddress().toString(),name));
-    int formatIndex=0;
-    for(int i=1;i<4;++i)
+    Logger::logger()->log(Logger::LANServer, QString("[%1]Subtitle - %2").arg(request.getPeerAddress().toString(),name));
+    int formatIndex = 0;
+    for(int i = 1; i < supportedSubFormats.size(); ++i)
     {
-        QFileInfo subInfo(dir,name+"."+supportedSubFormats[i]);
+        QFileInfo subInfo(dir, name+"."+supportedSubFormats[i]);
         if(subInfo.exists())
         {
             formatIndex=i;
@@ -289,23 +248,21 @@ void HttpServer::api_Subtitle(QHttpEngine::Socket *socket)
         {"type", supportedSubFormats[formatIndex]}
     };
     QByteArray data = QJsonDocument(resposeObj).toJson();
-    socket->setHeader("Content-Length", QByteArray::number(data.length()));
-    socket->setHeader("Content-Type", "application/json");
-    socket->writeHeaders();
-    socket->write(data);
-    socket->close();
+    response.setHeader("Content-Type", "application/json");
+    response.write(data, true);
 }
 
-void HttpServer::api_Screenshot(QHttpEngine::Socket *socket)
+void APIHandler::apiScreenshot(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
 {
+    Q_UNUSED(response)
     QJsonDocument document;
-    if (socket->readJson(document))
+    if(readJson(request.getBody(), document))
     {
         QVariantMap data = document.object().toVariantMap();
         QString animeName=data.value("animeName").toString();
         double pos = data.value("pos").toDouble();  //s
-        QString mediaId=data.value("mediaId").toString();
-        QString mediaPath=mediaHash.value(mediaId);
+        QString mediaId = data.value("mediaId").toString();
+        QString mediaPath = mediaHashTable.value(mediaId);
         QFileInfo fi(mediaPath);
         if(fi.exists() && !animeName.isEmpty())
         {
@@ -325,25 +282,22 @@ void HttpServer::api_Screenshot(QHttpEngine::Socket *socket)
                 arguments << tmpImg.fileName();
 
                 QProcess ffmpegProcess;
-                QEventLoop eventLoop;
                 bool success = true;
                 QString errorInfo;
-                QObject::connect(&ffmpegProcess, &QProcess::errorOccurred, this, [&errorInfo, &eventLoop, &success](QProcess::ProcessError error){
+                QObject::connect(&ffmpegProcess, &QProcess::errorOccurred, this, [&errorInfo, &success](QProcess::ProcessError error){
                     if(error == QProcess::FailedToStart)
                     {
                         errorInfo = tr("Start FFmpeg Failed");
                     }
                    success = false;
-                   eventLoop.quit();
                 });
                 QObject::connect(&ffmpegProcess, (void (QProcess:: *)(int, QProcess::ExitStatus))&QProcess::finished, this,
-                                 [&errorInfo, &eventLoop, &success](int exitCode, QProcess::ExitStatus exitStatus){
+                                 [&errorInfo, &success](int exitCode, QProcess::ExitStatus exitStatus){
                    success = (exitStatus == QProcess::NormalExit && exitCode == 0);
                    if(!success)
                    {
                        errorInfo = tr("Generate Failed, FFmpeg exit code: %1").arg(exitCode);
                    }
-                   eventLoop.quit();
                 });
                 QObject::connect(&ffmpegProcess, &QProcess::readyReadStandardOutput, this, [&](){
                    qInfo()<<ffmpegProcess.readAllStandardOutput();
@@ -353,10 +307,8 @@ void HttpServer::api_Screenshot(QHttpEngine::Socket *socket)
                     qInfo() << content.replace("\\n", "\n");
                 });
 
-                QTimer::singleShot(0, [&]() {
-                    ffmpegProcess.start(ffmpegPath, arguments);
-                });
-                eventLoop.exec();
+				ffmpegProcess.start(ffmpegPath, arguments);
+				ffmpegProcess.waitForFinished(-1);
                 if(success)
                 {
                     QImage captureImage(tmpImg.fileName());
@@ -376,13 +328,11 @@ void HttpServer::api_Screenshot(QHttpEngine::Socket *socket)
                             arguments << "-an";
                         arguments << "-y";
                         arguments << fileName;
-                        QTimer::singleShot(0, [&]() {
-                            ffmpegProcess.start(ffmpegPath, arguments);
-                        });
-                        eventLoop.exec();
+                        ffmpegProcess.start(ffmpegPath, arguments);
+                        ffmpegProcess.waitForFinished(-1);
                         if(success)
                         {
-                            Logger::logger()->log(Logger::LANServer, QString("[%1]Snippet,[%2]%3").arg(socket->peerAddress().toString(),posStr, fi.filePath()));
+                            Logger::logger()->log(Logger::LANServer, QString("[%1]Snippet,[%2]%3").arg(request.getPeerAddress().toString(),posStr, fi.filePath()));
                             QString info = data.value("info").toString();
                             if(info.isEmpty())  info = QString("%1,%2s - %3").arg(duration2Str(pos), duration, fi.fileName());
                             AnimeWorker::instance()->saveSnippet(animeName, info, timeId, captureImage);
@@ -390,7 +340,7 @@ void HttpServer::api_Screenshot(QHttpEngine::Socket *socket)
                     }
                     else
                     {
-                        Logger::logger()->log(Logger::LANServer, QString("[%1]Screenshot,[%2]%3").arg(socket->peerAddress().toString(),posStr, fi.filePath()));
+                        Logger::logger()->log(Logger::LANServer, QString("[%1]Screenshot,[%2]%3").arg(request.getPeerAddress().toString(),posStr, fi.filePath()));
                         QString info = data.value("info").toString();
                         if(info.isEmpty())  info = QString("%1 - %2").arg(duration2Str(pos), fi.fileName());
                         AnimeWorker::instance()->saveCapture(animeName, info, captureImage);
@@ -398,18 +348,18 @@ void HttpServer::api_Screenshot(QHttpEngine::Socket *socket)
                 }
                 else
                 {
-                    Logger::logger()->log(Logger::LANServer, QString("[%1]Screenshot, [%2]%3, %4").arg(socket->peerAddress().toString(),posStr, fi.filePath(), errorInfo));
+                    Logger::logger()->log(Logger::LANServer, QString("[%1]Screenshot, [%2]%3, %4").arg(request.getPeerAddress().toString(),posStr, fi.filePath(), errorInfo));
                 }
             }
         }
     }
-    socket->close();
 }
 
-void HttpServer::api_Launch(QHttpEngine::Socket *socket)
+void APIHandler::apiLaunch(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
 {
+    Q_UNUSED(response)
     QJsonDocument document;
-    if (socket->readJson(document))
+    if(readJson(request.getBody(), document))
     {
         QVariantMap data = document.object().toVariantMap();
         Pool *pool=GlobalObjects::danmuManager->getPool(data.value("danmuPool").toString());
@@ -452,7 +402,7 @@ void HttpServer::api_Launch(QHttpEngine::Socket *socket)
             int cls=time/1000-cmin*60;
             QString commentInfo(QString("[%1:%2]%3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(text));
             QString poolInfo(QString("%1 %2").arg(pool->animeTitle(), pool->toEp().toString()));
-            Logger::logger()->log(Logger::LANServer, QString("[%1]Launch, [%2] %3").arg(socket->peerAddress().toString(), poolInfo, commentInfo));
+            Logger::logger()->log(Logger::LANServer, QString("[%1]Launch, [%2] %3").arg(request.getPeerAddress().toString(), poolInfo, commentInfo));
             QStringList scriptIds = data.value("launchScripts").toStringList();
             if(time >= 0 && !scriptIds.isEmpty() && !pool->sources().isEmpty())
             {
@@ -473,5 +423,11 @@ void HttpServer::api_Launch(QHttpEngine::Socket *socket)
             }
         }
     }
-    socket->close();
+}
+
+bool APIHandler::readJson(const QByteArray &bytes, QJsonDocument &doc)
+{
+    QJsonParseError error;
+    doc = QJsonDocument::fromJson(bytes, &error);
+    return error.error == QJsonParseError::NoError;
 }

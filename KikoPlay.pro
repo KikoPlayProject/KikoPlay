@@ -36,7 +36,20 @@ SOURCES += \
     Download/autodownloadmanager.cpp \
     Download/peermodel.cpp \
     Download/trackersubscriber.cpp \
-    LANServer/mediahandler.cpp \
+    LANServer/apihandler.cpp \
+    LANServer/filehandler.cpp \
+    LANServer/httpserver/httpconnectionhandler.cpp \
+    LANServer/httpserver/httpconnectionhandlerpool.cpp \
+    LANServer/httpserver/httpcookie.cpp \
+    LANServer/httpserver/httpglobal.cpp \
+    LANServer/httpserver/httplistener.cpp \
+    LANServer/httpserver/httprequest.cpp \
+    LANServer/httpserver/httprequesthandler.cpp \
+    LANServer/httpserver/httpresponse.cpp \
+    LANServer/httpserver/httpsession.cpp \
+    LANServer/httpserver/httpsessionstore.cpp \
+    LANServer/httpserver/staticfilecontroller.cpp \
+    LANServer/router.cpp \
     MediaLibrary/animeinfo.cpp \
     MediaLibrary/animeprovider.cpp \
     MediaLibrary/episodeitem.cpp \
@@ -136,7 +149,6 @@ SOURCES += \
     Common/flowlayout.cpp \
     UI/timelineedit.cpp \
     LANServer/lanserver.cpp \
-    LANServer/httpserver.cpp \
     Play/Playlist/playlistitem.cpp \
     Play/Playlist/playlistprivate.cpp \
     Play/Danmu/Render/cacheworker.cpp \
@@ -166,7 +178,20 @@ HEADERS += \
     Download/peerid.h \
     Download/peermodel.h \
     Download/trackersubscriber.h \
-    LANServer/mediahandler.h \
+    LANServer/apihandler.h \
+    LANServer/filehandler.h \
+    LANServer/httpserver/httpconnectionhandler.h \
+    LANServer/httpserver/httpconnectionhandlerpool.h \
+    LANServer/httpserver/httpcookie.h \
+    LANServer/httpserver/httpglobal.h \
+    LANServer/httpserver/httplistener.h \
+    LANServer/httpserver/httprequest.h \
+    LANServer/httpserver/httprequesthandler.h \
+    LANServer/httpserver/httpresponse.h \
+    LANServer/httpserver/httpsession.h \
+    LANServer/httpserver/httpsessionstore.h \
+    LANServer/httpserver/staticfilecontroller.h \
+    LANServer/router.h \
     MediaLibrary/animeprovider.h \
     MediaLibrary/episodeitem.h \
     MediaLibrary/tagnode.h \
@@ -270,7 +295,6 @@ HEADERS += \
     Common/flowlayout.h \
     UI/timelineedit.h \
     LANServer/lanserver.h \
-    LANServer/httpserver.h \
     Play/Playlist/playlistitem.h \
     Play/Playlist/playlistprivate.h \
     Play/Danmu/Render/cacheworker.h \
@@ -294,7 +318,7 @@ HEADERS += \
 
 INCLUDEPATH += \
     Play/Video \
-    LANServer
+
 RESOURCES += \
     res.qrc
 
@@ -308,11 +332,9 @@ win32 {
     contains(QT_ARCH, i386) {
         LIBS += -L$$PWD/lib/ -llibmpv.dll
         LIBS += -L$$PWD/lib/ -lzlibstat
-        LIBS += -L$$PWD/lib/ -lqhttpengine
     } else {
         LIBS += -L$$PWD/lib/x64/ -llibmpv.dll
         LIBS += -L$$PWD/lib/x64/ -lzlibstat
-        LIBS += -L$$PWD/lib/x64/ -lqhttpengine
         LIBS += -L$$PWD/lib/x64/ -llua53
     }
 }
@@ -342,6 +364,5 @@ unix {
     LIBS += -lz
     LIBS += -lm
     LIBS += -llua5.3
-    LIBS += -lqhttpengine
     LIBS += -ldl
 }

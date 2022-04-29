@@ -96,6 +96,7 @@ bool isRunning()
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    a.setApplicationName("KikoPlay");
 #ifdef Q_OS_WIN
     SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)AppCrashHandler);
 #endif

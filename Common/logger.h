@@ -24,6 +24,7 @@ public:
     static Logger *logger();
     void log(LogType logType, const QString &message, const QtMsgType type, const QMessageLogContext& context);
     void log(LogType logType, const QString &message);
+    void log(LogType logType, const char *format, ...);
     const QStringList &getLogs(LogType type) const {assert(type!=UNKNOWN);return logBuffer[(int)type];}
 
 signals:

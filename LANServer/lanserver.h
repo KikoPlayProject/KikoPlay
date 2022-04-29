@@ -2,7 +2,12 @@
 #define LANSERVER_H
 
 #include <QObject>
-class HttpServer;
+class Router;
+class QSettings;
+namespace stefanfrings
+{
+class HttpListener;
+}
 class LANServer : public QObject
 {
     Q_OBJECT
@@ -13,7 +18,10 @@ public:
     void stopServer();
     bool isStart() const;
 private:
-    HttpServer *server;
+    Router *router;
+    stefanfrings::HttpListener *listener;
+    QSettings* serverSettings;
+
     QThread *httpThread;
 };
 

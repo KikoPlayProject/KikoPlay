@@ -80,6 +80,11 @@ void LANServerPage::onAccept()
 
 void LANServerPage::onClose()
 {
-
+    if(serverStateChanged)
+    {
+        GlobalObjects::appSetting->setValue("Server/AutoStart",startServer->isChecked());
+        if(syncTimeChanged) GlobalObjects::appSetting->setValue("Server/SyncPlayTime",syncUpdateTime->isChecked());
+        if(portChanged) GlobalObjects::appSetting->setValue("Server/Port",portEdit->text().toUInt());
+    }
 }
 

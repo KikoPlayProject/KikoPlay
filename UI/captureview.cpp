@@ -149,8 +149,8 @@ void CaptureView::setCapture()
         }
         else
         {
-            smPlayer->setMedia(snippetFile);
             smPlayer->setVolume(GlobalObjects::mpvplayer->getVolume());
+            smPlayer->setMedia(snippetFile);
         }
         smPlayer->setFocus();
     }

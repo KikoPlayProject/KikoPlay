@@ -334,7 +334,7 @@ bool BgmList::loadLocal(BgmSeason &season)
         }
         reader.readNext();
     }
-    return reader.hasError();
+    return !reader.hasError();
 }
 
 void BgmList::saveLocal(const BgmSeason &season)

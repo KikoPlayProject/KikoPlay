@@ -2,6 +2,7 @@
 #include <QDateTime>
 #include <QTimerEvent>
 #include <QDir>
+#include <cstdarg>
 #include "globalobjects.h"
 
 QSharedPointer<Logger> Logger::defaultLogger = nullptr;
@@ -50,6 +51,15 @@ void Logger::log(Logger::LogType logType, const QString &message)
         logBuffer[(int)logType].push_back(logContent);
         emit logAppend(logType,  logContent);
     }, Qt::ConnectionType::QueuedConnection);
+}
+
+void Logger::log(Logger::LogType logType, const char *format, ...)
+{
+    va_list argp;
+    va_start(argp, format);
+    QString msg = QString::vasprintf(format, argp);
+    va_end(argp);
+    log(logType, msg);
 }
 
 void Logger::timerEvent(QTimerEvent *event)

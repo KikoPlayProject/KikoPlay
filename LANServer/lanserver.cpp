@@ -1,15 +1,31 @@
 #include "lanserver.h"
-#include "httpserver.h"
 #include "globalobjects.h"
 #include <QSettings>
 #include <QThread>
+#include <QCoreApplication>
+#include "httpserver/httplistener.h"
+#include "router.h"
+
 LANServer::LANServer(QObject *parent) : QObject(parent)
 {
     httpThread=new QThread();
     httpThread->setObjectName(QStringLiteral("httpThread"));
     httpThread->start(QThread::NormalPriority);
-    server=new HttpServer();
-    server->moveToThread(httpThread);
+
+    serverSettings = new QSettings("KikoPlayProject", "KikoPlay");
+    serverSettings->setValue("minThreads","4");
+    serverSettings->setValue("maxThreads","100");
+    serverSettings->setValue("cleanupInterval","60000");
+    serverSettings->setValue("readTimeout","60000");
+    serverSettings->setValue("maxRequestSize","16000");
+    serverSettings->setValue("maxMultiPartSize","10000000");
+
+	QString vv = serverSettings->value("minThreads").toString();
+
+    router = new Router;
+    listener = new stefanfrings::HttpListener(serverSettings, router);
+    listener->moveToThread(httpThread);
+
     bool start=GlobalObjects::appSetting->value("Server/AutoStart",false).toBool();
     if(start)
     {
@@ -25,23 +41,25 @@ LANServer::~LANServer()
 {
     httpThread->quit();
     httpThread->wait();
-    server->deleteLater();
+    listener->deleteLater();
+    router->deleteLater();
+    serverSettings->deleteLater();
 }
 
 bool LANServer::startServer(quint16 port)
 {
-    bool ret;
-    QMetaObject::invokeMethod(server,"startServer",Qt::BlockingQueuedConnection,
-                              Q_RETURN_ARG(bool,ret),Q_ARG(quint16,port));
+    serverSettings->setValue("port", port);
+    bool ret = true;
+    QMetaObject::invokeMethod(listener,"listen",Qt::BlockingQueuedConnection, Q_RETURN_ARG(bool,ret));
     return ret;
 }
 
 void LANServer::stopServer()
 {
-    QMetaObject::invokeMethod(server,&HttpServer::stopServer,Qt::BlockingQueuedConnection);
+    QMetaObject::invokeMethod(listener,&stefanfrings::HttpListener::close, Qt::BlockingQueuedConnection);
 }
 
 bool LANServer::isStart() const
 {
-    return server->isListening();
+    return listener->isListening();
 }
