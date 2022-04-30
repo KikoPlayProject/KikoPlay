@@ -33,6 +33,7 @@ class QWinTaskbarProgress;
 class QWinTaskbarButton;
 #endif
 class QSystemTrayIcon;
+class QProgressBar;
 class MainWindow : public CFramelessWindow, public NotifyInterface
 {
     Q_OBJECT
@@ -86,6 +87,7 @@ private:
     QPoint miniPressPos;
     QSystemTrayIcon *trayIcon;
     HideToTrayType hideToTrayType;
+    QProgressBar *downloadToolProgress;
 
     void setupUI();
     void switchToPlay(const QString &fileToPlay);

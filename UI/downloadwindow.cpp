@@ -423,10 +423,14 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     refreshTimer=new QTimer();
     QObject::connect(refreshTimer,&QTimer::timeout,[this](){
         auto &items=GlobalObjects::downloadModel->getItems();
+        qint64 totalLength = 0, completedLength = 0;
         for(auto iter=items.cbegin();iter!=items.cend();++iter)
         {
+            totalLength += iter.value()->totalLength;
+            completedLength += iter.value()->completedLength;
             rpc->tellStatus(iter.key());
         }
+        emit totalProgressUpdate(totalLength==0 ? 100 : qBound<double>(0,(double)completedLength/totalLength*100,100));
         rpc->tellGlobalStatus();
         if(currentTask && !this->isHidden() && !currentTask->gid.isEmpty())
         {

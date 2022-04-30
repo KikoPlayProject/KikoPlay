@@ -1552,7 +1552,11 @@ QProgressBar {
 QProgressBar::chunk {
     background-color: #25b3df;
 }
-
+QProgressBar#DownloadToolProgress {
+    border: none;
+    text-align: center;
+    background-color: transparent;
+}
 
 QFrame#PoolItem{
     background-color:rgba(1,157,255,80);

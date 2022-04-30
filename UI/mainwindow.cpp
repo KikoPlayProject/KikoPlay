@@ -10,6 +10,7 @@
 #include <QHoverEvent>
 #include <QMouseEvent>
 #include <QSystemTrayIcon>
+#include <QProgressBar>
 #ifdef Q_OS_WIN
 #include <QWinTaskbarProgress>
 #include <QWinTaskbarButton>
@@ -182,13 +183,7 @@ void MainWindow::setupUI()
     widgetTitlebar->setAcceptDrops(true);
     widgetTitlebar->setObjectName(QStringLiteral("widgetTitlebar"));
     QFont normalFont(GlobalObjects::normalFont,12);
-#ifdef Q_OS_WIN
-    {
-    QFontMetrics fm(normalFont);
-    //widgetTitlebar->setFixedHeight(36*logicalDpiY()/96);
-    widgetTitlebar->setFixedHeight(fm.height() * 1.2);
-    }
-#endif
+
     buttonIcon = new QToolButton(widgetTitlebar);
     buttonIcon->setFont(normalFont);
 #ifdef Q_OS_WIN
@@ -278,14 +273,6 @@ void MainWindow::setupUI()
     QToolButton **infoBtnPtrs[] = {
         &buttonPage_Play, &buttonPage_Library, &buttonPage_Downlaod
     };
-    QFontMetrics fm(normalFont);
-    int btnHeight = fm.height() + 10*logicalDpiY()/96;
-    int btnWidth = 0;
-    for(const QString &t : pageButtonTexts)
-    {
-        btnWidth = qMax(btnWidth, fm.horizontalAdvance(t));
-    }
-    btnWidth += 40*logicalDpiX()/96;
 #ifdef Q_OS_WIN
     #define pageBtnObjName "PageButton"
 #else
@@ -300,7 +287,6 @@ void MainWindow::setupUI()
         tb->setText(pageButtonTexts[i]);
         tb->setCheckable(true);
         tb->setToolButtonStyle(Qt::ToolButtonTextOnly);
-        tb->setFixedSize(QSize(btnWidth, btnHeight));
         tb->setObjectName(QStringLiteral(pageBtnObjName));
         btnGroup->addButton(tb, i);
     }
@@ -322,8 +308,23 @@ void MainWindow::setupUI()
                 bgWidget->setBlurAnimation(60., 0.);
             }
             curPage = id;
+            if(downloadToolProgress->value() < 100)
+            {
+                int v = downloadToolProgress->value();
+                downloadToolProgress->setVisible(curPage != 2);
+            }
         }
     });
+
+    downloadToolProgress = new QProgressBar(this);
+    downloadToolProgress->setObjectName(QStringLiteral("DownloadToolProgress"));
+    downloadToolProgress->setRange(0, 100);
+    downloadToolProgress->setTextVisible(false);
+    QVBoxLayout *toolProgressVLayout=new QVBoxLayout();
+    toolProgressVLayout->addStretch(1);
+    toolProgressVLayout->addWidget(downloadToolProgress, 0, Qt::AlignHCenter);
+    toolProgressVLayout->setContentsMargins(0, 0, 0, 0);
+    buttonPage_Downlaod->setLayout(toolProgressVLayout);
 
 
     QVBoxLayout *pageVerticalLayout = new QVBoxLayout();
@@ -340,13 +341,10 @@ void MainWindow::setupUI()
 
 
     GlobalObjects::iconfont.setPointSize(10);
-    const int cBtnH = widgetTitlebar->height() - 4*logicalDpiY()/96;
-    const QSize controlButtonSize(cBtnH, cBtnH);
     minButton=new QToolButton(widgetTitlebar);
     minButton->setFont(GlobalObjects::iconfont);
     minButton->setText(QChar(0xe651));
     minButton->setObjectName(QStringLiteral("ControlButton"));
-    minButton->setMinimumSize(controlButtonSize);
     QObject::connect(minButton,&QToolButton::clicked,this, [=](){
         if(hideToTrayType == HideToTrayType::MINIMIZE)
         {
@@ -363,7 +361,6 @@ void MainWindow::setupUI()
     maxButton->setFont(GlobalObjects::iconfont);
     maxButton->setText(QChar(0xe93c));
     maxButton->setObjectName(QStringLiteral("ControlButton"));
-    maxButton->setMinimumSize(controlButtonSize);
     QObject::connect(maxButton,&QToolButton::clicked,[this](){
        if(this->isMaximized())
        {
@@ -381,7 +378,6 @@ void MainWindow::setupUI()
     closeButton->setFont(GlobalObjects::iconfont);
     closeButton->setText(QChar(0xe60b));
     closeButton->setObjectName(QStringLiteral("closelButton"));
-    closeButton->setMinimumSize(controlButtonSize);
     QObject::connect(closeButton,&QToolButton::clicked,[this](){
         if(hideToTrayType == HideToTrayType::CLOSE)
         {
@@ -729,7 +725,14 @@ QWidget *MainWindow::setupDownloadPage()
 {
     download=new DownloadWindow(this);
     download->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-    QObject::connect(download,&DownloadWindow::playFile,this,&MainWindow::switchToPlay);
+    QObject::connect(download, &DownloadWindow::playFile, this, &MainWindow::switchToPlay);
+    QObject::connect(download, &DownloadWindow::totalProgressUpdate, this, [=](int progress){
+        downloadToolProgress->setValue(progress);
+        if(curPage != 2)
+        {
+            downloadToolProgress->setVisible(progress < 100);
+        }
+    });
     return download;
 }
 
@@ -864,8 +867,35 @@ void MainWindow::resizeEvent(QResizeEvent *)
     if(isMini)
         miniGeo=geometry();
 #ifdef Q_OS_WIN
-    widgetTitlebar->setFixedHeight(36*logicalDpiY()/96);
+    QFontMetrics ffm(buttonIcon->fontMetrics());
+    widgetTitlebar->setFixedHeight(ffm.height() * 1.8);
+    //widgetTitlebar->setFixedHeight(36*logicalDpiY()/96);
 #endif
+    QToolButton **infoBtnPtrs[] = {
+        &buttonPage_Play, &buttonPage_Library, &buttonPage_Downlaod
+    };
+    QFontMetrics fm(buttonPage_Play->fontMetrics());
+    int btnHeight = fm.height() + 10*logicalDpiY()/96;
+    int btnWidth = 0;
+    for(int i = 0; i < sizeof(infoBtnPtrs)/sizeof(QToolButton **); ++i)
+    {
+        QToolButton *tb = *infoBtnPtrs[i];
+        btnWidth = qMax(btnWidth, fm.horizontalAdvance(tb->text()));
+    }
+    btnWidth += 70*logicalDpiX()/96;
+    for(int i = 0; i < sizeof(infoBtnPtrs)/sizeof(QToolButton **); ++i)
+    {
+        QToolButton *tb = *infoBtnPtrs[i];
+        tb->setFixedSize(QSize(btnWidth, btnHeight));
+    }
+    downloadToolProgress->setFixedSize(btnWidth - 4*logicalDpiX()/96, 1*logicalDpiY()/96);
+
+    const int cBtnH = widgetTitlebar->height() - 4*logicalDpiY()/96;
+    const QSize controlButtonSize(cBtnH, cBtnH);
+    maxButton->setMinimumSize(controlButtonSize);
+    minButton->setMinimumSize(controlButtonSize);
+    closeButton->setMinimumSize(controlButtonSize);
+    /*
     const QSize pageButtonSize(100*logicalDpiX()/96,30*logicalDpiY()/96);
     buttonPage_Play->setFixedSize(pageButtonSize);
     buttonPage_Library->setFixedSize(pageButtonSize);
@@ -874,6 +904,7 @@ void MainWindow::resizeEvent(QResizeEvent *)
     maxButton->setMinimumSize(controlButtonSize);
     minButton->setMinimumSize(controlButtonSize);
     closeButton->setMinimumSize(controlButtonSize);
+    */
 }
 
 void MainWindow::showEvent(QShowEvent *)

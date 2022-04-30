@@ -115,6 +115,7 @@ private:
     void setDetailInfo(DownloadTask *task);
 signals:
     void playFile(const QString &path);
+    void totalProgressUpdate(int progress);
 protected:
     virtual void showEvent(QShowEvent *event);
     virtual void hideEvent(QHideEvent *event);

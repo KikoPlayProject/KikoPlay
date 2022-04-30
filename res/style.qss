@@ -1500,7 +1500,11 @@ QListView#captureView,QListView#captureImageView{
     background: transparent;
     color: rgb(240,240,240);
 }
-
+QProgressBar#DownloadToolProgress {
+    border: none;
+    text-align: center;
+    background-color: transparent;
+}
 
 /* ------------------- QProgressBar ------------------- */
 QProgressBar {
