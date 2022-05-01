@@ -4,5 +4,5 @@ libmpv 0.34.0
 aria2 1.34
 Qt-Nice-Frameless-Window
 zlib 1.2.11
-QHttpEngine 1.01
+QtWebApp 1.8.5
 Lua 5.3
