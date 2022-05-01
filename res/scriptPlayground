@@ -4,3 +4,6 @@ local envinfo = kiko.envinfo()
 for k, v in pairs(envinfo) do
     print(string.format("%s:\t%s", k, v))
 end
+--查看KikoPlay API，具体用法参考目录下的KikoPlay脚本开发参考.pdf
+--或者 https://github.com/KikoPlayProject/KikoPlayScript
+kiko.viewtable(kiko)

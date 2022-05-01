@@ -7,6 +7,7 @@ class AnimeLibrary;
 class AnimeModel : public QAbstractItemModel
 {
     Q_OBJECT
+    friend class AnimeListModel;
 public:
     explicit AnimeModel(QObject *parent = nullptr);
     void init();
@@ -29,7 +30,7 @@ private:
     int limitCount;
     int currentOffset;
     std::atomic<int> totalCount;
-    QList<Anime *> animes, tmpAnimes;
+    QVector<Anime *> animes, tmpAnimes;
     bool active;
     bool inited;
     bool hasMoreAnimes;

@@ -22,7 +22,7 @@ void AnimeModel::init()
     ThreadTask task(GlobalObjects::workThread);
     task.RunOnce([this](){
         totalCount += AnimeWorker::instance()->animeCount();
-        QSharedPointer<QList<Anime *>> animes = QSharedPointer<QList<Anime *>>::create();
+        QSharedPointer<QVector<Anime *>> animes = QSharedPointer<QVector<Anime *>>::create();
         animes->reserve(limitCount);
         AnimeWorker::instance()->fetchAnimes(animes.get(), 0, limitCount);
         ThreadTask task(this->thread());
@@ -122,7 +122,7 @@ QVariant AnimeModel::data(const QModelIndex &index, int role) const
 
 void AnimeModel::fetchMore(const QModelIndex &)
 {
-    QList<Anime *> moreAnimes;
+    QVector<Anime *> moreAnimes;
     hasMoreAnimes=false;
     Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching..."), NM_PROCESS | NM_DARKNESS_BACK);
     AnimeWorker::instance()->fetchAnimes(&moreAnimes, currentOffset, limitCount);

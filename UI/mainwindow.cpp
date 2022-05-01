@@ -310,7 +310,6 @@ void MainWindow::setupUI()
             curPage = id;
             if(downloadToolProgress->value() < 100)
             {
-                int v = downloadToolProgress->value();
                 downloadToolProgress->setVisible(curPage != 2);
             }
         }

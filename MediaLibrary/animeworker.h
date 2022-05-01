@@ -16,7 +16,7 @@ public:
         static AnimeWorker worker;
         return &worker;
     }
-    int fetchAnimes(QList<Anime *> *animes, int offset, int limit);
+    int fetchAnimes(QVector<Anime *> *animes, int offset, int limit);
     int animeCount();
     void loadCrImages(Anime *anime);
     void loadEpInfo(Anime *anime);

@@ -65,7 +65,7 @@ void DanmuManagerModel::deletePool()
                 do
                 {
                     tp->danmuCount-=cur->danmuCount;
-                    emit dataChanged(pIndex.siblingAtColumn(3),pIndex.siblingAtColumn(3));
+                    emit dataChanged(pIndex.siblingAtColumn((int)Columns::COUNT),pIndex.siblingAtColumn((int)Columns::COUNT));
                     tp=tp->parent;
                     pIndex=pIndex.parent();
                 }while(tp);
@@ -98,17 +98,38 @@ void DanmuManagerModel::updatePool()
     {
         if(animeNode->checkStatus==Qt::Unchecked) continue;
         animeNode->setCount();
-        QModelIndex aIndex=this->index(animeNodeList.indexOf(animeNode),3,QModelIndex());
+        QModelIndex aIndex=this->index(animeNodeList.indexOf(animeNode),(int)Columns::COUNT,QModelIndex());
         emit dataChanged(aIndex,aIndex);
         for(DanmuPoolNode *epNode:*animeNode->children)
         {
             if(epNode->checkStatus==Qt::Unchecked) continue;
-            QModelIndex eIndex=this->index(animeNode->children->indexOf(epNode),3,aIndex);
+            QModelIndex eIndex=this->index(animeNode->children->indexOf(epNode),(int)Columns::COUNT,aIndex);
             emit dataChanged(eIndex,eIndex);
             for(DanmuPoolNode *sourceNode:*epNode->children)
             {
                 if(sourceNode->checkStatus==Qt::Unchecked) continue;
-                QModelIndex sIndex=this->index(epNode->children->indexOf(sourceNode),3,eIndex);
+                QModelIndex sIndex=this->index(epNode->children->indexOf(sourceNode),(int)Columns::COUNT,eIndex);
+                emit dataChanged(sIndex,sIndex);
+            }
+        }
+    }
+}
+
+void DanmuManagerModel::setDelay(int delay)
+{
+    GlobalObjects::danmuManager->setPoolDelay(animeNodeList, delay*1000);
+    for(DanmuPoolNode *animeNode:animeNodeList)
+    {
+        if(animeNode->checkStatus==Qt::Unchecked) continue;
+        QModelIndex aIndex=this->index(animeNodeList.indexOf(animeNode),(int)Columns::DELAY,QModelIndex());
+        for(DanmuPoolNode *epNode:*animeNode->children)
+        {
+            if(epNode->checkStatus==Qt::Unchecked) continue;
+            QModelIndex eIndex=this->index(animeNode->children->indexOf(epNode),(int)Columns::DELAY,aIndex);
+            for(DanmuPoolNode *sourceNode:*epNode->children)
+            {
+                if(sourceNode->checkStatus==Qt::Unchecked) continue;
+                QModelIndex sIndex=this->index(epNode->children->indexOf(sourceNode),(int)Columns::DELAY,eIndex);
                 emit dataChanged(sIndex,sIndex);
             }
         }

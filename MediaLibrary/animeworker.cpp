@@ -54,7 +54,7 @@ AnimeWorker::~AnimeWorker()
     qDeleteAll(animesMap);
 }
 
-int AnimeWorker::fetchAnimes(QList<Anime *> *animes, int offset, int limit)
+int AnimeWorker::fetchAnimes(QVector<Anime *> *animes, int offset, int limit)
 {
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([=](){

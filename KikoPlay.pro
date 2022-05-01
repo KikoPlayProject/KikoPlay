@@ -51,6 +51,7 @@ SOURCES += \
     LANServer/httpserver/staticfilecontroller.cpp \
     LANServer/router.cpp \
     MediaLibrary/animeinfo.cpp \
+    MediaLibrary/animelistmodel.cpp \
     MediaLibrary/animeprovider.cpp \
     MediaLibrary/episodeitem.cpp \
     MediaLibrary/tagnode.cpp \
@@ -76,6 +77,7 @@ SOURCES += \
     Script/scriptsettingmodel.cpp \
     UI/addpool.cpp \
     UI/addrule.cpp \
+    UI/animebatchaction.cpp \
     UI/animedetailinfopage.cpp \
     UI/animeinfoeditor.cpp \
     UI/animesearch.cpp \
@@ -192,6 +194,7 @@ HEADERS += \
     LANServer/httpserver/httpsessionstore.h \
     LANServer/httpserver/staticfilecontroller.h \
     LANServer/router.h \
+    MediaLibrary/animelistmodel.h \
     MediaLibrary/animeprovider.h \
     MediaLibrary/episodeitem.h \
     MediaLibrary/tagnode.h \
@@ -218,6 +221,7 @@ HEADERS += \
     Script/scriptsettingmodel.h \
     UI/addpool.h \
     UI/addrule.h \
+    UI/animebatchaction.h \
     UI/animedetailinfopage.h \
     UI/animeinfoeditor.h \
     UI/animesearch.h \

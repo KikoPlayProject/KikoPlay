@@ -590,6 +590,32 @@ void DanmuManager::updatePool(QList<DanmuPoolNode *> &updateList)
     });
 }
 
+void DanmuManager::setPoolDelay(QList<DanmuPoolNode *> &updateList, int delay)
+{
+    ThreadTask task(GlobalObjects::workThread);
+    task.Run([this,&updateList, delay](){
+        for(const DanmuPoolNode *animeNode:updateList)
+        {
+            if(animeNode->checkStatus==Qt::Unchecked)continue;
+            for(DanmuPoolNode *epNode:*animeNode->children)
+            {
+                if(epNode->checkStatus==Qt::Unchecked)continue;
+                Pool *pool=getPool(epNode->idInfo);
+                for(DanmuPoolNode *sourceNode:*epNode->children)
+                {
+                    if(sourceNode->checkStatus==Qt::Unchecked)continue;
+                    emit workerStateMessage(tr("Set Delay: %1 %2 %3").arg(animeNode->title, epNode->title, sourceNode->idInfo));
+                    DanmuPoolSourceNode *srcNode(static_cast<DanmuPoolSourceNode *>(sourceNode));
+                    pool->setDelay(srcNode->srcId, delay);
+                    srcNode->delay = delay;
+                }
+            }
+        }
+        emit workerStateMessage("Done");
+        return 0;
+    });
+}
+
 void DanmuManager::updateSourceDelay(const QString &pid, const DanmuSource *sourceInfo)
 {
     ThreadTask task(GlobalObjects::workThread);

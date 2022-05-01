@@ -21,6 +21,7 @@ public:
     void loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList);
     void deletePool(const QList<DanmuPoolNode *> &deleteList);
     void updatePool(QList<DanmuPoolNode *> &updateList);
+    void setPoolDelay(QList<DanmuPoolNode *> &updateList, int delay);
     void exportPool(const QList<DanmuPoolNode *> &exportList, const QString &dir, bool useTimeline=true, bool applyBlockRule=false);
     void exportKdFile(const QList<DanmuPoolNode *> &exportList, const QString &dir, const QString &comment="");
     int importKdFile(const QString &fileName, QWidget *parent);

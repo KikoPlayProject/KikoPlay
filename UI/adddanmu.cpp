@@ -192,6 +192,7 @@ void AddDanmu::search()
                 QList<DanmuSource> results;
                 auto ret = GlobalObjects::danmuProvider->getEpInfo(&item->source, results);
                 if(ret) addSearchItem(results);
+                else showMessage(ret.info, NM_ERROR | NM_HIDE);
                 endProcess();
             });
             QListWidgetItem *listItem=new QListWidgetItem(searchResultWidget);

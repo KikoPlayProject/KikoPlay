@@ -13,6 +13,7 @@ public:
     void exportKdFile(const QString &dir, const QString &comment="");
     void deletePool();
     void updatePool();
+    void setDelay(int delay);
     int totalDanmuCount();
     int totalPoolCount();
     bool hasSelected();

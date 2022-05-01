@@ -27,6 +27,7 @@
 #include "inputdialog.h"
 #include "widgets/dialogtip.h"
 #include "animedetailinfopage.h"
+#include "animebatchaction.h"
 #include "Script/scriptmanager.h"
 #include "Script/libraryscript.h"
 #include "MediaLibrary/animeworker.h"
@@ -127,6 +128,12 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(fa
     });
     act_delete->setEnabled(false);
 
+    QAction *act_batch=new QAction(tr("Batch Operation"),this);
+    QObject::connect(act_batch,&QAction::triggered,[this](){
+        AnimeBatchAction batchAction(animeModel, this);
+        batchAction.exec();
+    });
+
     QAction *act_getDetailInfo=new QAction(tr("Search Details"),this);
     QObject::connect(act_getDetailInfo,&QAction::triggered,[this](){
         QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
@@ -145,7 +152,13 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(fa
             showMessage(tr("No Script ID, Search For Detail First"), NM_HIDE);
             return;
         }
-        QString scriptName(GlobalObjects::scriptManager->getScript(currentAnime->scriptId())->name());
+        QSharedPointer<ScriptBase> script = GlobalObjects::scriptManager->getScript(currentAnime->scriptId());
+        if(!script)
+        {
+            showMessage(tr("Script \"%1\" not exist").arg(currentAnime->scriptId()), NM_HIDE);
+            return;
+        }
+        QString scriptName(script->name());
         showMessage(tr("Fetching Info from %1").arg(scriptName),  NM_PROCESS | NM_DARKNESS_BACK);
         Anime *nAnime = new Anime;
         ScriptState state = GlobalObjects::animeProvider->getDetail(currentAnime->toLite(), nAnime);
@@ -246,6 +259,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(fa
     animeListContextMenu->addAction(act_updateDetailInfo);
     animeListContextMenu->addAction(act_delete);
     animeListContextMenu->addMenu(orderSubMenu);
+    animeListContextMenu->addAction(act_batch);
 
     QAction *menuSep = new QAction(this);
     menuSep->setSeparator(true);

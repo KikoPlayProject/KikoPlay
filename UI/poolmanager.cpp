@@ -376,6 +376,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     QPushButton *addDanmuPool=new QPushButton(tr("Add"), mainPage);
     QPushButton *deletePool=new QPushButton(tr("Delete Pool(s)"),mainPage);
     QPushButton *updatePool=new QPushButton(tr("Update Pool(s)"),mainPage);
+    QPushButton *setDelay=new QPushButton(tr("Set Delay"),mainPage);
     QLineEdit *searchEdit=new QLineEdit(this);
     searchEdit->setPlaceholderText(tr("Search"));
     searchEdit->setMinimumWidth(150*logicalDpiX()/96);
@@ -391,6 +392,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     mainHLayout->addWidget(addDanmuPool);
     mainHLayout->addWidget(deletePool);
     mainHLayout->addWidget(updatePool);
+    mainHLayout->addWidget(setDelay);
     mainHLayout->addStretch(1);
     mainHLayout->addWidget(searchEdit);
 
@@ -401,21 +403,25 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     funcStackLayout->addWidget(deletePage);
     funcStackLayout->addWidget(updatePage);
 
+    auto setControlEnable = [=](bool enable){
+        poolView->setEnabled(enable);
+        importKdFile->setEnabled(enable);
+        exportPool->setEnabled(enable);
+        deletePool->setEnabled(enable);
+        updatePool->setEnabled(enable);
+        addDanmuPool->setEnabled(enable);
+        setDelay->setEnabled(enable);
+    };
+
     QObject::connect(cancel,&QPushButton::clicked,[funcStackLayout](){
        funcStackLayout->setCurrentIndex(0);
     });
-    QObject::connect(importKdFile,&QPushButton::clicked,[this,poolView,managerModel,
-                     importKdFile,exportPool,deletePool,updatePool,addDanmuPool](){
+    QObject::connect(importKdFile,&QPushButton::clicked,[=](){
         QStringList files = QFileDialog::getOpenFileNames(this,tr("Select KikoPlay Danmu Pool File"),"","KikoPlay Danmu Pool File(*.kd)");
         if(files.isEmpty()) return;
         this->showBusyState(true);
         importKdFile->setText(tr("Importing..."));
-        importKdFile->setEnabled(false);
-        poolView->setEnabled(false);
-        exportPool->setEnabled(false);
-        deletePool->setEnabled(false);
-        updatePool->setEnabled(false);
-        addDanmuPool->setEnabled(false);
+        setControlEnable(false);
         bool refreshList=false;
         for(auto &file:files)
         {
@@ -425,12 +431,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         if(refreshList) managerModel->refreshList();
         this->showBusyState(false);
         importKdFile->setText(tr("Import"));
-        poolView->setEnabled(true);
-        importKdFile->setEnabled(true);
-        exportPool->setEnabled(true);
-        deletePool->setEnabled(true);
-        addDanmuPool->setEnabled(true);
-        updatePool->setEnabled(true);
+        setControlEnable(true);
     });
     QObject::connect(exportPool,&QPushButton::clicked,[cancel, exportHLayout,funcStackLayout](){
         exportHLayout->addWidget(cancel);
@@ -456,6 +457,28 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         cancel->show();
         funcStackLayout->setCurrentIndex(3);
     }); 
+    QObject::connect(setDelay,&QPushButton::clicked,[=](){
+        if(!managerModel->hasSelected())return;
+        this->showBusyState(true);
+        setControlEnable(false);
+        LineInputDialog input(tr("Set Delay"), tr("Delay(s)"), "", "DialogSize/PoolManagerDelay", false, this);
+        if(QDialog::Accepted == input.exec())
+        {
+            bool ok = false;
+            int delay = input.text.toInt(&ok);
+            if(!ok)
+            {
+                showMessage(tr("Invalid Delay"), NM_ERROR | NM_HIDE);
+            }
+            else
+            {
+                managerModel->setDelay(delay);
+            }
+        }
+        this->showBusyState(false);
+        setControlEnable(true);
+        stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
+    });
 
     QGridLayout *managerGLayout=new QGridLayout(this);
     managerGLayout->addLayout(funcStackLayout,0,0);
@@ -465,7 +488,6 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     managerGLayout->setColumnStretch(0,1);
     managerGLayout->setContentsMargins(0, 0, 0, 0);
 
-    resize(620*logicalDpiX()/96, 420*logicalDpiY()/96);
     QHeaderView *poolHeader = poolView->header();
     poolHeader->setFont(this->font());
     poolHeader->resizeSection(0, 260*logicalDpiX()/96); //Pool
@@ -473,6 +495,13 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     poolHeader->resizeSection(2, 50*logicalDpiX()/96); //Delay
     poolHeader->resizeSection(3, 120*logicalDpiX()/96); //Count
 
+    setSizeSettingKey("DialogSize/PoolManager",QSize(620*logicalDpiX()/96,420*logicalDpiY()/96));
+    QVariant headerState(GlobalObjects::appSetting->value("HeaderViewState/PoolManagerView"));
+    if(!headerState.isNull())
+        poolView->header()->restoreState(headerState.toByteArray());
+    addOnCloseCallback([poolView](){
+        GlobalObjects::appSetting->setValue("HeaderViewState/PoolManagerView", poolView->header()->saveState());
+    });
 
     QTimer::singleShot(0,[this,managerModel,importKdFile,addDanmuPool](){
         this->showBusyState(true);
