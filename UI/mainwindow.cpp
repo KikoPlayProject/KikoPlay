@@ -131,6 +131,7 @@ MainWindow::MainWindow(QWidget *parent)
             geo.moveCenter(this->geometry().center());
             tip.move(geo.topLeft());
             tip.exec();
+            QDesktopServices::openUrl(QUrl("https://kikoplayproject.github.io/"));
         });
     }
 }
