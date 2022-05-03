@@ -33,7 +33,7 @@ KikoPlay基于以下项目：
  - [aria2](https://github.com/aria2/aria2)
  - [Qt-Nice-Frameless-Window](https://github.com/Bringer-of-Light/Qt-Nice-Frameless-Window)
  - zlib 1.2.11
- - [QHttpEngine](https://github.com/nitroshare/qhttpengine)
+ - [QtWebApp](http://stefanfrings.de/qtwebapp/index.html)
  - Lua 5.3
 
 编译环境： MSVC2015，gcc 7.3.0(其他版本未测试)

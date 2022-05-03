@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_WIN
     SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)AppCrashHandler);
 #endif
-    //if(isRunning()) return 0;
+    if(isRunning()) return 0;
     GlobalObjects::init();
 
     MainWindow w;
