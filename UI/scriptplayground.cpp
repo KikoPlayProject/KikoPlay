@@ -5,7 +5,6 @@
 #include <QPushButton>
 #include <QSplitter>
 #include <QGridLayout>
-#include "Script/playgroundscript.h"
 
 namespace
 {
