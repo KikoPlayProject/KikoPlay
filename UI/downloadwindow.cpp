@@ -426,8 +426,11 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         qint64 totalLength = 0, completedLength = 0;
         for(auto iter=items.cbegin();iter!=items.cend();++iter)
         {
-            totalLength += iter.value()->totalLength;
-            completedLength += iter.value()->completedLength;
+            if(iter.value()->status == DownloadTask::Downloading)
+            {
+                totalLength += iter.value()->totalLength;
+                completedLength += iter.value()->completedLength;
+            }
             rpc->tellStatus(iter.key());
         }
         emit totalProgressUpdate(totalLength==0 ? 100 : qBound<double>(0,(double)completedLength/totalLength*100,100));
