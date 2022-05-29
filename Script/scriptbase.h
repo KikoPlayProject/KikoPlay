@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QHash>
 #include <QMutex>
-#include "lua/lua.hpp"
+#include "lua.hpp"
 class MutexLocker
 {
     QMutex &m;

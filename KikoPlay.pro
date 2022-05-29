@@ -380,11 +380,6 @@ unix {
     INSTALLS += target icons desktop web
     DEFINES += CONFIG_UNIX_DATA
 
-    luahpp.target = Script/lua/lua.hpp
-    luahpp.depends = FORCE
-    luahpp.commands = cd Script/lua; ln -sf ../lua.hpp .
-    QMAKE_EXTRA_TARGETS += luahpp
-
     LIBS += -lmpv
     LIBS += -lz
 }
