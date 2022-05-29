@@ -1,6 +1,6 @@
 #ifndef MODULEBASE_H
 #define MODULEBASE_H
-#include "../lua/lua.hpp"
+#include "Script/lua.hpp"
 #include <QString>
 class ScriptBase;
 namespace LuaModule
