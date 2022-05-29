@@ -24,7 +24,7 @@ private:
     void processDirectory(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response, const QString &path);
     void processFile(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response, const QString &path);
 
-    bool getRange(const QString &range, int64_t fileSize, int64_t &from, int64_t &to);
+    bool getRange(const QString &range, qint64 fileSize, qint64 &from, qint64 &to);
 };
 
 #endif // FILEHANDLER_H

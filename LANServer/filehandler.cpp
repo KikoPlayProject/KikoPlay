@@ -130,12 +130,12 @@ void FileHandler::processFile(stefanfrings::HttpRequest &request, stefanfrings::
     // Return the file content, do not store in cache
     while (!file.atEnd() && !file.error() && file.pos() <= to && response.isConnected())
     {
-        qint64 blockSize = qMin<int64_t>(65536, to - file.pos() + 1);
+        qint64 blockSize = qMin<qint64>(65536, to - file.pos() + 1);
         response.write(file.read(blockSize), file.atEnd());
     }
 }
 
-bool FileHandler::getRange(const QString &range, int64_t fileSize, int64_t &from, int64_t &to)
+bool FileHandler::getRange(const QString &range, qint64 fileSize, qint64 &from, qint64 &to)
 {
     static QRegExp regExp("^(\\d*)-(\\d*)$");
 

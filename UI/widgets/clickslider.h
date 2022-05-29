@@ -1,8 +1,8 @@
 #ifndef CLICKSLIDER_H
 #define CLICKSLIDER_H
 #include <QSlider>
-#include "../Danmu/eventanalyzer.h"
-#include "../Play/Video/mpvplayer.h"
+#include "Play/Danmu/eventanalyzer.h"
+#include "Play/Video/mpvplayer.h"
 class ClickSlider: public QSlider
 {
     Q_OBJECT

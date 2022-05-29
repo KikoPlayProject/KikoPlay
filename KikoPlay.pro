@@ -344,6 +344,29 @@ win32 {
 }
 
 # UNIX related settings
+macx {
+    LIBS += -L/usr/lib -L/usr/local/lib -L/opt/local/lib -L$$PWD/lib/mac
+    LIBS += -llua5.3
+}
+
+linux-g++* {
+    PRE_TARGETDEPS = Script/lua/liblua.a
+    liblua.target = $$PRE_TARGETDEPS
+    liblua.depends = FORCE
+    liblua.commands = cd Script/lua && make MYCFLAGS=-fPIC\ -DLUA_USE_LINUX\ -DLUA_COMPAT_5_2 liblua.a
+    QMAKE_EXTRA_TARGETS += liblua
+    QMAKE_LFLAGS += -fuse-ld=gold -Wl,--exclude-libs,liblua.a
+
+    # Link library settings by ARCH
+    contains(QT_ARCH, i386) {
+        LIBS += -L/usr/lib -L$$PWD/lib/linux
+    } else {
+        LIBS += -L/usr/lib64 -L/usr/lib/x86_64-linux-gnu -L$$PWD/lib/x64/linux
+    }
+    LIBS += -LScript/lua -l:liblua.a
+    LIBS += -lm -ldl
+}
+
 unix {
     # Install settings
     target.path += /usr/bin
@@ -357,16 +380,11 @@ unix {
     INSTALLS += target icons desktop web
     DEFINES += CONFIG_UNIX_DATA
 
-    # Link library settings by ARCH
-    contains(QT_ARCH, i386) {
-        LIBS += -L/usr/lib/ -L$$PWD/lib/linux
-    } else {
-        LIBS += -L/usr/lib64/ -L$$PWD/lib/x64/linux -L$$PWD/lib64/linux
-    }
+    luahpp.target = Script/lua/lua.hpp
+    luahpp.depends = FORCE
+    luahpp.commands = cd Script/lua; ln -sf ../lua.hpp .
+    QMAKE_EXTRA_TARGETS += luahpp
 
     LIBS += -lmpv
     LIBS += -lz
-    LIBS += -lm
-    LIBS += -llua5.3
-    LIBS += -ldl
 }
