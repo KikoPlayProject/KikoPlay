@@ -20,8 +20,6 @@ LANServer::LANServer(QObject *parent) : QObject(parent)
     serverSettings->setValue("maxRequestSize","16000");
     serverSettings->setValue("maxMultiPartSize","10000000");
 
-	QString vv = serverSettings->value("minThreads").toString();
-
     router = new Router;
     listener = new stefanfrings::HttpListener(serverSettings, router);
     listener->moveToThread(httpThread);

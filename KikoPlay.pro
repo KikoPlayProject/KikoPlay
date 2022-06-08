@@ -37,6 +37,7 @@ SOURCES += \
     Download/peermodel.cpp \
     Download/trackersubscriber.cpp \
     LANServer/apihandler.cpp \
+    LANServer/dlna/upnpctrlpoint.cpp \
     LANServer/filehandler.cpp \
     LANServer/httpserver/httpconnectionhandler.cpp \
     LANServer/httpserver/httpconnectionhandlerpool.cpp \
@@ -85,6 +86,7 @@ SOURCES += \
     UI/charactereditor.cpp \
     UI/danmulaunch.cpp \
     UI/danmuview.cpp \
+    UI/dlnadiscover.cpp \
     UI/gifcapture.cpp \
     UI/inputdialog.cpp \
     UI/logwindow.cpp \
@@ -181,6 +183,7 @@ HEADERS += \
     Download/peermodel.h \
     Download/trackersubscriber.h \
     LANServer/apihandler.h \
+    LANServer/dlna/upnpctrlpoint.h \
     LANServer/filehandler.h \
     LANServer/httpserver/httpconnectionhandler.h \
     LANServer/httpserver/httpconnectionhandlerpool.h \
@@ -229,6 +232,7 @@ HEADERS += \
     UI/charactereditor.h \
     UI/danmulaunch.h \
     UI/danmuview.h \
+    UI/dlnadiscover.h \
     UI/gifcapture.h \
     UI/inputdialog.h \
     UI/logwindow.h \

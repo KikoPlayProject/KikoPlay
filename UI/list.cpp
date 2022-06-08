@@ -13,6 +13,7 @@
 #include "matcheditor.h"
 #include "blockeditor.h"
 #include "inputdialog.h"
+#include "dlnadiscover.h"
 #include "widgets/loadingicon.h"
 #include "Play/Danmu/Provider/localprovider.h"
 #include "MediaLibrary/animeprovider.h"
@@ -529,6 +530,26 @@ void ListWindow::initActions()
             GlobalObjects::playlist->addFolder(directory, getPSParentIndex());
         }
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
+    });
+    act_PlayOnOtherDevices = new QAction(tr("Play on other devices"), this);
+    QObject::connect(act_PlayOnOtherDevices, &QAction::triggered, [this](){
+        QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
+        QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
+        if (selection.size() == 0)return;
+        QModelIndex selIndex(selection.indexes().first());
+        const PlayListItem *item = GlobalObjects::playlist->getItem(selIndex);
+        if(item->children) return;
+        QFileInfo fileInfo(item->path);
+        if(!fileInfo.exists())
+        {
+            showMessage(tr("File Not Exist"), NM_HIDE);
+            return;
+        }
+        DLNADiscover dlnaDiscover(item, this);
+        if(QDialog::Accepted == dlnaDiscover.exec())
+        {
+            showMessage(tr("Play on %1: %2").arg(dlnaDiscover.deviceName, item->title), NM_HIDE);
+        }
     });
 
     act_cut=new QAction(tr("Cut"),this);
@@ -1096,7 +1117,6 @@ QWidget *ListWindow::setupPlaylistPage()
     });
     playlistContextMenu->addMenu(markSubMenu);
     playlistContextMenu->addAction(act_remove);
-    playlistContextMenu->addSeparator();
 
     QMenu *moveSubMenu=new QMenu(tr("Move"),playlistContextMenu);
     moveSubMenu->addAction(act_moveUp);
@@ -1106,10 +1126,13 @@ QWidget *ListWindow::setupPlaylistPage()
     sortSubMenu->addAction(act_sortSelectionAscending);
     sortSubMenu->addAction(act_sortSelectionDescending);
     playlistContextMenu->addMenu(sortSubMenu);
+    playlistContextMenu->addSeparator();
+
     QMenu *shareSubMenu=new QMenu(tr("Share"),playlistContextMenu);
     shareSubMenu->addAction(act_sharePoolCode);
     shareSubMenu->addAction(act_shareResourceCode);
     playlistContextMenu->addMenu(shareSubMenu);
+    playlistContextMenu->addAction(act_PlayOnOtherDevices);
     playlistContextMenu->addSeparator();
     playlistContextMenu->addAction(act_updateFolder);
     playlistContextMenu->addAction(act_removeInvalid);

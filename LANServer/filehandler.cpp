@@ -12,6 +12,10 @@ void FileHandler::service(stefanfrings::HttpRequest &request, stefanfrings::Http
     if(mediaHashTable && path.startsWith("media/"))
     {
         QString mediaId(path.mid(6).trimmed());
+        if(mediaId.indexOf('.') > 0)
+        {
+            mediaId = mediaId.mid(0, mediaId.indexOf('.'));
+        }
         QString mediaPath(mediaHashTable->value(mediaId,""));
         mediaPath.isEmpty()? response.setStatus(stefanfrings::HttpResponse::NotFound) :
                              processFile(request, response, mediaPath);

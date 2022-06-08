@@ -199,6 +199,7 @@ TrackerSubscribeDialog::TrackerSubscribeDialog(QWidget *parent) :
     QCheckBox *autoCheck = new QCheckBox(tr("Auto Check"), this);
     QTreeView *trackerSrcView = new QTreeView(this);
     trackerSrcView->setRootIsDecorated(false);
+    trackerSrcView->setAlternatingRowColors(true);
     QGridLayout *tsGLayout = new QGridLayout(this);
     QPlainTextEdit *trackerText = new QPlainTextEdit(this);
     trackerText->setReadOnly(true);

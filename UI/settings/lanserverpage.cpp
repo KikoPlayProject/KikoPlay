@@ -25,7 +25,7 @@ LANServerPage::LANServerPage(QWidget *parent) : SettingPage(parent)
     QIntValidator *portValidator=new QIntValidator(this);
     portValidator->setRange(1, 65535);
     portEdit->setValidator(portValidator);
-    portEdit->setText(QString::number(GlobalObjects::appSetting->value("Server/Port",8000).toLongLong()));
+    portEdit->setText(QString::number(GlobalObjects::appSetting->value("Server/Port",8000).toUInt()));
     portEdit->setEnabled(!GlobalObjects::lanServer->isStart());
 
     QPlainTextEdit *addressTip=new QPlainTextEdit(this);
