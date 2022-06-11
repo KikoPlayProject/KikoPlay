@@ -138,8 +138,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::setBackground(const QString &path, const QColor &color)
 {
+    bool forceRefeshQSS = color.isValid() && color != themeColor;
     themeColor = color;
-    setBackground(path);
+    setBackground(path, forceRefeshQSS);
 }
 
 void MainWindow::setBgDarkness(int val)

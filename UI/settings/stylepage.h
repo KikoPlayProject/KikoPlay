@@ -20,8 +20,10 @@ private:
     void setBgList(QListWidget *bgImgView);
     void updateSetting(const QString &path, bool add = true);
     QPixmap getThumb(const QString &path);
+    QPixmap addThumbColorTag(const QPixmap &srcThumb, const QColor &colorTip);
     void setSlide();
     static QHash<QString, QPixmap> bgThumb;
+    static QHash<QString, QColor> bgThumbColor;
     bool darkModeChanged = false, bgChanged = false, bgDarknessChanged = false, colorChanged = false;
     const int maxBgCount = 32;
     QStringList historyBgs;

@@ -19,6 +19,7 @@
 #include <algorithm>
 
 QHash<QString, QPixmap> StylePage::bgThumb;
+QHash<QString, QColor> StylePage::bgThumbColor;
 namespace  {
     class ColorPreview : public QWidget
     {
@@ -43,7 +44,7 @@ namespace  {
 StylePage::StylePage(QWidget *parent) : SettingPage(parent)
 {
     thumbSize = QSize(120*logicalDpiX()/96,120*logicalDpiY()/96);
-    historyBgs = GlobalObjects::appSetting->value("MainWindow/HistoryBackgrounds").toStringList();
+    historyBgs = GlobalObjects::appSetting->value("MainWindow/HistoryBackgrounds").toStringList();    
     QListWidget *bgImgView=new QListWidget(this);
     bgImgView->setSelectionMode(QAbstractItemView::SingleSelection);
     bgImgView->setIconSize(thumbSize);
@@ -146,13 +147,35 @@ StylePage::StylePage(QWidget *parent) : SettingPage(parent)
     QObject::connect(this, &StylePage::setBackground, mW, (void (MainWindow::*)(const QString &, const QColor &))&MainWindow::setBackground);
     QObject::connect(this, &StylePage::setBgDarkness, mW, &MainWindow::setBgDarkness);
     QObject::connect(this, &StylePage::setThemeColor, mW, &MainWindow::setThemeColor);
+    QObject::connect(this, &StylePage::setThemeColor, this, [=](const QColor &color){
+        if(!color.isValid()) return;
+        QListWidgetItem *frontItem = bgImgView->item(0);
+        if(!frontItem) return;
+        QString path(frontItem->data(Qt::UserRole).toString());
+        if(!bgThumb.contains(path)) return;
+        QPixmap thumb = bgThumb[path];
+        frontItem->setIcon(QIcon(addThumbColorTag(thumb, color)));
+        bgThumbColor[path] = color;
+    });
     hideToTrayCombo->setCurrentIndex(static_cast<int>(mW->getHideToTrayType()));
 }
 
 void StylePage::onAccept()
 {
     if(bgDarknessChanged) GlobalObjects::appSetting->setValue("MainWindow/BackgroundDarkness", sliderBgDarkness->value());
-    if(bgChanged) GlobalObjects::appSetting->setValue("MainWindow/HistoryBackgrounds", historyBgs);
+    if(bgChanged)
+    {
+        QMap<QString, QVariant> bgColorVariant;
+        for(auto &path : historyBgs)
+        {
+            if(bgThumbColor.contains(path))
+            {
+                bgColorVariant[path] = bgThumbColor[path];
+            }
+        }
+        GlobalObjects::appSetting->setValue("MainWindow/HistoryBackgroundsColor", bgColorVariant);
+        GlobalObjects::appSetting->setValue("MainWindow/HistoryBackgrounds", historyBgs);
+    }
     if(darkModeChanged) GlobalObjects::appSetting->setValue("MainWindow/DarkMode", darkMode->isChecked());
     if(colorChanged)
     {
@@ -175,7 +198,18 @@ void StylePage::setBgList(QListWidget *bgImgView)
         if(path != GlobalObjects::appSetting->value("MainWindow/Background").toString())
         {
             bgImgView->insertItem(0, bgImgView->takeItem(bgImgView->row(item)));
-            emit setBackground(path);
+            QColor color;
+            if(bgThumbColor.contains(path))
+            {
+                QColor tColor = bgThumbColor[path];
+                sliderHue->setValue(tColor.hue());
+                sliderLightness->setValue(tColor.value());
+                if(customColor->isChecked())
+                {
+                    color = tColor;
+                }
+            }
+            emit setBackground(path, color);
             updateSetting(path);
         }
     });
@@ -196,10 +230,16 @@ void StylePage::setBgList(QListWidget *bgImgView)
             if(bgImgView->count()>maxBgCount)
             {
                 QScopedPointer<QListWidgetItem> last(bgImgView->item(bgImgView->count()-1));
+                bgThumbColor.remove(last->data(Qt::UserRole).toString());
                 bgThumb.remove(last->data(Qt::UserRole).toString());
             }
             QColor color;
-            if(customColor->isChecked()) color=QColor::fromHsv(sliderHue->value(),255,sliderLightness->value());
+            if(customColor->isChecked())
+            {
+                color=QColor::fromHsv(sliderHue->value(),255,sliderLightness->value());
+                item->setIcon(QIcon(addThumbColorTag(thumb, color)));
+                bgThumbColor[fileName] = color;
+            }
             emit setBackground(fileName, color);
         }
     });
@@ -211,12 +251,27 @@ void StylePage::setBgList(QListWidget *bgImgView)
         QString path(curItem->data(Qt::UserRole).toString());
         updateSetting(path, false);
         bgThumb.remove(path);
+        bgThumbColor.remove(path);
         if(path == GlobalObjects::appSetting->value("MainWindow/Background").toString())
         {
             QColor color;
             if(customColor->isChecked()) color=QColor::fromHsv(sliderHue->value(),255,sliderLightness->value());
-            emit setBackground(bgImgView->count()>1?
-                                   bgImgView->item(1)->data(Qt::UserRole).toString():"", color);
+            QString newPath;
+            if(bgImgView->count()>1)
+            {
+                newPath = bgImgView->item(1)->data(Qt::UserRole).toString();
+                if(bgThumbColor.contains(newPath))
+                {
+                    QColor tColor = bgThumbColor[newPath];
+                    sliderHue->setValue(tColor.hue());
+                    sliderLightness->setValue(tColor.value());
+                    if(customColor->isChecked())
+                    {
+                        color = tColor;
+                    }
+                }
+            }
+            emit setBackground(newPath, color);
         }
     });
     bgImgView->setContextMenuPolicy(Qt::ActionsContextMenu);
@@ -232,10 +287,18 @@ void StylePage::setBgList(QListWidget *bgImgView)
             return 0;
         });
         QStringList historyBgs = GlobalObjects::appSetting->value("MainWindow/HistoryBackgrounds").toStringList();
+        QMap<QString, QVariant> bgColorVariant = GlobalObjects::appSetting->value("MainWindow/HistoryBackgroundsColor").toMap();
+
         for(auto &path : historyBgs)
         {
             QPixmap thumb(getThumb(path));
             if(thumb.isNull()) continue;
+            if(bgColorVariant.contains(path))
+            {
+                QColor color = bgColorVariant[path].value<QColor>();
+                bgThumbColor[path] = color;
+                thumb = addThumbColorTag(thumb, color);
+            }
             QListWidgetItem *item = new QListWidgetItem(QIcon(thumb), nullptr);
             item->setData(Qt::UserRole, path);
             item->setToolTip(path);
@@ -265,6 +328,22 @@ QPixmap StylePage::getThumb(const QString &path)
     painter.end();
     bgThumb[path]=QPixmap::fromImage(thumb);
     return bgThumb[path];
+}
+
+QPixmap StylePage::addThumbColorTag(const QPixmap &srcThumb, const QColor &colorTip)
+{
+    QImage img = srcThumb.toImage();
+    QPainter painter(&img);
+    if(colorTip.isValid())
+    {
+        int width = 24*logicalDpiX()/96;
+        QRect colorTipRect(2*logicalDpiX()/96, (120-2)*logicalDpiY()/96-width, width, width);
+        painter.fillRect(colorTipRect, Qt::white);
+        int m = 1*logicalDpiX()/96;
+        painter.fillRect(colorTipRect.marginsRemoved(QMargins(m, m, m, m)), colorTip);
+    }
+    painter.end();
+    return QPixmap::fromImage(img);
 }
 
 void StylePage::setSlide()
