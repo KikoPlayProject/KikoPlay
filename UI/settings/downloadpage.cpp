@@ -12,6 +12,8 @@
 #include <QTreeView>
 #include <QAction>
 #include <QHeaderView>
+#include <QApplication>
+#include <QClipboard>
 #include "Download/trackersubscriber.h"
 #include "../inputdialog.h"
 #include "globalobjects.h"
@@ -231,6 +233,14 @@ TrackerSubscribeDialog::TrackerSubscribeDialog(QWidget *parent) :
     trackerSrcView->setModel(TrackerSubscriber::subscriber());
     trackerSrcView->setContextMenuPolicy(Qt::ActionsContextMenu);
     trackerSrcView->setSelectionMode(QAbstractItemView::SingleSelection);
+    QAction *actCopyURL = new QAction(tr("Copy URL"), trackerSrcView);
+    QObject::connect(actCopyURL, &QAction::triggered, this, [=](){
+        auto selection = trackerSrcView->selectionModel()->selectedRows();
+        if(selection.size()==0) return;
+        const QString url(selection.first().siblingAtColumn(static_cast<int>(TrackerSubscriber::Columns::URL)).data().toString());
+        QClipboard *cb = QApplication::clipboard();
+        cb->setText(url);
+    });
     QAction *actRemoveSubscirbe = new QAction(tr("Remove Subscribe"), trackerSrcView);
     QObject::connect(actRemoveSubscirbe, &QAction::triggered, this, [=](){
         auto selection = trackerSrcView->selectionModel()->selectedRows();
@@ -244,6 +254,7 @@ TrackerSubscribeDialog::TrackerSubscribeDialog(QWidget *parent) :
         TrackerSubscriber::subscriber()->check(selection.first().row());
     });
     trackerSrcView->addAction(actCheck);
+    trackerSrcView->addAction(actCopyURL);
     trackerSrcView->addAction(actRemoveSubscirbe);
     QObject::connect(trackerSrcView->selectionModel(), &QItemSelectionModel::selectionChanged,this, [=](){
         auto selection = trackerSrcView->selectionModel()->selectedRows();

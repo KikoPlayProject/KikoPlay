@@ -1234,8 +1234,8 @@
 <context>
     <name>BgmList</name>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="192"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="225"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="201"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="234"/>
         <source>Bangumi Calendar script not exist</source>
         <translation>未找到番组日历脚本</translation>
     </message>
@@ -1244,20 +1244,25 @@
         <translation type="vanished">已选择番组日历：%1</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="195"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="230"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="36"/>
+        <source>Save Season: %1</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="204"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="239"/>
         <source>[%1]Select Bangumi Calendar: %2</source>
         <translation>[%1]已选择番组日历：%2</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="197"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="232"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="206"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="241"/>
         <source>Fetching Info...</source>
         <translation>获取信息...</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="204"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="263"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="213"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="272"/>
         <source>Fetch Failed: %1</source>
         <translation>获取失败：%1</translation>
     </message>
@@ -1270,29 +1275,29 @@
         <translation type="vanished">%1-%2 数量：%3%4</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="65"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="167"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="257"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="74"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="176"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="266"/>
         <source> Focus: %1</source>
         <translation> 关注：%1</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.h" line="32"/>
+        <location filename="../../Download/BgmList/bgmlist.h" line="33"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.h" line="32"/>
+        <location filename="../../Download/BgmList/bgmlist.h" line="33"/>
         <source>ShowDate/Time</source>
         <translation>放送开始/时间</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.h" line="32"/>
+        <location filename="../../Download/BgmList/bgmlist.h" line="33"/>
         <source>AirSites</source>
         <translation>放送站点</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.h" line="32"/>
+        <location filename="../../Download/BgmList/bgmlist.h" line="33"/>
         <source>Focus</source>
         <translation>关注</translation>
     </message>
@@ -1723,12 +1728,12 @@
 <context>
     <name>DLNADiscover</name>
     <message>
-        <location filename="../../UI/dlnadiscover.cpp" line="15"/>
+        <location filename="../../UI/dlnadiscover.cpp" line="16"/>
         <source>Select DLNA Device</source>
         <translation>选择DLNA设备</translation>
     </message>
     <message>
-        <location filename="../../UI/dlnadiscover.cpp" line="17"/>
+        <location filename="../../UI/dlnadiscover.cpp" line="18"/>
         <source>Refresh</source>
         <translation>刷新</translation>
     </message>
@@ -2247,42 +2252,42 @@ Date: %2
 <context>
     <name>DownloadPage</name>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="70"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="72"/>
         <source>Max Download Limit(KB): </source>
         <translation>下载限速（KB）：</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="78"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="80"/>
         <source>Max Uploas Limit(KB): </source>
         <translation>上传限速（KB）：</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="86"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="88"/>
         <source>Seed Time(min): </source>
         <translation>做种时间（min）：</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="94"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="96"/>
         <source>Max Concurrent Downloads: </source>
         <translation>同时下载任务数：</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="102"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="104"/>
         <source>Automatically add to playlist after download</source>
         <translation>下载完成后自动加入播放列表</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="108"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="110"/>
         <source>Extra BT Trackers: </source>
         <translation>附加BT Tracker：</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="114"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="116"/>
         <source>Tracker Subscribe</source>
         <translation>Tracker订阅</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="120"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="122"/>
         <source>Aria2 Startup Args: </source>
         <translation>Aria2启动参数： </translation>
     </message>
@@ -2363,7 +2368,7 @@ Date: %2
         <location filename="../../UI/downloadwindow.cpp" line="96"/>
         <location filename="../../UI/downloadwindow.cpp" line="347"/>
         <location filename="../../UI/downloadwindow.cpp" line="372"/>
-        <location filename="../../UI/downloadwindow.cpp" line="486"/>
+        <location filename="../../UI/downloadwindow.cpp" line="490"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
@@ -2390,7 +2395,7 @@ Date: %2
     </message>
     <message>
         <location filename="../../UI/downloadwindow.cpp" line="90"/>
-        <location filename="../../UI/downloadwindow.cpp" line="486"/>
+        <location filename="../../UI/downloadwindow.cpp" line="490"/>
         <source>An error occurred while adding Torrent : 
  %1 </source>
         <translation>添加种子时出错：
@@ -2460,63 +2465,63 @@ Date: %2
         <translation>日志</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="450"/>
-        <location filename="../../UI/downloadwindow.cpp" line="964"/>
+        <location filename="../../UI/downloadwindow.cpp" line="454"/>
+        <location filename="../../UI/downloadwindow.cpp" line="968"/>
         <source>Blocks: %1 Size: %2</source>
         <translation>分块：%1 大小：%2</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="524"/>
+        <location filename="../../UI/downloadwindow.cpp" line="528"/>
         <source>Downloading</source>
         <translation>正在下载</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="531"/>
+        <location filename="../../UI/downloadwindow.cpp" line="535"/>
         <source>Completed</source>
         <translation>下载完成</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="536"/>
+        <location filename="../../UI/downloadwindow.cpp" line="540"/>
         <source>All</source>
         <translation>全部任务</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="541"/>
+        <location filename="../../UI/downloadwindow.cpp" line="545"/>
         <source>BgmList</source>
         <translation>每日放送</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="546"/>
+        <location filename="../../UI/downloadwindow.cpp" line="550"/>
         <source>ResSearch</source>
         <translation>资源搜索</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="551"/>
+        <location filename="../../UI/downloadwindow.cpp" line="555"/>
         <source>AutoDownload</source>
         <translation>自动下载</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="700"/>
+        <location filename="../../UI/downloadwindow.cpp" line="704"/>
         <source>File Not Exist</source>
         <translation>文件不存在</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="776"/>
+        <location filename="../../UI/downloadwindow.cpp" line="780"/>
         <source>Pause</source>
         <translation>暂停</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="795"/>
+        <location filename="../../UI/downloadwindow.cpp" line="799"/>
         <source>Start</source>
         <translation>开始</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="812"/>
+        <location filename="../../UI/downloadwindow.cpp" line="816"/>
         <source>Resume</source>
         <translation>继续下载</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="812"/>
+        <location filename="../../UI/downloadwindow.cpp" line="816"/>
         <source>Control file(*.aria2) does not exist, download the file all over again ?
 %1</source>
         <translation>控制文件(*.aria2)丢失，重新下载任务？
@@ -2527,59 +2532,59 @@ Date: %2
         <translation type="vanished">控制文件(*.aria2)丢失，重新下载任务？</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="829"/>
-        <location filename="../../UI/downloadwindow.cpp" line="834"/>
+        <location filename="../../UI/downloadwindow.cpp" line="833"/>
+        <location filename="../../UI/downloadwindow.cpp" line="838"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="834"/>
+        <location filename="../../UI/downloadwindow.cpp" line="838"/>
         <source>Delete the Downloaded Files?</source>
         <translation>同时删除下载文件？</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="849"/>
+        <location filename="../../UI/downloadwindow.cpp" line="853"/>
         <source>Pause All</source>
         <translation>全部暂停</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="853"/>
+        <location filename="../../UI/downloadwindow.cpp" line="857"/>
         <source>Start All</source>
         <translation>全部开始</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="869"/>
+        <location filename="../../UI/downloadwindow.cpp" line="873"/>
         <source>Browse File</source>
         <translation>资源管理器中浏览</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="883"/>
+        <location filename="../../UI/downloadwindow.cpp" line="887"/>
         <source>Add To PlayList</source>
         <translation>添加到播放列表</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="911"/>
+        <location filename="../../UI/downloadwindow.cpp" line="915"/>
         <source>Copy URI</source>
         <translation>复制下载链接</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="920"/>
-        <location filename="../../UI/downloadwindow.cpp" line="928"/>
+        <location filename="../../UI/downloadwindow.cpp" line="924"/>
+        <location filename="../../UI/downloadwindow.cpp" line="932"/>
         <source>Save Torrent</source>
         <translation>保存种子文件</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="960"/>
+        <location filename="../../UI/downloadwindow.cpp" line="964"/>
         <source>Create Time: %1 	 Finish Time: %2</source>
         <translation>创建时间：%1 	 完成时间：%2</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="1005"/>
+        <location filename="../../UI/downloadwindow.cpp" line="1009"/>
         <source>&lt;No Item has been Selected&gt;</source>
         <translation>&lt;没有选择项目&gt;</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="1006"/>
+        <location filename="../../UI/downloadwindow.cpp" line="1010"/>
         <source>Create Time: ---- 	 Finish Time: ----</source>
         <translation>创建时间：---- 	 完成时间：----</translation>
     </message>
@@ -3791,7 +3796,7 @@ Set shortcuts through MPV Parameter input-conf</source>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="201"/>
+        <location filename="../../UI/mainwindow.cpp" line="202"/>
         <source>Danmu Pool Manager</source>
         <translation>管理弹幕池</translation>
     </message>
@@ -3804,7 +3809,7 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">界面设置</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="209"/>
+        <location filename="../../UI/mainwindow.cpp" line="210"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
@@ -3813,60 +3818,60 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">脚本日志</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="228"/>
+        <location filename="../../UI/mainwindow.cpp" line="229"/>
         <source>Log Center</source>
         <translation>日志中心</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="241"/>
+        <location filename="../../UI/mainwindow.cpp" line="242"/>
         <source>Check For Updates</source>
         <translation>检查更新</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="248"/>
+        <location filename="../../UI/mainwindow.cpp" line="249"/>
         <source>Useage Tip</source>
         <translation>使用提示</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="256"/>
+        <location filename="../../UI/mainwindow.cpp" line="257"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
         <location filename="../../UI/mainwindow.cpp" line="67"/>
-        <location filename="../../UI/mainwindow.cpp" line="265"/>
+        <location filename="../../UI/mainwindow.cpp" line="266"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="217"/>
+        <location filename="../../UI/mainwindow.cpp" line="218"/>
         <source>Script Playground</source>
         <translation>脚本测试场</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="270"/>
+        <location filename="../../UI/mainwindow.cpp" line="271"/>
         <source>Player</source>
         <translation>播放</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="271"/>
+        <location filename="../../UI/mainwindow.cpp" line="272"/>
         <source>Library</source>
         <translation>资料</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="272"/>
+        <location filename="../../UI/mainwindow.cpp" line="273"/>
         <source>Download</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="666"/>
-        <location filename="../../UI/mainwindow.cpp" line="840"/>
+        <location filename="../../UI/mainwindow.cpp" line="667"/>
+        <location filename="../../UI/mainwindow.cpp" line="841"/>
         <source>Updating...</source>
         <translation>更新中...</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="671"/>
-        <location filename="../../UI/mainwindow.cpp" line="845"/>
+        <location filename="../../UI/mainwindow.cpp" line="672"/>
+        <location filename="../../UI/mainwindow.cpp" line="846"/>
         <source>Add %1 Danmu</source>
         <translation>添加了 %1 条弹幕</translation>
     </message>
@@ -3928,17 +3933,17 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation>分集标题</translation>
     </message>
     <message>
-        <location filename="../../UI/matcheditor.cpp" line="616"/>
+        <location filename="../../UI/matcheditor.cpp" line="620"/>
         <source>Set Episodes Sequentially From Current</source>
         <translation>从当前项顺序设置分集</translation>
     </message>
     <message>
-        <location filename="../../UI/matcheditor.cpp" line="660"/>
+        <location filename="../../UI/matcheditor.cpp" line="664"/>
         <source>Anime should not be empty</source>
         <translation>动画不能为空</translation>
     </message>
     <message>
-        <location filename="../../UI/matcheditor.cpp" line="671"/>
+        <location filename="../../UI/matcheditor.cpp" line="675"/>
         <source>Anime Title and Episode Index should not be empty</source>
         <translation>动画标题和分集索引不能为空</translation>
     </message>
@@ -3975,12 +3980,12 @@ Set shortcuts through MPV Parameter input-conf</source>
     </message>
     <message>
         <location filename="../../UI/matcheditor.cpp" line="501"/>
-        <location filename="../../UI/matcheditor.cpp" line="626"/>
+        <location filename="../../UI/matcheditor.cpp" line="630"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location filename="../../UI/matcheditor.cpp" line="558"/>
+        <location filename="../../UI/matcheditor.cpp" line="562"/>
         <source>Back</source>
         <translation>返回</translation>
     </message>
@@ -3993,7 +3998,7 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">从当前项顺序设置分集</translation>
     </message>
     <message>
-        <location filename="../../UI/matcheditor.cpp" line="623"/>
+        <location filename="../../UI/matcheditor.cpp" line="627"/>
         <source>Select All/Cancel</source>
         <translation>全选/取消</translation>
     </message>
@@ -4883,7 +4888,7 @@ Folder Collection
     </message>
     <message>
         <location filename="../../UI/player.cpp" line="2198"/>
-        <location filename="../../UI/player.cpp" line="2404"/>
+        <location filename="../../UI/player.cpp" line="2405"/>
         <source>Volume: %0</source>
         <translation>音量：%0</translation>
     </message>
@@ -4898,17 +4903,22 @@ Folder Collection
         <translation>逐帧播放：向后</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="2345"/>
+        <location filename="../../UI/player.cpp" line="2271"/>
+        <source>Block User %1</source>
+        <translation>屏蔽用户 %1</translation>
+    </message>
+    <message>
+        <location filename="../../UI/player.cpp" line="2346"/>
         <source>Subtitle has been added</source>
         <translation>已添加字幕</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="2358"/>
+        <location filename="../../UI/player.cpp" line="2359"/>
         <source>Danmu has been added</source>
         <translation>已添加弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="2362"/>
+        <location filename="../../UI/player.cpp" line="2363"/>
         <source>Add Faied: Pool is busy</source>
         <translation>添加失败：弹幕池正忙</translation>
     </message>
@@ -6181,57 +6191,57 @@ Eps: %2
         <translation type="vanished">最小化时隐藏到托盘</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="56"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="57"/>
         <source>Hide To Tray</source>
         <translation>隐藏到托盘</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="58"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="59"/>
         <source>None</source>
         <translation>无</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="58"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="59"/>
         <source>Minimize</source>
         <translation>最小化</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="58"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="59"/>
         <source>Close Window</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="63"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="64"/>
         <source>Dark Mode</source>
         <translation>深色模式</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="64"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="65"/>
         <source>Enable Background</source>
         <translation>启用背景图</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="65"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="66"/>
         <source>Custom Color</source>
         <translation>自定义颜色</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="70"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="71"/>
         <source>Background Darkness</source>
         <translation>背景暗度</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="182"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="219"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="185"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="222"/>
         <source>Select Image</source>
         <translation>选择图片</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/stylepage.cpp" line="206"/>
+        <location filename="../../UI/settings/stylepage.cpp" line="249"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
@@ -6354,42 +6364,47 @@ Eps: %2
 <context>
     <name>TrackerSubscribeDialog</name>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="195"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="197"/>
         <source>Tracker Subscribe</source>
         <translation>Tracker订阅</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="197"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="199"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="198"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="200"/>
         <source>Check All</source>
         <translation>检查全部</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="199"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="201"/>
         <source>Auto Check</source>
         <translation>自动检查</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="217"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="219"/>
         <source>Subscirbe</source>
         <translation>订阅</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="217"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="219"/>
         <source>URL</source>
         <translation>URL</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="234"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="236"/>
+        <source>Copy URL</source>
+        <translation>复制URL</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/downloadpage.cpp" line="244"/>
         <source>Remove Subscribe</source>
         <translation>移除订阅</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/downloadpage.cpp" line="240"/>
+        <location filename="../../UI/settings/downloadpage.cpp" line="250"/>
         <source>Check</source>
         <translation>检查</translation>
     </message>

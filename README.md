@@ -38,7 +38,7 @@ KikoPlay基于以下项目：
 
 编译环境： MSVC2015，gcc 7.3.0(其他版本未测试)
 
-Windows上使用Qt Creator打开工程文件后可直接编译
+Windows上使用Qt Creator打开工程文件后可直接编译（需要先编译`Script\lua`下的lua，确保生成lua53.lib到`lib\x64`下）
 
 Linux上看[这里](linux.md)
 

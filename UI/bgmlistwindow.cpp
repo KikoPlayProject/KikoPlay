@@ -261,6 +261,11 @@ void BgmListWindow::showEvent(QShowEvent *)
     });
 }
 
+void BgmListWindow::hideEvent(QHideEvent *)
+{
+    bgmList->save();
+}
+
 void BgmListWindow::resizeEvent(QResizeEvent *)
 {
     int oneWidth = bgmListView->width() / 10;

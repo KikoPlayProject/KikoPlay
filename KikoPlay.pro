@@ -334,6 +334,7 @@ RESOURCES += \
 win32 {
     QMAKE_LFLAGS_RELEASE += /MAP
     QMAKE_CFLAGS_RELEASE += /Zi
+    QMAKE_CFLAGS_RELEASE += /MT
     QMAKE_LFLAGS_RELEASE += /debug /opt:ref
 
     # Link library settings by ARCH

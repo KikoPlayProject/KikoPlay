@@ -28,6 +28,16 @@ BgmList::~BgmList()
     if(needSave && curSeason) saveLocal(*curSeason);
 }
 
+void BgmList::save()
+{
+    if(needSave && curSeason)
+    {
+        saveLocal(*curSeason);
+        needSave=false;
+        Logger::logger()->log(Logger::APP, tr("Save Season: %1").arg(curSeason->title));
+    }
+}
+
 void BgmList::setScriptId(const QString &scriptId)
 {
     if(scriptId == curScriptId || scriptId.isEmpty()) return;

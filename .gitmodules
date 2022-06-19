@@ -1,4 +1,0 @@
-[submodule "Script/lua"]
-	path = Script/lua
-	url = https://github.com/lua/lua.git
-	branch = v5.3

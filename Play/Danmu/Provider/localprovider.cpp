@@ -1,5 +1,5 @@
 #include "localprovider.h"
-
+#include "Common/logger.h"
 
 void LocalProvider::LoadXmlDanmuFile(QString filePath, QVector<DanmuComment *> &list)
 {
@@ -52,5 +52,7 @@ void LocalProvider::LoadXmlDanmuFile(QString filePath, QVector<DanmuComment *> &
         }
         reader.readNext();
     }
+    if(reader.hasError())
+        Logger::logger()->log(Logger::APP, QString("Error occured when loading Danmu File[%1]: %2").arg(filePath, reader.errorString()));
     xmlFile.close();
 }

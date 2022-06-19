@@ -26,7 +26,7 @@
 #define EpRole Qt::UserRole+2
 namespace
 {
-    QSet<QString> hitWords;
+    QHash<QString, int> hitWords;
     static QCollator comparer;
     QString lastSearchCacheId;
     LRUCache<QString, QList<AnimeLite>> animeCache{"MatchAnime", 64};
@@ -529,7 +529,7 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
             {
                 lastSearchCacheId = cacheId;
                 static_cast<AnimeModel *>(animeModel)->reset(animeCache.get(cacheId));
-                hitWords<<keyword;
+                hitWords[keyword] = 3;
                 return;
             }
         }
@@ -546,9 +546,13 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
             if(!lastSearchCacheId.isEmpty())
                 animeCache.put(lastSearchCacheId,  static_cast<AnimeModel *>(animeModel)->animeBases());
             lastSearchCacheId = cacheId;
-            hitWords.remove(keyword);
+            --hitWords[keyword];
+            if(hitWords[keyword] <= 0)
+                hitWords.remove(keyword);
             static_cast<AnimeModel *>(animeModel)->reset(results);
             animeCache.put(cacheId, results);
+        } else {
+            showMessage(state.info, NM_ERROR | NM_HIDE);
         }
         showBusyState(false);
         searchSubPage->setEnabled(true);

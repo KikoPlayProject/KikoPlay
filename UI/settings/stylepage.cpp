@@ -165,6 +165,16 @@ void StylePage::onAccept()
     if(bgDarknessChanged) GlobalObjects::appSetting->setValue("MainWindow/BackgroundDarkness", sliderBgDarkness->value());
     if(bgChanged)
     {
+        GlobalObjects::appSetting->setValue("MainWindow/HistoryBackgrounds", historyBgs);
+    }
+    if(darkModeChanged) GlobalObjects::appSetting->setValue("MainWindow/DarkMode", darkMode->isChecked());
+    if(colorChanged)
+    {
+        GlobalObjects::appSetting->setValue("MainWindow/CustomColorHSV", QColor::fromHsv(sliderHue->value(), 255, sliderLightness->value()));
+        GlobalObjects::appSetting->setValue("MainWindow/CustomColor", customColor->isChecked());
+    }
+    if(bgChanged || colorChanged)
+    {
         QMap<QString, QVariant> bgColorVariant;
         for(auto &path : historyBgs)
         {
@@ -174,13 +184,6 @@ void StylePage::onAccept()
             }
         }
         GlobalObjects::appSetting->setValue("MainWindow/HistoryBackgroundsColor", bgColorVariant);
-        GlobalObjects::appSetting->setValue("MainWindow/HistoryBackgrounds", historyBgs);
-    }
-    if(darkModeChanged) GlobalObjects::appSetting->setValue("MainWindow/DarkMode", darkMode->isChecked());
-    if(colorChanged)
-    {
-        GlobalObjects::appSetting->setValue("MainWindow/CustomColorHSV", QColor::fromHsv(sliderHue->value(), 255, sliderLightness->value()));
-        GlobalObjects::appSetting->setValue("MainWindow/CustomColor", customColor->isChecked());
     }
     static_cast<MainWindow *>(GlobalObjects::mainWindow)->setHideToTrayType(
                 static_cast<MainWindow::HideToTrayType>(hideToTrayCombo->currentData().toInt()));

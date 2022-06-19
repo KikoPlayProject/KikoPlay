@@ -53,6 +53,7 @@ public slots:
     // QWidget interface
 protected:
     virtual void showEvent(QShowEvent *event);
+    virtual void hideEvent(QHideEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
 };
 

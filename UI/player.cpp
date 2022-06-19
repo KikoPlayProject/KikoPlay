@@ -2268,6 +2268,7 @@ void PlayerWindow::contextMenuEvent(QContextMenuEvent *)
     currentDanmu=GlobalObjects::danmuRender->danmuAt(mapFromGlobal(QCursor::pos()));
     if(currentDanmu.isNull())return;
     ctxText->setText(currentDanmu->text);
+    ctxBlockUser->setText(tr("Block User %1").arg(currentDanmu->sender));
     contexMenu->exec(QCursor::pos());
 }
 

@@ -12,6 +12,7 @@ public:
     explicit BgmList(QObject *parent = nullptr);
     ~BgmList();
     void init();
+    void save();
     const QStringList &seasonList(){return seasons[curScriptId];}
     const QList<BgmItem> &bgmList(){return curSeason->bgmList;}
     void setScriptId(const QString &scriptId);
