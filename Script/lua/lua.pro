@@ -72,10 +72,14 @@ SOURCES += \
     lzio.c
 
 win32 {
-    QMAKE_CFLAGS_RELEASE += /MT
+    QMAKE_CFLAGS_RELEASE += /MT /DLUA_COMPAT_5_2
     contains(QT_ARCH, i386) {
         DESTDIR = $$PWD/../../lib/
     } else {
         DESTDIR = $$PWD/../../lib/x64
     }
+}
+
+linux-g++* {
+    QMAKE_CFLAGS_RELEASE += -DLUA_USE_LINUX -DLUA_COMPAT_5_2
 }
