@@ -1,0 +1,28 @@
+{
+    "name": "kikoplay",
+    "version": "0.0.1",
+    "dependencies": [
+        "qt5-base",
+        "zlib",
+        "lua",
+        {
+            "name": "qt5-winextras",
+            "platform": "windows"
+        }
+    ],
+    "builtin-baseline": "9776b51b557bb2c20d79cf541f124c48d0c2c720",
+    "overrides": [
+        {
+            "name": "qt5-base",
+            "version": "5.15.4"
+        },
+        {
+            "name": "qt5-winextras",
+            "version": "5.15.4"
+        },
+        {
+            "name": "lua",
+            "version": "5.3.5-5#0"
+        }
+    ]
+}

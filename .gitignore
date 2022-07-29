@@ -22,3 +22,9 @@ qrc_res.cpp
 moc_*.cpp
 moc_predefs.h
 texture_test.jpg
+
+# cmake build dir
+build
+
+# clangd generated dir
+.cache
