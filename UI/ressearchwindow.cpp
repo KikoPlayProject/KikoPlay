@@ -67,15 +67,15 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     });
 
     prevPage=new QPushButton(this);
-    GlobalObjects::iconfont.setPointSize(10);
-    prevPage->setFont(GlobalObjects::iconfont);
+    GlobalObjects::iconfont->setPointSize(10);
+    prevPage->setFont(*GlobalObjects::iconfont);
     prevPage->setText(QChar(0xe617));
     QObject::connect(prevPage,&QPushButton::clicked,this,[this](){
         if(currentPage<=1) return;
         pageTurning(currentPage-1);
     });
     nextPage=new QPushButton(this);
-    nextPage->setFont(GlobalObjects::iconfont);
+    nextPage->setFont(*GlobalObjects::iconfont);
     nextPage->setText(QChar(0xe623));
     QObject::connect(nextPage,&QPushButton::clicked,this,[this](){
         if(currentPage==totalPage) return;

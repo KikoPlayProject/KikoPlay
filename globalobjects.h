@@ -30,7 +30,7 @@ public:
     static DanmuRender *danmuRender;
     static PlayList *playlist;
     static Blocker *blocker;
-    static QFont iconfont;
+    static QFont* iconfont;
     static QThread *workThread;
     static QSettings *appSetting;
     static DanmuProvider *danmuProvider;
