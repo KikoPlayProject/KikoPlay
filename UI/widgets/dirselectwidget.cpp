@@ -39,8 +39,8 @@ DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent), dirChanged(
 
     QPushButton *selectDir=new QPushButton(this);
     selectDir->setObjectName(QStringLiteral("SelectDirButton"));
-    GlobalObjects::iconfont.setPointSize(16);
-    selectDir->setFont(GlobalObjects::iconfont);
+    GlobalObjects::iconfont->setPointSize(16);
+    selectDir->setFont(*GlobalObjects::iconfont);
     selectDir->setText(QChar(0xe616));
 
     QObject::connect(selectDir,&QPushButton::clicked,[this](){

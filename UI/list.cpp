@@ -1158,14 +1158,14 @@ QWidget *ListWindow::setupPlaylistPage()
         {loopModeGroup->actions()}
     };
 
-    GlobalObjects::iconfont.setPointSize(14);
+    GlobalObjects::iconfont->setPointSize(14);
     QHBoxLayout *listEditHLayout=new QHBoxLayout();
     listEditHLayout->setContentsMargins(0,0,0,0);
 
     for(int i = 0; i < tbBtnCount; ++i)
     {
         QToolButton *tb = new QToolButton(playlistPage);
-        tb->setFont(GlobalObjects::iconfont);
+        tb->setFont(*GlobalObjects::iconfont);
         tb->setText(tbButtonTexts[i].first);
         tb->setToolTip(tbButtonTexts[i].second);
         tb->addActions(tbActions[i]);
@@ -1248,13 +1248,13 @@ QWidget *ListWindow::setupDanmulistPage()
     };
 
     QVector<QToolButton *> btns(tbBtnCount);
-    GlobalObjects::iconfont.setPointSize(14);
+    GlobalObjects::iconfont->setPointSize(14);
     QHBoxLayout *poolEditHLayout=new QHBoxLayout();
     for(int i = 0; i < tbBtnCount; ++i)
     {
         QToolButton *tb = new QToolButton(danmulistPage);
         btns[i] = tb;
-        tb->setFont(GlobalObjects::iconfont);
+        tb->setFont(*GlobalObjects::iconfont);
         tb->setText(tbButtonTexts[i].first);
         tb->setToolTip(tbButtonTexts[i].second);
         tb->addActions(tbActions[i]);
@@ -1489,8 +1489,8 @@ FilterBox::FilterBox(QWidget *parent) :
 
     optionsButton->setFocusPolicy(Qt::NoFocus);
     optionsButton->setObjectName(QStringLiteral("FilterOptionButton"));
-    GlobalObjects::iconfont.setPointSize(14);
-    optionsButton->setFont(GlobalObjects::iconfont);
+    GlobalObjects::iconfont->setPointSize(14);
+    optionsButton->setFont(*GlobalObjects::iconfont);
     optionsButton->setText(QChar(0xe609));
     optionsButton->setMenu(menu);
     optionsButton->setPopupMode(QToolButton::InstantPopup);

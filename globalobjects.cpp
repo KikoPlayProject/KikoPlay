@@ -37,7 +37,7 @@ LANServer *GlobalObjects::lanServer=nullptr;
 ScriptManager *GlobalObjects::scriptManager=nullptr;
 AutoDownloadManager *GlobalObjects::autoDownloadManager=nullptr;
 QMainWindow *GlobalObjects::mainWindow=nullptr;
-QFont GlobalObjects::iconfont;
+QFont* GlobalObjects::iconfont;
 QString GlobalObjects::dataPath;
 namespace  {
     const char *mt_db_names[]={"Comment_M", "Bangumi_M","Download_M"};
@@ -104,11 +104,12 @@ void GlobalObjects::init()
     downloadModel=new DownloadModel();
     danmuManager=new DanmuManager();
     lanServer=new LANServer();
+    iconfont=new QFont();
     autoDownloadManager=new AutoDownloadManager();
 
     int fontId = QFontDatabase::addApplicationFont(":/res/iconfont.ttf");
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
-    iconfont.setFamily(fontFamilies.at(0));
+    iconfont->setFamily(fontFamilies.at(0));
     QApplication::setFont(QFont("Microsoft Yahei UI", 10));
 }
 

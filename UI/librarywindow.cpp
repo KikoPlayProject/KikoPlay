@@ -399,8 +399,8 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(fa
 
     QPushButton *backButton =  new QPushButton(animeContainer);
     backButton->setObjectName(QStringLiteral("AnimeDetailBack"));
-    GlobalObjects::iconfont.setPointSize(14);
-    backButton->setFont(GlobalObjects::iconfont);
+    GlobalObjects::iconfont->setPointSize(14);
+    backButton->setFont(*GlobalObjects::iconfont);
     backButton->setText(QChar(0xe69b));
     backButton->hide();
 
@@ -617,8 +617,8 @@ AnimeFilterBox::AnimeFilterBox(QWidget *parent)
 
     optionsButton->setFocusPolicy(Qt::NoFocus);
     optionsButton->setObjectName(QStringLiteral("AnimeFilterOptionButton"));
-    GlobalObjects::iconfont.setPointSize(14);
-    optionsButton->setFont(GlobalObjects::iconfont);
+    GlobalObjects::iconfont->setPointSize(14);
+    optionsButton->setFont(*GlobalObjects::iconfont);
     optionsButton->setText(QChar(0xe609));
     optionsButton->setMenu(menu);
     optionsButton->setPopupMode(QToolButton::InstantPopup);

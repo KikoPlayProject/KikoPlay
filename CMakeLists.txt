@@ -1,8 +1,16 @@
 cmake_minimum_required(VERSION 3.16.0)
 
+# If QT is installed in your system, it can be FALSE
+option(USE_VCPKG_QT "Use vcpkg to add QT dependency" TRUE)
+
+if (USE_VCPKG_QT)
+    list(APPEND VCPKG_MANIFEST_FEATURES "qt-dependencies")
+endif()
+
+
 project(KikoPlay)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
@@ -11,7 +19,7 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5 COMPONENTS Widgets Core Gui Network Concurrent Sql REQUIRED)
 find_package(ZLIB REQUIRED)
-find_package(Lua REQUIRED)
+add_subdirectory(Script/lua)
 
 add_executable(${PROJECT_NAME}
     Common/counter.cpp 
@@ -168,12 +176,10 @@ PRIVATE
     LANServer
     MediaLibrary
     Play
-    Play/Video
     Script
     UI
     UI/settings/
     .
-    ${LUA_INCLUDE_DIR}
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -184,21 +190,41 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 target_link_libraries(${PROJECT_NAME} 
 PRIVATE 
     ZLIB::ZLIB
-    ${LUA_LIBRARIES}
     Qt::Core
     Qt::Gui
     Qt::Widgets
     Qt::Network 
     Qt::Concurrent 
     Qt::Sql
-    ${PROJECT_SOURCE_DIR}/lib/x64/libmpv.dll.lib
+    myLua53
 )
 
 if (WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE UNICODE)
     find_package(Qt5WinExtras CONFIG REQUIRED)
+
+    target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        Play/Video
+    )
     target_link_libraries(${PROJECT_NAME} 
     PRIVATE
         Qt::WinExtras
+        ${PROJECT_SOURCE_DIR}/lib/x64/libmpv.dll.lib
     )
 endif()
+
+if (UNIX)
+    include(FindPkgConfig)
+    pkg_check_modules(mpv QUIET mpv)
+
+    if (NOT mpv_FOUND)
+        message(FATAL_ERROR "libmpv is not found in the system. Use 'sudo apt install libmpv-dev' to install(Ubuntu)")
+    endif()
+
+    target_link_libraries(${PROJECT_NAME} 
+    PRIVATE
+        ${mpv_LIBRARIES}
+    )
+endif()
+

@@ -663,7 +663,7 @@ void AnimeDetailInfoPage::refreshCurInfo()
 {
     titleLabel->setText(QString("<style> a {text-decoration: none} </style><a style='color: white;' href = \"%1\">%2</a> &nbsp;&nbsp;"
                                 "<font face=\"%3\"><a style='color: white;' href = \"%4\">%5</a></font>")
-                        .arg(currentAnime->url(), currentAnime->name(), GlobalObjects::iconfont.family(), editAnimeURL, "&#xe60a;"));
+                        .arg(currentAnime->url(), currentAnime->name(), GlobalObjects::iconfont->family(), editAnimeURL, "&#xe60a;"));
     QStringList stafflist;
     for(const auto &p: currentAnime->staffList())
     {
@@ -1036,8 +1036,8 @@ CharacterPlaceholderWidget::CharacterPlaceholderWidget(QWidget *parent) : QWidge
 {
     setObjectName(QStringLiteral("CharacterPlaceholder"));
     QLabel *iconLabel=new QLabel(this);
-    GlobalObjects::iconfont.setPointSize(24);
-    iconLabel->setFont(GlobalObjects::iconfont);
+    GlobalObjects::iconfont->setPointSize(24);
+    iconLabel->setFont(*GlobalObjects::iconfont);
     iconLabel->setText(QChar(0xe6f3));
     iconLabel->setAlignment(Qt::AlignCenter);
     iconLabel->setObjectName(QStringLiteral("CharacterPlaceholderIcon"));
