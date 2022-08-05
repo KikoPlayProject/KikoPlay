@@ -93,6 +93,8 @@ sudo apt install libmpv-dev
 cmake --build build --config Release
 ```
 
+> vcpkg安装的时间可能会很长，因为它会从源代码构建QT，请耐心等待
+
 
 **多核编译**
 
