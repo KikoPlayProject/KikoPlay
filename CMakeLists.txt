@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 
 # If QT is installed in your system, it can be FALSE
-option(USE_VCPKG_QT "Use vcpkg to add QT dependency" TRUE)
+option(USE_VCPKG_QT "Use vcpkg to add QT dependency" ON)
 
 if (USE_VCPKG_QT)
     list(APPEND VCPKG_MANIFEST_FEATURES "qt-dependencies")
