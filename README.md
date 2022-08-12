@@ -46,6 +46,11 @@ macOS使用Homebrew包管理器：https://github.com/KikoPlayProject/Homebrew-Ki
 
 自从0.2.3版本后只提供64位版本，不建议使用32位版本
 
+### cmake编译
+
+关于cmake编译请参见[这里](cmake_build.md)
+
+
 ## 下载
 
 可以从[Github](https://github.com/KikoPlayProject/KikoPlay/releases) 或 [百度网盘](https://pan.baidu.com/s/1gyT0FU9rioaa77znhAUx2w) 或 QQ群文件 下载Windows版
