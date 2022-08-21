@@ -3829,7 +3829,7 @@ Set shortcuts through MPV Parameter input-conf</source>
     </message>
     <message>
         <location filename="../../UI/mainwindow.cpp" line="249"/>
-        <source>Useage Tip</source>
+        <source>Usage Tip</source>
         <translation>使用提示</translation>
     </message>
     <message>
