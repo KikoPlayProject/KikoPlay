@@ -246,7 +246,7 @@ void MainWindow::setupUI()
     });
     buttonIcon->addAction(act_checkUpdate);
 
-    QAction *act_useTip=new QAction(tr("Useage Tip"), this);
+    QAction *act_useTip=new QAction(tr("Usage Tip"), this);
     QObject::connect(act_useTip,&QAction::triggered,[this](){
         Tip tip(buttonIcon);
         tip.resize(500*logicalDpiX()/96, 400*logicalDpiY()/96);
