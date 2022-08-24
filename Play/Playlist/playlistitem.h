@@ -37,6 +37,7 @@ struct PlayListItem
     QString animeTitle;
     QString path, folderPath;
     QString poolID;
+    QString pathHash;
 };
 
 #endif // PLAYLISTITEM_H

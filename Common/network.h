@@ -16,7 +16,7 @@ namespace Network
         QByteArray content;
         QList<QPair<QByteArray,QByteArray>> headers;
     };
-
+    QNetworkAccessManager *getManager();
     Reply httpGet(const QString &url, const QUrlQuery &query, const QStringList &header=QStringList(), bool redirect=true);
     Reply httpPost(const QString &url, const QByteArray &data, const QStringList &header=QStringList());
     QList<Reply> httpGetBatch(const QStringList &urls, const QList<QUrlQuery> &queries, const QList<QStringList> &headers=QList<QStringList>(), bool redirect=true);

@@ -1390,7 +1390,6 @@ QPushButton#CharacterPlaceholder:pressed{
     margin-top:2px;
 }
 
-
 /* ------------------- QScrollBar Setting ------------------- */
 @if{DarkMode}
 QWidget QScrollBar:horizontal{

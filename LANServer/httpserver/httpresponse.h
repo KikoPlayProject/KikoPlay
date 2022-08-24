@@ -9,6 +9,7 @@
 #include <QMap>
 #include <QString>
 #include <QTcpSocket>
+#include <QHostAddress>
 #include "httpglobal.h"
 #include "httpcookie.h"
 
@@ -157,6 +158,8 @@ public:
      * This might be useful to cancel the generation of large or slow responses.
      */
     bool isConnected() const;
+
+    QHostAddress getLocalAddress() const;
 
 private:
 

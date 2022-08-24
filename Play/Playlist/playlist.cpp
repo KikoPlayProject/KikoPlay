@@ -164,7 +164,7 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
         parentItem = parentItem->parent;
         parent = this->parent(parent);
     }
-    QList<PlayListItem *> matchItems;
+    QVector<PlayListItem *> matchItems;
     beginInsertRows(parent, insertPosition, insertPosition+ tmpItems.count()-1);
     for (const QString &item : tmpItems)
 	{
@@ -173,11 +173,13 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
         PlayListItem *newItem = new PlayListItem(parentItem, true, insertPosition++);
         newItem->title = title;
 		newItem->path = item;
+        newItem->pathHash = QCryptographicHash::hash(item.toUtf8(),QCryptographicHash::Md5).toHex();
         newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
         d->fileItems.insert(newItem->path,newItem);
         if(d->autoMatch) matchItems<<newItem;
 	}
 	endInsertRows();
+    d->addMediaPathHash(matchItems);
     d->playListChanged=true;
     d->needRefresh = true;
     d->incModifyCounter();
@@ -211,7 +213,7 @@ int PlayList::addFolder(QString folderStr, QModelIndex parent)
     PlayListItem folderRootCollection;
     int itemCount=0;
     d->addSubFolder(folderStr, &folderRootCollection,itemCount);
-    QList<PlayListItem *> matchItems;
+    QVector<PlayListItem *> matchItems;
     if (folderRootCollection.children->count())
 	{
         PlayListItem *folderRoot(folderRootCollection.children->first());
@@ -221,26 +223,25 @@ int PlayList::addFolder(QString folderStr, QModelIndex parent)
         d->playListChanged=true;
         d->needRefresh = true;
         d->incModifyCounter();
-        if(d->autoMatch)
+
+        QVector<PlayListItem *> items({folderRoot});
+        while(!items.empty())
         {
-            QList<PlayListItem *> items({folderRoot});
-            while(!items.empty())
+            PlayListItem *currentItem=items.takeFirst();
+            if(currentItem->children)
             {
-                PlayListItem *currentItem=items.takeFirst();
-                if(currentItem->children)
+                for(PlayListItem *child:*currentItem->children)
                 {
-                    for(PlayListItem *child:*currentItem->children)
-                    {
-                        items.push_back(child);
-                    }
-                }
-                else if(currentItem->poolID.isEmpty())
-                {
-                    matchItems<<currentItem;
+                    items.push_back(child);
                 }
             }
+            else if(currentItem->poolID.isEmpty())
+            {
+                matchItems<<currentItem;
+            }
         }
-	}
+    }
+    d->addMediaPathHash(matchItems);
     Notifier *notifier = Notifier::getNotifier();
     notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(itemCount),NotifyMessageFlag::NM_HIDE);
     if(d->autoMatch && matchItems.count()>0)
@@ -338,6 +339,9 @@ void PlayList::clear()
         delete child;
     root->children->clear();
     endRemoveRows();
+    d->pathHashLock.lockForWrite();
+    d->mediaPathHash.clear();
+    d->pathHashLock.unlock();
     d->fileItems.clear();
     d->playListChanged=true;
     d->needRefresh = true;
@@ -419,8 +423,9 @@ int PlayList::refreshFolder(const QModelIndex &index)
     if(!index.isValid())return 0;
     PlayListItem *item= static_cast<PlayListItem*>(index.internalPointer());
     if(!item->children) return 0;
-    QList<PlayListItem *> nItems;
+    QVector<PlayListItem *> nItems;
     int c = d->refreshFolder(item, nItems);
+    d->addMediaPathHash(nItems);
     Notifier *notifier = Notifier::getNotifier();
     notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(c),NotifyMessageFlag::NM_HIDE);
     if(c>0)
@@ -902,7 +907,13 @@ void PlayList::setLoopMode(PlayList::LoopMode newMode)
 void PlayList::checkCurrentItem(PlayListItem *itemDeleted)
 {
     Q_D(PlayList);
-    if(!itemDeleted->path.isEmpty())d->fileItems.remove(itemDeleted->path);
+    if(!itemDeleted->path.isEmpty())
+    {
+        d->fileItems.remove(itemDeleted->path);
+        d->pathHashLock.lockForWrite();
+        d->mediaPathHash.remove(itemDeleted->pathHash);
+        d->pathHashLock.unlock();
+    }
     if(itemDeleted->isBgmCollection) d->bgmCollectionItems.remove(itemDeleted->title);
     if(itemDeleted==d->currentItem)
     {
@@ -919,7 +930,7 @@ void PlayList::setAutoMatch(bool on)
 
 void PlayList::matchItems(const QModelIndexList &matchIndexes)
 {
-    QList<PlayListItem *> items, selectedItems;
+    QVector<PlayListItem *> items, selectedItems;
     for(const QModelIndex &index : matchIndexes)
     {
         if (index.isValid())
@@ -975,7 +986,7 @@ void PlayList::matchIndex(QModelIndex &index, const MatchResult &match)
 
 void PlayList::matchItems(const QList<const PlayListItem *> &items, const QString &title,  const QList<EpInfo> &eps)
 {
-    QList<PlayListItem *> ncItems;
+    QVector<PlayListItem *> ncItems;
     for(auto i : items)
     {
         ncItems.append(const_cast<PlayListItem *>(i));
@@ -1184,18 +1195,52 @@ void PlayList::exportDanmuItems(const QModelIndexList &exportIndexes)
     notifier->showMessage(Notifier::LIST_NOTIFY, tr("Export Down"),NotifyMessageFlag::NM_HIDE);
 }
 
-void PlayList::dumpJsonPlaylist(QJsonDocument &jsonDoc, QHash<QString, QString> &mediaHash)
+void PlayList::dumpJsonPlaylist(QJsonDocument &jsonDoc)
 {
     Q_D(PlayList);
     if(!d->needRefresh) return;
     QJsonDocument newDoc;
     QJsonArray rootArray;
-    QHash<QString, QString> newHash;
-    d->dumpItem(rootArray,d->root,newHash);
+    d->dumpItem(rootArray, d->root);
     newDoc.setArray(rootArray);
     jsonDoc.swap(newDoc);
-    mediaHash.swap(newHash);
     d->needRefresh=false;
+}
+
+QString PlayList::getPathByHash(const QString &hash)
+{
+    Q_D(PlayList);
+    d->pathHashLock.lockForRead();
+    QString path = d->mediaPathHash.value(hash);
+    d->pathHashLock.unlock();
+    return path;
+}
+
+const PlayListItem *PlayList::getPathItem(const QString &pathId)
+{
+    Q_D(PlayList);
+    if(pathId == "0")
+    {
+        return d->root;
+    }
+    else
+    {
+        QStringList itemPosList = pathId.split("_");
+        if(itemPosList.size() < 2 || itemPosList[0] != '0') return nullptr;
+        itemPosList.pop_front();
+        PlayListItem *item = d->root;
+        for(const QString &sPos : itemPosList)
+        {
+            if(sPos.isEmpty()) return nullptr;
+            bool ok = true;
+            int pos = sPos.toInt(&ok);
+            if(!ok) return nullptr;
+            if(!item->children || item->children->size() <= pos) return nullptr;
+            item = (*item->children)[pos];
+        }
+        return item;
+    }
+    return nullptr;
 }
 
 void PlayList::updatePlayTime(const QString &path, int time, PlayListItem::PlayState state)
@@ -1258,7 +1303,7 @@ void PlayList::renameItemPoolId(const QString &opid, const QString &npid)
 }
 
 
-void MatchWorker::match(const QList<PlayListItem *> &items)
+void MatchWorker::match(const QVector<PlayListItem *> &items)
 {
     QList<PlayListItem *> matchedItems;
     auto notifier = Notifier::getNotifier();
@@ -1290,7 +1335,7 @@ void MatchWorker::match(const QList<PlayListItem *> &items)
     notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Done"),NotifyMessageFlag::NM_HIDE);
 }
 
-void MatchWorker::match(const QList<PlayListItem *> &items, const QString &animeTitle, const QList<EpInfo> &eps)
+void MatchWorker::match(const QVector<PlayListItem *> &items, const QString &animeTitle, const QList<EpInfo> &eps)
 {
     Q_ASSERT(items.size()==eps.size());
     QList<PlayListItem *> matchedItems;

@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QStorageInfo>
 #include <QSettings>
+#include <QApplication>
 #include "Download/util.h"
 #include "globalobjects.h"
 DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent), dirChanged(false)
@@ -18,6 +19,7 @@ DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent), dirChanged(
     dirEdit->addItems(dirList);
     dirEdit->setCurrentIndex(0);
     dirEdit->setFont(QFont(GlobalObjects::normalFont,13));
+
 
     QLabel *spaceTip=new QLabel(this);
     spaceTip->setObjectName(QStringLiteral("SpaceTip"));
@@ -39,7 +41,7 @@ DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent), dirChanged(
 
     QPushButton *selectDir=new QPushButton(this);
     selectDir->setObjectName(QStringLiteral("SelectDirButton"));
-    GlobalObjects::iconfont.setPointSize(16);
+    GlobalObjects::iconfont.setPointSize(17);
     selectDir->setFont(GlobalObjects::iconfont);
     selectDir->setText(QChar(0xe616));
 

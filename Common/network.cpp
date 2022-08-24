@@ -7,14 +7,15 @@
 namespace
 {
     static QThreadStorage<QSharedPointer<QNetworkAccessManager>> managers;
-    QNetworkAccessManager *getManager()
+}
+
+QNetworkAccessManager *Network::getManager()
+{
+    if(!managers.hasLocalData())
     {
-        if(!managers.hasLocalData())
-        {
-            managers.setLocalData(QSharedPointer<QNetworkAccessManager>::create());
-        }
-        return managers.localData().get();
+        managers.setLocalData(QSharedPointer<QNetworkAccessManager>::create());
     }
+    return managers.localData().get();
 }
 
 Network::Reply Network::httpGet(const QString &url, const QUrlQuery &query, const QStringList &header, bool redirect)
@@ -125,7 +126,6 @@ Network::Reply Network::httpPost(const QString &url, const QByteArray &data, con
         replyObj.hasError = true;
         replyObj.errInfo=QObject::tr("Replay Timeout");
     }
-    reply->deleteLater();
     reply->deleteLater();
     return replyObj;
 }
@@ -358,7 +358,4 @@ int Network::decompress(const QByteArray &input, QByteArray &output)
     (void)inflateEnd(&stream);
     return Z_OK ;
 }
-
-
-
 

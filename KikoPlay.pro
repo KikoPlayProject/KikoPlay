@@ -37,7 +37,13 @@ SOURCES += \
     Download/peermodel.cpp \
     Download/trackersubscriber.cpp \
     LANServer/apihandler.cpp \
+    LANServer/dlna/dlnamediacontroller.cpp \
+    LANServer/dlna/dlnamediaitem.cpp \
+    LANServer/dlna/dlnamediaserver.cpp \
+    LANServer/dlna/upnp.cpp \
     LANServer/dlna/upnpctrlpoint.cpp \
+    LANServer/dlna/upnpdevice.cpp \
+    LANServer/dlna/upnpservice.cpp \
     LANServer/filehandler.cpp \
     LANServer/httpserver/httpconnectionhandler.cpp \
     LANServer/httpserver/httpconnectionhandlerpool.cpp \
@@ -183,7 +189,13 @@ HEADERS += \
     Download/peermodel.h \
     Download/trackersubscriber.h \
     LANServer/apihandler.h \
+    LANServer/dlna/dlnamediacontroller.h \
+    LANServer/dlna/dlnamediaitem.h \
+    LANServer/dlna/dlnamediaserver.h \
+    LANServer/dlna/upnp.h \
     LANServer/dlna/upnpctrlpoint.h \
+    LANServer/dlna/upnpdevice.h \
+    LANServer/dlna/upnpservice.h \
     LANServer/filehandler.h \
     LANServer/httpserver/httpconnectionhandler.h \
     LANServer/httpserver/httpconnectionhandlerpool.h \

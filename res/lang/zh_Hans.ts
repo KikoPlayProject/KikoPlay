@@ -4,22 +4,22 @@
 <context>
     <name>APIHandler</name>
     <message>
-        <location filename="../../LANServer/apihandler.cpp" line="290"/>
+        <location filename="../../LANServer/apihandler.cpp" line="294"/>
         <source>Start FFmpeg Failed</source>
         <translation>启动FFmpeg失败</translation>
     </message>
     <message>
-        <location filename="../../LANServer/apihandler.cpp" line="299"/>
+        <location filename="../../LANServer/apihandler.cpp" line="303"/>
         <source>Generate Failed, FFmpeg exit code: %1</source>
         <translation>生成失败，FFmpeg返回值： %1</translation>
     </message>
     <message>
-        <location filename="../../LANServer/apihandler.cpp" line="419"/>
+        <location filename="../../LANServer/apihandler.cpp" line="423"/>
         <source>Success</source>
         <translation>成功</translation>
     </message>
     <message>
-        <location filename="../../LANServer/apihandler.cpp" line="419"/>
+        <location filename="../../LANServer/apihandler.cpp" line="423"/>
         <source>Faild, %1</source>
         <translation>失败, %1</translation>
     </message>
@@ -1234,8 +1234,8 @@
 <context>
     <name>BgmList</name>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="201"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="234"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="202"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="235"/>
         <source>Bangumi Calendar script not exist</source>
         <translation>未找到番组日历脚本</translation>
     </message>
@@ -1244,25 +1244,25 @@
         <translation type="vanished">已选择番组日历：%1</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="36"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="37"/>
         <source>Save Season: %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="204"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="239"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="205"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="240"/>
         <source>[%1]Select Bangumi Calendar: %2</source>
         <translation>[%1]已选择番组日历：%2</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="206"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="241"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="207"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="242"/>
         <source>Fetching Info...</source>
         <translation>获取信息...</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="213"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="272"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="214"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="273"/>
         <source>Fetch Failed: %1</source>
         <translation>获取失败：%1</translation>
     </message>
@@ -1275,9 +1275,9 @@
         <translation type="vanished">%1-%2 数量：%3%4</translation>
     </message>
     <message>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="74"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="176"/>
-        <location filename="../../Download/BgmList/bgmlist.cpp" line="266"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="75"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="177"/>
+        <location filename="../../Download/BgmList/bgmlist.cpp" line="267"/>
         <source> Focus: %1</source>
         <translation> 关注：%1</translation>
     </message>
@@ -1728,12 +1728,12 @@
 <context>
     <name>DLNADiscover</name>
     <message>
-        <location filename="../../UI/dlnadiscover.cpp" line="16"/>
+        <location filename="../../UI/dlnadiscover.cpp" line="18"/>
         <source>Select DLNA Device</source>
         <translation>选择DLNA设备</translation>
     </message>
     <message>
-        <location filename="../../UI/dlnadiscover.cpp" line="18"/>
+        <location filename="../../UI/dlnadiscover.cpp" line="20"/>
         <source>Refresh</source>
         <translation>刷新</translation>
     </message>
@@ -2153,7 +2153,7 @@ Date: %2
 <context>
     <name>DirSelectWidget</name>
     <message>
-        <location filename="../../UI/widgets/dirselectwidget.cpp" line="48"/>
+        <location filename="../../UI/widgets/dirselectwidget.cpp" line="50"/>
         <source>Select folder</source>
         <translation>选择文件夹</translation>
     </message>
@@ -2898,22 +2898,27 @@ Date: %2
 <context>
     <name>LANServerPage</name>
     <message>
-        <location filename="../../UI/settings/lanserverpage.cpp" line="17"/>
+        <location filename="../../UI/settings/lanserverpage.cpp" line="18"/>
         <source>Start Server</source>
         <translation>开启服务</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/lanserverpage.cpp" line="20"/>
+        <location filename="../../UI/settings/lanserverpage.cpp" line="21"/>
         <source>Synchronous playback time</source>
         <translation>同步播放时间</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/lanserverpage.cpp" line="23"/>
+        <location filename="../../UI/settings/lanserverpage.cpp" line="24"/>
         <source>Port:</source>
         <translation>端口：</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/lanserverpage.cpp" line="33"/>
+        <location filename="../../UI/settings/lanserverpage.cpp" line="32"/>
+        <source>Start DLNA Media Server</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/lanserverpage.cpp" line="38"/>
         <source>KikoPlay Server Address:</source>
         <translation>KikoPlay服务地址：</translation>
     </message>
@@ -4030,19 +4035,19 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">第%0话 %1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1265"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1298"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1310"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1343"/>
         <source>Match Start</source>
         <translation>开始关联...</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1278"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1323"/>
         <source>Failed: %1</source>
         <translation>失败：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1285"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1304"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1330"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1349"/>
         <source>Success: %1</source>
         <translation>成功：%1</translation>
     </message>
@@ -4051,8 +4056,8 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">需要手动关联：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1290"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1320"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1335"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1365"/>
         <source>Match Done</source>
         <translation>关联结束</translation>
     </message>
@@ -4233,9 +4238,9 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation>文件已在列表中或格式不支持</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="184"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="245"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="425"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="186"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="246"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="430"/>
         <source>Add %1 item(s)</source>
         <translation>添加了 %1 个项目</translation>
     </message>
@@ -4254,22 +4259,22 @@ Folder Collection
 %2</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="656"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="661"/>
         <source>Unplayed</source>
         <translation>未观看</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="658"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="663"/>
         <source>Finished</source>
         <translation>已看完</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="663"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="668"/>
         <source>PlayTo: %1:%2</source>
         <translation>播放到：%1:%2</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="823"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="828"/>
         <source>File Not Exist</source>
         <translation>文件不存在</translation>
     </message>
@@ -4282,7 +4287,7 @@ Folder Collection
         <translation type="vanished">失败：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="964"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="975"/>
         <source>Success: %1</source>
         <translation>成功：%1</translation>
     </message>
@@ -4295,43 +4300,43 @@ Folder Collection
         <translation type="vanished">关联结束</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="630"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="635"/>
         <source>Bangumi Collection</source>
         <translation>番组集合</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="634"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="639"/>
         <source>Folder Collection</source>
         <translation>目录集合</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="640"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="653"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="645"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="658"/>
         <source>Add Time: %1</source>
         <translation>添加时间：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1041"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1052"/>
         <source>Update Start</source>
         <translation>开始更新</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1057"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1068"/>
         <source>Updating: %1</source>
         <translation>正在更新：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1062"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1073"/>
         <source>Update Done</source>
         <translation>更新结束</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1176"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1187"/>
         <source>Exporting: %1</source>
         <translation>正在导出：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1184"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1195"/>
         <source>Export Down</source>
         <translation>导出完成</translation>
     </message>
@@ -5386,8 +5391,8 @@ Folder Collection
         <translation type="vanished">解析JSON出现错误</translation>
     </message>
     <message>
-        <location filename="../../Common/network.cpp" line="71"/>
-        <location filename="../../Common/network.cpp" line="126"/>
+        <location filename="../../Common/network.cpp" line="72"/>
+        <location filename="../../Common/network.cpp" line="127"/>
         <location filename="../../Common/network.cpp" line="218"/>
         <source>Replay Timeout</source>
         <translation>超时</translation>
@@ -5518,7 +5523,7 @@ Date: %2
         <translation type="vanished">全部：%1 最大：%2</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlistprivate.cpp" line="441"/>
+        <location filename="../../Play/Playlist/playlistprivate.cpp" line="446"/>
         <location filename="../../UI/list.cpp" line="497"/>
         <source>new collection</source>
         <translation>新合集</translation>
@@ -6443,17 +6448,17 @@ Eps: %2
 <context>
     <name>UPnPCtrlPoint</name>
     <message>
-        <location filename="../../LANServer/dlna/upnpctrlpoint.cpp" line="218"/>
+        <location filename="../../LANServer/dlna/upnpctrlpoint.cpp" line="237"/>
         <source>Device</source>
         <translation>设备</translation>
     </message>
     <message>
-        <location filename="../../LANServer/dlna/upnpctrlpoint.cpp" line="218"/>
+        <location filename="../../LANServer/dlna/upnpctrlpoint.cpp" line="237"/>
         <source>Description</source>
         <translation>描述</translation>
     </message>
     <message>
-        <location filename="../../LANServer/dlna/upnpctrlpoint.cpp" line="218"/>
+        <location filename="../../LANServer/dlna/upnpctrlpoint.cpp" line="237"/>
         <source>Location</source>
         <translation>位置</translation>
     </message>

@@ -30,9 +30,9 @@ namespace
     }
 }
 
-APIHandler::APIHandler(QHash<QString, QString> &mediaHash, QObject *parent) : stefanfrings::HttpRequestHandler(parent), mediaHashTable(mediaHash)
+APIHandler::APIHandler(QObject *parent) : stefanfrings::HttpRequestHandler(parent)
 {
-    GlobalObjects::playlist->dumpJsonPlaylist(playlistDoc, mediaHashTable);
+
 }
 
 void APIHandler::service(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
@@ -68,7 +68,7 @@ void APIHandler::service(stefanfrings::HttpRequest &request, stefanfrings::HttpR
 void APIHandler::apiPlaylist(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
 {
     QMetaObject::invokeMethod(GlobalObjects::playlist,[this](){
-        GlobalObjects::playlist->dumpJsonPlaylist(playlistDoc, mediaHashTable);
+        GlobalObjects::playlist->dumpJsonPlaylist(playlistDoc);
     },Qt::BlockingQueuedConnection);
     Logger::logger()->log(Logger::LANServer, QString("[%1]Playlist").arg(request.getPeerAddress().toString()));
 
@@ -91,12 +91,15 @@ void APIHandler::apiUpdateTime(stefanfrings::HttpRequest &request, stefanfrings:
         {
             Logger::logger()->log(Logger::LANServer, QString("[%1]UpdateTime").arg(request.getPeerAddress().toString()));
             QVariantMap data = document.object().toVariantMap();
-            QString mediaPath = mediaHashTable.value(data.value("mediaId").toString());
-            int playTime=data.value("playTime").toInt();
-            PlayListItem::PlayState playTimeState=PlayListItem::PlayState(data.value("playTimeState").toInt());
-            QMetaObject::invokeMethod(GlobalObjects::playlist,[mediaPath,playTime,playTimeState](){
-                GlobalObjects::playlist->updatePlayTime(mediaPath,playTime,playTimeState);
-            },Qt::QueuedConnection);
+            QString mediaPath = GlobalObjects::playlist->getPathByHash(data.value("mediaId").toString());
+            if(!mediaPath.isEmpty())
+            {
+                int playTime=data.value("playTime").toInt();
+                PlayListItem::PlayState playTimeState=PlayListItem::PlayState(data.value("playTimeState").toInt());
+                QMetaObject::invokeMethod(GlobalObjects::playlist,[mediaPath,playTime,playTimeState](){
+                    GlobalObjects::playlist->updatePlayTime(mediaPath,playTime,playTimeState);
+                },Qt::QueuedConnection);
+            }
         }
     }
 }
@@ -227,7 +230,8 @@ void APIHandler::apiUpdateTimeline(stefanfrings::HttpRequest &request, stefanfri
 void APIHandler::apiSubtitle(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
 {
     QString mediaId = request.getParameter("id");
-    QString mediaPath = mediaHashTable.value(mediaId);
+    QString mediaPath = GlobalObjects::playlist->getPathByHash(mediaId);
+    if(mediaPath.isEmpty()) return;
     QFileInfo fi(mediaPath);
     QString dir=fi.absolutePath(), name=fi.fileName();
     name = name.mid(0, name.lastIndexOf('.'));
@@ -262,7 +266,7 @@ void APIHandler::apiScreenshot(stefanfrings::HttpRequest &request, stefanfrings:
         QString animeName=data.value("animeName").toString();
         double pos = data.value("pos").toDouble();  //s
         QString mediaId = data.value("mediaId").toString();
-        QString mediaPath = mediaHashTable.value(mediaId);
+        QString mediaPath = GlobalObjects::playlist->getPathByHash(mediaId);
         QFileInfo fi(mediaPath);
         if(fi.exists() && !animeName.isEmpty())
         {

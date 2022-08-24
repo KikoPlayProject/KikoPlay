@@ -11,7 +11,7 @@ class APIHandler : public stefanfrings::HttpRequestHandler
     Q_OBJECT
     Q_DISABLE_COPY(APIHandler)
 public:
-    APIHandler(QHash<QString,QString> &mediaHash, QObject* parent = nullptr);
+    APIHandler(QObject* parent = nullptr);
     void service(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
 private:
     void apiPlaylist(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
@@ -24,7 +24,6 @@ private:
     void apiScreenshot(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
     void apiLaunch(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
 private:
-    QHash<QString,QString> &mediaHashTable;
     QJsonDocument playlistDoc;
     bool readJson(const QByteArray &bytes, QJsonDocument &doc);
 };

@@ -11,13 +11,21 @@ UPnPCtrlPoint::UPnPCtrlPoint(QObject *parent) : QAbstractItemModel(parent)
     while(true)
     {
         quint16 port = u(e);
-        if(socket->bind(QHostAddress::AnyIPv4, port, QUdpSocket::ShareAddress)) break;
+        if(socket->bind(QHostAddress::AnyIPv4, port)) break;
     }
     QObject::connect(socket, &QUdpSocket::readyRead, this, &UPnPCtrlPoint::readMessage);
 }
 
 void UPnPCtrlPoint::search(const QByteArray &searchTarget)
 {
+    UPnPRequest request(UPnPRequest::M_SEARCH, "*", " HTTP/1.1");
+    request.headers["MAN"] = "\"ssdp:discover\"";
+    request.headers["MX"] = "1";
+    request.headers["ST"] = searchTarget;
+    request.headers["Host"] = "239.255.255.250:1900";
+    request.headers["Connection"] = "close";
+    request.headers["User-Agent"] = "UPnP/1.0 KikoPlay/0.9.1";
+    /*
     QByteArray buffer;
     buffer.append("M-SEARCH * HTTP/1.1\r\n");
     QVector<QPair<QByteArray, QByteArray>> headers = {
@@ -36,10 +44,11 @@ void UPnPCtrlPoint::search(const QByteArray &searchTarget)
         buffer.append("\r\n");
     }
     buffer.append("\r\n");
+    */
     beginResetModel();
     devices.clear();
     endResetModel();
-    socket->writeDatagram(buffer.data(), QHostAddress("255.255.255.255"), 1900);
+    request.send(socket, QHostAddress("255.255.255.255"), 1900);
 }
 
 QSharedPointer<UPnPDevice> UPnPCtrlPoint::getDevice(const QModelIndex &index)
@@ -50,7 +59,8 @@ QSharedPointer<UPnPDevice> UPnPCtrlPoint::getDevice(const QModelIndex &index)
 
 void UPnPCtrlPoint::readMessage()
 {
-    while (socket->hasPendingDatagrams()) {
+    while (socket->hasPendingDatagrams())
+    {
         QByteArray reply;
         reply.resize(socket->pendingDatagramSize());
         QHostAddress fromAddress;
@@ -112,17 +122,17 @@ void UPnPCtrlPoint::processSearchReply(const QMap<QByteArray, QByteArray> &heade
     if(usn.isEmpty()) return;
     for(const auto &d : devices)
     {
-        if(d->usn == usn) return;
+        if("uuid:" + d->getUUID() == usn) return;
     }
-    QSharedPointer<UPnPDevice> device = QSharedPointer<UPnPDevice>::create();
-    device->location = headers["location"];
-    device->server = headers["server"];
-    device->st = headers["st"];
-    device->usn = usn;
-    getDescription(*device);
-    beginInsertRows(QModelIndex(), devices.size(), devices.size());
-    devices.append(device);
-    endInsertRows();
+    QSharedPointer<UPnPDevice> device = QSharedPointer<UPnPDevice>::create(usn.toUtf8());
+    device->getLocation() = headers["location"];
+    device->getServer() = headers["server"];
+    if(getDescription(*device))
+    {
+        beginInsertRows(QModelIndex(), devices.size(), devices.size());
+        devices.append(device);
+        endInsertRows();
+    }
 }
 
 QByteArray UPnPCtrlPoint::httpGet(const QString &surl)
@@ -138,54 +148,63 @@ QByteArray UPnPCtrlPoint::httpGet(const QString &surl)
     return reply->readAll();
 }
 
-void UPnPCtrlPoint::getDescription(UPnPDevice &device)
+bool UPnPCtrlPoint::getDescription(UPnPDevice &device)
 {
-    QByteArray descReply = httpGet(device.location);
-    QXmlStreamReader reader(descReply);
+    Network::Reply descReply = Network::httpGet(device.getLocation(), QUrlQuery());
+    if(descReply.hasError) return false;
+    QXmlStreamReader reader(descReply.content);
     bool serviceStart = false;
+    int serviceIndex = 0;
+    QString serviceKey;
+    auto &services = device.getServicesMap();
     while(!reader.atEnd())
     {
         if(reader.isStartElement())
         {
             QStringRef name=reader.name();
             if(name=="friendlyName"){
-                device.friendlyName = reader.readElementText().trimmed();
+                device.getFriendlyName() = reader.readElementText().trimmed().toUtf8();
             } else if(name == "modelDescription") {
-                device.modelDescription = reader.readElementText().trimmed();
+                device.getModelDescription() = reader.readElementText().trimmed().toUtf8();
             } else if(name == "service") {
                 serviceStart = true;
-                device.services.append(UPnPService());
+                serviceKey = QString::number(serviceIndex++);
+				services[serviceKey] = QSharedPointer<UPnPService>::create();
             }
             if(serviceStart)
             {
                 if(name == "serviceType") {
-                    device.services.back().serviceType = reader.readElementText().trimmed();
+                    services[serviceKey]->serviceType = reader.readElementText().trimmed();
                 } else if(name == "serviceId") {
-                    device.services.back().serviceId = reader.readElementText().trimmed();
+                    services[serviceKey]->serviceId = reader.readElementText().trimmed();
                 } else if(name == "SCPDURL") {
-                    device.services.back().SCPDURL = reader.readElementText().trimmed();
-                    if(!device.services.back().SCPDURL.startsWith('/')){
-                        device.services.back().SCPDURL.push_front('/');
+                    services[serviceKey]->SCPDURL = reader.readElementText().trimmed();
+                    if(!services[serviceKey]->SCPDURL.startsWith('/')){
+                        services[serviceKey]->SCPDURL.push_front('/');
                     }
                 } else if(name == "controlURL") {
-                    device.services.back().controlURL = reader.readElementText().trimmed();
-                    if(!device.services.back().controlURL.startsWith('/')){
-                        device.services.back().controlURL.push_front('/');
+                    services[serviceKey]->controlURL = reader.readElementText().trimmed();
+                    if(!services[serviceKey]->controlURL.startsWith('/')){
+                        services[serviceKey]->controlURL.push_front('/');
                     }
                 } else if(name == "eventSubURL") {
-                    device.services.back().eventSubURL = reader.readElementText().trimmed();
-                    if(!device.services.back().eventSubURL.startsWith('/')){
-                        device.services.back().eventSubURL.push_front('/');
+                    services[serviceKey]->eventSubURL = reader.readElementText().trimmed();
+                    if(!services[serviceKey]->eventSubURL.startsWith('/')){
+                        services[serviceKey]->eventSubURL.push_front('/');
                     }
                 }
             }
         }
         if(reader.isEndElement())
         {
-            if(reader.name() == "service") serviceStart = false;
+            if(reader.name() == "service")
+            {
+                serviceStart = false;
+            }
         }
         reader.readNext();
     }
+    return !reader.hasError();
 }
 
 QVariant UPnPCtrlPoint::data(const QModelIndex &index, int role) const
@@ -198,12 +217,12 @@ QVariant UPnPCtrlPoint::data(const QModelIndex &index, int role) const
         switch (col)
         {
         case Column::FriendlyName:
-            return device.friendlyName;
+            return device.getFriendlyName();
         case Column::Desc:
-            return device.modelDescription;
+            return device.getModelDescription();
         case Column::Location:
         {
-            QUrl location(device.location);
+            QUrl location(device.getLocation());
             return QString("%1:%2").arg(location.host()).arg(location.port());
         }
         default:
@@ -216,126 +235,10 @@ QVariant UPnPCtrlPoint::data(const QModelIndex &index, int role) const
 QVariant UPnPCtrlPoint::headerData(int section, Qt::Orientation orientation, int role) const
 {
     static QStringList headers{tr("Device"), tr("Description"), tr("Location")};
-    if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
+    if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
     {
-        if(section<headers.size()) return headers.at(section);
+        if(section < headers.size()) return headers.at(section);
     }
     return QVariant();
 }
 
-void DLNAMediaController::setAVTransportURI(const QString &uri)
-{
-    if(!device) return;
-    const UPnPService *s = getService(AVTransportService);
-    if(!s) return;
-    QString fields = QString(
-          "<InstanceID>0</InstanceID>"
-          "<CurrentURI>%1</CurrentURI>"
-          "<CurrentURIMetaData></CurrentURIMetaData>").arg(uri);
-    QString body(fillRequestBody({
-         {"action", "SetAVTransportURI"},
-         {"urn", AVTransportService},
-         {"fields", fields}
-     }));
-    QUrl url(device->location);
-    url.setPath(s->controlURL);
-    Network::httpPost(url.toString(), body.toUtf8(),
-                      {"Content-Type", "text/xml; charset=\"utf-8\"",
-                       "SOAPAction", "\"" AVTransportService "#SetAVTransportURI\""});
-}
-
-void DLNAMediaController::seek(int pos)
-{
-    if(!device) return;
-    const UPnPService *s = getService(AVTransportService);
-    if(!s) return;
-    int lh = pos / 3600;
-    int lmin = (pos % 3600) / 60;
-    int ls = pos % 60;
-    QString seekTime = QString("%0:%1:%2").arg(lh,2,10,QChar('0')).arg(lmin,2,10,QChar('0')).arg(ls,2,10,QChar('0'));
-    qDebug() << "seek:" << seekTime;
-    QString fields = QString(
-          "<InstanceID>0</InstanceID>"
-          "<Unit>ABS_TIME</Unit>"
-          "<Target>%1</Target>").arg(seekTime);
-    QString body(fillRequestBody({
-         {"action", "Seek"},
-         {"urn", AVTransportService},
-         {"fields", fields}
-     }));
-    QUrl url(device->location);
-    url.setPath(s->controlURL);
-    Network::httpPost(url.toString(), body.toUtf8(),
-                      {"Content-Type", "text/xml; charset=\"utf-8\"",
-                       "SOAPAction", "\"" AVTransportService "#Seek\""});
-}
-
-void DLNAMediaController::play()
-{
-    if(!device) return;
-    const UPnPService *s = getService(AVTransportService);
-    if(!s) return;
-    QString fields = QString(
-          "<InstanceID>0</InstanceID>"
-          "<Speed>1</Speed>");
-    QString body(fillRequestBody({
-         {"action", "Play"},
-         {"urn", AVTransportService},
-         {"fields", fields}
-     }));
-    QUrl url(device->location);
-    url.setPath(s->controlURL);
-    Network::httpPost(url.toString(), body.toUtf8(),
-                      {"Content-Type", "text/xml; charset=\"utf-8\"",
-                       "SOAPAction", "\"" AVTransportService "#Play\""});
-}
-
-QString DLNAMediaController::fillRequestBody(const QMap<QString, QString> &kv)
-{
-    const QString bodyTemplate =
-        "<?xml version='1.0' encoding='utf-8'?>"
-        "<s:Envelope s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">"
-          "<s:Body>"
-            "<u:{action} xmlns:u=\"{urn}\">"
-              "{fields}"
-            "</u:{action}>"
-          "</s:Body>"
-        "</s:Envelope>";
-    QString ret;
-    QString curName;
-    int state = 0;
-    for(const QChar c: bodyTemplate)
-    {
-        if(state == 0)
-        {
-            if(c == '{')
-            {
-                state = 1;
-                curName = "";
-            }
-            else ret.append(c);
-        }
-        else if(state == 1)
-        {
-            if(c == '}')
-            {
-                ret.append(kv.value(curName));
-                state = 0;
-            }
-            else curName.append(c);
-        }
-    }
-    return ret;
-}
-
-const UPnPService *DLNAMediaController::getService(const QString &service)
-{
-    for(const UPnPService &s : device->services)
-    {
-        if(s.serviceType == service)
-        {
-            return &s;
-        }
-    }
-    return nullptr;
-}

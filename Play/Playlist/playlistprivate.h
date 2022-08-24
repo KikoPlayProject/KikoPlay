@@ -17,8 +17,10 @@ public:
     bool saveFinishTimeOnce;
 
     QList<PlayListItem *> itemsClipboard;
-    QList<QPair<QString,QString> > recentList;
-    QHash<QString,PlayListItem *> fileItems, bgmCollectionItems;
+    QList<QPair<QString, QString> > recentList;
+    QHash<QString, PlayListItem *> fileItems, bgmCollectionItems;
+    QHash<QString, QString> mediaPathHash;
+    QReadWriteLock pathHashLock;
 
 public:
     void loadPlaylist();
@@ -31,10 +33,12 @@ public:
 
     PlayListItem *getPrevOrNextItem(bool prev);
     bool addSubFolder(QString folderStr, PlayListItem *parent, int &itemCount);
-    int refreshFolder(PlayListItem *folderItem, QList<PlayListItem *> &nItems);
+    int refreshFolder(PlayListItem *folderItem, QVector<PlayListItem *> &nItems);
 
     QString setCollectionTitle(QList<PlayListItem *> &list);
-    void dumpItem(QJsonArray &array,PlayListItem *item, QHash<QString, QString> &mediaHash);
+    void dumpItem(QJsonArray &array, PlayListItem *item);
+
+    void addMediaPathHash(const QVector<PlayListItem *> newItems);
 private:
     void saveItem(QXmlStreamWriter &writer,PlayListItem *item);
 private:

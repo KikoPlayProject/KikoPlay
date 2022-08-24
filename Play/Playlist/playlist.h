@@ -11,8 +11,8 @@ class MatchWorker : public QObject
     Q_OBJECT
 public:
     explicit MatchWorker(QObject *parent = nullptr):QObject(parent){}
-    void match(const QList<PlayListItem *> &items);
-    void match(const QList<PlayListItem *> &items, const QString &animeTitle, const QList<EpInfo> &eps);
+    void match(const QVector<PlayListItem *> &items);
+    void match(const QVector<PlayListItem *> &items, const QString &animeTitle, const QList<EpInfo> &eps);
 signals:
     void matchDown(const QList<PlayListItem *> &matchedItems);
 };
@@ -96,7 +96,9 @@ public slots :
     void exportDanmuItems(const QModelIndexList &exportIndexes);
 
     
-    void dumpJsonPlaylist(QJsonDocument &jsonDoc,QHash<QString,QString> &mediaHash);
+    void dumpJsonPlaylist(QJsonDocument &jsonDoc);
+    QString getPathByHash(const QString &hash);
+    const PlayListItem *getPathItem(const QString &pathId);
     void updatePlayTime(const QString &path, int time, PlayListItem::PlayState state);
     void renameItemPoolId(const QString &opid, const QString &npid);
 
