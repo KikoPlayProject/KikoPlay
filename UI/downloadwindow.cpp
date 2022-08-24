@@ -629,15 +629,15 @@ QWidget *DownloadWindow::setupGeneralInfoPage(QWidget *parent)
     taskTimeLabel=new QLabel(content);
     taskTimeLabel->setObjectName(QStringLiteral("TaskTimeLabel"));
 
-    GlobalObjects::iconfont.setPointSize(12);
+    GlobalObjects::iconfont->setPointSize(12);
     downSpeedIconLabel=new QLabel(parent);
     downSpeedIconLabel->setObjectName(QStringLiteral("DownSpeedIcon"));
-    downSpeedIconLabel->setFont(GlobalObjects::iconfont);
+    downSpeedIconLabel->setFont(*GlobalObjects::iconfont);
     downSpeedIconLabel->setText(QChar(0xe910));
     downSpeedIconLabel->setMaximumWidth(downSpeedIconLabel->height()+4*logicalDpiX()/96);
     upSpeedIconLabel=new QLabel(parent);
     upSpeedIconLabel->setObjectName(QStringLiteral("UpSpeedIcon"));
-    upSpeedIconLabel->setFont(GlobalObjects::iconfont);
+    upSpeedIconLabel->setFont(*GlobalObjects::iconfont);
     upSpeedIconLabel->setText(QChar(0xe941));
     upSpeedIconLabel->setMaximumWidth(upSpeedIconLabel->height()+4*logicalDpiX()/96);
     downSpeedLabel=new QLabel(parent);

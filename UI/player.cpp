@@ -176,8 +176,8 @@ public:
         QObject::connect(deleteItem,&QPushButton::clicked,[this](){
             GlobalObjects::playlist->removeRecentItem(path);
         });
-        GlobalObjects::iconfont.setPointSize(10);
-        deleteItem->setFont(GlobalObjects::iconfont);
+        GlobalObjects::iconfont->setPointSize(10);
+        deleteItem->setFont(*GlobalObjects::iconfont);
         deleteItem->setText(QChar(0xe60b));
         deleteItem->hide();
         QHBoxLayout *itemHLayout=new QHBoxLayout(this);
@@ -356,8 +356,8 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
 
     playListCollapseButton=new QPushButton(contralContainer);
     playListCollapseButton->setObjectName(QStringLiteral("widgetPlayListCollapse"));
-    GlobalObjects::iconfont.setPointSize(12);
-    playListCollapseButton->setFont(GlobalObjects::iconfont);
+    GlobalObjects::iconfont->setPointSize(12);
+    playListCollapseButton->setFont(*GlobalObjects::iconfont);
     playListCollapseButton->setText(QChar(GlobalObjects::appSetting->value("MainWindow/ListVisibility",true).toBool()?0xe945:0xe946));
     playListCollapseButton->hide();
 
@@ -387,7 +387,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     QToolButton **infoBtnPtrs[infoBtnCount] = {
         &mediaInfo, &windowSize, &screenshot, &stayOnTop
     };
-    GlobalObjects::iconfont.setPointSize(12);
+    GlobalObjects::iconfont->setPointSize(12);
     QHBoxLayout *infoHLayout=new QHBoxLayout(playInfoPanel);
     infoHLayout->setSpacing(0);
     infoHLayout->addWidget(titleLabel);
@@ -396,7 +396,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     {
         *infoBtnPtrs[i] = new QToolButton(playInfoPanel);
         QToolButton *tb = *infoBtnPtrs[i];
-        tb->setFont(GlobalObjects::iconfont);
+        tb->setFont(*GlobalObjects::iconfont);
         tb->setText(infoButtonTexts[i].first);
         tb->setToolTip(infoButtonTexts[i].second);
         tb->setObjectName(QStringLiteral("ListEditButton"));
@@ -422,7 +422,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     progress->setMouseTracking(true);
     controlVLayout->addWidget(progress);
 
-    GlobalObjects::iconfont.setPointSize(24);
+    GlobalObjects::iconfont->setPointSize(24);
 
     timeLabel=new QLabel("00:00/00:00",playControlPanel);
     timeLabel->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
@@ -431,47 +431,47 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     timeLabel->setFont(normalFont);
 
     playPause=new QPushButton(playControlPanel);
-    playPause->setFont(GlobalObjects::iconfont);
+    playPause->setFont(*GlobalObjects::iconfont);
     playPause->setText(QChar(0xe606));
     //play_pause->setFixedSize(buttonWidth,buttonHeight);
     playPause->setObjectName(QStringLiteral("widgetPlayControlButtons"));
     playPause->setToolTip(tr("Play/Pause(Space)"));
 
-    GlobalObjects::iconfont.setPointSize(20);
+    GlobalObjects::iconfont->setPointSize(20);
     int buttonWidth=36*logicalDpiX()/96,buttonHeight=36*logicalDpiY()/96;
 
     prev=new QPushButton(playControlPanel);
-    prev->setFont(GlobalObjects::iconfont);
+    prev->setFont(*GlobalObjects::iconfont);
     prev->setText(QChar(0xe69b));
     prev->setFixedSize(buttonWidth,buttonHeight);
     prev->setToolTip(tr("Prev(PageUp)"));
     prev->setObjectName(QStringLiteral("widgetPlayControlButtons"));
 
     next=new QPushButton(playControlPanel);
-    next->setFont(GlobalObjects::iconfont);
+    next->setFont(*GlobalObjects::iconfont);
     next->setText(QChar(0xe940));
     next->setFixedSize(buttonWidth,buttonHeight);
     next->setToolTip(tr("Next(PageDown)"));
     next->setObjectName(QStringLiteral("widgetPlayControlButtons"));
 
     stop=new QPushButton(playControlPanel);
-    stop->setFont(GlobalObjects::iconfont);
+    stop->setFont(*GlobalObjects::iconfont);
     stop->setText(QChar(0xe6fa));
     stop->setFixedSize(buttonWidth,buttonHeight);
     stop->setToolTip(tr("Stop"));
     stop->setObjectName(QStringLiteral("widgetPlayControlButtons"));
 
     mute=new QPushButton(playControlPanel);
-    mute->setFont(GlobalObjects::iconfont);
+    mute->setFont(*GlobalObjects::iconfont);
     mute->setText(QChar(0xe62c));
     mute->setFixedSize(buttonWidth,buttonHeight);
     mute->setToolTip(tr("Mute/Unmute"));
     mute->setObjectName(QStringLiteral("widgetPlayControlButtons"));
 
-    GlobalObjects::iconfont.setPointSize(18);
+    GlobalObjects::iconfont->setPointSize(18);
 
     launch=new QPushButton(playControlPanel);
-    launch->setFont(GlobalObjects::iconfont);
+    launch->setFont(*GlobalObjects::iconfont);
     launch->setText(QChar(0xe947));
     launch->setFixedSize(buttonWidth,buttonHeight);
     launch->setToolTip(tr("Launch Danmu"));
@@ -479,21 +479,21 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     launch->hide();
 
     setting=new QPushButton(playControlPanel);
-    setting->setFont(GlobalObjects::iconfont);
+    setting->setFont(*GlobalObjects::iconfont);
     setting->setText(QChar(0xe607));
     setting->setFixedSize(buttonWidth,buttonHeight);
     setting->setToolTip(tr("Play Setting"));
     setting->setObjectName(QStringLiteral("widgetPlayControlButtons"));
 
     danmu=new QPushButton(playControlPanel);
-    danmu->setFont(GlobalObjects::iconfont);
+    danmu->setFont(*GlobalObjects::iconfont);
     danmu->setText(QChar(0xe622));
     danmu->setFixedSize(buttonWidth,buttonHeight);
     danmu->setToolTip(tr("Danmu Setting"));
     danmu->setObjectName(QStringLiteral("widgetPlayControlButtons"));
 
     fullscreen=new QPushButton(playControlPanel);
-    fullscreen->setFont(GlobalObjects::iconfont);
+    fullscreen->setFont(*GlobalObjects::iconfont);
     fullscreen->setText(QChar(0xe621));
     fullscreen->setFixedSize(buttonWidth,buttonHeight);
     fullscreen->setToolTip(tr("FullScreen"));

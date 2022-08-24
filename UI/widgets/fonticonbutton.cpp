@@ -10,8 +10,8 @@ FontIconButton::FontIconButton(QChar iconChar, const QString &content, int iconS
     QPushButton(parent), icon(iconChar), iconFontSize(iconSize), textFontSize(fontSize), iconSpace(iconTextSpace), text(content)
 {
     if(iconSpace==-1) iconSpace = 2;
-    GlobalObjects::iconfont.setPointSize(iconFontSize);
-    setFont(GlobalObjects::iconfont);
+    GlobalObjects::iconfont->setPointSize(iconFontSize);
+    setFont(*GlobalObjects::iconfont);
     preferredWidth = sizeHint().width();
     QObject::connect(this,&QPushButton::toggled,[this](bool toggled){
         fontColor=toggled?hoverColor : normColor;

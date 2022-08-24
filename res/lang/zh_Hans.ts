@@ -2915,7 +2915,7 @@ Date: %2
     <message>
         <location filename="../../UI/settings/lanserverpage.cpp" line="32"/>
         <source>Start DLNA Media Server</source>
-        <translation type="unfinished"></translation>
+        <translation>开启DLNA媒体服务</translation>
     </message>
     <message>
         <location filename="../../UI/settings/lanserverpage.cpp" line="38"/>
@@ -3833,9 +3833,8 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation>检查更新</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="249"/>
         <source>Useage Tip</source>
-        <translation>使用提示</translation>
+        <translation type="vanished">使用提示</translation>
     </message>
     <message>
         <location filename="../../UI/mainwindow.cpp" line="257"/>
@@ -3852,6 +3851,11 @@ Set shortcuts through MPV Parameter input-conf</source>
         <location filename="../../UI/mainwindow.cpp" line="218"/>
         <source>Script Playground</source>
         <translation>脚本测试场</translation>
+    </message>
+    <message>
+        <location filename="../../UI/mainwindow.cpp" line="249"/>
+        <source>Usage Tip</source>
+        <translation>使用提示</translation>
     </message>
     <message>
         <location filename="../../UI/mainwindow.cpp" line="271"/>

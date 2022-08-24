@@ -246,7 +246,7 @@ void MainWindow::setupUI()
     });
     buttonIcon->addAction(act_checkUpdate);
 
-    QAction *act_useTip=new QAction(tr("Useage Tip"), this);
+    QAction *act_useTip=new QAction(tr("Usage Tip"), this);
     QObject::connect(act_useTip,&QAction::triggered,[this](){
         Tip tip(buttonIcon);
         tip.resize(500*logicalDpiX()/96, 400*logicalDpiY()/96);
@@ -341,9 +341,9 @@ void MainWindow::setupUI()
     pageVerticalLayout->addLayout(pageHLayout);
 
 
-    GlobalObjects::iconfont.setPointSize(10);
+    GlobalObjects::iconfont->setPointSize(10);
     minButton=new QToolButton(widgetTitlebar);
-    minButton->setFont(GlobalObjects::iconfont);
+    minButton->setFont(*GlobalObjects::iconfont);
     minButton->setText(QChar(0xe651));
     minButton->setObjectName(QStringLiteral("ControlButton"));
     QObject::connect(minButton,&QToolButton::clicked,this, [=](){
@@ -359,7 +359,7 @@ void MainWindow::setupUI()
     });
 
     maxButton=new QToolButton(widgetTitlebar);
-    maxButton->setFont(GlobalObjects::iconfont);
+    maxButton->setFont(*GlobalObjects::iconfont);
     maxButton->setText(QChar(0xe93c));
     maxButton->setObjectName(QStringLiteral("ControlButton"));
     QObject::connect(maxButton,&QToolButton::clicked,[this](){
@@ -376,7 +376,7 @@ void MainWindow::setupUI()
     });
 
     closeButton=new QToolButton(widgetTitlebar);
-    closeButton->setFont(GlobalObjects::iconfont);
+    closeButton->setFont(*GlobalObjects::iconfont);
     closeButton->setText(QChar(0xe60b));
     closeButton->setObjectName(QStringLiteral("closelButton"));
     QObject::connect(closeButton,&QToolButton::clicked,[this](){

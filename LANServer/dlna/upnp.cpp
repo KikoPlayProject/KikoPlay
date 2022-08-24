@@ -4,6 +4,7 @@
 #include <QNetworkInterface>
 #include <QSharedPointer>
 #include "Common/network.h"
+#include "Common/logger.h"
 
 UPnP::UPnP(QObject *parent) : QObject(parent), upnpStart(false), socket(nullptr)
 {
@@ -27,6 +28,7 @@ void UPnP::start()
         socket->joinMulticastGroup(groupAddress, interface);
     }
     upnpStart = true;
+    Logger::logger()->log(Logger::LANServer, "UPnP Start");
 }
 
 void UPnP::stop()

@@ -36,17 +36,17 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
     title->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
     title->setOpenExternalLinks(true);
 
-    GlobalObjects::iconfont.setPointSize(title->font().pointSize());
+    GlobalObjects::iconfont->setPointSize(title->font().pointSize());
 
-    QFontMetrics fm(GlobalObjects::iconfont);
+    QFontMetrics fm(*GlobalObjects::iconfont);
     int btnH = qMax(fm.horizontalAdvance(QChar(0xe60b)), fm.horizontalAdvance(QChar(0xe680)));
-    btnH = qMax(btnH, fm.height())*2;
+    btnH = qMax(btnH, fm.height())*1.6;
     QSize btnSize(btnH, btnH);
 
     closeButton=new QPushButton(titleBar);
     closeButton->setObjectName(QStringLiteral("DialogCloseButton"));
     closeButton->setFixedSize(btnSize);
-    closeButton->setFont(GlobalObjects::iconfont);
+    closeButton->setFont(*GlobalObjects::iconfont);
     closeButton->setText(QChar(0xe60b));
     QObject::connect(closeButton,&QPushButton::clicked,this,&CFramelessDialog::onClose);
     closeButton->setVisible(showClose);
@@ -56,7 +56,7 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
     acceptButton=new QPushButton(titleBar);
     acceptButton->setObjectName(QStringLiteral("DialogAcceptButton"));
     acceptButton->setFixedSize(btnSize);
-    acceptButton->setFont(GlobalObjects::iconfont);
+    acceptButton->setFont(*GlobalObjects::iconfont);
     acceptButton->setText(QChar(0xe680));
     QObject::connect(acceptButton,&QPushButton::clicked,this,&CFramelessDialog::onAccept);
     acceptButton->setVisible(showAccept);
@@ -395,9 +395,9 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
     title->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
     title->setOpenExternalLinks(true);
 
-    GlobalObjects::iconfont.setPointSize(title->font().pointSize());
+    GlobalObjects::iconfont->setPointSize(title->font().pointSize());
 
-    QFontMetrics fm(GlobalObjects::iconfont);
+    QFontMetrics fm(*GlobalObjects::iconfont);
     int btnH = qMax(fm.horizontalAdvance(QChar(0xe60b)), fm.horizontalAdvance(QChar(0xe680)));
     btnH = qMax(btnH, fm.height())*2;
     QSize btnSize(btnH, btnH);
@@ -405,7 +405,7 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
     closeButton=new QPushButton(titleBar);
     closeButton->setObjectName(QStringLiteral("DialogCloseButton"));
     closeButton->setFixedSize(btnSize);
-    closeButton->setFont(GlobalObjects::iconfont);
+    closeButton->setFont(*GlobalObjects::iconfont);
     closeButton->setText(QChar(0xe60b));
     QObject::connect(closeButton,&QPushButton::clicked,this,&CFramelessDialog::onClose);
     closeButton->setVisible(showClose);
@@ -415,7 +415,7 @@ CFramelessDialog::CFramelessDialog(QString titleStr, QWidget *parent, bool showA
     acceptButton=new QPushButton(titleBar);
     acceptButton->setObjectName(QStringLiteral("DialogAcceptButton"));
     acceptButton->setFixedSize(btnSize);
-    acceptButton->setFont(GlobalObjects::iconfont);
+    acceptButton->setFont(*GlobalObjects::iconfont);
     acceptButton->setText(QChar(0xe680));
     QObject::connect(acceptButton,&QPushButton::clicked,this,&CFramelessDialog::onAccept);
     acceptButton->setVisible(showAccept);

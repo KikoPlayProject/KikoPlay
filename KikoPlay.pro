@@ -367,12 +367,7 @@ macx {
 }
 
 linux-g++* {
-    PRE_TARGETDEPS = Script/lua/liblua.a
-    liblua.target = $$PRE_TARGETDEPS
-    liblua.depends = FORCE
-    liblua.commands = cd Script/lua && make MYCFLAGS=-fPIC\ -DLUA_USE_LINUX\ -DLUA_COMPAT_5_2 liblua.a
-    QMAKE_EXTRA_TARGETS += liblua
-    QMAKE_LFLAGS += -fuse-ld=gold -Wl,--exclude-libs,liblua.a
+    QMAKE_LFLAGS += -fuse-ld=gold -Wl,--exclude-libs,liblua53.a
 
     # Link library settings by ARCH
     contains(QT_ARCH, i386) {
@@ -380,7 +375,7 @@ linux-g++* {
     } else {
         LIBS += -L/usr/lib64 -L/usr/lib/x86_64-linux-gnu -L$$PWD/lib/x64/linux
     }
-    LIBS += -LScript/lua -l:liblua.a
+    LIBS += -LScript/lua -l:liblua53.a
     LIBS += -lm -ldl
 }
 

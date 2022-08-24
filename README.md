@@ -36,15 +36,20 @@ KikoPlay基于以下项目：
  - [QtWebApp](http://stefanfrings.de/qtwebapp/index.html)
  - Lua 5.3
 
-编译环境： MSVC2015，gcc 7.3.0(其他版本未测试)
+编译环境： Windows平台使用MSVC2015，gcc 7.3.0(其他版本未测试)，其他平台依照平台推荐配置（包管理器/Xcode）
 
-Windows上使用Qt Creator打开工程文件后可直接编译（需要先编译`Script\lua`下的lua，确保生成lua53.lib到`lib\x64`下）
+Windows上使用Qt Creator打开build.pro文件后可直接编译，Linux/macOS亦然，当然也可以手动切换到目录执行`qmake`和`make`
 
-Linux上看[这里](linux.md)
+Linux各发行版的说明参见[这里](linux.md)
 
-Mac OS 系统可自行尝试
+macOS使用Homebrew包管理器：https://github.com/KikoPlayProject/Homebrew-KikoPlay
 
 自从0.2.3版本后只提供64位版本，不建议使用32位版本
+
+### cmake编译
+
+关于cmake编译请参见[这里](cmake_build.md)
+
 
 ## 下载
 
