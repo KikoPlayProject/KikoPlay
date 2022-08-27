@@ -64,14 +64,14 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
     acceptButton->setAutoDefault(false);
 
     busyLabel = new LoadingIcon(QColor(153, 153, 153), this);
-    busyLabel->setFixedSize(btnSize);
+    busyLabel->setFixedSize(QSize(btnH*0.9, btnH*0.9));
     busyLabel->hide();
 
     QHBoxLayout *titleHBLayout=new QHBoxLayout(titleBar);
     titleHBLayout->setContentsMargins(8*logicalDpiX()/96, 8*logicalDpiY()/96, 8*logicalDpiX()/96, 8*logicalDpiY()/96);
     titleHBLayout->addWidget(title, 0, Qt::AlignVCenter);
     titleHBLayout->addWidget(busyLabel);
-    titleHBLayout->addSpacing(btnH * 0.1);
+    titleHBLayout->addSpacing(btnH * 0.2);
     titleHBLayout->addWidget(acceptButton);
     titleHBLayout->addSpacing(btnH * 0.1);
     titleHBLayout->addWidget(closeButton);

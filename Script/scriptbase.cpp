@@ -9,6 +9,7 @@
 #include "Common/network.h"
 #include "Common/htmlparsersax.h"
 #include "Common/logger.h"
+#include "globalobjects.h"
 
 #define LOG_INFO(info, scriptId) Logger::logger()->log(Logger::Script, QString("[%1]%2").arg(scriptId, info))
 #define LOG_ERROR(info, scriptId) Logger::logger()->log(Logger::Script, QString("[ERROR][%1]%2").arg(scriptId, info))
@@ -352,7 +353,6 @@ QString ScriptBase::loadMeta(const QString &scriptPath)
     if(!scriptInfo.canConvert(QVariant::Map))
     {
         errInfo = "Script Error: no info table";
-        LOG_ERROR(errInfo, "KikoPlay");
         return errInfo;
     }
     QVariantMap scriptInfoMap = scriptInfo.toMap();
@@ -369,6 +369,33 @@ QString ScriptBase::loadMeta(const QString &scriptPath)
     scriptMeta["time"] = QString::number(scriptFileInfo.fileTime(QFile::FileModificationTime).toSecsSinceEpoch());
     if(!scriptMeta.contains("id")) scriptMeta["id"] = scriptMeta["path"];
     if(!scriptMeta.contains("name")) scriptMeta["name"] = scriptFileInfo.baseName();
+    if(scriptMeta.contains("minKikoVersion"))
+    {
+        QStringList minVer(scriptMeta["minKikoVersion"].split('.', Qt::SkipEmptyParts));
+        QStringList curVer(QString(GlobalObjects::kikoVersion).split('.', Qt::SkipEmptyParts));
+        bool versionMismatch = false;
+        if(minVer.size() == curVer.size())
+        {
+            for(int i = 0; i < minVer.size(); ++i)
+            {
+                int cv = curVer[i].toInt(), mv = minVer[i].toInt();
+                if(cv < mv)
+                {
+                    versionMismatch = true;
+                    break;
+                }
+                else if(cv > mv)
+                {
+                    versionMismatch = false;
+                    break;
+                }
+            }
+        }
+        if(versionMismatch)
+        {
+            errInfo = QString("Script Version Mismatch, min: %1, cur: %2").arg(scriptMeta["minKikoVersion"], GlobalObjects::kikoVersion);
+        }
+    }
     return errInfo;
 }
 

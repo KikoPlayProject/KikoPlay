@@ -1176,7 +1176,6 @@ QPushButton#widgetPlayListCollapse:hover,
 QPushButton#widgetPlayListCollapse:pressed,
 QPushButton#widgetPlayListCollapse:checked{
     color:#FFFFFF;
-    background:#666a6e;
 }
 QPushButton#DialogCloseButton{
     border:none;

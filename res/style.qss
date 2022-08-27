@@ -753,7 +753,9 @@ QScrollArea{
     border:none;
 }
 QScrollArea > QWidget > QWidget{
+@if{DarkMode}
     background: transparent;
+@endif
 }
 QScrollArea#PoolItemContainer{
     border-color: rgb(200,200,200);
@@ -1129,7 +1131,6 @@ QPushButton#widgetPlayListCollapse:hover,
 QPushButton#widgetPlayListCollapse:pressed,
 QPushButton#widgetPlayListCollapse:checked{
     color:#FFFFFF;
-    background:#666a6e;
 }
 QPushButton#DialogCloseButton{
     border:none;
