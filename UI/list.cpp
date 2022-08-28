@@ -114,7 +114,8 @@ namespace
         explicit InfoTip(QWidget *parent=nullptr):QWidget(parent)
         {
             setObjectName(QStringLiteral("ListInfoBar"));
-            loadingIcon=new LoadingIcon(Qt::white, this);
+            loadingIcon = new LoadingIcon(Qt::white, this);
+            loadingIcon->setMargin(4 * logicalDpiX() / 96);
             loadingIcon->hide();
 
             infoText=new QLabel(this);

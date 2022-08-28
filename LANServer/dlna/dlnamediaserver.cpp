@@ -314,8 +314,8 @@ void DLNAMediaServer::onBrowseDirectChildren(UPnPAction &action, stefanfrings::H
         if(objId == "0") fullPath = "/";
         const QVector<PlayListItem *> &children = *item->children;
         totalMatches = children.size();
-		if (totalMatches == 0) return false;
-        startIndex = qMin(startIndex, children.size() - 1);
+        if (children.size() == 0 || startIndex >= children.size()) return false;
+        totalMatches = children.size() - startIndex;
         int endIndex = requestCount == 0? children.size() : startIndex + requestCount;
         endIndex = qMin(endIndex, children.size());
         mediaItems.reserve(endIndex - startIndex);
@@ -355,7 +355,8 @@ void DLNAMediaServer::onBrowseDirectChildren(UPnPAction &action, stefanfrings::H
     action.setArg("NumberReturned", QString::number(mediaItems.size()));
     action.setArg("TotalMatches", QString::number(totalMatches));
     action.setArg("UpdateID", "1");
-    Logger::logger()->log(Logger::LANServer, QString("[DLNA][%1]BrowseDirectChildren: %2, filter: %3").arg(request.getPeerAddress().toString(), fullPath, filter));
+    Logger::logger()->log(Logger::LANServer, QString("[DLNA][%1]BrowseDirectChildren: %2, filter: %3, start: %4, requset count: %5")
+                          .arg(request.getPeerAddress().toString(), fullPath, filter, QString::number(startIndex), QString::number(requestCount)));
 }
 
 void DLNAMediaServer::setDefaultActionResponse(UPnPAction &action, stefanfrings::HttpResponse &response)

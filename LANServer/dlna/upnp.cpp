@@ -36,6 +36,7 @@ void UPnP::stop()
     QObject::disconnect(socket, &QUdpSocket::readyRead, this, &UPnP::handleMessage);
     socket->disconnectFromHost();
     upnpStart = false;
+    Logger::logger()->log(Logger::LANServer, "UPnP Stop");
 }
 
 void UPnP::addDevice(UPnPDevice *device)
