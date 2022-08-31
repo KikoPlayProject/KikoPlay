@@ -183,5 +183,8 @@ void GlobalObjects::registerCustomSettingType()
 
     qRegisterMetaType<QVector<QPair<QString, QString>>>("QVector<QPair<QString, QString>>");
     qRegisterMetaTypeStreamOperators<QVector<QPair<QString, QString>>>("QVector<QPair<QString, QString>>");
+
+    qRegisterMetaType<QVector<QStringList>>("QVector<QStringList>");
+    qRegisterMetaTypeStreamOperators<QVector<QStringList>>("QVector<QStringList>");
 }
 

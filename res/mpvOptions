@@ -1,0 +1,3 @@
+#Make sure the danmu is smooth
+vf=lavfi="fps=fps=60:round=down"
+hwdec=auto

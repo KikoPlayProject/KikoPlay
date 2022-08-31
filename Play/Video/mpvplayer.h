@@ -68,8 +68,14 @@ public:
 
     VideoSizeInfo getVideoSizeInfo();
     QString expandMediaInfo(const QString &text);
-    void setOptions();
+    void setIccProfileOption();
     void drawTexture(QVector<const DanmuObject *> &objList, float alpha);
+
+    void loadOptions();
+    bool setOptionGroup(const QString &key);
+    const QStringList &allOptionGroups() const {return optionGroupKeys;}
+    const QString &currentOptionGroup() const {return curOptionGroup;}
+
     void modifyShortcut(const QString &key, const QString &newKey, const QString &command);
     int runShortcut(const QString &key, int keyEventType=0);  //0:press 1:down 2:up
     void setDirectKeyMode(bool on);
@@ -92,6 +98,7 @@ signals:
     void sharpenChanged(double value);
     void volumeChanged(int value);
     void muteChanged(bool value);
+    void optionGroupChanged();
 
     void initContext();
     void refreshPreview(int time, QPixmap *pixmap);
@@ -149,8 +156,12 @@ private:
     QTimer refreshTimer;
     qint64 refreshTimestamp;
     QElapsedTimer elapsedTimer;
+
+    QString curOptionGroup;
+    QStringList optionGroupKeys;
+    QHash<QString, QMap<QString, QString>> optionsGroupMap;
+
     bool directKeyMode;
-    QMap<QString, QString> optionsMap;
     QHash<QString, QPair<QList<QStringList>, QString>> mpvShortcuts;
     QHash<QString, QString> directModeKeyMapping;
 

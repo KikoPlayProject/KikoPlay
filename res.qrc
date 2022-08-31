@@ -75,5 +75,8 @@
         <file>res/images/down-arrow-darkmode-hover.svg</file>
         <file>res/images/up-arrow-darkmode-hover.svg</file>
         <file>res/scriptPlayground</file>
+        <file>res/mpvOptions</file>
+        <file>res/images/tab-close.svg</file>
+        <file>res/images/tab-close-hover.svg</file>
     </qresource>
 </RCC>

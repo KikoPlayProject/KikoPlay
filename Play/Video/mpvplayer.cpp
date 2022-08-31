@@ -89,6 +89,9 @@ static QString get_color_profile(HWND hwnd)
     return name;
 }
 #endif
+
+static QSet<QString> optionsBeforeInit{"config", "config-dir", "input-conf", "load-scripts", "script", "scripts"};
+
 }
 MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::Stop),
     mute(false),danmuHide(false),oldOpenGLVersion(false),currentDuration(0), mpvPreview(nullptr), previewThread(nullptr)
@@ -97,38 +100,27 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     mpv = mpv_create();
     if (!mpv)
         throw std::runtime_error("could not create mpv context");
-
-    QSet<QString> optionsBeforeInit{"config", "config-dir", "input-conf", "load-scripts", "script", "scripts"};
-    QStringList options=GlobalObjects::appSetting->value(
-         "Play/MPVParameters",
-         "#Make sure the danmu is smooth\n"
-         "vf=lavfi=\"fps=fps=60:round=down\"\n"
-         "hwdec=auto").toString().split('\n');
-    for(const QString &option:options)
+    loadOptions();
+    const QMap<QString, QString> &optionsMap = optionsGroupMap[curOptionGroup];
+    for(auto iter = optionsMap.cbegin(); iter != optionsMap.cend(); ++iter)
     {
-        QString opt(option.trimmed());
-        if(opt.isEmpty() || opt.startsWith('#'))continue;
-        int eqPos=opt.indexOf('=');
-        if(eqPos==-1) eqPos = opt.length();
-        QString key(opt.left(eqPos)), val(opt.mid(eqPos+1));
-        if(optionsBeforeInit.contains(key))
+        if(optionsBeforeInit.contains(iter.key()))
         {
-            int ret = mpv::qt::set_option_variant(mpv, key, val);
+            int ret = mpv::qt::set_option_variant(mpv, iter.key(), iter.value());
             if(ret != MPV_ERROR_SUCCESS)
             {
-                Logger::logger()->log(Logger::MPV, QString("[kiko][option error]: %1, %2").arg(key, QString::number(ret)));
+                Logger::logger()->log(Logger::MPV, QString("[kiko][option error]: %1, %2").arg(iter.key(), QString::number(ret)));
             }
         }
-        else
-            optionsMap.insert(key, val);
     }
 
     if (mpv_initialize(mpv) < 0)
         throw std::runtime_error("could not initialize mpv context");
 
     mpv_request_log_messages(mpv, "v");
-    for(auto iter=optionsMap.cbegin(); iter!=optionsMap.cend(); ++iter)
+    for(auto iter = optionsMap.cbegin(); iter != optionsMap.cend(); ++iter)
     {
+        if(optionsBeforeInit.contains(iter.key())) continue;
         int ret = mpv::qt::set_option_variant(mpv, iter.key(), iter.value());
         if(ret != MPV_ERROR_SUCCESS)
         {
@@ -232,9 +224,9 @@ QString MPVPlayer::expandMediaInfo(const QString &text)
     return mpv::qt::command(mpv, QVariantList() << "expand-text" << text).toString();
 }
 
-void MPVPlayer::setOptions()
+void MPVPlayer::setIccProfileOption()
 {
-    if(optionsMap.contains("icc-profile-auto"))
+    if(optionsGroupMap[curOptionGroup].contains("icc-profile-auto"))
     {
 #ifdef Q_OS_WIN
         if(this->parent())
@@ -995,6 +987,62 @@ void *MPVPlayer::get_proc_address(void *ctx, const char *name)
     QOpenGLContext *glctx = QOpenGLContext::currentContext();
     if (!glctx) return nullptr;
     return (void *)glctx->getProcAddress(QByteArray(name));
+}
+
+void MPVPlayer::loadOptions()
+{
+    QFile defaultOptionFile(":/res/mpvOptions");
+    defaultOptionFile.open(QFile::ReadOnly);
+    QStringList defaultOptions = GlobalObjects::appSetting->value("Play/MPVParameters", QString(defaultOptionFile.readAll())).toString().split('\n');
+    QVector<QStringList> optionsGroupList = GlobalObjects::appSetting->value("Play/MPVParameterGroups").value<QVector<QStringList>>();
+    optionsGroupList.prepend(defaultOptions);
+
+    curOptionGroup = GlobalObjects::appSetting->value("Play/DefaultParameterGroup", "default").toString();
+    optionGroupKeys = GlobalObjects::appSetting->value("Play/ParameterGroupKeys").toStringList();
+    optionGroupKeys.prepend("default");
+
+    if(optionGroupKeys.size() < optionsGroupList.size())
+    {
+        optionsGroupList.resize(optionGroupKeys.size());
+    }
+    optionsGroupMap.clear();
+    for(int i = 0; i < optionGroupKeys.size(); ++i)
+    {
+        QMap<QString, QString> &optionsMap = optionsGroupMap[optionGroupKeys[i]];
+        for(const QString &option : optionsGroupList[i])
+        {
+            QString opt(option.trimmed());
+            if(opt.isEmpty() || opt.startsWith('#')) continue;
+            int eqPos = opt.indexOf('=');
+            if(eqPos == -1) eqPos = opt.length();
+            optionsMap.insert(opt.left(eqPos), opt.mid(eqPos+1));
+        }
+    }
+    if(!optionsGroupMap.contains(curOptionGroup)) curOptionGroup = "default";
+    emit optionGroupChanged();
+}
+
+bool MPVPlayer::setOptionGroup(const QString &key)
+{
+    if(!optionsGroupMap.contains(key)) return false;
+    const QMap<QString, QString> &optionsMap = optionsGroupMap[key];
+    curOptionGroup = key;
+    GlobalObjects::appSetting->setValue("Play/DefaultParameterGroup", curOptionGroup);
+    Logger::logger()->log(Logger::MPV, QString("[kiko]Switch to option group: %1").arg(curOptionGroup));
+    for(auto iter = optionsMap.cbegin(); iter != optionsMap.cend(); ++iter)
+    {
+        if(optionsBeforeInit.contains(iter.key()))
+        {
+            Logger::logger()->log(Logger::MPV, QString("[kiko]Option need restart: %1").arg(iter.key()));
+            continue;
+        }
+        int ret = mpv::qt::set_option_variant(mpv, iter.key(), iter.value());
+        if(ret != MPV_ERROR_SUCCESS)
+        {
+            Logger::logger()->log(Logger::MPV, QString("[kiko][option error]: %1, %2").arg(iter.key(), QString::number(ret)));
+        }
+    }
+    return true;
 }
 
 void MPVPlayer::loadTracks()

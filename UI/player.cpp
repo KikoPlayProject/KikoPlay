@@ -540,7 +540,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
 
     GlobalObjects::mpvplayer->setParent(centralWidget);
     setContentsMargins(0,0,0,0);
-    GlobalObjects::mpvplayer->setOptions();
+    GlobalObjects::mpvplayer->setIccProfileOption();
     QStackedLayout *playerSLayout = new QStackedLayout(centralWidget);
     playerSLayout->setStackingMode(QStackedLayout::StackAll);
     playerSLayout->setContentsMargins(0,0,0,0);
@@ -1257,6 +1257,25 @@ void PlayerWindow::setupPlaySettingPage()
         playSpeedCombo->setCurrentText(QString::number(val));
     });
 
+    QComboBox *mpvParaGroupCombo = new QComboBox(pagePlay);
+    mpvParaGroupCombo->setInsertPolicy(QComboBox::NoInsert);
+    mpvParaGroupCombo->setEditable(false);
+    mpvParaGroupCombo->addItems(GlobalObjects::mpvplayer->allOptionGroups());
+    mpvParaGroupCombo->setCurrentText(GlobalObjects::mpvplayer->currentOptionGroup());
+    QObject::connect(mpvParaGroupCombo, &QComboBox::currentTextChanged,[](const QString &group){
+        if(GlobalObjects::mpvplayer->setOptionGroup(group))
+        {
+            Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tr("Switch to option group \"%1\"").arg(GlobalObjects::mpvplayer->currentOptionGroup()));
+        }
+    });
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::optionGroupChanged, [=](){
+        mpvParaGroupCombo->blockSignals(true);
+        mpvParaGroupCombo->clear();
+        mpvParaGroupCombo->addItems(GlobalObjects::mpvplayer->allOptionGroups());
+        mpvParaGroupCombo->setCurrentText(GlobalObjects::mpvplayer->currentOptionGroup());
+        mpvParaGroupCombo->blockSignals(false);
+    });
+
     QPushButton *editMpvOptions=new QPushButton(tr("MPV Parameter Settings"), pagePlay);
     QObject::connect(editMpvOptions,&QPushButton::clicked,[this](){
         Settings settings(Settings::PAGE_MPV, this);
@@ -1266,7 +1285,7 @@ void PlayerWindow::setupPlaySettingPage()
         settings.exec();
     });
 
-    QPushButton *showMpvLog=new QPushButton(tr("Show MPV Log"), pagePlay);
+    QPushButton *showMpvLog=new QPushButton(tr("MPV Log"), pagePlay);
     QObject::connect(showMpvLog,&QPushButton::clicked, this, &PlayerWindow::showMPVLog);
 
 //Behavior Page
@@ -1426,6 +1445,7 @@ void PlayerWindow::setupPlaySettingPage()
     playSettingGLayout->addWidget(speedLabel,5,0);
     playSettingGLayout->addWidget(playSpeedCombo,5,1,1,2);
     QHBoxLayout *bottomBtnHLayout=new QHBoxLayout();
+    bottomBtnHLayout->addWidget(mpvParaGroupCombo);
     bottomBtnHLayout->addWidget(editMpvOptions);
     bottomBtnHLayout->addWidget(showMpvLog);
     playSettingGLayout->addLayout(bottomBtnHLayout,6,0,1,3);

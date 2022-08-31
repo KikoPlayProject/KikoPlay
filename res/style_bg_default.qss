@@ -924,6 +924,9 @@ QDialog QLineEdit:focus,QDialog QSpinBox:focus,QDialog QDateEdit:focus {
 QPlainTextEdit:focus,QTextEdit:focus {
     border: 1px solid #2BA9EC;
 }
+QTabWidget QPlainTextEdit {
+    border: 1px solid #2BA9EC;
+}
 QPlainTextEdit#TaskLogView{
     background-color: rgba(255,255,255,40);
     color: rgb(240,240,240);
@@ -1388,6 +1391,10 @@ QPushButton#CharacterPlaceholder:hover{
 QPushButton#CharacterPlaceholder:pressed{
     margin-top:2px;
 }
+QPushButton#AddOptionGroup {
+    margin-bottom: 2px;
+}
+
 
 /* ------------------- QScrollBar Setting ------------------- */
 @if{DarkMode}
@@ -1559,4 +1566,57 @@ QProgressBar#DownloadToolProgress {
 QFrame#PoolItem{
     background-color:rgba(1,157,255,80);
     padding: 2px;
+}
+
+
+/* --------------------QTab-------------------------------*/
+QTabWidget::pane {
+    border: 0px solid #2BA9EC;
+    background: #fafafa;
+    top: -1px;
+}
+
+QTabBar::tab {
+    border: 1px solid #C4C4C3;
+    min-width:10ex;
+    padding: 6px;
+    margin-left: 1px;
+    @if{DarkMode}
+       color: rgb(214, 214, 214);
+    @endif
+}
+
+QTabBar::tab:hover {
+   @if{DarkMode}
+       background-color:rgb(80, 80, 80);
+   @else
+       background-color:#fafafa;
+   @endif
+}
+
+QTabBar::tab:selected {
+    border-top-color: #2BA9EC;
+    border-left-color: #2BA9EC;
+    border-right-color: #2BA9EC;
+    @if{DarkMode}
+        background-color:rgb(60, 60, 60);
+        border-bottom-color: rgb(60, 60, 60);
+    @else
+        background-color:#fafafa;
+        border-bottom-color: #fafafa;
+    @endif
+}
+
+QTabBar::tab:!selected {
+    margin-top: 0px; /* make non-selected tabs look smaller */
+    border-bottom-color: #2BA9EC;
+}
+
+QTabBar::close-button {
+    image: url(:/res/images/tab-close.svg);
+    margin: 4px;
+}
+
+QTabBar::close-button:hover {
+    image: url(:/res/images/tab-close-hover.svg);
 }
