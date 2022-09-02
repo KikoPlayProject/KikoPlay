@@ -694,6 +694,9 @@ QTreeView#TaskFileInfoView {
     qproperty-ignoreColor: rgb(200,200,200);
 @endif
 }
+QDialog QTreeView::item {
+    padding: 2px;
+}
 
 
 /* ------------------- QHeaderView ------------------- */
@@ -938,6 +941,9 @@ QLineEdit#PageEdit{
     border-color:#1CA0E4;
     background:transparent;
     padding-bottom:-1px;
+}
+QLineEdit#ElideLineEdit {
+    padding-right: 28px;
 }
 QSpinBox::up-button,QDateEdit::up-button {
     subcontrol-origin: border;
@@ -1349,6 +1355,10 @@ QLabel#CharacterPlaceholderIcon:pressed {
 QPushButton#AddOptionGroup {
     margin-bottom: 2px;
 }
+QPushButton#ElideLineEditBtn {
+    margin: 2px;
+}
+
 
 /* ------------------- QScrollBar Setting ------------------- */
 @if{DarkMode}
@@ -1535,7 +1545,7 @@ QTabBar::tab {
     border: 1px solid #C4C4C3;
     min-width:10ex;
     padding: 6px;
-    margin-left: 1px;
+    margin-right: 1px;
     @if{DarkMode}
        color: rgb(214, 214, 214);
     @endif

@@ -1,6 +1,7 @@
 #include "scriptsettingmodel.h"
 #include <QComboBox>
 #include <QLineEdit>
+#include "UI/widgets/elidelineedit.h"
 #define ItemChoiceRole Qt::UserRole+1
 
 
@@ -84,11 +85,11 @@ QWidget *SettingDelegate::createEditor(QWidget *parent, const QStyleOptionViewIt
         {
             QComboBox *combo=new QComboBox(parent);
             combo->setFrame(false);
-            combo->addItems(choices.split(',', QString::SplitBehavior::SkipEmptyParts));
+            combo->addItems(choices.split(',', Qt::SkipEmptyParts));
             return combo;
         }
     }
-    return QStyledItemDelegate::createEditor(parent,option,index);
+    return new ElideLineEdit(parent);
 }
 
 void SettingDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const

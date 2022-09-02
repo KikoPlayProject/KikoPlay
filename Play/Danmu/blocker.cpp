@@ -4,6 +4,7 @@
 #include <QLineEdit>
 #include "globalobjects.h"
 #include "Play/Danmu/danmupool.h"
+#include "UI/widgets/elidelineedit.h"
 #include "Common/network.h"
 #define BlockNameRole Qt::UserRole+1
 QWidget *ComboBoxDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
@@ -18,6 +19,10 @@ QWidget *ComboBoxDelegate::createEditor(QWidget *parent, const QStyleOptionViewI
         combo->setFrame(false);
         combo->addItems(col==Blocker::Columns::FIELD?GlobalObjects::blocker->fields:GlobalObjects::blocker->relations);
         return combo;
+    }
+    case Blocker::Columns::CONTENT:
+    {
+        return new ElideLineEdit(parent);
     }
     default:
     {

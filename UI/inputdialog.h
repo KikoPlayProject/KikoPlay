@@ -9,7 +9,7 @@ class InputDialog : public CFramelessDialog
     Q_OBJECT
 public:
     InputDialog(const QString &title, const QString &tip, const QString &text="",
-                         bool canEmpty=true, QWidget *parent = nullptr);
+                         bool canEmpty=true, QWidget *parent = nullptr, const QString &sizeKey="");
 
     InputDialog(const QString &title, const QString &tip, QWidget *parent = nullptr);
     InputDialog(const QByteArray &imgData, const QString &title, const QString &tip, const QString &text, QWidget *parent = nullptr);

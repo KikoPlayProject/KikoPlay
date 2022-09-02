@@ -114,6 +114,7 @@ SOURCES += \
     UI/widgets/colorslider.cpp \
     UI/widgets/danmustatiswidget.cpp \
     UI/widgets/dialogtip.cpp \
+    UI/widgets/elidelineedit.cpp \
     UI/widgets/fonticonbutton.cpp \
     UI/widgets/loadingicon.cpp \
         main.cpp \
@@ -274,6 +275,7 @@ HEADERS += \
     UI/widgets/colorslider.h \
     UI/widgets/danmustatiswidget.h \
     UI/widgets/dialogtip.h \
+    UI/widgets/elidelineedit.h \
     UI/widgets/fonticonbutton.h \
     UI/widgets/loadingicon.h \
     globalobjects.h \
