@@ -30,6 +30,7 @@ private:
     float danmuOpacity;
     bool bottomSubtitleProtect;
     bool topSubtitleProtect;
+    float displayAreaRatio;
     int maxCount;
     int fontSizeTable[3];
     DanmuStyle danmuStyle;
@@ -42,6 +43,7 @@ private:
 public:
     void setBottomSubtitleProtect(bool bottomOn);
     void setTopSubtitleProtect(bool topOn);
+    void setDisplayArea(float ratio);
     void setFontSize(int pt);
     void setBold(bool bold);
     void setOpacity(float opacity);

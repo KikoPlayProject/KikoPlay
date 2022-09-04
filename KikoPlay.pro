@@ -117,6 +117,7 @@ SOURCES += \
     UI/widgets/elidelineedit.cpp \
     UI/widgets/fonticonbutton.cpp \
     UI/widgets/loadingicon.cpp \
+    UI/widgets/optionslider.cpp \
         main.cpp \
     UI/mainwindow.cpp \
     UI/framelesswindow.cpp \
@@ -278,6 +279,7 @@ HEADERS += \
     UI/widgets/elidelineedit.h \
     UI/widgets/fonticonbutton.h \
     UI/widgets/loadingicon.h \
+    UI/widgets/optionslider.h \
     globalobjects.h \
     Play/Playlist/playlist.h \
     Play/Video/mpvplayer.h \

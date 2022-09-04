@@ -451,33 +451,64 @@ QSlider#ColorSlider::handle:horizontal {
 QSlider#ColorSlider::handle:horizontal:hover {
    background: #eeeeee;
 }
-QWidget#PopupPage QSlider{
+QSlider#PopupPageSlider{
     margin-top: 4px;
     margin-bottom: 4px;
 }
-QWidget#PopupPage QSlider::groove:horizontal {
+QSlider#PopupPageSlider::groove:horizontal {
     height: 5px;
-    background-color:rgb(237,237,237);
+    background-color: rgba(255, 255, 255, 100);
     left: 8px; right: 8px;
 }
-QWidget#PopupPage QSlider::handle:horizontal {
+
+QSlider#PopupPageSlider::handle:horizontal {
     height: 18px;
     width:18px;
     border-image: url(:/res/images/slider-normal.png);
     margin-top:-7px;
     margin-bottom:-7px;
 }
-QWidget#PopupPage QSlider::handle:hover {
+QSlider#PopupPageSlider::handle:hover {
     border-image: url(:/res/images/slider-hover.png);
 }
-QWidget#PopupPage QSlider::handle:pressed {
+QSlider#PopupPageSlider::handle:pressed {
     border-image: url(:/res/images/slider-pressed.png);
 }
-QWidget#PopupPage QSlider::add-page:horizontal{
-    background-color: rgb(237, 237, 237);
+QSlider#PopupPageSlider::add-page:horizontal{
+    background-color: rgba(255, 255, 255, 0);
 }
-QWidget#PopupPage QSlider::sub-page:horizontal{
-    background-color: rgb(@ThemeColor);
+QSlider#PopupPageSlider::sub-page:horizontal{
+    background-color: rgb(@ThemeColorL1);
+}
+
+QSlider#OptionSlider{
+    border-color: #bcbcbc;
+    padding-bottom: 25px;
+}
+
+QSlider#OptionSlider::groove:horizontal {
+    background-color: rgba(255, 255, 255, 100);
+    height: 5px;
+}
+
+QSlider#OptionSlider::handle:horizontal {
+    height: 18px;
+    width:18px;
+    border-image: url(:/res/images/sliderThumb.png);
+    margin-top:-7px;
+    margin-bottom:-7px;
+}
+QSlider#OptionSlider::handle:hover {
+    border-image: url(:/res/images/slider-hover.png);
+}
+QSlider#OptionSlider::handle:pressed {
+    border-image: url(:/res/images/slider-pressed.png);
+}
+QSlider#OptionSlider::add-page:horizontal{
+    background-color: rgba(255, 255, 255, 0);
+}
+QSlider#OptionSlider::sub-page:horizontal{
+    background-color: rgba(255, 255, 255, 0);
 }
 
 

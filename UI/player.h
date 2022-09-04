@@ -17,6 +17,7 @@ class QSpinBox;
 class QSlider;
 class ClickSlider;
 class DanmuLaunch;
+class OptionSlider;
 class PlayerWindow : public QWidget, public NotifyInterface
 {
     Q_OBJECT
@@ -69,9 +70,10 @@ private:
      QSpinBox *mergeInterval,*contentSimCount,*minMergeCount;
      QFontComboBox *fontFamilyCombo;
      QComboBox *aspectRatioCombo,*playSpeedCombo,*clickBehaviorCombo,*dbClickBehaviorCombo,
-                *denseLevel,*mergeCountTipPos;
+                *mergeCountTipPos;
      QSlider *speedSlider,*alphaSlider,*strokeWidthSlider,*fontSizeSlider,*maxDanmuCount,
              *brightnessSlider, *contrastSlider, *saturationSlider, *gammaSlider, *hueSlider, *sharpenSlider;
+     OptionSlider *denseLevel, *displayAreaSlider;
      bool updatingTrack;
      bool isFullscreen;
      int resizePercent;

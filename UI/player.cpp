@@ -15,6 +15,7 @@
 
 #include "widgets/clickslider.h"
 #include "widgets/danmustatiswidget.h"
+#include "widgets/optionslider.h"
 #include "capture.h"
 #include "mediainfo.h"
 #include "settings.h"
@@ -860,7 +861,8 @@ void PlayerWindow::setupDanmuSettingPage()
 //General Page
     QWidget *pageGeneral=new QWidget(danmuSettingPage);
 
-    danmuSwitch=new QCheckBox(tr("Hide Danmu"),pageGeneral);
+    QLabel *hideLabel=new QLabel(tr("Hide Danmu"), pageGeneral);
+    danmuSwitch=new QCheckBox(tr("All"),pageGeneral);
     danmuSwitch->setToolTip("Double Press Ctrl");
     QObject::connect(danmuSwitch,&QCheckBox::stateChanged,[this](int state){
         if(state==Qt::Checked)
@@ -876,32 +878,33 @@ void PlayerWindow::setupDanmuSettingPage()
     });
     danmuSwitch->setChecked(GlobalObjects::appSetting->value("Play/HideDanmu",false).toBool());
 
-    hideRollingDanmu=new QCheckBox(tr("Hide Rolling"),pageGeneral);
+    hideRollingDanmu=new QCheckBox(tr("Rolling"),pageGeneral);
     QObject::connect(hideRollingDanmu,&QCheckBox::stateChanged,[](int state){
         GlobalObjects::danmuRender->hideDanmu(DanmuComment::Rolling,state==Qt::Checked?true:false);
     });
     hideRollingDanmu->setChecked(GlobalObjects::appSetting->value("Play/HideRolling",false).toBool());
 
-    hideTopDanmu=new QCheckBox(tr("Hide Top"),pageGeneral);
+    hideTopDanmu=new QCheckBox(tr("Top"),pageGeneral);
     QObject::connect(hideTopDanmu,&QCheckBox::stateChanged,[](int state){
         GlobalObjects::danmuRender->hideDanmu(DanmuComment::Top,state==Qt::Checked?true:false);
     });
     hideTopDanmu->setChecked(GlobalObjects::appSetting->value("Play/HideTop",false).toBool());
 
-    hideBottomDanmu=new QCheckBox(tr("Hide Bottom"),pageGeneral);
+    hideBottomDanmu=new QCheckBox(tr("Bottom"),pageGeneral);
     QObject::connect(hideBottomDanmu,&QCheckBox::stateChanged,[](int state){
         GlobalObjects::danmuRender->hideDanmu(DanmuComment::Bottom,state==Qt::Checked?true:false);
     });
     hideBottomDanmu->setChecked(GlobalObjects::appSetting->value("Play/HideBottom",false).toBool());
 
-    bottomSubtitleProtect=new QCheckBox(tr("Protect Bottom Sub"),pageGeneral);
+    QLabel *subProtectLabel=new QLabel(tr("Sub Protect"), pageGeneral);
+    bottomSubtitleProtect=new QCheckBox(tr("Bottom Sub"),pageGeneral);
     bottomSubtitleProtect->setChecked(true);
     QObject::connect(bottomSubtitleProtect,&QCheckBox::stateChanged,[](int state){
         GlobalObjects::danmuRender->setBottomSubtitleProtect(state==Qt::Checked?true:false);
     });
     bottomSubtitleProtect->setChecked(GlobalObjects::appSetting->value("Play/BottomSubProtect",true).toBool());
 
-    topSubtitleProtect=new QCheckBox(tr("Protect Top Sub"),pageGeneral);
+    topSubtitleProtect=new QCheckBox(tr("Top Sub"),pageGeneral);
     QObject::connect(topSubtitleProtect,&QCheckBox::stateChanged,[](int state){
         GlobalObjects::danmuRender->setTopSubtitleProtect(state==Qt::Checked?true:false);
     });
@@ -909,6 +912,7 @@ void PlayerWindow::setupDanmuSettingPage()
 
     QLabel *speedLabel=new QLabel(tr("Rolling Speed"),pageGeneral);
     speedSlider=new QSlider(Qt::Horizontal,pageGeneral);
+    speedSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     speedSlider->setRange(50,500);
     QObject::connect(speedSlider,&QSlider::valueChanged,[this](int val){
         GlobalObjects::danmuRender->setSpeed(val);
@@ -918,7 +922,8 @@ void PlayerWindow::setupDanmuSettingPage()
 
     QLabel *maxDanmuCountLabel=new QLabel(tr("Max Count"),pageGeneral);
     maxDanmuCount=new QSlider(Qt::Horizontal,pageGeneral);
-    maxDanmuCount->setRange(40,300);
+    maxDanmuCount->setObjectName(QStringLiteral("PopupPageSlider"));
+    maxDanmuCount->setRange(20,300);
     QObject::connect(maxDanmuCount,&QSlider::valueChanged,[this](int val){
         GlobalObjects::danmuRender->setMaxDanmuCount(val);
         maxDanmuCount->setToolTip(QString::number(val));
@@ -926,18 +931,29 @@ void PlayerWindow::setupDanmuSettingPage()
     maxDanmuCount->setValue(GlobalObjects::appSetting->value("Play/MaxCount",100).toInt());
 
     QLabel *denseLabel=new QLabel(tr("Dense Level"),pageGeneral);
-    denseLevel=new QComboBox(pageGeneral);
-    denseLevel->addItems(QStringList()<<tr("Uncovered")<<tr("General")<<tr("Dense"));
-    QObject::connect(denseLevel,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[](int index){
+    denseLevel = new OptionSlider(pageGeneral);
+    denseLevel->setLabels({tr("Uncovered"), tr("General"), tr("Dense")});
+
+    QObject::connect(denseLevel, &OptionSlider::valueChanged, [](int index){
          GlobalObjects::danmuRender->dense=index;
     });
-    denseLevel->setCurrentIndex(GlobalObjects::appSetting->value("Play/Dense",1).toInt());
+    denseLevel->setValue(GlobalObjects::appSetting->value("Play/Dense",1).toInt());
+
+    QLabel *displayAreaLabel=new QLabel(tr("Display Area"), pageGeneral);
+    displayAreaSlider = new OptionSlider(pageGeneral);
+    displayAreaSlider->setLabels({tr("1/4"), tr("1/2"), tr("3/4"), tr("Full")});
+    QObject::connect(displayAreaSlider, &OptionSlider::valueChanged, [](int val){
+        GlobalObjects::danmuRender->setDisplayArea((val + 1.0f) / 4.0f);
+    });
+    displayAreaSlider->setValue(GlobalObjects::appSetting->value("Play/DisplayArea", 3).toInt());
+
 
 //Appearance Page
     QWidget *pageAppearance=new QWidget(danmuSettingPage);
 
     QLabel *alphaLabel=new QLabel(tr("Danmu Alpha"),pageAppearance);
     alphaSlider=new QSlider(Qt::Horizontal,pageAppearance);
+    alphaSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     alphaSlider->setRange(0,100);
     QObject::connect(alphaSlider,&QSlider::valueChanged,[this](int val){
         GlobalObjects::danmuRender->setOpacity(val/100.f);
@@ -947,6 +963,7 @@ void PlayerWindow::setupDanmuSettingPage()
 
     QLabel *strokeWidthLabel=new QLabel(tr("Stroke Width"),pageAppearance);
     strokeWidthSlider=new QSlider(Qt::Horizontal,pageAppearance);
+    strokeWidthSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     strokeWidthSlider->setRange(0,80);
     QObject::connect(strokeWidthSlider,&QSlider::valueChanged,[this](int val){
         GlobalObjects::danmuRender->setStrokeWidth(val/10.f);
@@ -956,6 +973,7 @@ void PlayerWindow::setupDanmuSettingPage()
 
     QLabel *fontSizeLabel=new QLabel(tr("Font Size"),pageAppearance);
     fontSizeSlider=new QSlider(Qt::Horizontal,pageAppearance);
+    fontSizeSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     fontSizeSlider->setRange(4,60);
     QObject::connect(fontSizeSlider,&QSlider::valueChanged,[this](int val){
         GlobalObjects::danmuRender->setFontSize(val);
@@ -1051,20 +1069,33 @@ void PlayerWindow::setupDanmuSettingPage()
 
     QGridLayout *generalGLayout=new QGridLayout(pageGeneral);
     generalGLayout->setContentsMargins(0,0,0,0);
-    generalGLayout->setColumnStretch(0,1);
-    generalGLayout->setColumnStretch(1,1);
-    generalGLayout->addWidget(danmuSwitch,0,0);
-    generalGLayout->addWidget(hideRollingDanmu,1,0);
-    generalGLayout->addWidget(hideTopDanmu,2,0);
-    generalGLayout->addWidget(hideBottomDanmu,3,0);
-    generalGLayout->addWidget(bottomSubtitleProtect,4,0);
-    generalGLayout->addWidget(topSubtitleProtect,5,0);
-    generalGLayout->addWidget(denseLabel,0,1);
-    generalGLayout->addWidget(denseLevel,1,1);
-    generalGLayout->addWidget(speedLabel,2,1);
-    generalGLayout->addWidget(speedSlider,3,1);
-    generalGLayout->addWidget(maxDanmuCountLabel,4,1);
-    generalGLayout->addWidget(maxDanmuCount,5,1);
+    QHBoxLayout *hideHLayout = new QHBoxLayout();
+    hideHLayout->setContentsMargins(0,0,0,0);
+    hideHLayout->setSpacing(6*logicalDpiX()/96);
+    hideHLayout->addWidget(danmuSwitch);
+    hideHLayout->addWidget(hideRollingDanmu);
+    hideHLayout->addWidget(hideTopDanmu);
+    hideHLayout->addWidget(hideBottomDanmu);
+    hideHLayout->addStretch(1);
+    generalGLayout->addWidget(hideLabel, 0, 0);
+    generalGLayout->addItem(hideHLayout, 0, 1);
+    generalGLayout->addWidget(denseLabel, 1, 0);
+    generalGLayout->addWidget(denseLevel, 1, 1);
+    generalGLayout->addWidget(speedLabel, 2, 0);
+    generalGLayout->addWidget(speedSlider, 2, 1);
+    generalGLayout->addWidget(maxDanmuCountLabel, 3, 0);
+    generalGLayout->addWidget(maxDanmuCount, 3, 1);
+    generalGLayout->addWidget(displayAreaLabel, 4, 0);
+    generalGLayout->addWidget(displayAreaSlider, 4, 1);
+    generalGLayout->addWidget(subProtectLabel, 5, 0);
+    QHBoxLayout *subProtectHLayout = new QHBoxLayout();
+    subProtectHLayout->setContentsMargins(0,0,0,0);
+    subProtectHLayout->setSpacing(6*logicalDpiX()/96);
+    subProtectHLayout->addWidget(bottomSubtitleProtect);
+    subProtectHLayout->addWidget(topSubtitleProtect);
+    subProtectHLayout->addStretch(1);
+    generalGLayout->addItem(subProtectHLayout, 5, 1);
+
 
     QGridLayout *appearanceGLayout=new QGridLayout(pageAppearance);
     appearanceGLayout->setContentsMargins(0,0,0,0);
@@ -1352,6 +1383,7 @@ void PlayerWindow::setupPlaySettingPage()
 
     QLabel *brightnessLabel=new QLabel(tr("Brightness"),pageColor);
     brightnessSlider=new QSlider(Qt::Horizontal,pageColor);
+    brightnessSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     brightnessSlider->setRange(-100, 100);
     QObject::connect(brightnessSlider,&QSlider::valueChanged,[this](int val){
         GlobalObjects::mpvplayer->setBrightness(val);
@@ -1362,6 +1394,7 @@ void PlayerWindow::setupPlaySettingPage()
 
     QLabel *contrastLabel=new QLabel(tr("Contrast"),pageColor);
     contrastSlider=new QSlider(Qt::Horizontal,pageColor);
+    contrastSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     contrastSlider->setRange(-100, 100);
     QObject::connect(contrastSlider,&QSlider::valueChanged,[this](int val){
         GlobalObjects::mpvplayer->setContrast(val);
@@ -1372,6 +1405,7 @@ void PlayerWindow::setupPlaySettingPage()
 
     QLabel *saturationLabel=new QLabel(tr("Saturation"),pageColor);
     saturationSlider=new QSlider(Qt::Horizontal,pageColor);
+    saturationSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     saturationSlider->setRange(-100, 100);
     QObject::connect(saturationSlider,&QSlider::valueChanged,[this](int val){
         GlobalObjects::mpvplayer->setSaturation(val);
@@ -1382,6 +1416,7 @@ void PlayerWindow::setupPlaySettingPage()
 
     QLabel *gammaLabel=new QLabel(tr("Gamma"),pageColor);
     gammaSlider=new QSlider(Qt::Horizontal,pageColor);
+    gammaSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     gammaSlider->setRange(-100, 100);
     QObject::connect(gammaSlider,&QSlider::valueChanged,[this](int val){
         GlobalObjects::mpvplayer->setGamma(val);
@@ -1392,6 +1427,7 @@ void PlayerWindow::setupPlaySettingPage()
 
     QLabel *hueLabel=new QLabel(tr("Hue"),pageColor);
     hueSlider=new QSlider(Qt::Horizontal,pageColor);
+    hueSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     hueSlider->setRange(-100, 100);
     QObject::connect(hueSlider,&QSlider::valueChanged,[this](int val){
         GlobalObjects::mpvplayer->setHue(val);
@@ -1402,6 +1438,7 @@ void PlayerWindow::setupPlaySettingPage()
 
     QLabel *sharpenLabel=new QLabel(tr("Sharpen"),pageColor);
     sharpenSlider=new QSlider(Qt::Horizontal,pageColor);
+    sharpenSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     sharpenSlider->setRange(-200, 200);
     QObject::connect(sharpenSlider,&QSlider::valueChanged,[this](int val){
         GlobalObjects::mpvplayer->setSharpen(val);
@@ -2318,7 +2355,8 @@ void PlayerWindow::closeEvent(QCloseEvent *)
     GlobalObjects::appSetting->setValue("Volume",volume->value());
     GlobalObjects::appSetting->setValue("Mute",GlobalObjects::mpvplayer->getMute());
     GlobalObjects::appSetting->setValue("MaxCount",maxDanmuCount->value());
-    GlobalObjects::appSetting->setValue("Dense",denseLevel->currentIndex());
+    GlobalObjects::appSetting->setValue("Dense",denseLevel->value());
+    GlobalObjects::appSetting->setValue("DisplayArea",displayAreaSlider->value());
     GlobalObjects::appSetting->setValue("EnableMerge",enableMerge->isChecked());
     GlobalObjects::appSetting->setValue("EnableAnalyze", enableAnalyze->isChecked());
     GlobalObjects::appSetting->setValue("EnlargeMerged",enlargeMerged->isChecked());

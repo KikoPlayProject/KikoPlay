@@ -21,6 +21,7 @@ DanmuRender::DanmuRender()
     hideLayout[0]=hideLayout[1]=hideLayout[2]=false;
     bottomSubtitleProtect=true;
     topSubtitleProtect=false;
+    displayAreaRatio = 1.0f;
     dense=false;
     maxCount=-1;
     danmuOpacity=1;
@@ -150,9 +151,14 @@ void DanmuRender::refreshDMRect()
     surfaceSize.setWidth(surfaceSize.width()*GlobalObjects::mpvplayer->devicePixelRatioF());
     surfaceSize.setHeight(surfaceSize.height()*GlobalObjects::mpvplayer->devicePixelRatioF());
     this->surfaceRect.setRect(0,0,surfaceSize.width(), surfaceSize.height());
+    float dpRatio = displayAreaRatio;
     if(bottomSubtitleProtect)
     {
-        this->surfaceRect.setBottom(surfaceSize.height()*0.85);
+        dpRatio = qMin(dpRatio, 0.85f);
+    }
+    if(dpRatio < 1.0f)
+    {
+        this->surfaceRect.setBottom(surfaceSize.height()*dpRatio);
     }
     if(topSubtitleProtect)
     {
@@ -171,6 +177,12 @@ void DanmuRender::setTopSubtitleProtect(bool topOn)
     topSubtitleProtect=topOn;
     refreshDMRect();
 
+}
+
+void DanmuRender::setDisplayArea(float ratio)
+{
+    displayAreaRatio = ratio;
+    refreshDMRect();
 }
 
 void DanmuRender::setFontSize(int pt)
