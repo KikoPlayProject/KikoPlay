@@ -2211,6 +2211,16 @@ Date: %2
         <translation>目录</translation>
     </message>
     <message>
+        <location filename="../../Download/downloadmodel.h" line="48"/>
+        <source>Create Time</source>
+        <translation>创建时间</translation>
+    </message>
+    <message>
+        <location filename="../../Download/downloadmodel.h" line="48"/>
+        <source>Finish Time</source>
+        <translation>完成时间</translation>
+    </message>
+    <message>
         <location filename="../../Download/downloadmodel.h" line="49"/>
         <source>Downloading</source>
         <translation>正在下载</translation>
@@ -2366,16 +2376,16 @@ Date: %2
         <location filename="../../UI/downloadwindow.cpp" line="69"/>
         <location filename="../../UI/downloadwindow.cpp" line="90"/>
         <location filename="../../UI/downloadwindow.cpp" line="96"/>
-        <location filename="../../UI/downloadwindow.cpp" line="347"/>
-        <location filename="../../UI/downloadwindow.cpp" line="372"/>
-        <location filename="../../UI/downloadwindow.cpp" line="490"/>
+        <location filename="../../UI/downloadwindow.cpp" line="368"/>
+        <location filename="../../UI/downloadwindow.cpp" line="393"/>
+        <location filename="../../UI/downloadwindow.cpp" line="511"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
         <location filename="../../UI/downloadwindow.cpp" line="69"/>
-        <location filename="../../UI/downloadwindow.cpp" line="347"/>
-        <location filename="../../UI/downloadwindow.cpp" line="372"/>
+        <location filename="../../UI/downloadwindow.cpp" line="368"/>
+        <location filename="../../UI/downloadwindow.cpp" line="393"/>
         <source>An error occurred while adding : URI:
  %1 
  %2</source>
@@ -2395,7 +2405,7 @@ Date: %2
     </message>
     <message>
         <location filename="../../UI/downloadwindow.cpp" line="90"/>
-        <location filename="../../UI/downloadwindow.cpp" line="490"/>
+        <location filename="../../UI/downloadwindow.cpp" line="511"/>
         <source>An error occurred while adding Torrent : 
  %1 </source>
         <translation>添加种子时出错：
@@ -2436,22 +2446,32 @@ Date: %2
         <translation>目录</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="266"/>
+        <location filename="../../UI/downloadwindow.cpp" line="246"/>
+        <source>Create Time</source>
+        <translation>创建时间</translation>
+    </message>
+    <message>
+        <location filename="../../UI/downloadwindow.cpp" line="256"/>
+        <source>Finish Time</source>
+        <translation>完成时间</translation>
+    </message>
+    <message>
+        <location filename="../../UI/downloadwindow.cpp" line="287"/>
         <source>General</source>
         <translation>一般</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="267"/>
+        <location filename="../../UI/downloadwindow.cpp" line="288"/>
         <source>File</source>
         <translation>文件</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="268"/>
+        <location filename="../../UI/downloadwindow.cpp" line="289"/>
         <source>Block</source>
         <translation>分块</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="269"/>
+        <location filename="../../UI/downloadwindow.cpp" line="290"/>
         <source>Connection</source>
         <translation>连接</translation>
     </message>
@@ -2460,68 +2480,68 @@ Date: %2
         <translation type="vanished">全局日志</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="270"/>
+        <location filename="../../UI/downloadwindow.cpp" line="291"/>
         <source>Log</source>
         <translation>日志</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="454"/>
-        <location filename="../../UI/downloadwindow.cpp" line="968"/>
+        <location filename="../../UI/downloadwindow.cpp" line="475"/>
+        <location filename="../../UI/downloadwindow.cpp" line="989"/>
         <source>Blocks: %1 Size: %2</source>
         <translation>分块：%1 大小：%2</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="528"/>
+        <location filename="../../UI/downloadwindow.cpp" line="549"/>
         <source>Downloading</source>
         <translation>正在下载</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="535"/>
+        <location filename="../../UI/downloadwindow.cpp" line="556"/>
         <source>Completed</source>
         <translation>下载完成</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="540"/>
+        <location filename="../../UI/downloadwindow.cpp" line="561"/>
         <source>All</source>
         <translation>全部任务</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="545"/>
+        <location filename="../../UI/downloadwindow.cpp" line="566"/>
         <source>BgmList</source>
         <translation>每日放送</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="550"/>
+        <location filename="../../UI/downloadwindow.cpp" line="571"/>
         <source>ResSearch</source>
         <translation>资源搜索</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="555"/>
+        <location filename="../../UI/downloadwindow.cpp" line="576"/>
         <source>AutoDownload</source>
         <translation>自动下载</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="704"/>
+        <location filename="../../UI/downloadwindow.cpp" line="725"/>
         <source>File Not Exist</source>
         <translation>文件不存在</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="780"/>
+        <location filename="../../UI/downloadwindow.cpp" line="801"/>
         <source>Pause</source>
         <translation>暂停</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="799"/>
+        <location filename="../../UI/downloadwindow.cpp" line="820"/>
         <source>Start</source>
         <translation>开始</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="816"/>
+        <location filename="../../UI/downloadwindow.cpp" line="837"/>
         <source>Resume</source>
         <translation>继续下载</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="816"/>
+        <location filename="../../UI/downloadwindow.cpp" line="837"/>
         <source>Control file(*.aria2) does not exist, download the file all over again ?
 %1</source>
         <translation>控制文件(*.aria2)丢失，重新下载任务？
@@ -2532,59 +2552,59 @@ Date: %2
         <translation type="vanished">控制文件(*.aria2)丢失，重新下载任务？</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="833"/>
-        <location filename="../../UI/downloadwindow.cpp" line="838"/>
+        <location filename="../../UI/downloadwindow.cpp" line="854"/>
+        <location filename="../../UI/downloadwindow.cpp" line="859"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="838"/>
+        <location filename="../../UI/downloadwindow.cpp" line="859"/>
         <source>Delete the Downloaded Files?</source>
         <translation>同时删除下载文件？</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="853"/>
+        <location filename="../../UI/downloadwindow.cpp" line="874"/>
         <source>Pause All</source>
         <translation>全部暂停</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="857"/>
+        <location filename="../../UI/downloadwindow.cpp" line="878"/>
         <source>Start All</source>
         <translation>全部开始</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="873"/>
+        <location filename="../../UI/downloadwindow.cpp" line="894"/>
         <source>Browse File</source>
         <translation>资源管理器中浏览</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="887"/>
+        <location filename="../../UI/downloadwindow.cpp" line="908"/>
         <source>Add To PlayList</source>
         <translation>添加到播放列表</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="915"/>
+        <location filename="../../UI/downloadwindow.cpp" line="936"/>
         <source>Copy URI</source>
         <translation>复制下载链接</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="924"/>
-        <location filename="../../UI/downloadwindow.cpp" line="932"/>
+        <location filename="../../UI/downloadwindow.cpp" line="945"/>
+        <location filename="../../UI/downloadwindow.cpp" line="953"/>
         <source>Save Torrent</source>
         <translation>保存种子文件</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="964"/>
+        <location filename="../../UI/downloadwindow.cpp" line="985"/>
         <source>Create Time: %1 	 Finish Time: %2</source>
         <translation>创建时间：%1 	 完成时间：%2</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="1009"/>
+        <location filename="../../UI/downloadwindow.cpp" line="1030"/>
         <source>&lt;No Item has been Selected&gt;</source>
         <translation>&lt;没有选择项目&gt;</translation>
     </message>
     <message>
-        <location filename="../../UI/downloadwindow.cpp" line="1010"/>
+        <location filename="../../UI/downloadwindow.cpp" line="1031"/>
         <source>Create Time: ---- 	 Finish Time: ----</source>
         <translation>创建时间：---- 	 完成时间：----</translation>
     </message>

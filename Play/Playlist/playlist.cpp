@@ -1186,7 +1186,7 @@ void PlayList::exportDanmuItems(const QModelIndexList &exportIndexes)
             {
                 notifier->showMessage(Notifier::LIST_NOTIFY, tr("Exporting: %1").arg(currentItem->title),NotifyMessageFlag::NM_PROCESS);
                 QFileInfo fi(currentItem->path);
-                QFileInfo dfi(fi.absolutePath(),fi.baseName()+".xml");
+                QFileInfo dfi(fi.absolutePath(),fi.completeBaseName()+".xml");
                 Pool *pool=GlobalObjects::danmuManager->getPool(currentItem->poolID);
                 if(pool) pool->exportPool(dfi.absoluteFilePath());
             }

@@ -36,7 +36,7 @@ public:
     };
     enum class Columns
     {
-        STATUS, TITLE, PROGRESS, SIZE, DOWNSPEED, TIMELEFT, UPSPEED, CONNECTION, SEEDER, DIR
+        STATUS, TITLE, PROGRESS, SIZE, DOWNSPEED, TIMELEFT, UPSPEED, CONNECTION, SEEDER, DIR, CREATETIME, FINISHTIME
     };
 
     void setRPC(Aria2JsonRPC *aria2RPC);
@@ -45,7 +45,7 @@ public:
 private:
     QVector<DownloadTask *> downloadTasks;
     QMap<QString ,DownloadTask *> gidMap;
-    const QStringList headers={tr("Status"),tr("Title"),tr("Progress"),tr("Size"),tr("DownSpeed"),tr("Time Left"), tr("UpSpeed"), tr("Connections"), tr("Seeders"), tr("Dir")};
+    const QStringList headers={tr("Status"),tr("Title"),tr("Progress"),tr("Size"),tr("DownSpeed"),tr("Time Left"), tr("UpSpeed"), tr("Connections"), tr("Seeders"), tr("Dir"), tr("Create Time"), tr("Finish Time")};
     const QStringList status={tr("Downloading"),tr("Seeding"),tr("Waiting"),tr("Paused"),tr("Complete"),tr("Error")};
     QIcon statusIcons[6]={QIcon(":/res/images/downloading.png"),
                                     QIcon(":/res/images/seeding.png"),

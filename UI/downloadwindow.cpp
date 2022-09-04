@@ -242,12 +242,33 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     });
     actShowDir->setChecked(GlobalObjects::appSetting->value("Download/ShowDir", false).toBool());
 
+    downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::CREATETIME));
+    QAction *actShowCreateTime=new QAction(tr("Create Time"),this);
+    actShowCreateTime->setCheckable(true);
+    QObject::connect(actShowCreateTime,&QAction::toggled,[this](bool checked){
+        if(checked) downloadView->showColumn(static_cast<int>(DownloadModel::Columns::CREATETIME));
+        else downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::CREATETIME));
+        GlobalObjects::appSetting->setValue("Download/ShowCreateTime", checked);
+    });
+    actShowCreateTime->setChecked(GlobalObjects::appSetting->value("Download/ShowCreateTime", false).toBool());
+
+    downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::FINISHTIME));
+    QAction *actShowFinishTime=new QAction(tr("Finish Time"),this);
+    actShowFinishTime->setCheckable(true);
+    QObject::connect(actShowFinishTime,&QAction::toggled,[this](bool checked){
+        if(checked) downloadView->showColumn(static_cast<int>(DownloadModel::Columns::FINISHTIME));
+        else downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::FINISHTIME));
+        GlobalObjects::appSetting->setValue("Download/ShowFinishTime", checked);
+    });
+    actShowFinishTime->setChecked(GlobalObjects::appSetting->value("Download/ShowFinishTime", false).toBool());
 
     downloadView->header()->setContextMenuPolicy(Qt::ActionsContextMenu);
     downloadView->header()->addAction(actShowUpSpeed);
     downloadView->header()->addAction(actShowConnections);
     downloadView->header()->addAction(actShowSeeders);
     downloadView->header()->addAction(actShowDir);
+    downloadView->header()->addAction(actShowCreateTime);
+    downloadView->header()->addAction(actShowFinishTime);
 
     QObject::connect(downloadView, &QTreeView::doubleClicked,[this,proxyModel](const QModelIndex &index){
         DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(proxyModel->mapToSource(index));
