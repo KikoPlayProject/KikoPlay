@@ -20,7 +20,6 @@
         <file>res/images/paused.png</file>
         <file>res/images/seeding.png</file>
         <file>res/images/waiting.png</file>
-        <file>res/version.json</file>
         <file>res/kikoplay.ico</file>
         <file>res/db/bangumi.sql</file>
         <file>res/db/comment.sql</file>

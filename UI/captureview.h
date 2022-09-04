@@ -33,6 +33,7 @@ class CaptureView : public CFramelessDialog
     Q_OBJECT
 public:
     CaptureView(CaptureListModel *model, int curRow, QWidget *parent = nullptr);
+    CaptureView(const QPixmap &pixmap, QWidget *parent = nullptr);
     ~CaptureView();
 private:
     ImageView *view;
@@ -41,6 +42,7 @@ private:
     int curRow;
     QPixmap curPixmap;
     const AnimeImage *curItem;
+    bool singleImageMode;
     void setCapture();
     void navigate(bool next);
     // QWidget interface

@@ -75,6 +75,7 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
     coverLabel=new QLabel(this);
     coverLabel->setAlignment(Qt::AlignCenter);
     coverLabel->setScaledContents(true);
+    coverLabel->installEventFilter(this);
 
     coverLabelShadow = new ShadowLabel();
 
@@ -84,6 +85,26 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
         {
             QApplication::clipboard()->setPixmap(currentAnime->rawCover());
         }
+    });
+    QAction *actPasteCover = new QAction(tr("Paste Cover"), this);
+    QObject::connect(actPasteCover, &QAction::triggered, this, [=](){
+        QImage img = QApplication::clipboard()->image();
+        if(img.isNull()) return;
+        CaptureView viewer(QPixmap::fromImage(img), this);
+        if(QDialog::Accepted == viewer.exec())
+        {
+            QByteArray imgBytes;
+            QBuffer bufferImage(&imgBytes);
+            bufferImage.open(QIODevice::WriteOnly);
+            img.save(&bufferImage, "JPG");
+            currentAnime->setCover(imgBytes);
+            coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->rawCover()));
+        }
+    });
+    QAction *actCleanCover = new QAction(tr("Clean Cover"), this);
+    QObject::connect(actCleanCover, &QAction::triggered, this, [=](){
+        currentAnime->setCover(QByteArray());
+        coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(QPixmap(":/res/images/cover.png")));
     });
     QAction *actDownloadCover = new QAction(tr("Re-Download Cover"), this);
     QObject::connect(actDownloadCover, &QAction::triggered, this, [=](){
@@ -119,6 +140,8 @@ AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), cur
         }
     });
     coverLabel->addAction(actCopyCover);
+    coverLabel->addAction(actPasteCover);
+    coverLabel->addAction(actCleanCover);
     coverLabel->addAction(actDownloadCover);
     coverLabel->addAction(actLocalCover);
     coverLabel->setContextMenuPolicy(Qt::ActionsContextMenu);
@@ -276,6 +299,23 @@ void AnimeDetailInfoPage::setAnime(Anime *anime)
 
     setCharacters();
     setTags();
+}
+
+bool AnimeDetailInfoPage::eventFilter(QObject *watched, QEvent *event)
+{
+    if(watched==coverLabel)
+    {
+        if (event->type() == QEvent::MouseButtonDblClick)
+        {
+            if(currentAnime && !currentAnime->rawCover().isNull())
+            {
+                CaptureView viewer(currentAnime->rawCover(), this);
+                viewer.exec();
+                return true;
+            }
+        }
+    }
+    return QWidget::eventFilter(watched,event);
 }
 
 
@@ -681,6 +721,8 @@ CharacterWidget *AnimeDetailInfoPage::createCharacterWidget(const Character &crt
     CharacterWidget *crtItem=new CharacterWidget(crt);
     QObject::connect(crtItem, &CharacterWidget::updateCharacter, this, &AnimeDetailInfoPage::updateCharacter);
     QObject::connect(crtItem, &CharacterWidget::selectLocalImage, this, &AnimeDetailInfoPage::selectLocalCharacterImage);
+    QObject::connect(crtItem, &CharacterWidget::pasteImage, this, &AnimeDetailInfoPage::pasteCharacterImage);
+    QObject::connect(crtItem, &CharacterWidget::cleanImage, this, &AnimeDetailInfoPage::cleanCharacterImage);
     QObject::connect(crtItem, &CharacterWidget::modifyCharacter, this, &AnimeDetailInfoPage::modifyCharacter);
     QObject::connect(crtItem, &CharacterWidget::removeCharacter, this, &AnimeDetailInfoPage::removeCharacter);
     return crtItem;
@@ -777,6 +819,29 @@ void AnimeDetailInfoPage::selectLocalCharacterImage(CharacterWidget *crtItem)
     }
 }
 
+void AnimeDetailInfoPage::pasteCharacterImage(CharacterWidget *crtItem)
+{
+    QImage img = QApplication::clipboard()->image();
+    if(img.isNull()) return;
+    CaptureView viewer(QPixmap::fromImage(img), this);
+    if(QDialog::Accepted == viewer.exec())
+    {
+        QByteArray imgBytes;
+        QBuffer bufferImage(&imgBytes);
+        bufferImage.open(QIODevice::WriteOnly);
+        img.save(&bufferImage, "JPG");
+        currentAnime->setCrtImage(crtItem->crt.name, imgBytes);
+        crtItem->refreshIcon(imgBytes);
+    }
+}
+
+void AnimeDetailInfoPage::cleanCharacterImage(CharacterWidget *crtItem)
+{
+    currentAnime->setCrtImage(crtItem->crt.name, QByteArray());
+    crtItem->crt.image = QPixmap();
+    crtItem->refreshIcon(QByteArray());
+}
+
 void AnimeDetailInfoPage::addCharacter()
 {
     if(!currentAnime) return;
@@ -860,6 +925,15 @@ CharacterWidget::CharacterWidget(const Character &character, QWidget *parent) : 
         if(crt.image.isNull()) return;
         QApplication::clipboard()->setPixmap(crt.image);
     });
+    QAction *actPasteImage = new QAction(tr("Paste Image"), this);
+    QObject::connect(actPasteImage, &QAction::triggered, this, [=](){
+        emit pasteImage(this);
+    });
+    QAction *actCleanImage = new QAction(tr("Clean Image"), this);
+    QObject::connect(actCleanImage, &QAction::triggered, this, [=](){
+        if(crt.image.isNull()) return;
+        emit cleanImage(this);
+    });
     QAction *actDownloadImage = new QAction(tr("Re-Download Image"), this);
     QObject::connect(actDownloadImage, &QAction::triggered, this, [=](){
         if(!crt.imgURL.isEmpty())
@@ -871,6 +945,8 @@ CharacterWidget::CharacterWidget(const Character &character, QWidget *parent) : 
     });
 
     iconLabel->addAction(actCopyImage);
+    iconLabel->addAction(actPasteImage);
+    iconLabel->addAction(actCleanImage);
     iconLabel->addAction(actDownloadImage);
     iconLabel->addAction(actLocalImage);
     iconLabel->setContextMenuPolicy(Qt::ActionsContextMenu);
@@ -920,6 +996,15 @@ void CharacterWidget::refreshText()
 
     infoLabel->setText(fm.elidedText(crt.actor, Qt::ElideRight, 160*logicalDpiX()/96));
     infoLabel->setToolTip(crt.actor);
+}
+
+void CharacterWidget::mouseDoubleClickEvent(QMouseEvent *)
+{
+    if(!crt.image.isNull())
+    {
+        CaptureView viewer(crt.image, this);
+        viewer.exec();
+    }
 }
 
 TagPanel::TagPanel(QWidget *parent, bool allowDelete, bool checkAble, bool allowAdd):QWidget(parent),

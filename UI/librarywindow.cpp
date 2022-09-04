@@ -397,7 +397,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(fa
         !animeViewing && hasMore? loadMoreButton->show():loadMoreButton->hide();
     });
 
-    QPushButton *backButton =  new QPushButton(animeContainer);
+    backButton =  new QPushButton(animeContainer);
     backButton->setObjectName(QStringLiteral("AnimeDetailBack"));
     GlobalObjects::iconfont->setPointSize(14);
     backButton->setFont(*GlobalObjects::iconfont);
@@ -560,6 +560,17 @@ void LibraryWindow::showEvent(QShowEvent *)
 void LibraryWindow::hideEvent(QHideEvent *)
 {
     animeModel->setActive(false);
+}
+
+void LibraryWindow::keyPressEvent(QKeyEvent *event)
+{
+    if(event->key() == Qt::Key_Escape)
+    {
+        if(!backButton->isHidden())
+        {
+            backButton->click();
+        }
+    }
 }
 
 void LibraryWindow::showMessage(const QString &content, int flag)
