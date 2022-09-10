@@ -51,6 +51,7 @@ public:
         QString title;
         QString description;
         QString choices;
+        QString group;
         QString key;
         QString value;
     };

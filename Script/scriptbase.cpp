@@ -418,6 +418,7 @@ void ScriptBase::loadSettings(const QString &scriptPath)
                 settingItemMap.value("title").toString(),
                 settingItemMap.value("desc", "").toString(),
                 settingItemMap.value("choices", "").toString(),
+                settingItemMap.value("group", "").toString(),
                 iter.key(),
                 settingItemMap.value("default", "").toString()
             });

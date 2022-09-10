@@ -721,6 +721,22 @@ QTreeView#AnimeDetailEpisode{
 QDialog QTreeView::item {
     padding: 2px;
 }
+QTreeView#ScriptSettingView {
+    show-decoration-selected: 1;
+    outline:0px;
+}
+QTreeView#ScriptSettingView::item {
+    border: none;
+}
+QTreeView#ScriptSettingView::branch {
+    background-color: transparent;
+}
+QTreeView#ScriptSettingView::item:hover, QTreeView#ScriptSettingView::branch:hover {
+    background-color: rgba(149, 207, 255, 100);
+}
+QTreeView#ScriptSettingView::item:selected, QTreeView#ScriptSettingView::branch:selected{
+    background-color: rgba(60, 167, 255, 255);
+}
 
 
 /* ------------------- QHeaderView ------------------- */

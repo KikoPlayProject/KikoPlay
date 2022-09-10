@@ -22,6 +22,24 @@ public:
     }
 };
 
+struct SettingTreeItem
+{
+    SettingTreeItem(SettingTreeItem * p = nullptr) : parent(p)
+    {
+        if(parent) parent->subItems.append(this);
+    }
+    ~SettingTreeItem()
+    {
+        if(item) delete item;
+        qDeleteAll(subItems);
+    }
+    SettingTreeItem *parent = nullptr;
+    QString groupTitle;
+    ScriptBase::ScriptSettingItem *item = nullptr;
+    int row = 0;
+    QVector<SettingTreeItem *> subItems;
+};
+
 class ScriptSettingModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -31,11 +49,12 @@ public:
     {
         TITLE, DESC, VALUE, NONE
     };
+    bool settingHasGroup() const {return hasGroup;}
 public:
-    inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
-    inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
-    inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:settingItems.count();}
-    inline virtual int columnCount(const QModelIndex &parent) const{return parent.isValid()?0:(int)Columns::NONE;}
+    inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const;
+    inline virtual QModelIndex parent(const QModelIndex &index) const;
+    inline virtual int rowCount(const QModelIndex &parent) const;
+    inline virtual int columnCount(const QModelIndex &) const{return (int)Columns::NONE;}
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
@@ -43,7 +62,9 @@ public:
 signals:
     void itemChanged(const QString &key, int index,  const QString &val);
 private:
-    QVector<ScriptBase::ScriptSettingItem> settingItems;
+    void buildSettingTree(QSharedPointer<ScriptBase> script);
+    QSharedPointer<SettingTreeItem> rootItem;
+    bool hasGroup;
 };
 
 #endif // SCRIPTSETTINGMODEL_H
