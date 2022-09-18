@@ -10,6 +10,7 @@ class QLineEdit;
 class SearchListModel;
 class QPushButton;
 class QComboBox;
+class ScriptSearchOptionPanel;
 class SearchListModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -50,6 +51,7 @@ private:
     QPushButton *prevPage, *nextPage;
     QComboBox *scriptCombo;
     SearchListModel *searchListModel;
+    ScriptSearchOptionPanel *scriptOptionPanel;
     int totalPage,currentPage;
     bool isSearching;
     QString currentKeyword,currentScriptId;

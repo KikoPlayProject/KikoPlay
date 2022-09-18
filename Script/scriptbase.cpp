@@ -49,10 +49,19 @@ ScriptBase::~ScriptBase()
         QFile settingSaved(scriptPath.mid(0,suffixPos)+".json");
         if(settingSaved.open(QFile::WriteOnly))
         {
-            QMap<QString, QVariant> settingMap;
+            QMap<QString, QVariant> settingMap, searchSettingMap;
             for(const auto &item : scriptSettings)
                 settingMap[item.key] = item.value;
-            QJsonDocument doc(QJsonObject::fromVariantMap(settingMap));
+            for(const auto &item : searchSettingItems)
+            {
+                if(item.save) searchSettingMap[item.key] = item.value;
+            }
+            QJsonObject settingObj
+            {
+                {"scriptSettings", QJsonObject::fromVariantMap(settingMap)},
+                {"searchSettings", QJsonObject::fromVariantMap(searchSettingMap)}
+            };
+            QJsonDocument doc(settingObj);
             settingSaved.write(doc.toJson(QJsonDocument::Indented));
         }
         settingsUpdated = false;
@@ -95,6 +104,20 @@ ScriptState ScriptBase::setOption(const QString &key, const QString &value, bool
     return errInfo;
 }
 
+ScriptState ScriptBase::setSearchOption(const QString &key, const QString &value)
+{
+    for(auto &item : searchSettingItems)
+    {
+        if(item.key == key)
+        {
+            item.value = value;
+            if(item.save) settingsUpdated = true;
+            break;
+        }
+    }
+    return "";
+}
+
 ScriptState ScriptBase::scriptMenuClick(const QString &mid)
 {
     MutexLocker locker(scriptLock);
@@ -117,6 +140,7 @@ ScriptState ScriptBase::loadScript(const QString &path)
     errInfo = loadMeta(path);
     if(!errInfo.isEmpty()) return errInfo;
     loadSettings(path);
+    loadSearchSettings(path);
     loadScriptMenus();
     return errInfo;
 }
@@ -401,7 +425,7 @@ QString ScriptBase::loadMeta(const QString &scriptPath)
 
 void ScriptBase::loadSettings(const QString &scriptPath)
 {
-    //settings = {key = {title = 'xx', default='', desc='', choices=',..,'},...}
+    //settings = {key = {title = 'xx', default='', desc='', choices=',..,', group=''},...}
     QString errInfo;
     QVariant settings = get(luaSettingsTable);
     hasSetOptionFunc = checkType(luaSetOptionFunc, LUA_TFUNCTION);
@@ -430,6 +454,14 @@ void ScriptBase::loadSettings(const QString &scriptPath)
     if(settingSaved.open(QFile::ReadOnly))
     {
         QJsonObject sObj(Network::toJson(settingSaved.readAll()).object());
+        if(sObj.contains("scriptSettings") && sObj["scriptSettings"].isObject())  // 0.9.1 setting format
+        {
+            sObj = sObj["scriptSettings"].toObject();
+        }
+        else
+        {
+            settingsUpdated = true;  // from old version
+        }
         QHash<QString, ScriptSettingItem *> itemHash;
         for(auto &item: scriptSettings)
         {
@@ -453,6 +485,61 @@ void ScriptBase::loadSettings(const QString &scriptPath)
         lua_settable(L, -3);
     }
     lua_setglobal(L, luaSettingsTable);
+}
+
+void ScriptBase::loadSearchSettings(const QString &scriptPath)
+{
+    //settings = {key = {title = 'xx', default='', desc='', choices=',..,', display_type=0/1/2/3},...}
+    QString errInfo;
+    QVariant settings = get(luaSearchSettingsTable);
+    if(!settings.canConvert(QVariant::Map)) return;
+    QVariantMap settingMap = settings.toMap();
+    scriptSettings.clear();
+    for(auto iter = settingMap.constBegin(); iter != settingMap.constEnd(); ++iter)
+    {
+        if(iter.value().canConvert(QVariant::Map))
+        {
+            QVariantMap settingItemMap = iter.value().toMap();
+            int dtype = settingItemMap.value("display_type").toInt();
+            if(dtype < 0 || dtype >= SearchSettingItem::DisplayType::UNKNOWN)
+            {
+                dtype = 0;
+            }
+            bool save = settingItemMap.value("save", true).toBool();
+            searchSettingItems.append(
+            {
+                SearchSettingItem::DisplayType(dtype),
+                settingItemMap.value("title").toString(),
+                settingItemMap.value("desc", "").toString(),
+                settingItemMap.value("choices", "").toString(),
+                iter.key(),
+                settingItemMap.value("default", "").toString(),
+                save
+            });
+        }
+    }
+    if(searchSettingItems.isEmpty()) return;
+    int suffixPos = scriptPath.lastIndexOf('.');
+    QFile settingSaved(scriptPath.mid(0,suffixPos)+".json");
+    if(settingSaved.open(QFile::ReadOnly))
+    {
+        QJsonObject sObj(Network::toJson(settingSaved.readAll()).object());
+        if(!sObj.contains("searchSettings") || !sObj["searchSettings"].isObject()) return;
+        sObj = sObj["searchSettings"].toObject();
+        QHash<QString, SearchSettingItem *> itemHash;
+        for(auto &item: searchSettingItems)
+        {
+            itemHash[item.key] = &item;
+        }
+        for(auto iter = sObj.constBegin(); iter != sObj.constEnd(); ++iter)
+        {
+            SearchSettingItem *item = itemHash.value(iter.key(), nullptr);
+            if(item)
+            {
+                item->value = iter.value().toString("");
+            }
+        }
+    }
 }
 
 void ScriptBase::loadScriptMenus()
@@ -497,4 +584,17 @@ ScriptState ScriptBase::loadScriptStr(const QString &content)
         return errInfo;
     }
     return errInfo;
+}
+
+void ScriptBase::addSearchOptions(QVariantList &params)
+{
+    if(!searchSettingItems.empty())
+    {
+        QVariantMap optionMap;
+        for(const auto &item : searchSettingItems)
+        {
+            optionMap[item.key] = item.value;
+        }
+        params.append(optionMap);
+    }
 }

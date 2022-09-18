@@ -32,7 +32,7 @@ ScriptState DanmuScript::search(const QString &keyword, QList<DanmuSource> &resu
     if(!canSearch) return ScriptState(ScriptState::S_ERROR, "Search not supported");
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
-    QString errInfo(callGetSources(luaSearchFunc, keyword, results));
+    QString errInfo(callGetSources(luaSearchFunc, keyword, true, results));
     return ScriptState(errInfo.isEmpty()?ScriptState::S_NORM:ScriptState::S_ERROR, errInfo);
 }
 
@@ -40,7 +40,7 @@ ScriptState DanmuScript::getEpInfo(const DanmuSource *source, QList<DanmuSource>
 {
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
-    QString errInfo(callGetSources(luaEpFunc, source->toMap(), results));
+    QString errInfo(callGetSources(luaEpFunc, source->toMap(), false, results));
     return ScriptState(errInfo.isEmpty()?ScriptState::S_NORM:ScriptState::S_ERROR, errInfo);
 }
 
@@ -48,7 +48,7 @@ ScriptState DanmuScript::getURLInfo(const QString &url, QList<DanmuSource> &resu
 {
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
-    QString errInfo(callGetSources(luaURLFunc, url, results));
+    QString errInfo(callGetSources(luaURLFunc, url, false, results));
     return ScriptState(errInfo.isEmpty()?ScriptState::S_NORM:ScriptState::S_ERROR, errInfo);
 }
 
@@ -151,10 +151,12 @@ bool DanmuScript::supportURL(const QString &url)
     return supported;
 }
 
-QString DanmuScript::callGetSources(const char *fname, const QVariant &param, QList<DanmuSource> &results)
+QString DanmuScript::callGetSources(const char *fname, const QVariant &param, bool passOption, QList<DanmuSource> &results)
 {
     QString errInfo;
-    QVariantList rets = call(fname, {param}, 1, errInfo);
+    QVariantList params{param};
+    if(passOption) addSearchOptions(params);
+    QVariantList rets = call(fname, params, 1, errInfo);
     if(!errInfo.isEmpty()) return errInfo;
     QVariant ret = rets.first();  // array, [{title='', <desc>='', data='', <delay>=xx, <duration>=''},{}...]
     if(ret.type() != QVariant::List) return "Wrong Return Value Type";

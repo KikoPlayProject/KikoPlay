@@ -14,7 +14,7 @@ public:
     const QString &defaultMatchScript() const {return defaultMatchScriptId;}
     void setDefaultMatchScript(const QString &scriptId);
 
-    ScriptState animeSearch(const QString &scriptId, const QString &keyword, QList<AnimeLite> &results);
+    ScriptState animeSearch(const QString &scriptId, const QString &keyword, const QMap<QString, QString> &options, QList<AnimeLite> &results);
     ScriptState getDetail(const AnimeLite &base, Anime *anime);
     ScriptState getEp(Anime *anime, QVector<EpInfo> &results);
     ScriptState getTags(Anime *anime, QStringList &results);

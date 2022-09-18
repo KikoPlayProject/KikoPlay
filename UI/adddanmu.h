@@ -12,6 +12,7 @@ class QListWidget;
 class QTreeView;
 struct PlayListItem;
 class AddDanmu;
+class ScriptSearchOptionPanel;
 class SearchItemWidget:public QWidget
 {
     Q_OBJECT
@@ -122,6 +123,7 @@ private:
     DanmuItemModel *danmuItemModel;
     RelWordWidget *relWordWidget;
     QString themeWord;
+    ScriptSearchOptionPanel *scriptOptionPanel;
 
     void search();
     void addSearchItem(QList<DanmuSource> &sources);

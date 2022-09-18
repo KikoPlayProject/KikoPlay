@@ -20,6 +20,7 @@
 #include "Common/notifier.h"
 #include "globalobjects.h"
 #include "stylemanager.h"
+#include "widgets/scriptsearchoptionpanel.h"
 namespace
 {
     QMap<int,QList<ResourceItem> > pageCache;
@@ -37,6 +38,28 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
 
     scriptCombo=new QComboBox(this);
     scriptCombo->setProperty("cScrollStyle", true);
+    scriptOptionPanel = new ScriptSearchOptionPanel(this);
+    QObject::connect(scriptCombo, &QComboBox::currentTextChanged, this, [=](const QString &){
+        QString curId = scriptCombo->currentData().toString();
+        scriptOptionPanel->setScript(GlobalObjects::scriptManager->getScript(curId));
+        if(scriptOptionPanel->hasOptions()) scriptOptionPanel->show();
+        else scriptOptionPanel->hide();
+        if(!scriptOptionPanel->isHidden())
+        {
+            QGridLayout * gLayout = static_cast<QGridLayout *>(this->layout());
+            if(!gLayout || !searchListView) return;
+            int optionAvailableWidth = searchListView->width() - 20 -
+                    gLayout->cellRect(0, 0).width() - gLayout->cellRect(0, 2).width();
+            if(scriptOptionPanel->getAllWidth() < optionAvailableWidth)
+            {
+                gLayout->addWidget(scriptOptionPanel, 0, 1);
+            }
+            else
+            {
+                gLayout->addWidget(scriptOptionPanel, 1, 0, 1, 3);
+            }
+        }
+    });
     auto scripts = GlobalObjects::scriptManager->scripts(ScriptType::RESOURCE);
     for(auto &s : scripts)
     {
@@ -159,23 +182,27 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     searchListView->addAction(copyMagnet);
     searchListView->addAction(openLink);
 
-    QHBoxLayout *btnHLayout=new QHBoxLayout();
-    btnHLayout->addWidget(scriptCombo);
-    btnHLayout->addWidget(searchEdit);
-    btnHLayout->addStretch(1);
-    btnHLayout->addWidget(filterEdit);
+    QHBoxLayout *lBtnHLayout=new QHBoxLayout();
+    lBtnHLayout->addWidget(scriptCombo);
+    lBtnHLayout->addWidget(searchEdit);
+    QHBoxLayout *rBtnHLayout=new QHBoxLayout();
+    rBtnHLayout->addWidget(filterEdit);
+
     QHBoxLayout *pageBarHLayout=new QHBoxLayout();
     pageBarHLayout->setContentsMargins(0,0,0,0);
     pageBarHLayout->setSpacing(1);
-    btnHLayout->addWidget(prevPage);
     pageBarHLayout->addWidget(pageEdit);
     pageBarHLayout->addWidget(totalPageTip);
+    rBtnHLayout->addWidget(prevPage);
+    rBtnHLayout->addLayout(pageBarHLayout);
+    rBtnHLayout->addWidget(nextPage);
 
-    btnHLayout->addLayout(pageBarHLayout);btnHLayout->addWidget(nextPage);
     QGridLayout *searchWindowGLayout=new QGridLayout(this);
-    searchWindowGLayout->addLayout(btnHLayout,0,0);
-    searchWindowGLayout->addWidget(searchListView,1,0);
-
+    searchWindowGLayout->addLayout(lBtnHLayout,0,0);
+    searchWindowGLayout->addLayout(rBtnHLayout,0,2);
+    searchWindowGLayout->addWidget(searchListView, 2, 0, 1, 3);
+    searchWindowGLayout->setRowStretch(2,1);
+    searchWindowGLayout->setColumnStretch(1,1);
 }
 
 void ResSearchWindow::search(const QString &keyword, bool setSearchEdit)
@@ -192,6 +219,14 @@ void ResSearchWindow::search(const QString &keyword, bool setSearchEdit)
     QList<ResourceItem> results;
     setEnable(false);
     Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, tr("Searching..."), NM_PROCESS | NM_DARKNESS_BACK);
+    if(scriptOptionPanel->hasOptions() && scriptOptionPanel->changed())
+    {
+        QMap<QString, QString> searchOptions = scriptOptionPanel->getOptionVals();
+        for(auto iter = searchOptions.cbegin(); iter != searchOptions.cend(); ++iter)
+        {
+            resScript->setSearchOption(iter.key(), iter.value());
+        }
+    }
     ScriptState state = resScript->search(keyword, 1, pageCount, results);
     if(state)
     {
@@ -265,6 +300,21 @@ void ResSearchWindow::resizeEvent(QResizeEvent *)
     searchListView->header()->resizeSection(0,oneWidth);
     searchListView->header()->resizeSection(1,4*oneWidth);
     searchListView->header()->resizeSection(2,1*oneWidth);
+    if(!scriptOptionPanel->isHidden())
+    {
+        QGridLayout * gLayout = static_cast<QGridLayout *>(this->layout());
+        if(!gLayout || !searchListView) return;
+        int optionAvailableWidth = searchListView->width() - 20 -
+                gLayout->cellRect(0, 0).width() - gLayout->cellRect(0, 2).width();
+        if(scriptOptionPanel->getAllWidth() < optionAvailableWidth)
+        {
+            gLayout->addWidget(scriptOptionPanel, 0, 1);
+        }
+        else
+        {
+            gLayout->addWidget(scriptOptionPanel, 1, 0, 1, 3);
+        }
+    }
 }
 
 void SearchListModel::setList(const QString &curScriptId, QList<ResourceItem> &nList)

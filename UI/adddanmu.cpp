@@ -22,6 +22,7 @@
 #include "danmuview.h"
 #include "Play/Danmu/blocker.h"
 #include "Script/scriptmanager.h"
+#include "widgets/scriptsearchoptionpanel.h"
 #include "globalobjects.h"
 #include "Common/notifier.h"
 namespace
@@ -174,7 +175,12 @@ void AddDanmu::search()
     beginProcrss();
     searchResultWidget->setEnabled(false);
     QList<DanmuSource> results;
-    auto ret = GlobalObjects::danmuProvider->danmuSearch(tmpProviderId, keyword, results);
+    QMap<QString, QString> searchOptions;
+    if(scriptOptionPanel->hasOptions() && scriptOptionPanel->changed())
+    {
+        searchOptions = scriptOptionPanel->getOptionVals();
+    }
+    auto ret = GlobalObjects::danmuProvider->danmuSearch(tmpProviderId, keyword, searchOptions, results);
     if(ret)
     {
         if(!themeWord.isEmpty() && themeWord!=keyword)
@@ -283,6 +289,13 @@ QWidget *AddDanmu::setupSearchPage()
     QWidget *searchPage=new QWidget(this);
     searchPage->setFont(QFont(GlobalObjects::normalFont,10));
     sourceCombo=new QComboBox(searchPage);
+    scriptOptionPanel = new ScriptSearchOptionPanel(searchPage);
+    QObject::connect(sourceCombo, &QComboBox::currentTextChanged, this, [=](const QString &){
+        QString curId = sourceCombo->currentData().toString();
+        scriptOptionPanel->setScript(GlobalObjects::scriptManager->getScript(curId));
+        if(scriptOptionPanel->hasOptions()) scriptOptionPanel->show();
+        else scriptOptionPanel->hide();
+    });
     for(const auto &p : GlobalObjects::danmuProvider->getSearchProviders())
     {
         sourceCombo->addItem(p.first, p.second);  //p: <name, id>
@@ -300,10 +313,11 @@ QWidget *AddDanmu::setupSearchPage()
     searchPageGLayout->addWidget(sourceCombo,0,0);
     searchPageGLayout->addWidget(keywordEdit,0,1);
     searchPageGLayout->addWidget(searchButton,0,2);
-    searchPageGLayout->addWidget(relWordWidget,1,0,1,3);
-    searchPageGLayout->addWidget(searchResultWidget,2,0,1,3);
+    searchPageGLayout->addWidget(scriptOptionPanel,1,0,1,3);
+    searchPageGLayout->addWidget(relWordWidget,2,0,1,3);
+    searchPageGLayout->addWidget(searchResultWidget,3,0,1,3);
     searchPageGLayout->setColumnStretch(1,1);
-    searchPageGLayout->setRowStretch(2,1);
+    searchPageGLayout->setRowStretch(3,1);
 
     return searchPage;
 }

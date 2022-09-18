@@ -900,7 +900,7 @@ QCheckBox::indicator:unchecked:hover {
 QCheckBox::indicator:checked {
     image: url(:/res/images/checkbox-check.svg);
 }
-QDialog QCheckBox {
+QCheckBox {
 @if{DarkMode}
     color: rgb(214,214,214);
 @else
@@ -909,6 +909,16 @@ QDialog QCheckBox {
 }
 QWidget#PopupPage QCheckBox::indicator:unchecked {
     image: url(:/res/images/checkbox-uncheck-light.svg);
+}
+
+
+/* --------------------QRadioButton--------------------------------*/
+QRadioButton {
+@if{DarkMode}
+    color: rgb(214,214,214);
+@else
+    color: rgb(0,0,0);
+@endif
 }
 
 

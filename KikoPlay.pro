@@ -118,6 +118,7 @@ SOURCES += \
     UI/widgets/fonticonbutton.cpp \
     UI/widgets/loadingicon.cpp \
     UI/widgets/optionslider.cpp \
+    UI/widgets/scriptsearchoptionpanel.cpp \
         main.cpp \
     UI/mainwindow.cpp \
     UI/framelesswindow.cpp \
@@ -280,6 +281,7 @@ HEADERS += \
     UI/widgets/fonticonbutton.h \
     UI/widgets/loadingicon.h \
     UI/widgets/optionslider.h \
+    UI/widgets/scriptsearchoptionpanel.h \
     globalobjects.h \
     Play/Playlist/playlist.h \
     Play/Video/mpvplayer.h \
