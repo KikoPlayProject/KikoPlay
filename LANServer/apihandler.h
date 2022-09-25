@@ -18,6 +18,7 @@ private:
     void apiUpdateTime(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
     void apiDanmu(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
     void apiDanmuFull(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
+    void apiLocalDanmu(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
     void apiUpdateDelay(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
     void apiUpdateTimeline(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
     void apiSubtitle(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);

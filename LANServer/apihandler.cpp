@@ -7,6 +7,7 @@
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Danmu/danmupool.h"
+#include "Play/Danmu/Provider/localprovider.h"
 #include "Script/scriptmanager.h"
 #include "Script/danmuscript.h"
 #include "MediaLibrary/animeworker.h"
@@ -54,6 +55,7 @@ void APIHandler::service(stefanfrings::HttpRequest &request, stefanfrings::HttpR
         {"screenshot", &APIHandler::apiScreenshot},
         {"danmu/v3/", &APIHandler::apiDanmu},
         {"danmu/full/", &APIHandler::apiDanmuFull},
+        {"danmu/local/", &APIHandler::apiLocalDanmu},
         {"danmu/launch", &APIHandler::apiLaunch}
     };
     auto api = routeTable.value(path, nullptr);
@@ -191,6 +193,40 @@ void APIHandler::apiDanmuFull(stefanfrings::HttpRequest &request, stefanfrings::
     response.setHeader("Content-Type", "application/json");
     response.setHeader("Content-Encoding", "gzip");
     response.write(compressedBytes, true);
+}
+
+void APIHandler::apiLocalDanmu(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
+{
+    QString mediaId = request.getParameter("mediaId");
+    QString mediaPath(GlobalObjects::playlist->getPathByHash(mediaId));
+    Logger::logger()->log(Logger::LANServer,
+                          QString("[%1]Danmu(Local) %2").arg(request.getPeerAddress().toString(),
+                          mediaPath));
+    if(mediaPath.isEmpty())
+    {
+        response.setStatus(stefanfrings::HttpResponse::NotFound);
+        return;
+    }
+    QString danmuFile(mediaPath.mid(0, mediaPath.lastIndexOf('.'))+".xml");
+    QFileInfo fi(danmuFile);
+    QJsonObject resposeObj;
+    if(fi.exists())
+    {
+        QVector<DanmuComment *> tmplist;
+        LocalProvider::LoadXmlDanmuFile(danmuFile, tmplist);
+        resposeObj=
+        {
+            {"comment", Pool::exportJson(tmplist, false)},
+            {"local", danmuFile}
+        };
+    }
+    QByteArray data = QJsonDocument(resposeObj).toJson();
+    QByteArray compressedBytes;
+    Network::gzipCompress(data,compressedBytes);
+    response.setHeader("Content-Type", "application/json");
+    response.setHeader("Content-Encoding", "gzip");
+    response.write(compressedBytes, true);
+
 }
 
 void APIHandler::apiUpdateDelay(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)

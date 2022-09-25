@@ -361,24 +361,6 @@ QJsonObject Pool::exportFullJson()
     return poolObj;
 }
 
-QJsonArray Pool::exportJson(const QVector<QSharedPointer<DanmuComment> > &danmuList, bool useOrigin)
-{
-    QJsonArray danmuArray;
-    for(const auto &danmu:danmuList)
-    {
-        if(danmu->blockBy!=-1) continue;
-        if(useOrigin)
-        {
-            danmuArray.append(QJsonArray({danmu->originTime/1000.0,danmu->type,danmu->color,danmu->source,danmu->text, danmu->sender}));
-        }
-        else
-        {
-            danmuArray.append(QJsonArray({danmu->time/1000.0,danmu->type,danmu->color,danmu->sender,danmu->text}));
-        }
-    }
-    return danmuArray;
-}
-
 QString Pool::getPoolCode(const QStringList &addition) const
 {
     if(sourcesTable.isEmpty() && addition.isEmpty()) return QString();
