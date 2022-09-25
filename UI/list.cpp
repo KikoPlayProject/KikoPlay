@@ -625,11 +625,11 @@ void ListWindow::initActions()
         if (selection.size() == 0)return;
         QModelIndexList indexes(selection.indexes());
         const PlayListItem *item=GlobalObjects::playlist->getItem(indexes.last());
-        if(item->path.isEmpty() && item->folderPath.isEmpty())return;
+        if(item->path.isEmpty())return;
 #ifdef Q_OS_WIN
-        QProcess::startDetached("Explorer", {"/select,",  QDir::toNativeSeparators(item->path.isEmpty()?item->folderPath:item->path)});
+        QProcess::startDetached("Explorer", {"/select,",  QDir::toNativeSeparators(item->path)});
 #else
-        QDesktopServices::openUrl(QUrl("file:///" + QDir::toNativeSeparators(item->path.isEmpty()?item->folderPath:QFileInfo(item->path).absolutePath())));
+        QDesktopServices::openUrl(QUrl("file:///" + QDir::toNativeSeparators(QFileInfo(item->path).absolutePath())));
 #endif
 
     });

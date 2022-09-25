@@ -289,8 +289,9 @@ private:
 };
 }
 PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPanel(true),
-    onTopWhilePlaying(false),updatingTrack(false),isFullscreen(false),resizePercent(-1),jumpForwardTime(5),jumpBackwardTime(5),
-    autoLoadLocalDanmu(true), miniModeOn(false), mouseLPressed(false), moving(false)
+    onTopWhilePlaying(false),isFullscreen(false),resizePercent(-1),jumpForwardTime(5),jumpBackwardTime(5),
+    autoLoadLocalDanmu(true), hasExternalAudio(false), hasExternalSub(false), miniModeOn(false),
+    mouseLPressed(false), moving(false)
 {
     Notifier::getNotifier()->addNotify(Notifier::PLAYER_NOTIFY, this);
     setWindowFlags(Qt::FramelessWindowHint);
@@ -1192,9 +1193,21 @@ void PlayerWindow::setupPlaySettingPage()
 
     QLabel *audioTrackLabel=new QLabel(tr("Audio Track"),pagePlay);
     QComboBox *audioTrackCombo=new QComboBox(pagePlay);
-    QObject::connect(audioTrackCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[this](int index){
-        if(updatingTrack)return;
-        GlobalObjects::mpvplayer->setTrackId(0,index);
+    audioTrackCombo->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
+    QObject::connect(audioTrackCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[audioTrackCombo](int index){
+        if(index==audioTrackCombo->count() - 1)
+        {
+            GlobalObjects::playlist->clearCurrentAudio();
+            GlobalObjects::mpvplayer->clearExternalAudio();
+            audioTrackCombo->blockSignals(true);
+            audioTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentTrack(MPVPlayer::TrackType::AudioTrack));
+            audioTrackCombo->blockSignals(false);
+        }
+        else
+        {
+            GlobalObjects::mpvplayer->setTrackId(MPVPlayer::TrackType::AudioTrack, index);
+            GlobalObjects::playlist->setCurrentAudioIndex(index);
+        }
     });
     QPushButton *addAudioTrackButton=new QPushButton(tr("Add"),pagePlay);
     QObject::connect(addAudioTrackButton,&QPushButton::clicked,[this](){
@@ -1206,23 +1219,31 @@ void PlayerWindow::setupPlaySettingPage()
         }
         QString file(QFileDialog::getOpenFileName(this,tr("Select Audio File"),"",tr("Audio (%0);;All Files(*)").arg(GlobalObjects::mpvplayer->audioFormats.join(" "))));
         if(!file.isEmpty())
+        {
             GlobalObjects::mpvplayer->addAudioTrack(file);
+        }
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
 
     QLabel *subtitleTrackLabel=new QLabel(tr("Subtitle Track"),pagePlay);
     QComboBox *subtitleTrackCombo=new QComboBox(pagePlay);
     subtitleTrackCombo->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
-    QObject::connect(subtitleTrackCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[subtitleTrackCombo, this](int index){
-        if(updatingTrack)return;
-        if(index==subtitleTrackCombo->count()-1)
+    QObject::connect(subtitleTrackCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[subtitleTrackCombo](int index){
+        if(index==subtitleTrackCombo->count() - 1)
+        {
+            GlobalObjects::playlist->clearCurrentSub();
+            GlobalObjects::mpvplayer->clearExternalSub();
+            subtitleTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentTrack(MPVPlayer::TrackType::SubTrack));
+        }
+        else if(index==subtitleTrackCombo->count() - 2)
         {
             GlobalObjects::mpvplayer->hideSubtitle(true);
         }
         else
         {
             GlobalObjects::mpvplayer->hideSubtitle(false);
-            GlobalObjects::mpvplayer->setTrackId(1,index);
+            GlobalObjects::mpvplayer->setTrackId(MPVPlayer::TrackType::SubTrack, index);
+            GlobalObjects::playlist->setCurrentSubIndex(index);
         }
     });
     QPushButton *addSubtitleButton=new QPushButton(tr("Add"),pagePlay);
@@ -1235,26 +1256,46 @@ void PlayerWindow::setupPlaySettingPage()
         }
         QString file(QFileDialog::getOpenFileName(this,tr("Select Sub File"),"",tr("Subtitle (%0);;All Files(*)").arg(GlobalObjects::mpvplayer->subtitleFormats.join(" "))));
         if(!file.isEmpty())
+        {
             GlobalObjects::mpvplayer->addSubtitle(file);
+        }
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
     QLabel *subtitleDelayLabel=new QLabel(tr("Subtitle Delay(s)"),pagePlay);
     QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::trackInfoChange, [=](MPVPlayer::TrackType type){
-        updatingTrack=true;
         if(type == MPVPlayer::TrackType::AudioTrack)
         {
+            audioTrackCombo->blockSignals(true);
             audioTrackCombo->clear();
-            audioTrackCombo->addItems(GlobalObjects::mpvplayer->getTrackList(type));
-            audioTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentAudioTrack());
+            for(auto &t : GlobalObjects::mpvplayer->getTrackList(MPVPlayer::TrackType::AudioTrack))
+            {
+                if(t.isExternal && !t.externalFile.isEmpty())
+                {
+                    GlobalObjects::playlist->addCurrentAudio(t.externalFile);
+                }
+                audioTrackCombo->addItem(t.title);
+            }
+            audioTrackCombo->addItem(tr("Clear External Audio Files"));
+            audioTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentTrack(MPVPlayer::TrackType::AudioTrack));
+            audioTrackCombo->blockSignals(false);
         }
         else if(type == MPVPlayer::TrackType::SubTrack)
         {
+            subtitleTrackCombo->blockSignals(true);
             subtitleTrackCombo->clear();
-            subtitleTrackCombo->addItems(GlobalObjects::mpvplayer->getTrackList(type));
-            subtitleTrackCombo->addItem(tr("Hide"));;
-            subtitleTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentSubTrack());
+            for(auto &t : GlobalObjects::mpvplayer->getTrackList(MPVPlayer::TrackType::SubTrack))
+            {
+                if(t.isExternal && !t.externalFile.isEmpty())
+                {
+                    GlobalObjects::playlist->addCurrentSub(t.externalFile);
+                }
+                subtitleTrackCombo->addItem(t.title);
+            }
+            subtitleTrackCombo->addItem(tr("Hide"));
+            subtitleTrackCombo->addItem(tr("Clear External Sub Files"));
+            subtitleTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentTrack(MPVPlayer::TrackType::SubTrack));
+            subtitleTrackCombo->blockSignals(false);
         }
-        updatingTrack=false;
     });
     QSpinBox *delaySpinBox=new QSpinBox(pagePlay);
     delaySpinBox->setRange(INT_MIN,INT_MAX);
@@ -1262,6 +1303,7 @@ void PlayerWindow::setupPlaySettingPage()
     delaySpinBox->setAlignment(Qt::AlignCenter);
     QObject::connect(delaySpinBox,&QSpinBox::editingFinished,[delaySpinBox](){
        GlobalObjects::mpvplayer->setSubDelay(delaySpinBox->value());
+       GlobalObjects::playlist->setCurrentSubDelay(delaySpinBox->value());
     });
     QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::subDelayChanged, delaySpinBox, &QSpinBox::setValue);
 
@@ -1583,6 +1625,33 @@ void PlayerWindow::setupSignals()
             {
                 GlobalObjects::danmuPool->addLocalDanmuFile(danmuFile);
             }
+        }
+        hasExternalAudio = false;
+        hasExternalSub = false;
+        if(currentItem->trackInfo)
+        {
+            for(const QString &audioFile : currentItem->trackInfo->audioFiles)
+            {
+                GlobalObjects::mpvplayer->addAudioTrack(audioFile);
+            }
+            for(const QString &subFile : currentItem->trackInfo->subFiles)
+            {
+                GlobalObjects::mpvplayer->addSubtitle(subFile);
+            }
+            GlobalObjects::mpvplayer->setSubDelay(currentItem->trackInfo->subDelay);
+            if(currentItem->trackInfo->audioIndex > -1)
+            {
+                GlobalObjects::mpvplayer->setTrackId(MPVPlayer::TrackType::AudioTrack, currentItem->trackInfo->audioIndex);
+            }
+            if(currentItem->trackInfo->subIndex > -1)
+            {
+                GlobalObjects::mpvplayer->setTrackId(MPVPlayer::TrackType::SubTrack, currentItem->trackInfo->subIndex);
+                GlobalObjects::mpvplayer->hideSubtitle(false);
+            }
+        }
+        else
+        {
+            GlobalObjects::mpvplayer->setSubDelay(0);
         }
 #ifdef QT_DEBUG
         qDebug()<<"File Changed,Current Item: "<<currentItem->title;
@@ -1911,13 +1980,6 @@ void PlayerWindow::showMessage(const QString &msg, int flag)
 {
     Q_UNUSED(flag)
     showMessage(msg, "");
-    /*
-    int x = (width()-playInfo->width())/2, y;
-    if(miniModeOn) y = height()-miniProgress->height()-playInfo->height()-20;
-    else y = height()-playControlPanel->height()-playInfo->height()-20;
-    playInfo->move(x, y);
-    playInfo->raise();
-    */
 }
 
 void PlayerWindow::showMessage(const QString &msg, const QString &type)

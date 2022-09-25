@@ -200,13 +200,37 @@ MPVPlayer::~MPVPlayer()
     }
 }
 
+int MPVPlayer::getCurrentTrack(MPVPlayer::TrackType type) const
+{
+    const QVector<TrackInfo> &tracks = type==AudioTrack?audioTracks:subTracks;
+    int curId = mpv::qt::get_property(mpv, type==AudioTrack?"aid":"sid").toInt();
+    int index = -1;
+    for(int i = 0; i < tracks.size(); ++i)
+    {
+        if(tracks[i].id == curId)
+        {
+            index = i;
+            break;
+        }
+    }
+    return index;
+}
+
+int MPVPlayer::getExternalTrackCount(MPVPlayer::TrackType type) const
+{
+    const QVector<TrackInfo> &tracks = type==AudioTrack?audioTracks:subTracks;
+    int c = 0;
+    for(const TrackInfo &t : tracks) c += t.isExternal?1:0;
+    return c;
+}
+
 QString MPVPlayer::getMPVProperty(const QString &property, bool &hasError)
 {
-     auto ret = mpv::qt::get_property(mpv, property);
-     hasError = true;
-     if(mpv::qt::is_error(ret)) return "";
-     hasError = false;
-     return ret.toString();
+    auto ret = mpv::qt::get_property(mpv, property);
+    hasError = true;
+    if(mpv::qt::is_error(ret)) return "";
+    hasError = false;
+    return ret.toString();
 }
 
 MPVPlayer::VideoSizeInfo MPVPlayer::getVideoSizeInfo()
@@ -537,21 +561,40 @@ void MPVPlayer::hideDanmu(bool hide)
 
 void MPVPlayer::addSubtitle(const QString &path)
 {
-	setMPVCommand(QVariantList() << "sub-add" << path);
+    setMPVCommand(QVariantList() << "sub-add" << path << "cached");
 	loadTracks();
     emit trackInfoChange(SubTrack);
 }
 
 void MPVPlayer::addAudioTrack(const QString &path)
 {
-    setMPVCommand(QVariantList() << "audio-add" << path);
+    setMPVCommand(QVariantList() << "audio-add" << path << "cached");
     loadTracks();
     emit trackInfoChange(AudioTrack);
 }
 
-void MPVPlayer::setTrackId(int type, int id)
+void MPVPlayer::clearExternalAudio()
 {
-    setMPVProperty(type==0?"aid":"sid",type==0?audioTrack.ids[id]:subtitleTrack.ids[id]);
+    bool changed = false;
+    for(int i = 0; i < audioTracks.size(); ++i)
+    {
+        if(audioTracks[i].isExternal)
+        {
+            changed = true;
+            setMPVCommand(QVariantList() << "audio-remove" << audioTracks[i].id);
+        }
+    }
+    if(changed)
+    {
+        loadTracks();
+        emit trackInfoChange(AudioTrack);
+    }
+}
+
+void MPVPlayer::setTrackId(TrackType type, int index)
+{
+    if(index < 0 || index >= (type==0?audioTracks.size():subTracks.size())) return;
+    setMPVProperty(type==AudioTrack?"aid":"sid",type==AudioTrack?audioTracks[index].id:subTracks[index].id);
 }
 
 void MPVPlayer::hideSubtitle(bool on)
@@ -562,6 +605,24 @@ void MPVPlayer::hideSubtitle(bool on)
 void MPVPlayer::setSubDelay(int delay)
 {
     setMPVProperty("sub-delay",delay);
+}
+
+void MPVPlayer::clearExternalSub()
+{
+    bool changed = false;
+    for(int i = 0; i < subTracks.size(); ++i)
+    {
+        if(subTracks[i].isExternal)
+        {
+            changed = true;
+            setMPVCommand(QVariantList() << "sub-remove" << subTracks[i].id);
+        }
+    }
+    if(changed)
+    {
+        loadTracks();
+        emit trackInfoChange(SubTrack);
+    }
 }
 
 void MPVPlayer::setSpeed(double speed)
@@ -811,27 +872,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
         [this, event](){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             QVariantList allTracks=mpv::qt::node_to_variant((mpv_node *)prop->data).toList();
-            audioTrack.desc_str.clear();
-            audioTrack.ids.clear();
-            subtitleTrack.desc_str.clear();
-            subtitleTrack.ids.clear();
-            for (QVariant &track : allTracks)
-            {
-                QMap<QString, QVariant> trackMap = track.toMap();
-                QString type(trackMap["type"].toString());
-                if (type == "audio")
-                {
-                    QString title(trackMap["title"].toString());
-                    audioTrack.desc_str.append(title.isEmpty()? trackMap["id"].toString():title);
-                    audioTrack.ids.append(trackMap["id"].toInt());
-                }
-                else if (type == "sub")
-                {
-                    QString title(trackMap["title"].toString());
-                    subtitleTrack.desc_str.append(title.isEmpty() ? trackMap["id"].toString() : title);
-                    subtitleTrack.ids.append(trackMap["id"].toInt());
-                }
-            }
+            loadTracks(allTracks);
             emit trackInfoChange(AudioTrack);
             emit trackInfoChange(SubTrack);
         }
@@ -1048,26 +1089,38 @@ bool MPVPlayer::setOptionGroup(const QString &key)
 void MPVPlayer::loadTracks()
 {
     QVariantList allTracks=mpv::qt::get_property(mpv,"track-list").toList();
-	audioTrack.desc_str.clear();
-	audioTrack.ids.clear();
-	subtitleTrack.desc_str.clear();
-	subtitleTrack.ids.clear();
-	for (QVariant &track : allTracks)
-	{
-		QMap<QString, QVariant> trackMap = track.toMap();
-		QString type(trackMap["type"].toString());
-		if (type == "audio")
-		{
-			QString title(trackMap["title"].toString());
-			audioTrack.desc_str.append(title.isEmpty()? trackMap["id"].toString():title);
-			audioTrack.ids.append(trackMap["id"].toInt());
-		}
-		else if (type == "sub")
-		{
-			QString title(trackMap["title"].toString());
-			subtitleTrack.desc_str.append(title.isEmpty() ? trackMap["id"].toString() : title);
-			subtitleTrack.ids.append(trackMap["id"].toInt());
-		}
+    loadTracks(allTracks);
+}
+
+void MPVPlayer::loadTracks(const QVariantList &allTracks)
+{
+    audioTracks.clear();
+    subTracks.clear();
+    for (const QVariant &track : allTracks)
+    {
+        QMap<QString, QVariant> trackMap = track.toMap();
+        QString type(trackMap["type"].toString());
+        QString externalFile = trackMap["external-filename"].toString();
+        if (type == "audio")
+        {
+            QString title(trackMap["title"].toString());
+            audioTracks.append({
+                                   title.isEmpty()? trackMap["id"].toString():title,
+                                   trackMap["id"].toInt(),
+                                   !externalFile.isEmpty(),
+                                   externalFile
+                               });
+        }
+        else if (type == "sub")
+        {
+            QString title(trackMap["title"].toString());
+            subTracks.append({
+                                   title.isEmpty()? trackMap["id"].toString():title,
+                                   trackMap["id"].toInt(),
+                                   !externalFile.isEmpty(),
+                                   externalFile
+                               });
+        }
     }
 }
 

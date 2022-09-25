@@ -6,7 +6,7 @@
 PlayList* PlayListItem::playlist=nullptr;
 
 PlayListItem::PlayListItem(PlayListItem *p, bool leaf, int insertPosition):
-    parent(p),children(nullptr),playTime(0),playTimeState(UNPLAY),level(0),isBgmCollection(false), marker(M_NONE), addTime(0)
+    parent(p), children(nullptr), playTimeState(UNPLAY), marker(M_NONE), playTime(0), level(0), isBgmCollection(false), addTime(0), trackInfo(nullptr)
 {
     if(!leaf)
     {
@@ -28,6 +28,10 @@ PlayListItem::~PlayListItem()
     {
         qDeleteAll(children->begin(),children->end());
         delete children;
+    }
+    if(trackInfo)
+    {
+        delete trackInfo;
     }
 }
 

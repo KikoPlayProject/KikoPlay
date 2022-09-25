@@ -80,6 +80,13 @@ public slots :
     const PlayListItem *setCurrentItem(const QString &path);
 	void cleanCurrentItem();
     void setCurrentPlayTime(int playTime);
+    void addCurrentSub(const QString &subFile);
+    void clearCurrentSub();
+    void setCurrentSubDelay(int delay);
+    void setCurrentSubIndex(int index);
+    void addCurrentAudio(const QString &audioFile);
+    void clearCurrentAudio();
+    void setCurrentAudioIndex(int index);
 
     const PlayListItem *playPrevOrNext(bool prev);
     void setLoopMode(PlayList::LoopMode newMode);

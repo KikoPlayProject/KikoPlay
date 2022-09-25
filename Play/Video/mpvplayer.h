@@ -41,6 +41,13 @@ public:
         QString title;
         int position;
     };
+    struct TrackInfo
+    {
+        QString title;
+        int id;
+        bool isExternal;
+        QString externalFile;
+    };
 
     const QStringList videoFileFormats{"*.mp4","*.mkv","*.avi","*.flv","*.wmv","*.webm","*.vob","*.mts","*.ts","*.m2ts","*.mov","*.rm","*.rmvb","*.asf","*.m4v","*.mpg","*.mp2","*.mpeg","*.mpe","*.mpv","*.m2v","*.m4v","*.3gp","*.f4v"};
     const QStringList audioFormats{"*.mp3","*.wav","*.wma","*.ogg","*.flac","*.aac","*.ape","*.ac3","*.m4a","*.mka"};
@@ -52,9 +59,7 @@ public:
     inline PlayState getState() const {return state;}
     inline bool getDanmuHide() const{return danmuHide;}
     inline bool getMute() const{return mute;}
-    inline const QStringList &getTrackList(TrackType type){return type==AudioTrack?audioTrack.desc_str:subtitleTrack.desc_str;}
-    inline int getCurrentAudioTrack() const {return audioTrack.ids.indexOf(mpv::qt::get_property(mpv,"aid").toInt());}
-    inline int getCurrentSubTrack() const{return subtitleTrack.ids.indexOf(mpv::qt::get_property(mpv,"sid").toInt());}
+    inline const QVector<TrackInfo> &getTrackList(TrackType type){return type==AudioTrack?audioTracks:subTracks;}
     inline double getTime() const{return mpv::qt::get_property(mpv,"playback-time").toDouble();}
     inline int getDuration() const{return currentDuration;}
     inline QString getMediaTitle() const {return mpv::qt::get_property(mpv,"media-title").toString();}
@@ -65,6 +70,8 @@ public:
     QString getMPVProperty(const QString &property, bool &hasError);
     const QHash<QString, QPair<QList<QStringList>, QString>> &getShortcuts() const{return mpvShortcuts;}
     inline bool enableDirectKey() const {return directKeyMode;}
+    int getCurrentTrack(TrackType type) const;
+    int getExternalTrackCount(TrackType type) const;
 
     VideoSizeInfo getVideoSizeInfo();
     QString expandMediaInfo(const QString &text);
@@ -112,9 +119,11 @@ public slots:
     void hideDanmu(bool hide);
     void addSubtitle(const QString &path);
     void addAudioTrack(const QString &path);
-    void setTrackId(int type,int id);
+    void clearExternalAudio();
+    void setTrackId(TrackType type, int index);
     void hideSubtitle(bool on);
     void setSubDelay(int delay);
+    void clearExternalSub();
     void setSpeed(double speed);
     void setVideoAspect(int index);
     void screenshot(const QString &filename);
@@ -133,11 +142,6 @@ private slots:
     void on_mpv_events();
     void maybeUpdate();
 private:
-    struct TrackInfo
-    {
-      QStringList desc_str;
-      QVector<int> ids;
-    };
     mpv_handle *mpv;
     mpv_render_context *mpv_gl;
     void handle_mpv_event(mpv_event *event);
@@ -166,8 +170,9 @@ private:
     QHash<QString, QString> directModeKeyMapping;
 
     int currentDuration;
-    TrackInfo audioTrack,subtitleTrack;
+    QVector<TrackInfo> audioTracks, subTracks;
     void loadTracks();
+    void loadTracks(const QVariantList &allTracks);
 
     QVector<ChapterInfo> chapters;
     void loadChapters();

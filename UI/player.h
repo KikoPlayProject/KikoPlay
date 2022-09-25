@@ -74,12 +74,12 @@ private:
      QSlider *speedSlider,*alphaSlider,*strokeWidthSlider,*fontSizeSlider,*maxDanmuCount,
              *brightnessSlider, *contrastSlider, *saturationSlider, *gammaSlider, *hueSlider, *sharpenSlider;
      OptionSlider *denseLevel, *displayAreaSlider;
-     bool updatingTrack;
      bool isFullscreen;
      int resizePercent;
      int clickBehavior,dbClickBehaivior;
      int jumpForwardTime, jumpBackwardTime;
      bool autoLoadLocalDanmu;
+     bool hasExternalAudio, hasExternalSub;
 
      QSharedPointer<DanmuComment> currentDanmu;
 

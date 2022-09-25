@@ -301,9 +301,9 @@ int PlayList::deleteInvalidItems(const QModelIndexList &indexes)
             {
                 items.push_back(child);
             }
-            if(!currentItem->folderPath.isEmpty())
+            if(!currentItem->path.isEmpty())
             {
-                if(!QFileInfo::exists(currentItem->folderPath)) invalidItems.append(currentItem);
+                if(!QFileInfo::exists(currentItem->path)) invalidItems.append(currentItem);
             }
         }
         else if(!currentItem->path.isEmpty())
@@ -522,7 +522,7 @@ void PlayList::switchBgmCollection(const QModelIndex &index)
     Q_D(PlayList);
     if(!index.isValid())return;
     PlayListItem *item= static_cast<PlayListItem*>(index.internalPointer());
-    if(!item->children || !item->folderPath.isEmpty()) return;
+    if(!item->children || !item->path.isEmpty()) return;
     item->isBgmCollection=!item->isBgmCollection;
     if(item->isBgmCollection)
     {
@@ -634,10 +634,10 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
             {
                 tipContent<< tr("Bangumi Collection");
             }
-            else if(!item->folderPath.isEmpty())
+            else if(!item->path.isEmpty())
             {
                 tipContent<< tr("Folder Collection");
-                tipContent<< item->folderPath;
+                tipContent<< item->path;
             }
             if (item->addTime > 0)
             {
@@ -682,11 +682,11 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
     case ItemRole::BgmCollectionRole:
         return (item->isBgmCollection && item->children);
     case ItemRole::FolderCollectionRole:
-        return !item->folderPath.isEmpty();
+        return (item->children && !item->path.isEmpty());
     case ItemRole::ColorMarkerRole:
         return item->marker;
     case ItemRole::FilePathRole:
-        return item->children? item->folderPath : item->path;
+        return item->path;
     default:
         return QVariant();
     }
@@ -1100,6 +1100,122 @@ void PlayList::setCurrentPlayTime(int playTime)
         if((d->saveFinishTimeOnce && lastState!=PlayListItem::FINISH) || !d->saveFinishTimeOnce)
             AnimeWorker::instance()->updateEpTime(currentItem->animeTitle, currentItem->path, true);
     }
+    d->playListChanged=true;
+    d->needRefresh=true;
+    d->incModifyCounter();
+}
+
+void PlayList::addCurrentSub(const QString &subFile)
+{
+    Q_D(PlayList);
+    PlayListItem *currentItem=d->currentItem;
+    if(!currentItem) return;
+    if(!currentItem->trackInfo)
+    {
+        currentItem->trackInfo = new ItemTrackInfo;
+    }
+    if(currentItem->trackInfo->subFiles.contains(subFile)) return;
+    currentItem->trackInfo->subFiles.append(subFile);
+    d->playListChanged=true;
+    d->needRefresh=true;
+    d->incModifyCounter();
+}
+
+void PlayList::clearCurrentSub()
+{
+    Q_D(PlayList);
+    PlayListItem *currentItem=d->currentItem;
+    if(!currentItem) return;
+    if(!currentItem->trackInfo) return;
+    currentItem->trackInfo->subFiles.clear();
+    if(currentItem->trackInfo->subDelay == 0 && currentItem->trackInfo->audioFiles.isEmpty())
+    {
+        delete currentItem->trackInfo;
+        currentItem->trackInfo = nullptr;
+    }
+    d->playListChanged=true;
+    d->needRefresh=true;
+    d->incModifyCounter();
+}
+
+void PlayList::setCurrentSubDelay(int delay)
+{
+    Q_D(PlayList);
+    PlayListItem *currentItem=d->currentItem;
+    if(!currentItem) return;
+    if(!currentItem->trackInfo)
+    {
+        if(delay == 0) return;
+        currentItem->trackInfo = new ItemTrackInfo;
+    }
+    currentItem->trackInfo->subDelay = delay;
+    d->playListChanged=true;
+    d->needRefresh=true;
+    d->incModifyCounter();
+}
+
+void PlayList::setCurrentSubIndex(int index)
+{
+    if(index < 0) return;
+    Q_D(PlayList);
+    PlayListItem *currentItem=d->currentItem;
+    if(!currentItem) return;
+    if(!currentItem->trackInfo)
+    {
+        if(index == 0) return;
+        currentItem->trackInfo = new ItemTrackInfo;
+    }
+    currentItem->trackInfo->subIndex = index;
+    d->playListChanged=true;
+    d->needRefresh=true;
+    d->incModifyCounter();
+}
+
+void PlayList::addCurrentAudio(const QString &audioFile)
+{
+    Q_D(PlayList);
+    PlayListItem *currentItem=d->currentItem;
+    if(!currentItem) return;
+    if(!currentItem->trackInfo)
+    {
+        currentItem->trackInfo = new ItemTrackInfo;
+    }
+    if(currentItem->trackInfo->audioFiles.contains(audioFile)) return;
+    currentItem->trackInfo->audioFiles.append(audioFile);
+    d->playListChanged=true;
+    d->needRefresh=true;
+    d->incModifyCounter();
+}
+
+void PlayList::clearCurrentAudio()
+{
+    Q_D(PlayList);
+    PlayListItem *currentItem=d->currentItem;
+    if(!currentItem) return;
+    if(!currentItem->trackInfo) return;
+    currentItem->trackInfo->audioFiles.clear();
+    if(currentItem->trackInfo->subDelay == 0 && currentItem->trackInfo->subFiles.isEmpty())
+    {
+        delete currentItem->trackInfo;
+        currentItem->trackInfo = nullptr;
+    }
+    d->playListChanged=true;
+    d->needRefresh=true;
+    d->incModifyCounter();
+}
+
+void PlayList::setCurrentAudioIndex(int index)
+{
+    if(index < 0) return;
+    Q_D(PlayList);
+    PlayListItem *currentItem=d->currentItem;
+    if(!currentItem) return;
+    if(!currentItem->trackInfo)
+    {
+        if(index == 0) return;
+        currentItem->trackInfo = new ItemTrackInfo;
+    }
+    currentItem->trackInfo->audioIndex = index;
     d->playListChanged=true;
     d->needRefresh=true;
     d->incModifyCounter();
