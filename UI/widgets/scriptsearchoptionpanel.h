@@ -33,6 +33,7 @@ private:
     void makeRadioItem(OptionItem &item);
     void makeCheckItem(OptionItem &item);
     void makeCheckListItem(OptionItem &item);
+    void makeLabelItem(OptionItem &item);
 };
 
 #endif // SCRIPTSEARCHOPTIONPANEL_H

@@ -494,7 +494,7 @@ void ScriptBase::loadSearchSettings(const QString &scriptPath)
     QVariant settings = get(luaSearchSettingsTable);
     if(!settings.canConvert(QVariant::Map)) return;
     QVariantMap settingMap = settings.toMap();
-    scriptSettings.clear();
+    searchSettingItems.clear();
     for(auto iter = settingMap.constBegin(); iter != settingMap.constEnd(); ++iter)
     {
         if(iter.value().canConvert(QVariant::Map))

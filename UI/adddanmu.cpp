@@ -533,7 +533,7 @@ QVariant DanmuItemModel::data(const QModelIndex &index, int role) const
     if(!index.isValid()) return QVariant();
     const ItemInfo &info=items.at(index.row());
     Columns col=static_cast<Columns>(index.column());
-    if(role==Qt::DisplayRole)
+    if(role==Qt::DisplayRole || role==Qt::ToolTipRole)
     {
         switch (col)
         {

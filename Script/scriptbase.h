@@ -60,7 +60,7 @@ public:
     {
         enum DisplayType
         {
-            Text, Combo, Radio, Check, CheckList, UNKNOWN
+            Text, Combo, Radio, Check, CheckList, Label, UNKNOWN
         };
         DisplayType dType;
         QString title;

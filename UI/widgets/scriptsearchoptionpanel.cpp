@@ -67,6 +67,9 @@ void ScriptSearchOptionPanel::makeItem(ScriptSearchOptionPanel::OptionItem &item
     case ScriptBase::SearchSettingItem::CheckList:
         makeCheckListItem(item);
         break;
+    case ScriptBase::SearchSettingItem::Label:
+        makeLabelItem(item);
+        break;
     default:
         break;
     }
@@ -80,6 +83,7 @@ void ScriptSearchOptionPanel::makeTextItem(ScriptSearchOptionPanel::OptionItem &
     QHBoxLayout *hLayout = new QHBoxLayout(container);
     QLabel *tip = new QLabel(item.searchSettingItem->title, container);
     tip->setToolTip(item.searchSettingItem->description);
+    tip->setOpenExternalLinks(true);
     QLineEdit *edit = new QLineEdit(item.searchSettingItem->value, container);
     if(overlayOptions && overlayOptions->contains(item.searchSettingItem->key))
     {
@@ -103,6 +107,7 @@ void ScriptSearchOptionPanel::makeComboItem(ScriptSearchOptionPanel::OptionItem 
     QHBoxLayout *hLayout = new QHBoxLayout(container);
     QLabel *tip = new QLabel(item.searchSettingItem->title, container);
     tip->setToolTip(item.searchSettingItem->description);
+    tip->setOpenExternalLinks(true);
     QComboBox *combo = new QComboBox(container);
     combo->setEditable(false);
     QStringList choices = item.searchSettingItem->choices.split(',', Qt::SkipEmptyParts);
@@ -130,6 +135,7 @@ void ScriptSearchOptionPanel::makeRadioItem(ScriptSearchOptionPanel::OptionItem 
     QHBoxLayout *hLayout = new QHBoxLayout(container);
     QLabel *tip = new QLabel(item.searchSettingItem->title, container);
     tip->setToolTip(item.searchSettingItem->description);
+    tip->setOpenExternalLinks(true);
     hLayout->setContentsMargins(0, 0, 0, 0);
     hLayout->addWidget(tip);
     QStringList choices = item.searchSettingItem->choices.split(',', Qt::SkipEmptyParts);
@@ -183,6 +189,7 @@ void ScriptSearchOptionPanel::makeCheckListItem(ScriptSearchOptionPanel::OptionI
     QHBoxLayout *hLayout = new QHBoxLayout(container);
     QLabel *tip = new QLabel(item.searchSettingItem->title, container);
     tip->setToolTip(item.searchSettingItem->description);
+    tip->setOpenExternalLinks(true);
     hLayout->setContentsMargins(0, 0, 0, 0);
     hLayout->addWidget(tip);
     QStringList choices = item.searchSettingItem->choices.split(',', Qt::SkipEmptyParts);
@@ -212,4 +219,14 @@ void ScriptSearchOptionPanel::makeCheckListItem(ScriptSearchOptionPanel::OptionI
         item.val = vals.join(',');
         this->optionChanged = true;
     });
+}
+
+void ScriptSearchOptionPanel::makeLabelItem(ScriptSearchOptionPanel::OptionItem &item)
+{
+    QLabel *label = new QLabel(item.searchSettingItem->title, this);
+    layout()->addWidget(label);
+    item.widget.reset(label);
+    item.val = item.searchSettingItem->value;
+    label->setToolTip(item.searchSettingItem->description);
+    label->setOpenExternalLinks(true);
 }
