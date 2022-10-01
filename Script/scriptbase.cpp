@@ -393,9 +393,9 @@ QString ScriptBase::loadMeta(const QString &scriptPath)
     scriptMeta["time"] = QString::number(scriptFileInfo.fileTime(QFile::FileModificationTime).toSecsSinceEpoch());
     if(!scriptMeta.contains("id")) scriptMeta["id"] = scriptMeta["path"];
     if(!scriptMeta.contains("name")) scriptMeta["name"] = scriptFileInfo.baseName();
-    if(scriptMeta.contains("minKikoVersion"))
+    if(scriptMeta.contains("min_kiko"))
     {
-        QStringList minVer(scriptMeta["minKikoVersion"].split('.', Qt::SkipEmptyParts));
+        QStringList minVer(scriptMeta["min_kiko"].split('.', Qt::SkipEmptyParts));
         QStringList curVer(QString(GlobalObjects::kikoVersion).split('.', Qt::SkipEmptyParts));
         bool versionMismatch = false;
         if(minVer.size() == curVer.size())
@@ -417,7 +417,7 @@ QString ScriptBase::loadMeta(const QString &scriptPath)
         }
         if(versionMismatch)
         {
-            errInfo = QString("Script Version Mismatch, min: %1, cur: %2").arg(scriptMeta["minKikoVersion"], GlobalObjects::kikoVersion);
+            errInfo = QString("Script Version Mismatch, min: %1, cur: %2").arg(scriptMeta["min_kiko"], GlobalObjects::kikoVersion);
         }
     }
     return errInfo;

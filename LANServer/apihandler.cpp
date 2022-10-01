@@ -8,6 +8,7 @@
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Danmu/danmupool.h"
 #include "Play/Danmu/Provider/localprovider.h"
+#include "Play/Danmu/blocker.h"
 #include "Script/scriptmanager.h"
 #include "Script/danmuscript.h"
 #include "MediaLibrary/animeworker.h"
@@ -214,6 +215,7 @@ void APIHandler::apiLocalDanmu(stefanfrings::HttpRequest &request, stefanfrings:
     {
         QVector<DanmuComment *> tmplist;
         LocalProvider::LoadXmlDanmuFile(danmuFile, tmplist);
+        GlobalObjects::blocker->checkDanmu(tmplist.begin(), tmplist.end(), false);
         resposeObj=
         {
             {"comment", Pool::exportJson(tmplist, false)},

@@ -18,6 +18,7 @@
  - 支持批量管理弹幕池、弹幕时间轴调整，更好地处理本地视频和网站上的视频时长不一致的情况
  - 强大的资料库功能，支持通过多种方式记录并组织你看过的动画，通过脚本扩展可以支持更多信息来源
  - 局域网服务，你可以通过网页在其他设备上观看，现在还有[Android端](https://github.com/KikoPlayProject/KikoPlay-Android-LAN)可供选择
+ - DLNA功能支持投屏到其他设备，也可以作为媒体服务器供其他设备访问
  - 集成每日放送、资源搜索、aria2下载、自动下载等功能，在KikoPlay里即可完成下载、观看、管理等全部操作
  - .........
 
@@ -48,7 +49,7 @@ macOS使用Homebrew包管理器：https://github.com/KikoPlayProject/Homebrew-Ki
 
 ### cmake编译
 
-关于cmake编译请参见[这里](cmake_build.md)
+关于cmake编译请参见[这里](cmake_build.md) （cmake编译方法为其他网友提供，随着版本更新可能失效，需要用户自行调整）
 
 
 ## 下载
