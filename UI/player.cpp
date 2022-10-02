@@ -943,6 +943,7 @@ void PlayerWindow::setupDanmuSettingPage()
     QLabel *displayAreaLabel=new QLabel(tr("Display Area"), pageGeneral);
     displayAreaSlider = new OptionSlider(pageGeneral);
     displayAreaSlider->setLabels({tr("1/4"), tr("1/2"), tr("3/4"), tr("Full")});
+    displayAreaSlider->setValue(3);
     QObject::connect(displayAreaSlider, &OptionSlider::valueChanged, [](int val){
         GlobalObjects::danmuRender->setDisplayArea((val + 1.0f) / 4.0f);
     });
