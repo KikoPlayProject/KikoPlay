@@ -90,7 +90,7 @@ QList<const PlayListItem *> PlayList::getSiblings(const PlayListItem *item, bool
     {
         for(PlayListItem *sibling:*item->parent->children)
         {
-            if(!sibling->path.isEmpty() && (!sameAnime || sibling->animeTitle==item->animeTitle)) siblings<<sibling;
+            if(!sibling->children && !sibling->path.isEmpty() && (!sameAnime || sibling->animeTitle==item->animeTitle)) siblings<<sibling;
         }
     }
     return siblings;
