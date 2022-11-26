@@ -51,10 +51,10 @@ public:
     };
     bool settingHasGroup() const {return hasGroup;}
 public:
-    inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const;
-    inline virtual QModelIndex parent(const QModelIndex &index) const;
-    inline virtual int rowCount(const QModelIndex &parent) const;
-    inline virtual int columnCount(const QModelIndex &) const{return (int)Columns::NONE;}
+    virtual QModelIndex index(int row, int column, const QModelIndex &parent) const;
+    virtual QModelIndex parent(const QModelIndex &index) const;
+    virtual int rowCount(const QModelIndex &parent) const;
+    virtual int columnCount(const QModelIndex &) const{return (int)Columns::NONE;}
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
