@@ -43,6 +43,10 @@ namespace  {
     const char *mt_db_names[]={"Comment_M", "Bangumi_M","Download_M"};
     const char *wt_db_names[]={"Comment_W", "Bangumi_W","Download_W"};
 }
+
+constexpr const char *GlobalObjects::normalFont;
+constexpr const char *GlobalObjects::kikoVersion;
+
 void GlobalObjects::init()
 {
 	dataPath = QCoreApplication::applicationDirPath() + "/data/";
