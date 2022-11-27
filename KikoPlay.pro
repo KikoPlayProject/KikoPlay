@@ -29,6 +29,14 @@ DEFINES += ZLIB_WINAPI
 
 CONFIG += C++11
 
+CONFIG += debug_and_release
+CONFIG(debug, debug|release) {
+    TARGET = $${TARGET}.debug
+#    QMAKE_CXX_FLAGS_MT_DBG += /Od /D_DEBUG
+} else {
+    TARGET = $${TARGET}
+}
+
 SOURCES += \
     Common/counter.cpp \
     Common/logger.cpp \

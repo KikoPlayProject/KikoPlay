@@ -5,6 +5,9 @@
 #include "peerid.h"
 #include "util.h"
 #define PiecesNumRole Qt::UserRole+1
+
+constexpr const int PeerModel::ProgressCluster;
+
 PeerModel::PeerModel(QObject *parent) : QAbstractItemModel(parent)
 {
 
