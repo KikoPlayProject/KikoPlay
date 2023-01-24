@@ -9,7 +9,6 @@
 #include <mpv/qthelper.hpp>
 #include "Play/Danmu/common.h"
 #include "mpvpreview.h"
-class DanmuRender;
 class MPVPlayer : public QOpenGLWidget
 {
     Q_OBJECT

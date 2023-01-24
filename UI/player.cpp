@@ -12,10 +12,12 @@
 #include <QMenu>
 #include <QGraphicsOpacityEffect>
 #include <QButtonGroup>
+#include <QListView>
 
 #include "widgets/clickslider.h"
 #include "widgets/danmustatiswidget.h"
 #include "widgets/optionslider.h"
+#include "widgets/smoothscrollbar.h"
 #include "capture.h"
 #include "mediainfo.h"
 #include "settings.h"
@@ -24,6 +26,8 @@
 #include "gifcapture.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/Render/danmurender.h"
+#include "Play/Danmu/Render/livedanmulistmodel.h"
+#include "Play/Danmu/Render/livedanmuitemdelegate.h"
 #include "Play/Danmu/Provider/localprovider.h"
 #include "Play/Danmu/danmupool.h"
 #include "Play/Danmu/Manager/pool.h"
@@ -543,10 +547,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     GlobalObjects::mpvplayer->setParent(centralWidget);
     setContentsMargins(0,0,0,0);
     GlobalObjects::mpvplayer->setIccProfileOption();
-    QStackedLayout *playerSLayout = new QStackedLayout(centralWidget);
-    playerSLayout->setStackingMode(QStackedLayout::StackAll);
-    playerSLayout->setContentsMargins(0,0,0,0);
-    playerSLayout->setSpacing(0);
+
     contralContainer->setMouseTracking(true);
     QVBoxLayout *contralVLayout = new QVBoxLayout(contralContainer);
     contralVLayout->setContentsMargins(0,0,0,0);
@@ -556,9 +557,28 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     contralVLayout->addWidget(miniProgress);
     contralVLayout->addWidget(danmuStatisBar);
     contralVLayout->addWidget(playControlPanel);
-    playerSLayout->addWidget(contralContainer);
-    playerSLayout->addWidget(GlobalObjects::mpvplayer);
 
+    QWidget *liveDanmuContainer = new QWidget(centralWidget);
+    liveDanmuList = new QListView(liveDanmuContainer);
+    liveDanmuList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    liveDanmuList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    liveDanmuList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    liveDanmuList->setObjectName(QStringLiteral("LiveDanmuList"));
+    liveDanmuList->setVerticalScrollBar(new SmoothScrollBar(liveDanmuList));
+    liveDanmuList->setModel(GlobalObjects::danmuRender->liveDanmuModel());
+    liveDanmuList->setItemDelegate(new LiveDanmuItemDelegate(this));
+    QVBoxLayout *liveVLayout = new QVBoxLayout(liveDanmuContainer);
+    liveVLayout->addStretch(1);
+    liveVLayout->addWidget(liveDanmuList, 0, Qt::AlignLeft);
+    liveDanmuList->hide();
+
+    QStackedLayout *playerSLayout = new QStackedLayout(centralWidget);
+    playerSLayout->setStackingMode(QStackedLayout::StackAll);
+    playerSLayout->setContentsMargins(0,0,0,0);
+    playerSLayout->setSpacing(0);
+    playerSLayout->addWidget(contralContainer);
+    playerSLayout->addWidget(liveDanmuContainer);
+    playerSLayout->addWidget(GlobalObjects::mpvplayer);
 
     setupDanmuSettingPage();
     setupPlaySettingPage();
@@ -1027,38 +1047,9 @@ void PlayerWindow::setupDanmuSettingPage()
     });
     enlargeMerged->setChecked(GlobalObjects::appSetting->value("Play/EnlargeMerged",true).toBool());
 
-    QLabel *mergeIntervalLabel=new QLabel(tr("Merge Interval(s)"),pageAdvanced);
-    mergeInterval=new QSpinBox(pageAdvanced);
-    mergeInterval->setRange(1,60);
-    mergeInterval->setAlignment(Qt::AlignCenter);
-    mergeInterval->setObjectName(QStringLiteral("Delay"));
-    QObject::connect(mergeInterval,&QSpinBox::editingFinished,this,[this](){
-        GlobalObjects::danmuPool->setMergeInterval(mergeInterval->value()*1000);
-    });
-    mergeInterval->setValue(GlobalObjects::appSetting->value("Play/MergeInterval",15).toInt());
-    GlobalObjects::danmuPool->setMergeInterval(mergeInterval->value()*1000);
-
-    QLabel *contentSimLabel=new QLabel(tr("MaxDiff Char Count"),pageAdvanced);
-    contentSimCount=new QSpinBox(pageAdvanced);
-    contentSimCount->setRange(1,11);
-    contentSimCount->setAlignment(Qt::AlignCenter);
-    contentSimCount->setObjectName(QStringLiteral("Delay"));
-    QObject::connect(contentSimCount,&QSpinBox::editingFinished,this,[this](){
-        GlobalObjects::danmuPool->setMaxUnSimCount(contentSimCount->value());
-    });
-    contentSimCount->setValue(GlobalObjects::appSetting->value("Play/MaxDiffCount",4).toInt());
-    GlobalObjects::danmuPool->setMaxUnSimCount(contentSimCount->value());
-
-    QLabel *minMergeCountLabel=new QLabel(tr("Min Similar Danmu Count"),pageAdvanced);
-    minMergeCount=new QSpinBox(pageAdvanced);
-    minMergeCount->setAlignment(Qt::AlignCenter);
-    minMergeCount->setRange(1,11);
-    minMergeCount->setObjectName(QStringLiteral("Delay"));
-    QObject::connect(minMergeCount,&QSpinBox::editingFinished,this,[this](){
-        GlobalObjects::danmuPool->setMinMergeCount(minMergeCount->value());
-    });
-    minMergeCount->setValue(GlobalObjects::appSetting->value("Play/MinSimCount",3).toInt());
-    GlobalObjects::danmuPool->setMinMergeCount(minMergeCount->value());
+    GlobalObjects::danmuPool->setMergeInterval(GlobalObjects::appSetting->value("Play/MergeInterval", 20).toInt() * 1000);
+    GlobalObjects::danmuPool->setMaxUnSimCount(GlobalObjects::appSetting->value("Play/MaxDiffCount", 4).toInt());
+    GlobalObjects::danmuPool->setMinMergeCount(GlobalObjects::appSetting->value("Play/MinSimCount", 2).toInt());
 
     QLabel *mergeCountTipLabel=new QLabel(tr("Merge Count Tip Position"),pageAdvanced);
     mergeCountTipPos=new QComboBox(pageAdvanced);
@@ -1068,6 +1059,64 @@ void PlayerWindow::setupDanmuSettingPage()
     });
     mergeCountTipPos->setCurrentIndex(GlobalObjects::appSetting->value("Play/MergeCountTip",1).toInt());
 
+    enableLiveMode = new QCheckBox(tr("Enable Live Mode"), pageAdvanced);
+    QObject::connect(enableLiveMode,&QCheckBox::stateChanged,[=](int state){
+        GlobalObjects::danmuRender->setLiveMode(state == Qt::Checked, true);
+        if(GlobalObjects::playlist->getCurrentItem())
+        {
+            liveDanmuList->setVisible(state == Qt::Checked);
+        }
+    });
+    enableLiveMode->setChecked(GlobalObjects::appSetting->value("Play/EnableLiveMode", false).toBool());
+
+    liveModeOnlyRolling = new QCheckBox(tr("Live Only Rolling"), pageAdvanced);
+    QObject::connect(liveModeOnlyRolling,&QCheckBox::stateChanged,[=](int state){
+        GlobalObjects::danmuRender->setLiveMode(enableLiveMode->isChecked(), state == Qt::Checked);
+    });
+    liveModeOnlyRolling->setChecked(GlobalObjects::appSetting->value("Play/LiveModeOnlyRolling", true).toBool());
+    GlobalObjects::danmuRender->setLiveMode(enableLiveMode->isChecked(), liveModeOnlyRolling->isChecked());
+
+    liveDanmuAlignRight = new QCheckBox(tr("Live Align Right"), pageAdvanced);
+    QObject::connect(liveDanmuAlignRight,&QCheckBox::stateChanged,[=](int state){
+        if(state == Qt::Checked)
+        {
+            GlobalObjects::danmuRender->liveDanmuModel()->setAlignment(Qt::AlignRight);
+            liveDanmuList->parentWidget()->layout()->setAlignment(liveDanmuList, Qt::AlignRight);
+        }
+        else
+        {
+            GlobalObjects::danmuRender->liveDanmuModel()->setAlignment(Qt::AlignLeft);
+            liveDanmuList->parentWidget()->layout()->setAlignment(liveDanmuList, Qt::AlignLeft);
+        }
+    });
+    liveDanmuAlignRight->setChecked(GlobalObjects::appSetting->value("Play/LiveModeAlignRight", false).toBool());
+
+    liveShowSender = new QCheckBox(tr("Live Show Sender"), pageAdvanced);
+    QObject::connect(liveShowSender, &QCheckBox::stateChanged, [=](int state){
+        GlobalObjects::danmuRender->liveDanmuModel()->setShowSender(state == Qt::Checked);
+    });
+    liveShowSender->setChecked(GlobalObjects::appSetting->value("Play/LiveShowSender", true).toBool());
+    GlobalObjects::danmuRender->liveDanmuModel()->setShowSender(liveShowSender->isChecked());
+
+    QLabel *liveDanmuSizeLable = new QLabel(tr("Live Danmu Size"), pageAdvanced);
+    liveSizeSlider = new QSlider(Qt::Horizontal, pageAdvanced);
+    liveSizeSlider->setObjectName(QStringLiteral("PopupPageSlider"));
+    liveSizeSlider->setRange(6, 20);
+    QObject::connect(liveSizeSlider, &QSlider::valueChanged, [this](int val){
+        GlobalObjects::danmuRender->liveDanmuModel()->setFontSize(val);
+        liveSizeSlider->setToolTip(QString::number(val));
+    });
+    liveSizeSlider->setValue(GlobalObjects::appSetting->value("Play/LiveDanmuFontSize", 10).toInt());
+
+    QLabel *liveVRangeLable = new QLabel(tr("Live Vertical Range"), pageAdvanced);
+    liveVRangeSlider = new QSlider(Qt::Horizontal, pageAdvanced);
+    liveVRangeSlider->setObjectName(QStringLiteral("PopupPageSlider"));
+    liveVRangeSlider->setRange(20, 95);
+    QObject::connect(liveVRangeSlider, &QSlider::valueChanged, [this](int val){
+        liveDanmuList->setFixedHeight(static_cast<float>(val) / 100 * height());
+        liveVRangeSlider->setToolTip(QString::number(val));
+    });
+    liveVRangeSlider->setValue(GlobalObjects::appSetting->value("Play/LiveVRange", 40).toInt());
 
     QGridLayout *generalGLayout=new QGridLayout(pageGeneral);
     generalGLayout->setContentsMargins(0,0,0,0);
@@ -1098,7 +1147,6 @@ void PlayerWindow::setupDanmuSettingPage()
     subProtectHLayout->addStretch(1);
     generalGLayout->addItem(subProtectHLayout, 5, 1);
 
-
     QGridLayout *appearanceGLayout=new QGridLayout(pageAppearance);
     appearanceGLayout->setContentsMargins(0,0,0,0);
     appearanceGLayout->setColumnStretch(0,1);
@@ -1121,14 +1169,16 @@ void PlayerWindow::setupDanmuSettingPage()
     mergeGLayout->addWidget(enableAnalyze,0,0);
     mergeGLayout->addWidget(enableMerge,1,0);
     mergeGLayout->addWidget(enlargeMerged,2,0);
-    mergeGLayout->addWidget(mergeIntervalLabel,3,0);
-    mergeGLayout->addWidget(mergeInterval,4,0);
-    mergeGLayout->addWidget(contentSimLabel,0,1);
-    mergeGLayout->addWidget(contentSimCount,1,1);
-    mergeGLayout->addWidget(minMergeCountLabel,2,1);
-    mergeGLayout->addWidget(minMergeCount,3,1);
-    mergeGLayout->addWidget(mergeCountTipLabel,4,1);
-    mergeGLayout->addWidget(mergeCountTipPos,5,1);
+    mergeGLayout->addWidget(mergeCountTipLabel, 3, 0);
+    mergeGLayout->addWidget(mergeCountTipPos, 4, 0);
+    mergeGLayout->addWidget(enableLiveMode, 0, 1);
+    mergeGLayout->addWidget(liveModeOnlyRolling, 1, 1);
+    mergeGLayout->addWidget(liveDanmuAlignRight, 2, 1);
+    mergeGLayout->addWidget(liveShowSender, 3, 1);
+    mergeGLayout->addWidget(liveDanmuSizeLable, 4, 1);
+    mergeGLayout->addWidget(liveSizeSlider, 5, 1);
+    mergeGLayout->addWidget(liveVRangeLable, 5, 0);
+    mergeGLayout->addWidget(liveVRangeSlider, 6, 0);
 
     danmuSettingSLayout->setContentsMargins(4,4,4,4);
     danmuSettingSLayout->addWidget(pageGeneral);
@@ -1606,7 +1656,9 @@ void PlayerWindow::setupSignals()
             titleLabel->setText(mediaTitle.isEmpty()?currentItem->title:mediaTitle);
         }
         else
+        {
             titleLabel->setText(QString("%1-%2").arg(currentItem->animeTitle,currentItem->title));
+        }
         if(currentItem->hasPool())
         {
             GlobalObjects::danmuPool->setPoolID(currentItem->poolID);
@@ -1626,6 +1678,10 @@ void PlayerWindow::setupSignals()
             {
                 GlobalObjects::danmuPool->addLocalDanmuFile(danmuFile);
             }
+        }
+        if(enableLiveMode->isChecked())
+        {
+            liveDanmuList->show();
         }
         hasExternalAudio = false;
         hasExternalSub = false;
@@ -1767,6 +1823,7 @@ void PlayerWindow::setupSignals()
             GlobalObjects::mpvplayer->update();
             playerContent->raise();
             playerContent->show();
+            liveDanmuList->hide();
             break;
         }
         }
@@ -1956,6 +2013,10 @@ void PlayerWindow::setupSignals()
         mediaInfoDialog.move(mapToGlobal(geo.topLeft()));
         mediaInfoDialog.exec();
     });
+    QObject::connect(GlobalObjects::danmuRender->liveDanmuModel(), &LiveDanmuListModel::danmuAppend, this, [this](){
+        SmoothScrollBar *liveDanmuVScroll = static_cast<SmoothScrollBar*>(liveDanmuList->verticalScrollBar());
+        liveDanmuVScroll->setValue(liveDanmuVScroll->maximum());
+    }, Qt::QueuedConnection);
 }
 
 void PlayerWindow::adjustPlayerSize(int percent)
@@ -2190,6 +2251,7 @@ void PlayerWindow::resizeEvent(QResizeEvent *)
     int y = height() - 20*logicalDpiY()/96 - (miniModeOn? miniProgress->height() : playControlPanel->height());
     static_cast<InfoTips *>(playInfo)->setBottom(y);
     static_cast<InfoTips *>(playInfo)->updatePosition();
+    liveDanmuList->setFixedSize(width() * 0.45, height() * static_cast<float>(liveVRangeSlider->value()) / 100);
 }
 
 void PlayerWindow::leaveEvent(QEvent *)
@@ -2385,8 +2447,13 @@ void PlayerWindow::keyReleaseEvent(QKeyEvent *event)
 
 void PlayerWindow::contextMenuEvent(QContextMenuEvent *)
 {
-    currentDanmu=GlobalObjects::danmuRender->danmuAt(mapFromGlobal(QCursor::pos()));
-    if(currentDanmu.isNull())return;
+    currentDanmu = GlobalObjects::danmuRender->danmuAt(mapFromGlobal(QCursor::pos()));
+    if(!currentDanmu && liveDanmuList->isVisible())
+    {
+        QModelIndex index = liveDanmuList->indexAt(liveDanmuList->mapFromGlobal(QCursor::pos()));
+        currentDanmu = GlobalObjects::danmuRender->liveDanmuModel()->getDanmu(index);
+    }
+    if(currentDanmu.isNull()) return;
     ctxText->setText(currentDanmu->text);
     ctxBlockUser->setText(tr("Block User %1").arg(currentDanmu->sender));
     contexMenu->exec(QCursor::pos());
@@ -2397,7 +2464,13 @@ void PlayerWindow::closeEvent(QCloseEvent *)
     setPlayTime();
     GlobalObjects::appSetting->beginGroup("Play");
     GlobalObjects::appSetting->setValue("ShowPreview",showPreview->isChecked());
-    GlobalObjects::appSetting->setValue("AutoLoadLocalDanmu",autoLoadDanmuCheck->isChecked());
+    GlobalObjects::appSetting->setValue("AutoLoadLocalDanmu",autoLoadDanmuCheck->isChecked());    
+    GlobalObjects::appSetting->setValue("EnableLiveMode", enableLiveMode->isChecked());
+    GlobalObjects::appSetting->setValue("LiveModeOnlyRolling", liveModeOnlyRolling->isChecked());
+    GlobalObjects::appSetting->setValue("LiveModeAlignRight", liveDanmuAlignRight->isChecked());
+    GlobalObjects::appSetting->setValue("LiveShowSender", liveShowSender->isChecked());
+    GlobalObjects::appSetting->setValue("LiveDanmuFontSize", liveSizeSlider->value());
+    GlobalObjects::appSetting->setValue("LiveVRange", liveVRangeSlider->value());
     GlobalObjects::appSetting->setValue("HideDanmu",danmuSwitch->isChecked());
     GlobalObjects::appSetting->setValue("HideRolling",hideRollingDanmu->isChecked());
     GlobalObjects::appSetting->setValue("HideTop",hideTopDanmu->isChecked());
@@ -2423,9 +2496,6 @@ void PlayerWindow::closeEvent(QCloseEvent *)
     GlobalObjects::appSetting->setValue("EnableMerge",enableMerge->isChecked());
     GlobalObjects::appSetting->setValue("EnableAnalyze", enableAnalyze->isChecked());
     GlobalObjects::appSetting->setValue("EnlargeMerged",enlargeMerged->isChecked());
-    GlobalObjects::appSetting->setValue("MergeInterval",mergeInterval->value());
-    GlobalObjects::appSetting->setValue("MaxDiffCount",contentSimCount->value());
-    GlobalObjects::appSetting->setValue("MinSimCount",minMergeCount->value());
     GlobalObjects::appSetting->setValue("MergeCountTip",mergeCountTipPos->currentIndex());
     GlobalObjects::appSetting->setValue("Brightness",brightnessSlider->value());
     GlobalObjects::appSetting->setValue("Contrast",contrastSlider->value());

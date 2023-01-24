@@ -18,6 +18,7 @@ class QSlider;
 class ClickSlider;
 class DanmuLaunch;
 class OptionSlider;
+class QListView;
 class PlayerWindow : public QWidget, public NotifyInterface
 {
     Q_OBJECT
@@ -35,6 +36,7 @@ private:
      QPushButton *playListCollapseButton;
      QLabel *timeInfoTip, *previewLabel;
      QWidget *progressInfo;
+     QListView *liveDanmuList;
      QTimer previewTimer;
      bool isShowPreview;
      bool autoHideControlPanel;
@@ -66,13 +68,15 @@ private:
      QWidget *danmuSettingPage,*playSettingPage;
      QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold,
                 *bottomSubtitleProtect,*topSubtitleProtect,*randomSize,
-                *enableAnalyze, *enableMerge,*enlargeMerged, *showPreview, *autoLoadDanmuCheck;
+                *enableAnalyze, *enableMerge,*enlargeMerged, *showPreview, *autoLoadDanmuCheck,
+                *enableLiveMode, *liveModeOnlyRolling, *liveDanmuAlignRight, *liveShowSender;
      QSpinBox *mergeInterval,*contentSimCount,*minMergeCount;
      QFontComboBox *fontFamilyCombo;
      QComboBox *aspectRatioCombo,*playSpeedCombo,*clickBehaviorCombo,*dbClickBehaviorCombo,
                 *mergeCountTipPos;
      QSlider *speedSlider,*alphaSlider,*strokeWidthSlider,*fontSizeSlider,*maxDanmuCount,
-             *brightnessSlider, *contrastSlider, *saturationSlider, *gammaSlider, *hueSlider, *sharpenSlider;
+             *brightnessSlider, *contrastSlider, *saturationSlider, *gammaSlider, *hueSlider, *sharpenSlider,
+             *liveSizeSlider, *liveVRangeSlider;
      OptionSlider *denseLevel, *displayAreaSlider;
      bool isFullscreen;
      int resizePercent;

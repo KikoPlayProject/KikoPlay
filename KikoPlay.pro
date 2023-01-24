@@ -70,6 +70,8 @@ SOURCES += \
     MediaLibrary/animeprovider.cpp \
     MediaLibrary/episodeitem.cpp \
     MediaLibrary/tagnode.cpp \
+    Play/Danmu/Render/livedanmuitemdelegate.cpp \
+    Play/Danmu/Render/livedanmulistmodel.cpp \
     Play/Danmu/danmuprovider.cpp \
     Play/Danmu/eventanalyzer.cpp \
     Play/Video/mpvpreview.cpp \
@@ -127,6 +129,7 @@ SOURCES += \
     UI/widgets/loadingicon.cpp \
     UI/widgets/optionslider.cpp \
     UI/widgets/scriptsearchoptionpanel.cpp \
+    UI/widgets/smoothscrollbar.cpp \
         main.cpp \
     UI/mainwindow.cpp \
     UI/framelesswindow.cpp \
@@ -224,6 +227,8 @@ HEADERS += \
     MediaLibrary/animeprovider.h \
     MediaLibrary/episodeitem.h \
     MediaLibrary/tagnode.h \
+    Play/Danmu/Render/livedanmuitemdelegate.h \
+    Play/Danmu/Render/livedanmulistmodel.h \
     Play/Danmu/danmuprovider.h \
     Play/Danmu/danmuviewmodel.h \
     Play/Danmu/eventanalyzer.h \
@@ -290,6 +295,7 @@ HEADERS += \
     UI/widgets/loadingicon.h \
     UI/widgets/optionslider.h \
     UI/widgets/scriptsearchoptionpanel.h \
+    UI/widgets/smoothscrollbar.h \
     globalobjects.h \
     Play/Playlist/playlist.h \
     Play/Video/mpvplayer.h \

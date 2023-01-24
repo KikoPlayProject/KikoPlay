@@ -219,7 +219,7 @@ QWidget#PlayInfoBar{
     background-color:rgb(50,50,50);
 }
 QWidget#PopupPage{
-    background-color: rgba(@ThemeColorD5,120);
+    background-color: rgba(@ThemeColorD5,150);
     border:1px solid #9d9d9d;
 }
 QWidget#PopupPage QWidget{
@@ -464,7 +464,7 @@ QSlider#PopupPageSlider::groove:horizontal {
 QSlider#PopupPageSlider::handle:horizontal {
     height: 18px;
     width:18px;
-    border-image: url(:/res/images/slider-normal.png);
+    border-image: url(:/res/images/sliderThumb.png);
     margin-top:-7px;
     margin-bottom:-7px;
 }
@@ -1588,7 +1588,7 @@ QListView#AnimeDetailCharacterList{
 }
 QListWidget#SettingPageList {
     show-decoration-selected: 1;
-    outline:0px;f
+    outline:0px;
 }
 QListWidget#SettingPageList::item {
     border: none;
@@ -1602,6 +1602,10 @@ QListWidget#SettingPageList::item:hover {
 QListWidget#SettingPageList::item:selected{
     background: rgb(@ThemeColorL1);
     color: #ffffff;
+}
+QListView#LiveDanmuList {
+    border-style:none;
+    background:transparent;
 }
 
 

@@ -482,7 +482,7 @@ QSlider#PopupPageSlider::groove:horizontal {
 QSlider#PopupPageSlider::handle:horizontal {
     height: 18px;
     width:18px;
-    border-image: url(:/res/images/slider-normal.png);
+    border-image: url(:/res/images/sliderThumb.png);
     margin-top:-7px;
     margin-bottom:-7px;
 }
@@ -1574,11 +1574,11 @@ QListView#captureView,QListView#captureImageView{
     background: transparent;
     color: rgb(240,240,240);
 }
-QProgressBar#DownloadToolProgress {
-    border: none;
-    text-align: center;
-    background-color: transparent;
+QListView#LiveDanmuList {
+    border-style:none;
+    background:transparent;
 }
+
 
 /* ------------------- QProgressBar ------------------- */
 QProgressBar {
@@ -1589,6 +1589,12 @@ QProgressBar {
 QProgressBar::chunk {
     background-color: #25b3df;
 }
+QProgressBar#DownloadToolProgress {
+    border: none;
+    text-align: center;
+    background-color: transparent;
+}
+
 
 
 /* --------------------QTab-------------------------------*/

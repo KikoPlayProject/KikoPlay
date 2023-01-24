@@ -463,7 +463,7 @@ QSlider#PopupPageSlider::groove:horizontal {
 QSlider#PopupPageSlider::handle:horizontal {
     height: 18px;
     width:18px;
-    border-image: url(:/res/images/slider-normal.png);
+    border-image: url(:/res/images/sliderThumb.png);
     margin-top:-7px;
     margin-bottom:-7px;
 }
@@ -1610,6 +1610,10 @@ QListView#AnimeDetailCharacterList{
     background-color: rgba(255,255,255,40);
     color: rgb(240,240,240);
     alternate-background-color: transparent;
+}
+QListView#LiveDanmuList {
+    border-style:none;
+    background:transparent;
 }
 
 
