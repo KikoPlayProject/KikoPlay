@@ -46,23 +46,23 @@
 <context>
     <name>AddDanmu</name>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="87"/>
+        <location filename="../../UI/adddanmu.cpp" line="88"/>
         <source>Add Danmu</source>
         <translation>添加弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="101"/>
-        <location filename="../../UI/adddanmu.cpp" line="304"/>
+        <location filename="../../UI/adddanmu.cpp" line="102"/>
+        <location filename="../../UI/adddanmu.cpp" line="319"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="102"/>
+        <location filename="../../UI/adddanmu.cpp" line="103"/>
         <source>URL</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="103"/>
+        <location filename="../../UI/adddanmu.cpp" line="104"/>
         <source>Selected</source>
         <translation>已选弹幕</translation>
     </message>
@@ -71,44 +71,58 @@
         <translation type="obsolete">不支持这种URL</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="231"/>
-        <location filename="../../UI/adddanmu.cpp" line="256"/>
+        <location filename="../../UI/adddanmu.cpp" line="233"/>
+        <location filename="../../UI/adddanmu.cpp" line="259"/>
         <source>Pre-filter %1 Danmu</source>
         <translation>预过滤掉%1条弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="261"/>
-        <location filename="../../UI/adddanmu.cpp" line="266"/>
+        <location filename="../../UI/adddanmu.cpp" line="264"/>
+        <location filename="../../UI/adddanmu.cpp" line="270"/>
         <source>Selected(%1)</source>
         <translation>已选弹幕(%1)</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="330"/>
         <source>Input URL:</source>
-        <translation>输入URL：</translation>
+        <translation type="vanished">输入URL：</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="335"/>
+        <location filename="../../UI/adddanmu.cpp" line="285"/>
+        <source>Adding: %1</source>
+        <translation>正在添加：%1</translation>
+    </message>
+    <message>
+        <location filename="../../UI/adddanmu.cpp" line="296"/>
+        <source>Add %1 URL(s)</source>
+        <translation>添加了 %1 条URL</translation>
+    </message>
+    <message>
+        <location filename="../../UI/adddanmu.cpp" line="346"/>
+        <source>One URL per line</source>
+        <translation>每行一条URL</translation>
+    </message>
+    <message>
+        <location filename="../../UI/adddanmu.cpp" line="348"/>
         <source>Add URL</source>
         <translation>添加URL</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="340"/>
+        <location filename="../../UI/adddanmu.cpp" line="353"/>
         <source>Supported URL:</source>
         <translation>支持的URL类型：</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="362"/>
+        <location filename="../../UI/adddanmu.cpp" line="374"/>
         <source>Select danmu you want to add:</source>
         <translation>选择你想添加的弹幕：</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="382"/>
+        <location filename="../../UI/adddanmu.cpp" line="394"/>
         <source>View Danmu</source>
         <translation>查看弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="390"/>
+        <location filename="../../UI/adddanmu.cpp" line="402"/>
         <source>Set DanmuPool Sequentially From Current</source>
         <translation>从当前项顺序设置弹幕池</translation>
     </message>
@@ -1796,27 +1810,27 @@
 <context>
     <name>DanmuItemModel</name>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="580"/>
+        <location filename="../../UI/adddanmu.cpp" line="592"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="580"/>
+        <location filename="../../UI/adddanmu.cpp" line="592"/>
         <source>DanmuCount</source>
         <translation>弹幕数量</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="580"/>
+        <location filename="../../UI/adddanmu.cpp" line="592"/>
         <source>Source</source>
         <translation>来源</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="580"/>
+        <location filename="../../UI/adddanmu.cpp" line="592"/>
         <source>Duration</source>
         <translation>时长</translation>
     </message>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="580"/>
+        <location filename="../../UI/adddanmu.cpp" line="592"/>
         <source>DanmuPool</source>
         <translation>弹幕池</translation>
     </message>
@@ -5080,7 +5094,7 @@ Folder Collection
     </message>
     <message>
         <location filename="../../UI/player.cpp" line="2380"/>
-        <location filename="../../UI/player.cpp" line="2591"/>
+        <location filename="../../UI/player.cpp" line="2596"/>
         <source>Volume: %0</source>
         <translation>音量：%0</translation>
     </message>
@@ -5095,22 +5109,22 @@ Folder Collection
         <translation>逐帧播放：向后</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="2453"/>
+        <location filename="../../UI/player.cpp" line="2458"/>
         <source>Block User %1</source>
         <translation>屏蔽用户 %1</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="2532"/>
+        <location filename="../../UI/player.cpp" line="2537"/>
         <source>Subtitle has been added</source>
         <translation>已添加字幕</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="2545"/>
+        <location filename="../../UI/player.cpp" line="2550"/>
         <source>Danmu has been added</source>
         <translation>已添加弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/player.cpp" line="2549"/>
+        <location filename="../../UI/player.cpp" line="2554"/>
         <source>Add Faied: Pool is busy</source>
         <translation>添加失败：弹幕池正忙</translation>
     </message>
@@ -6032,7 +6046,7 @@ Eps: %2
 <context>
     <name>SearchItemWidget</name>
     <message>
-        <location filename="../../UI/adddanmu.cpp" line="495"/>
+        <location filename="../../UI/adddanmu.cpp" line="507"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>

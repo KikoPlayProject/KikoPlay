@@ -10,6 +10,7 @@ class QToolButton;
 class QComboBox;
 class QListWidget;
 class QTreeView;
+class QPlainTextEdit;
 struct PlayListItem;
 class AddDanmu;
 class ScriptSearchOptionPanel;
@@ -113,7 +114,8 @@ public:
     QStringList danmuToPoolList;
 private:
     QToolButton *onlineDanmuPage,*urlDanmuPage,*selectedDanmuPage;
-    QLineEdit *keywordEdit,*urlEdit;
+    QLineEdit *keywordEdit;
+    QPlainTextEdit *urlEdit;
     QPushButton *searchButton, *addUrlButton;
     QComboBox *sourceCombo;
     QListWidget *searchResultWidget;
@@ -126,7 +128,7 @@ private:
     ScriptSearchOptionPanel *scriptOptionPanel;
 
     void search();
-    void addSearchItem(QList<DanmuSource> &sources);
+    int addSearchItem(QList<DanmuSource> &sources);
     void addURL();
     QWidget *setupSearchPage();
     QWidget *setupURLPage();

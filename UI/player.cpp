@@ -565,6 +565,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     liveDanmuList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     liveDanmuList->setObjectName(QStringLiteral("LiveDanmuList"));
     liveDanmuList->setVerticalScrollBar(new SmoothScrollBar(liveDanmuList));
+    liveDanmuList->setResizeMode(QListView::ResizeMode::Adjust);
     liveDanmuList->setModel(GlobalObjects::danmuRender->liveDanmuModel());
     liveDanmuList->setItemDelegate(new LiveDanmuItemDelegate(this));
     QVBoxLayout *liveVLayout = new QVBoxLayout(liveDanmuContainer);
@@ -656,6 +657,8 @@ void PlayerWindow::initActions()
             playInfoPanel->hide();
             playControlPanel->hide();
             danmuStatisBar->hide();
+            danmuSettingPage->hide();
+            playSettingPage->hide();
             emit miniMode(true);
         }
     });
@@ -2252,6 +2255,8 @@ void PlayerWindow::resizeEvent(QResizeEvent *)
     static_cast<InfoTips *>(playInfo)->setBottom(y);
     static_cast<InfoTips *>(playInfo)->updatePosition();
     liveDanmuList->setFixedSize(width() * 0.45, height() * static_cast<float>(liveVRangeSlider->value()) / 100);
+    liveDanmuList->resize(width() * 0.45, height() * static_cast<float>(liveVRangeSlider->value()) / 100);
+    liveDanmuList->scrollToBottom();
 }
 
 void PlayerWindow::leaveEvent(QEvent *)

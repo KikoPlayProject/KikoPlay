@@ -315,6 +315,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(fa
     labelView->setObjectName(QStringLiteral("LabelView"));
     labelView->setProperty("cScrollStyle", true);
     labelView->setAnimated(true);
+    labelView->setMouseTracking(true);
     labelView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
     labelView->header()->hide();
     labelView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

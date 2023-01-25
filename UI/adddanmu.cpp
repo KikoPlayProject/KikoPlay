@@ -10,6 +10,7 @@
 #include <QListWidget>
 #include <QTreeView>
 #include <QTextEdit>
+#include <QPlainTextEdit>
 #include <QHeaderView>
 #include <QButtonGroup>
 #include <QAction>
@@ -214,10 +215,11 @@ void AddDanmu::search()
 }
 
 
-void AddDanmu::addSearchItem(QList<DanmuSource> &sources)
+int AddDanmu::addSearchItem(QList<DanmuSource> &sources)
 {
-    if(sources.empty()) return;
+    if(sources.empty()) return 0;
     ScriptState retState(ScriptState::S_NORM);
+    int succNum = 0;
     if(sources.size() == 1)
     {
         QVector<DanmuComment *> tmplist;
@@ -233,6 +235,7 @@ void AddDanmu::addSearchItem(QList<DanmuSource> &sources)
             src.count = tmplist.count();
             selectedDanmuList.append({src, tmplist});
             danmuItemModel->addItem(src);
+            succNum = 1;
         } else {
             showMessage(ret.info, NM_ERROR | NM_HIDE);
         }
@@ -259,26 +262,38 @@ void AddDanmu::addSearchItem(QList<DanmuSource> &sources)
                     selectedDanmuList.append({src, tmplist});
                     danmuItemModel->addItem(src);
                     selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuList.count()));
+                    ++succNum;
                 }
             }
         }
     }
     selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuList.count()));
+    return succNum;
 }
 
 void AddDanmu::addURL()
 {
-    QString url=urlEdit->text().trimmed();
-    if(url.isEmpty()) return;
+    const QStringList urls = urlEdit->toPlainText().split('\n', Qt::SkipEmptyParts);
+    if(urls.isEmpty()) return;
     addUrlButton->setEnabled(false);
     urlEdit->setEnabled(false);
     beginProcrss();
-    QList<DanmuSource> results;
-    auto ret = GlobalObjects::danmuProvider->getURLInfo(url, results);
-    if(!ret)
-        showMessage(ret.info, NM_ERROR | NM_HIDE);
-    else
-        addSearchItem(results);
+    int addNum = 0;
+    for(const QString &url : urls)
+    {
+        QList<DanmuSource> results;
+        showMessage(tr("Adding: %1").arg(url), NM_PROCESS);
+        auto ret = GlobalObjects::danmuProvider->getURLInfo(url, results);
+        if(!ret)
+        {
+            showMessage(ret.info, NM_ERROR | NM_PROCESS);
+        }
+        else
+        {
+            if(addSearchItem(results) > 0) ++addNum;
+        }
+    }
+    showMessage(tr("Add %1 URL(s)").arg(addNum), NM_HIDE);
     addUrlButton->setEnabled(true);
     urlEdit->setEnabled(true);
     endProcess();
@@ -327,10 +342,8 @@ QWidget *AddDanmu::setupURLPage()
     QWidget *urlPage=new QWidget(this);
     urlPage->setFont(QFont(GlobalObjects::normalFont,10));
 
-    QLabel *tipLabel=new QLabel(tr("Input URL:"),urlPage);
-    tipLabel->setFont(QFont(GlobalObjects::normalFont,12,QFont::Medium));
-
-    urlEdit=new QLineEdit(urlPage);
+    urlEdit = new QPlainTextEdit(urlPage);
+    urlEdit->setPlaceholderText(tr("One URL per line"));
 
     addUrlButton=new QPushButton(tr("Add URL"),urlPage);
     addUrlButton->setMinimumWidth(150);
@@ -345,7 +358,6 @@ QWidget *AddDanmu::setupURLPage()
 
 
     QVBoxLayout *localVLayout=new QVBoxLayout(urlPage);
-    localVLayout->addWidget(tipLabel);
     localVLayout->addWidget(urlEdit);
     localVLayout->addWidget(addUrlButton);
     localVLayout->addSpacing(10);

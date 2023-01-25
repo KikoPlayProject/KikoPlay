@@ -337,7 +337,6 @@ void CFramelessDialog::setTitle(const QString &text)
 void CFramelessDialog::showMessage(const QString &msg, int type)
 {
     dialogTip->showMessage(msg, type);
-    //dialogTip->raise();
 }
 
 void CFramelessDialog::setSizeSettingKey(const QString &key, const QSize &initSize)

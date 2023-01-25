@@ -56,7 +56,6 @@ void DialogTip::showMessage(const QString &msg, int type)
     {
         static_cast<LoadingIcon *>(busyWidget)->hide();
     }
-    bool isShow=hideTimer.isActive();
     if(hideTimer.isActive()) hideTimer.stop();
     if(type & NM_HIDE)
     {
@@ -81,10 +80,11 @@ void DialogTip::showMessage(const QString &msg, int type)
     infoText->setText(msg);
     infoText->adjustSize();
     adjustSize();
-    move((parentWidget()->width()-width())/2,y());
+
+    move((parentWidget()->width() - width()) / 2, y());
     raise();
 
-    if(!isShow)
+    if(isHidden())
     {
         show();
         QPoint endPos(this->x(),0), startPos(this->x(),-this->height());

@@ -516,18 +516,18 @@ QWidget *MainWindow::setupPlayPage()
 
     playerWindow=new PlayerWindow();
     playerWindow->setMouseTracking(true);
-#ifdef Q_OS_WIN
+//#ifdef Q_OS_WIN
     QWindow *native_wnd  = QWindow::fromWinId(playerWindow->winId());
     QWidget *playerWindowWidget=QWidget::createWindowContainer(native_wnd);
     playerWindowWidget->setContentsMargins(1,0,1,1);
     playerWindowWidget->setMouseTracking(true);
     playerWindowWidget->setParent(playSplitter);
     playerWindow->show();
-#else
-    QWidget *playerWindowWidget = playerWindow;
-    playerWindowWidget->setParent(playSplitter);
-    playerWindow->show();
-#endif
+//#else
+//    QWidget *playerWindowWidget = playerWindow;
+//    playerWindowWidget->setParent(playSplitter);
+//    playerWindow->show();
+//#endif
 
     listWindow=new ListWindow(playSplitter);
     QObject::connect(playerWindow,&PlayerWindow::toggleListVisibility,[this](){
