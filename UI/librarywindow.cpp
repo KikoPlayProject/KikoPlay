@@ -316,6 +316,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(fa
     labelView->setProperty("cScrollStyle", true);
     labelView->setAnimated(true);
     labelView->setMouseTracking(true);
+    labelView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     labelView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
     labelView->header()->hide();
     labelView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -353,20 +354,23 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(fa
     });
     QObject::connect(labelView, &LabelTreeView::countFColorChanged, labelItemDelegate, &LabelItemDelegate::setPenColor);
     QObject::connect(labelView, &LabelTreeView::countBColorChanged, labelItemDelegate, &LabelItemDelegate::setBrushColor);
+    QObject::connect(labelItemDelegate, &LabelItemDelegate::openTagSearchEditor, [=](const QModelIndex &index){
+       labelView->openPersistentEditor(index);
+    });
+    QObject::connect(labelItemDelegate, &LabelItemDelegate::tagSearchTextChanged, [=](const QString &text, const QModelIndex &index){
+        labelProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+        labelProxyModel->setFilterRegExp(text);
+        if(text.isEmpty())
+        {
+            labelView->closePersistentEditor(index);
+        }
+    });
 
 
     AnimeFilterBox *filterBox=new AnimeFilterBox(this);
     filterBox->resize(240*logicalDpiX()/96, filterBox->height());
     QObject::connect(filterBox,&AnimeFilterBox::filterChanged,[=](int type,const QString &str){
-        if(type==4)
-        {
-            labelProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-            labelProxyModel->setFilterRegExp(str);
-        }
-        else
-        {
-            proxyModel->setFilter(type, str);
-        }
+        proxyModel->setFilter(type, str);
     });
 
     QAction *actDeleteTag=new QAction(tr("Delete"),this);
@@ -609,11 +613,6 @@ AnimeFilterBox::AnimeFilterBox(QWidget *parent)
     filterCrt->setData(QVariant(int(3)));
     filterCrt->setCheckable(true);
     filterTypeGroup->addAction(filterCrt);
-
-    QAction *filterTag = menu->addAction(tr("Tag"));
-    filterTag->setData(QVariant(int(4)));
-    filterTag->setCheckable(true);
-    filterTypeGroup->addAction(filterTag);
 
     connect(filterTypeGroup, &QActionGroup::triggered,[this](QAction *act){
         emit filterChanged(act->data().toInt(),this->text());
