@@ -861,8 +861,8 @@ void DownloadWindow::initActions()
     QObject::connect(act_Remove,&QAction::triggered,[this](){
         TaskFilterProxyModel *model = static_cast<TaskFilterProxyModel *>(downloadView->model());
         QModelIndexList selectedRows= downloadView->selectionModel()->selectedRows();
-        if (selectedRows.size() == 0)return;
-        QMessageBox::StandardButton btn = QMessageBox::information(this,tr("Remove"),tr("Delete the Downloaded Files?"),
+        if (selectedRows.empty())return;
+        QMessageBox::StandardButton btn = QMessageBox::information(this,tr("Remove"),tr("Delete the Downloaded %1 Files?").arg(selectedRows.size()),
                                  QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel,QMessageBox::No);
         if(btn==QMessageBox::Cancel)return;
         QModelIndexList sourceIndexes;

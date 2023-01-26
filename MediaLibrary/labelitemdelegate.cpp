@@ -42,7 +42,7 @@ void LabelItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     }
     if(tag->tagType == TagNode::TAG_CUSTOM && tag->subNodes) return;
 
-    static QFont decorationFont("Microsoft Yahei UI", 9);
+    static QFont decorationFont(GlobalObjects::normalFont, 9);
     painter->setFont(decorationFont);
     painter->setPen(QPen(penColor));
 

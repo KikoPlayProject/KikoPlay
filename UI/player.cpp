@@ -291,6 +291,36 @@ private:
     QList<RecentItem *> items;
     QLabel *logo;
 };
+class EdgeFadeEffect : public QGraphicsEffect
+{
+    // QGraphicsEffect interface
+public:
+    EdgeFadeEffect(QObject *parent = nullptr) : QGraphicsEffect(parent)
+    {
+        int ptSize = GlobalObjects::appSetting->value("Play/LiveDanmuFontSize", 10).toInt();
+        fadeHeight = QFontMetrics(QFont(GlobalObjects::normalFont, ptSize)).height() * 1.5;
+    }
+private:
+    double fadeHeight = 0.0;
+protected:
+    void draw(QPainter *painter)
+    {
+        QPixmap source = sourcePixmap();
+        QImage composionImg(source.size(), QImage::Format_ARGB32_Premultiplied);
+        composionImg.fill(0);
+        QLinearGradient fillGradient;
+        fillGradient.setColorAt(0, QColor(0, 0, 0, 0));
+        fillGradient.setColorAt(1, QColor(0, 0, 0, 255));
+        fillGradient.setStart(0, 0);
+        fillGradient.setFinalStop(0, qMin(fadeHeight, composionImg.height() * 0.1));
+        QPainter tp(&composionImg);
+        tp.fillRect(composionImg.rect(), QBrush(fillGradient));
+        tp.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        tp.drawPixmap(0, 0, source);
+        tp.end();
+        painter->drawImage(0, 0, composionImg);
+    }
+};
 }
 PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPanel(true),
     onTopWhilePlaying(false),isFullscreen(false),resizePercent(-1),jumpForwardTime(5),jumpBackwardTime(5),
@@ -566,6 +596,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     liveDanmuList->setObjectName(QStringLiteral("LiveDanmuList"));
     liveDanmuList->setVerticalScrollBar(new SmoothScrollBar(liveDanmuList));
     liveDanmuList->setResizeMode(QListView::ResizeMode::Adjust);
+    liveDanmuList->setGraphicsEffect(new EdgeFadeEffect);
     liveDanmuList->setModel(GlobalObjects::danmuRender->liveDanmuModel());
     liveDanmuList->setItemDelegate(new LiveDanmuItemDelegate(this));
     QVBoxLayout *liveVLayout = new QVBoxLayout(liveDanmuContainer);
@@ -892,11 +923,19 @@ void PlayerWindow::setupDanmuSettingPage()
         if(state==Qt::Checked)
         {
             GlobalObjects::mpvplayer->hideDanmu(true);
+            if(enableLiveMode->isChecked() && liveDanmuList->isVisible())
+            {
+                liveDanmuList->setVisible(false);
+            }
             this->danmu->setText(QChar(0xe620));
         }
         else
         {
             GlobalObjects::mpvplayer->hideDanmu(false);
+            if(enableLiveMode->isChecked() && GlobalObjects::playlist->getCurrentItem())
+            {
+                liveDanmuList->setVisible(true);
+            }
             this->danmu->setText(QChar(0xe622));
         }
     });
@@ -1065,7 +1104,7 @@ void PlayerWindow::setupDanmuSettingPage()
     enableLiveMode = new QCheckBox(tr("Enable Live Mode"), pageAdvanced);
     QObject::connect(enableLiveMode,&QCheckBox::stateChanged,[=](int state){
         GlobalObjects::danmuRender->setLiveMode(state == Qt::Checked, true);
-        if(GlobalObjects::playlist->getCurrentItem())
+        if(GlobalObjects::playlist->getCurrentItem() && !GlobalObjects::mpvplayer->getDanmuHide())
         {
             liveDanmuList->setVisible(state == Qt::Checked);
         }
@@ -2255,7 +2294,6 @@ void PlayerWindow::resizeEvent(QResizeEvent *)
     static_cast<InfoTips *>(playInfo)->setBottom(y);
     static_cast<InfoTips *>(playInfo)->updatePosition();
     liveDanmuList->setFixedSize(width() * 0.45, height() * static_cast<float>(liveVRangeSlider->value()) / 100);
-    liveDanmuList->resize(width() * 0.45, height() * static_cast<float>(liveVRangeSlider->value()) / 100);
     liveDanmuList->scrollToBottom();
 }
 
