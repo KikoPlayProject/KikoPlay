@@ -2,6 +2,7 @@
 #define LIVEDANMUITEMDELEGATE_H
 
 #include <QStyledItemDelegate>
+#include <QTextLayout>
 
 class LiveDanmuItemDelegate : public QStyledItemDelegate
 {

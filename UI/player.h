@@ -66,7 +66,7 @@ private:
      DanmuLaunch *launchWindow;
 
      QWidget *danmuSettingPage,*playSettingPage;
-     QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold,
+     QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold, *glow,
                 *bottomSubtitleProtect,*topSubtitleProtect,*randomSize,
                 *enableAnalyze, *enableMerge,*enlargeMerged, *showPreview, *autoLoadDanmuCheck,
                 *enableLiveMode, *liveModeOnlyRolling, *liveDanmuAlignRight, *liveShowSender;

@@ -39,6 +39,8 @@ DanmuRender::DanmuRender(QObject *parent) : QObject(parent)
 	danmuStyle.bold = false;
     danmuStyle.enlargeMerged = true;
     danmuStyle.mergeCountPos = 1;
+    danmuStyle.glow = false;
+    danmuStyle.glowRadius = 16;
     enableLiveMode = false;
     liveModeOnlyRolling = true;
     liveDanmuListModel = new LiveDanmuListModel(this);
@@ -205,6 +207,11 @@ void DanmuRender::setBold(bool bold)
 {
     danmuStyle.bold = bold;
     emit danmuStyleChanged();
+}
+
+void DanmuRender::setGlow(bool on)
+{
+    danmuStyle.glow = on;
 }
 
 void DanmuRender::setOpacity(float opacity)

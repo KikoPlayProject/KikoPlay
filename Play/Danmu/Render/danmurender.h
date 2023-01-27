@@ -51,6 +51,7 @@ public:
     void setDisplayArea(float ratio);
     void setFontSize(int pt);
     void setBold(bool bold);
+    void setGlow(bool on);
     void setOpacity(float opacity);
     void setFontFamily(const QString &family);
     void setSpeed(float speed);

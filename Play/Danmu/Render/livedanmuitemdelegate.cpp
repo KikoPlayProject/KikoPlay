@@ -1,6 +1,5 @@
 #include "livedanmuitemdelegate.h"
 #include <QPainter>
-#include <QTextLayout>
 #define AlignmentRole Qt::UserRole+1
 
 LiveDanmuItemDelegate::LiveDanmuItemDelegate(QObject *parent)

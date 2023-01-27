@@ -1039,6 +1039,7 @@ void PlayerWindow::setupDanmuSettingPage()
         strokeWidthSlider->setToolTip(QString::number(val/10.));
     });
     strokeWidthSlider->setValue(GlobalObjects::appSetting->value("Play/DanmuStroke",35).toInt());
+    GlobalObjects::danmuRender->setStrokeWidth(strokeWidthSlider->value() / 10.f);
 
     QLabel *fontSizeLabel=new QLabel(tr("Font Size"),pageAppearance);
     fontSizeSlider=new QSlider(Qt::Horizontal,pageAppearance);
@@ -1049,6 +1050,12 @@ void PlayerWindow::setupDanmuSettingPage()
         fontSizeSlider->setToolTip(QString::number(val));
     });
     fontSizeSlider->setValue(GlobalObjects::appSetting->value("Play/DanmuFontSize",20).toInt());
+
+    glow = new QCheckBox(tr("Glow"),pageAppearance);
+    QObject::connect(glow, &QCheckBox::stateChanged, [](int state){
+        GlobalObjects::danmuRender->setGlow(state == Qt::Checked);
+    });
+    glow->setChecked(GlobalObjects::appSetting->value("Play/DanmuGlow", false).toBool());
 
     bold=new QCheckBox(tr("Bold"),pageAppearance);
     QObject::connect(bold,&QCheckBox::stateChanged,[](int state){
@@ -1206,8 +1213,9 @@ void PlayerWindow::setupDanmuSettingPage()
     appearanceGLayout->addWidget(strokeWidthSlider,5,0);
     appearanceGLayout->addWidget(alphaLabel,0,1);
     appearanceGLayout->addWidget(alphaSlider,1,1);
-    appearanceGLayout->addWidget(bold,2,1);
-    appearanceGLayout->addWidget(randomSize,3,1);
+    appearanceGLayout->addWidget(glow,2,1);
+    appearanceGLayout->addWidget(bold,3,1);
+    appearanceGLayout->addWidget(randomSize,4,1);
 
     QGridLayout *mergeGLayout=new QGridLayout(pageAdvanced);
     mergeGLayout->setContentsMargins(0,0,0,0);
