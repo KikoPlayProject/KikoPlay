@@ -714,6 +714,11 @@ void PlayerWindow::initActions()
     actScreenshotAct = new QAction(tr("Actual content"),this);
     QObject::connect(actScreenshotAct,&QAction::triggered,[this](){
         QImage captureImage(GlobalObjects::mpvplayer->grabFramebuffer());
+        if(liveDanmuList->isVisible())
+        {
+            QPainter p(&captureImage);
+            p.drawPixmap(liveDanmuList->pos(), liveDanmuList->grab());
+        }
         const PlayListItem *curItem=GlobalObjects::playlist->getCurrentItem();
         Capture captureDialog(captureImage,screenshot,curItem);
         QRect geo(captureDialog.geometry());
