@@ -2071,6 +2071,7 @@ void PlayerWindow::setupSignals()
     QObject::connect(GlobalObjects::danmuRender->liveDanmuModel(), &LiveDanmuListModel::danmuAppend, this, [this](){
         SmoothScrollBar *liveDanmuVScroll = static_cast<SmoothScrollBar*>(liveDanmuList->verticalScrollBar());
         liveDanmuVScroll->setValue(liveDanmuVScroll->maximum());
+        liveDanmuList->graphicsEffect()->setEnabled(liveDanmuVScroll->value() > 0);
     }, Qt::QueuedConnection);
 }
 
@@ -2536,6 +2537,7 @@ void PlayerWindow::closeEvent(QCloseEvent *)
     GlobalObjects::appSetting->setValue("DanmuStroke",strokeWidthSlider->value());
     GlobalObjects::appSetting->setValue("DanmuFontSize",fontSizeSlider->value());
     GlobalObjects::appSetting->setValue("DanmuBold",bold->isChecked());
+    GlobalObjects::appSetting->setValue("DanmuGlow", glow->isChecked());
     GlobalObjects::appSetting->setValue("BottomSubProtect",bottomSubtitleProtect->isChecked());
     GlobalObjects::appSetting->setValue("TopSubProtect",topSubtitleProtect->isChecked());
     GlobalObjects::appSetting->setValue("RandomSize",randomSize->isChecked());

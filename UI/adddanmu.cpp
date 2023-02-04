@@ -352,10 +352,16 @@ QWidget *AddDanmu::setupURLPage()
 
     QLabel *urlTipLabel=new QLabel(tr("Supported URL:"),urlPage);
     QTextEdit *supportUrlInfo=new QTextEdit(urlPage);
-    supportUrlInfo->setText(GlobalObjects::danmuProvider->getSampleURLs().join('\n'));
     supportUrlInfo->setFont(QFont(GlobalObjects::normalFont,10));
+    const QList<QPair<QString, QStringList>> scriptSampleURLS = GlobalObjects::danmuProvider->getSampleURLs();
+    for(const auto &pair : scriptSampleURLS)
+    {
+        supportUrlInfo->setFontWeight(QFont::Bold);
+        supportUrlInfo->append(pair.first);
+        supportUrlInfo->setFontWeight(QFont::Light);
+        supportUrlInfo->append(pair.second.join('\n'));
+    }
     supportUrlInfo->setReadOnly(true);
-
 
     QVBoxLayout *localVLayout=new QVBoxLayout(urlPage);
     localVLayout->addWidget(urlEdit);

@@ -18,7 +18,7 @@ namespace Network
     };
     QNetworkAccessManager *getManager();
     Reply httpGet(const QString &url, const QUrlQuery &query, const QStringList &header=QStringList(), bool redirect=true);
-    Reply httpPost(const QString &url, const QByteArray &data, const QStringList &header=QStringList());
+    Reply httpPost(const QString &url, const QByteArray &data, const QStringList &header=QStringList(), const QUrlQuery &query=QUrlQuery());
     QList<Reply> httpGetBatch(const QStringList &urls, const QList<QUrlQuery> &queries, const QList<QStringList> &headers=QList<QStringList>(), bool redirect=true);
     QJsonDocument toJson(const QString &str);
     QJsonValue getValue(QJsonObject &obj, const QString &path);

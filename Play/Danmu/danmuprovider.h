@@ -11,7 +11,7 @@ public:
     DanmuProvider(QObject *parent = nullptr);
 
     QList<QPair<QString, QString>> getSearchProviders();
-    QStringList getSampleURLs();
+    QList<QPair<QString, QStringList>> getSampleURLs();
 
     ScriptState danmuSearch(const QString &scriptId, const QString &keyword, const QMap<QString, QString> &options, QList<DanmuSource> &results);
     ScriptState getEpInfo(const DanmuSource *source, QList<DanmuSource> &results);

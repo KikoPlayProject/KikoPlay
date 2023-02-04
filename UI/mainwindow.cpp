@@ -778,6 +778,13 @@ QVariant MainWindow::showDialog(const QVariant &inputs)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    if(hideToTrayType == HideToTrayType::CLOSE)
+    {
+        this->hide();
+        trayIcon->show();
+        event->ignore();
+        return;
+    }
 	GlobalObjects::appSetting->setValue("MainWindow/miniGeometry", miniGeo);
     GlobalObjects::appSetting->setValue("MainWindow/hideToTrayType", static_cast<int>(hideToTrayType));
     GlobalObjects::appSetting->setValue("MainWindow/ListWindowWidth", listWindowWidth);

@@ -256,8 +256,7 @@ int LuaUtil::logger(lua_State *L)
     if(val.type()==QVariant::List || val.type()==QVariant::Map)
     {
         QString json(QJsonDocument::fromVariant(val).toJson(QJsonDocument::JsonFormat::Indented));
-        logInfo("Show Table: ", script->id());
-        Logger::logger()->log(Logger::Script, json);
+        logInfo("Show Table: \n" + json, script->id());
     }
     else
     {

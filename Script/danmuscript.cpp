@@ -1,5 +1,6 @@
 #include "danmuscript.h"
 #include "Common/threadtask.h"
+#include <QRegularExpression>
 
 DanmuScript::DanmuScript() : ScriptBase()
 {
@@ -140,9 +141,9 @@ bool DanmuScript::supportURL(const QString &url)
     bool supported = false;
     for(const QString &s : supportedURLsRe)
     {
-        QRegExp re(s);
-        re.indexIn(url);
-        if(re.matchedLength()==url.length())
+        QRegularExpression re(s);
+        QRegularExpressionMatch match = re.match(url);
+        if(match.capturedLength(0) == url.length())
         {
             supported = true;
             break;

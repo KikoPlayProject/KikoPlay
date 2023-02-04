@@ -80,6 +80,11 @@ void DialogTip::showMessage(const QString &msg, int type)
     infoText->setText(msg);
     infoText->adjustSize();
     adjustSize();
+    if(moveAnime->state() == QAbstractAnimation::Running)
+    {
+        moveAnime->stop();
+        hide();
+    }
 
     move((parentWidget()->width() - width()) / 2, y());
     raise();

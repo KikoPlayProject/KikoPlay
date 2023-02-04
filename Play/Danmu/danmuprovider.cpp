@@ -25,13 +25,14 @@ QList<QPair<QString, QString>> DanmuProvider::getSearchProviders()
     return searchProviders;
 }
 
-QStringList DanmuProvider::getSampleURLs()
+QList<QPair<QString, QStringList>> DanmuProvider::getSampleURLs()
 {
-    QStringList sampledURLs;
+    QList<QPair<QString, QStringList>> sampledURLs;
     for(auto &script : GlobalObjects::scriptManager->scripts(ScriptType::DANMU))
     {
         DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
-        sampledURLs.append(dmScript->sampleURLs());
+        if (dmScript->sampleURLs().isEmpty()) continue;
+        sampledURLs.append({dmScript->name(), dmScript->sampleURLs()});
     }
     return sampledURLs;
 }
