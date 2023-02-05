@@ -10,7 +10,7 @@
 
 ## 特性
 
- - OpenGL渲染，流畅的弹幕体验
+ - OpenGL渲染，流畅的弹幕体验，支持正常滚动模式/直播模式显示弹幕
  - libmpv播放内核，保留mpv灵活的参数设置，支持实时进度条预览
  - 树形播放列表，可随意组织视频文件
  - 支持所有主流视频网站弹幕搜索下载，同时可以通过脚本支持更多弹幕来源
@@ -37,7 +37,7 @@ KikoPlay基于以下项目：
  - [QtWebApp](http://stefanfrings.de/qtwebapp/index.html)
  - Lua 5.3
 
-编译环境： Windows平台使用MSVC2015，gcc 7.3.0(其他版本未测试)，其他平台依照平台推荐配置（包管理器/Xcode）
+编译环境： Windows平台使用MSVC2019，gcc 7.3.0(其他版本未测试)，其他平台依照平台推荐配置（包管理器/Xcode）
 
 Windows上使用Qt Creator打开build.pro文件后可直接编译，Linux/macOS亦然，当然也可以手动切换到目录执行`qmake`和`make`
 

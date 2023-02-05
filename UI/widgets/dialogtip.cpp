@@ -76,7 +76,7 @@ void DialogTip::showMessage(const QString &msg, int type)
     {
         bgDarkWidget->hide();
     }
-
+    infoText->setMaximumWidth(parentWidget()->width());
     infoText->setText(msg);
     infoText->adjustSize();
     adjustSize();
