@@ -928,10 +928,7 @@ void PlayerWindow::setupDanmuSettingPage()
         if(state==Qt::Checked)
         {
             GlobalObjects::mpvplayer->hideDanmu(true);
-            if(enableLiveMode->isChecked() && liveDanmuList->isVisible())
-            {
-                liveDanmuList->setVisible(false);
-            }
+            liveDanmuList->setVisible(false);
             this->danmu->setText(QChar(0xe620));
         }
         else
