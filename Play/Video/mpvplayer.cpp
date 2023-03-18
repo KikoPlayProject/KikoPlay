@@ -224,13 +224,17 @@ int MPVPlayer::getExternalTrackCount(MPVPlayer::TrackType type) const
     return c;
 }
 
-QString MPVPlayer::getMPVProperty(const QString &property, bool &hasError)
+QString MPVPlayer::getMPVProperty(const QString &property, int &errCode)
+{
+    auto ret = getMPVPropertyVariant(property, errCode);
+    return ret.toString();
+}
+
+QVariant MPVPlayer::getMPVPropertyVariant(const QString &property, int &errCode)
 {
     auto ret = mpv::qt::get_property(mpv, property);
-    hasError = true;
-    if(mpv::qt::is_error(ret)) return "";
-    hasError = false;
-    return ret.toString();
+    errCode = mpv::qt::get_error(ret);
+    return ret;
 }
 
 MPVPlayer::VideoSizeInfo MPVPlayer::getVideoSizeInfo()

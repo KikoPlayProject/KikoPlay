@@ -125,9 +125,9 @@ void MediaInfo::evalCommand(QStringList &commandStack, QVector<TextBlock> &textS
     if(command.startsWith("kiko:") && kikoCommand.contains(command.mid(5))) {
         commandResult = kikoCommand[command.mid(5)];
     } else if(command.startsWith("mpv:")) {
-        bool hasError;
-        QString mpvProperty(GlobalObjects::mpvplayer->getMPVProperty(command.mid(4), hasError));
-        if(!hasError) commandResult = mpvProperty;
+        int errCode = 0;
+        QString mpvProperty(GlobalObjects::mpvplayer->getMPVProperty(command.mid(4), errCode));
+        if(errCode >= 0) commandResult = mpvProperty;
     } else if(command.startsWith("loop:")) {
         QString loop = command.mid(5);
         int varPos = loop.indexOf('=');

@@ -66,7 +66,8 @@ public:
     inline QPixmap *getPreview(int timePos, bool refresh=true) { if(!mpvPreview) return nullptr; return mpvPreview->getPreview(timePos, refresh);}
     inline const QString &getCurrentFile() const {return currentFile;}
     inline int getVolume() const {return volume;}
-    QString getMPVProperty(const QString &property, bool &hasError);
+    QString getMPVProperty(const QString &property, int &errCode);
+    QVariant getMPVPropertyVariant(const QString &property, int &errCode);
     const QHash<QString, QPair<QList<QStringList>, QString>> &getShortcuts() const{return mpvShortcuts;}
     inline bool enableDirectKey() const {return directKeyMode;}
     int getCurrentTrack(TrackType type) const;
