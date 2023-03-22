@@ -20,7 +20,6 @@
         <file>res/images/paused.png</file>
         <file>res/images/seeding.png</file>
         <file>res/images/waiting.png</file>
-        <file>res/version.json</file>
         <file>res/kikoplay.ico</file>
         <file>res/db/bangumi.sql</file>
         <file>res/db/comment.sql</file>
@@ -75,5 +74,8 @@
         <file>res/images/down-arrow-darkmode-hover.svg</file>
         <file>res/images/up-arrow-darkmode-hover.svg</file>
         <file>res/scriptPlayground</file>
+        <file>res/mpvOptions</file>
+        <file>res/images/tab-close.svg</file>
+        <file>res/images/tab-close-hover.svg</file>
     </qresource>
 </RCC>

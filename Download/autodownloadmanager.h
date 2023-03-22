@@ -17,6 +17,7 @@ struct DownloadRule
     QString searchWord;
     QString filterWord;
     QString scriptId;
+    QMap<QString, QString> searchOptions;
     QString filePath;
     int minSize,maxSize; //MB
 

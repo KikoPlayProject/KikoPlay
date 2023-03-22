@@ -34,7 +34,7 @@ private:
 
     bool canSearch, canLaunch;
     QStringList supportedURLsRe, sampleSupporedURLs;
-    QString callGetSources(const char *fname,  const QVariant &param, QList<DanmuSource> &results);
+    QString callGetSources(const char *fname,  const QVariant &param, bool passOption, QList<DanmuSource> &results);
 };
 
 #endif // DANMUSCRIPT_H

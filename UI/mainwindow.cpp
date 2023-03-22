@@ -246,7 +246,7 @@ void MainWindow::setupUI()
     });
     buttonIcon->addAction(act_checkUpdate);
 
-    QAction *act_useTip=new QAction(tr("Useage Tip"), this);
+    QAction *act_useTip=new QAction(tr("Usage Tip"), this);
     QObject::connect(act_useTip,&QAction::triggered,[this](){
         Tip tip(buttonIcon);
         tip.resize(500*logicalDpiX()/96, 400*logicalDpiY()/96);
@@ -516,18 +516,18 @@ QWidget *MainWindow::setupPlayPage()
 
     playerWindow=new PlayerWindow();
     playerWindow->setMouseTracking(true);
-#ifdef Q_OS_WIN
+//#ifdef Q_OS_WIN
     QWindow *native_wnd  = QWindow::fromWinId(playerWindow->winId());
     QWidget *playerWindowWidget=QWidget::createWindowContainer(native_wnd);
     playerWindowWidget->setContentsMargins(1,0,1,1);
     playerWindowWidget->setMouseTracking(true);
     playerWindowWidget->setParent(playSplitter);
     playerWindow->show();
-#else
-    QWidget *playerWindowWidget = playerWindow;
-    playerWindowWidget->setParent(playSplitter);
-    playerWindow->show();
-#endif
+//#else
+//    QWidget *playerWindowWidget = playerWindow;
+//    playerWindowWidget->setParent(playSplitter);
+//    playerWindow->show();
+//#endif
 
     listWindow=new ListWindow(playSplitter);
     QObject::connect(playerWindow,&PlayerWindow::toggleListVisibility,[this](){
@@ -778,6 +778,13 @@ QVariant MainWindow::showDialog(const QVariant &inputs)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    if(hideToTrayType == HideToTrayType::CLOSE)
+    {
+        this->hide();
+        trayIcon->show();
+        event->ignore();
+        return;
+    }
 	GlobalObjects::appSetting->setValue("MainWindow/miniGeometry", miniGeo);
     GlobalObjects::appSetting->setValue("MainWindow/hideToTrayType", static_cast<int>(hideToTrayType));
     GlobalObjects::appSetting->setValue("MainWindow/ListWindowWidth", listWindowWidth);

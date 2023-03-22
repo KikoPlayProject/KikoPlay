@@ -5,7 +5,6 @@
 #include <QSharedPointer>
 struct LuaItem
 {
-public:
     LuaItem(LuaItem * parent = nullptr) : mParent(parent)
     {
         if(parent) parent->mChilds.append(this);

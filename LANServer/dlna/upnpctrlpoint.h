@@ -4,38 +4,8 @@
 #include <QObject>
 #include <QAbstractItemModel>
 #include <QSharedPointer>
-#define AVTransportService "urn:schemas-upnp-org:service:AVTransport:1"
+#include "upnpdevice.h"
 class QUdpSocket;
-struct UPnPService
-{
-    QString serviceType;
-    QString serviceId;
-    QString SCPDURL;
-    QString controlURL;
-    QString eventSubURL;
-};
-struct UPnPDevice
-{
-    QString location;
-    QString server;
-    QString st;
-    QString usn;
-    QString friendlyName;
-    QString modelDescription;
-    QVector<UPnPService> services;
-};
-class DLNAMediaController
-{
-public:
-    DLNAMediaController(QSharedPointer<UPnPDevice> d) : device(d) {}
-    void setAVTransportURI(const QString &uri);
-    void seek(int pos);
-    void play();
-private:
-    QSharedPointer<UPnPDevice> device;
-    QString fillRequestBody(const QMap<QString ,QString> &kv);
-    const UPnPService *getService(const QString &service);
-};
 
 class UPnPCtrlPoint : public QAbstractItemModel
 {
@@ -53,7 +23,7 @@ private:
     bool readHeaders(const QByteArray &reply, QMap<QByteArray,QByteArray> &headers);
     void processSearchReply(const QMap<QByteArray, QByteArray> &headers);
     QByteArray httpGet(const QString &surl);
-    void getDescription(UPnPDevice &device);
+    bool getDescription(UPnPDevice &device);
     enum class Column
     {
         FriendlyName, Desc, Location, NONE

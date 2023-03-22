@@ -5,6 +5,7 @@
 #include "Common/notifier.h"
 #include "Common/logger.h"
 #include <QSysInfo>
+#include "globalobjects.h"
 #ifdef Q_OS_WIN
 #include <windows.h>
 #endif
@@ -255,8 +256,7 @@ int LuaUtil::logger(lua_State *L)
     if(val.type()==QVariant::List || val.type()==QVariant::Map)
     {
         QString json(QJsonDocument::fromVariant(val).toJson(QJsonDocument::JsonFormat::Indented));
-        logInfo("Show Table: ", script->id());
-        Logger::logger()->log(Logger::Script, json);
+        logInfo("Show Table: \n" + json, script->id());
     }
     else
     {
@@ -356,13 +356,8 @@ int LuaUtil::envInfo(lua_State *L)
     lua_pushstring(L, QSysInfo::productVersion().toStdString().c_str()); // tabel key value
     lua_rawset(L, -3); //table
 
-    QFile version(":/res/version.json");
-    version.open(QIODevice::ReadOnly);
-    QJsonObject curVersionObj = QJsonDocument::fromJson(version.readAll()).object();
-    QString versionStr=curVersionObj.value("Version").toString();
-
     lua_pushstring(L, "kikoplay"); // table key
-    lua_pushstring(L, versionStr.toStdString().c_str()); // tabel key value
+    lua_pushstring(L, GlobalObjects::kikoVersion); // tabel key value
     lua_rawset(L, -3); //table
 
     return 1;

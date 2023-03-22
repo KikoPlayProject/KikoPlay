@@ -19,7 +19,7 @@ public:
 public:
     bool needGetDetail() const {return hasDetailFunc;}
 public:
-    ScriptState search(const QString &keyword, int page, int &totalPage, QList<ResourceItem> &results, const QString &scene="search");
+    ScriptState search(const QString &keyword, int page, int &totalPage, QList<ResourceItem> &results, const QString &scene="search", const QMap<QString, QString> *option=nullptr);
     ScriptState getDetail(const ResourceItem &oldItem, ResourceItem &newItem, const QString &scene="search");
 private:
     bool hasDetailFunc;

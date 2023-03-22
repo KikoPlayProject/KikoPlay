@@ -10,6 +10,9 @@
 extern QOpenGLContext *danmuTextureContext;
 extern QOffscreenSurface *surface;
 
+// in src/qtbase/src/widgets/effects/qpixmapfilter.cpp
+extern Q_DECL_IMPORT void qt_blurImage(QImage &blurImage, qreal radius, bool quality, int transposed = 0);
+
 namespace
 {
     int powerOf2GE(int x)
@@ -182,7 +185,7 @@ void CacheWorker::createImage(CacheMiddleInfo &midInfo)
         }
         ++i;
     }
-    QImage *img=new QImage(imgSize, QImage::Format_ARGB32);
+    QImage *img = new QImage(imgSize, QImage::Format_ARGB32_Premultiplied);
     img->fill(Qt::transparent);
     QPainter painter(img);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -194,6 +197,15 @@ void CacheWorker::createImage(CacheMiddleInfo &midInfo)
         painter.drawPath(path);
     }
     painter.fillPath(path,QBrush(QColor(r,g,b)));
+    if(danmuStyle->glow)
+    {
+        QImage tmp(*img);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        painter.fillRect(img->rect(), QColor(0, 0, 0));
+        qt_blurImage(*img, danmuStyle->glowRadius, true);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+        painter.drawImage(0, 0, tmp);
+    }
     painter.end();
 
     midInfo.img=img;

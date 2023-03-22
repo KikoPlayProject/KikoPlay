@@ -9,6 +9,7 @@ class QComboBox;
 class QSpinBox;
 class DirSelectWidget;
 class QTreeView;
+class ScriptSearchOptionPanel;
 class PreviewModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -26,7 +27,7 @@ private:
     float getSize(const QString &sizeStr);
     bool checkSize(int size, int min, int max);
 public:
-    void search(const QString &searchWord, const QString &scriptId);
+    void search(const QString &searchWord, const QString &scriptId, const QMap<QString, QString> *options=nullptr);
     void filter(const QString &filterWord, int minSize, int maxSize);
 signals:
     void showError(const QString &err);
@@ -49,6 +50,7 @@ private:
     bool addRule;
     QLineEdit *nameEdit, *searchWordEdit, *filterWordEdit;
     QComboBox *scriptIdCombo, *downloadCombo;
+    ScriptSearchOptionPanel *scriptOptionPanel;
     QSpinBox *minSizeSpin, *maxSizeSpin, *searchIntervalSpin;
     DirSelectWidget *filePathSelector;
     QTreeView *preview;

@@ -11,6 +11,8 @@ struct DanmuStyle
     bool randomSize;
     bool enlargeMerged;
     bool bold;
+    bool glow;
+    int glowRadius;
 };
 struct CacheMiddleInfo
 {

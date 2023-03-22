@@ -7,14 +7,15 @@
 namespace
 {
     static QThreadStorage<QSharedPointer<QNetworkAccessManager>> managers;
-    QNetworkAccessManager *getManager()
+}
+
+QNetworkAccessManager *Network::getManager()
+{
+    if(!managers.hasLocalData())
     {
-        if(!managers.hasLocalData())
-        {
-            managers.setLocalData(QSharedPointer<QNetworkAccessManager>::create());
-        }
-        return managers.localData().get();
+        managers.setLocalData(QSharedPointer<QNetworkAccessManager>::create());
     }
+    return managers.localData().get();
 }
 
 Network::Reply Network::httpGet(const QString &url, const QUrlQuery &query, const QStringList &header, bool redirect)
@@ -35,6 +36,7 @@ Network::Reply Network::httpGet(const QString &url, const QUrlQuery &query, cons
     request.setMaximumRedirectsAllowed(maxRedirectTimes);
 
     QNetworkAccessManager *manager = getManager();
+    manager->setCookieJar(nullptr);
 
     QTimer timer;
     timer.setInterval(timeout);
@@ -74,9 +76,10 @@ Network::Reply Network::httpGet(const QString &url, const QUrlQuery &query, cons
     return replyObj;
 }
 
-Network::Reply Network::httpPost(const QString &url, const QByteArray &data, const QStringList &header)
+Network::Reply Network::httpPost(const QString &url, const QByteArray &data, const QStringList &header, const QUrlQuery &query)
 {
     QUrl queryUrl(url);
+    if(!query.isEmpty())  queryUrl.setQuery(query);
     QNetworkRequest request;
     if(header.size()>=2)
     {
@@ -88,6 +91,7 @@ Network::Reply Network::httpPost(const QString &url, const QByteArray &data, con
     request.setUrl(queryUrl);
 
     QNetworkAccessManager *manager = getManager();
+    manager->setCookieJar(nullptr);
 
     QTimer timer;
     timer.setInterval(timeout);
@@ -125,7 +129,6 @@ Network::Reply Network::httpPost(const QString &url, const QByteArray &data, con
         replyObj.hasError = true;
         replyObj.errInfo=QObject::tr("Replay Timeout");
     }
-    reply->deleteLater();
     reply->deleteLater();
     return replyObj;
 }
@@ -171,6 +174,7 @@ QList<Network::Reply> Network::httpGetBatch(const QStringList &urls, const QList
     int finishCount=0;
     QEventLoop eventLoop;
     QNetworkAccessManager *manager(getManager());
+    manager->setCookieJar(nullptr);
     for(int i=0;i<urls.size();++i)
     {
         results.append(Reply());
@@ -358,7 +362,4 @@ int Network::decompress(const QByteArray &input, QByteArray &output)
     (void)inflateEnd(&stream);
     return Z_OK ;
 }
-
-
-
 

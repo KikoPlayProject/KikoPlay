@@ -62,12 +62,16 @@ void AnimeProvider::setDefaultMatchScript(const QString &scriptId)
     emit defaultMacthProviderChanged(script->name(), scriptId);
 }
 
-ScriptState AnimeProvider::animeSearch(const QString &scriptId, const QString &keyword, QList<AnimeLite> &results)
+ScriptState AnimeProvider::animeSearch(const QString &scriptId, const QString &keyword, const QMap<QString, QString> &options, QList<AnimeLite> &results)
 {
     auto script = GlobalObjects::scriptManager->getScript(scriptId).staticCast<LibraryScript>();
     if(!script) return "Script invalid";
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([&](){
+        for(auto iter = options.cbegin(); iter != options.cend(); ++iter)
+        {
+            script->setSearchOption(iter.key(), iter.value());
+        }
         return QVariant::fromValue(script->search(keyword, results));
     }).value<ScriptState>();
 }

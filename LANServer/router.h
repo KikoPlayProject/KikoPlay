@@ -12,7 +12,6 @@ public:
     Router(QObject* parent = nullptr);
     void service(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
 private:
-    QHash<QString,QString> mediaHash;
     FileHandler *fileHandler;
     APIHandler *apiHandler;
 };

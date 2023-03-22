@@ -242,12 +242,33 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     });
     actShowDir->setChecked(GlobalObjects::appSetting->value("Download/ShowDir", false).toBool());
 
+    downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::CREATETIME));
+    QAction *actShowCreateTime=new QAction(tr("Create Time"),this);
+    actShowCreateTime->setCheckable(true);
+    QObject::connect(actShowCreateTime,&QAction::toggled,[this](bool checked){
+        if(checked) downloadView->showColumn(static_cast<int>(DownloadModel::Columns::CREATETIME));
+        else downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::CREATETIME));
+        GlobalObjects::appSetting->setValue("Download/ShowCreateTime", checked);
+    });
+    actShowCreateTime->setChecked(GlobalObjects::appSetting->value("Download/ShowCreateTime", false).toBool());
+
+    downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::FINISHTIME));
+    QAction *actShowFinishTime=new QAction(tr("Finish Time"),this);
+    actShowFinishTime->setCheckable(true);
+    QObject::connect(actShowFinishTime,&QAction::toggled,[this](bool checked){
+        if(checked) downloadView->showColumn(static_cast<int>(DownloadModel::Columns::FINISHTIME));
+        else downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::FINISHTIME));
+        GlobalObjects::appSetting->setValue("Download/ShowFinishTime", checked);
+    });
+    actShowFinishTime->setChecked(GlobalObjects::appSetting->value("Download/ShowFinishTime", false).toBool());
 
     downloadView->header()->setContextMenuPolicy(Qt::ActionsContextMenu);
     downloadView->header()->addAction(actShowUpSpeed);
     downloadView->header()->addAction(actShowConnections);
     downloadView->header()->addAction(actShowSeeders);
     downloadView->header()->addAction(actShowDir);
+    downloadView->header()->addAction(actShowCreateTime);
+    downloadView->header()->addAction(actShowFinishTime);
 
     QObject::connect(downloadView, &QTreeView::doubleClicked,[this,proxyModel](const QModelIndex &index){
         DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(proxyModel->mapToSource(index));
@@ -424,19 +445,25 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     QObject::connect(refreshTimer,&QTimer::timeout,[this](){
         auto &items=GlobalObjects::downloadModel->getItems();
         qint64 totalLength = 0, completedLength = 0;
+#ifdef QT_DEBUG
         QStringList logs;
+#endif
         for(auto iter=items.cbegin();iter!=items.cend();++iter)
         {
             if(iter.value()->status == DownloadTask::Downloading)
             {
                 totalLength += iter.value()->totalLength;
                 completedLength += iter.value()->completedLength;
+#ifdef QT_DEBUG
                 logs << QString("[%1/%2]%3").arg(iter.value()->totalLength).arg(iter.value()->completedLength).arg(iter.value()->title);
+#endif
             }
             rpc->tellStatus(iter.key());
         }
+#ifdef QT_DEBUG
         if(logs.size()>0)
         Logger::logger()->log(Logger::APP, QString("Progress Stat[%1/%2]\n%3").arg(totalLength).arg(completedLength).arg(logs.join('\n')));
+#endif
         emit totalProgressUpdate(totalLength==0 ? 100 : qBound<double>(0,(double)completedLength/totalLength*100,100));
         rpc->tellGlobalStatus();
         if(currentTask && !this->isHidden() && !currentTask->gid.isEmpty())
@@ -834,8 +861,8 @@ void DownloadWindow::initActions()
     QObject::connect(act_Remove,&QAction::triggered,[this](){
         TaskFilterProxyModel *model = static_cast<TaskFilterProxyModel *>(downloadView->model());
         QModelIndexList selectedRows= downloadView->selectionModel()->selectedRows();
-        if (selectedRows.size() == 0)return;
-        QMessageBox::StandardButton btn = QMessageBox::information(this,tr("Remove"),tr("Delete the Downloaded Files?"),
+        if (selectedRows.empty())return;
+        QMessageBox::StandardButton btn = QMessageBox::information(this,tr("Remove"),tr("Delete the Downloaded %1 Files?").arg(selectedRows.size()),
                                  QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel,QMessageBox::No);
         if(btn==QMessageBox::Cancel)return;
         QModelIndexList sourceIndexes;

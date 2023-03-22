@@ -17,6 +17,8 @@ class QSpinBox;
 class QSlider;
 class ClickSlider;
 class DanmuLaunch;
+class OptionSlider;
+class QListView;
 class PlayerWindow : public QWidget, public NotifyInterface
 {
     Q_OBJECT
@@ -34,6 +36,7 @@ private:
      QPushButton *playListCollapseButton;
      QLabel *timeInfoTip, *previewLabel;
      QWidget *progressInfo;
+     QListView *liveDanmuList;
      QTimer previewTimer;
      bool isShowPreview;
      bool autoHideControlPanel;
@@ -63,21 +66,24 @@ private:
      DanmuLaunch *launchWindow;
 
      QWidget *danmuSettingPage,*playSettingPage;
-     QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold,
+     QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold, *glow,
                 *bottomSubtitleProtect,*topSubtitleProtect,*randomSize,
-                *enableAnalyze, *enableMerge,*enlargeMerged, *showPreview, *autoLoadDanmuCheck;
+                *enableAnalyze, *enableMerge,*enlargeMerged, *showPreview, *autoLoadDanmuCheck,
+                *enableLiveMode, *liveModeOnlyRolling, *liveDanmuAlignRight, *liveShowSender;
      QSpinBox *mergeInterval,*contentSimCount,*minMergeCount;
      QFontComboBox *fontFamilyCombo;
      QComboBox *aspectRatioCombo,*playSpeedCombo,*clickBehaviorCombo,*dbClickBehaviorCombo,
-                *denseLevel,*mergeCountTipPos;
+                *mergeCountTipPos;
      QSlider *speedSlider,*alphaSlider,*strokeWidthSlider,*fontSizeSlider,*maxDanmuCount,
-             *brightnessSlider, *contrastSlider, *saturationSlider, *gammaSlider, *hueSlider, *sharpenSlider;
-     bool updatingTrack;
+             *brightnessSlider, *contrastSlider, *saturationSlider, *gammaSlider, *hueSlider, *sharpenSlider,
+             *liveSizeSlider, *liveVRangeSlider;
+     OptionSlider *denseLevel, *displayAreaSlider;
      bool isFullscreen;
      int resizePercent;
      int clickBehavior,dbClickBehaivior;
      int jumpForwardTime, jumpBackwardTime;
      bool autoLoadLocalDanmu;
+     bool hasExternalAudio, hasExternalSub;
 
      QSharedPointer<DanmuComment> currentDanmu;
 

@@ -3,6 +3,8 @@
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "MediaLibrary/animeprovider.h"
+#include "widgets/scriptsearchoptionpanel.h"
+#include "Script/scriptmanager.h"
 #include <QVBoxLayout>
 #include <QToolButton>
 #include <QStackedLayout>
@@ -476,15 +478,23 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
     QComboBox *scriptCombo = new QComboBox(searchSubPage);
     QLineEdit *keywordEdit = new QLineEdit(srcAnime, searchSubPage);
     QPushButton *searchBtn = new QPushButton(tr("Search"), searchSubPage);
+    ScriptSearchOptionPanel *scriptOptionPanel = new ScriptSearchOptionPanel(this);
     QTreeView *animeView = new QTreeView(searchSubPage);
     QGridLayout *searchSubGLayout = new QGridLayout(searchSubPage);
     searchSubGLayout->addWidget(scriptCombo, 0, 0);
     searchSubGLayout->addWidget(keywordEdit, 0, 1);
     searchSubGLayout->addWidget(searchBtn, 0, 2);
-    searchSubGLayout->addWidget(animeView, 1, 0, 1, 3);
-    searchSubGLayout->setRowStretch(1, 1);
+    searchSubGLayout->addWidget(scriptOptionPanel, 1, 0, 1, 3);
+    searchSubGLayout->addWidget(animeView, 2, 0, 1, 3);
+    searchSubGLayout->setRowStretch(2, 1);
     searchSubGLayout->setColumnStretch(1, 1);
 
+    QObject::connect(scriptCombo, &QComboBox::currentTextChanged, this, [=](const QString &){
+        QString curId = scriptCombo->currentData().toString();
+        scriptOptionPanel->setScript(GlobalObjects::scriptManager->getScript(curId));
+        if(scriptOptionPanel->hasOptions()) scriptOptionPanel->show();
+        else scriptOptionPanel->hide();
+    });
     for(const auto &s : GlobalObjects::animeProvider->getSearchProviders())
     {
         scriptCombo->addItem(s.first, s.second);
@@ -538,9 +548,18 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
         QList<AnimeLite> results;
         ScriptState state;
         if(scriptCombo->currentIndex()==scriptCombo->count()-1)
+        {
             GlobalObjects::danmuManager->localSearch(keyword, results);
+        }
         else
-            state = GlobalObjects::animeProvider->animeSearch(scriptCombo->currentData().toString(), keyword, results);
+        {
+            QMap<QString, QString> searchOptions;
+            if(scriptOptionPanel->hasOptions() && scriptOptionPanel->changed())
+            {
+                searchOptions = scriptOptionPanel->getOptionVals();
+            }
+            state = GlobalObjects::animeProvider->animeSearch(scriptCombo->currentData().toString(), keyword, searchOptions, results);
+        }
         if(state)
         {
             if(!lastSearchCacheId.isEmpty())

@@ -29,6 +29,14 @@ DEFINES += ZLIB_WINAPI
 
 CONFIG += C++11
 
+CONFIG += debug_and_release
+CONFIG(debug, debug|release) {
+    TARGET = $${TARGET}.debug
+#    QMAKE_CXX_FLAGS_MT_DBG += /Od /D_DEBUG
+} else {
+    TARGET = $${TARGET}
+}
+
 SOURCES += \
     Common/counter.cpp \
     Common/logger.cpp \
@@ -37,7 +45,13 @@ SOURCES += \
     Download/peermodel.cpp \
     Download/trackersubscriber.cpp \
     LANServer/apihandler.cpp \
+    LANServer/dlna/dlnamediacontroller.cpp \
+    LANServer/dlna/dlnamediaitem.cpp \
+    LANServer/dlna/dlnamediaserver.cpp \
+    LANServer/dlna/upnp.cpp \
     LANServer/dlna/upnpctrlpoint.cpp \
+    LANServer/dlna/upnpdevice.cpp \
+    LANServer/dlna/upnpservice.cpp \
     LANServer/filehandler.cpp \
     LANServer/httpserver/httpconnectionhandler.cpp \
     LANServer/httpserver/httpconnectionhandlerpool.cpp \
@@ -56,6 +70,8 @@ SOURCES += \
     MediaLibrary/animeprovider.cpp \
     MediaLibrary/episodeitem.cpp \
     MediaLibrary/tagnode.cpp \
+    Play/Danmu/Render/livedanmuitemdelegate.cpp \
+    Play/Danmu/Render/livedanmulistmodel.cpp \
     Play/Danmu/danmuprovider.cpp \
     Play/Danmu/eventanalyzer.cpp \
     Play/Video/mpvpreview.cpp \
@@ -108,8 +124,12 @@ SOURCES += \
     UI/widgets/colorslider.cpp \
     UI/widgets/danmustatiswidget.cpp \
     UI/widgets/dialogtip.cpp \
+    UI/widgets/elidelineedit.cpp \
     UI/widgets/fonticonbutton.cpp \
     UI/widgets/loadingicon.cpp \
+    UI/widgets/optionslider.cpp \
+    UI/widgets/scriptsearchoptionpanel.cpp \
+    UI/widgets/smoothscrollbar.cpp \
         main.cpp \
     UI/mainwindow.cpp \
     UI/framelesswindow.cpp \
@@ -183,7 +203,13 @@ HEADERS += \
     Download/peermodel.h \
     Download/trackersubscriber.h \
     LANServer/apihandler.h \
+    LANServer/dlna/dlnamediacontroller.h \
+    LANServer/dlna/dlnamediaitem.h \
+    LANServer/dlna/dlnamediaserver.h \
+    LANServer/dlna/upnp.h \
     LANServer/dlna/upnpctrlpoint.h \
+    LANServer/dlna/upnpdevice.h \
+    LANServer/dlna/upnpservice.h \
     LANServer/filehandler.h \
     LANServer/httpserver/httpconnectionhandler.h \
     LANServer/httpserver/httpconnectionhandlerpool.h \
@@ -201,6 +227,8 @@ HEADERS += \
     MediaLibrary/animeprovider.h \
     MediaLibrary/episodeitem.h \
     MediaLibrary/tagnode.h \
+    Play/Danmu/Render/livedanmuitemdelegate.h \
+    Play/Danmu/Render/livedanmulistmodel.h \
     Play/Danmu/danmuprovider.h \
     Play/Danmu/danmuviewmodel.h \
     Play/Danmu/eventanalyzer.h \
@@ -262,8 +290,12 @@ HEADERS += \
     UI/widgets/colorslider.h \
     UI/widgets/danmustatiswidget.h \
     UI/widgets/dialogtip.h \
+    UI/widgets/elidelineedit.h \
     UI/widgets/fonticonbutton.h \
     UI/widgets/loadingicon.h \
+    UI/widgets/optionslider.h \
+    UI/widgets/scriptsearchoptionpanel.h \
+    UI/widgets/smoothscrollbar.h \
     globalobjects.h \
     Play/Playlist/playlist.h \
     Play/Video/mpvplayer.h \

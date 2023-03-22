@@ -25,23 +25,28 @@ QList<QPair<QString, QString>> DanmuProvider::getSearchProviders()
     return searchProviders;
 }
 
-QStringList DanmuProvider::getSampleURLs()
+QList<QPair<QString, QStringList>> DanmuProvider::getSampleURLs()
 {
-    QStringList sampledURLs;
+    QList<QPair<QString, QStringList>> sampledURLs;
     for(auto &script : GlobalObjects::scriptManager->scripts(ScriptType::DANMU))
     {
         DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
-        sampledURLs.append(dmScript->sampleURLs());
+        if (dmScript->sampleURLs().isEmpty()) continue;
+        sampledURLs.append({dmScript->name(), dmScript->sampleURLs()});
     }
     return sampledURLs;
 }
 
-ScriptState DanmuProvider::danmuSearch(const QString &scriptId, const QString &keyword, QList<DanmuSource> &results)
+ScriptState DanmuProvider::danmuSearch(const QString &scriptId, const QString &keyword, const QMap<QString, QString> &options, QList<DanmuSource> &results)
 {
     auto script = GlobalObjects::scriptManager->getScript(scriptId).staticCast<DanmuScript>();
     if(!script || !script->supportSearch()) return "Script invalid or Unsupport search";
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([&](){
+        for(auto iter = options.cbegin(); iter != options.cend(); ++iter)
+        {
+            script->setSearchOption(iter.key(), iter.value());
+        }
         return QVariant::fromValue(script->search(keyword, results));
     }).value<ScriptState>();
 }

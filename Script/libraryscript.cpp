@@ -39,7 +39,9 @@ ScriptState LibraryScript::search(const QString &keyword, QList<AnimeLite> &resu
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo;
-    QVariantList rets = call(searchFunc, {keyword}, 1, errInfo);
+    QVariantList params{keyword};
+    addSearchOptions(params);
+    QVariantList rets = call(searchFunc, params, 1, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(rets[0].type()!=QVariant::List) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
     auto robjs = rets[0].toList(); //[{name=xx, data=xx, <extra=xx>, <eps=[{index=number, name=xx, <type=xx(1:ep, 2:sp, ...,7=other)>, }]>},...]

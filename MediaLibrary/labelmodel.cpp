@@ -337,12 +337,19 @@ Qt::ItemFlags LabelModel::flags(const QModelIndex &index) const
     Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index);
     if(!index.isValid()) return defaultFlags;
     TagNode *node = static_cast<TagNode*>(index.internalPointer());
-    if (index.column()==0)
+    if (index.column() == 0)
     {
         if((node->tagType == TagNode::TAG_SCRIPT  ||
             node->tagType == TagNode::TAG_TIME ||
             node->tagType == TagNode::TAG_FILE))
-        return  Qt::ItemIsUserCheckable | defaultFlags;
+        {
+            return  Qt::ItemIsUserCheckable | defaultFlags;
+        }
+        if(node->tagType == TagNode::TAG_ROOT_CATE && node->subNodes &&
+                !node->subNodes->empty() && node->subNodes->first()->tagType == TagNode::TAG_CUSTOM)
+        {
+            return Qt::ItemIsEditable | defaultFlags;
+        }
     }
     return defaultFlags;
 }

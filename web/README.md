@@ -1,5 +1,5 @@
 # <img src="../res/images/kikoplay-4.png" width=24 /> KikoPlay Web接口参考 
-2021.03 By Kikyou，本文档适用于KikoPlay 0.8及以上版本
+2022.10 By Kikyou，本文档适用于KikoPlay 0.9.1及以上版本
 
 KikoPlay局域网服务功能提供了一些Web接口供其他客户端（包括网页端，Android端等）使用。
 
@@ -64,6 +64,18 @@ CommentL:
     sender(string, 用户), 
     text(string, 弹幕文本)
 ]
+```
+## [Get] /api/danmu/local/
+获取和媒体文件同名的本地xml弹幕文件中的弹幕。在返回弹幕前，KikoPlay会使用本地的屏蔽规则进行过滤。当媒体文件未关联到弹幕池时，可通过这个api尝试获取本地弹幕。
+参数：  
+> mediaId:  媒体文件ID  
+
+返回JSON格式：
+```json
+{
+    "comment"(Array[CommentL]): 弹幕列表
+    "local"(string): 本地xml弹幕文件
+}
 ```
 ## [Get] /api/subtitle
 查询字幕文件。返回的`type`为空表示不存在字幕，可以使用/sub/`{subFormat}`/`{mediaID}`获取具体的文件。  

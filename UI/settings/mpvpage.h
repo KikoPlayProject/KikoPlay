@@ -1,7 +1,9 @@
 #ifndef MPVPAGE_H
 #define MPVPAGE_H
 #include "settingpage.h"
-class QTextEdit;
+#include <QVector>
+class QPlainTextEdit;
+class QTabWidget;
 class MPVPage : public SettingPage
 {
     Q_OBJECT
@@ -10,8 +12,15 @@ public:
     virtual void onAccept() override;
     virtual void onClose() override;
 private:
-    QTextEdit *parameterEdit;
-    bool paramChange = false;
+    QTabWidget *tab;
+    struct OptionGroup
+    {
+        QString groupKey;
+        QPlainTextEdit *editor;
+        bool changed;
+    };
+    QVector<OptionGroup> optionGroups;
+    bool hasRemoved, currentRemoved;
+    void loadOptions();
 };
-
 #endif // MPVPAGE_H

@@ -13,9 +13,9 @@ public:
     virtual void onAccept() override;
     virtual void onClose() override;
 private:
-    QCheckBox *startServer, *syncUpdateTime;
+    QCheckBox *startServer, *syncUpdateTime, *startDLNA;
     QLineEdit *portEdit;
-    bool syncTimeChanged, serverStateChanged, portChanged;
+    bool syncTimeChanged, serverStateChanged, portChanged, dlnaStateChanged;
 };
 
 #endif // LANSERVERPAGE_H

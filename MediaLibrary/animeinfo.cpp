@@ -83,7 +83,8 @@ void Anime::setCrtImage(const QString &name, const QByteArray &data)
         {
             if(crt.name == name)
             {
-                crt.image.loadFromData(data);
+                if(data.isEmpty()) crt.image = QPixmap();
+                else crt.image.loadFromData(data);
                 break;
             }
         }

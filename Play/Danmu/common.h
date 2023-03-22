@@ -96,7 +96,7 @@ struct BlockRule
     QString name;
     QString content;
     QScopedPointer<QRegExp> re;
-    bool blockTest(DanmuComment *comment);
+    bool blockTest(DanmuComment *comment, bool updateCount=true);
     BlockRule(const QString &ruleContent, Field field, Relation r);
     BlockRule() = default;
 };

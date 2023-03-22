@@ -89,6 +89,9 @@ static QString get_color_profile(HWND hwnd)
     return name;
 }
 #endif
+
+static QSet<QString> optionsBeforeInit{"config", "config-dir", "input-conf", "load-scripts", "script", "scripts"};
+
 }
 MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::Stop),
     mute(false),danmuHide(false),oldOpenGLVersion(false),currentDuration(0), mpvPreview(nullptr), previewThread(nullptr)
@@ -97,38 +100,27 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     mpv = mpv_create();
     if (!mpv)
         throw std::runtime_error("could not create mpv context");
-
-    QSet<QString> optionsBeforeInit{"config", "config-dir", "input-conf", "load-scripts", "script", "scripts"};
-    QStringList options=GlobalObjects::appSetting->value(
-         "Play/MPVParameters",
-         "#Make sure the danmu is smooth\n"
-         "vf=lavfi=\"fps=fps=60:round=down\"\n"
-         "hwdec=auto").toString().split('\n');
-    for(const QString &option:options)
+    loadOptions();
+    const QMap<QString, QString> &optionsMap = optionsGroupMap[curOptionGroup];
+    for(auto iter = optionsMap.cbegin(); iter != optionsMap.cend(); ++iter)
     {
-        QString opt(option.trimmed());
-        if(opt.isEmpty() || opt.startsWith('#'))continue;
-        int eqPos=opt.indexOf('=');
-        if(eqPos==-1) eqPos = opt.length();
-        QString key(opt.left(eqPos)), val(opt.mid(eqPos+1));
-        if(optionsBeforeInit.contains(key))
+        if(optionsBeforeInit.contains(iter.key()))
         {
-            int ret = mpv::qt::set_option_variant(mpv, key, val);
+            int ret = mpv::qt::set_option_variant(mpv, iter.key(), iter.value());
             if(ret != MPV_ERROR_SUCCESS)
             {
-                Logger::logger()->log(Logger::MPV, QString("[kiko][option error]: %1, %2").arg(key, QString::number(ret)));
+                Logger::logger()->log(Logger::MPV, QString("[kiko][option error]: %1, %2").arg(iter.key(), QString::number(ret)));
             }
         }
-        else
-            optionsMap.insert(key, val);
     }
 
     if (mpv_initialize(mpv) < 0)
         throw std::runtime_error("could not initialize mpv context");
 
     mpv_request_log_messages(mpv, "v");
-    for(auto iter=optionsMap.cbegin(); iter!=optionsMap.cend(); ++iter)
+    for(auto iter = optionsMap.cbegin(); iter != optionsMap.cend(); ++iter)
     {
+        if(optionsBeforeInit.contains(iter.key())) continue;
         int ret = mpv::qt::set_option_variant(mpv, iter.key(), iter.value());
         if(ret != MPV_ERROR_SUCCESS)
         {
@@ -208,13 +200,37 @@ MPVPlayer::~MPVPlayer()
     }
 }
 
+int MPVPlayer::getCurrentTrack(MPVPlayer::TrackType type) const
+{
+    const QVector<TrackInfo> &tracks = type==AudioTrack?audioTracks:subTracks;
+    int curId = mpv::qt::get_property(mpv, type==AudioTrack?"aid":"sid").toInt();
+    int index = -1;
+    for(int i = 0; i < tracks.size(); ++i)
+    {
+        if(tracks[i].id == curId)
+        {
+            index = i;
+            break;
+        }
+    }
+    return index;
+}
+
+int MPVPlayer::getExternalTrackCount(MPVPlayer::TrackType type) const
+{
+    const QVector<TrackInfo> &tracks = type==AudioTrack?audioTracks:subTracks;
+    int c = 0;
+    for(const TrackInfo &t : tracks) c += t.isExternal?1:0;
+    return c;
+}
+
 QString MPVPlayer::getMPVProperty(const QString &property, bool &hasError)
 {
-     auto ret = mpv::qt::get_property(mpv, property);
-     hasError = true;
-     if(mpv::qt::is_error(ret)) return "";
-     hasError = false;
-     return ret.toString();
+    auto ret = mpv::qt::get_property(mpv, property);
+    hasError = true;
+    if(mpv::qt::is_error(ret)) return "";
+    hasError = false;
+    return ret.toString();
 }
 
 MPVPlayer::VideoSizeInfo MPVPlayer::getVideoSizeInfo()
@@ -232,9 +248,9 @@ QString MPVPlayer::expandMediaInfo(const QString &text)
     return mpv::qt::command(mpv, QVariantList() << "expand-text" << text).toString();
 }
 
-void MPVPlayer::setOptions()
+void MPVPlayer::setIccProfileOption()
 {
-    if(optionsMap.contains("icc-profile-auto"))
+    if(optionsGroupMap[curOptionGroup].contains("icc-profile-auto"))
     {
 #ifdef Q_OS_WIN
         if(this->parent())
@@ -545,21 +561,40 @@ void MPVPlayer::hideDanmu(bool hide)
 
 void MPVPlayer::addSubtitle(const QString &path)
 {
-	setMPVCommand(QVariantList() << "sub-add" << path);
+    setMPVCommand(QVariantList() << "sub-add" << path << "cached");
 	loadTracks();
     emit trackInfoChange(SubTrack);
 }
 
 void MPVPlayer::addAudioTrack(const QString &path)
 {
-    setMPVCommand(QVariantList() << "audio-add" << path);
+    setMPVCommand(QVariantList() << "audio-add" << path << "cached");
     loadTracks();
     emit trackInfoChange(AudioTrack);
 }
 
-void MPVPlayer::setTrackId(int type, int id)
+void MPVPlayer::clearExternalAudio()
 {
-    setMPVProperty(type==0?"aid":"sid",type==0?audioTrack.ids[id]:subtitleTrack.ids[id]);
+    bool changed = false;
+    for(int i = 0; i < audioTracks.size(); ++i)
+    {
+        if(audioTracks[i].isExternal)
+        {
+            changed = true;
+            setMPVCommand(QVariantList() << "audio-remove" << audioTracks[i].id);
+        }
+    }
+    if(changed)
+    {
+        loadTracks();
+        emit trackInfoChange(AudioTrack);
+    }
+}
+
+void MPVPlayer::setTrackId(TrackType type, int index)
+{
+    if(index < 0 || index >= (type==0?audioTracks.size():subTracks.size())) return;
+    setMPVProperty(type==AudioTrack?"aid":"sid",type==AudioTrack?audioTracks[index].id:subTracks[index].id);
 }
 
 void MPVPlayer::hideSubtitle(bool on)
@@ -570,6 +605,24 @@ void MPVPlayer::hideSubtitle(bool on)
 void MPVPlayer::setSubDelay(int delay)
 {
     setMPVProperty("sub-delay",delay);
+}
+
+void MPVPlayer::clearExternalSub()
+{
+    bool changed = false;
+    for(int i = 0; i < subTracks.size(); ++i)
+    {
+        if(subTracks[i].isExternal)
+        {
+            changed = true;
+            setMPVCommand(QVariantList() << "sub-remove" << subTracks[i].id);
+        }
+    }
+    if(changed)
+    {
+        loadTracks();
+        emit trackInfoChange(SubTrack);
+    }
 }
 
 void MPVPlayer::setSpeed(double speed)
@@ -819,27 +872,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
         [this, event](){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             QVariantList allTracks=mpv::qt::node_to_variant((mpv_node *)prop->data).toList();
-            audioTrack.desc_str.clear();
-            audioTrack.ids.clear();
-            subtitleTrack.desc_str.clear();
-            subtitleTrack.ids.clear();
-            for (QVariant &track : allTracks)
-            {
-                QMap<QString, QVariant> trackMap = track.toMap();
-                QString type(trackMap["type"].toString());
-                if (type == "audio")
-                {
-                    QString title(trackMap["title"].toString());
-                    audioTrack.desc_str.append(title.isEmpty()? trackMap["id"].toString():title);
-                    audioTrack.ids.append(trackMap["id"].toInt());
-                }
-                else if (type == "sub")
-                {
-                    QString title(trackMap["title"].toString());
-                    subtitleTrack.desc_str.append(title.isEmpty() ? trackMap["id"].toString() : title);
-                    subtitleTrack.ids.append(trackMap["id"].toInt());
-                }
-            }
+            loadTracks(allTracks);
             emit trackInfoChange(AudioTrack);
             emit trackInfoChange(SubTrack);
         }
@@ -997,29 +1030,97 @@ void *MPVPlayer::get_proc_address(void *ctx, const char *name)
     return (void *)glctx->getProcAddress(QByteArray(name));
 }
 
+void MPVPlayer::loadOptions()
+{
+    QFile defaultOptionFile(":/res/mpvOptions");
+    defaultOptionFile.open(QFile::ReadOnly);
+    QStringList defaultOptions = GlobalObjects::appSetting->value("Play/MPVParameters", QString(defaultOptionFile.readAll())).toString().split('\n');
+    QVector<QStringList> optionsGroupList = GlobalObjects::appSetting->value("Play/MPVParameterGroups").value<QVector<QStringList>>();
+    optionsGroupList.prepend(defaultOptions);
+
+    curOptionGroup = GlobalObjects::appSetting->value("Play/DefaultParameterGroup", "default").toString();
+    optionGroupKeys = GlobalObjects::appSetting->value("Play/ParameterGroupKeys").toStringList();
+    optionGroupKeys.prepend("default");
+
+    if(optionGroupKeys.size() < optionsGroupList.size())
+    {
+        optionsGroupList.resize(optionGroupKeys.size());
+    }
+    optionsGroupMap.clear();
+    for(int i = 0; i < optionGroupKeys.size(); ++i)
+    {
+        QMap<QString, QString> &optionsMap = optionsGroupMap[optionGroupKeys[i]];
+        for(const QString &option : optionsGroupList[i])
+        {
+            QString opt(option.trimmed());
+            if(opt.isEmpty() || opt.startsWith('#')) continue;
+            int eqPos = opt.indexOf('=');
+            if(eqPos == -1) eqPos = opt.length();
+            optionsMap.insert(opt.left(eqPos), opt.mid(eqPos+1));
+        }
+    }
+    if(!optionsGroupMap.contains(curOptionGroup)) curOptionGroup = "default";
+    emit optionGroupChanged();
+}
+
+bool MPVPlayer::setOptionGroup(const QString &key)
+{
+    if(!optionsGroupMap.contains(key)) return false;
+    const QMap<QString, QString> &optionsMap = optionsGroupMap[key];
+    curOptionGroup = key;
+    GlobalObjects::appSetting->setValue("Play/DefaultParameterGroup", curOptionGroup);
+    Logger::logger()->log(Logger::MPV, QString("[kiko]Switch to option group: %1").arg(curOptionGroup));
+    for(auto iter = optionsMap.cbegin(); iter != optionsMap.cend(); ++iter)
+    {
+        if(optionsBeforeInit.contains(iter.key()))
+        {
+            Logger::logger()->log(Logger::MPV, QString("[kiko]Option need restart: %1").arg(iter.key()));
+            continue;
+        }
+        int ret = mpv::qt::set_option_variant(mpv, iter.key(), iter.value());
+        if(ret != MPV_ERROR_SUCCESS)
+        {
+            Logger::logger()->log(Logger::MPV, QString("[kiko][option error]: %1, %2").arg(iter.key(), QString::number(ret)));
+        }
+    }
+    return true;
+}
+
 void MPVPlayer::loadTracks()
 {
     QVariantList allTracks=mpv::qt::get_property(mpv,"track-list").toList();
-	audioTrack.desc_str.clear();
-	audioTrack.ids.clear();
-	subtitleTrack.desc_str.clear();
-	subtitleTrack.ids.clear();
-	for (QVariant &track : allTracks)
-	{
-		QMap<QString, QVariant> trackMap = track.toMap();
-		QString type(trackMap["type"].toString());
-		if (type == "audio")
-		{
-			QString title(trackMap["title"].toString());
-			audioTrack.desc_str.append(title.isEmpty()? trackMap["id"].toString():title);
-			audioTrack.ids.append(trackMap["id"].toInt());
-		}
-		else if (type == "sub")
-		{
-			QString title(trackMap["title"].toString());
-			subtitleTrack.desc_str.append(title.isEmpty() ? trackMap["id"].toString() : title);
-			subtitleTrack.ids.append(trackMap["id"].toInt());
-		}
+    loadTracks(allTracks);
+}
+
+void MPVPlayer::loadTracks(const QVariantList &allTracks)
+{
+    audioTracks.clear();
+    subTracks.clear();
+    for (const QVariant &track : allTracks)
+    {
+        QMap<QString, QVariant> trackMap = track.toMap();
+        QString type(trackMap["type"].toString());
+        QString externalFile = trackMap["external-filename"].toString();
+        if (type == "audio")
+        {
+            QString title(trackMap["title"].toString());
+            audioTracks.append({
+                                   title.isEmpty()? trackMap["id"].toString():title,
+                                   trackMap["id"].toInt(),
+                                   !externalFile.isEmpty(),
+                                   externalFile
+                               });
+        }
+        else if (type == "sub")
+        {
+            QString title(trackMap["title"].toString());
+            subTracks.append({
+                                   title.isEmpty()? trackMap["id"].toString():title,
+                                   trackMap["id"].toInt(),
+                                   !externalFile.isEmpty(),
+                                   externalFile
+                               });
+        }
     }
 }
 

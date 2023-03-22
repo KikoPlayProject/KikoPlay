@@ -17,6 +17,8 @@
 #include "Common/notifier.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "MediaLibrary/animeprovider.h"
+#include "Script/scriptmanager.h"
+#include "widgets/scriptsearchoptionpanel.h"
 #define AnimeRole Qt::UserRole+1
 #define EpRole Qt::UserRole+2
 namespace
@@ -209,6 +211,13 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
     QWidget *animePage = new QWidget(pageContainer);
 
     QComboBox *scriptCombo = new QComboBox(animePage);
+    ScriptSearchOptionPanel *scriptOptionPanel = new ScriptSearchOptionPanel(searchPage);
+    QObject::connect(scriptCombo, &QComboBox::currentTextChanged, this, [=](const QString &){
+        QString curId = scriptCombo->currentData().toString();
+        scriptOptionPanel->setScript(GlobalObjects::scriptManager->getScript(curId));
+        if(scriptOptionPanel->hasOptions()) scriptOptionPanel->show();
+        else scriptOptionPanel->hide();
+    });
     for(const auto &s : GlobalObjects::animeProvider->getSearchProviders())
     {
         scriptCombo->addItem(s.first, s.second);
@@ -240,8 +249,9 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
     animePageGLayout->addWidget(scriptCombo,0,0);
     animePageGLayout->addWidget(keywordEdit,0,1);
     animePageGLayout->addWidget(searchButton,0,2);
-    animePageGLayout->addWidget(animeView,1,0,1,3);
-    animePageGLayout->setRowStretch(1,1);
+    animePageGLayout->addWidget(scriptOptionPanel,1,0,1,3);
+    animePageGLayout->addWidget(animeView,2,0,1,3);
+    animePageGLayout->setRowStretch(2,1);
     animePageGLayout->setColumnStretch(1,1);
 
     QAction *copy=new QAction(tr("Copy"), this);
@@ -273,9 +283,18 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
         QList<AnimeLite> results;
         ScriptState state;
         if(scriptCombo->currentIndex()==scriptCombo->count()-1)
+        {
             GlobalObjects::danmuManager->localSearch(keyword, results);
+        }
         else
-            state = GlobalObjects::animeProvider->animeSearch(scriptCombo->currentData().toString(), keyword, results);
+        {
+            QMap<QString, QString> searchOptions;
+            if(scriptOptionPanel->hasOptions() && scriptOptionPanel->changed())
+            {
+                searchOptions = scriptOptionPanel->getOptionVals();
+            }
+            state = GlobalObjects::animeProvider->animeSearch(scriptCombo->currentData().toString(), keyword, searchOptions, results);
+        }
         if(state)
         {
             if(!lastSearchCacheId.isEmpty())

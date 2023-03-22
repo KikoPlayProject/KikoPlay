@@ -3,6 +3,8 @@
 
 #include <QObject>
 class Router;
+class UPnP;
+class DLNAMediaServer;
 class QSettings;
 namespace stefanfrings
 {
@@ -16,9 +18,15 @@ public:
     ~LANServer();
     bool startServer(quint16 port);
     void stopServer();
+    void startDLNA();
+    void stopDLNA();
     bool isStart() const;
+    bool isDLNAStart() const;
+    UPnP *getUPnP() const {return upnp;}
 private:
     Router *router;
+    UPnP *upnp;
+    DLNAMediaServer *dlnaMediaServer;
     stefanfrings::HttpListener *listener;
     QSettings* serverSettings;
 

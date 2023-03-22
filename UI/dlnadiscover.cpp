@@ -9,7 +9,9 @@
 #include <QNetworkInterface>
 #include <QUrl>
 #include <QSettings>
+#include <QUdpSocket>
 #include "LANServer/dlna/upnpctrlpoint.h"
+#include "LANServer/dlna/dlnamediacontroller.h"
 #include "Play/Playlist/playlistitem.h"
 #include "globalobjects.h"
 
@@ -32,8 +34,11 @@ DLNADiscover::DLNADiscover(const PlayListItem *item, QWidget *parent) : CFramele
     playItemFunc = [=](const QModelIndex &index){
         QSharedPointer<UPnPDevice> device = ctrlPoint->getDevice(index);
         DLNAMediaController controller(device);
-        QHostAddress deviceIP = QHostAddress(QUrl(device->location).host());
-        QHostAddress httpServerIP;
+        QHostAddress deviceIP = QHostAddress(QUrl(device->getLocation()).host());
+        QUdpSocket tmpSocket;
+        tmpSocket.connectToHost(deviceIP, 1900);
+        QHostAddress httpServerIP = tmpSocket.localAddress();
+        /*
         bool findIP = false;
         for(QNetworkInterface interface : QNetworkInterface::allInterfaces())
         {
@@ -55,6 +60,7 @@ DLNADiscover::DLNADiscover(const PlayListItem *item, QWidget *parent) : CFramele
             }
         }
         if(!findIP) return false;
+        */
         showBusyState(true);
         refreshDevice->setEnabled(false);
         QString port = QString::number(GlobalObjects::appSetting->value("Server/Port", 8000).toUInt());
@@ -67,7 +73,7 @@ DLNADiscover::DLNADiscover(const PlayListItem *item, QWidget *parent) : CFramele
         {
             controller.seek(item->playTime);
         }
-        deviceName = device->friendlyName;
+        deviceName = device->getFriendlyName();
         refreshDevice->setEnabled(true);
         showBusyState(false);
         return true;
@@ -81,7 +87,9 @@ DLNADiscover::DLNADiscover(const PlayListItem *item, QWidget *parent) : CFramele
     });
     QObject::connect(deviceView, &QTreeView::doubleClicked, [=](const QModelIndex &index){
         if(playItemFunc(index))
+        {
             CFramelessDialog::onAccept();
+        }
     });
     setSizeSettingKey("DialogSize/DLNADiscover",QSize(400*logicalDpiX()/96,220*logicalDpiY()/96));
     QVariant headerState(GlobalObjects::appSetting->value("HeaderViewState/DeviceView"));
@@ -101,5 +109,7 @@ void DLNADiscover::onAccept()
     auto selection = deviceView->selectionModel()->selectedRows();
     if(selection.size()==0) return;
     if(playItemFunc(selection.first()))
+    {
         CFramelessDialog::onAccept();
+    }
 }

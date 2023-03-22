@@ -468,34 +468,65 @@ QSlider#ColorSlider::handle:horizontal {
 QSlider#ColorSlider::handle:horizontal:hover {
    background: #eeeeee;
 }
-QWidget#PopupPage QSlider{
+
+QSlider#PopupPageSlider{
     margin-top: 4px;
     margin-bottom: 4px;
 }
-QWidget#PopupPage QSlider::groove:horizontal {
+QSlider#PopupPageSlider::groove:horizontal {
     height: 5px;
-    background-color:rgb(237,237,237);
+    background-color: rgba(255, 255, 255, 100);
     left: 8px; right: 8px;
 }
 
-QWidget#PopupPage QSlider::handle:horizontal {
+QSlider#PopupPageSlider::handle:horizontal {
     height: 18px;
     width:18px;
-    border-image: url(:/res/images/slider-normal.png);
+    border-image: url(:/res/images/sliderThumb.png);
     margin-top:-7px;
     margin-bottom:-7px;
 }
-QWidget#PopupPage QSlider::handle:hover {
+QSlider#PopupPageSlider::handle:hover {
     border-image: url(:/res/images/slider-hover.png);
 }
-QWidget#PopupPage QSlider::handle:pressed {
+QSlider#PopupPageSlider::handle:pressed {
     border-image: url(:/res/images/slider-pressed.png);
 }
-QWidget#PopupPage QSlider::add-page:horizontal{
-    background-color: rgb(237, 237, 237);
+QSlider#PopupPageSlider::add-page:horizontal{
+    background-color: rgba(255, 255, 255, 0);
 }
-QWidget#PopupPage QSlider::sub-page:horizontal{
-    background-color: rgb(237, 237, 237);
+QSlider#PopupPageSlider::sub-page:horizontal{
+    background-color: rgb(37, 168, 198);
+}
+
+QSlider#OptionSlider{
+    border-color: #bcbcbc;
+    padding-bottom: 25px;
+}
+
+QSlider#OptionSlider::groove:horizontal {
+    background-color: rgba(255, 255, 255, 100);
+    height: 5px;
+}
+
+QSlider#OptionSlider::handle:horizontal {
+    height: 18px;
+    width:18px;
+    border-image: url(:/res/images/sliderThumb.png);
+    margin-top:-7px;
+    margin-bottom:-7px;
+}
+QSlider#OptionSlider::handle:hover {
+    border-image: url(:/res/images/slider-hover.png);
+}
+QSlider#OptionSlider::handle:pressed {
+    border-image: url(:/res/images/slider-pressed.png);
+}
+QSlider#OptionSlider::add-page:horizontal{
+    background-color: rgba(255, 255, 255, 0);
+}
+QSlider#OptionSlider::sub-page:horizontal{
+    background-color: rgba(255, 255, 255, 0);
 }
 
 
@@ -694,6 +725,25 @@ QTreeView#TaskFileInfoView {
     qproperty-ignoreColor: rgb(200,200,200);
 @endif
 }
+QDialog QTreeView::item {
+    padding: 2px;
+}
+QTreeView#ScriptSettingView {
+    show-decoration-selected: 1;
+    outline:0px;
+}
+QTreeView#ScriptSettingView::item {
+    border: none;
+}
+QTreeView#ScriptSettingView::branch {
+    background-color: transparent;
+}
+QTreeView#ScriptSettingView::item:hover, QTreeView#ScriptSettingView::branch:hover {
+    background-color: rgba(149, 207, 255, 100);
+}
+QTreeView#ScriptSettingView::item:selected, QTreeView#ScriptSettingView::branch:selected{
+    background-color: rgba(60, 167, 255, 255);
+}
 
 
 /* ------------------- QHeaderView ------------------- */
@@ -753,7 +803,9 @@ QScrollArea{
     border:none;
 }
 QScrollArea > QWidget > QWidget{
+@if{DarkMode}
     background: transparent;
+@endif
 }
 QScrollArea#PoolItemContainer{
     border-color: rgb(200,200,200);
@@ -852,7 +904,17 @@ QCheckBox::indicator:checked {
 QWidget#PopupPage QCheckBox::indicator:unchecked {
     image: url(:/res/images/checkbox-uncheck-light.svg);
 }
-QDialog QCheckBox {
+QCheckBox {
+@if{DarkMode}
+    color: rgb(214,214,214);
+@else
+    color: rgb(0,0,0);
+@endif
+}
+
+
+/* --------------------QRadioButton--------------------------------*/
+QRadioButton {
 @if{DarkMode}
     color: rgb(214,214,214);
 @else
@@ -908,6 +970,9 @@ QTextEdit#AnimeDetailDesc{
 QPlainTextEdit:focus,QTextEdit:focus {
     border: 1px solid #2BA9EC;
 }
+QTabWidget QPlainTextEdit {
+    border: 1px solid #2BA9EC;
+}
 QPlainTextEdit#LuaCodeEditor{
 @if{DarkMode}
     qproperty-hoverColor: rgba(92, 92, 92, 200);
@@ -933,6 +998,9 @@ QLineEdit#PageEdit{
     border-color:#1CA0E4;
     background:transparent;
     padding-bottom:-1px;
+}
+QLineEdit#ElideLineEdit {
+    padding-right: 28px;
 }
 QSpinBox::up-button,QDateEdit::up-button {
     subcontrol-origin: border;
@@ -1129,7 +1197,6 @@ QPushButton#widgetPlayListCollapse:hover,
 QPushButton#widgetPlayListCollapse:pressed,
 QPushButton#widgetPlayListCollapse:checked{
     color:#FFFFFF;
-    background:#666a6e;
 }
 QPushButton#DialogCloseButton{
     border:none;
@@ -1342,6 +1409,13 @@ QPushButton#CharacterPlaceholder:pressed{
 QLabel#CharacterPlaceholderIcon:pressed {
     margin-top:2px;
 }
+QPushButton#AddOptionGroup {
+    margin-bottom: 2px;
+}
+QPushButton#ElideLineEditBtn {
+    margin: 2px;
+}
+
 
 /* ------------------- QScrollBar Setting ------------------- */
 @if{DarkMode}
@@ -1500,11 +1574,11 @@ QListView#captureView,QListView#captureImageView{
     background: transparent;
     color: rgb(240,240,240);
 }
-QProgressBar#DownloadToolProgress {
-    border: none;
-    text-align: center;
-    background-color: transparent;
+QListView#LiveDanmuList {
+    border-style:none;
+    background:transparent;
 }
+
 
 /* ------------------- QProgressBar ------------------- */
 QProgressBar {
@@ -1515,3 +1589,63 @@ QProgressBar {
 QProgressBar::chunk {
     background-color: #25b3df;
 }
+QProgressBar#DownloadToolProgress {
+    border: none;
+    text-align: center;
+    background-color: transparent;
+}
+
+
+
+/* --------------------QTab-------------------------------*/
+QTabWidget::pane {
+    border: 0px solid #2BA9EC;
+    background: #fafafa;
+    top: -1px;
+}
+
+QTabBar::tab {
+    border: 1px solid #C4C4C3;
+    min-width:10ex;
+    padding: 6px;
+    margin-right: 1px;
+    @if{DarkMode}
+       color: rgb(214, 214, 214);
+    @endif
+}
+
+QTabBar::tab:hover {
+   @if{DarkMode}
+       background-color:rgb(80, 80, 80);
+   @else
+       background-color:#fafafa;
+   @endif
+}
+
+QTabBar::tab:selected {
+    border-top-color: #2BA9EC;
+    border-left-color: #2BA9EC;
+    border-right-color: #2BA9EC;
+    @if{DarkMode}
+        background-color:rgb(60, 60, 60);
+        border-bottom-color: rgb(60, 60, 60);
+    @else
+        background-color:#fafafa;
+        border-bottom-color: #fafafa;
+    @endif
+}
+
+QTabBar::tab:!selected {
+    margin-top: 0px; /* make non-selected tabs look smaller */
+    border-bottom-color: #2BA9EC;
+}
+
+QTabBar::close-button {
+    image: url(:/res/images/tab-close.svg);
+    margin: 4px;
+}
+
+QTabBar::close-button:hover {
+    image: url(:/res/images/tab-close-hover.svg);
+}
+
