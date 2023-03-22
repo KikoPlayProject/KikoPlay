@@ -198,12 +198,13 @@ ScriptSettingDialog::ScriptSettingDialog(QSharedPointer<ScriptBase> script, QWid
     SettingDelegate *delegate = new SettingDelegate(this);
 
     QTreeView *scriptView=new QTreeView(this);
+    scriptView->setObjectName(QStringLiteral("ScriptSettingView"));
     scriptView->setRootIsDecorated(false);
     scriptView->setItemDelegate(delegate);
     scriptView->setSelectionMode(QAbstractItemView::SingleSelection);
     scriptView->setModel(model);
     scriptView->setAlternatingRowColors(true);
-
+    scriptView->expandAll();
     QObject::connect(model, &ScriptSettingModel::itemChanged, this, [=](const QString &, int index, const QString &value){
        changedItems[index] = value;
     });

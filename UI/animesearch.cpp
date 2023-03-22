@@ -11,11 +11,20 @@
 #include "MediaLibrary/animeworker.h"
 #include "MediaLibrary/animeprovider.h"
 #include "Common/notifier.h"
+#include "widgets/scriptsearchoptionpanel.h"
+#include "Script/scriptmanager.h"
 #define AnimeRole Qt::UserRole+1
 
 AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("Bangumi Search"),parent,true,true,false)
 {
     scriptCombo=new QComboBox(this);
+    scriptOptionPanel = new ScriptSearchOptionPanel(this);
+    QObject::connect(scriptCombo, &QComboBox::currentTextChanged, this, [=](const QString &){
+        QString curId = scriptCombo->currentData().toString();
+        scriptOptionPanel->setScript(GlobalObjects::scriptManager->getScript(curId));
+        if(scriptOptionPanel->hasOptions()) scriptOptionPanel->show();
+        else scriptOptionPanel->hide();
+    });
     for(const auto &p : GlobalObjects::animeProvider->getSearchProviders())
     {
         scriptCombo->addItem(p.first, p.second);
@@ -54,8 +63,9 @@ AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("B
     bgmGLayout->addWidget(scriptCombo, 0, 0);
     bgmGLayout->addWidget(searchWordEdit, 0, 1);
     bgmGLayout->addWidget(searchButton, 0, 2);
-    bgmGLayout->addWidget(bangumiList,1,0,1,3);
-    bgmGLayout->setRowStretch(1,1);
+    bgmGLayout->addWidget(scriptOptionPanel,2,0,1,3);
+    bgmGLayout->addWidget(bangumiList,3,0,1,3);
+    bgmGLayout->setRowStretch(3,1);
     bgmGLayout->setColumnStretch(1,1);
 
     setSizeSettingKey("DialogSize/AnimeSearch", QSize(460*logicalDpiX()/96, 320*logicalDpiY()/96));
@@ -70,7 +80,12 @@ void AnimeSearch::search()
     searchWordEdit->setEnabled(false);
     showBusyState(true);
     QList<AnimeLite> animes;
-    ScriptState state = GlobalObjects::animeProvider->animeSearch(scriptCombo->currentData().toString(), keyword, animes);
+    QMap<QString, QString> searchOptions;
+    if(scriptOptionPanel->hasOptions() && scriptOptionPanel->changed())
+    {
+        searchOptions = scriptOptionPanel->getOptionVals();
+    }
+    ScriptState state = GlobalObjects::animeProvider->animeSearch(scriptCombo->currentData().toString(), keyword, searchOptions, animes);
     if(state)
     {
         bangumiList->clear();

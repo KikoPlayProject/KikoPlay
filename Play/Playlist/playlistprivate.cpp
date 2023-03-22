@@ -28,6 +28,7 @@ void PlayListPrivate::loadPlaylist()
     if(QFile::exists(plPath+".tmp") && !QFile::exists(plPath))
     {
         QFile::rename(plPath+".tmp", plPath);
+        //TODO LOG
     }
     QFile playlistFile(plPath);
     bool ret=playlistFile.open(QIODevice::ReadOnly|QIODevice::Text);
@@ -56,7 +57,7 @@ void PlayListPrivate::loadPlaylist()
                 collection->title=reader.attributes().value("title").toString();
                 collection->isBgmCollection=(reader.attributes().value("bgmCollection")=="true");
                 if(collection->isBgmCollection) bgmCollectionItems.insert(collection->title, collection);
-                collection->folderPath=reader.attributes().value("folderPath").toString();
+                collection->path=reader.attributes().value("folderPath").toString();
                 int marker=PlayListItem::Marker::M_NONE;
                 if(reader.attributes().hasAttribute("marker"))
                     marker = reader.attributes().value("marker").toInt();
@@ -68,28 +69,49 @@ void PlayListPrivate::loadPlaylist()
             }
             case 2:
             {
-                QString title= reader.attributes().value("title").toString();
-                QString animeTitle= reader.attributes().value("animeTitle").toString();
-                QString poolID=reader.attributes().value("poolID").toString();
-                int playTime=reader.attributes().value("playTime").toInt();
-                int playTimeState=reader.attributes().value("playTimeState").toInt();
+                QXmlStreamAttributes attrs = reader.attributes();
+                QString title = attrs.value("title").toString();
+                QString animeTitle = attrs.value("animeTitle").toString();
+                QString poolID = attrs.value("poolID").toString();
+                int playTime = attrs.value("playTime").toInt();
+                int playTimeState = attrs.value("playTimeState").toInt();
                 int marker=PlayListItem::Marker::M_NONE;
-                if(reader.attributes().hasAttribute("marker"))
-                    marker = reader.attributes().value("marker").toInt();
+                if(attrs.hasAttribute("marker"))
+                    marker = attrs.value("marker").toInt();
                 qint64 addTime = 0;
-                if(reader.attributes().hasAttribute("addTime"))
-                    addTime = reader.attributes().value("addTime").toLongLong();
+                if(attrs.hasAttribute("addTime"))
+                    addTime = attrs.value("addTime").toLongLong();
+                bool hasTrackInfo = attrs.hasAttribute("subDelay") || attrs.hasAttribute("audioIndex") ||
+                        attrs.hasAttribute("subIndex") || attrs.hasAttribute("sub") || attrs.hasAttribute("audio");
+                ItemTrackInfo trackInfo;
+                if(hasTrackInfo)
+                {
+                    if(attrs.hasAttribute("subDelay"))
+                        trackInfo.subDelay = attrs.value("subDelay").toInt();
+                    if(attrs.hasAttribute("audioIndex"))
+                        trackInfo.audioIndex = attrs.value("audioIndex").toInt();
+                    if(attrs.hasAttribute("subIndex"))
+                        trackInfo.subIndex = attrs.value("subIndex").toInt();
+                    if(attrs.hasAttribute("sub"))
+                        trackInfo.subFiles = attrs.value("sub").toString().split('|', Qt::SkipEmptyParts);
+                    if(attrs.hasAttribute("audio"))
+                        trackInfo.audioFiles = attrs.value("audio").toString().split('|', Qt::SkipEmptyParts);
+                }
+
                 QString path = reader.readElementText().trimmed();
 
                 PlayListItem *item=new PlayListItem(parents.last(),true);
                 item->title=title;
                 item->path= path;
+                item->pathHash = QCryptographicHash::hash(path.toUtf8(),QCryptographicHash::Md5).toHex();
                 item->playTime=playTime;
                 item->poolID = poolID;
                 item->playTimeState=PlayListItem::PlayState(playTimeState);
                 item->marker = PlayListItem::Marker(marker);
                 item->addTime = addTime;
+                if(hasTrackInfo)  item->trackInfo = new ItemTrackInfo(trackInfo);
                 fileItems.insert(item->path,item);
+                mediaPathHash.insert(item->pathHash, path);
                 if(!animeTitle.isEmpty())item->animeTitle=animeTitle;
                 for(auto &pair :recentList)
                 {
@@ -138,6 +160,7 @@ void PlayListPrivate::savePlaylist()
     writer.writeStartDocument();
     saveItem(writer, root);
     writer.writeEndDocument();
+    playlistFile.flush();
     ret = QFile::remove(plPath);
     if(!QFile::exists(plPath) || ret)
     {
@@ -168,8 +191,8 @@ void PlayListPrivate::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
         writer.writeStartElement("collection");
         writer.writeAttribute("title",item->title);
         writer.writeAttribute("bgmCollection",item->isBgmCollection?"true":"false");
-        if(!item->folderPath.isEmpty())
-            writer.writeAttribute("folderPath",item->folderPath);
+        if(!item->path.isEmpty())
+            writer.writeAttribute("folderPath",item->path);
         if(item->marker != PlayListItem::Marker::M_NONE)
             writer.writeAttribute("marker", QString::number((int)item->marker));
         if(item->addTime > 0)
@@ -195,6 +218,19 @@ void PlayListPrivate::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
                 writer.writeAttribute("marker", QString::number((int)child->marker));
             if(item->addTime > 0)
                 writer.writeAttribute("addTime", QString::number(item->addTime));
+            if(child->trackInfo)
+            {
+                if(child->trackInfo->subDelay != 0)
+                    writer.writeAttribute("subDelay",QString::number(child->trackInfo->subDelay));
+                if(child->trackInfo->audioIndex > -1)
+                    writer.writeAttribute("audioIndex",QString::number(child->trackInfo->audioIndex));
+                if(child->trackInfo->subIndex > -1)
+                    writer.writeAttribute("subIndex",QString::number(child->trackInfo->subIndex));
+                if(!child->trackInfo->subFiles.isEmpty())
+                    writer.writeAttribute("sub", child->trackInfo->subFiles.join('|'));
+                if(!child->trackInfo->audioFiles.isEmpty())
+                    writer.writeAttribute("audio", child->trackInfo->audioFiles.join('|'));
+            }
             writer.writeCharacters(child->path);
             writer.writeEndElement();
         }
@@ -334,7 +370,7 @@ bool PlayListPrivate::addSubFolder(QString folderStr, PlayListItem *parent, int 
     bool containsVideoFile = false;
     PlayListItem *folderCollection = new PlayListItem();
     folderCollection->title = folder.dirName();
-    folderCollection->folderPath = folderStr;
+    folderCollection->path = folderStr;
     folderCollection->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
     for (QFileInfo fileInfo : folder.entryInfoList())
     {
@@ -350,6 +386,7 @@ bool PlayListPrivate::addSubFolder(QString folderStr, PlayListItem *parent, int 
                     newItem->title = fileName.mid(pathPos, suffixPos - pathPos);
                     newItem->path = fileInfo.filePath();
                     newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
+                    newItem->pathHash = QCryptographicHash::hash(newItem->path.toUtf8(),QCryptographicHash::Md5).toHex();
                     containsVideoFile = true;
                     itemCount++;
                     fileItems.insert(newItem->path,newItem);
@@ -370,7 +407,7 @@ bool PlayListPrivate::addSubFolder(QString folderStr, PlayListItem *parent, int 
     return containsVideoFile;
 }
 
-int PlayListPrivate::refreshFolder(PlayListItem *folderItem, QList<PlayListItem *> &nItems)
+int PlayListPrivate::refreshFolder(PlayListItem *folderItem, QVector<PlayListItem *> &nItems)
 {
     int nCount = 0;
     QSet<QString> currentPaths;
@@ -378,13 +415,13 @@ int PlayListPrivate::refreshFolder(PlayListItem *folderItem, QList<PlayListItem 
     {
         if(item->children)
         {
-            if(!item->folderPath.isEmpty()) currentPaths<<item->folderPath;
+            if(!item->path.isEmpty()) currentPaths<<item->path;
             nCount += refreshFolder(item, nItems);
         }
     }
-    if(folderItem->folderPath.isEmpty()) return nCount;
+    if(folderItem->path.isEmpty()) return nCount;
 
-    QDir folder(folderItem->folderPath);
+    QDir folder(folderItem->path);
     bool oFolder(folderItem->parent);
     QModelIndex fIndex;
     if(oFolder) fIndex = q_ptr->createIndex(folderItem->parent->children->indexOf(folderItem),0,folderItem);
@@ -416,7 +453,7 @@ int PlayListPrivate::refreshFolder(PlayListItem *folderItem, QList<PlayListItem 
             {
                 PlayListItem *folderCollection = new PlayListItem();
                 folderCollection->title = fileName;
-                folderCollection->folderPath = filePath;
+                folderCollection->path = filePath;
                 folderCollection->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
                 int c = refreshFolder(folderCollection, nItems);
                 if(c>0)
@@ -502,7 +539,7 @@ QString PlayListPrivate::setCollectionTitle(QList<PlayListItem *> &list)
     return matchStr.length() < minLength? defaultTitle : matchStr;
 }
 
-void PlayListPrivate::dumpItem(QJsonArray &array, PlayListItem *item, QHash<QString, QString> &mediaHash)
+void PlayListPrivate::dumpItem(QJsonArray &array, PlayListItem *item)
 {
     for(PlayListItem *child:*item->children)
     {
@@ -515,21 +552,29 @@ void PlayListPrivate::dumpItem(QJsonArray &array, PlayListItem *item, QHash<QStr
         if(child->children)
         {
             QJsonArray childArray;
-            dumpItem(childArray,child,mediaHash);
+            dumpItem(childArray, child);
             itemObj.insert("nodes",childArray);
         }
         else
         {
-            QString pathHash(QCryptographicHash::hash(child->path.toUtf8(),QCryptographicHash::Md5).toHex());
-            itemObj.insert("mediaId",pathHash);
+            itemObj.insert("mediaId", child->pathHash);
             itemObj.insert("danmuPool",child->poolID);
             itemObj.insert("playTime",child->playTime);
             itemObj.insert("playTimeState",child->playTimeState);
             itemObj.insert("animeName", child->animeTitle);
             static QString nodeColors[3]={"#333","#428bca","#a4a2a2"};
             itemObj.insert("color",nodeColors[child->playTimeState]);
-            mediaHash.insert(pathHash,child->path);
         }
         array.append(itemObj);
     }
+}
+
+void PlayListPrivate::addMediaPathHash(const QVector<PlayListItem *> newItems)
+{
+    pathHashLock.lockForWrite();
+    for(PlayListItem *item : newItems)
+    {
+        mediaPathHash.insert(item->pathHash, item->path);
+    }
+    pathHashLock.unlock();
 }

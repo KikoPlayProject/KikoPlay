@@ -31,7 +31,24 @@ public:
     void exportSimpleInfo(int srcId, QVector<SimpleDanmuInfo> &simpleDanmuList);
     QJsonArray exportJson();
     QJsonObject exportFullJson();
-    static QJsonArray exportJson(const QVector<QSharedPointer<DanmuComment> > &danmuList, bool useOrigin=false);
+    template<typename T>
+    static QJsonArray exportJson(const QVector<T> &danmuList, bool useOrigin=false)
+    {
+        QJsonArray danmuArray;
+        for(const auto &danmu:danmuList)
+        {
+            if(danmu->blockBy!=-1) continue;
+            if(useOrigin)
+            {
+                danmuArray.append(QJsonArray({danmu->originTime/1000.0,danmu->type,danmu->color,danmu->source,danmu->text, danmu->sender}));
+            }
+            else
+            {
+                danmuArray.append(QJsonArray({danmu->time/1000.0,danmu->type,danmu->color,danmu->sender,danmu->text}));
+            }
+        }
+        return danmuArray;
+    }
     QString getPoolCode(const QStringList &addition=QStringList()) const;
     bool addPoolCode(const QString &code, bool hasAddition=false);
     bool addPoolCode(const QJsonArray &infoArray);

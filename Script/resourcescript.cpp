@@ -18,12 +18,27 @@ ScriptState ResourceScript::loadScript(const QString &scriptPath)
     return ScriptState(ScriptState::S_NORM);
 }
 
-ScriptState ResourceScript::search(const QString &keyword, int page, int &totalPage, QList<ResourceItem> &results, const QString &scene)
+ScriptState ResourceScript::search(const QString &keyword, int page, int &totalPage, QList<ResourceItem> &results, const QString &scene, const QMap<QString, QString> *option)
 {
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo;
-    QVariantList rets = call(searchFunc, {keyword, page, scene}, 2, errInfo);
+    QVariantList params{keyword, page, scene};
+    if(!option)
+    {
+        addSearchOptions(params);
+    }
+    else
+    {
+        QVariantMap optionMap;
+        for(auto iter = option->cbegin(); iter != option->cend(); ++iter)
+        {
+
+            optionMap[iter.key()] = iter.value();
+        }
+        params.append(optionMap);
+    }
+    QVariantList rets = call(searchFunc, params, 2, errInfo);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     if(rets[0].type()!=QVariant::List || !rets[1].canConvert(QVariant::Int)) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
     totalPage = rets[1].toInt();

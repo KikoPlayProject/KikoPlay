@@ -109,8 +109,8 @@ int Net::httpPost(lua_State *L)
 {
     do
     {
-        int params = lua_gettop(L);  //url <data> <header>
-        if(params<2 || params>3) break;
+        int params = lua_gettop(L);  //url <data> <header> <query>
+        if(params<2 || params>4) break;
         if(lua_type(L, 1)!=LUA_TSTRING) break;
         if(lua_type(L, 2)!=LUA_TSTRING) break;
         const char *curl = luaL_checkstring(L,1);
@@ -120,7 +120,9 @@ int Net::httpPost(lua_State *L)
         QStringList headers;
         if(params > 2)  //has header
         {
+            lua_pushvalue(L, 3);
             auto h = ScriptBase::getValue(L);
+            lua_pop(L, 1);
             if (h.type() != QVariant::Map && !(h.type() == QVariant::List && h.toList().size() == 0)) break;
             auto hmap = h.toMap();
             for(auto iter=hmap.constBegin(); iter!=hmap.constEnd(); ++iter)
@@ -128,7 +130,20 @@ int Net::httpPost(lua_State *L)
                 headers<<iter.key()<<iter.value().toString();
             }
         }
-        Network::Reply &&reply = Network::httpPost(curl,cdata,headers);
+        QUrlQuery query;
+        if(params > 3)  //has query
+        {
+            lua_pushvalue(L, 4);
+            auto q = ScriptBase::getValue(L);
+            lua_pop(L, 1);
+            if (q.type() != QVariant::Map && !(q.type() == QVariant::List && q.toList().size() == 0)) break;
+            auto qmap = q.toMap();
+            for(auto iter=qmap.constBegin(); iter!=qmap.constEnd(); ++iter)
+            {
+                query.addQueryItem(iter.key(), iter.value().toString());
+            }
+        }
+        Network::Reply &&reply = Network::httpPost(curl, cdata, headers, query);
         if(!reply.hasError)
         {
             lua_pushnil(L);
@@ -141,7 +156,7 @@ int Net::httpPost(lua_State *L)
         }
         return 2;
     }while(false);
-    lua_pushstring(L, "httppost: param error, expect: url(string), <data(string)>, <header(table)>");
+    lua_pushstring(L, "httppost: param error, expect: url(string), <data(string)>, <header(table)>, <query(table)>");
     lua_pushnil(L);
     return 2;
 }
@@ -203,7 +218,7 @@ int Net::httpGetBatch(lua_State *L)
         {
             redirect = lua_toboolean(L, 4);
         }
-        QList<Network::Reply> &&content = Network::httpGetBatch(urls,querys,headers); //[[hasError, content], [], ...]
+        QList<Network::Reply> &&content = Network::httpGetBatch(urls, querys, headers, redirect); //[[hasError, content], [], ...]
         lua_pushnil(L);
         lua_newtable(L); // table
         for(int i=0; i<content.size(); ++i)
@@ -256,14 +271,25 @@ int Net::json2table(lua_State *L)
 int Net::table2json(lua_State *L)
 {
     int params = lua_gettop(L);
-    if(params!=1 || lua_type(L, 1)!=LUA_TTABLE)
+    if(params<1 || lua_type(L, 1)!=LUA_TTABLE)
     {
-        lua_pushstring(L, "table2json: param error, expect: table");
+        lua_pushstring(L, "table2json: param error, expect: table, <format(indented/compact, default=indented)>");
         lua_pushnil(L);
         return 2;
     }
+    lua_pushvalue(L, 1);
     QVariant table = ScriptBase::getValue(L);
-    QByteArray json = QJsonDocument::fromVariant(table).toJson(QJsonDocument::JsonFormat::Indented);
+    lua_pop(L, 1);
+    QJsonDocument::JsonFormat format = QJsonDocument::JsonFormat::Indented;
+    if(params > 1)
+    {
+        const char *type = lua_tostring(L, 2);
+        if(strcmp(type, "compact") == 0)
+        {
+            format = QJsonDocument::JsonFormat::Compact;
+        }
+    }
+    QByteArray json = QJsonDocument::fromVariant(table).toJson(format);
     lua_pushnil(L);
     lua_pushstring(L, json.constData());
     return 2;

@@ -33,9 +33,13 @@ public:
 private:
     QLabel *iconLabel, *nameLabel, *infoLabel;
     constexpr static const int iconSize = 60;
+protected:
+    virtual void mouseDoubleClickEvent(QMouseEvent *) override;
 signals:
     void updateCharacter(CharacterWidget *crtItem);
     void selectLocalImage(CharacterWidget *crtItem);
+    void pasteImage(CharacterWidget *crtItem);
+    void cleanImage(CharacterWidget *crtItem);
     void modifyCharacter(CharacterWidget *crtItem);
     void removeCharacter(CharacterWidget *crtItem);
 };
@@ -84,6 +88,7 @@ public:
     AnimeDetailInfoPage(QWidget *parent = nullptr);
     void setAnime(Anime *anime);
     Anime *curAnime() const {return currentAnime;}
+    virtual bool eventFilter(QObject *watched, QEvent *event) override;
 signals:
     void playFile(const QString &file);
 private:
@@ -113,6 +118,8 @@ private:
 
     void updateCharacter(CharacterWidget *crtItem);
     void selectLocalCharacterImage(CharacterWidget *crtItem);
+    void pasteCharacterImage(CharacterWidget *crtItem);
+    void cleanCharacterImage(CharacterWidget *crtItem);
     void addCharacter();
     void modifyCharacter(CharacterWidget *crtItem);
     void removeCharacter(CharacterWidget *crtItem);

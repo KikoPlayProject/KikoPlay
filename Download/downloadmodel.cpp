@@ -474,6 +474,12 @@ QVariant DownloadModel::data(const QModelIndex &index, int role) const
         if(role==Qt::DisplayRole || role==Qt::ToolTipRole)
             return downloadItem->dir;
         break;
+    case Columns::CREATETIME:
+        if(role == Qt::DisplayRole)
+            return QDateTime::fromSecsSinceEpoch(downloadItem->createTime).toString("yyyy-MM-dd hh:mm:ss");
+    case Columns::FINISHTIME:
+        if(role == Qt::DisplayRole)
+            return downloadItem->finishTime < downloadItem->createTime? "--" : QDateTime::fromSecsSinceEpoch(downloadItem->finishTime).toString("yyyy-MM-dd hh:mm:ss");
     default:
         break;
     }

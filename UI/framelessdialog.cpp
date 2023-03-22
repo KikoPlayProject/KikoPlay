@@ -40,7 +40,7 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
 
     QFontMetrics fm(*GlobalObjects::iconfont);
     int btnH = qMax(fm.horizontalAdvance(QChar(0xe60b)), fm.horizontalAdvance(QChar(0xe680)));
-    btnH = qMax(btnH, fm.height())*2;
+    btnH = qMax(btnH, fm.height())*1.6;
     QSize btnSize(btnH, btnH);
 
     closeButton=new QPushButton(titleBar);
@@ -64,14 +64,14 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
     acceptButton->setAutoDefault(false);
 
     busyLabel = new LoadingIcon(QColor(153, 153, 153), this);
-    busyLabel->setFixedSize(btnSize);
+    busyLabel->setFixedSize(QSize(btnH*0.9, btnH*0.9));
     busyLabel->hide();
 
     QHBoxLayout *titleHBLayout=new QHBoxLayout(titleBar);
     titleHBLayout->setContentsMargins(8*logicalDpiX()/96, 8*logicalDpiY()/96, 8*logicalDpiX()/96, 8*logicalDpiY()/96);
     titleHBLayout->addWidget(title, 0, Qt::AlignVCenter);
     titleHBLayout->addWidget(busyLabel);
-    titleHBLayout->addSpacing(btnH * 0.1);
+    titleHBLayout->addSpacing(btnH * 0.2);
     titleHBLayout->addWidget(acceptButton);
     titleHBLayout->addSpacing(btnH * 0.1);
     titleHBLayout->addWidget(closeButton);
@@ -337,7 +337,6 @@ void CFramelessDialog::setTitle(const QString &text)
 void CFramelessDialog::showMessage(const QString &msg, int type)
 {
     dialogTip->showMessage(msg, type);
-    //dialogTip->raise();
 }
 
 void CFramelessDialog::setSizeSettingKey(const QString &key, const QSize &initSize)

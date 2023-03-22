@@ -10,12 +10,15 @@
 Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent)
 {
     aria2Process = new QProcess(this);
+    if(GlobalObjects::appSetting->value("Download/KillExistAria2", true).toBool())
+    {
 #ifdef Q_OS_WIN
-    aria2Process->start("taskkill", {"/im", "aria2c.exe", "/f"});
+        aria2Process->start("taskkill", {"/im", "aria2c.exe", "/f"});
 #else
-    aria2Process->start("pkill -f aria2c");
+        aria2Process->start("pkill -f aria2c");
 #endif
-    aria2Process->waitForFinished(-1);
+        aria2Process->waitForFinished(-1);
+    }
     QStringList opts=GlobalObjects::appSetting->value("Download/Aria2Args","").toString().split('\n');
     QStringList args;
     for(const QString &option:opts)

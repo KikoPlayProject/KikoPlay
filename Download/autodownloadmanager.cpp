@@ -2,6 +2,7 @@
 #include "../Script/resourcescript.h"
 #include "../Script/scriptmanager.h"
 #include "autodownloadmanager.h"
+#include "Common/network.h"
 #include "globalobjects.h"
 #include <QDateTime>
 #include <QBrush>
@@ -210,6 +211,15 @@ void AutoDownloadManager::loadRules()
                 rule->state=(reader.attributes().value("enable")=="true"?0:2);
                 rule->searchInterval=reader.attributes().value("searchInterval").toInt();
                 rule->download=(reader.attributes().value("download")=="true");
+                QString searchOptions = reader.attributes().value("searchOptions").toString();
+                if(!searchOptions.isEmpty())
+                {
+                    QJsonObject sObj(Network::toJson(searchOptions).object());
+                    for(auto iter = sObj.constBegin(); iter != sObj.constEnd(); ++iter)
+                    {
+                        rule->searchOptions[iter.key()] = iter.value().toString();
+                    }
+                }
                 curRule = rule;
                 ruleIdHash.insert(rule->id, rule);
                 downloadRules.append(QSharedPointer<DownloadRule>(rule));
@@ -258,6 +268,16 @@ void AutoDownloadManager::saveRules()
         writer.writeAttribute("enable",rule->state==2?"false":"true");
         writer.writeAttribute("searchInterval", QString::number(rule->searchInterval));
         writer.writeAttribute("download", rule->download?"true":"false");
+        if(!rule->searchOptions.isEmpty())
+        {
+            QMap<QString, QVariant> searchOptions;
+            for(auto iter = rule->searchOptions.cbegin(); iter != rule->searchOptions.cend(); ++iter)
+            {
+                searchOptions[iter.key()] = iter.value();
+            }
+            QJsonDocument doc(QJsonObject::fromVariantMap(searchOptions));
+            writer.writeAttribute("searchOptions", doc.toJson(QJsonDocument::Compact));
+        }
 
         for(QString &checkPosition: rule->lastCheckPosition)
         {
@@ -390,7 +410,7 @@ void DownloadRuleChecker::fetchInfo(DownloadRule *rule)
             break;
         }
         ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
-        ScriptState state = resScript->search(rule->searchWord, page, pageCount, searchResults, "auto-download");
+        ScriptState state = resScript->search(rule->searchWord, page, pageCount, searchResults, "auto-download", &rule->searchOptions);
         if(state)
         {
             if(page==1)

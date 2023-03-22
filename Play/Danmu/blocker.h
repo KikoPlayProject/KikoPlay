@@ -50,13 +50,13 @@ public:
     void resetBlockCount();
     void removeBlockRule(const QModelIndexList &deleteIndexes);
     template<typename Iter>
-    void checkDanmu(Iter begin, Iter end)
+    void checkDanmu(Iter begin, Iter end, bool updateRuleCount=true)
     {
         for(Iter i = begin; i != end; ++i)
         {
             for(BlockRule *rule:blockList)
             {
-                if(rule->blockTest(&(**i)))
+                if(rule->blockTest(&(**i), updateRuleCount))
                 {
                     (*i)->blockBy=rule->id;
                     break;

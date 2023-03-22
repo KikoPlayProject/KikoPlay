@@ -14,7 +14,7 @@
 #include <QWindow>
 #include "Common/notifier.h"
 
-CaptureView::CaptureView(CaptureListModel *model, int curRow, QWidget *parent) : CFramelessDialog("",parent,false,true,false), captureModel(model)
+CaptureView::CaptureView(CaptureListModel *model, int curRow, QWidget *parent) : CFramelessDialog("",parent,false,true,false), captureModel(model), singleImageMode(false)
 {
     this->curRow=curRow;
     view=new ImageView(this);
@@ -121,9 +121,20 @@ CaptureView::CaptureView(CaptureListModel *model, int curRow, QWidget *parent) :
     setSizeSettingKey("DialogSize/CaptureView",QSize(600*logicalDpiX()/96,340*logicalDpiY()/96));
 }
 
+CaptureView::CaptureView(const QPixmap &pixmap, QWidget *parent) : CFramelessDialog(tr("View Image"),parent,true,true,false),
+    smPlayer(nullptr), captureModel(nullptr), curItem(nullptr), singleImageMode(true)
+{
+    view = new ImageView(this);
+    view->setPixmap(pixmap);
+    QStackedLayout *viewSLayout=new QStackedLayout(this);
+    viewSLayout->setContentsMargins(0,0,0,0);
+    viewSLayout->addWidget(view);
+    setSizeSettingKey("DialogSize/CaptureImageView",QSize(300*logicalDpiX()/96,240*logicalDpiY()/96));
+}
+
 CaptureView::~CaptureView()
 {
-    delete smPlayer;
+    if(smPlayer) delete smPlayer;
 }
 
 
@@ -159,6 +170,7 @@ void CaptureView::setCapture()
 
 void CaptureView::navigate(bool next)
 {
+    if(singleImageMode) return;
     int nRow=this->curRow+(next?1:-1);
     curItem=captureModel->getCaptureItem(nRow);
     if(curItem)

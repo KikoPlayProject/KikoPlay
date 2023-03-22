@@ -14,10 +14,7 @@ CheckUpdate::CheckUpdate(QWidget *parent) : CFramelessDialog(tr("Check For Updat
     versionVLayout->addWidget(newVersionLabel);
     setResizeable(false);
 
-    QFile version(":/res/version.json");
-    version.open(QIODevice::ReadOnly);
-    QJsonObject curVersionObj = QJsonDocument::fromJson(version.readAll()).object();
-    QString versionStr=curVersionObj.value("Version").toString();
+    QString versionStr=GlobalObjects::kikoVersion;
     curVersionLabel->setText(tr("Current Version: %1").arg(versionStr));
 
     newVersionLabel->setText(tr("Checking for updates..."));
@@ -31,7 +28,7 @@ CheckUpdate::CheckUpdate(QWidget *parent) : CFramelessDialog(tr("Check For Updat
             QJsonObject newVersionObj(Network::toJson(reply.content).object());
             QString nVersionStr=newVersionObj.value("Version").toString();
             QString downloadURL=newVersionObj.value("URL").toString();
-            QStringList curVer(versionStr.split('.',QString::SkipEmptyParts)),newVer(nVersionStr.split('.',QString::SkipEmptyParts));
+            QStringList curVer(versionStr.split('.' ,Qt::SkipEmptyParts)),newVer(nVersionStr.split('.',QString::SkipEmptyParts));
             int i=0;
             bool hasNewversion=false;
             for(;i<3;++i)

@@ -5,7 +5,7 @@
 DanmuObject *DanmuObject::head=nullptr;
 int DanmuObject::poolCount=0;
 
-bool BlockRule::blockTest(DanmuComment *comment)
+bool BlockRule::blockTest(DanmuComment *comment, bool updateCount)
 {
     if(!enable)return false;
     QString *testStr(nullptr);
@@ -59,7 +59,7 @@ bool BlockRule::blockTest(DanmuComment *comment)
         break;
     }
     if(blockField==DanmuColor)delete testStr;
-    if(testResult) ++blockCount;
+    if(testResult && updateCount) ++blockCount;
     return testResult;
 }
 

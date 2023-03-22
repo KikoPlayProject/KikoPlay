@@ -43,6 +43,7 @@ class ScriptBase
 {
 public:
     ScriptBase();
+    ScriptBase(const ScriptBase &) = delete;
     virtual ~ScriptBase();
 
 public:
@@ -51,13 +52,30 @@ public:
         QString title;
         QString description;
         QString choices;
+        QString group;
         QString key;
         QString value;
     };
+    struct SearchSettingItem
+    {
+        enum DisplayType
+        {
+            Text, Combo, Radio, Check, CheckList, Label, UNKNOWN
+        };
+        DisplayType dType;
+        QString title;
+        QString description;
+        QString choices;
+        QString key;
+        QString value;
+        bool save;
+    };
     const QVector<ScriptSettingItem> &settings() const {return scriptSettings;}
+    const QVector<SearchSettingItem> &searchSettings() const {return searchSettingItems;}
     const QVector<QPair<QString, QString>> &getScriptMenuItems() const {return scriptMenuItems;}
     virtual ScriptState setOption(int index, const QString &value, bool callLua=true);
     virtual ScriptState setOption(const QString &key, const QString &value, bool callLua=true);
+    virtual ScriptState setSearchOption(const QString &key, const QString &value);
     virtual QString id() const {return scriptMeta.value("id");}
     virtual QString name() const {return scriptMeta.value("name");}
     virtual QString desc() const {return scriptMeta.value("desc");}
@@ -70,6 +88,7 @@ public:
 
 protected:
     const char *luaSettingsTable = "settings";
+    const char *luaSearchSettingsTable = "searchsettings";
     const char *luaMetaTable = "info";
     const char *luaSetOptionFunc = "setoption";
     const char *scriptMenuTable = "scriptmenus";
@@ -79,6 +98,7 @@ protected:
     QMutex scriptLock;
     QHash<QString, QString> scriptMeta;
     QVector<ScriptSettingItem> scriptSettings;
+    QVector<SearchSettingItem> searchSettingItems;
     QVector<QPair<QString, QString>> scriptMenuItems; // (title, id)
     bool settingsUpdated, hasSetOptionFunc;
     ScriptType sType;
@@ -91,9 +111,11 @@ protected:
 
     QString loadMeta(const QString &scriptPath);
     void loadSettings(const QString &scriptPath);
+    void loadSearchSettings(const QString &scriptPath);
     void loadScriptMenus();
     void registerFuncs(const char *tname, const luaL_Reg *funcs);
     ScriptState loadScriptStr(const QString &content);
+    void addSearchOptions(QVariantList &params);
 public:
     static void pushValue(lua_State *L, const QVariant &val);
     static QVariant getValue(lua_State *L, bool useString=true);

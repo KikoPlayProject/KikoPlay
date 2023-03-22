@@ -3,6 +3,7 @@
 
 #include <QWidget>
 class QComboBox;
+class QPushButton;
 class DirSelectWidget : public QWidget
 {
     Q_OBJECT

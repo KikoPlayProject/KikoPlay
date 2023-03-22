@@ -199,3 +199,8 @@ bool HttpResponse::isConnected() const
 {
     return socket->isOpen();
 }
+
+QHostAddress HttpResponse::getLocalAddress() const
+{
+    return socket->localAddress();
+}

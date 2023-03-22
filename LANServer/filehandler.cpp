@@ -1,7 +1,8 @@
 #include "filehandler.h"
+#include "globalobjects.h"
+#include "Play/Playlist/playlist.h"
 
-
-FileHandler::FileHandler(QObject *parent) : stefanfrings::HttpRequestHandler(parent), mediaHashTable(nullptr)
+FileHandler::FileHandler(QObject *parent) : stefanfrings::HttpRequestHandler(parent)
 {
 
 }
@@ -9,18 +10,18 @@ FileHandler::FileHandler(QObject *parent) : stefanfrings::HttpRequestHandler(par
 void FileHandler::service(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
 {
     QByteArray path = request.getPath().mid(1);
-    if(mediaHashTable && path.startsWith("media/"))
+    if(path.startsWith("media/"))
     {
         QString mediaId(path.mid(6).trimmed());
         if(mediaId.indexOf('.') > 0)
         {
             mediaId = mediaId.mid(0, mediaId.indexOf('.'));
         }
-        QString mediaPath(mediaHashTable->value(mediaId,""));
+        QString mediaPath(GlobalObjects::playlist->getPathByHash(mediaId));
         mediaPath.isEmpty()? response.setStatus(stefanfrings::HttpResponse::NotFound) :
                              processFile(request, response, mediaPath);
     }
-    else if(mediaHashTable && path.startsWith("sub/")) // eg. sub/ass/...
+    else if(path.startsWith("sub/")) // eg. sub/ass/...
     {
         QStringList infoList(QString(path).split('/', Qt::SkipEmptyParts));
         if(infoList.count()<3)
@@ -28,7 +29,7 @@ void FileHandler::service(stefanfrings::HttpRequest &request, stefanfrings::Http
             response.setStatus(stefanfrings::HttpResponse::BadRequest);
             return;
         }
-        QString mediaPath(mediaHashTable->value(infoList[2],""));
+        QString mediaPath(GlobalObjects::playlist->getPathByHash(infoList[2]));
         QFileInfo fi(mediaPath);
         QString subPath=QString("%1/%2.%3").arg(fi.absolutePath(),fi.baseName(),infoList[1]);
         processFile(request, response, subPath);;

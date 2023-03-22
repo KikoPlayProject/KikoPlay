@@ -87,6 +87,7 @@ private:
     QSplitter *splitter;
     DialogTip *dialogTip;
     AnimeDetailInfoPage *detailPage;
+    QPushButton *backButton;
     bool animeViewing;
     void searchAddAnime(Anime *srcAnime = nullptr);
 signals:
@@ -97,6 +98,7 @@ public slots:
 protected:
     virtual void showEvent(QShowEvent *event);
     virtual void hideEvent(QHideEvent *event);
+    virtual void keyPressEvent(QKeyEvent *event);
 
     // NotifyInterface interface
 public:

@@ -5,7 +5,7 @@
 #include <QGridLayout>
 #include "Common/notifier.h"
 
-InputDialog::InputDialog(const QString &title, const QString &tip, const QString &text, bool canEmpty, QWidget *parent)
+InputDialog::InputDialog(const QString &title, const QString &tip, const QString &text, bool canEmpty, QWidget *parent, const QString &sizeKey)
     : CFramelessDialog (title,parent,true)
 {
    QLabel *tipLabel=new QLabel(tip,this);
@@ -18,6 +18,11 @@ InputDialog::InputDialog(const QString &title, const QString &tip, const QString
    inputGLayout->setColumnStretch(0, 1);
    inputGLayout->setContentsMargins(0, 0, 0, 0);
    this->canEmpty=canEmpty;
+   if(tip.isEmpty()) tipLabel->hide();
+   if(!sizeKey.isEmpty())
+   {
+       setSizeSettingKey(sizeKey,QSize(200*logicalDpiX()/96,50*logicalDpiY()/96));
+   }
 }
 
 InputDialog::InputDialog(const QString &title, const QString &tip, QWidget *parent): CFramelessDialog (title,parent,true), edit(nullptr)

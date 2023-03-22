@@ -9,6 +9,7 @@
 #include "pool.h"
 #include "Common/threadtask.h"
 #include "Common/network.h"
+#include "Common/logger.h"
 #include "../common.h"
 #include "../blocker.h"
 #include "../danmupool.h"
@@ -634,7 +635,11 @@ QVector<DanmuComment *> DanmuManager::updateSource(const DanmuSource *sourceInfo
 {
     QVector<DanmuComment *> tmpList;
     auto ret = GlobalObjects::danmuProvider->downloadDanmu(sourceInfo, tmpList);
-    if(!ret)return tmpList;
+    if(!ret)
+    {
+        Logger::logger()->log(Logger::Script, QString("update source[%1] failed: %2").arg(sourceInfo->title, ret.info));
+        return tmpList;
+    }
     GlobalObjects::blocker->preFilter(tmpList);
     for(auto iter=tmpList.begin();iter!=tmpList.end();)
     {

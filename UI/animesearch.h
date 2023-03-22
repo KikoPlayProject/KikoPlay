@@ -5,6 +5,7 @@
 class QTreeWidget;
 class QLineEdit;
 class QComboBox;
+class ScriptSearchOptionPanel;
 class AnimeSearch : public CFramelessDialog
 {
     Q_OBJECT
@@ -17,6 +18,7 @@ private:
     QLineEdit *searchWordEdit;
     QPushButton *searchButton;
     QComboBox *scriptCombo;
+    ScriptSearchOptionPanel *scriptOptionPanel;
     void search();
     // CFramelessDialog interface
 protected:

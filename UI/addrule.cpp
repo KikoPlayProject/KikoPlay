@@ -10,6 +10,7 @@
 #include "globalobjects.h"
 #include "Download/autodownloadmanager.h"
 #include "widgets/dirselectwidget.h"
+#include "widgets/scriptsearchoptionpanel.h"
 #include "Script/scriptmanager.h"
 #include "Script/resourcescript.h"
 #include "Common/notifier.h"
@@ -39,12 +40,18 @@ AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add
 
     QLabel *scriptLabel=new QLabel(tr("Search Script:"),this);
     scriptIdCombo=new QComboBox(this);
+    scriptOptionPanel = new ScriptSearchOptionPanel(this);
+
     for(auto &item:GlobalObjects::scriptManager->scripts(ScriptType::RESOURCE))
     {
         scriptIdCombo->addItem(item->name(),item->id());
     }
-
     scriptIdCombo->setCurrentIndex(addRule?0:scriptIdCombo->findData(curRule->scriptId));
+
+    QString curId = scriptIdCombo->currentData().toString();
+    scriptOptionPanel->setScript(GlobalObjects::scriptManager->getScript(curId), &curRule->searchOptions);
+    if(scriptOptionPanel->hasOptions()) scriptOptionPanel->show();
+    else scriptOptionPanel->hide();
 
     QLabel *downloadLabel=new QLabel(tr("After discovering new uri:"),this);
     downloadCombo=new QComboBox(this);
@@ -89,22 +96,23 @@ AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add
     addRuleGLayout->addWidget(filterWordEdit, 2, 1);
     addRuleGLayout->addWidget(scriptLabel, 3, 0);
     addRuleGLayout->addWidget(scriptIdCombo, 3, 1);
-    addRuleGLayout->addWidget(downloadLabel, 4, 0);
-    addRuleGLayout->addWidget(downloadCombo, 4, 1);
-    addRuleGLayout->addWidget(minMaxSizeLabel, 5, 0);
+    addRuleGLayout->addWidget(scriptOptionPanel, 4, 1);
+    addRuleGLayout->addWidget(downloadLabel, 5, 0);
+    addRuleGLayout->addWidget(downloadCombo, 5, 1);
+    addRuleGLayout->addWidget(minMaxSizeLabel, 6, 0);
     QHBoxLayout *minMaxHLayout = new QHBoxLayout();
     minMaxHLayout->setContentsMargins(0,0,0,0);
     minMaxHLayout->addWidget(minSizeSpin);
     minMaxHLayout->addWidget(maxSizeSpin);
-    addRuleGLayout->addLayout(minMaxHLayout, 5, 1);
-    addRuleGLayout->addWidget(searchIntervalSpinLabel, 6, 0);
-    addRuleGLayout->addWidget(searchIntervalSpin, 6, 1);
-    addRuleGLayout->addWidget(filePathLabel, 7, 0);
-    addRuleGLayout->addWidget(filePathSelector, 7, 1);
-    addRuleGLayout->addWidget(previewLabel, 8, 0);
-    addRuleGLayout->addWidget(preview, 9,0,1,2);
+    addRuleGLayout->addLayout(minMaxHLayout, 6, 1);
+    addRuleGLayout->addWidget(searchIntervalSpinLabel, 7, 0);
+    addRuleGLayout->addWidget(searchIntervalSpin, 7, 1);
+    addRuleGLayout->addWidget(filePathLabel, 8, 0);
+    addRuleGLayout->addWidget(filePathSelector, 8, 1);
+    addRuleGLayout->addWidget(previewLabel, 9, 0);
+    addRuleGLayout->addWidget(preview, 10,0,1,2);
 
-    addRuleGLayout->setRowStretch(9, 1);
+    addRuleGLayout->setRowStretch(10, 1);
     addRuleGLayout->setColumnStretch(1,1);
 
     setupSignals();
@@ -116,16 +124,43 @@ void AddRule::setupSignals()
     QObject::connect(searchWordEdit, &QLineEdit::editingFinished, this, [this](){
        if(searchWordEdit->text().trimmed().isEmpty()) return;
        showBusyState(true);
-       previewModel->search(searchWordEdit->text().trimmed(), scriptIdCombo->currentData().toString());
+       scriptIdCombo->setEnabled(false);
+       searchWordEdit->setEnabled(false);
+       QMap<QString, QString> searchOptions, *searchOptionPtr = nullptr;
+       if(scriptOptionPanel->hasOptions())
+       {
+           searchOptions = scriptOptionPanel->getOptionVals();
+           searchOptionPtr = &searchOptions;
+       }
+       previewModel->search(searchWordEdit->text().trimmed(), scriptIdCombo->currentData().toString(), searchOptionPtr);
        showBusyState(false);
        previewModel->filter(filterWordEdit->text().trimmed(), minSizeSpin->value(), maxSizeSpin->value());
+       scriptIdCombo->setEnabled(true);
+       searchWordEdit->setEnabled(true);
     });
     QObject::connect(scriptIdCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[this](){
+        QString curId = scriptIdCombo->currentData().toString();
+        const QMap<QString, QString> *optionPtr = curId == curRule->scriptId? &curRule->searchOptions : nullptr;
+        scriptOptionPanel->setScript(GlobalObjects::scriptManager->getScript(curId), optionPtr);
+        if(scriptOptionPanel->hasOptions()) scriptOptionPanel->show();
+        else scriptOptionPanel->hide();
+
         if(searchWordEdit->text().trimmed().isEmpty()) return;
+
         showBusyState(true);
-        previewModel->search(searchWordEdit->text().trimmed(), scriptIdCombo->currentData().toString());
+        scriptIdCombo->setEnabled(false);
+        searchWordEdit->setEnabled(false);
+        QMap<QString, QString> searchOptions, *searchOptionPtr = nullptr;
+        if(scriptOptionPanel->hasOptions())
+        {
+            searchOptions = scriptOptionPanel->getOptionVals();
+            searchOptionPtr = &searchOptions;
+        }
+        previewModel->search(searchWordEdit->text().trimmed(), curId, searchOptionPtr);
         showBusyState(false);
         previewModel->filter(filterWordEdit->text().trimmed(), minSizeSpin->value(), maxSizeSpin->value());
+        scriptIdCombo->setEnabled(true);
+        searchWordEdit->setEnabled(true);
     });
     QObject::connect(filterWordEdit, &QLineEdit::editingFinished, this, [this](){
         previewModel->filter(filterWordEdit->text().trimmed(), minSizeSpin->value(), maxSizeSpin->value());
@@ -171,16 +206,20 @@ void AddRule::onAccept()
     curRule->scriptId=scriptIdCombo->currentData().toString();
     curRule->searchInterval=searchIntervalSpin->value();
     curRule->download=downloadCombo->currentIndex()==0?true:false;
-    if(searchWordChanged || scriptChanged)
+    if(scriptOptionPanel->hasOptions())
+    {
+        curRule->searchOptions = scriptOptionPanel->getOptionVals();
+    }
+    if(searchWordChanged || scriptChanged || scriptOptionPanel->changed())
     {
         showBusyState(true);
         int pageCount;
         QList<ResourceItem> resList;
         auto curScript = GlobalObjects::scriptManager->getScript(curRule->scriptId);
-        if(curScript && curScript->type()!=ScriptType::RESOURCE)
+        if(curScript && curScript->type()==ScriptType::RESOURCE)
         {
             ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
-            ScriptState state = resScript->search(curRule->searchWord, 1, pageCount, resList);
+            ScriptState state = resScript->search(curRule->searchWord, 1, pageCount, resList, "auto-download", &curRule->searchOptions);
             if(state)
             {
                 for(int i=0; i<3 && i<resList.size(); ++i)
@@ -239,7 +278,7 @@ bool PreviewModel::checkSize(int size, int min, int max)
     return size>min && size<max;
 }
 
-void PreviewModel::search(const QString &searchWord, const QString &scriptId)
+void PreviewModel::search(const QString &searchWord, const QString &scriptId, const QMap<QString, QString> *options)
 {
     if(searchWord==lastSearchWord && lastScriptId==scriptId) return;
     int pageCount;
@@ -250,7 +289,7 @@ void PreviewModel::search(const QString &searchWord, const QString &scriptId)
     if(curScript && curScript->type()==ScriptType::RESOURCE)
     {
         ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
-        ScriptState state = resScript->search(searchWord, 1, pageCount, resList);
+        ScriptState state = resScript->search(searchWord, 1, pageCount, resList, "auto-download", options);
         if(state)
         {
             for(const auto &item:resList)
