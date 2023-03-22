@@ -9,6 +9,7 @@
             "description": "Use vcpkg to add QT dependency",
             "dependencies" :[
                 "qt5-base",
+                "qt5-svg",
                 {
                     "name": "qt5-winextras",
                     "platform": "windows"
@@ -20,6 +21,10 @@
     "overrides": [
         {
             "name": "qt5-base",
+            "version": "5.15.4"
+        },
+        {
+            "name": "qt5-svg",
             "version": "5.15.4"
         },
         {
