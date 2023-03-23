@@ -28,3 +28,6 @@ build
 
 # clangd generated dir
 .cache
+
+# vscode config idr
+.vscode

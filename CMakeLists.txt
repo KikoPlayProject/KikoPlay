@@ -17,7 +17,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt5 COMPONENTS Widgets Core Gui Network Concurrent Sql REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Core Gui Network Concurrent Sql Svg REQUIRED)
 find_package(ZLIB REQUIRED)
 add_subdirectory(Script/lua)
 
@@ -29,7 +29,13 @@ add_executable(${PROJECT_NAME}
     Download/peermodel.cpp 
     Download/trackersubscriber.cpp 
     LANServer/apihandler.cpp 
+    LANServer/dlna/dlnamediacontroller.cpp 
+    LANServer/dlna/dlnamediaitem.cpp 
+    LANServer/dlna/dlnamediaserver.cpp 
+    LANServer/dlna/upnp.cpp 
     LANServer/dlna/upnpctrlpoint.cpp 
+    LANServer/dlna/upnpdevice.cpp 
+    LANServer/dlna/upnpservice.cpp 
     LANServer/filehandler.cpp 
     LANServer/httpserver/httpconnectionhandler.cpp 
     LANServer/httpserver/httpconnectionhandlerpool.cpp 
@@ -48,6 +54,8 @@ add_executable(${PROJECT_NAME}
     MediaLibrary/animeprovider.cpp 
     MediaLibrary/episodeitem.cpp 
     MediaLibrary/tagnode.cpp 
+    Play/Danmu/Render/livedanmuitemdelegate.cpp 
+    Play/Danmu/Render/livedanmulistmodel.cpp 
     Play/Danmu/danmuprovider.cpp 
     Play/Danmu/eventanalyzer.cpp 
     Play/Video/mpvpreview.cpp 
@@ -101,8 +109,12 @@ add_executable(${PROJECT_NAME}
     UI/widgets/colorslider.cpp 
     UI/widgets/danmustatiswidget.cpp 
     UI/widgets/dialogtip.cpp 
+    UI/widgets/elidelineedit.cpp 
     UI/widgets/fonticonbutton.cpp 
     UI/widgets/loadingicon.cpp 
+    UI/widgets/optionslider.cpp 
+    UI/widgets/scriptsearchoptionpanel.cpp 
+    UI/widgets/smoothscrollbar.cpp 
         main.cpp 
     UI/mainwindow.cpp 
     UI/framelesswindow.cpp 
@@ -196,6 +208,7 @@ PRIVATE
     Qt::Network 
     Qt::Concurrent 
     Qt::Sql
+    Qt::Svg
     myLua53
 )
 
