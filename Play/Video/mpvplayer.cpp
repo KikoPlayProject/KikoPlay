@@ -788,10 +788,10 @@ void MPVPlayer::maybeUpdate()
 
 void MPVPlayer::handle_mpv_event(mpv_event *event)
 {
-    static QHash<QString, std::function<void()>> propertyFunc = {
+    static QHash<QString, std::function<void(mpv_event *event)>> propertyFunc = {
     {
         "playback-time",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_DOUBLE)
             {
@@ -803,7 +803,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "duration",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_DOUBLE)
             {
@@ -815,7 +815,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "pause",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_FLAG)
             {
@@ -837,7 +837,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "eof-reached",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_FLAG)
             {
@@ -853,7 +853,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "chapter-list",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_NODE) {
                 QVariantList chapters=mpv::qt::node_to_variant((mpv_node *)prop->data).toList();
@@ -869,7 +869,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "track-list",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             QVariantList allTracks=mpv::qt::node_to_variant((mpv_node *)prop->data).toList();
             loadTracks(allTracks);
@@ -879,7 +879,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "sub-delay",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_INT64) {
                 int64_t sub_delay = *(int64_t *)prop->data;
@@ -889,7 +889,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "speed",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_DOUBLE) {
                 double speed = *(double *)prop->data;
@@ -899,7 +899,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "brightness",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_INT64) {
                 int64_t brightness = *(int64_t *)prop->data;
@@ -909,7 +909,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "contrast",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_INT64) {
                 int64_t contrast = *(int64_t *)prop->data;
@@ -919,7 +919,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "saturation",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_INT64) {
                 int64_t saturation = *(int64_t *)prop->data;
@@ -929,7 +929,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "gamma",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_INT64) {
                 int64_t gamma = *(int64_t *)prop->data;
@@ -939,7 +939,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "hue",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_INT64) {
                 int64_t hue = *(int64_t *)prop->data;
@@ -949,7 +949,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "sharpen",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_DOUBLE) {
                 double sharpen = *(double *)prop->data;
@@ -959,7 +959,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "volume",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_INT64) {
                 int64_t volume = *(int64_t *)prop->data;
@@ -969,7 +969,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     },
     {
         "mute",
-        [this, event](){
+        [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_FLAG)
             {
@@ -987,7 +987,7 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
         mpv_event_property *prop = (mpv_event_property *)event->data;
         if(propertyFunc.contains(prop->name))
         {
-            propertyFunc[prop->name]();
+            propertyFunc[prop->name](event);
         }
         break;
     }
