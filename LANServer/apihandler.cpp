@@ -70,7 +70,7 @@ void APIHandler::service(stefanfrings::HttpRequest &request, stefanfrings::HttpR
 
 void APIHandler::apiPlaylist(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
 {
-    QMetaObject::invokeMethod(GlobalObjects::playlist,[this](){
+    QMetaObject::invokeMethod(GlobalObjects::playlist,[=](){
         GlobalObjects::playlist->dumpJsonPlaylist(playlistDoc);
     },Qt::BlockingQueuedConnection);
     Logger::logger()->log(Logger::LANServer, QString("[%1]Playlist").arg(request.getPeerAddress().toString()));

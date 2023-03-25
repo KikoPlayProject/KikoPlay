@@ -94,7 +94,7 @@ static QSet<QString> optionsBeforeInit{"config", "config-dir", "input-conf", "lo
 
 }
 MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::Stop),
-    mute(false),danmuHide(false),oldOpenGLVersion(false),currentDuration(0), mpvPreview(nullptr), previewThread(nullptr)
+    mute(false),curIsLocalFile(false),danmuHide(false),oldOpenGLVersion(false), cacheSpeed(0),currentDuration(0), mpvPreview(nullptr), previewThread(nullptr)
 {
     std::setlocale(LC_NUMERIC, "C");
     mpv = mpv_create();
@@ -162,6 +162,10 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     mpv_observe_property(mpv, 0, "sharpen", MPV_FORMAT_DOUBLE);
     mpv_observe_property(mpv, 0, "volume", MPV_FORMAT_INT64);
     mpv_observe_property(mpv, 0, "mute", MPV_FORMAT_FLAG);
+    mpv_observe_property(mpv, 0, "seekable", MPV_FORMAT_FLAG);
+    mpv_observe_property(mpv, 0, "paused-for-cache", MPV_FORMAT_FLAG);
+    mpv_observe_property(mpv, 0, "cache-buffering-state", MPV_FORMAT_INT64);
+    mpv_observe_property(mpv, 0, "cache-speed", MPV_FORMAT_INT64);
 
     mpv_set_wakeup_callback(mpv, MPVPlayer::wakeup, this);
     refreshTimestamp = QDateTime::currentMSecsSinceEpoch();
@@ -488,7 +492,8 @@ void MPVPlayer::setMedia(const QString &file)
         setMPVProperty("pause",false);
         setMPVProperty("volume",volume);
         setMPVProperty("mute", mute);
-        if(mpvPreview) mpvPreview->reset(file);
+        curIsLocalFile = QFileInfo::exists(file);
+        if(mpvPreview && curIsLocalFile) mpvPreview->reset(file);
         QCoreApplication::processEvents();
 		emit stateChanged(state);
     }
@@ -980,6 +985,39 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
                 int flag = *(int *)prop->data;
                 this->mute=flag;
                 emit muteChanged(flag);
+            }
+        }
+    },
+    {
+        "seekable",
+        [this](mpv_event *event){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
+            if (prop->format == MPV_FORMAT_FLAG)
+            {
+                int flag = *(int *)prop->data;
+                this->seekable=flag;
+                emit seekableChanged(flag);
+            }
+        }
+    },
+    {
+        "cache-buffering-state",
+        [this](mpv_event *event){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
+            if (prop->format == MPV_FORMAT_INT64)
+            {
+                int64_t state = *(int64_t *)prop->data;
+                emit bufferingStateChanged(state);
+            }
+        }
+    },
+    {
+        "cache-speed",
+        [this](mpv_event *event){
+            mpv_event_property *prop = (mpv_event_property *)event->data;
+            if (prop->format == MPV_FORMAT_INT64)
+            {
+                cacheSpeed = *(int64_t *)prop->data;
             }
         }
     }

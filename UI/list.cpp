@@ -237,6 +237,7 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
             act_addCollection->setEnabled(true);
             act_addFolder->setEnabled(true);
             act_addItem->setEnabled(true);
+            act_addURL->setEnabled(true);
         }
         else
         {
@@ -245,6 +246,7 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
             act_addCollection->setEnabled(false);
             act_addFolder->setEnabled(false);
             act_addItem->setEnabled(false);
+            act_addURL->setEnabled(false);
             playlistView->setDragEnabled(false);
         }
     });
@@ -404,6 +406,7 @@ void ListWindow::initActions()
         act_addCollection->setEnabled(false);
         act_addFolder->setEnabled(false);
         act_addItem->setEnabled(false);
+        act_addURL->setEnabled(false);
         playlistView->setDragEnabled(false);
         GlobalObjects::playlist->updateItemsDanmu(indexes);
         actionDisable=false;
@@ -412,6 +415,7 @@ void ListWindow::initActions()
         act_addCollection->setEnabled(true);
         act_addFolder->setEnabled(true);
         act_addItem->setEnabled(true);
+        act_addURL->setEnabled(true);
     });
     act_exportDanmu=new QAction(tr("Export Danmu"),this);
     QObject::connect(act_exportDanmu,&QAction::triggered,[this](){
@@ -424,6 +428,7 @@ void ListWindow::initActions()
         act_addCollection->setEnabled(false);
         act_addFolder->setEnabled(false);
         act_addItem->setEnabled(false);
+        act_addURL->setEnabled(false);
         playlistView->setDragEnabled(false);
         GlobalObjects::playlist->exportDanmuItems(indexes);
         actionDisable=false;
@@ -432,6 +437,7 @@ void ListWindow::initActions()
         act_addCollection->setEnabled(true);
         act_addFolder->setEnabled(true);
         act_addItem->setEnabled(true);
+        act_addURL->setEnabled(true);
     });
 
     act_shareResourceCode=new QAction(tr("Resource Code"),this);
@@ -514,6 +520,13 @@ void ListWindow::initActions()
             GlobalObjects::playlist->addItems(files, getPSParentIndex());
         }
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
+    });
+    act_addURL = new QAction(tr("Add URL"), this);
+    QObject::connect(act_addURL, &QAction::triggered, [this](){
+        InputDialog inputDialog(tr("Add URL"),tr("Enter URL(http, https, smb)"),"", false, this, "AddURLDialog");
+        if(QDialog::Accepted != inputDialog.exec()) return;
+        const QStringList urls = inputDialog.text.split("\n", Qt::SkipEmptyParts);
+        GlobalObjects::playlist->addURL(urls, getPSParentIndex());
     });
     act_addFolder = new QAction(tr("Add Folder"),this);
     QObject::connect(act_addFolder,&QAction::triggered,[this](){
@@ -803,7 +816,7 @@ void ListWindow::initActions()
             GlobalObjects::mpvplayer->seek(getSelectedDanmu()->time);
     });
 
-    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::durationChanged,[this](){
+    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::fileChanged,[this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         playlistView->scrollTo(model->mapFromSource(GlobalObjects::playlist->getCurrentIndex()), QAbstractItemView::EnsureVisible);
     });
@@ -832,11 +845,10 @@ void ListWindow::matchPool(const QString &scriptId)
     const PlayListItem *item=GlobalObjects::playlist->getItem(indexes.first());
     if(indexes.size()==1 && !item->children)
     {
-
         if(!item->children)
         {
             bool matchSuccess = false;
-            if(!item->hasPool())
+            if(!item->hasPool() && item->type == PlayListItem::ItemType::LOCAL_FILE)
             {
                 showMessage(tr("Match Start"),NotifyMessageFlag::NM_PROCESS);
                 MatchResult match;
@@ -1075,6 +1087,7 @@ QWidget *ListWindow::setupPlaylistPage()
     QMenu *addSubMenu=new QMenu(tr("Add"),playlistContextMenu);
     addSubMenu->addAction(act_addCollection);
     addSubMenu->addAction(act_addItem);
+    addSubMenu->addAction(act_addURL);
     addSubMenu->addAction(act_addFolder);
     playlistContextMenu->addMenu(addSubMenu);
     playlistContextMenu->addSeparator();
@@ -1153,7 +1166,7 @@ QWidget *ListWindow::setupPlaylistPage()
         {QChar(0xe608), tr("Loop Mode")}
     };
     QList<QAction *> tbActions[tbBtnCount] = {
-        {act_addCollection, act_addItem, act_addFolder},
+        {act_addCollection, act_addItem, act_addURL, act_addFolder},
         {act_remove, act_clear},
         {act_sortSelectionAscending, act_sortSelectionDescending, act_sortAllAscending, act_sortAllDescending},
         {loopModeGroup->actions()}

@@ -165,7 +165,7 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
         parent = this->parent(parent);
     }
     QVector<PlayListItem *> matchItems;
-    beginInsertRows(parent, insertPosition, insertPosition+ tmpItems.count()-1);
+    beginInsertRows(parent, insertPosition, insertPosition + tmpItems.count()-1);
     for (const QString &item : tmpItems)
 	{
         int suffixPos = item.lastIndexOf('.'), pathPos = item.lastIndexOf('/') + 1;
@@ -252,6 +252,62 @@ int PlayList::addFolder(QString folderStr, QModelIndex parent)
         },Qt::QueuedConnection);
     }
     return itemCount;
+}
+
+int PlayList::addURL(const QStringList &urls, QModelIndex parent)
+{
+    Q_D(PlayList);
+    QStringList localItems, webItems;
+    for(const QString &url : urls)
+    {
+        const QString urlTrimmed = url.trimmed();
+        if(urlTrimmed.isEmpty()) continue;
+        if (d->fileItems.contains(urlTrimmed)) continue;
+        if(QFileInfo::exists(urlTrimmed))
+        {
+            localItems.append(urlTrimmed);
+        }
+        else
+        {
+            webItems.append(urlTrimmed);
+        }
+    }
+    int insertCount = 0;
+    if(!localItems.empty())
+    {
+        insertCount = addItems(localItems, parent);
+    }
+    if(webItems.empty()) return insertCount;
+    int insertPosition{0};
+    PlayListItem *parentItem = parent.isValid() ? static_cast<PlayListItem*>(parent.internalPointer()) : d->root;
+    if(parentItem->children)
+    {
+        insertPosition = parentItem->children->size();
+    }
+    else
+    {
+        insertPosition = parentItem->parent->children->indexOf(parentItem) + 1;
+        parentItem = parentItem->parent;
+        parent = this->parent(parent);
+    }
+    beginInsertRows(parent, insertPosition, insertPosition + webItems.count() - 1);
+    for (const QString &url : webItems)
+    {
+        PlayListItem *newItem = new PlayListItem(parentItem, true, insertPosition++);
+        newItem->title = url;
+        newItem->path = url;
+        newItem->type = PlayListItem::ItemType::WEB_URL;
+        newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
+        d->fileItems.insert(newItem->path, newItem);
+        ++insertCount;
+    }
+    endInsertRows();
+    d->playListChanged=true;
+    d->needRefresh = true;
+    d->incModifyCounter();
+    Notifier *notifier = Notifier::getNotifier();
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 URL item(s)").arg(insertCount), NM_HIDE);
+    return insertCount;
 }
 
 void PlayList::deleteItems(const QModelIndexList &deleteIndexes)
@@ -651,21 +707,26 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
                 tipContent<<QString("%1-%2").arg(item->animeTitle, item->title);
             else
                 tipContent<<QString("%1").arg(item->title);
+            if(item->type == PlayListItem::ItemType::WEB_URL)
+                tipContent << tr("Web Item");
             tipContent<<item->path;
             if (item->addTime > 0)
             {
                 QString addTime(QDateTime::fromSecsSinceEpoch(item->addTime).toString("yyyy-MM-dd hh:mm:ss"));
                 tipContent<< tr("Add Time: %1").arg(addTime);
             }
-            if(item->playTimeState==PlayListItem::UNPLAY)
-                tipContent<<tr("Unplayed");
-            else if(item->playTimeState==PlayListItem::FINISH)
-                tipContent<<tr("Finished");
-            else
+            if(item->type == PlayListItem::ItemType::LOCAL_FILE)
             {
-                int cmin=item->playTime/60;
-                int cls=item->playTime-cmin*60;
-                tipContent<<(tr("PlayTo: %1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')));
+                if(item->playTimeState==PlayListItem::UNPLAY)
+                    tipContent<<tr("Unplayed");
+                else if(item->playTimeState==PlayListItem::FINISH)
+                    tipContent<<tr("Finished");
+                else
+                {
+                    int cmin=item->playTime/60;
+                    int cls=item->playTime-cmin*60;
+                    tipContent<<(tr("PlayTo: %1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')));
+                }
             }
         }
         return tipContent.join('\n');
@@ -821,12 +882,15 @@ const PlayListItem *PlayList::setCurrentItem(const QModelIndex &index,bool playC
     }
     if(cur->children || cur==d->currentItem)
         return nullptr;
-    QFileInfo fileInfo(cur->path);
-    if(!fileInfo.exists())
+    if(cur->type == PlayListItem::ItemType::LOCAL_FILE)
     {
-        Notifier *notifier = Notifier::getNotifier();
-        notifier->showMessage(Notifier::LIST_NOTIFY, tr("File Not Exist"), NM_HIDE);
-        return nullptr;
+        QFileInfo fileInfo(cur->path);
+        if(!fileInfo.exists())
+        {
+            Notifier *notifier = Notifier::getNotifier();
+            notifier->showMessage(Notifier::LIST_NOTIFY, tr("File Not Exist"), NM_HIDE);
+            return nullptr;
+        }
     }
     PlayListItem *tmp = d->currentItem;
     d->currentItem = cur;
@@ -836,7 +900,7 @@ const PlayListItem *PlayList::setCurrentItem(const QModelIndex &index,bool playC
 		emit dataChanged(nIndex, nIndex);
 	}
     d->updateRecentlist(cur);
-    if(!cur->animeTitle.isEmpty())
+    if(!cur->animeTitle.isEmpty() && cur->type == PlayListItem::ItemType::LOCAL_FILE)
         AnimeWorker::instance()->updateEpTime(cur->animeTitle, cur->path);
     return cur;
 }
@@ -1024,8 +1088,15 @@ void PlayList::removeMatch(const QModelIndexList &matchIndexes)
             GlobalObjects::danmuManager->removeMatch(currentItem->path);
             currentItem->poolID = "";
             currentItem->animeTitle = "";
-            int suffixPos = currentItem->path.lastIndexOf('.'), pathPos = currentItem->path.lastIndexOf('/') + 1;
-            currentItem->title = currentItem->path.mid(pathPos, suffixPos - pathPos);
+            if (currentItem->type == PlayListItem::ItemType::LOCAL_FILE)
+            {
+                int suffixPos = currentItem->path.lastIndexOf('.'), pathPos = currentItem->path.lastIndexOf('/') + 1;
+                currentItem->title = currentItem->path.mid(pathPos, suffixPos - pathPos);
+            }
+            else
+            {
+                currentItem->title = currentItem->path;
+            }
             if (currentItem == d->currentItem) emit currentMatchChanged(currentItem->poolID);
             d->playListChanged = true;
             d->needRefresh = true;
@@ -1078,6 +1149,7 @@ void PlayList::setCurrentPlayTime(int playTime)
     Q_D(PlayList);
     PlayListItem *currentItem=d->currentItem;
     if(!currentItem) return;
+    if(currentItem->type != PlayListItem::ItemType::LOCAL_FILE) return;
     PlayListItem::PlayState lastState = currentItem->playTimeState;
     currentItem->playTime=playTime;
     const int ignoreLength = 15;
@@ -1430,6 +1502,7 @@ void MatchWorker::match(const QVector<PlayListItem *> &items)
     {
         if(cancel) break;
         if(currentItem->hasPool()) continue;
+        if(currentItem->type == PlayListItem::ItemType::WEB_URL) continue;
         if (!QFile::exists(currentItem->path))continue;
         MatchResult match;
         GlobalObjects::danmuManager->localMatch(currentItem->path, match);

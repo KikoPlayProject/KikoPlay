@@ -73,6 +73,9 @@ void PlayListPrivate::loadPlaylist()
                 QString title = attrs.value("title").toString();
                 QString animeTitle = attrs.value("animeTitle").toString();
                 QString poolID = attrs.value("poolID").toString();
+                PlayListItem::ItemType type = PlayListItem::ItemType::LOCAL_FILE;
+                if(attrs.hasAttribute("type"))
+                    type = static_cast<PlayListItem::ItemType>(attrs.value("type").toInt());
                 int playTime = attrs.value("playTime").toInt();
                 int playTimeState = attrs.value("playTimeState").toInt();
                 int marker=PlayListItem::Marker::M_NONE;
@@ -101,12 +104,13 @@ void PlayListPrivate::loadPlaylist()
                 QString path = reader.readElementText().trimmed();
 
                 PlayListItem *item=new PlayListItem(parents.last(),true);
-                item->title=title;
-                item->path= path;
+                item->title = title;
+                item->path = path;
+                item->type = type;
                 item->pathHash = QCryptographicHash::hash(path.toUtf8(),QCryptographicHash::Md5).toHex();
-                item->playTime=playTime;
+                item->playTime = playTime;
                 item->poolID = poolID;
-                item->playTimeState=PlayListItem::PlayState(playTimeState);
+                item->playTimeState = PlayListItem::PlayState(playTimeState);
                 item->marker = PlayListItem::Marker(marker);
                 item->addTime = addTime;
                 if(hasTrackInfo)  item->trackInfo = new ItemTrackInfo(trackInfo);
@@ -212,6 +216,8 @@ void PlayListPrivate::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
                 writer.writeAttribute("animeTitle",child->animeTitle);
             if(!child->poolID.isEmpty())
                 writer.writeAttribute("poolID",child->poolID);
+            if(child->type != PlayListItem::ItemType::LOCAL_FILE)
+                writer.writeAttribute("type",QString::number(child->type));
             writer.writeAttribute("playTime",QString::number(child->playTime));
             writer.writeAttribute("playTimeState",QString::number((int)child->playTimeState));
             if(child->marker != PlayListItem::Marker::M_NONE)
@@ -562,6 +568,11 @@ void PlayListPrivate::dumpItem(QJsonArray &array, PlayListItem *item)
             itemObj.insert("playTime",child->playTime);
             itemObj.insert("playTimeState",child->playTimeState);
             itemObj.insert("animeName", child->animeTitle);
+            itemObj.insert("itemType", child->type);
+            if(child->type == PlayListItem::ItemType::WEB_URL)
+            {
+                itemObj.insert("url", child->path);
+            }
             static QString nodeColors[3]={"#333","#428bca","#a4a2a2"};
             itemObj.insert("color",nodeColors[child->playTimeState]);
         }

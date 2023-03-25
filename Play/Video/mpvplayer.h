@@ -58,14 +58,17 @@ public:
     inline PlayState getState() const {return state;}
     inline bool getDanmuHide() const{return danmuHide;}
     inline bool getMute() const{return mute;}
+    inline bool getSeekable() const { return seekable; }
+    inline bool isLocalFile() const { return curIsLocalFile; }
     inline const QVector<TrackInfo> &getTrackList(TrackType type){return type==AudioTrack?audioTracks:subTracks;}
     inline double getTime() const{return mpv::qt::get_property(mpv,"playback-time").toDouble();}
     inline int getDuration() const{return currentDuration;}
     inline QString getMediaTitle() const {return mpv::qt::get_property(mpv,"media-title").toString();}
     inline const QVector<ChapterInfo> &getChapters() const {return chapters;}
-    inline QPixmap *getPreview(int timePos, bool refresh=true) { if(!mpvPreview) return nullptr; return mpvPreview->getPreview(timePos, refresh);}
+    inline QPixmap *getPreview(int timePos, bool refresh=true) { if(!mpvPreview || !curIsLocalFile) return nullptr; return mpvPreview->getPreview(timePos, refresh);}
     inline const QString &getCurrentFile() const {return currentFile;}
     inline int getVolume() const {return volume;}
+    inline qint64 getCacheSpeed() const { return cacheSpeed; }
     QString getMPVProperty(const QString &property, int &errCode);
     QVariant getMPVPropertyVariant(const QString &property, int &errCode);
     const QHash<QString, QPair<QList<QStringList>, QString>> &getShortcuts() const{return mpvShortcuts;}
@@ -105,6 +108,8 @@ signals:
     void sharpenChanged(double value);
     void volumeChanged(int value);
     void muteChanged(bool value);
+    void seekableChanged(bool value);
+    void bufferingStateChanged(int value);
     void optionGroupChanged();
 
     void initContext();
@@ -152,9 +157,12 @@ private:
     const int timeRefreshInterval=400;
     PlayState state;
     bool mute;
+    bool seekable;
+    bool curIsLocalFile;
     bool danmuHide;
     int volume;
     bool oldOpenGLVersion;
+    qint64 cacheSpeed;
     QString currentFile;
     QOpenGLShaderProgram danmuShader;
     QTimer refreshTimer;

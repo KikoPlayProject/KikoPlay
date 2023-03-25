@@ -26,7 +26,10 @@ struct PlayListItem
 
     PlayListItem *parent;
     QVector<PlayListItem *> *children;
-
+    enum ItemType
+    {
+        LOCAL_FILE, WEB_URL
+    };
     enum PlayState
     {
         UNPLAY, UNFINISH, FINISH
@@ -36,6 +39,7 @@ struct PlayListItem
         M_RED, M_BLUE, M_GREEN, M_ORANGE, M_PINK, M_YELLOW, M_NONE
     };
 
+    ItemType type;
     PlayState playTimeState;
     Marker marker;
     int playTime;

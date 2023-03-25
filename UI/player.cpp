@@ -34,6 +34,7 @@
 #include "Play/Danmu/blocker.h"
 #include "Play/Danmu/danmuprovider.h"
 #include "MediaLibrary/animeworker.h"
+#include "Download/util.h"
 #include "danmulaunch.h"
 #include "globalobjects.h"
 namespace
@@ -461,7 +462,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     GlobalObjects::iconfont->setPointSize(24);
 
     timeLabel=new QLabel("00:00/00:00",playControlPanel);
-    timeLabel->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
+    timeLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     timeLabel->setObjectName(QStringLiteral("labelTime"));
     normalFont.setPointSize(10);
     timeLabel->setFont(normalFont);
@@ -553,22 +554,36 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
         if(isFullscreen)setCursor(Qt::BlankCursor);
     });
 
-    QHBoxLayout *buttonHLayout=new QHBoxLayout();
-    buttonHLayout->addWidget(timeLabel);
-    buttonHLayout->addStretch(5);
+
+    QStackedLayout *controlSLayout = new QStackedLayout();
+    controlSLayout->setStackingMode(QStackedLayout::StackAll);
+    controlSLayout->setContentsMargins(0,0,0,0);
+    controlSLayout->setSpacing(0);
+
+    QWidget *btnContainer = new QWidget(playControlPanel);
+    QHBoxLayout *buttonHLayout=new QHBoxLayout(btnContainer);
+    //QWidget *Container = new QWidget(playControlPanel);
+    //QHBoxLayout *buttonHLayout=new QHBoxLayout(btnContainer);
+
+    //buttonHLayout->addWidget(timeLabel);
+    buttonHLayout->addStretch(8);
     buttonHLayout->addWidget(stop);
     buttonHLayout->addWidget(prev);
     buttonHLayout->addWidget(playPause);
     buttonHLayout->addWidget(next);
     buttonHLayout->addWidget(mute);
     buttonHLayout->addWidget(volume);
-    buttonHLayout->addStretch(4);
+    buttonHLayout->addStretch(3);
     buttonHLayout->addWidget(launch);
     buttonHLayout->addWidget(setting);
     buttonHLayout->addWidget(danmu);
     buttonHLayout->addWidget(fullscreen);
 
-    controlVLayout->addLayout(buttonHLayout);
+    controlSLayout->addWidget(btnContainer);
+    controlSLayout->addWidget(timeLabel);
+
+    //controlVLayout->addLayout(buttonHLayout);
+    controlVLayout->addLayout(controlSLayout);
 
     miniProgress = new ClickSlider(contralContainer);
     miniProgress->setObjectName(QStringLiteral("MiniProgressSlider"));
@@ -1687,25 +1702,44 @@ void PlayerWindow::setupSignals()
         timeLabel->setText("00:00"+this->totalTimeStr);
         static_cast<DanmuStatisWidget *>(danmuStatisBar)->setDuration(ts);
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
-        if(currentItem->playTime>15 && currentItem->playTime<ts-15)
+        if(currentItem && currentItem->type == PlayListItem::ItemType::LOCAL_FILE)
         {
-            GlobalObjects::mpvplayer->seek(currentItem->playTime*1000);
-            showMessage(tr("Jumped to the last play position"));
+            if(currentItem->playTime>15 && currentItem->playTime<ts-15)
+            {
+                GlobalObjects::mpvplayer->seek(currentItem->playTime*1000);
+                showMessage(tr("Jumped to the last play position"));
+            }
         }
-        if(resizePercent!=-1 && !miniModeOn) adjustPlayerSize(resizePercent);
 #ifdef QT_DEBUG
         qDebug()<<"Duration Changed";
 #endif
     });
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::fileChanged,[this](){
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
-        Q_ASSERT(currentItem);
         progress->setEventMark(QVector<DanmuEvent>());
         progress->setChapterMark(QVector<MPVPlayer::ChapterInfo>());
+        QString mediaTitle(GlobalObjects::mpvplayer->getMediaTitle());
+        if(!currentItem)
+        {
+            titleLabel->setText(mediaTitle);
+            launch->hide();
+            GlobalObjects::danmuPool->setPoolID("");
+            if(resizePercent!=-1 && !miniModeOn) adjustPlayerSize(resizePercent);
+#ifdef QT_DEBUG
+            qDebug()<<"File Changed(external item), Current File: " << GlobalObjects::mpvplayer->getCurrentFile();
+#endif
+            return;
+        }
         if(currentItem->animeTitle.isEmpty())
         {
-            QString mediaTitle(GlobalObjects::mpvplayer->getMediaTitle());
-            titleLabel->setText(mediaTitle.isEmpty()?currentItem->title:mediaTitle);
+            if(currentItem->type == PlayListItem::ItemType::WEB_URL)
+            {
+                titleLabel->setText(currentItem->title != currentItem->path? currentItem->title : mediaTitle);
+            }
+            else
+            {
+                titleLabel->setText(mediaTitle.isEmpty()?currentItem->title:mediaTitle);
+            }
         }
         else
         {
@@ -1719,10 +1753,13 @@ void PlayerWindow::setupSignals()
         else
         {
             launch->hide();
-            showMessage(tr("File is not associated with Danmu Pool"));
             GlobalObjects::danmuPool->setPoolID("");
+            if(currentItem->type == PlayListItem::ItemType::LOCAL_FILE)
+            {
+                showMessage(tr("File is not associated with Danmu Pool"));
+            }
         }
-        if(autoLoadLocalDanmu)
+        if(autoLoadLocalDanmu && currentItem->type == PlayListItem::ItemType::LOCAL_FILE)
         {
             QString danmuFile(currentItem->path.mid(0, currentItem->path.lastIndexOf('.'))+".xml");
             QFileInfo fi(danmuFile);
@@ -1762,6 +1799,7 @@ void PlayerWindow::setupSignals()
         {
             GlobalObjects::mpvplayer->setSubDelay(0);
         }
+        if(resizePercent!=-1 && !miniModeOn) adjustPlayerSize(resizePercent);
 #ifdef QT_DEBUG
         qDebug()<<"File Changed,Current Item: "<<currentItem->title;
 #endif
@@ -1787,6 +1825,9 @@ void PlayerWindow::setupSignals()
         if(!progressPressed) progress->setValue(newtime);
         if(miniModeOn) miniProgress->setValue(newtime);
         timeLabel->setText(QString("%1:%2%3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(this->totalTimeStr));
+    });
+    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::bufferingStateChanged,[this](int val){
+        timeLabel->setText(tr("Buffering: %1%, %2").arg(val).arg(formatSize(true, GlobalObjects::mpvplayer->getCacheSpeed())));
     });
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::refreshPreview,[this](int timePos, QPixmap *pixmap){
         int cp = progress->curMousePos() / 1000;
@@ -1862,6 +1903,7 @@ void PlayerWindow::setupSignals()
             progress->setRange(0, 0);
             progress->setEventMark(QVector<DanmuEvent>());
             progress->setChapterMark(QVector<MPVPlayer::ChapterInfo>());
+            progress->setVisible(true);
             miniProgress->setValue(0);
             miniProgress->setRange(0, 0);
             previewLabel->clear();
@@ -1927,7 +1969,7 @@ void PlayerWindow::setupSignals()
         timeInfoTip->setText(timeTip);
         timeInfoTip->adjustSize();
         if(previewTimer.isActive()) previewTimer.stop();
-        if(isShowPreview && GlobalObjects::playlist->getCurrentItem() != nullptr)
+        if(isShowPreview && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
         {
             previewLabel->clear();
             QPixmap *pixmap = GlobalObjects::mpvplayer->getPreview(cs, false);
@@ -1941,7 +1983,10 @@ void PlayerWindow::setupSignals()
             else
             {
                 previewLabel->hide();
-                previewTimer.start(80);
+                if (GlobalObjects::mpvplayer->isLocalFile())
+                {
+                    previewTimer.start(80);
+                }
             }
         }
         progressInfo->adjustSize();
@@ -2000,6 +2045,17 @@ void PlayerWindow::setupSignals()
         else
         {
             this->mute->setText(QChar(0xe62c));
+        }
+    });
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::seekableChanged, [this](bool seekable){
+        this->progress->setVisible(seekable);
+        actSnippet->setEnabled(seekable);
+        actGIF->setEnabled(seekable);
+        if(!seekable) {
+            progressInfo->hide();
+        }
+        if(this->miniModeOn && this->miniProgress->isVisible() && !seekable) {
+            this->miniProgress->setVisible(false);
         }
     });
 
@@ -2112,20 +2168,20 @@ void PlayerWindow::switchItem(bool prev, const QString &nullMsg)
         const PlayListItem *item = GlobalObjects::playlist->playPrevOrNext(prev);
         if (item)
         {
-            QFileInfo fi(item->path);
-            if(!fi.exists())
+            if(item->type == PlayListItem::ItemType::LOCAL_FILE)
             {
-                showMessage(tr("File not exist: %0").arg(item->title));
-                continue;
+                QFileInfo fi(item->path);
+                if(!fi.exists())
+                {
+                    showMessage(tr("File not exist: %0").arg(item->title));
+                    continue;
+                }
             }
-            else
-            {
-                QCoreApplication::processEvents();
-                GlobalObjects::danmuPool->reset();
-                GlobalObjects::danmuRender->cleanup();
-                GlobalObjects::mpvplayer->setMedia(item->path);
-                break;
-            }
+            QCoreApplication::processEvents();
+            GlobalObjects::danmuPool->reset();
+            GlobalObjects::danmuRender->cleanup();
+            GlobalObjects::mpvplayer->setMedia(item->path);
+            break;
         }
         else
         {
@@ -2169,7 +2225,7 @@ void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
             event->accept();
             moving = true;
         }
-        else
+        else if(GlobalObjects::mpvplayer->getSeekable())
         {
             if(height()-event->pos().y()<miniProgress->height()+10)
             {

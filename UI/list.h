@@ -56,7 +56,7 @@ private:
     QTreeView *playlistView;
     QToolButton *playlistPageButton,*danmulistPageButton;
     QStackedLayout *contentStackLayout;
-    QAction *act_play,*act_addCollection,*act_addItem,*act_addFolder,
+    QAction *act_play,*act_addCollection,*act_addItem,*act_addURL,*act_addFolder,
             *act_cut,*act_paste,*act_moveUp,*act_moveDown,*act_merge,
             *act_remove,*act_clear, *act_removeMatch, *act_removeInvalid,
             *act_sortSelectionAscending,*act_sortSelectionDescending,*act_sortAllAscending,*act_sortAllDescending,

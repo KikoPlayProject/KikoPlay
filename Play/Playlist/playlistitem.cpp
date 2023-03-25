@@ -6,7 +6,7 @@
 PlayList* PlayListItem::playlist=nullptr;
 
 PlayListItem::PlayListItem(PlayListItem *p, bool leaf, int insertPosition):
-    parent(p), children(nullptr), playTimeState(UNPLAY), marker(M_NONE), playTime(0), level(0), isBgmCollection(false), addTime(0), trackInfo(nullptr)
+    parent(p), children(nullptr), type(LOCAL_FILE), playTimeState(UNPLAY), marker(M_NONE), playTime(0), level(0), isBgmCollection(false), addTime(0), trackInfo(nullptr)
 {
     if(!leaf)
     {
