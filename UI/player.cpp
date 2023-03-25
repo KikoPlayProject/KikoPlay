@@ -566,14 +566,14 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPan
     //QHBoxLayout *buttonHLayout=new QHBoxLayout(btnContainer);
 
     //buttonHLayout->addWidget(timeLabel);
-    buttonHLayout->addStretch(8);
+    buttonHLayout->addStretch(3);
     buttonHLayout->addWidget(stop);
     buttonHLayout->addWidget(prev);
     buttonHLayout->addWidget(playPause);
     buttonHLayout->addWidget(next);
     buttonHLayout->addWidget(mute);
     buttonHLayout->addWidget(volume);
-    buttonHLayout->addStretch(3);
+    buttonHLayout->addStretch(2);
     buttonHLayout->addWidget(launch);
     buttonHLayout->addWidget(setting);
     buttonHLayout->addWidget(danmu);

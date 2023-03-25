@@ -27,10 +27,10 @@
 #include <stdint.h>
 
 /* New symbols must still be added to libmpv/mpv.def. */
-#if defined(__GNUC__) || defined(__clang__)
-#define MPV_EXPORT __attribute__((visibility("default")))
-#elif defined(_MSC_VER)
+#ifdef _WIN32
 #define MPV_EXPORT __declspec(dllexport)
+#elif defined(__GNUC__) || defined(__clang__)
+#define MPV_EXPORT __attribute__((visibility("default")))
 #else
 #define MPV_EXPORT
 #endif
@@ -152,8 +152,6 @@ extern "C" {
  * - Using UNIX IPC (off by default) will override the SIGPIPE signal handler,
  *   and set it to SIG_IGN. Some invocations of the "subprocess" command will
  *   also do that.
- * - mpv will reseed the legacy C random number generator by calling srand() at
- *   some random point once.
  * - mpv may start sub processes, so overriding SIGCHLD, or waiting on all PIDs
  *   (such as calling wait()) by the parent process or any other library within
  *   the process must be avoided. libmpv itself only waits for its own PIDs.
@@ -242,7 +240,7 @@ extern "C" {
  * relational operators (<, >, <=, >=).
  */
 #define MPV_MAKE_VERSION(major, minor) (((major) << 16) | (minor) | 0UL)
-#define MPV_CLIENT_API_VERSION MPV_MAKE_VERSION(2, 0)
+#define MPV_CLIENT_API_VERSION MPV_MAKE_VERSION(2, 1)
 
 /**
  * The API user is allowed to "#define MPV_ENABLE_DEPRECATED 0" before
@@ -1069,6 +1067,16 @@ MPV_EXPORT int mpv_set_property(mpv_handle *ctx, const char *name, mpv_format fo
  * This is like calling mpv_set_property() with MPV_FORMAT_STRING.
  */
 MPV_EXPORT int mpv_set_property_string(mpv_handle *ctx, const char *name, const char *data);
+
+/**
+ * Convenience function to delete a property.
+ *
+ * This is equivalent to running the command "del [name]".
+ *
+ * @param name The property name. See input.rst for a list of properties.
+ * @return error code
+ */
+MPV_EXPORT int mpv_del_property(mpv_handle *ctx, const char *name);
 
 /**
  * Set a property asynchronously. You will receive the result of the operation
