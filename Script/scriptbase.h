@@ -101,6 +101,7 @@ protected:
     QVector<SearchSettingItem> searchSettingItems;
     QVector<QPair<QString, QString>> scriptMenuItems; // (title, id)
     bool settingsUpdated, hasSetOptionFunc;
+    QString settingPath;
     ScriptType sType;
 
     QVariantList call(const char *fname, const QVariantList &params, int nRet, QString &errInfo);
@@ -112,6 +113,7 @@ protected:
     QString loadMeta(const QString &scriptPath);
     void loadSettings(const QString &scriptPath);
     void loadSearchSettings(const QString &scriptPath);
+    QString getSettingFile(const QString &scriptPath, bool exist = true);
     void loadScriptMenus();
     void registerFuncs(const char *tname, const luaL_Reg *funcs);
     ScriptState loadScriptStr(const QString &content);

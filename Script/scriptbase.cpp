@@ -5,6 +5,7 @@
 #include "modules/lua_htmlparser.h"
 #include "modules/lua_regex.h"
 #include <QFile>
+#include <QDir>
 #include <QVariant>
 #include "Common/network.h"
 #include "Common/htmlparsersax.h"
@@ -18,6 +19,7 @@ namespace
 }
 ScriptBase::ScriptBase() : L(nullptr), settingsUpdated(false),hasSetOptionFunc(false),sType(ScriptType::UNKNOWN_STYPE)
 {
+    settingPath = GlobalObjects::dataPath + "script_data/";
     L = luaL_newstate();
     if(L)
     {
@@ -44,9 +46,8 @@ ScriptBase::~ScriptBase()
     }
     if(settingsUpdated)
     {
-        QString scriptPath(scriptMeta["path"]);
-        int suffixPos = scriptPath.lastIndexOf('.');
-        QFile settingSaved(scriptPath.mid(0,suffixPos)+".json");
+        const QString scriptPath(scriptMeta["path"]);
+        QFile settingSaved(getSettingFile(scriptPath, false));
         if(settingSaved.open(QFile::WriteOnly))
         {
             QMap<QString, QVariant> settingMap, searchSettingMap;
@@ -448,9 +449,7 @@ void ScriptBase::loadSettings(const QString &scriptPath)
             });
         }
     }
-
-    int suffixPos = scriptPath.lastIndexOf('.');
-    QFile settingSaved(scriptPath.mid(0,suffixPos)+".json");
+    QFile settingSaved(getSettingFile(scriptPath));
     if(settingSaved.open(QFile::ReadOnly))
     {
         QJsonObject sObj(Network::toJson(settingSaved.readAll()).object());
@@ -518,9 +517,7 @@ void ScriptBase::loadSearchSettings(const QString &scriptPath)
             });
         }
     }
-    if(searchSettingItems.isEmpty()) return;
-    int suffixPos = scriptPath.lastIndexOf('.');
-    QFile settingSaved(scriptPath.mid(0,suffixPos)+".json");
+    QFile settingSaved(getSettingFile(scriptPath));
     if(settingSaved.open(QFile::ReadOnly))
     {
         QJsonObject sObj(Network::toJson(settingSaved.readAll()).object());
@@ -540,6 +537,24 @@ void ScriptBase::loadSearchSettings(const QString &scriptPath)
             }
         }
     }
+}
+
+QString ScriptBase::getSettingFile(const QString &scriptPath, bool exist)
+{
+    QString settingFile;
+    int suffixPos = scriptPath.lastIndexOf('.');
+    settingFile = scriptPath.mid(0,suffixPos)+".json";
+    if(!settingPath.isEmpty())
+    {
+       QDir dir;
+       if(!dir.exists(settingPath)) dir.mkpath(settingPath);
+       auto settingFileInfo = QFileInfo(settingPath, QFileInfo(scriptPath).baseName() + ".json");
+       if(settingFileInfo.exists() || !exist)
+       {
+           settingFile = settingFileInfo.filePath();
+       }
+    }
+    return settingFile;
 }
 
 void ScriptBase::loadScriptMenus()

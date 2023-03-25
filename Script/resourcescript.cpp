@@ -4,6 +4,7 @@
 ResourceScript::ResourceScript() : ScriptBase()
 {
     sType = ScriptType::RESOURCE;
+    settingPath += "resource/";
 }
 
 ScriptState ResourceScript::loadScript(const QString &scriptPath)

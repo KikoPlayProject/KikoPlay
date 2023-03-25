@@ -3,6 +3,7 @@
 LibraryScript::LibraryScript() : ScriptBase()
 {
     sType = ScriptType::LIBRARY;
+    settingPath += "library/";
 }
 
 ScriptState LibraryScript::loadScript(const QString &scriptPath)

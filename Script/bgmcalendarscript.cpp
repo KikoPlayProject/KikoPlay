@@ -4,6 +4,7 @@
 BgmCalendarScript::BgmCalendarScript() : ScriptBase()
 {
     sType = ScriptType::BGM_CALENDAR;
+    settingPath += "bgm_calendar/";
 }
 
 ScriptState BgmCalendarScript::loadScript(const QString &scriptPath)

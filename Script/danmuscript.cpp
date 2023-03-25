@@ -5,6 +5,7 @@
 DanmuScript::DanmuScript() : ScriptBase()
 {
     sType = ScriptType::DANMU;
+    settingPath += "danmu/";
 }
 
 ScriptState DanmuScript::loadScript(const QString &scriptPath)

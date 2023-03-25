@@ -360,6 +360,10 @@ int LuaUtil::envInfo(lua_State *L)
     lua_pushstring(L, GlobalObjects::kikoVersion); // tabel key value
     lua_rawset(L, -3); //table
 
+    lua_pushstring(L, "data_path"); // table key
+    lua_pushstring(L, GlobalObjects::dataPath.toStdString().c_str()); // tabel key value
+    lua_rawset(L, -3); //table
+
     return 1;
 }
 
