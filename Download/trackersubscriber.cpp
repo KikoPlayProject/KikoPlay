@@ -88,7 +88,7 @@ void TrackerSubscriber::check(int index)
     for(int i = 0; i < replies.size(); ++i)
     {
         TrackerListSource &src = trackerListSrcs[indexes[i]];
-        Network::Reply &reply = replies[indexes[i]];
+        Network::Reply &reply = replies[i];
         if(reply.hasError)
         {
             Logger::logger()->log(Logger::APP, QString("Tracker Subsciber checking faild: %1, %2").arg(src.url, reply.errInfo));

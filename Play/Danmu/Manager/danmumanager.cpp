@@ -31,8 +31,11 @@ DanmuManager::~DanmuManager()
 
 Pool *DanmuManager::getPool(const QString &pid, bool loadDanmu)
 {
-    QMutexLocker locker(&poolsLock);
-    Pool *pool=pools.value(pid,nullptr);
+    Pool *pool = nullptr;
+    {
+        QMutexLocker locker(&poolsLock);
+        pool = pools.value(pid,nullptr);
+    }
     if(pool && loadDanmu)
     {
         pool->load();
