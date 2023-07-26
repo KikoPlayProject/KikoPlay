@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.16.0)
 
 # If QT is installed in your system, it can be FALSE
 option(USE_VCPKG_QT "Use vcpkg to add QT dependency" ON)
-# Set default overridable parameters for "/usr/share"
-set(CMAKE_INSTALL_SHAREDIR "/usr/share" CACHE STRING "The default share path")
 
 if (USE_VCPKG_QT)
     list(APPEND VCPKG_MANIFEST_FEATURES "qt-dependencies")
@@ -100,6 +98,11 @@ if (WIN32)
 endif()
 
 if (UNIX)
+    # Set default overridable parameters for "/usr/share"
+    set(CMAKE_INSTALL_SHAREDIR "/usr/share" CACHE STRING "The default share path")
+    # Set default unix data option
+    option(CONFIG_UNIX_DATA "Use unix data path" ON)
+
     include(FindPkgConfig)
     pkg_check_modules(mpv QUIET mpv)
 
@@ -111,6 +114,11 @@ if (UNIX)
     PRIVATE
         ${mpv_LIBRARIES}
     )
+
+    if (CONFIG_UNIX_DATA)
+        message("CONFIG_UNIX_DATA = ON")
+        target_compile_definitions(${PROJECT_NAME} PRIVATE CONFIG_UNIX_DATA=1)
+    endif()
 
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
     install(FILES kikoplay.png kikoplay.xpm DESTINATION "${CMAKE_INSTALL_SHAREDIR}/pixmaps")
