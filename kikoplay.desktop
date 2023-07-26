@@ -3,7 +3,7 @@ Type=Application
 Name=KikoPlay
 Comment=KikoPlay is a full-featured danmu player!
 TryExec=KikoPlay
-Exec=KikoPlay
+Exec=env QT_QPA_PLATFORM=xcb KikoPlay
 Icon=/usr/share/pixmaps/kikoplay.png
 Terminal=false
 StartupNotify=true
