@@ -21,176 +21,46 @@ find_package(Qt5 COMPONENTS Widgets Core Gui Network Concurrent Sql Svg REQUIRED
 find_package(ZLIB REQUIRED)
 add_subdirectory(Script/lua)
 
+function(include_sub_directories_recursively ROOT_DIR)
+    if (IS_DIRECTORY ${ROOT_DIR})
+        include_directories(${ROOT_DIR})
+    endif()
+
+    file(GLOB SUB_LIST RELATIVE ${ROOT_DIR} ${ROOT_DIR}/*)
+    foreach(SUB ${SUB_LIST})
+        if (IS_DIRECTORY ${ROOT_DIR}/${SUB})
+            include_sub_directories_recursively(${ROOT_DIR}/${SUB})
+        endif()
+    endforeach()
+endfunction()
+
+set (CMAKE_PROJECT_SEARCH_PATH
+    ${CMAKE_SOURCE_DIR}/Common
+    ${CMAKE_SOURCE_DIR}/Download
+    ${CMAKE_SOURCE_DIR}/LANServer
+    ${CMAKE_SOURCE_DIR}/MediaLibrary
+    ${CMAKE_SOURCE_DIR}/Play
+    ${CMAKE_SOURCE_DIR}/Script
+    ${CMAKE_SOURCE_DIR}/UI
+)
+
+foreach(SEARCH_PATH ${CMAKE_PROJECT_SEARCH_PATH})
+    include_sub_directories_recursively(${SEARCH_PATH})
+endforeach()
+
+file(READ "KikoPlay.pro" KIKOPLAY_PRO_CONTENTS)
+
+string(REGEX MATCHALL "[A-Za-z0-9_\\/]+\\.cpp" CMAKE_PROJECT_SOURCE_FILES "${KIKOPLAY_PRO_CONTENTS}")
+message("add sources: " "${CMAKE_PROJECT_SOURCE_FILES}")
+
 add_executable(${PROJECT_NAME}
-    Common/counter.cpp 
-    Common/logger.cpp 
-    Common/notifier.cpp 
-    Download/autodownloadmanager.cpp 
-    Download/peermodel.cpp 
-    Download/trackersubscriber.cpp 
-    LANServer/apihandler.cpp 
-    LANServer/dlna/dlnamediacontroller.cpp 
-    LANServer/dlna/dlnamediaitem.cpp 
-    LANServer/dlna/dlnamediaserver.cpp 
-    LANServer/dlna/upnp.cpp 
-    LANServer/dlna/upnpctrlpoint.cpp 
-    LANServer/dlna/upnpdevice.cpp 
-    LANServer/dlna/upnpservice.cpp 
-    LANServer/filehandler.cpp 
-    LANServer/httpserver/httpconnectionhandler.cpp 
-    LANServer/httpserver/httpconnectionhandlerpool.cpp 
-    LANServer/httpserver/httpcookie.cpp 
-    LANServer/httpserver/httpglobal.cpp 
-    LANServer/httpserver/httplistener.cpp 
-    LANServer/httpserver/httprequest.cpp 
-    LANServer/httpserver/httprequesthandler.cpp 
-    LANServer/httpserver/httpresponse.cpp 
-    LANServer/httpserver/httpsession.cpp 
-    LANServer/httpserver/httpsessionstore.cpp 
-    LANServer/httpserver/staticfilecontroller.cpp 
-    LANServer/router.cpp 
-    MediaLibrary/animeinfo.cpp 
-    MediaLibrary/animelistmodel.cpp 
-    MediaLibrary/animeprovider.cpp 
-    MediaLibrary/episodeitem.cpp 
-    MediaLibrary/tagnode.cpp 
-    Play/Danmu/Render/livedanmuitemdelegate.cpp 
-    Play/Danmu/Render/livedanmulistmodel.cpp 
-    Play/Danmu/danmuprovider.cpp 
-    Play/Danmu/eventanalyzer.cpp 
-    Play/Video/mpvpreview.cpp 
-    Play/Video/simpleplayer.cpp 
-    Script/bgmcalendarscript.cpp 
-    Script/danmuscript.cpp 
-    Script/libraryscript.cpp 
-    Script/luatablemodel.cpp 
-    Script/modules/lua_htmlparser.cpp 
-    Script/modules/lua_net.cpp 
-    Script/modules/lua_regex.cpp 
-    Script/modules/lua_util.cpp 
-    Script/modules/lua_xmlreader.cpp 
-    Script/modules/modulebase.cpp 
-    Script/playgroundscript.cpp 
-    Script/resourcescript.cpp 
-    Script/scriptbase.cpp 
-    Script/scriptmanager.cpp 
-    Script/scriptmodel.cpp 
-    Script/scriptsettingmodel.cpp 
-    UI/addpool.cpp 
-    UI/addrule.cpp 
-    UI/animebatchaction.cpp 
-    UI/animedetailinfopage.cpp 
-    UI/animeinfoeditor.cpp 
-    UI/animesearch.cpp 
-    UI/autodownloadwindow.cpp 
-    UI/charactereditor.cpp 
-    UI/danmulaunch.cpp 
-    UI/danmuview.cpp 
-    UI/dlnadiscover.cpp 
-    UI/gifcapture.cpp 
-    UI/inputdialog.cpp 
-    UI/logwindow.cpp 
-    UI/luatableviewer.cpp 
-    UI/scriptplayground.cpp 
-    UI/settings.cpp 
-    UI/settings/downloadpage.cpp 
-    UI/settings/lanserverpage.cpp 
-    UI/settings/mpvpage.cpp 
-    UI/settings/mpvshortcutpage.cpp 
-    UI/settings/scriptpage.cpp 
-    UI/settings/stylepage.cpp 
-    UI/settings/settingpage.cpp
-    UI/snippetcapture.cpp 
-    UI/stylemanager.cpp 
-    UI/widgets/backgroundfadewidget.cpp 
-    UI/widgets/backgroundwidget.cpp 
-    UI/widgets/clickslider.cpp 
-    UI/widgets/colorpicker.cpp 
-    UI/widgets/colorslider.cpp 
-    UI/widgets/danmustatiswidget.cpp 
-    UI/widgets/dialogtip.cpp 
-    UI/widgets/elidelineedit.cpp 
-    UI/widgets/fonticonbutton.cpp 
-    UI/widgets/loadingicon.cpp 
-    UI/widgets/optionslider.cpp 
-    UI/widgets/scriptsearchoptionpanel.cpp 
-    UI/widgets/smoothscrollbar.cpp 
-        main.cpp 
-    UI/mainwindow.cpp 
-    UI/framelesswindow.cpp 
-    Play/Danmu/Layouts/bottomlayout.cpp 
-    Play/Danmu/Layouts/rolllayout.cpp 
-    Play/Danmu/Layouts/toplayout.cpp 
-    Play/Danmu/danmupool.cpp 
-    globalobjects.cpp 
-    Play/Playlist/playlist.cpp 
-    Play/Video/mpvplayer.cpp 
-    UI/list.cpp 
-    UI/player.cpp 
-    UI/pooleditor.cpp 
-    UI/framelessdialog.cpp 
-    Play/Danmu/Provider/localprovider.cpp 
-    UI/adddanmu.cpp 
-    UI/matcheditor.cpp 
-    UI/selectepisode.cpp 
-    Play/Danmu/blocker.cpp 
-    UI/blockeditor.cpp 
-    UI/capture.cpp 
-    UI/mediainfo.cpp 
-    Play/Danmu/common.cpp 
-    UI/about.cpp 
-    Common/network.cpp 
-    Common/htmlparsersax.cpp 
-    MediaLibrary/animeitemdelegate.cpp 
-    UI/librarywindow.cpp 
-    MediaLibrary/episodesmodel.cpp 
-    Download/util.cpp 
-    Download/aria2jsonrpc.cpp 
-    UI/widgets/dirselectwidget.cpp 
-    Download/downloaditemdelegate.cpp 
-    Download/downloadmodel.cpp 
-    Download/torrent.cpp 
-    UI/downloadwindow.cpp 
-    UI/adduritask.cpp 
-    UI/selecttorrentfile.cpp 
-    UI/poolmanager.cpp 
-    UI/checkupdate.cpp 
-    Common/flowlayout.cpp 
-    UI/timelineedit.cpp 
-    LANServer/lanserver.cpp 
-    Play/Playlist/playlistitem.cpp 
-    Play/Playlist/playlistprivate.cpp 
-    Play/Danmu/Render/cacheworker.cpp 
-    Play/Danmu/Render/danmurender.cpp 
-    Play/Danmu/Manager/danmumanager.cpp 
-    Play/Danmu/Manager/nodeinfo.cpp 
-    Play/Danmu/Manager/managermodel.cpp 
-    MediaLibrary/animeworker.cpp 
-    MediaLibrary/animemodel.cpp 
-    MediaLibrary/labelmodel.cpp 
-    MediaLibrary/animefilterproxymodel.cpp 
-    MediaLibrary/labelitemdelegate.cpp 
-    Download/BgmList/bgmlist.cpp 
-    UI/bgmlistwindow.cpp 
-    UI/ressearchwindow.cpp 
-    Play/Danmu/Manager/pool.cpp 
-    MediaLibrary/capturelistmodel.cpp 
-    UI/captureview.cpp 
-    UI/tip.cpp
+    ${CMAKE_PROJECT_SOURCE_FILES}
     res.qrc
     kikoplay.rc
 )
 
 target_include_directories(${PROJECT_NAME}
-PRIVATE 
-    Common
-    Download
-    LANServer
-    MediaLibrary
-    Play
-    Script
-    UI
-    UI/settings/
+PRIVATE
     .
 )
 
@@ -228,6 +98,11 @@ if (WIN32)
 endif()
 
 if (UNIX)
+    # Set default overridable parameters for "/usr/share"
+    set(CMAKE_INSTALL_SHAREDIR "/usr/share" CACHE STRING "The default share path")
+    # Set default unix data option
+    option(CONFIG_UNIX_DATA "Use unix data path" ON)
+
     include(FindPkgConfig)
     pkg_check_modules(mpv QUIET mpv)
 
@@ -239,5 +114,14 @@ if (UNIX)
     PRIVATE
         ${mpv_LIBRARIES}
     )
-endif()
 
+    if (CONFIG_UNIX_DATA)
+        message("CONFIG_UNIX_DATA = ON")
+        target_compile_definitions(${PROJECT_NAME} PRIVATE CONFIG_UNIX_DATA=1)
+    endif()
+
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    install(FILES kikoplay.png kikoplay.xpm DESTINATION "${CMAKE_INSTALL_SHAREDIR}/pixmaps")
+    install(FILES kikoplay.desktop DESTINATION "${CMAKE_INSTALL_SHAREDIR}/applications")
+    install(DIRECTORY web DESTINATION "${CMAKE_INSTALL_SHAREDIR}/kikoplay")
+endif()
