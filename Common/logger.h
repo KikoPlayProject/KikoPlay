@@ -14,9 +14,9 @@ class Logger : public QObject
 public:
     enum LogType
     {
-        APP, MPV, LANServer, Script, Aria2, UNKNOWN
+        APP, MPV, LANServer, Script, Extension, Aria2, UNKNOWN
     };
-    const QStringList LogTypeNames{"App", "MPV", "LAN Server", "Script", "Aria2"};
+    const QStringList LogTypeNames{"App", "MPV", "LAN Server", "Script", "Extension",  "Aria2"};
     const int bufferSize = 1024;
     const qint64 maxLogFileSize = 10*1024*1024;
     virtual ~Logger();
@@ -39,7 +39,7 @@ private:
     static void msgHandler(const QtMsgType type, const QMessageLogContext& context, const QString &message);
 
     QStringList logBuffer[(int)LogType::UNKNOWN];
-    QString typeIdentity[(int)LogType::UNKNOWN] = {"app", "mpv", "server", "script", "aria2"};
+    QString typeIdentity[(int)LogType::UNKNOWN] = {"app", "mpv", "server", "script", "extension", "aria2"};
     QString timestampFormat{"yyyy-MM-dd hh:mm:ss"};
     QSharedPointer<QThread> logThread;
     QBasicTimer flushTimer;

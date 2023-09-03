@@ -9,7 +9,7 @@
 #include "Common/notifier.h"
 #include "widgets/dirselectwidget.h"
 #include "Download/torrent.h"
-SelectTorrentFile::SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *parent) : CFramelessDialog(tr("Add Torrent"),parent,true),model(nullptr)
+SelectTorrentFile::SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *parent, const QString &path) : CFramelessDialog(tr("Add Torrent"),parent,true),model(nullptr)
 {   
     model=new TorrentFileModel(torrentFileTree,this);
     TorrentTreeView *torrentFileView=new TorrentTreeView(this);
@@ -39,9 +39,10 @@ SelectTorrentFile::SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *pare
         checkedFileSizeLabel->setText(tr("Select: %1").arg(formatSize(false,checkedFileSize)));
     });
 
-    checkedFileSize=model->getCheckedFileSize();
+    checkedFileSize = model->getCheckedFileSize();
     checkedFileSizeLabel->setText(tr("Select: %1").arg(formatSize(false,checkedFileSize)));
-    dirSelect=new DirSelectWidget(this);
+    dirSelect = new DirSelectWidget(this);
+    if (!path.isEmpty()) dirSelect->setDir(path);
 
     QVBoxLayout *dialogVLayout=new QVBoxLayout(this);
     QHBoxLayout *checkHLayout=new QHBoxLayout();

@@ -2,7 +2,7 @@
 #include "animemodel.h"
 #include "animeworker.h"
 #include "Common/notifier.h"
-#include "Script/scriptmanager.h"
+#include "Extension/Script/scriptmanager.h"
 #include "animeprovider.h"
 #include "labelmodel.h"
 #include "globalobjects.h"

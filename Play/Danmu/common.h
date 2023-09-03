@@ -6,6 +6,8 @@ struct DanmuComment
 {
     DanmuComment():time(0),originTime(0),blockBy(-1),mergedList(nullptr),m_parent(nullptr){}
     ~DanmuComment(){if(mergedList)delete mergedList;}
+    DanmuComment &operator=(const DanmuComment&) = delete;
+    DanmuComment(const DanmuComment&) = delete;
 
     enum DanmuType
     {
@@ -66,7 +68,11 @@ public:
     float x;
     float y;
     float extraData;
+
+    DanmuObject() = default;
      ~DanmuObject();
+    DanmuObject &operator=(const DanmuObject&) = delete;
+    DanmuObject(const DanmuObject&) = delete;
     void *operator new(size_t sz);
     void  operator delete(void * p);
     static void DeleteObjPool();

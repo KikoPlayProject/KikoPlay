@@ -34,6 +34,7 @@ class QWinTaskbarButton;
 #endif
 class QSystemTrayIcon;
 class QProgressBar;
+class AppBar;
 class MainWindow : public CFramelessWindow, public NotifyInterface
 {
     Q_OBJECT
@@ -71,7 +72,7 @@ private:
 #endif
 
     QToolButton *buttonIcon,*buttonPage_Play,*buttonPage_Library,*buttonPage_Downlaod;
-    QToolButton *minButton,*maxButton,*closeButton;
+    QToolButton *appButton, *minButton,*maxButton,*closeButton;
     QSplitter *playSplitter;
     PlayerWindow *playerWindow;
     ListWindow *listWindow;
@@ -88,6 +89,7 @@ private:
     QSystemTrayIcon *trayIcon;
     HideToTrayType hideToTrayType;
     QProgressBar *downloadToolProgress;
+    AppBar *appBar;
 
     void setupUI();
     void switchToPlay(const QString &fileToPlay);

@@ -39,6 +39,8 @@ public:
     void dumpItem(QJsonArray &array, PlayListItem *item);
 
     void addMediaPathHash(const QVector<PlayListItem *> newItems);
+
+    void pushEpFinishEvent(PlayListItem *item);
 private:
     void saveItem(QXmlStreamWriter &writer,PlayListItem *item);
 private:

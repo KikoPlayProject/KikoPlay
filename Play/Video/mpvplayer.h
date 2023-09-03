@@ -69,6 +69,7 @@ public:
     inline const QString &getCurrentFile() const {return currentFile;}
     inline int getVolume() const {return volume;}
     inline qint64 getCacheSpeed() const { return cacheSpeed; }
+    inline bool isWebSource() const { return mpv::qt::get_property(mpv,"demuxer-via-network").toBool(); }
     QString getMPVProperty(const QString &property, int &errCode);
     QVariant getMPVPropertyVariant(const QString &property, int &errCode);
     const QHash<QString, QPair<QList<QStringList>, QString>> &getShortcuts() const{return mpvShortcuts;}
@@ -90,6 +91,8 @@ public:
     int runShortcut(const QString &key, int keyEventType=0);  //0:press 1:down 2:up
     void setDirectKeyMode(bool on);
     void setDirectModeKeyMapping(const QString &key, const QString *val = nullptr);
+
+    int runCommand(const QVariant& params) { return setMPVCommand(params); }
 signals:
     void fileChanged();
     void durationChanged(int value);
@@ -188,8 +191,8 @@ private:
     MPVPreview *mpvPreview;
     QThread *previewThread;
 
-    inline int setMPVCommand(const QVariant& params);
-    inline void setMPVProperty(const QString& name, const QVariant& value);
+    int setMPVCommand(const QVariant& params);
+    void setMPVProperty(const QString& name, const QVariant& value);
 };
 
 #endif // MPVPLAYER_H

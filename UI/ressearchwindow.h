@@ -2,7 +2,7 @@
 #define RESSEARCHWINDOW_H
 #include <QWidget>
 #include <QAbstractItemModel>
-#include "Script/resourcescript.h"
+#include "Extension/Script/resourcescript.h"
 
 class QTreeView;
 class QLabel;

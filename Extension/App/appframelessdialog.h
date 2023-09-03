@@ -1,0 +1,132 @@
+#ifndef APPFRAMELESSDIALOG_H
+#define APPFRAMELESSDIALOG_H
+#include "qsystemdetection.h"
+#include <QDialog>
+#include <QList>
+#include <QMargins>
+#include <QRect>
+#include <QTimer>
+class QLabel;
+class DialogTip;
+class LoadingIcon;
+#ifdef Q_OS_WIN
+class AppFramelessDialog : public QDialog
+{
+    Q_OBJECT
+public:
+    explicit AppFramelessDialog(const QString &titleStr="", QWidget *parent = 0);
+public:
+    void setResizeable(bool resizeable=true);
+    bool isResizeable(){return m_bResizeable;}
+    void setResizeableAreaWidth(int width = 5);
+
+protected:
+    void onHide();
+    void onClose();
+    void onPin();
+    void addIgnoreWidget(QWidget* widget);
+    bool nativeEvent(const QByteArray &eventType, void *message, long *result) override;
+public:
+    void setContentsMargins(const QMargins &margins);
+    void setContentsMargins(int left, int top, int right, int bottom);
+    QMargins contentsMargins() const;
+    QRect contentsRect() const;
+    void getContentsMargins(int *left, int *top, int *right, int *bottom) const;
+public:
+    void setPin(bool pin);
+    bool isPinned() const { return isPin; }
+private:
+    QList<QWidget*> m_whiteList;
+    int m_borderWidth;
+
+    QMargins m_margins;
+    QMargins m_frames;
+    bool m_bJustMaximized;
+
+    bool m_bResizeable;
+    bool inited;
+    QPushButton *closeButton,*hideButton, *pinButton;
+    LoadingIcon *busyLabel;
+    QLabel *title;
+    QWidget *titleBar, *backWidget;
+    bool isBusy;
+    bool isPin;
+
+    DialogTip *dialogTip;
+    std::function<bool()> onCloseCallback, onHideCallback;
+
+    // QWidget interface
+protected:
+    virtual void showEvent(QShowEvent *event) override;
+    virtual void resizeEvent(QResizeEvent *event) override;
+    void keyPressEvent(QKeyEvent *) override;
+public:
+    void showBusyState(bool busy);
+    void setTitle(const QString &text);
+    void showMessage(const QString &msg, int type=1);
+    void setCloseCallback(const std::function<bool()> &func);
+    void setHideCallback(const std::function<bool()> &func);
+};
+#else
+class AppFramelessDialog : public QDialog
+{
+    Q_OBJECT
+public:
+    explicit AppFramelessDialog(const QString &titleStr="", QWidget *parent = 0);
+public:
+    void setResizeable(bool resizeable=true);
+    bool isResizeable(){return m_bResizeable;}
+
+protected:
+    void onHide();
+    void onClose();
+    void onPin();
+public:
+    void setContentsMargins(const QMargins &margins);
+    void setContentsMargins(int left, int top, int right, int bottom);
+    QMargins contentsMargins() const;
+    QRect contentsRect() const;
+    void getContentsMargins(int *left, int *top, int *right, int *bottom) const;
+    bool isPinned() const { return this->windowFlags() & Qt::WindowStaysOnTopHint; }
+    void setPin(bool pin);
+private:
+    int m_borderWidth;
+
+    QMargins m_margins;
+    QMargins m_frames;
+    bool m_bJustMaximized;
+
+    bool m_bResizeable;
+    QPushButton *closeButton,*hideButton, *pinButton;
+    LoadingIcon *busyLabel;
+    QLabel *title;
+    QWidget *titleBar, *backWidget;
+    bool isBusy;
+    bool isMousePressed;
+    QPoint mousePressPos;
+
+    bool resizeMouseDown;
+    bool left, right, top, bottom;
+    QPoint oldPos;
+
+    DialogTip *dialogTip;
+    std::function<bool()> onCloseCallback, onHideCallback;
+
+    // QWidget interface
+protected:
+    void showEvent(QShowEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
+    virtual void resizeEvent(QResizeEvent *event) override;
+    void keyPressEvent(QKeyEvent *) override;
+public:
+    void showBusyState(bool busy);
+    void setTitle(const QString &text);
+    void showMessage(const QString &msg, int type=1);
+    void setCloseCallback(const std::function<bool()> &func);
+    void setHideCallback(const std::function<bool()> &func);
+};
+#endif
+#endif // APPFRAMELESSDIALOG_H

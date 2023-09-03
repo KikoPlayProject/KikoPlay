@@ -12,7 +12,7 @@
 #include "MediaLibrary/animeprovider.h"
 #include "Common/notifier.h"
 #include "widgets/scriptsearchoptionpanel.h"
-#include "Script/scriptmanager.h"
+#include "Extension/Script/scriptmanager.h"
 #define AnimeRole Qt::UserRole+1
 
 AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("Bangumi Search"),parent,true,true,false)

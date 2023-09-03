@@ -17,9 +17,10 @@ public:
     inline const QString &animeTitle() const {return anime;}
     inline const QString &epTitle() const {return ep;}
     EpInfo toEp() const { EpInfo ep; ep.name = this->ep; ep.type = epType; ep.index = epIndex; return ep; }
+    QVariantMap toMap() const;
 public:
     int update(int sourceId=-1, QVector<QSharedPointer<DanmuComment> > *incList=nullptr);
-    int addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool reset=false);
+    int addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool reset=false, bool save = true);
     bool deleteSource(int sourceId, bool applyDB=true);
     bool deleteDanmu(int pos);
     bool setTimeline(int sourceId, const QVector<QPair<int, int> > &timelineInfo);

@@ -3,6 +3,7 @@
 #include "animeworker.h"
 #include "Common/notifier.h"
 #include "Common/threadtask.h"
+#include "Common/eventbus.h"
 #define AnimeRole Qt::UserRole+1
 
 AnimeModel::AnimeModel(QObject *parent):QAbstractItemModel(parent),
@@ -12,6 +13,12 @@ AnimeModel::AnimeModel(QObject *parent):QAbstractItemModel(parent),
     limitCount = qMax(limitCount, 8);
     QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeAdded, this, &AnimeModel::addAnime);
     QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeRemoved, this, &AnimeModel::removeAnime);
+    QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeUpdated, this, [](Anime *anime){
+        if (EventBus::getEventBus()->hasListener(EventBus::EVENT_LIBRARY_ANIME_UPDATED))
+        {
+            EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_LIBRARY_ANIME_UPDATED, anime->toMap(true)});
+        }
+    });
 }
 
 void AnimeModel::init()
@@ -89,6 +96,10 @@ void AnimeModel::addAnime(Anime *anime)
         showStatisMessage();
     }
     currentOffset++;
+    if (EventBus::getEventBus()->hasListener(EventBus::EVENT_LIBRARY_ANIME_ADDED))
+    {
+        EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_LIBRARY_ANIME_ADDED, anime->toMap(true)});
+    }
 }
 
 void AnimeModel::removeAnime(Anime *anime)

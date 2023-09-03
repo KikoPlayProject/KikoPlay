@@ -21,9 +21,9 @@
 #include "capture.h"
 #include "mediainfo.h"
 #include "settings.h"
-#include "logwindow.h"
 #include "snippetcapture.h"
 #include "gifcapture.h"
+#include "Play/playcontext.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/Render/danmurender.h"
 #include "Play/Danmu/Render/livedanmulistmodel.h"
@@ -37,6 +37,8 @@
 #include "Download/util.h"
 #include "danmulaunch.h"
 #include "globalobjects.h"
+#include "Common/eventbus.h"
+
 namespace
 {
 class InfoTips;
@@ -213,9 +215,7 @@ protected:
             const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(path);
             if (curItem)
             {
-                GlobalObjects::danmuPool->reset();
-                GlobalObjects::danmuRender->cleanup();
-                GlobalObjects::mpvplayer->setMedia(curItem->path);
+                PlayContext::context()->playItem(curItem);
             }
         }
         event->accept();
@@ -277,9 +277,7 @@ public:
                 const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(files.first());
                 if (curItem)
                 {
-                    GlobalObjects::danmuPool->reset();
-                    GlobalObjects::danmuRender->cleanup();
-                    GlobalObjects::mpvplayer->setMedia(curItem->path);
+                    PlayContext::context()->playItem(curItem);
                 }
 
             }
@@ -692,7 +690,7 @@ void PlayerWindow::initActions()
     windowSizeGroup->actions().at(GlobalObjects::appSetting->value("Play/WindowSize",2).toInt())->trigger();
     actMiniMode = new QAction(tr("Mini Mode"),this);
     QObject::connect(actMiniMode, &QAction::triggered, this, [this](){
-        if(GlobalObjects::playlist->getCurrentItem() != nullptr && !miniModeOn)
+        if(!GlobalObjects::mpvplayer->getCurrentFile().isEmpty() && !miniModeOn)
         {
             if(isFullscreen)
             {
@@ -786,7 +784,7 @@ void PlayerWindow::initActions()
         {
         case 0:
             onTopWhilePlaying=true;
-            if(GlobalObjects::mpvplayer->getState()==MPVPlayer::Play && GlobalObjects::playlist->getCurrentItem() != nullptr)
+            if(GlobalObjects::mpvplayer->getState()==MPVPlayer::Play && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
                 emit setStayOnTop(true);
 			else
 				emit setStayOnTop(false);
@@ -1694,6 +1692,7 @@ void PlayerWindow::setupSignals()
         int ts=duration/1000;
         int lmin=ts/60;
         int ls=ts-lmin*60;
+        PlayContext::context()->duration = ts;
         progress->setRange(0,duration);
         progress->setSingleStep(1);
         miniProgress->setRange(0,duration);
@@ -1713,6 +1712,13 @@ void PlayerWindow::setupSignals()
 #ifdef QT_DEBUG
         qDebug()<<"Duration Changed";
 #endif
+    });
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::fileChanged, [](){
+        if (!EventBus::getEventBus()->hasListener(EventBus::EVENT_PLAYER_FILE_CHANGED)) return;
+        QVariantMap param = {
+            { "file", GlobalObjects::mpvplayer->getCurrentFile() }
+        };
+        EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_PLAYER_FILE_CHANGED, param});
     });
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::fileChanged,[this](){
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
@@ -1819,9 +1825,10 @@ void PlayerWindow::setupSignals()
         static_cast<PlayerContent *>(playerContent)->refreshItems();
     });
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::positionChanged,[this](int newtime){
-        int cs=newtime/1000;
-        int cmin=cs/60;
-        int cls=cs-cmin*60;
+        const int cs = newtime / 1000;
+        const int cmin = cs / 60;
+        const int cls = cs - cmin * 60;
+        PlayContext::context()->playtime = cs;
         if(!progressPressed) progress->setValue(newtime);
         if(miniModeOn) miniProgress->setValue(newtime);
         timeLabel->setText(QString("%1:%2%3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(this->totalTimeStr));
@@ -1842,36 +1849,49 @@ void PlayerWindow::setupSignals()
             //previewLabel->adjustSize();
         }
     });
-    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::stateChanged,[this](MPVPlayer::PlayState state){
-        if(GlobalObjects::playlist->getCurrentItem()!=nullptr)
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::stateChanged, [](MPVPlayer::PlayState state){
+        if (!EventBus::getEventBus()->hasListener(EventBus::EVENT_PLAYER_STATE_CHANGED)) return;
+        QVariantMap param = {
+            { "state", (int)state }
+        };
+        if (state == MPVPlayer::Play)
         {
+            if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+            {
+                EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_PLAYER_STATE_CHANGED, param});
+            }
+        }
+        else
+        {
+            EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_PLAYER_STATE_CHANGED, param});
+        }
+    });
+    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::stateChanged,[this](MPVPlayer::PlayState state){
 #ifdef Q_OS_WIN
-            if(state==MPVPlayer::Play)
-            {
-                SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED);
-            }
-            else
-            {
-                SetThreadExecutionState(ES_CONTINUOUS);
-            }
-
+        if(state==MPVPlayer::Play && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+        {
+            SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED);
+        }
+        else
+        {
+            SetThreadExecutionState(ES_CONTINUOUS);
+        }
 #endif
-            if(onTopWhilePlaying)
-            {
-                emit setStayOnTop(state==MPVPlayer::Play);
-            }
+        if(onTopWhilePlaying)
+        {
+            emit setStayOnTop(state == MPVPlayer::Play && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty());
         }
         switch(state)
         {
         case MPVPlayer::Play:
-			if (GlobalObjects::playlist->getCurrentItem() != nullptr)
+            if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
             {
                 this->playPause->setText(QChar(0xe6fb));
                 playerContent->hide();
             }
             break;
         case MPVPlayer::Pause:
-			if (GlobalObjects::playlist->getCurrentItem() != nullptr)
+            if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
                 this->playPause->setText(QChar(0xe606));
             break;
         case MPVPlayer::EndReached:
@@ -1879,8 +1899,8 @@ void PlayerWindow::setupSignals()
             this->playPause->setText(QChar(0xe606));
 			GlobalObjects::danmuPool->reset();
 			GlobalObjects::danmuRender->cleanup();
-            //GlobalObjects::playlist->setCurrentPlayTime(0);
-            setPlayTime();
+            GlobalObjects::playlist->setCurrentPlayTime();
+            // setPlayTime();
 			PlayList::LoopMode loopMode = GlobalObjects::playlist->getLoopMode();
 			if (loopMode == PlayList::Loop_One)
 			{
@@ -1896,7 +1916,7 @@ void PlayerWindow::setupSignals()
         case MPVPlayer::Stop:
         {
             QCoreApplication::processEvents();
-            setPlayTime();
+            // setPlayTime();
             launch->hide();
             playPause->setText(QChar(0xe606));
             progress->setValue(0);
@@ -1918,6 +1938,7 @@ void PlayerWindow::setupSignals()
             playerContent->raise();
             playerContent->show();
             liveDanmuList->hide();
+            PlayContext::context()->clear();
             break;
         }
         }
@@ -1926,6 +1947,7 @@ void PlayerWindow::setupSignals()
 
     QObject::connect(stop,&QPushButton::clicked,[](){
         QCoreApplication::processEvents();
+        GlobalObjects::playlist->setCurrentPlayTime();
         GlobalObjects::mpvplayer->setState(MPVPlayer::Stop);
     });
     QObject::connect(progress,&ClickSlider::sliderClick,[](int pos){
@@ -2114,7 +2136,7 @@ void PlayerWindow::setupSignals()
     });
 
     QObject::connect(mediaInfo,&QToolButton::clicked,[this](){
-		if (GlobalObjects::playlist->getCurrentItem() == nullptr)return;
+        if (GlobalObjects::mpvplayer->getCurrentFile().isEmpty()) return;
         MediaInfo mediaInfoDialog(this);
         QRect geo(0,0,400*logicalDpiX()/96,600*logicalDpiY()/96);
         geo.moveCenter(this->geometry().center());
@@ -2144,7 +2166,7 @@ void PlayerWindow::adjustPlayerSize(int percent)
 void PlayerWindow::setPlayTime()
 {
     int playTime=progress->value()/1000;
-    GlobalObjects::playlist->setCurrentPlayTime(playTime);
+    // GlobalObjects::playlist->setCurrentPlayTime(playTime);
 }
 
 void PlayerWindow::showMessage(const QString &msg, int flag)
@@ -2178,9 +2200,7 @@ void PlayerWindow::switchItem(bool prev, const QString &nullMsg)
                 }
             }
             QCoreApplication::processEvents();
-            GlobalObjects::danmuPool->reset();
-            GlobalObjects::danmuRender->cleanup();
-            GlobalObjects::mpvplayer->setMedia(item->path);
+            PlayContext::context()->playItem(item);
             break;
         }
         else
@@ -2571,7 +2591,8 @@ void PlayerWindow::contextMenuEvent(QContextMenuEvent *)
 
 void PlayerWindow::closeEvent(QCloseEvent *)
 {
-    setPlayTime();
+    //setPlayTime();
+    GlobalObjects::playlist->setCurrentPlayTime();
     GlobalObjects::appSetting->beginGroup("Play");
     GlobalObjects::appSetting->setValue("ShowPreview",showPreview->isChecked());
     GlobalObjects::appSetting->setValue("AutoLoadLocalDanmu",autoLoadDanmuCheck->isChecked());    
@@ -2678,9 +2699,7 @@ void PlayerWindow::dropEvent(QDropEvent *event)
         const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(fileList.first());
         if (curItem)
         {
-            GlobalObjects::danmuPool->reset();
-            GlobalObjects::danmuRender->cleanup();
-            GlobalObjects::mpvplayer->setMedia(curItem->path);
+            PlayContext::context()->playItem(curItem);
         }
 
     }

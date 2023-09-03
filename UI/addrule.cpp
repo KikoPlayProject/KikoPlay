@@ -11,8 +11,8 @@
 #include "Download/autodownloadmanager.h"
 #include "widgets/dirselectwidget.h"
 #include "widgets/scriptsearchoptionpanel.h"
-#include "Script/scriptmanager.h"
-#include "Script/resourcescript.h"
+#include "Extension/Script/scriptmanager.h"
+#include "Extension/Script/resourcescript.h"
 #include "Common/notifier.h"
 
 AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add Rule"),parent, true, true, false)

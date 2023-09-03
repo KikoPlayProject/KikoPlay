@@ -3,7 +3,7 @@
 
 #include <QWidget>
 #include <QSharedPointer>
-#include "Script/scriptbase.h"
+#include "Extension/Script/scriptbase.h"
 
 class ScriptSearchOptionPanel : public QWidget
 {

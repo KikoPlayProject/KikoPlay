@@ -2,6 +2,10 @@
 #define ANIMEINFO_H
 #include <QtCore>
 #include <QPixmap>
+namespace Extension
+{
+    class LibraryInterface;
+}
 enum EpType
 {
     UNKNOWN, EP, SP, OP, ED, Trailer, MAD, Other
@@ -128,6 +132,7 @@ class Anime
     friend class LibraryScript;
     friend struct AnimeLite;
     friend class AnimeProvider;
+    friend class Extension::LibraryInterface;
 
     QString _name;
     QString _desc;
@@ -193,6 +198,7 @@ private:
 public:
     QVariantMap toMap(bool fillEp = false);
     const AnimeLite toLite() const;
+    static Anime *fromMap(const QVariantMap &aobj);
 
 private:
     void assign(const Anime *anime);

@@ -17,6 +17,7 @@
 #include "widgets/loadingicon.h"
 #include "Play/Danmu/Provider/localprovider.h"
 #include "MediaLibrary/animeprovider.h"
+#include "Play/playcontext.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/blocker.h"
@@ -1433,15 +1434,11 @@ void ListWindow::sortSelection(bool allItem, bool ascending)
 
 void ListWindow::playItem(const QModelIndex &index, bool playChild)
 {
-    int playTime=GlobalObjects::mpvplayer->getTime();
-    GlobalObjects::playlist->setCurrentPlayTime(playTime);
     QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
     const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(model->mapToSource(index),playChild);
     if (curItem)
     {
-        GlobalObjects::danmuPool->cleanUp();
-        GlobalObjects::danmuRender->cleanup();
-        GlobalObjects::mpvplayer->setMedia(curItem->path);
+        PlayContext::context()->playItem(curItem);
     }
 }
 

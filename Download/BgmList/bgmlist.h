@@ -3,7 +3,7 @@
 #include <QtCore>
 #include <QAbstractItemModel>
 #include <QColor>
-#include "Script/bgmcalendarscript.h"
+#include "Extension/Script/bgmcalendarscript.h"
 
 class BgmList : public QAbstractItemModel
 {

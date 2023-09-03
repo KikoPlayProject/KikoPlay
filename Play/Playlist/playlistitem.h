@@ -28,7 +28,7 @@ struct PlayListItem
     QVector<PlayListItem *> *children;
     enum ItemType
     {
-        LOCAL_FILE, WEB_URL
+        LOCAL_FILE, WEB_URL, COLLECTION
     };
     enum PlayState
     {

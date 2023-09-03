@@ -2,7 +2,7 @@
 #define PROVIDERMANAGER_H
 
 #include <QObject>
-#include "Script/scriptbase.h"
+#include "Extension/Script/scriptbase.h"
 #include "common.h"
 class DanmuProvider : public QObject
 {

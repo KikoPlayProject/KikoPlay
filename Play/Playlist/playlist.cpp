@@ -13,6 +13,7 @@
 #include "Play/Video/mpvplayer.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
+#include "Play/playcontext.h"
 #include "MediaLibrary/animeworker.h"
 #include "MediaLibrary/animeprovider.h"
 #include "Common/notifier.h"
@@ -139,6 +140,12 @@ bool PlayList::saveFinishTimeOnce()
     return d->saveFinishTimeOnce;
 }
 
+bool PlayList::hasPath(const QString &path) const
+{
+    Q_D(const PlayList);
+    return d->fileItems.value(path, nullptr);
+}
+
 int PlayList::addItems(QStringList &items, QModelIndex parent)
 {
     Q_D(PlayList);
@@ -194,7 +201,7 @@ int PlayList::addItems(QStringList &items, QModelIndex parent)
     return tmpItems.size();
 }
 
-int PlayList::addFolder(QString folderStr, QModelIndex parent)
+int PlayList::addFolder(QString folderStr, QModelIndex parent, const QString &name)
 {
     Q_D(PlayList);
     int insertPosition(0);
@@ -217,6 +224,10 @@ int PlayList::addFolder(QString folderStr, QModelIndex parent)
     if (folderRootCollection.children->count())
 	{
         PlayListItem *folderRoot(folderRootCollection.children->first());
+        if (!name.isEmpty())
+        {
+            folderRoot->title = name;
+        }
         beginInsertRows(parent, insertPosition, insertPosition);
         folderRoot->moveTo(parentItem, insertPosition);
 		endInsertRows();
@@ -446,7 +457,7 @@ void PlayList::sortAllItems(bool ascendingOrder)
     emit layoutChanged();
 }
 
-QModelIndex PlayList::addCollection(QModelIndex parent, QString title)
+QModelIndex PlayList::addCollection(QModelIndex parent, const QString &title)
 {
     Q_D(PlayList);
     PlayListItem *newCollection(nullptr);
@@ -471,6 +482,47 @@ QModelIndex PlayList::addCollection(QModelIndex parent, QString title)
     d->needRefresh = true;
     d->incModifyCounter();
     return this->index(insertPosition,0,parent);
+}
+
+QModelIndex PlayList::getCollection(QModelIndex parent, const QStringList &path)
+{
+    Q_D(PlayList);
+    PlayListItem *item = parent.isValid() ? static_cast<PlayListItem*>(parent.internalPointer()) : d->root;
+    if (!item->children) item = item->parent;
+    bool listChanged = false;
+    for (const QString &p : path)
+    {
+        bool hasPath = false;
+        for (int i = 0; i < item->children->size(); ++i)
+        {
+            PlayListItem *child = (*item->children)[i];
+            if (child->title == p && child->children)
+            {
+                hasPath = true;
+                item = child;
+                parent = this->index(i, 0, parent);
+                break;
+            }
+        }
+        if (!hasPath)
+        {
+            beginInsertRows(parent, item->children->size(), item->children->size());
+            PlayListItem *newCollection = new PlayListItem(item, false, item->children->size());
+            newCollection->title = p;
+            newCollection->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
+            endInsertRows();
+            parent = this->index(item->children->size() - 1, 0, parent);
+            item = newCollection;
+            listChanged = true;
+        }
+    }
+    if (listChanged)
+    {
+        d->playListChanged=true;
+        d->needRefresh = true;
+        d->incModifyCounter();
+    }
+    return parent;
 }
 
 int PlayList::refreshFolder(const QModelIndex &index)
@@ -499,6 +551,44 @@ int PlayList::refreshFolder(const QModelIndex &index)
         d->savePlaylist();
     }
     return c;
+}
+
+QModelIndex PlayList::addItem(QModelIndex parent, PlayListItem *item)
+{
+    if (!item) return QModelIndex();
+    Q_D(PlayList);
+    if (item->children) return QModelIndex();
+    PlayListItem *oldItem = d->fileItems.value(item->path, nullptr);
+    if (oldItem && oldItem != item)
+    {
+        delete item;
+        return createIndex(oldItem->parent->children->indexOf(oldItem), 0, oldItem);
+    }
+    PlayListItem *parentItem = parent.isValid() ? static_cast<PlayListItem*>(parent.internalPointer()) : d->root;
+    int insertPosition(0);
+    if (parentItem->children)
+    {
+        insertPosition = parentItem->children->size();
+    }
+    else
+    {
+        insertPosition = parentItem->parent->children->indexOf(parentItem) + 1;
+        parentItem = parentItem->parent;
+        parent = this->parent(parent);
+    }
+
+    beginInsertRows(parent, insertPosition, insertPosition);
+    item->parent=nullptr;
+    item->moveTo(parentItem, insertPosition);
+    item->pathHash = QCryptographicHash::hash(item->path.toUtf8(), QCryptographicHash::Md5).toHex();
+    item->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
+    d->fileItems.insert(item->path, item);
+    endInsertRows();
+
+    d->addMediaPathHash({item});
+    d->playListChanged=true;
+    d->needRefresh = true;
+    return createIndex(parentItem->children->indexOf(item), 0, item);
 }
 
 void PlayList::cutItems(const QModelIndexList &cutIndexes)
@@ -893,6 +983,7 @@ const PlayListItem *PlayList::setCurrentItem(const QModelIndex &index,bool playC
         }
     }
     PlayListItem *tmp = d->currentItem;
+    if (tmp) setCurrentPlayTime();
     d->currentItem = cur;
 	if (tmp)
 	{
@@ -908,19 +999,20 @@ const PlayListItem *PlayList::setCurrentItem(const QModelIndex &index,bool playC
 const PlayListItem *PlayList::setCurrentItem(const QString &path)
 {
     Q_D(PlayList);
-    PlayListItem *curItem=d->fileItems.value(path,nullptr);
-    if(curItem && d->currentItem!=curItem)
+    PlayListItem *curItem = d->fileItems.value(path, nullptr);
+    if (curItem && d->currentItem != curItem)
     {
         PlayListItem *tmp = d->currentItem;
         d->currentItem = curItem;
         if (tmp)
         {
+            setCurrentPlayTime();
             QModelIndex nIndex = createIndex(tmp->parent->children->indexOf(tmp), 0, tmp);
             emit dataChanged(nIndex, nIndex);
         }
         QModelIndex cIndex = createIndex(curItem->parent->children->indexOf(curItem), 0, curItem);
         emit dataChanged(cIndex, cIndex);
-        if(!curItem->animeTitle.isEmpty())
+        if (!curItem->animeTitle.isEmpty())
             AnimeWorker::instance()->updateEpTime(curItem->animeTitle, curItem->path);
         d->updateRecentlist(curItem);
     }
@@ -973,12 +1065,18 @@ void PlayList::checkCurrentItem(PlayListItem *itemDeleted)
     Q_D(PlayList);
     if(!itemDeleted->path.isEmpty())
     {
-        d->fileItems.remove(itemDeleted->path);
-        d->pathHashLock.lockForWrite();
-        d->mediaPathHash.remove(itemDeleted->pathHash);
-        d->pathHashLock.unlock();
+        if (d->fileItems.value(itemDeleted->path, nullptr) == itemDeleted)
+        {
+            d->fileItems.remove(itemDeleted->path);
+            d->pathHashLock.lockForWrite();
+            d->mediaPathHash.remove(itemDeleted->pathHash);
+            d->pathHashLock.unlock();
+        }
     }
-    if(itemDeleted->isBgmCollection) d->bgmCollectionItems.remove(itemDeleted->title);
+    if(itemDeleted->isBgmCollection && d->bgmCollectionItems.value(itemDeleted->title, nullptr) == itemDeleted)
+    {
+        d->bgmCollectionItems.remove(itemDeleted->title);
+    }
     if(itemDeleted==d->currentItem)
     {
         d->currentItem=nullptr;
@@ -1144,16 +1242,17 @@ void PlayList::updateItemsDanmu(const QModelIndexList &itemIndexes)
     notifier->showMessage(Notifier::LIST_NOTIFY, tr("Update Done"),NotifyMessageFlag::NM_HIDE);
 }
 
-void PlayList::setCurrentPlayTime(int playTime)
+void PlayList::setCurrentPlayTime()
 {
     Q_D(PlayList);
     PlayListItem *currentItem=d->currentItem;
     if(!currentItem) return;
     if(currentItem->type != PlayListItem::ItemType::LOCAL_FILE) return;
     PlayListItem::PlayState lastState = currentItem->playTimeState;
-    currentItem->playTime=playTime;
     const int ignoreLength = 15;
-    int duration = GlobalObjects::mpvplayer->getDuration();
+    const int playTime = PlayContext::context()->playtime;
+    currentItem->playTime = playTime;
+    const int duration = PlayContext::context()->duration; // GlobalObjects::mpvplayer->getDuration();
     if(playTime>duration-ignoreLength)
     {
         currentItem->playTimeState=PlayListItem::FINISH;//finished
@@ -1170,7 +1269,10 @@ void PlayList::setCurrentPlayTime(int playTime)
     if(!currentItem->animeTitle.isEmpty() && currentItem->playTimeState==PlayListItem::FINISH)
     {
         if((d->saveFinishTimeOnce && lastState!=PlayListItem::FINISH) || !d->saveFinishTimeOnce)
+        {
             AnimeWorker::instance()->updateEpTime(currentItem->animeTitle, currentItem->path, true);
+            d->pushEpFinishEvent(currentItem);
+        }
     }
     d->playListChanged=true;
     d->needRefresh=true;
@@ -1449,7 +1551,10 @@ void PlayList::updatePlayTime(const QString &path, int time, PlayListItem::PlayS
             if(state==PlayListItem::PlayState::FINISH)
             {
                 if((d->saveFinishTimeOnce && lastState!=PlayListItem::FINISH) || !d->saveFinishTimeOnce)
+                {
                     AnimeWorker::instance()->updateEpTime(item->animeTitle, item->path, true);
+                    d->pushEpFinishEvent(item);
+                }
             }
             else
             {

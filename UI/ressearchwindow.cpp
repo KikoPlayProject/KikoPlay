@@ -1,5 +1,5 @@
 #include "ressearchwindow.h"
-#include "Script/scriptmanager.h"
+#include "Extension/Script/scriptmanager.h"
 #include "settings.h"
 #include <QPushButton>
 #include <QComboBox>

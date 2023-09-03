@@ -1,5 +1,6 @@
 #include "bgmlistwindow.h"
 #include "Download/BgmList/bgmlist.h"
+#include "MediaLibrary/animeworker.h"
 #include <QLabel>
 #include <QPushButton>
 #include <QGridLayout>
@@ -14,8 +15,7 @@
 #include <QStyledItemDelegate>
 #include "globalobjects.h"
 #include "Common/logger.h"
-#include "MediaLibrary/animeworker.h"
-#include "Script/scriptmanager.h"
+#include "Extension/Script/scriptmanager.h"
 namespace
 {
     class TextColorDelegate: public QStyledItemDelegate

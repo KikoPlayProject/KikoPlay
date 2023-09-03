@@ -28,8 +28,9 @@
 #include "widgets/backgroundwidget.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
-#include "Play/Danmu/danmupool.h"
-#include "Play/Danmu/Render/danmurender.h"
+#include "Play/playcontext.h""
+#include "appmenu.h"
+#include "appbar.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : CFramelessWindow(parent),hasBackground(false),hasCoverBg(false),curPage(0),listWindowWidth(0),
@@ -76,12 +77,12 @@ MainWindow::MainWindow(QWidget *parent)
     listShowState=!listWindow->isHidden();
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::stateChanged,[this](MPVPlayer::PlayState state){
 #ifdef Q_OS_WIN
-        if(state==MPVPlayer::Play && GlobalObjects::playlist->getCurrentItem()!=nullptr)
+        if(state==MPVPlayer::Play && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
         {
             winTaskbarProgress->show();
             winTaskbarProgress->resume();
         }
-        else if(state==MPVPlayer::Pause && GlobalObjects::playlist->getCurrentItem()!=nullptr)
+        else if(state==MPVPlayer::Pause && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
         {
             winTaskbarProgress->show();
             winTaskbarProgress->pause();
@@ -341,7 +342,17 @@ void MainWindow::setupUI()
     pageVerticalLayout->addLayout(pageHLayout);
 
 
+    appBar = new AppBar(widgetTitlebar);
+
     GlobalObjects::iconfont->setPointSize(10);
+    appButton=new QToolButton(widgetTitlebar);
+    appButton->setFont(*GlobalObjects::iconfont);
+    appButton->setText(QChar(0xe63d));
+    appButton->setObjectName(QStringLiteral("ControlButton"));
+    appButton->setProperty("hideMenuIndicator", true);
+    appButton->setMenu(new AppMenu(appButton, this));
+    appButton->setPopupMode(QToolButton::InstantPopup);
+
     minButton=new QToolButton(widgetTitlebar);
     minButton->setFont(*GlobalObjects::iconfont);
     minButton->setText(QChar(0xe651));
@@ -398,6 +409,9 @@ void MainWindow::setupUI()
     layout->addSpacing(20*logicalDpiX()/96);
     layout->addLayout(pageVerticalLayout);
     layout->addStretch(1);
+    layout->addWidget(appBar);
+    layout->addSpacing(10*logicalDpiX()/96);
+    layout->addWidget(appButton);
     layout->addWidget(minButton);
     layout->addWidget(maxButton);
     layout->addWidget(closeButton);
@@ -406,6 +420,7 @@ void MainWindow::setupUI()
     layout->addLayout(pageVerticalLayout);
     layout->addStretch(1);
     layout->addWidget(buttonIcon);
+    appButton->hide();
     minButton->hide();
     maxButton->hide();
     closeButton->hide();
@@ -451,15 +466,11 @@ void MainWindow::setupUI()
 
 void MainWindow::switchToPlay(const QString &fileToPlay)
 {
-    int playTime=GlobalObjects::mpvplayer->getTime();
-    GlobalObjects::playlist->setCurrentPlayTime(playTime);
     GlobalObjects::playlist->addItems(QStringList()<<fileToPlay,QModelIndex());
     const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(fileToPlay);
     if (curItem)
     {
-        GlobalObjects::danmuPool->reset();
-        GlobalObjects::danmuRender->cleanup();
-        GlobalObjects::mpvplayer->setMedia(curItem->path);
+        PlayContext::context()->playItem(curItem);
         buttonPage_Play->click();
     }
 }
@@ -796,8 +807,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
         GlobalObjects::appSetting->setValue("ListVisibility",!listWindow->isHidden());
         GlobalObjects::appSetting->endGroup();
     }
-    int playTime=GlobalObjects::mpvplayer->getTime();
-    GlobalObjects::playlist->setCurrentPlayTime(playTime);
+    GlobalObjects::playlist->setCurrentPlayTime();
     QWidget::closeEvent(event);
     playerWindow->close();
 	playerWindow->deleteLater();
@@ -862,7 +872,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
 void MainWindow::moveEvent(QMoveEvent *)
 {
-    if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen() && !isMini)
+    if(GlobalObjects::mpvplayer->getCurrentFile().isEmpty() && !isFullScreen() && !isMini)
         originalGeo=geometry();
     if(isMini)
         miniGeo=geometry();
@@ -870,7 +880,7 @@ void MainWindow::moveEvent(QMoveEvent *)
 
 void MainWindow::resizeEvent(QResizeEvent *)
 {
-    if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen() && !isMini)
+    if(GlobalObjects::mpvplayer->getCurrentFile().isEmpty() && !isFullScreen() && !isMini)
         originalGeo=geometry();
     if(isMini)
         miniGeo=geometry();
@@ -900,19 +910,11 @@ void MainWindow::resizeEvent(QResizeEvent *)
 
     const int cBtnH = widgetTitlebar->height() - 4*logicalDpiY()/96;
     const QSize controlButtonSize(cBtnH, cBtnH);
+    appButton->setMinimumSize(controlButtonSize);
     maxButton->setMinimumSize(controlButtonSize);
     minButton->setMinimumSize(controlButtonSize);
     closeButton->setMinimumSize(controlButtonSize);
-    /*
-    const QSize pageButtonSize(100*logicalDpiX()/96,30*logicalDpiY()/96);
-    buttonPage_Play->setFixedSize(pageButtonSize);
-    buttonPage_Library->setFixedSize(pageButtonSize);
-    buttonPage_Downlaod->setFixedSize(pageButtonSize);
-    const QSize controlButtonSize(34*logicalDpiX()/96,32*logicalDpiY()/96);
-    maxButton->setMinimumSize(controlButtonSize);
-    minButton->setMinimumSize(controlButtonSize);
-    closeButton->setMinimumSize(controlButtonSize);
-    */
+    appBar->setMaximumWidth(100*logicalDpiX()/96);
 }
 
 void MainWindow::showEvent(QShowEvent *)

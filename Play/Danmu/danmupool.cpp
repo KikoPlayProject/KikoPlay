@@ -124,7 +124,7 @@ void DanmuPool::deleteDanmu(QSharedPointer<DanmuComment> danmu)
 
 void DanmuPool::launch(const QList<QSharedPointer<DanmuComment> > userComments)
 {
-    if(!hasPool() || userComments.isEmpty()) return;
+    if(userComments.isEmpty()) return;
     QVector<DrawTask> *prepareList(nullptr);
     prepareList=prepareListPool.isEmpty()?new QVector<DrawTask>:prepareListPool.takeFirst();
     for(auto &c : userComments)

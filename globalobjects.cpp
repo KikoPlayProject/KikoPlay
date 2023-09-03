@@ -5,15 +5,16 @@
 #include "Play/Video/mpvplayer.h"
 #include "Play/Danmu/blocker.h"
 #include "Play/Danmu/danmuprovider.h"
+#include "Play/playcontext.h"
 #include "MediaLibrary/animeprovider.h"
-#include "MediaLibrary/labelmodel.h"
 #include "LANServer/lanserver.h"
 #include "Download/downloadmodel.h"
 #include "Play/Danmu/Manager/danmumanager.h"
-#include "Script/scriptmanager.h"
+#include "Extension/Script/scriptmanager.h"
+#include "Extension/App/appmanager.h"
 #include "Download/autodownloadmanager.h"
-#include "UI/stylemanager.h"
 #include "Common/notifier.h"
+#include "Common/eventbus.h"
 #include "Common/logger.h"
 
 #include <QSqlDatabase>
@@ -35,10 +36,12 @@ DownloadModel *GlobalObjects::downloadModel=nullptr;
 DanmuManager *GlobalObjects::danmuManager=nullptr;
 LANServer *GlobalObjects::lanServer=nullptr;
 ScriptManager *GlobalObjects::scriptManager=nullptr;
+AppManager *GlobalObjects::appManager=nullptr;
 AutoDownloadManager *GlobalObjects::autoDownloadManager=nullptr;
 QMainWindow *GlobalObjects::mainWindow=nullptr;
 QFont* GlobalObjects::iconfont;
 QString GlobalObjects::dataPath;
+
 namespace  {
     const char *mt_db_names[]={"Comment_M", "Bangumi_M","Download_M"};
     const char *wt_db_names[]={"Comment_W", "Bangumi_W","Download_W"};
@@ -85,6 +88,8 @@ void GlobalObjects::init()
         }
     }
     Notifier::getNotifier();
+    EventBus::getEventBus();
+    PlayContext::context();
     workThread=new QThread();
     workThread->setObjectName(QStringLiteral("workThread"));
     workThread->start(QThread::NormalPriority);
@@ -102,14 +107,15 @@ void GlobalObjects::init()
         initDatabase(wt_db_names);
         workObj->deleteLater();
     },Qt::QueuedConnection);
-    scriptManager=new ScriptManager();
-    danmuProvider=new DanmuProvider();
-    animeProvider=new AnimeProvider();
-    downloadModel=new DownloadModel();
-    danmuManager=new DanmuManager();
-    lanServer=new LANServer();
-    iconfont=new QFont();
-    autoDownloadManager=new AutoDownloadManager();
+    scriptManager = new ScriptManager();
+    danmuProvider = new DanmuProvider();
+    animeProvider = new AnimeProvider();
+    downloadModel = new DownloadModel();
+    danmuManager = new DanmuManager();
+    lanServer = new LANServer();
+    iconfont = new QFont();
+    autoDownloadManager = new AutoDownloadManager();
+    appManager = new AppManager();
 
     int fontId = QFontDatabase::addApplicationFont(":/res/iconfont.ttf");
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
@@ -133,6 +139,7 @@ void GlobalObjects::clear()
     lanServer->deleteLater();
     autoDownloadManager->deleteLater();
     scriptManager->deleteLater();
+    appManager->deleteLater();
     appSetting->deleteLater();
 }
 

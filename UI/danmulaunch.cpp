@@ -11,7 +11,7 @@
 #include "Play/Danmu/danmupool.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
-#include "Script/scriptmanager.h"
+#include "Extension/Script/scriptmanager.h"
 #include "Common/logger.h"
 #include "Common/notifier.h"
 #define ScriptIdRole Qt::UserRole+1

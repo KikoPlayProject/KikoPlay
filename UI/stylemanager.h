@@ -16,6 +16,7 @@ public:
     };
     static StyleManager *getStyleManager();
     void setQSS(StyleMode mode, const QColor &color=QColor());
+    QString setQSS(const QString &qss, const QVariantMap *extraVal = nullptr);
     void setCondVariable(const QString &name, bool val, bool refresh=true);
     bool getCondVariable(const QString &name) const {return condHash.value(name, false);}
     StyleMode currentMode() const {return mode;}
@@ -36,8 +37,9 @@ private:
 
     void setColorHash();
     QColor getColorPalette(const QColor &color, int index);
-    QString setQSS(const QString &qss);
     inline QString toString(const QColor &color);
+
+    void pushEvent();
 
 };
 

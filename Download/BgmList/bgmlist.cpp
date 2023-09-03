@@ -2,7 +2,7 @@
 #include "globalobjects.h"
 #include "Common/network.h"
 #include "Common/threadtask.h"
-#include "Script/scriptmanager.h"
+#include "Extension/Script/scriptmanager.h"
 #include "Common/logger.h"
 #include <QBrush>
 BgmList::BgmList(QObject *parent) : QAbstractItemModel (parent),needSave(false),

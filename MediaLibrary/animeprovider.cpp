@@ -1,8 +1,8 @@
 #include "animeprovider.h"
 #include "Common/threadtask.h"
 #include "Common/network.h"
-#include "Script/scriptmanager.h"
-#include "Script/libraryscript.h"
+#include "Extension/Script/scriptmanager.h"
+#include "Extension/Script/libraryscript.h"
 #include "globalobjects.h"
 #include <QImageReader>
 

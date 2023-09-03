@@ -1,6 +1,8 @@
 #include "stylemanager.h"
 #include <QFile>
 #include <QApplication>
+#include <QVariant>
+#include "Common/eventbus.h"
 #include "globalobjects.h"
 
 StyleManager::StyleManager():QObject(),mode(UNKNOWN)
@@ -20,6 +22,7 @@ void StyleManager::setQSS(StyleMode mode, const QColor &color)
 {
     if(mode == this->mode && color == themeColor) return;
     emit styleModelChanged(mode);
+    pushEvent();
     this->mode = mode;
     if(mode == StyleMode::BG_COLOR)
     {
@@ -46,6 +49,7 @@ void StyleManager::setCondVariable(const QString &name, bool val, bool refresh)
     condHash[name] = val;
     emit condVariableChanged(name, val);
     if(!refresh) return;
+    if (name == "DarkMode") pushEvent();
     if(mode == StyleMode::BG_COLOR)
     {
         setColorHash();
@@ -118,7 +122,7 @@ QColor StyleManager::getColorPalette(const QColor &color, int index)
     return QColor::fromHsv(h, s, v);
 }
 
-QString StyleManager::setQSS(const QString &qss)
+QString StyleManager::setQSS(const QString &qss, const QVariantMap *extraVal)
 {
     QVector<QPair<QString, bool>> replacedStack{{"", true}};
     int state = 0;
@@ -174,7 +178,12 @@ QString StyleManager::setQSS(const QString &qss)
                 }
                 else
                 {
-                    replacedStack.back().first.append(colorHash.value(curName, curName));
+                    QString val = colorHash.value(curName, curName);
+                    if (extraVal && extraVal->contains(curName))
+                    {
+                        val = (*extraVal)[curName].toString();
+                    }
+                    replacedStack.back().first.append(val);
                     replacedStack.back().first.append(c);
                     state = 0;
                 }
@@ -186,6 +195,10 @@ QString StyleManager::setQSS(const QString &qss)
             if(c == '}')
             {
                bool cond = condHash.value(curCond, false);
+               if (extraVal && extraVal->contains(curCond))
+               {
+                   cond = (*extraVal)[curCond].toBool();
+               }
                replacedStack.append({"", cond});
                state = 0;
             }
@@ -199,4 +212,14 @@ QString StyleManager::setQSS(const QString &qss)
 QString StyleManager::toString(const QColor &color)
 {
     return QString("%1,%2,%3").arg(color.red()).arg(color.green()).arg(color.blue());
+}
+
+void StyleManager::pushEvent()
+{
+    if (!EventBus::getEventBus()->hasListener(EventBus::EVENT_APP_STYLE_CHANGED)) return;
+    const QVariantMap param = {
+        { "mode", static_cast<int>(mode) },
+        { "dark_mode", condHash.value("DarkMode", false) },
+    };
+    EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_APP_STYLE_CHANGED, param});
 }

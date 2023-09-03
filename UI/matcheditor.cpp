@@ -4,7 +4,7 @@
 #include "Play/Danmu/Manager/pool.h"
 #include "MediaLibrary/animeprovider.h"
 #include "widgets/scriptsearchoptionpanel.h"
-#include "Script/scriptmanager.h"
+#include "Extension/Script/scriptmanager.h"
 #include <QVBoxLayout>
 #include <QToolButton>
 #include <QStackedLayout>

@@ -6,8 +6,7 @@
 #include "globalobjects.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Video/mpvplayer.h"
-#include "Play/Danmu/danmupool.h"
-#include "Play/Danmu/Render/danmurender.h"
+#include "Play/playcontext.h"
 #ifdef Q_OS_WIN
 #include <Windows.h>
 #include <DbgHelp.h>
@@ -63,23 +62,23 @@ bool isRunning()
     if (socket.waitForConnected())
     {
         QStringList args=QCoreApplication::arguments();
-        if(args.count()>1)
+        if (args.count() > 1)
         {
             args.pop_front();
             QStringList fileList;
-            for(const QString &path:args)
+            for (const QString &path : args)
             {
                 QFileInfo fi(path);
-                if(fi.isFile())
+                if (fi.isFile())
                 {
                     const QStringList videoFileFormats = {"*.mp4","*.mkv","*.avi","*.flv","*.wmv"};
-                    if(videoFileFormats.contains("*."+fi.suffix().toLower()))
+                    if (videoFileFormats.contains("*."+fi.suffix().toLower()))
                     {
                         fileList.append(fi.filePath());
                     }
                 }
             }
-            if(fileList.count()>0)
+            if (fileList.count() > 0)
             {
                 QByteArray data;
                 QDataStream s(&data,QIODevice::WriteOnly);
@@ -113,18 +112,13 @@ int main(int argc, char *argv[])
         QStringList args;
         QDataStream s(data);
         s >> args;
-        if(args.count()>0)
+        if (args.count() > 0)
         {
             GlobalObjects::playlist->addItems(args,QModelIndex());
-            int playTime=GlobalObjects::mpvplayer->getTime();
-            GlobalObjects::playlist->setCurrentPlayTime(playTime);
             const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(args.last());
             if (curItem)
             {
-                GlobalObjects::danmuPool->reset();
-                GlobalObjects::danmuRender->cleanup();
-                GlobalObjects::mpvplayer->setMedia(curItem->path);
-
+                PlayContext::context()->playItem(curItem);
             }
         }
         w.raise();
@@ -132,9 +126,9 @@ int main(int argc, char *argv[])
         w.setWindowState((w.windowState() & ~Qt::WindowMinimized) | Qt::WindowActive);
         w.show();
     });
-    if(!singleServer->listen("KikoPlaySingleServer"))
+    if (!singleServer->listen("KikoPlaySingleServer"))
     {
-        if(singleServer->serverError() == QAbstractSocket::AddressInUseError)
+        if (singleServer->serverError() == QAbstractSocket::AddressInUseError)
         {
             QLocalServer::removeServer("KikoPlaySingleServer");
             singleServer->listen("KikoPlaySingleServer");

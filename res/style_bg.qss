@@ -710,8 +710,13 @@ QTreeView#RuleURLView {
 QTreeView#TaskFileInfoView {
     background-color: rgba(255,255,255,40);
     alternate-background-color: transparent;
+@if{DarkMode}
     qproperty-normColor: rgb(240,240,240);
+    qproperty-ignoreColor: rgb(160,160,160);
+@else
+    qproperty-normColor: rgb(0,0,0);
     qproperty-ignoreColor: rgb(200,200,200);
+@endif
 }
 QTreeView#AnimeDetailEpisode{
     background-color: rgba(255,255,255,40);
@@ -819,6 +824,13 @@ QMenu {
     background-color: #f2f3f4;
 @endif    
     border: 1px solid #adbac2
+}
+QMenu#AppMenu {
+@if{DarkMode}
+    background-color: rgba(30, 30, 30, 230);
+@else
+    background-color: rgba(60, 65, 68, 230);
+@endif
 }
 QMenu::item {
     background-color: transparent;
@@ -1266,6 +1278,27 @@ QPushButton#DialogAcceptButton:pressed{
     background-color:rgb(0,171,47);
     color:rgb(255,255,255);
 }
+QPushButton#DialogHideButton{
+    border:none;
+    background-color:transparent;
+    color:rgb(153,153,153);
+}
+QPushButton#DialogHideButton:hover{
+@if{DarkMode}
+    background-color: rgb(114, 118, 123);
+@else
+    background-color: rgb(209, 209, 210);
+@endif
+    color:rgb(255,255,255);
+}
+QPushButton#DialogHideButton:pressed{
+@if{DarkMode}
+    background-color: rgb(93, 97, 100);
+@else
+    background-color: rgb(168, 171, 174);
+@endif
+    color:rgb(255,255,255);
+}
 QPushButton{
     border:1px solid;
     border-color:rgb(221,221,221);
@@ -1452,6 +1485,26 @@ QPushButton#AddOptionGroup {
 QPushButton#ElideLineEditBtn {
     margin: 2px;
 }
+AppBarBtn {
+    border-style:none;
+    color:#c8c8c8;
+    background:none;
+}
+AppBarBtn:hover,AppBarBtn:pressed,AppBarBtn:checked {
+    color:#FFFFFF;
+    background-color: rgba(255, 255, 255, 80);
+}
+QPushButton#AppRefreshBtn {
+    border-style:none;
+    background:none;
+    color:#c8c8c8;
+}
+QPushButton#AppRefreshBtn:hover,
+QPushButton#AppRefreshBtn:pressed,
+QPushButton#AppRefreshBtn:checked{
+    color:#FFFFFF;
+    background:#666a6e;
+}
 
 
 /* ------------------- QScrollBar Setting ------------------- */
@@ -1559,6 +1612,9 @@ QWidget[cScrollStyle="true"] QScrollBar::sub-page:vertical{
     background: none;
 }
 @endif
+#AppBar QScrollBar:horizontal {
+    height:0px;
+}
 
 
 /* ------------------- QListView, QListWidget ------------------- */
@@ -1606,6 +1662,16 @@ QListWidget#SettingPageList::item:selected{
 QListView#LiveDanmuList {
     border-style:none;
     background:transparent;
+}
+QListView#AppView {
+    border-style:none;
+    background:transparent;
+    show-decoration-selected: 1;
+    outline:0px;
+    color:rgb(214, 214, 214);
+}
+QListView#AppView::item:hover, QListView#AppView::item:selected {
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 

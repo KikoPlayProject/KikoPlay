@@ -283,16 +283,16 @@ QVariantMap Anime::toMap(bool fillEp)
         for(const auto &ep : epList())
             eps.append(ep.toMap());
     }
-    for(const auto &c : characters)
+    for(const auto &c : qAsConst(characters))
         crts.append(c.toMap());
     QVariantMap staffMap;
-    for(const auto &p : staff)
+    for(const auto &p : qAsConst(staff))
         staffMap.insert(p.first, p.second);
-    return
-    {
+    return  {
         {"name", _name},
         {"desc", _desc},
         {"url", _url},
+        {"coverUrl", _coverURL},
         {"scriptId", _scriptId},
         {"data", _scriptData},
         {"airDate", _airDate},
@@ -312,6 +312,50 @@ const AnimeLite Anime::toLite() const
     lite.scriptData = _scriptData;
     if(epLoaded) lite.epList.reset(new QVector<EpInfo>(epInfoList));
     return lite;
+}
+
+Anime *Anime::fromMap(const QVariantMap &aobj)
+{
+    const QString name = aobj.value("name").toString(),
+            airdate=aobj.value("airDate").toString();
+    if (name.isEmpty() || airdate.isEmpty()) return nullptr;
+    Anime *anime = new Anime;
+    anime->_name = name;
+    anime->_desc = aobj.value("desc").toString();
+    anime->_url = aobj.value("url").toString();
+    anime->_coverURL = aobj.value("coverUrl").toString();
+    anime->_scriptId = aobj.value("scriptId").toString();
+    anime->_scriptData = aobj.value("data").toString();
+    anime->_airDate = airdate;
+    anime->_epCount = aobj.value("epCount", 0).toInt();
+    if (aobj.contains("staff"))
+    {
+        QString staffstr = aobj.value("staff").toString();
+        auto strs = staffstr.split(';', Qt::SkipEmptyParts);
+        for (const auto &s : qAsConst(strs))
+        {
+            int pos = s.indexOf(':');
+            anime->staff.append({s.mid(0, pos), s.mid(pos+1)});
+        }
+    }
+    if (aobj.contains("crt") && aobj.value("crt").type() == QVariant::List)
+    {
+        auto crts = aobj.value("crt").toList();
+        for (auto &c : crts)
+        {
+            if (c.type()!=QVariant::Map) continue;
+            auto cobj = c.toMap();
+            QString cname = cobj.value("name").toString();
+            if(cname.isEmpty()) continue;
+            Character crt;
+            crt.name = cname;
+            crt.actor = cobj.value("actor").toString();
+            crt.link = cobj.value("link").toString();
+            crt.imgURL = cobj.value("imgurl").toString();
+            anime->characters.append(crt);
+        }
+    }
+    return anime;
 }
 
 Anime *AnimeLite::toAnime() const

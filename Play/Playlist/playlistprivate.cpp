@@ -7,8 +7,10 @@
 
 #include "globalobjects.h"
 #include "Common/logger.h"
+#include "Common/eventbus.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Danmu/Manager/danmumanager.h"
+#include "Play/Danmu/Manager/pool.h"
 
 PlayListPrivate::PlayListPrivate(PlayList *pl) : root(new PlayListItem), currentItem(nullptr), playListChanged(false),
     needRefresh(true), loopMode(PlayList::NO_Loop_All), autoMatch(true), modifyCounter(0), saveFinishTimeOnce(true), q_ptr(pl)
@@ -588,4 +590,19 @@ void PlayListPrivate::addMediaPathHash(const QVector<PlayListItem *> newItems)
         mediaPathHash.insert(item->pathHash, item->path);
     }
     pathHashLock.unlock();
+}
+
+void PlayListPrivate::pushEpFinishEvent(PlayListItem *item)
+{
+    if (!item || !EventBus::getEventBus()->hasListener(EventBus::EVENT_LIBRARY_EP_FINISH)) return;
+    QVariantMap param = {
+        { "path", item->path }
+    };
+    Pool *pool = GlobalObjects::danmuManager->getPool(item->poolID, false);
+    if (pool)
+    {
+        param["anime_name"] = pool->animeTitle();
+        param["epinfo"] = pool->toEp().toMap();
+    }
+    EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_LIBRARY_EP_FINISH, param});
 }

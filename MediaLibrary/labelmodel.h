@@ -32,13 +32,13 @@ public:
 
     void selectedLabelList(const QModelIndexList &indexes,  SelectedLabelInfo &selectLabels);
 
-    const QMap<QString, QSet<QString>> epTags() const {return epPathAnimes;}
-    const QMap<QString, QSet<QString>> customTags() const {return tagAnimes;}
+    const QMap<QString, QSet<QString>> &epTags() const {return epPathAnimes;}
+    const QMap<QString, QSet<QString>> &customTags() const {return tagAnimes;}
 
     void setBrushColor(BrushType type, const QColor &color);
 public:
     void addTag(const QString &animeName, const QString &tag, TagNode::TagType type);
-    void addCustomTags(const QString &animeName, const QStringList &tagList);
+    int addCustomTags(const QString &animeName, const QStringList &tagList);
     void removeTag(const QString &animeName, const QString &tag, TagNode::TagType type);
     void removeTag(const QString &animeName, const QString &airDate, const QString &scriptId);
     void removeTag(const QModelIndex &index);

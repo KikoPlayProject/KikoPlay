@@ -18,6 +18,7 @@ class DownloadModel;
 class DanmuManager;
 class LANServer;
 class ScriptManager;
+class AppManager;
 class AutoDownloadManager;
 class QMainWindow;
 class GlobalObjects
@@ -39,6 +40,7 @@ public:
     static DanmuManager *danmuManager;
     static LANServer *lanServer;    
     static ScriptManager *scriptManager;
+    static AppManager *appManager;
     static AutoDownloadManager *autoDownloadManager;
     static QMainWindow *mainWindow;
     static QString dataPath;

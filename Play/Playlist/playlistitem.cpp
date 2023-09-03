@@ -11,6 +11,7 @@ PlayListItem::PlayListItem(PlayListItem *p, bool leaf, int insertPosition):
     if(!leaf)
     {
         children=new QVector<PlayListItem *>();
+        type = ItemType::COLLECTION;
     }
     if(parent)
     {

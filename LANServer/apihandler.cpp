@@ -9,8 +9,8 @@
 #include "Play/Danmu/danmupool.h"
 #include "Play/Danmu/Provider/localprovider.h"
 #include "Play/Danmu/blocker.h"
-#include "Script/scriptmanager.h"
-#include "Script/danmuscript.h"
+#include "Extension/Script/scriptmanager.h"
+#include "Extension/Script/danmuscript.h"
 #include "MediaLibrary/animeworker.h"
 
 namespace
@@ -419,13 +419,13 @@ void APIHandler::apiLaunch(stefanfrings::HttpRequest &request, stefanfrings::Htt
             else date = dateStr.toLongLong();
             int type = data.value("type", int(DanmuComment::DanmuType::Rolling)).toInt();
 
-            DanmuComment comment;
-            comment.text = text;
-            comment.originTime = comment.time = time;
-            comment.color = color;
-            comment.fontSizeLevel = (DanmuComment::FontSizeLevel)fontsize;
-            comment.date = date;
-            comment.type = (DanmuComment::DanmuType)type;
+            QSharedPointer<DanmuComment> comment = QSharedPointer<DanmuComment>::create();
+            comment->text = text;
+            comment->originTime = comment->time = time;
+            comment->color = color;
+            comment->fontSizeLevel = (DanmuComment::FontSizeLevel)fontsize;
+            comment->date = date;
+            comment->type = (DanmuComment::DanmuType)type;
 
             if(GlobalObjects::danmuPool->getPool()==pool)
             {
@@ -433,11 +433,11 @@ void APIHandler::apiLaunch(stefanfrings::HttpRequest &request, stefanfrings::Htt
                 if(time < 0)  // launch to current
                 {
                     time = poolTime;
-                    comment.originTime = comment.time = time;
+                    comment->originTime = comment->time = time;
                 }
                 if(qAbs(poolTime - time)<3000)
                 {
-                    GlobalObjects::danmuPool->launch({QSharedPointer<DanmuComment>(new DanmuComment(comment))});
+                    GlobalObjects::danmuPool->launch({comment});
                 }
             }
             int cmin=time/1000/60;
@@ -457,7 +457,7 @@ void APIHandler::apiLaunch(stefanfrings::HttpRequest &request, stefanfrings::Htt
                 {
                     auto script =  GlobalObjects::scriptManager->getScript(id);
                     DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
-                    ScriptState state = dmScript->launch(sources, &comment);
+                    ScriptState state = dmScript->launch(sources, comment.get());
                     results.append(QString("[%1]: %2").arg(id, state?tr("Success"):tr("Faild, %1").arg(state.info)));
                 }
                 QString msg(QString("%1\n%2\n%3").arg(poolInfo, commentInfo, results.join('\n')));

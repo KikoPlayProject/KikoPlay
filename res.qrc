@@ -77,5 +77,6 @@
         <file>res/mpvOptions</file>
         <file>res/images/tab-close.svg</file>
         <file>res/images/tab-close-hover.svg</file>
+        <file>res/images/app.png</file>
     </qresource>
 </RCC>

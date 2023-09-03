@@ -22,7 +22,7 @@
 #include "selectepisode.h"
 #include "danmuview.h"
 #include "Play/Danmu/blocker.h"
-#include "Script/scriptmanager.h"
+#include "Extension/Script/scriptmanager.h"
 #include "widgets/scriptsearchoptionpanel.h"
 #include "globalobjects.h"
 #include "Common/notifier.h"

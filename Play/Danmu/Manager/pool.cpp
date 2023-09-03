@@ -1,6 +1,6 @@
 #include "pool.h"
 #include "danmumanager.h"
-#include "Script/scriptmanager.h"
+#include "Extension/Script/scriptmanager.h"
 #include "globalobjects.h"
 #include "../blocker.h"
 #include "Common/network.h"
@@ -19,6 +19,27 @@ Pool::Pool(const QString &id, const QString &animeTitle, const QString &epTitle,
      QObject(parent),pid(id),anime(animeTitle),ep(epTitle),epType(type), epIndex(index), used(false),isLoaded(false)
 {
 
+}
+
+QVariantMap Pool::toMap() const
+{
+    QVariantMap info = {
+        {"id", pid},
+        {"anime", anime},
+        {"ep_index", epIndex},
+        {"ep_name", ep},
+        {"ep_type", static_cast<int>(epType)},
+        {"load", isLoaded},
+    };
+    QVariantMap srcs;
+    for (auto iter = sourcesTable.begin(); iter != sourcesTable.end(); ++iter)
+    {
+        QVariantMap srcMap = iter.value().toMap();
+        srcMap["count"] = iter.value().count;
+        srcs[QString::number(iter.key())] = srcMap;
+    }
+    info["srcs"] = srcs;
+    return info;
 }
 
 bool Pool::load()
@@ -88,7 +109,7 @@ int Pool::update(int sourceId, QVector<QSharedPointer<DanmuComment> > *incList)
     return tList.count();
 }
 
-int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool reset)
+int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool reset, bool save)
 {
     PoolStateLock locker;
     if(!locker.tryLock(pid)) return -1;
@@ -144,7 +165,7 @@ int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danm
         commentList.append(sp);
         tmpList.append(sp);
     }
-    if(!pid.isEmpty())GlobalObjects::danmuManager->saveSource(pid,containSource?nullptr:source,tmpList);
+    if(!pid.isEmpty() && save)GlobalObjects::danmuManager->saveSource(pid,containSource?nullptr:source,tmpList);
     if(reset && used)
     {
         std::sort(commentList.begin(),commentList.end(),DanmuSPCompare);
@@ -346,6 +367,7 @@ QJsonObject Pool::exportFullJson()
             {"id", source.id},
             {"duration", source.duration},
             {"delay", source.delay},
+            {"desc", source.desc},
             {"scriptId", source.scriptId},
             {"scriptName", scriptName},
             {"scriptData", source.scriptData},

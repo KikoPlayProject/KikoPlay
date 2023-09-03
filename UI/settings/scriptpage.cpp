@@ -9,8 +9,8 @@
 #include <QMenu>
 #include <QHeaderView>
 #include "Common/threadtask.h"
-#include "Script/scriptmodel.h"
-#include "Script/scriptsettingmodel.h"
+#include "Extension/Script/scriptmodel.h"
+#include "Extension/Script/scriptsettingmodel.h"
 #include "globalobjects.h"
 ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
 {

@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql network concurrent
+QT       += core gui sql network concurrent websockets
 win32:QT += winextras
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -39,11 +39,69 @@ CONFIG(debug, debug|release) {
 
 SOURCES += \
     Common/counter.cpp \
+    Common/eventbus.cpp \
     Common/logger.cpp \
     Common/notifier.cpp \
     Download/autodownloadmanager.cpp \
     Download/peermodel.cpp \
     Download/trackersubscriber.cpp \
+    Extension/App/AppWidgets/appbutton.cpp \
+    Extension/App/AppWidgets/appcheckbox.cpp \
+    Extension/App/AppWidgets/appcombo.cpp \
+    Extension/App/AppWidgets/appgview.cpp \
+    Extension/App/AppWidgets/apphview.cpp \
+    Extension/App/AppWidgets/applabel.cpp \
+    Extension/App/AppWidgets/applist.cpp \
+    Extension/App/AppWidgets/appprogress.cpp \
+    Extension/App/AppWidgets/appradio.cpp \
+    Extension/App/AppWidgets/appslider.cpp \
+    Extension/App/AppWidgets/appsview.cpp \
+    Extension/App/AppWidgets/apptextbox.cpp \
+    Extension/App/AppWidgets/apptextline.cpp \
+    Extension/App/AppWidgets/apptree.cpp \
+    Extension/App/AppWidgets/apputil.cpp \
+    Extension/App/AppWidgets/appview.cpp \
+    Extension/App/AppWidgets/appvview.cpp \
+    Extension/App/AppWidgets/appwidget.cpp \
+    Extension/App/AppWidgets/appwindow.cpp \
+    Extension/App/appframelessdialog.cpp \
+    Extension/App/appmanager.cpp \
+    Extension/App/appstorage.cpp \
+    Extension/App/kapp.cpp \
+    Extension/Common/ext_common.cpp \
+    Extension/Common/luatablemodel.cpp \
+    Extension/Modules/lua_appcommondialog.cpp \
+    Extension/Modules/lua_appevent.cpp \
+    Extension/Modules/lua_appimage.cpp \
+    Extension/Modules/lua_appnet.cpp \
+    Extension/Modules/lua_appui.cpp \
+    Extension/Modules/lua_apputil.cpp \
+    Extension/Modules/lua_clipboardinterface.cpp \
+    Extension/Modules/lua_danmuinterface.cpp \
+    Extension/Modules/lua_dir.cpp \
+    Extension/Modules/lua_downloadinterface.cpp \
+    Extension/Modules/lua_htmlparser.cpp \
+    Extension/Modules/lua_libraryinterface.cpp \
+    Extension/Modules/lua_net.cpp \
+    Extension/Modules/lua_playerinterface.cpp \
+    Extension/Modules/lua_playlistinterface.cpp \
+    Extension/Modules/lua_process.cpp \
+    Extension/Modules/lua_regex.cpp \
+    Extension/Modules/lua_storageinterface.cpp \
+    Extension/Modules/lua_stringutil.cpp \
+    Extension/Modules/lua_timer.cpp \
+    Extension/Modules/lua_util.cpp \
+    Extension/Modules/lua_xmlreader.cpp \
+    Extension/Modules/modulebase.cpp \
+    Extension/Script/bgmcalendarscript.cpp \
+    Extension/Script/danmuscript.cpp \
+    Extension/Script/libraryscript.cpp \
+    Extension/Script/playgroundscript.cpp \
+    Extension/Script/resourcescript.cpp \
+    Extension/Script/scriptbase.cpp \
+    Extension/Script/scriptmanager.cpp \
+    Extension/Script/scriptmodel.cpp \
+    Extension/Script/scriptsettingmodel.cpp \
     LANServer/apihandler.cpp \
     LANServer/dlna/dlnamediacontroller.cpp \
     LANServer/dlna/dlnamediaitem.cpp \
@@ -76,28 +134,15 @@ SOURCES += \
     Play/Danmu/eventanalyzer.cpp \
     Play/Video/mpvpreview.cpp \
     Play/Video/simpleplayer.cpp \
-    Script/bgmcalendarscript.cpp \
-    Script/danmuscript.cpp \
-    Script/libraryscript.cpp \
-    Script/luatablemodel.cpp \
-    Script/modules/lua_htmlparser.cpp \
-    Script/modules/lua_net.cpp \
-    Script/modules/lua_regex.cpp \
-    Script/modules/lua_util.cpp \
-    Script/modules/lua_xmlreader.cpp \
-    Script/modules/modulebase.cpp \
-    Script/playgroundscript.cpp \
-    Script/resourcescript.cpp \
-    Script/scriptbase.cpp \
-    Script/scriptmanager.cpp \
-    Script/scriptmodel.cpp \
-    Script/scriptsettingmodel.cpp \
+    Play/playcontext.cpp \
     UI/addpool.cpp \
     UI/addrule.cpp \
     UI/animebatchaction.cpp \
     UI/animedetailinfopage.cpp \
     UI/animeinfoeditor.cpp \
     UI/animesearch.cpp \
+    UI/appbar.cpp \
+    UI/appmenu.cpp \
     UI/autodownloadwindow.cpp \
     UI/charactereditor.cpp \
     UI/danmulaunch.cpp \
@@ -195,6 +240,7 @@ SOURCES += \
 
 HEADERS += \
     Common/counter.h \
+    Common/eventbus.h \
     Common/logger.h \
     Common/lrucache.h \
     Common/notifier.h \
@@ -202,6 +248,63 @@ HEADERS += \
     Download/peerid.h \
     Download/peermodel.h \
     Download/trackersubscriber.h \
+    Extension/App/AppWidgets/appbutton.h \
+    Extension/App/AppWidgets/appcheckbox.h \
+    Extension/App/AppWidgets/appcombo.h \
+    Extension/App/AppWidgets/appgview.h \
+    Extension/App/AppWidgets/apphview.h \
+    Extension/App/AppWidgets/applabel.h \
+    Extension/App/AppWidgets/applist.h \
+    Extension/App/AppWidgets/appprogress.h \
+    Extension/App/AppWidgets/appradio.h \
+    Extension/App/AppWidgets/appslider.h \
+    Extension/App/AppWidgets/appsview.h \
+    Extension/App/AppWidgets/apptextbox.h \
+    Extension/App/AppWidgets/apptextline.h \
+    Extension/App/AppWidgets/apptree.h \
+    Extension/App/AppWidgets/apputil.h \
+    Extension/App/AppWidgets/appview.h \
+    Extension/App/AppWidgets/appvview.h \
+    Extension/App/AppWidgets/appwidget.h \
+    Extension/App/AppWidgets/appwindow.h \
+    Extension/App/appframelessdialog.h \
+    Extension/App/appmanager.h \
+    Extension/App/appstorage.h \
+    Extension/App/kapp.h \
+    Extension/Common/ext_common.h \
+    Extension/Common/luatablemodel.h \
+    Extension/Modules/lua_appcommondialog.h \
+    Extension/Modules/lua_appevent.h \
+    Extension/Modules/lua_appimage.h \
+    Extension/Modules/lua_appnet.h \
+    Extension/Modules/lua_appui.h \
+    Extension/Modules/lua_apputil.h \
+    Extension/Modules/lua_clipboardinterface.h \
+    Extension/Modules/lua_danmuinterface.h \
+    Extension/Modules/lua_dir.h \
+    Extension/Modules/lua_downloadinterface.h \
+    Extension/Modules/lua_htmlparser.h \
+    Extension/Modules/lua_libraryinterface.h \
+    Extension/Modules/lua_net.h \
+    Extension/Modules/lua_playerinterface.h \
+    Extension/Modules/lua_playlistinterface.h \
+    Extension/Modules/lua_process.h \
+    Extension/Modules/lua_regex.h \
+    Extension/Modules/lua_storageinterface.h \
+    Extension/Modules/lua_stringutil.h \
+    Extension/Modules/lua_timer.h \
+    Extension/Modules/lua_util.h \
+    Extension/Modules/lua_xmlreader.h \
+    Extension/Modules/modulebase.h \
+    Extension/Script/bgmcalendarscript.h \
+    Extension/Script/danmuscript.h \
+    Extension/Script/libraryscript.h \
+    Extension/Script/playgroundscript.h \
+    Extension/Script/resourcescript.h \
+    Extension/Script/scriptbase.h \
+    Extension/Script/scriptmanager.h \
+    Extension/Script/scriptmodel.h \
+    Extension/Script/scriptsettingmodel.h \
     LANServer/apihandler.h \
     LANServer/dlna/dlnamediacontroller.h \
     LANServer/dlna/dlnamediaitem.h \
@@ -234,28 +337,15 @@ HEADERS += \
     Play/Danmu/eventanalyzer.h \
     Play/Video/mpvpreview.h \
     Play/Video/simpleplayer.h \
-    Script/bgmcalendarscript.h \
-    Script/danmuscript.h \
-    Script/libraryscript.h \
-    Script/luatablemodel.h \
-    Script/modules/lua_htmlparser.h \
-    Script/modules/lua_net.h \
-    Script/modules/lua_regex.h \
-    Script/modules/lua_util.h \
-    Script/modules/lua_xmlreader.h \
-    Script/modules/modulebase.h \
-    Script/playgroundscript.h \
-    Script/resourcescript.h \
-    Script/scriptbase.h \
-    Script/scriptmanager.h \
-    Script/scriptmodel.h \
-    Script/scriptsettingmodel.h \
+    Play/playcontext.h \
     UI/addpool.h \
     UI/addrule.h \
     UI/animebatchaction.h \
     UI/animedetailinfopage.h \
     UI/animeinfoeditor.h \
     UI/animesearch.h \
+    UI/appbar.h \
+    UI/appmenu.h \
     UI/autodownloadwindow.h \
     UI/charactereditor.h \
     UI/danmulaunch.h \

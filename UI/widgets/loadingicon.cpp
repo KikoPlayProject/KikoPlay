@@ -3,11 +3,12 @@
 #include <QPainterPath>
 #include <QTimer>
 
-LoadingIcon::LoadingIcon(const QColor &color, QWidget *parent) : QWidget(parent), iconColor(color), angleSpeed(12), margin(2)
+LoadingIcon::LoadingIcon(const QColor &color, QWidget *parent) : QWidget(parent), iconColor(color), angle(45), angleSpeed(12), margin(2), isPause(false)
 {
     createIcon();
     refreshTimer = new QTimer(this);
     QObject::connect(refreshTimer, &QTimer::timeout, this, [=](){
+        if (isPause) return;
         angle = (angle + angleSpeed) % 360;
         update();
     });
@@ -24,6 +25,16 @@ void LoadingIcon::hide()
 {
     refreshTimer->stop();
     QWidget::hide();
+}
+
+void LoadingIcon::pause(bool p)
+{
+    isPause = p;
+    if (p)
+    {
+        angle = 45;
+        update();
+    }
 }
 
 void LoadingIcon::setMargin(int m)

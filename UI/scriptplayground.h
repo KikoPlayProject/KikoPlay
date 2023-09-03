@@ -2,7 +2,7 @@
 #define SCRIPTPLAYGROUND_H
 #include "framelessdialog.h"
 #include <QPlainTextEdit>
-#include "Script/playgroundscript.h"
+#include "Extension/Script/playgroundscript.h"
 
 class CodeEditor : public QPlainTextEdit
 {

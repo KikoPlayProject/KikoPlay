@@ -7,7 +7,7 @@
 #include <QApplication>
 #include <QSettings>
 #include <QSortFilterProxyModel>
-#include "Script/luatablemodel.h"
+#include "Extension/Common/luatablemodel.h"
 #include "globalobjects.h"
 
 LuaTableViewer::LuaTableViewer(LuaTableModel *model, QWidget *parent) :

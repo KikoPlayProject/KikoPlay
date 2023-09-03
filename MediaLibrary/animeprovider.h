@@ -2,7 +2,7 @@
 #define ANIMEPROVIDER_H
 #include <QObject>
 #include "animeinfo.h"
-#include "Script/scriptbase.h"
+#include "Extension/Script/scriptbase.h"
 class AnimeProvider : public QObject
 {
     Q_OBJECT

@@ -9,7 +9,7 @@ class SelectTorrentFile : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    explicit SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *parent = nullptr);
+    explicit SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *parent = nullptr, const QString &path = "");
     QString selectIndexes;
     QString dir;
 private:

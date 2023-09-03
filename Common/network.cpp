@@ -363,3 +363,60 @@ int Network::decompress(const QByteArray &input, QByteArray &output)
     return Z_OK ;
 }
 
+
+Network::Reply Network::httpHead(const QString &url, const QUrlQuery &query, const QStringList &header, bool redirect)
+{
+    QUrl queryUrl(url);
+    if(!query.isEmpty())  queryUrl.setQuery(query);
+    QNetworkRequest request;
+    request.setUrl(queryUrl);
+    if(header.size()>=2)
+    {
+        Q_ASSERT((header.size() & 1) ==0);
+        for(int i=0;i<header.size();i+=2)
+        {
+            request.setRawHeader(header[i].toUtf8(),header[i+1].toUtf8());
+        }
+    }
+    request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, redirect);
+    request.setMaximumRedirectsAllowed(maxRedirectTimes);
+
+    QNetworkAccessManager *manager = getManager();
+    manager->setCookieJar(nullptr);
+
+    QTimer timer;
+    timer.setInterval(timeout);
+    timer.setSingleShot(true);
+    QNetworkReply *reply = manager->head(request);
+
+    QEventLoop eventLoop;
+    QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
+    QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
+    timer.start();
+    eventLoop.exec();
+    Reply replyObj;
+    if (timer.isActive())
+    {
+        timer.stop();
+        if (reply->error() == QNetworkReply::NoError)
+        {
+            replyObj.hasError = false;
+            replyObj.statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            replyObj.headers = reply->rawHeaderPairs();
+        }
+        else
+        {
+            replyObj.hasError = true;
+            replyObj.errInfo=reply->errorString();
+        }
+    }
+    else
+    {
+        QObject::disconnect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
+        reply->abort();
+        replyObj.hasError = true;
+        replyObj.errInfo=QObject::tr("Replay Timeout");
+    }
+    reply->deleteLater();
+    return replyObj;
+}

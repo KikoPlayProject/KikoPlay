@@ -1,6 +1,6 @@
 #include "autodownloadmanager.h"
-#include "../Script/resourcescript.h"
-#include "../Script/scriptmanager.h"
+#include "Extension/Script/resourcescript.h"
+#include "Extension/Script/scriptmanager.h"
 #include "autodownloadmanager.h"
 #include "Common/network.h"
 #include "globalobjects.h"

@@ -358,7 +358,11 @@ void DanmuManager::localMatch(const QString &path, MatchResult &result)
 QString DanmuManager::createPool(const QString &animeTitle, EpType epType, double epIndex, const QString &epName,  const QString &fileHash)
 {
     QString poolId(getPoolId(animeTitle, epType, epIndex));
-    Pool *pool = pools.value(poolId, nullptr);
+    Pool *pool = nullptr;
+    {
+        QMutexLocker locker(&poolsLock);
+        pool = pools.value(poolId, nullptr);
+    }
     if(!pool)
     {
         QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Comment_DB));

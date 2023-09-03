@@ -7,8 +7,8 @@
 #include <QVariant>
 enum NotifyMessageFlag
 {
-    NM_HIDE=1,
-    NM_PROCESS=2,
+    NM_HIDE = 1,
+    NM_PROCESS = 2,
     NM_SHOWCANCEL = 4,
     NM_ERROR = 8,
     NM_DARKNESS_BACK = 16
@@ -39,6 +39,7 @@ public:
         PLAYER_NOTIFY = 2,
         LIBRARY_NOTIFY = 3,
         DOWNLOAD_NOTIFY = 4,
+        APP_MENU_NOTIFY = 5,
         MAIN_DIALOG_NOTIFY
     };
     void addNotify(NotifyType nType, NotifyInterface *notify);

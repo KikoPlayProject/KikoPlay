@@ -51,6 +51,7 @@ public:
     void removeRecentItem(const QString &path);
     void setFinishTimeOnce(bool on);
     bool saveFinishTimeOnce();
+    bool hasPath(const QString &path) const;
 signals:
     void currentInvaild();
     void currentMatchChanged(const QString &pid);
@@ -58,10 +59,12 @@ signals:
     void matchStatusChanged(bool on);
 public slots :
     int addItems(QStringList &items, QModelIndex parent);
-    int addFolder(QString folderStr, QModelIndex parent);
+    int addFolder(QString folderStr, QModelIndex parent, const QString &name = "");
     int addURL(const QStringList &urls, QModelIndex parent);
-    QModelIndex addCollection(QModelIndex parent,QString title);
+    QModelIndex addCollection(QModelIndex parent, const QString &title);
+    QModelIndex getCollection(QModelIndex parent, const QStringList &path);
     int refreshFolder(const QModelIndex &index);
+    QModelIndex addItem(QModelIndex parent, PlayListItem *item);
 
     void deleteItems(const QModelIndexList &deleteIndexes);
     int deleteInvalidItems(const QModelIndexList &indexes);
@@ -80,7 +83,7 @@ public slots :
     const PlayListItem *setCurrentItem(const QModelIndex &index,bool playChild=true);
     const PlayListItem *setCurrentItem(const QString &path);
 	void cleanCurrentItem();
-    void setCurrentPlayTime(int playTime);
+    void setCurrentPlayTime();
     void addCurrentSub(const QString &subFile);
     void clearCurrentSub();
     void setCurrentSubDelay(int delay);

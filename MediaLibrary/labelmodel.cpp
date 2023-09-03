@@ -3,7 +3,7 @@
 #include "globalobjects.h"
 #include "tagnode.h"
 #include "animeinfo.h"
-#include "Script/scriptmanager.h"
+#include "Extension/Script/scriptmanager.h"
 #include <QBrush>
 #define CountRole Qt::UserRole+1
 #define TypeRole Qt::UserRole+2
@@ -129,16 +129,19 @@ void LabelModel::addTag(const QString &animeName, const QString &tag, TagNode::T
     insertNodeIndex(cateNode[type], tag, 1, type, type==TagNode::TAG_TIME?'-':'/');
 }
 
-void LabelModel::addCustomTags(const QString &animeName, const QStringList &tagList)
+int LabelModel::addCustomTags(const QString &animeName, const QStringList &tagList)
 {
-    if(!root) return;
+    if(!root) return 0;
+    int validCount = 0;
     for(const QString &tag : tagList)
     {
         if(tagAnimes.contains(tag) && tagAnimes[tag].contains(animeName)) continue;
         tagAnimes[tag].insert(animeName);
         insertNodeIndex(root->subNodes->value(C_CUSTOM), tag, 1, TagNode::TAG_CUSTOM);
+        ++validCount;
     }
     AnimeWorker::instance()->saveTags(animeName, tagList);
+    return validCount;
 }
 
 void LabelModel::removeTag(const QString &animeName, const QString &tag, TagNode::TagType type)

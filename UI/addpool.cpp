@@ -17,7 +17,7 @@
 #include "Common/notifier.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "MediaLibrary/animeprovider.h"
-#include "Script/scriptmanager.h"
+#include "Extension/Script/scriptmanager.h"
 #include "widgets/scriptsearchoptionpanel.h"
 #define AnimeRole Qt::UserRole+1
 #define EpRole Qt::UserRole+2
