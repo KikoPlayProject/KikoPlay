@@ -40,10 +40,18 @@ CONFIG(debug, debug|release) {
 SOURCES += \
     Common/counter.cpp \
     Common/eventbus.cpp \
+    Common/flowlayout.cpp \
+    Common/htmlparsersax.cpp \
     Common/logger.cpp \
+    Common/network.cpp \
     Common/notifier.cpp \
+    Download/aria2jsonrpc.cpp \
     Download/autodownloadmanager.cpp \
+    Download/BgmList/bgmlist.cpp \
+    Download/downloaditemdelegate.cpp \
+    Download/downloadmodel.cpp \
     Download/peermodel.cpp \
+    Download/torrent.cpp \
     Download/trackersubscriber.cpp \
     Extension/App/AppWidgets/appbutton.cpp \
     Extension/App/AppWidgets/appcheckbox.cpp \
@@ -102,6 +110,8 @@ SOURCES += \
     Extension/Script/scriptmanager.cpp \
     Extension/Script/scriptmodel.cpp \
     Extension/Script/scriptsettingmodel.cpp \
+    Download/util.cpp \
+    globalobjects.cpp \
     LANServer/apihandler.cpp \
     LANServer/dlna/dlnamediacontroller.cpp \
     LANServer/dlna/dlnamediaitem.cpp \
@@ -122,21 +132,51 @@ SOURCES += \
     LANServer/httpserver/httpsession.cpp \
     LANServer/httpserver/httpsessionstore.cpp \
     LANServer/httpserver/staticfilecontroller.cpp \
+    LANServer/lanserver.cpp \
     LANServer/router.cpp \
+    main.cpp \
+    MediaLibrary/animefilterproxymodel.cpp \
     MediaLibrary/animeinfo.cpp \
+    MediaLibrary/animeitemdelegate.cpp \
     MediaLibrary/animelistmodel.cpp \
+    MediaLibrary/animemodel.cpp \
     MediaLibrary/animeprovider.cpp \
+    MediaLibrary/animeworker.cpp \
+    MediaLibrary/capturelistmodel.cpp \
     MediaLibrary/episodeitem.cpp \
+    MediaLibrary/episodesmodel.cpp \
+    MediaLibrary/labelitemdelegate.cpp \
+    MediaLibrary/labelmodel.cpp \
     MediaLibrary/tagnode.cpp \
-    Play/Danmu/Render/livedanmuitemdelegate.cpp \
-    Play/Danmu/Render/livedanmulistmodel.cpp \
+    Play/Danmu/blocker.cpp \
+    Play/Danmu/common.cpp \
+    Play/Danmu/danmupool.cpp \
     Play/Danmu/danmuprovider.cpp \
     Play/Danmu/eventanalyzer.cpp \
+    Play/Danmu/Layouts/bottomlayout.cpp \
+    Play/Danmu/Layouts/rolllayout.cpp \
+    Play/Danmu/Layouts/toplayout.cpp \
+    Play/Danmu/Manager/danmumanager.cpp \
+    Play/Danmu/Manager/managermodel.cpp \
+    Play/Danmu/Manager/nodeinfo.cpp \
+    Play/Danmu/Manager/pool.cpp \
+    Play/Danmu/Provider/localprovider.cpp \
+    Play/Danmu/Render/cacheworker.cpp \
+    Play/Danmu/Render/danmurender.cpp \
+    Play/Danmu/Render/livedanmuitemdelegate.cpp \
+    Play/Danmu/Render/livedanmulistmodel.cpp \
+    Play/Playlist/playlist.cpp \
+    Play/Playlist/playlistitem.cpp \
+    Play/Playlist/playlistprivate.cpp \
+    Play/Video/mpvplayer.cpp \
     Play/Video/mpvpreview.cpp \
     Play/Video/simpleplayer.cpp \
     Play/playcontext.cpp \
+    UI/about.cpp \
+    UI/adddanmu.cpp \
     UI/addpool.cpp \
     UI/addrule.cpp \
+    UI/adduritask.cpp \
     UI/animebatchaction.cpp \
     UI/animedetailinfopage.cpp \
     UI/animeinfoeditor.cpp \
@@ -144,24 +184,46 @@ SOURCES += \
     UI/appbar.cpp \
     UI/appmenu.cpp \
     UI/autodownloadwindow.cpp \
+    UI/bgmlistwindow.cpp \
+    UI/blockeditor.cpp \
+    UI/capture.cpp \
+    UI/captureview.cpp \
     UI/charactereditor.cpp \
+    UI/checkupdate.cpp \
     UI/danmulaunch.cpp \
     UI/danmuview.cpp \
     UI/dlnadiscover.cpp \
+    UI/downloadwindow.cpp \
+    UI/framelessdialog.cpp \
+    UI/framelesswindow.cpp \
     UI/gifcapture.cpp \
     UI/inputdialog.cpp \
+    UI/librarywindow.cpp \
+    UI/list.cpp \
     UI/logwindow.cpp \
     UI/luatableviewer.cpp \
+    UI/mainwindow.cpp \
+    UI/matcheditor.cpp \
+    UI/mediainfo.cpp \
+    UI/player.cpp \
+    UI/pooleditor.cpp \
+    UI/poolmanager.cpp \
+    UI/ressearchwindow.cpp \
     UI/scriptplayground.cpp \
+    UI/selectepisode.cpp \
+    UI/selecttorrentfile.cpp \
     UI/settings.cpp \
     UI/settings/downloadpage.cpp \
     UI/settings/lanserverpage.cpp \
     UI/settings/mpvpage.cpp \
     UI/settings/mpvshortcutpage.cpp \
     UI/settings/scriptpage.cpp \
+    UI/settings/settingpage.cpp \
     UI/settings/stylepage.cpp \
     UI/snippetcapture.cpp \
     UI/stylemanager.cpp \
+    UI/timelineedit.cpp \
+    UI/tip.cpp \
     UI/widgets/backgroundfadewidget.cpp \
     UI/widgets/backgroundwidget.cpp \
     UI/widgets/clickslider.cpp \
@@ -169,84 +231,34 @@ SOURCES += \
     UI/widgets/colorslider.cpp \
     UI/widgets/danmustatiswidget.cpp \
     UI/widgets/dialogtip.cpp \
+    UI/widgets/dirselectwidget.cpp \
     UI/widgets/elidelineedit.cpp \
     UI/widgets/fonticonbutton.cpp \
     UI/widgets/loadingicon.cpp \
     UI/widgets/optionslider.cpp \
     UI/widgets/scriptsearchoptionpanel.cpp \
-    UI/widgets/smoothscrollbar.cpp \
-        main.cpp \
-    UI/mainwindow.cpp \
-    UI/framelesswindow.cpp \
-    Play/Danmu/Layouts/bottomlayout.cpp \
-    Play/Danmu/Layouts/rolllayout.cpp \
-    Play/Danmu/Layouts/toplayout.cpp \
-    Play/Danmu/danmupool.cpp \
-    globalobjects.cpp \
-    Play/Playlist/playlist.cpp \
-    Play/Video/mpvplayer.cpp \
-    UI/list.cpp \
-    UI/player.cpp \
-    UI/pooleditor.cpp \
-    UI/framelessdialog.cpp \
-    Play/Danmu/Provider/localprovider.cpp \
-    UI/adddanmu.cpp \
-    UI/matcheditor.cpp \
-    UI/selectepisode.cpp \
-    Play/Danmu/blocker.cpp \
-    UI/blockeditor.cpp \
-    UI/capture.cpp \
-    UI/mediainfo.cpp \
-    Play/Danmu/common.cpp \
-    UI/about.cpp \
-    Common/network.cpp \
-    Common/htmlparsersax.cpp \
-    MediaLibrary/animeitemdelegate.cpp \
-    UI/librarywindow.cpp \
-    MediaLibrary/episodesmodel.cpp \
-    Download/util.cpp \
-    Download/aria2jsonrpc.cpp \
-    UI/widgets/dirselectwidget.cpp \
-    Download/downloaditemdelegate.cpp \
-    Download/downloadmodel.cpp \
-    Download/torrent.cpp \
-    UI/downloadwindow.cpp \
-    UI/adduritask.cpp \
-    UI/selecttorrentfile.cpp \
-    UI/poolmanager.cpp \
-    UI/checkupdate.cpp \
-    Common/flowlayout.cpp \
-    UI/timelineedit.cpp \
-    LANServer/lanserver.cpp \
-    Play/Playlist/playlistitem.cpp \
-    Play/Playlist/playlistprivate.cpp \
-    Play/Danmu/Render/cacheworker.cpp \
-    Play/Danmu/Render/danmurender.cpp \
-    Play/Danmu/Manager/danmumanager.cpp \
-    Play/Danmu/Manager/nodeinfo.cpp \
-    Play/Danmu/Manager/managermodel.cpp \
-    MediaLibrary/animeworker.cpp \
-    MediaLibrary/animemodel.cpp \
-    MediaLibrary/labelmodel.cpp \
-    MediaLibrary/animefilterproxymodel.cpp \
-    MediaLibrary/labelitemdelegate.cpp \
-    Download/BgmList/bgmlist.cpp \
-    UI/bgmlistwindow.cpp \
-    UI/ressearchwindow.cpp \
-    Play/Danmu/Manager/pool.cpp \
-    MediaLibrary/capturelistmodel.cpp \
-    UI/captureview.cpp \
-    UI/tip.cpp
+    UI/widgets/smoothscrollbar.cpp
 
 HEADERS += \
     Common/counter.h \
     Common/eventbus.h \
+    Common/flowlayout.h \
+    Common/htmlparsersax.h \
     Common/logger.h \
     Common/lrucache.h \
+    Common/network.h \
     Common/notifier.h \
+    Common/threadtask.h \
+    Common/zconf.h \
+    Common/zlib.h \
+    Download/aria2jsonrpc.h \
     Download/autodownloadmanager.h \
+    Download/BgmList/bgmlist.h \
+    Download/downloaditemdelegate.h \
+    Download/downloadmodel.h \
     Download/peerid.h \
     Download/peermodel.h \
+    Download/torrent.h \
     Download/trackersubscriber.h \
     Extension/App/AppWidgets/appbutton.h \
     Extension/App/AppWidgets/appcheckbox.h \
@@ -305,6 +317,8 @@ HEADERS += \
     Extension/Script/scriptmanager.h \
     Extension/Script/scriptmodel.h \
     Extension/Script/scriptsettingmodel.h \
+    Download/util.h \
+    globalobjects.h \
     LANServer/apihandler.h \
     LANServer/dlna/dlnamediacontroller.h \
     LANServer/dlna/dlnamediaitem.h \
@@ -325,21 +339,52 @@ HEADERS += \
     LANServer/httpserver/httpsession.h \
     LANServer/httpserver/httpsessionstore.h \
     LANServer/httpserver/staticfilecontroller.h \
+    LANServer/lanserver.h \
     LANServer/router.h \
+    MediaLibrary/animefilterproxymodel.h \
+    MediaLibrary/animeinfo.h \
+    MediaLibrary/animeitemdelegate.h \
     MediaLibrary/animelistmodel.h \
+    MediaLibrary/animemodel.h \
     MediaLibrary/animeprovider.h \
+    MediaLibrary/animeworker.h \
+    MediaLibrary/capturelistmodel.h \
     MediaLibrary/episodeitem.h \
+    MediaLibrary/episodesmodel.h \
+    MediaLibrary/labelitemdelegate.h \
+    MediaLibrary/labelmodel.h \
     MediaLibrary/tagnode.h \
-    Play/Danmu/Render/livedanmuitemdelegate.h \
-    Play/Danmu/Render/livedanmulistmodel.h \
+    Play/Danmu/blocker.h \
+    Play/Danmu/common.h \
+    Play/Danmu/danmupool.h \
     Play/Danmu/danmuprovider.h \
     Play/Danmu/danmuviewmodel.h \
     Play/Danmu/eventanalyzer.h \
+    Play/Danmu/Layouts/bottomlayout.h \
+    Play/Danmu/Layouts/danmulayout.h \
+    Play/Danmu/Layouts/rolllayout.h \
+    Play/Danmu/Layouts/toplayout.h \
+    Play/Danmu/Manager/danmumanager.h \
+    Play/Danmu/Manager/managermodel.h \
+    Play/Danmu/Manager/nodeinfo.h \
+    Play/Danmu/Manager/pool.h \
+    Play/Danmu/Provider/localprovider.h \
+    Play/Danmu/Render/cacheworker.h \
+    Play/Danmu/Render/danmurender.h \
+    Play/Danmu/Render/livedanmuitemdelegate.h \
+    Play/Danmu/Render/livedanmulistmodel.h \
+    Play/Playlist/playlist.h \
+    Play/Playlist/playlistitem.h \
+    Play/Playlist/playlistprivate.h \
+    Play/Video/mpvplayer.h \
     Play/Video/mpvpreview.h \
     Play/Video/simpleplayer.h \
     Play/playcontext.h \
+    UI/about.h \
+    UI/adddanmu.h \
     UI/addpool.h \
     UI/addrule.h \
+    UI/adduritask.h \
     UI/animebatchaction.h \
     UI/animedetailinfopage.h \
     UI/animeinfoeditor.h \
@@ -347,22 +392,34 @@ HEADERS += \
     UI/appbar.h \
     UI/appmenu.h \
     UI/autodownloadwindow.h \
+    UI/bgmlistwindow.h \
+    UI/blockeditor.h \
+    UI/capture.h \
+    UI/captureview.h \
     UI/charactereditor.h \
+    UI/checkupdate.h \
     UI/danmulaunch.h \
     UI/danmuview.h \
     UI/dlnadiscover.h \
+    UI/downloadwindow.h \
+    UI/framelessdialog.h \
+    UI/framelesswindow.h \
     UI/gifcapture.h \
     UI/inputdialog.h \
+    UI/librarywindow.h \
+    UI/list.h \
     UI/logwindow.h \
     UI/luatableviewer.h \
     UI/mainwindow.h \
-    UI/framelesswindow.h \
-    Play/Danmu/Layouts/bottomlayout.h \
-    Play/Danmu/Layouts/danmulayout.h \
-    Play/Danmu/Layouts/rolllayout.h \
-    Play/Danmu/Layouts/toplayout.h \
-    Play/Danmu/danmupool.h \
+    UI/matcheditor.h \
+    UI/mediainfo.h \
+    UI/player.h \
+    UI/pooleditor.h \
+    UI/poolmanager.h \
+    UI/ressearchwindow.h \
     UI/scriptplayground.h \
+    UI/selectepisode.h \
+    UI/selecttorrentfile.h \
     UI/settings.h \
     UI/settings/downloadpage.h \
     UI/settings/lanserverpage.h \
@@ -373,6 +430,8 @@ HEADERS += \
     UI/settings/stylepage.h \
     UI/snippetcapture.h \
     UI/stylemanager.h \
+    UI/timelineedit.h \
+    UI/tip.h \
     UI/widgets/backgroundfadewidget.h \
     UI/widgets/backgroundwidget.h \
     UI/widgets/clickslider.h \
@@ -380,71 +439,13 @@ HEADERS += \
     UI/widgets/colorslider.h \
     UI/widgets/danmustatiswidget.h \
     UI/widgets/dialogtip.h \
+    UI/widgets/dirselectwidget.h \
     UI/widgets/elidelineedit.h \
     UI/widgets/fonticonbutton.h \
     UI/widgets/loadingicon.h \
     UI/widgets/optionslider.h \
     UI/widgets/scriptsearchoptionpanel.h \
-    UI/widgets/smoothscrollbar.h \
-    globalobjects.h \
-    Play/Playlist/playlist.h \
-    Play/Video/mpvplayer.h \
-    UI/list.h \
-    UI/player.h \
-    UI/pooleditor.h \
-    UI/framelessdialog.h \
-    Play/Danmu/Provider/localprovider.h \
-    UI/adddanmu.h \
-    Play/Danmu/common.h \
-    UI/matcheditor.h \
-    UI/selectepisode.h \
-    Play/Danmu/blocker.h \
-    UI/blockeditor.h \
-    UI/capture.h \
-    UI/mediainfo.h \
-    UI/about.h \
-    Common/network.h \
-    Common/htmlparsersax.h \
-    MediaLibrary/animeinfo.h \
-    MediaLibrary/animeitemdelegate.h \
-    UI/librarywindow.h \
-    MediaLibrary/episodesmodel.h \
-    Download/util.h \
-    Download/aria2jsonrpc.h \
-    UI/widgets/dirselectwidget.h \
-    Download/downloaditemdelegate.h \
-    Download/downloadmodel.h \
-    Download/torrent.h \
-    UI/downloadwindow.h \
-    UI/adduritask.h \
-    UI/selecttorrentfile.h \
-    UI/poolmanager.h \
-    UI/checkupdate.h \
-    Common/zconf.h \
-    Common/zlib.h \
-    Common/flowlayout.h \
-    UI/timelineedit.h \
-    LANServer/lanserver.h \
-    Play/Playlist/playlistitem.h \
-    Play/Playlist/playlistprivate.h \
-    Play/Danmu/Render/cacheworker.h \
-    Play/Danmu/Render/danmurender.h \
-    Play/Danmu/Manager/danmumanager.h \
-    Play/Danmu/Manager/nodeinfo.h \
-    Play/Danmu/Manager/managermodel.h \
-    MediaLibrary/animeworker.h \
-    MediaLibrary/animemodel.h \
-    MediaLibrary/labelmodel.h \
-    MediaLibrary/animefilterproxymodel.h \
-    MediaLibrary/labelitemdelegate.h \
-    Download/BgmList/bgmlist.h \
-    UI/bgmlistwindow.h \
-    UI/ressearchwindow.h \
-    Play/Danmu/Manager/pool.h \
-    Common/threadtask.h \
-    MediaLibrary/capturelistmodel.h \
-    UI/captureview.h \
-    UI/tip.h
+    UI/widgets/smoothscrollbar.h
 
 INCLUDEPATH += \
     Play/Video \
