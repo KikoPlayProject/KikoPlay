@@ -3,6 +3,6 @@ SUBDIRS = main
 main.file = KikoPlay.pro
 
 !macx {
-    SUBDIRS += Script/lua
-    main.depends = Script/lua
+    SUBDIRS += Extension/lua
+    main.depends = Extension/lua
 }

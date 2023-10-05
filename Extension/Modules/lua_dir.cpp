@@ -122,12 +122,12 @@ int Dir::entrylist(lua_State *L)
     }
     if (n > 2 && lua_isinteger(L, 3))
     {
-        QDir::Filters filter(lua_tointeger(L, 3));
+        QDir::Filters filter((int)lua_tointeger(L, 3));
         dir.setFilter(filter);
     }
     if (n > 3 && lua_isinteger(L, 4))
     {
-        QDir::SortFlags sort(lua_tointeger(L, 4));
+        QDir::SortFlags sort((int)lua_tointeger(L, 4));
         dir.setSorting(sort);
     }
     pushValue(L, dir.entryList());
