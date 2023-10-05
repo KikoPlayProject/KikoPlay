@@ -12,21 +12,31 @@ AppManager::AppManager(QObject *parent)
     refresh();
 }
 
+AppManager::~AppManager()
+{
+    for (auto app : appList)
+    {
+        app->close();
+    }
+}
+
 void AppManager::refresh(bool inWorkerThread)
 {
-    beginResetModel();
+    QVector<QSharedPointer<Extension::KApp>> newAppList;
     if (inWorkerThread)
     {
         ThreadTask task(GlobalObjects::workThread);
-        task.Run([this](){
-            this->refresApp();
+        task.Run([this, &newAppList](){
+            newAppList = this->refresApp();
             return 0;
-        });
+        }); 
     }
     else
     {
-        refresApp();
+        newAppList = refresApp();
     }
+    beginResetModel();
+    this->appList.swap(newAppList);
     endResetModel();
 }
 
@@ -96,8 +106,9 @@ QString AppManager::getAppPath() const
 #endif
 }
 
-void AppManager::refresApp()
+QVector<QSharedPointer<Extension::KApp>> AppManager::refresApp()
 {
+    QVector<QSharedPointer<Extension::KApp>> appList = this->appList;
     for (int i = appList.size() - 1; i >= 0; --i)
     {
         QSharedPointer<Extension::KApp> app = appList[i];
@@ -146,5 +157,6 @@ void AppManager::refresApp()
     });
     newAppList.append(appList);
     appList.swap(newAppList);
+    return appList;
 }
 

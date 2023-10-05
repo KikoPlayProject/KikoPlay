@@ -25,6 +25,7 @@ public:
     KApp(const KApp&) = delete;
     ~KApp();
     bool start(LaunchScene scene = LaunchScene::LaunchScene_AppMenu);
+    void close();
     void stop();
     void show();
 

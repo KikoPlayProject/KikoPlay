@@ -1,3 +1,4 @@
 #Make sure the danmu is smooth
 vf=lavfi="fps=fps=60:round=down"
 hwdec=auto
+demuxer-max-bytes=1024MiB

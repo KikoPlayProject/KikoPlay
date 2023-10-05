@@ -137,7 +137,7 @@ int DanmuInterface::addsrc(lua_State *L)
 
 DanmuComment *DanmuInterface::parseDanmu(const QVariantMap &dobj)
 {
-    // [{text=xx, time=xx(number, ms), <color=xx(int)>, <fontsize=xx(int, 1=normal, 2=small, 3=large)> <type=xx(int, 1=roll,2=top,3=bottom)>, <date=xx(str)>, <sender=xx>},....]
+    // [{text=xx, time=xx(number, ms), <color=xx(int)>, <fontsize=xx(int, 1=normal, 2=small, 3=large)> <type=xx(int, 0=roll,1=top,2=bottom)>, <date=xx(str)>, <sender=xx>},....]
     const QString text = dobj.value("text").toString();
     double time = dobj.value("time", -1).toDouble();
     if(text.isEmpty() || time<0)  return nullptr;

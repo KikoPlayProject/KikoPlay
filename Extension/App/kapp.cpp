@@ -143,6 +143,14 @@ bool KApp::start(LaunchScene scene)
     return true;
 }
 
+void KApp::close()
+{
+    if (!loaded || !mainWindow || !mainWindow->getWidget()) return;
+    AppFramelessDialog *w = static_cast<AppFramelessDialog *>(mainWindow->getWidget());
+    w->reject();
+    stop();
+}
+
 void KApp::stop()
 {
     if (!loaded) return;

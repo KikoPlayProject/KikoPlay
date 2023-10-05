@@ -311,10 +311,18 @@ QWidget *AddDanmu::setupSearchPage()
         if(scriptOptionPanel->hasOptions()) scriptOptionPanel->show();
         else scriptOptionPanel->hide();
     });
+    const QString defaultScriptId = GlobalObjects::appSetting->value("Script/DefaultDanmuScript").toString();
+    int index = 0, defaultIndex = -1;
     for(const auto &p : GlobalObjects::danmuProvider->getSearchProviders())
     {
         sourceCombo->addItem(p.first, p.second);  //p: <name, id>
+        if (p.second == defaultScriptId)
+        {
+            defaultIndex = index;
+        }
+        ++index;
     }
+    if (defaultIndex != -1) sourceCombo->setCurrentIndex(defaultIndex);
     keywordEdit=new QLineEdit(searchPage);
     searchButton=new QPushButton(tr("Search"),searchPage);
     QObject::connect(searchButton,&QPushButton::clicked,this,&AddDanmu::search);
@@ -462,6 +470,7 @@ void AddDanmu::onAccept()
         }
     }
     relCache->save();
+    if (!providerId.isEmpty()) GlobalObjects::appSetting->setValue("Script/DefaultDanmuScript", providerId);
     CFramelessDialog::onAccept();
 }
 
@@ -472,6 +481,7 @@ void AddDanmu::onClose()
         qDeleteAll((*iter).second);
     }
     relCache->save();
+    if (!providerId.isEmpty()) GlobalObjects::appSetting->setValue("Script/DefaultDanmuScript", providerId);
     CFramelessDialog::onClose();
 }
 

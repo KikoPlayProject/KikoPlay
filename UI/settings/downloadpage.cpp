@@ -127,6 +127,11 @@ DownloadPage::DownloadPage(QWidget *parent) : SettingPage(parent)
     QObject::connect(args,&QTextEdit::textChanged,[this](){
        argChange=true;
     });
+    QCheckBox *killExistAria2 = new QCheckBox(tr("Kill existing aria2 processes at startup"), this);
+    killExistAria2->setChecked(GlobalObjects::appSetting->value("Download/KillExistAria2", true).toBool());
+    QObject::connect(killExistAria2, &QCheckBox::stateChanged, [](int state){
+        GlobalObjects::appSetting->setValue("Download/KillExistAria2", state==Qt::Checked);
+    });
 
     QGridLayout *settingGLayout=new QGridLayout(this);
     settingGLayout->setContentsMargins(0, 0, 0, 0);
@@ -143,6 +148,7 @@ DownloadPage::DownloadPage(QWidget *parent) : SettingPage(parent)
     settingGLayout->addWidget(trackerSubscribe, 5, 2);
     settingGLayout->addWidget(btTrackers,6,0,1,3);
     settingGLayout->addWidget(startupArgsLabel,7,0);
+    settingGLayout->addWidget(killExistAria2, 7, 1, 1, 2, Qt::AlignRight);
     settingGLayout->addWidget(args,8,0,1,3);
     settingGLayout->setRowStretch(6,1);
     settingGLayout->setRowStretch(8,1);

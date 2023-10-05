@@ -578,7 +578,7 @@ void LibraryWindow::keyPressEvent(QKeyEvent *event)
     }
 }
 
-void LibraryWindow::showMessage(const QString &content, int flag)
+void LibraryWindow::showMessage(const QString &content, int flag, const QVariant &)
 {
     dialogTip->showMessage(content, flag);
 }

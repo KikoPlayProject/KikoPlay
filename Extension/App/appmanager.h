@@ -10,6 +10,7 @@ class AppManager : public QAbstractItemModel
     Q_OBJECT
 public:
     explicit AppManager(QObject *parent = nullptr);
+    ~AppManager();
     void refresh(bool inWorkerThread = false);
     void start(const QModelIndex &index);
 public:
@@ -25,7 +26,7 @@ signals:
 private:
     QVector<QSharedPointer<Extension::KApp>> appList;
     QString getAppPath() const;
-    void refresApp();
+    QVector<QSharedPointer<Extension::KApp> > refresApp();
 };
 
 #endif // APPMANAGER_H

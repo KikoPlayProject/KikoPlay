@@ -18,7 +18,7 @@ void Notifier::addNotify(Notifier::NotifyType nType, NotifyInterface *notify)
     notify->setCancelCallBack(cancelCallBack);
 }
 
-void Notifier::showMessage(NotifyType nType, const QString &content, int flag)
+void Notifier::showMessage(NotifyType nType, const QString &content, int flag, const QVariant &extra)
 {
     if(!notifyHash.contains(nType)) return;
     auto &notifyList = notifyHash[nType];
@@ -33,7 +33,7 @@ void Notifier::showMessage(NotifyType nType, const QString &content, int flag)
     for(auto n: notifyList)
     {
         QMetaObject::invokeMethod(this, [=](){
-            n->showMessage(content, flag);
+            n->showMessage(content, flag, extra);
         }, connType);
     }
 }

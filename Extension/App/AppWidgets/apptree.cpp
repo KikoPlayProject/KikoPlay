@@ -1,9 +1,15 @@
 #include "apptree.h"
 #include <QTreeWidget>
 #include <QHeaderView>
+#include <QFile>
+#include <QBuffer>
+#include <QPixmap>
+#include <QIcon>
+#include <QImageReader>
+#include <QScrollBar>
 #include "Extension/Common/ext_common.h"
 #include "Extension/App/kapp.h"
-#include <QScrollBar>
+#include "Extension/Modules/lua_appimage.h"
 #define TreeItemDataRole Qt::UserRole + 1
 
 namespace Extension
@@ -193,7 +199,6 @@ int AppTree::selection(lua_State *L)
     QMetaObject::invokeMethod(tree, [&](){
         selItems = tree->selectedItems();
     }, Qt::BlockingQueuedConnection);
-
     lua_newtable(L);  // table
     for (int i = 0; i < selItems.size(); ++i)
     {
@@ -500,6 +505,37 @@ void AppTree::parseItems(lua_State *L, QList<QTreeWidgetItem *> &items, AppTree 
             }
             lua_pop(L, 1);
         }
+        if (appTree && level < 3 && map.contains("icon"))
+        {
+            lua_pushstring(L, "icon");  // t key
+            const int type = lua_gettable(L, -2);
+            if (type == LUA_TSTRING)
+            {
+                size_t len = 0;
+                const char * s = lua_tolstring(L, -1, &len);
+                if (QFile::exists(s))
+                {
+                    map["icon"] = QIcon(s);
+                }
+                else
+                {
+                    QByteArray imgBytes(s, len);
+                    QBuffer bufferImage(&imgBytes);
+                    bufferImage.open(QIODevice::ReadOnly);
+                    QImageReader reader(&bufferImage);
+                    map["icon"] = QIcon(QPixmap::fromImageReader(&reader));
+                }
+            }
+            else if (type == LUA_TUSERDATA)
+            {
+                QImage *img = AppImage::checkImg(L, -1);
+                if (img)
+                {
+                    map["icon"] = QIcon(QPixmap::fromImage(*img));
+                }
+            }
+            lua_pop(L, 1);
+        }
     };
     const QVariantList itemParam = getValue(L, true, modifer, 3).toList();
     QVariantList rawItems;
@@ -759,10 +795,9 @@ void AppTreeItem::setItemCol(QTreeWidgetItem *item, int col, const QString &fiel
     }
     else if (field == "icon")
     {
-        if (val.type() == QVariant::String)
-        {
-            item->setIcon(col, QIcon(val.toString()));
-        }
+        
+        item->setIcon(col, val.value<QIcon>());
+        
     }
 }
 
@@ -888,6 +923,31 @@ int AppTreeItem::set(lua_State *L)
     {
         AppTree *appTree = getAppTree(item);
         val = QVariant::fromValue<Extension::LuaItemRef>({appTree->getDataRef(L, appTree), appTree->dataRef});
+    }
+    else if (field == "icon")
+    {
+        if (valType == LUA_TSTRING)
+        {
+            size_t len = 0;
+            const char * s = lua_tolstring(L, -1, &len);
+            if (QFile::exists(s))
+            {
+                val = QIcon(s);
+            }
+            else
+            {
+                QByteArray imgBytes(s, len);
+                QBuffer bufferImage(&imgBytes);
+                bufferImage.open(QIODevice::ReadOnly);
+                QImageReader reader(&bufferImage);
+                val = QIcon(QPixmap::fromImageReader(&reader));
+            }
+        }
+        else if (valType == LUA_TUSERDATA)
+        {
+            QImage *img = AppImage::checkImg(L, -1);
+            if (img) val = QIcon(QPixmap::fromImage(*img));
+        }
     }
     QMetaObject::invokeMethod(item->treeWidget(), [&](){
         setItemCol(item, col, field, val);

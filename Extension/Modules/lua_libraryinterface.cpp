@@ -129,8 +129,8 @@ int LibraryInterface::addanime(lua_State *L)
             Character::scale(crts[i]->image);
         }
     }
-    AnimeWorker::instance()->addAnime(anime);
-    return 0;
+    lua_pushboolean(L, AnimeWorker::instance()->addAnime(anime));
+    return 1;
 }
 
 int LibraryInterface::addtag(lua_State *L)

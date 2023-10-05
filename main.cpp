@@ -30,25 +30,14 @@ LONG AppCrashHandler(EXCEPTION_POINTERS *pException)
 #endif
 void decodeParam()
 {
-    QStringList args=QCoreApplication::arguments();
-    if(args.count()<=1)return;
+    QStringList args = QCoreApplication::arguments();
+    if(args.count()<=1) return;
     args.pop_front();
-    QStringList fileList;
-    for(const QString &path:args)
+    QStringList urlList = args;
+    if(!urlList.empty())
     {
-        QFileInfo fi(path);
-        if(fi.isFile())
-        {
-            if(GlobalObjects::mpvplayer->videoFileFormats.contains("*."+fi.suffix().toLower()))
-            {
-                fileList.append(fi.filePath());
-            }
-        }
-    }
-    if(fileList.count()>0)
-    {
-        GlobalObjects::playlist->addItems(fileList,QModelIndex());
-        const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(fileList.last());
+        GlobalObjects::playlist->addURL(urlList,QModelIndex());
+        const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(urlList.last());
         if (curItem)
         {
             GlobalObjects::mpvplayer->setMedia(curItem->path);
@@ -65,24 +54,12 @@ bool isRunning()
         if (args.count() > 1)
         {
             args.pop_front();
-            QStringList fileList;
-            for (const QString &path : args)
-            {
-                QFileInfo fi(path);
-                if (fi.isFile())
-                {
-                    const QStringList videoFileFormats = {"*.mp4","*.mkv","*.avi","*.flv","*.wmv"};
-                    if (videoFileFormats.contains("*."+fi.suffix().toLower()))
-                    {
-                        fileList.append(fi.filePath());
-                    }
-                }
-            }
-            if (fileList.count() > 0)
+            QStringList urlList = args;
+            if (!urlList.empty())
             {
                 QByteArray data;
                 QDataStream s(&data,QIODevice::WriteOnly);
-                s << fileList;
+                s << urlList;
                 socket.write(data);
                 socket.waitForBytesWritten();
             }
@@ -96,6 +73,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     a.setApplicationName("KikoPlay");
+    a.setWindowIcon(QIcon(":/res/images/app.png"));
 #ifdef Q_OS_WIN
     SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)AppCrashHandler);
 #endif
@@ -114,7 +92,7 @@ int main(int argc, char *argv[])
         s >> args;
         if (args.count() > 0)
         {
-            GlobalObjects::playlist->addItems(args,QModelIndex());
+            GlobalObjects::playlist->addURL(args,QModelIndex());
             const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(args.last());
             if (curItem)
             {

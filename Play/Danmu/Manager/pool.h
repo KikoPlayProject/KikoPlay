@@ -41,7 +41,7 @@ public:
             if(danmu->blockBy!=-1) continue;
             if(useOrigin)
             {
-                danmuArray.append(QJsonArray({danmu->originTime/1000.0,danmu->type,danmu->color,danmu->source,danmu->text, danmu->sender}));
+                danmuArray.append(QJsonArray({danmu->originTime/1000.0,danmu->type,danmu->color,danmu->source,danmu->text, danmu->sender,danmu->date}));
             }
             else
             {

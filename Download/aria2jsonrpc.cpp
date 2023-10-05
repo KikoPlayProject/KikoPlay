@@ -7,7 +7,7 @@
 #include "Common/logger.h"
 #include "globalobjects.h"
 
-Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent)
+Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent), listenPort(7800)
 {
     aria2Process = new QProcess(this);
     if(GlobalObjects::appSetting->value("Download/KillExistAria2", true).toBool())
@@ -21,16 +21,30 @@ Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent)
     }
     QStringList opts=GlobalObjects::appSetting->value("Download/Aria2Args","").toString().split('\n');
     QStringList args;
+    bool hasListenPort = false;
     for(const QString &option:opts)
     {
         QString opt(option.trimmed());
 		if (opt.isEmpty()) continue;
         if(opt.startsWith('#'))continue;
         if(!opt.startsWith("--")) opt = "--"+opt;
+        if (opt.startsWith("--rpc-listen-port"))
+        {
+            const int sepIdx = opt.indexOf("=");
+            const QStringRef portStr = opt.midRef(sepIdx + 1).trimmed();
+            bool ok = false;
+            const int port = portStr.toInt(&ok);
+            if (portStr.isEmpty() || !ok) continue;
+            listenPort = port;
+            hasListenPort = true;
+        }
         args<<opt;
     }
     args << "--enable-rpc=true";
-    args << "--rpc-listen-port=6800";
+    if (!hasListenPort)
+    {
+        args << QString("--rpc-listen-port=%1").arg(listenPort);
+    }
     //args << "rpc-save-upload-metadata","false");
 
     QStringList aria2PathList = {
@@ -73,7 +87,7 @@ QJsonObject Aria2JsonRPC::rpcCall(const QString &method, const QJsonArray &param
     }
 
     QNetworkRequest request;
-    request.setUrl(QUrl("http://localhost:6800/jsonrpc"));
+    request.setUrl(QUrl(QString("http://localhost:%1/jsonrpc").arg(listenPort)));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
     QByteArray content(QJsonDocument(object).toJson(QJsonDocument::Compact));

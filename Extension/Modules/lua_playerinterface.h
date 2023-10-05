@@ -15,6 +15,8 @@ private:
     static int curfile(lua_State *L);
     static int property(lua_State *L);
     static int command(lua_State *L);
+    static int optgroups(lua_State *L);
+    static int setoptgroup(lua_State *L);
 };
 
 }

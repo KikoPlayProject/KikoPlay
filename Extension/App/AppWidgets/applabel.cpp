@@ -66,10 +66,15 @@ int AppLabel::getimg(lua_State *L)
         return 0;
     }
     QLabel *label = static_cast<QLabel *>(appWidget->getWidget());
-    QImage *img = new QImage;
+    QImage *img = nullptr;
     QMetaObject::invokeMethod(label, [label, &img](){
-        *img = label->pixmap(Qt::ReturnByValue).toImage();
+        auto pixmap = label->pixmap(Qt::ReturnByValue);
+        if (!pixmap.isNull())
+        {
+            img = new QImage(pixmap.toImage());
+        }
     }, Qt::BlockingQueuedConnection);
+    if (!img) return 0;
     AppImage::pushImg(L, img);
     return 1;
 

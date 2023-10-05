@@ -1056,7 +1056,7 @@ void DownloadWindow::hideEvent(QHideEvent *)
     refreshTimer->setInterval(backgoundRefreshInterval);
 }
 
-void DownloadWindow::showMessage(const QString &content, int flag)
+void DownloadWindow::showMessage(const QString &content, int flag, const QVariant &)
 {
     dialogTip->showMessage(content, flag);
 }

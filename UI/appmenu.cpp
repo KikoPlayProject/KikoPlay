@@ -60,7 +60,7 @@ void AppMenu::showEvent(QShowEvent *event)
     this->move(p.x() + popupFromWidget->width() - this->width(), p.y());
 }
 
-void AppMenu::showMessage(const QString &content, int flag)
+void AppMenu::showMessage(const QString &content, int flag, const QVariant &)
 {
     dialogTip->showMessage(content, flag);
 }

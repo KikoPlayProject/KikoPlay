@@ -16,6 +16,7 @@
 #include "Common/notifier.h"
 #include "Common/eventbus.h"
 #include "Common/logger.h"
+#include "Common/kstats.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -121,6 +122,7 @@ void GlobalObjects::init()
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
     iconfont->setFamily(fontFamilies.at(0));
     QApplication::setFont(QFont("Microsoft Yahei UI", 10));
+    KStats::instance();
 }
 
 void GlobalObjects::clear()

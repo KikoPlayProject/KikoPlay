@@ -152,14 +152,14 @@ int StringUtil::encode(lua_State *L)
     size_t size = 0;
     const char* str = luaL_checklstring(L, 1, &size);;
     int src_code = CodeType::UTF_8;
-    int desc_code = CodeType::UTF_8;
+    int dest_code = CodeType::UTF_8;
     if (lua_gettop(L) > 1)
     {
         src_code = lua_tointeger(L, 2);
     }
     if (lua_gettop(L) > 2)
     {
-        desc_code = lua_tointeger(L, 3);
+        dest_code = lua_tointeger(L, 3);
     }
     QString src;
     if (src_code == CodeType::LOCAL)
@@ -170,7 +170,7 @@ int StringUtil::encode(lua_State *L)
     {
         src = QString::fromUtf8(str, size);
     }
-    if (desc_code == CodeType::LOCAL)
+    if (dest_code == CodeType::LOCAL)
     {
         QByteArray d = src.toLocal8Bit();
         lua_pushlstring(L, d.constData(), d.size());

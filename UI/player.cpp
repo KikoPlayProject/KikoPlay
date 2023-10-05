@@ -14,6 +14,7 @@
 #include <QButtonGroup>
 #include <QListView>
 
+#include "Play/Danmu/Manager/danmumanager.h"
 #include "widgets/clickslider.h"
 #include "widgets/danmustatiswidget.h"
 #include "widgets/optionslider.h"
@@ -107,7 +108,7 @@ public:
             if(showTips.empty()) hideTimer.stop();
         });
     }
-    void showMessage(const QString &msg, const QString &type = "")
+    void showMessage(const QString &msg, const QString &type = "", int timeout = 2500)
     {
         InfoTip *targetInfoTip = nullptr;
         for(InfoTip *tip : showTips)
@@ -118,6 +119,12 @@ public:
                 break;
             }
         }
+        if (!type.isEmpty() && msg.isEmpty())
+        {
+            if (targetInfoTip) targetInfoTip->timeout = 0;
+            return;
+        }
+
         if(!targetInfoTip && showTips.size() > 3)
         {
             for(InfoTip *tip : showTips)
@@ -165,7 +172,6 @@ private:
     QVector<InfoTip *> showTips, hideTips;
     QWidget *parentWidget;
     int minBottom;
-    const int timeout = 2500;
     const int timerInterval = 500;
     QTimer hideTimer;
 };
@@ -1718,6 +1724,16 @@ void PlayerWindow::setupSignals()
         QVariantMap param = {
             { "file", GlobalObjects::mpvplayer->getCurrentFile() }
         };
+        const PlayListItem *currentItem = GlobalObjects::playlist->getCurrentItem();
+        if (currentItem)
+        {
+            Pool *pool = GlobalObjects::danmuManager->getPool(currentItem->poolID, false);
+            if (pool)
+            {
+                param["anime_name"] = pool->animeTitle();
+                param["epinfo"] = pool->toEp().toMap();
+            }
+        }
         EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_PLAYER_FILE_CHANGED, param});
     });
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::fileChanged,[this](){
@@ -1947,7 +1963,6 @@ void PlayerWindow::setupSignals()
 
     QObject::connect(stop,&QPushButton::clicked,[](){
         QCoreApplication::processEvents();
-        GlobalObjects::playlist->setCurrentPlayTime();
         GlobalObjects::mpvplayer->setState(MPVPlayer::Stop);
     });
     QObject::connect(progress,&ClickSlider::sliderClick,[](int pos){
@@ -2165,26 +2180,42 @@ void PlayerWindow::adjustPlayerSize(int percent)
 
 void PlayerWindow::setPlayTime()
 {
-    int playTime=progress->value()/1000;
+    // int playTime=progress->value()/1000;
     // GlobalObjects::playlist->setCurrentPlayTime(playTime);
 }
 
-void PlayerWindow::showMessage(const QString &msg, int flag)
+void PlayerWindow::showMessage(const QString &msg, int flag, const QVariant &extra)
 {
     Q_UNUSED(flag)
-    showMessage(msg, "");
+    if (extra.isNull())
+    {
+        showMessage(msg, "");
+    }
+    else
+    {
+        const QVariantMap extraInfo = extra.toMap();
+        const QString type = extraInfo.value("type").toString();
+        const int timeout = extraInfo.value("timeout", -1).toInt();
+        showMessage(msg, type, timeout);
+    }
 }
 
-void PlayerWindow::showMessage(const QString &msg, const QString &type)
+void PlayerWindow::showMessage(const QString &msg, const QString &type, int timeout)
 {
     int y = height() - 20*logicalDpiY()/96 - (miniModeOn? miniProgress->height() : playControlPanel->height());
     static_cast<InfoTips *>(playInfo)->setBottom(y);
-    static_cast<InfoTips *>(playInfo)->showMessage(msg, type);
+    if (timeout >= 0)
+    {
+        static_cast<InfoTips *>(playInfo)->showMessage(msg, type, timeout);
+    }
+    else
+    {
+        static_cast<InfoTips *>(playInfo)->showMessage(msg, type);
+    }
 }
 
 void PlayerWindow::switchItem(bool prev, const QString &nullMsg)
 {
-    setPlayTime();
     while(true)
     {
         const PlayListItem *item = GlobalObjects::playlist->playPrevOrNext(prev);

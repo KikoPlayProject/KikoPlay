@@ -26,8 +26,8 @@ public:
     explicit PlayerWindow(QWidget *parent = nullptr);
     void toggleListCollapseState(bool on);
     void toggleFullScreenState(bool on);
-    virtual void showMessage(const QString &msg, int flag = 0) override;
-    void showMessage(const QString &msg, const QString &type);
+    virtual void showMessage(const QString &msg, int flag = 0, const QVariant &extra = QVariant()) override;
+    void showMessage(const QString &msg, const QString &type, int timeout = -1);
 
 private:
      QWidget *playControlPanel,*playInfoPanel;

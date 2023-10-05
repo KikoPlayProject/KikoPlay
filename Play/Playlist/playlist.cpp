@@ -10,7 +10,6 @@
 
 #include "playlistprivate.h"
 #include "globalobjects.h"
-#include "Play/Video/mpvplayer.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/playcontext.h"
@@ -265,7 +264,7 @@ int PlayList::addFolder(QString folderStr, QModelIndex parent, const QString &na
     return itemCount;
 }
 
-int PlayList::addURL(const QStringList &urls, QModelIndex parent)
+int PlayList::addURL(const QStringList &urls, QModelIndex parent, bool decodeTitle)
 {
     Q_D(PlayList);
     QStringList localItems, webItems;
@@ -305,7 +304,8 @@ int PlayList::addURL(const QStringList &urls, QModelIndex parent)
     for (const QString &url : webItems)
     {
         PlayListItem *newItem = new PlayListItem(parentItem, true, insertPosition++);
-        newItem->title = url;
+        if (decodeTitle) newItem->title = QUrl(url).fileName();
+        if (newItem->title.isEmpty()) newItem->title = url;
         newItem->path = url;
         newItem->type = PlayListItem::ItemType::WEB_URL;
         newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
@@ -829,7 +829,16 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
         return brs[item->playTimeState];
     }
     case Qt::DecorationRole:
-        return item==d->currentItem?QIcon(":/res/images/playing.svg"):QVariant();
+    {
+        static QIcon currentItemIcon(":/res/images/playing.svg");
+        static bool init = false;
+        if (!init)
+        {
+            currentItemIcon.addFile(":/res/images/playing.svg", QSize(), QIcon::Selected);
+            init = true;
+        }
+        return item==d->currentItem?currentItemIcon:QVariant();
+    }
     case ItemRole::BgmCollectionRole:
         return (item->isBgmCollection && item->children);
     case ItemRole::FolderCollectionRole:
@@ -1024,6 +1033,7 @@ void PlayList::cleanCurrentItem()
     Q_D(PlayList);
     if (d->currentItem)
 	{
+        setCurrentPlayTime();
         QModelIndex cIndex = createIndex(d->currentItem->parent->children->indexOf(d->currentItem), 0, d->currentItem);
         d->currentItem = nullptr;
 		emit dataChanged(cIndex, cIndex);
@@ -1038,6 +1048,7 @@ const PlayListItem *PlayList::playPrevOrNext(bool prev)
     if(item)
     {
         PlayListItem *tmp = d->currentItem;
+        if (tmp) setCurrentPlayTime();
         d->currentItem = item;
         if (tmp)
         {

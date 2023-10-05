@@ -60,7 +60,7 @@ signals:
 public slots :
     int addItems(QStringList &items, QModelIndex parent);
     int addFolder(QString folderStr, QModelIndex parent, const QString &name = "");
-    int addURL(const QStringList &urls, QModelIndex parent);
+    int addURL(const QStringList &urls, QModelIndex parent, bool decodeTitle = false);
     QModelIndex addCollection(QModelIndex parent, const QString &title);
     QModelIndex getCollection(QModelIndex parent, const QStringList &path);
     int refreshFolder(const QModelIndex &index);

@@ -19,6 +19,7 @@ public:
 private:
     QNetworkAccessManager manager;
     QProcess *aria2Process;
+    int listenPort;
     QJsonObject rpcCall(const QString &method, const QJsonArray &params, const QString &id, bool async=true);
     void handleRPCReply(const QString &method, const QJsonObject &replyObj);
 signals:

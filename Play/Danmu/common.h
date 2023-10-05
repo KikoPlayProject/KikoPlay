@@ -129,16 +129,30 @@ struct DanmuSource
     QString scriptId;
     //---------
     int id = -1;
-    int delay = 0;
+    int delay = 0;  // ms
     int count = 0;
-    int duration = 0;
+    int duration = 0;  // s
     bool show = true;
 
     QVector<QPair<int,int>> timelineInfo;
     void setTimeline(const QString &timelineStr);
     QString timelineStr() const;
 
-    QVariantMap toMap() const {return {{"title", title}, {"desc", desc}, {"scriptId", scriptId}, {"data", scriptData}, {"duration", duration}, {"delay", delay}};}
+    QVariantMap toMap() const
+    {
+        return {
+            {"title", title},
+            {"name", title},
+            {"id", id},
+            {"desc", desc},
+            {"scriptId", scriptId},
+            {"data", scriptData},
+            {"scriptData", scriptData},
+            {"duration", duration},
+            {"delay", delay},
+            {"timeline", timelineStr()},
+        };
+    }
     QString durationStr() const
     {
         int min=duration/60;

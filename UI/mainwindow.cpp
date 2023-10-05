@@ -28,7 +28,7 @@
 #include "widgets/backgroundwidget.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
-#include "Play/playcontext.h""
+#include "Play/playcontext.h"
 #include "appmenu.h"
 #include "appbar.h"
 
@@ -39,7 +39,7 @@ MainWindow::MainWindow(QWidget *parent)
     setObjectName(QStringLiteral("MainWindow"));
     Notifier::getNotifier()->addNotify(Notifier::MAIN_DIALOG_NOTIFY, this);
     setupUI();
-    setWindowIcon(QIcon(":/res/kikoplay.ico"));
+    // setWindowIcon(QIcon(":/res/kikoplay.ico"));
     QRect defaultGeo(0,0,800*logicalDpiX()/96,480*logicalDpiX()/96), defaultMiniGeo(0,0,200*logicalDpiX()/96, 200*logicalDpiY()/96);
     defaultGeo.moveCenter(QApplication::desktop()->geometry().center());
 	defaultMiniGeo.moveCenter(QApplication::desktop()->geometry().center());

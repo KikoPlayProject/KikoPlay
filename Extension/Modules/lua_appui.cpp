@@ -44,11 +44,14 @@ int AppUI::remove(lua_State *L)
     else
     {
         w = AppWidget::checkWidget(L, 1, AppWidget::MetaName);
+        if (w)
+        {
+            lua_pushnil(L);
+            lua_setmetatable(L, 1);  // widget meta
+        }
     }
     if (w)
     {
-        lua_pushnil(L);
-        lua_setmetatable(L, 1);  // widget meta
         w->deleteLater();
     }
     return 0;

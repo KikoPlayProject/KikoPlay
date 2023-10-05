@@ -12,6 +12,9 @@
 #include <QRegExp>
 #include <QStyledItemDelegate>
 #include "Common/notifier.h"
+#include "framelessdialog.h"
+class QPlainTextEdit;
+class QCheckBox;
 struct DanmuComment;
 class FilterBox : public QLineEdit
 {
@@ -87,11 +90,27 @@ public slots:
     void sortSelection(bool allItem,bool ascending);
     void playItem(const QModelIndex &index,bool playChild=true);
 
-    virtual void showMessage(const QString &msg, int flag);
+    virtual void showMessage(const QString &msg, int flag, const QVariant & = QVariant());
     void updatePlaylistActions();
     void updateDanmuActions();
     int updateCurrentPool();
     void infoCancelClicked();
 };
 
+class AddUrlDialog : public CFramelessDialog
+{
+    Q_OBJECT
+public:
+    AddUrlDialog(QWidget *parent = nullptr);
+    QStringList urls;
+    QString collectionTitle;
+    bool decodeTitle;
+private:
+    QPlainTextEdit *edit;
+    QCheckBox *newCollectionCheck, *decodeTitleCheck;
+    QLineEdit *collectionEdit;
+    // CFramelessDialog interface
+protected:
+    virtual void onAccept();
+};
 #endif // LISTWINDOW_H

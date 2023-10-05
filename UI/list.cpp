@@ -5,6 +5,9 @@
 #include <QFileDialog>
 #include <QPushButton>
 #include <QApplication>
+#include <QPlainTextEdit>
+#include <QCheckBox>
+#include <QLineEdit>
 #include <QMessageBox>
 
 #include "globalobjects.h"
@@ -524,10 +527,14 @@ void ListWindow::initActions()
     });
     act_addURL = new QAction(tr("Add URL"), this);
     QObject::connect(act_addURL, &QAction::triggered, [this](){
-        InputDialog inputDialog(tr("Add URL"),tr("Enter URL(http, https, smb)"),"", false, this, "AddURLDialog");
-        if(QDialog::Accepted != inputDialog.exec()) return;
-        const QStringList urls = inputDialog.text.split("\n", Qt::SkipEmptyParts);
-        GlobalObjects::playlist->addURL(urls, getPSParentIndex());
+        AddUrlDialog dialog(this);
+        if(QDialog::Accepted != dialog.exec()) return;
+        QModelIndex parent = getPSParentIndex();
+        if (!dialog.collectionTitle.isEmpty())
+        {
+            parent = GlobalObjects::playlist->addCollection(parent, dialog.collectionTitle);
+        }
+        GlobalObjects::playlist->addURL(dialog.urls, parent, dialog.decodeTitle);
     });
     act_addFolder = new QAction(tr("Add Folder"),this);
     QObject::connect(act_addFolder,&QAction::triggered,[this](){
@@ -1442,7 +1449,7 @@ void ListWindow::playItem(const QModelIndex &index, bool playChild)
     }
 }
 
-void ListWindow::showMessage(const QString &msg,int flag)
+void ListWindow::showMessage(const QString &msg, int flag, const QVariant &)
 {
     infoTip->show();
     infoTip->setGeometry(0, height() - 60*logicalDpiY()/96, width(), 30*logicalDpiX()/96);
@@ -1509,4 +1516,49 @@ FilterBox::FilterBox(QWidget *parent) :
     QWidgetAction *optionsAction = new QWidgetAction(this);
     optionsAction->setDefaultWidget(optionsButton);
     addAction(optionsAction, QLineEdit::LeadingPosition);
+}
+
+AddUrlDialog::AddUrlDialog(QWidget *parent) : CFramelessDialog(tr("Add URL"), parent, true), decodeTitle(false)
+{
+    QLabel *tipLabel = new QLabel(tr("Enter URL(http, https, smb), separate multiple urls with line breaks"), this);
+    edit = new QPlainTextEdit(this);
+    newCollectionCheck = new QCheckBox(tr("Add to new collection"), this);
+    collectionEdit = new QLineEdit(this);
+    collectionEdit->setPlaceholderText(tr("Input Collection Name"));
+    collectionEdit->setEnabled(false);
+    QObject::connect(newCollectionCheck, &QCheckBox::stateChanged, collectionEdit, &QLineEdit::setEnabled);
+    decodeTitleCheck = new QCheckBox(tr("Decode Title From URL"), this);
+
+    QGridLayout *inputGLayout = new QGridLayout(this);
+    inputGLayout->addWidget(tipLabel, 0, 0, 1, 2);
+    inputGLayout->addWidget(edit, 1, 0, 1, 2);
+    inputGLayout->addWidget(newCollectionCheck, 2, 0);
+    inputGLayout->addWidget(collectionEdit, 2, 1);
+    inputGLayout->addWidget(decodeTitleCheck, 3, 0, 1, 2);
+    inputGLayout->setRowStretch(1, 1);
+    inputGLayout->setColumnStretch(1, 1);
+    inputGLayout->setContentsMargins(0, 0, 0, 0);
+
+    setSizeSettingKey("AddURLDialog" ,QSize(200*logicalDpiX()/96, 60*logicalDpiY()/96));
+}
+
+void AddUrlDialog::onAccept()
+{
+    urls = edit->toPlainText().split("\n", Qt::SkipEmptyParts);
+    if (urls.isEmpty())
+    {
+        showMessage(tr("URL can't be empty"), NM_ERROR | NM_HIDE);
+        return;
+    }
+    if (newCollectionCheck->isChecked())
+    {
+        collectionTitle = collectionEdit->text().trimmed();
+        if (collectionTitle.isEmpty())
+        {
+            showMessage(tr("Collection Title can't be empty"), NM_ERROR | NM_HIDE);
+            return;
+        }
+    }
+    decodeTitle = decodeTitleCheck->isChecked();
+    CFramelessDialog::onAccept();
 }

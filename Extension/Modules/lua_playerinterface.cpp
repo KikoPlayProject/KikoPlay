@@ -3,6 +3,7 @@
 #include "Play/playcontext.h"
 #include "globalobjects.h"
 #include "Play/Video/mpvplayer.h"
+#include "Common/notifier.h"
 
 namespace Extension
 {
@@ -14,6 +15,8 @@ void PlayerInterface::setup()
         {"curfile", curfile},
         {"property", property},
         {"command", command},
+        {"optgroups", optgroups},
+        {"setoptgroup", setoptgroup},
         {nullptr, nullptr}
     };
     registerFuncs({"kiko", "player"}, funcs);
@@ -72,6 +75,32 @@ int PlayerInterface::command(lua_State *L)
     int ret = GlobalObjects::mpvplayer->runCommand(param);
     lua_pushinteger(L, ret);
     return 1;
+}
+
+int PlayerInterface::optgroups(lua_State *L)
+{
+    const QVariantMap optionGroupInfo = {
+        {"all", GlobalObjects::mpvplayer->allOptionGroups()},
+        {"current", GlobalObjects::mpvplayer->currentOptionGroup()},
+    };
+    pushValue(L, optionGroupInfo);
+    return 1;
+}
+
+int PlayerInterface::setoptgroup(lua_State *L)
+{
+    if (lua_gettop(L) < 1)
+    {
+        return 0;
+    }
+    const QString group = lua_tostring(L, 1);
+    QMetaObject::invokeMethod(GlobalObjects::mpvplayer, [=](){
+        if(GlobalObjects::mpvplayer->setOptionGroup(group))
+        {
+            Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, QObject::tr("Switch to option group \"%1\"").arg(GlobalObjects::mpvplayer->currentOptionGroup()));
+        }
+    }, Qt::BlockingQueuedConnection);
+    return 0;
 }
 
 }

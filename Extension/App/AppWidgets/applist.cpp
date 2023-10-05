@@ -176,11 +176,18 @@ int AppList::set(lua_State *L)
         {
             size_t len = 0;
             const char * s = lua_tolstring(L, -1, &len);
-            QByteArray imgBytes(s, len);
-            QBuffer bufferImage(&imgBytes);
-            bufferImage.open(QIODevice::ReadOnly);
-            QImageReader reader(&bufferImage);
-            val = QIcon(QPixmap::fromImageReader(&reader));
+            if (QFile::exists(s))
+            {
+                val = QIcon(s);
+            }
+            else
+            {
+                QByteArray imgBytes(s, len);
+                QBuffer bufferImage(&imgBytes);
+                bufferImage.open(QIODevice::ReadOnly);
+                QImageReader reader(&bufferImage);
+                val = QIcon(QPixmap::fromImageReader(&reader));
+            }
         }
         else if (valType == LUA_TUSERDATA)
         {
@@ -598,7 +605,7 @@ void AppList::parseItems(lua_State *L, QVector<QListWidgetItem *> &items, AppLis
                     const char * s = lua_tolstring(L, -1, &len);
                     if (QFile::exists(s))
                     {
-                        map["icon"] = QIcon(QPixmap(QString(s)));
+                        map["icon"] = QIcon(s);
                     }
                     else
                     {

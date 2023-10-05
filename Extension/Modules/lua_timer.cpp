@@ -9,7 +9,6 @@ const char *TimerData::MetaName = "meta.kiko.timer";
 void Timer::setup()
 {
     const luaL_Reg timerMembers[] = {
-        {"start",  TimerData::start},
         {"__gc",  TimerData::timerGC},
         {"start",  TimerData::start},
         {"stop",  TimerData::stop},

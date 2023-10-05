@@ -19,7 +19,7 @@ private:
 
     // NotifyInterface interface
 public:
-    virtual void showMessage(const QString &content, int flag);
+    virtual void showMessage(const QString &content, int flag, const QVariant &);
 };
 
 #endif // APPMENU_H

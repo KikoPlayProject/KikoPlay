@@ -10,6 +10,7 @@
 #include <QMap>
 #include <clocale>
 #include <Common/logger.h>
+#include <Common/notifier.h>
 #include "Play/Danmu/Render/danmurender.h"
 #include "globalobjects.h"
 #ifdef QT_DEBUG
@@ -1036,10 +1037,39 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
     case MPV_EVENT_FILE_LOADED:
     {        
         emit fileChanged();
+        if (!curIsLocalFile)
+        {
+            const QVariantMap info = {
+                {"type", "fileinfo"},
+            };
+            Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, "", 0, info);
+        }
+        break;
+    }
+    case MPV_EVENT_START_FILE:
+    {
+        const QVariantMap info = {
+            {"timeout", 180000},
+            {"type", "fileinfo"},
+        };
+        Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, "", 0, info);
+        if (!curIsLocalFile)
+        {
+            Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tr("Opening: %1").arg(currentFile), 0, info);
+        }
         break;
     }
     case MPV_EVENT_END_FILE:
     {
+        const QVariantMap info = {
+            {"type", "fileinfo"},
+        };
+        Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, "", 0, info);
+        struct mpv_event_end_file *ev = (struct mpv_event_end_file *)event->data;
+        if (ev->reason == MPV_END_FILE_REASON_ERROR)
+        {
+            Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tr("Open Failed: %1").arg(ev->error), 0, info);
+        }
         update();
         break;
     }
@@ -1088,6 +1118,10 @@ void MPVPlayer::loadOptions()
     {
         optionsGroupList.resize(optionGroupKeys.size());
     }
+    if (!GlobalObjects::appSetting->value("Play/PredefineOptionLoaded", false).toBool())
+    {
+        loadPredefineOptions(optionGroupKeys, optionsGroupList);
+    }
     optionsGroupMap.clear();
     for(int i = 0; i < optionGroupKeys.size(); ++i)
     {
@@ -1103,6 +1137,46 @@ void MPVPlayer::loadOptions()
     }
     if(!optionsGroupMap.contains(curOptionGroup)) curOptionGroup = "default";
     emit optionGroupChanged();
+}
+
+void MPVPlayer::loadPredefineOptions(QStringList &optionGroupKeys, QVector<QStringList> &optionsGroupList)
+{
+    QFile predefineOptionFile("predefineMPVOptions");
+    if (!predefineOptionFile.open(QFile::ReadOnly)) return;
+
+    QSet<QString> groupKeys(optionGroupKeys.begin(), optionGroupKeys.end());
+    char buf[2048];
+    qint64 lineLength = -1;
+    QString currentKey;
+    QStringList currentOptions;
+    while((lineLength = predefineOptionFile.readLine(buf, sizeof(buf))) > 0)
+    {
+        QByteArray data(buf, lineLength);
+        data = data.trimmed();
+        if (data.isEmpty()) continue;
+        if (data.size() > 2 && data.front() == '[' && data.back() == ']')
+        {
+            if (!currentKey.isEmpty() && !currentOptions.isEmpty() && !groupKeys.contains(currentKey))
+            {
+                optionGroupKeys.append(currentKey);
+                optionsGroupList.append(currentOptions);
+            }
+            currentOptions.clear();
+            currentKey = data.mid(1, data.size() - 2);
+        }
+        else if (!currentKey.isEmpty())
+        {
+            currentOptions.append(data);
+        }
+    }
+    if (!currentKey.isEmpty() && !currentOptions.isEmpty() && !groupKeys.contains(currentKey))
+    {
+        optionGroupKeys.append(currentKey);
+        optionsGroupList.append(currentOptions);
+    }
+    GlobalObjects::appSetting->setValue("Play/ParameterGroupKeys", optionGroupKeys);
+    GlobalObjects::appSetting->setValue("Play/MPVParameterGroups", QVariant::fromValue(optionsGroupList));
+    GlobalObjects::appSetting->setValue("Play/PredefineOptionLoaded", true);
 }
 
 bool MPVPlayer::setOptionGroup(const QString &key)

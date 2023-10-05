@@ -42,6 +42,7 @@ SOURCES += \
     Common/eventbus.cpp \
     Common/flowlayout.cpp \
     Common/htmlparsersax.cpp \
+    Common/kstats.cpp \
     Common/logger.cpp \
     Common/network.cpp \
     Common/notifier.cpp \
@@ -244,6 +245,7 @@ HEADERS += \
     Common/eventbus.h \
     Common/flowlayout.h \
     Common/htmlparsersax.h \
+    Common/kstats.h \
     Common/logger.h \
     Common/lrucache.h \
     Common/network.h \

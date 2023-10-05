@@ -18,7 +18,7 @@ class NotifyInterface
 {
 public:
     using CancelCallBack = void(*)(NotifyInterface *);
-    virtual void showMessage(const QString &/*content*/, int /*flag*/){};
+    virtual void showMessage(const QString &/*content*/, int /*flag*/, const QVariant &extra=QVariant()){};
     virtual QVariant showDialog(const QVariant &/*inputs*/){ return QVariant();};
     void setCancelCallBack(CancelCallBack cb){ ccb = cb; }
     void setType(int type) {nTypeFlag = type; }
@@ -43,7 +43,7 @@ public:
         MAIN_DIALOG_NOTIFY
     };
     void addNotify(NotifyType nType, NotifyInterface *notify);
-    void showMessage(NotifyType nType, const QString &content, int flag = 0);
+    void showMessage(NotifyType nType, const QString &content, int flag = 0, const QVariant &extra = QVariant());
     QVariant showDialog(NotifyType nType, const QVariant &inputs);
     static Notifier *getNotifier();
 

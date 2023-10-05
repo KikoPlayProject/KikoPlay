@@ -41,7 +41,7 @@ void AppStorage::set(const QString &key, const QVariant &val)
     {
         storageHash[key] = val;
     }
-    if (++counter > 5)
+    if (++counter > 0)
     {
         QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest));
     }

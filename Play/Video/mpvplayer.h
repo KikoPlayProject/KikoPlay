@@ -83,6 +83,7 @@ public:
     void drawTexture(QVector<const DanmuObject *> &objList, float alpha);
 
     void loadOptions();
+    void loadPredefineOptions(QStringList &optionGroupKeys, QVector<QStringList> &optionsGroupList);
     bool setOptionGroup(const QString &key);
     const QStringList &allOptionGroups() const {return optionGroupKeys;}
     const QString &currentOptionGroup() const {return curOptionGroup;}
