@@ -419,8 +419,11 @@ void MainWindow::setupUI()
     layout->setContentsMargins(0,0,4*logicalDpiX()/96,0);
     layout->addLayout(pageVerticalLayout);
     layout->addStretch(1);
+    layout->addWidget(appBar);
+    layout->addSpacing(10*logicalDpiX()/96);
+    layout->addWidget(appButton);
     layout->addWidget(buttonIcon);
-    appButton->hide();
+    widgetTitlebar->setSizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Maximum);
     minButton->hide();
     maxButton->hide();
     closeButton->hide();
@@ -907,14 +910,17 @@ void MainWindow::resizeEvent(QResizeEvent *)
         tb->setFixedSize(QSize(btnWidth, btnHeight));
     }
     downloadToolProgress->setFixedSize(btnWidth - 4*logicalDpiX()/96, 1*logicalDpiY()/96);
-
+#ifdef Q_OS_WIN
     const int cBtnH = widgetTitlebar->height() - 4*logicalDpiY()/96;
+#else
+    const int cBtnH = btnHeight;
+#endif
     const QSize controlButtonSize(cBtnH, cBtnH);
     appButton->setMinimumSize(controlButtonSize);
     maxButton->setMinimumSize(controlButtonSize);
     minButton->setMinimumSize(controlButtonSize);
     closeButton->setMinimumSize(controlButtonSize);
-    appBar->setMaximumWidth(100*logicalDpiX()/96);
+    appBar->setMaximumSize(100*logicalDpiX()/96, btnHeight);
 }
 
 void MainWindow::showEvent(QShowEvent *)

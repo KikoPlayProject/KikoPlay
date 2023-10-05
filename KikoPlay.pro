@@ -488,7 +488,7 @@ linux-g++* {
     } else {
         LIBS += -L/usr/lib64 -L/usr/lib/x86_64-linux-gnu -L$$PWD/lib/x64/linux
     }
-    LIBS += -LScript/lua -l:liblua53.a
+    LIBS += -LExtension/Lua -l:liblua53.a
     LIBS += -lm -ldl
 }
 
