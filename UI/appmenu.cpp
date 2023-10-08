@@ -19,6 +19,7 @@ AppMenu::AppMenu(QWidget *p, QWidget *parent)
     Notifier::getNotifier()->addNotify(Notifier::APP_MENU_NOTIFY, this);
 
     QListView *appView = new QListView(this);
+    appView->setContentsMargins(0,0,0,0);
     appView->setObjectName(QStringLiteral("AppView"));
     appView->setViewMode(QListView::IconMode);
     appView->setProperty("cScrollStyle", true);

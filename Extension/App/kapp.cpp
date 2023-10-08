@@ -567,7 +567,7 @@ void KApp::setEnvInfo()
     lua_getglobal(L, "package");
     lua_getfield(L, -1, "path");
     QString packagePath = lua_tostring(L, -1);
-    packagePath += ";" + path() + "\\?.lua";
+    packagePath += ";" + path() + "/?.lua";
     lua_pushstring(L, packagePath.toStdString().c_str());
     lua_setfield(L, -3, "path");
     lua_pop(L, 2);
