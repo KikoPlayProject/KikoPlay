@@ -378,16 +378,10 @@ AppWidget *KApp::getWidget(const QString &name)
     return mainWindow->findChild<AppWidget *>(name);
 }
 
-const QIcon &KApp::icon() const
+const QPixmap &KApp::icon() const
 {
-    static QIcon defaultIcon;
-    if (defaultIcon.isNull())
-    {
-        QPixmap iconPixmap(":/res/images/app.png");
-        iconPixmap = iconPixmap.scaled(256, 256, Qt::KeepAspectRatioByExpanding);
-        defaultIcon.addPixmap(iconPixmap, QIcon::Normal);
-        defaultIcon.addPixmap(iconPixmap, QIcon::Selected);
-    }
+    static QPixmap defaultIcon(":/res/images/app.png");
+
     return appIcon.isNull() ? defaultIcon : appIcon;
 }
 
@@ -471,13 +465,7 @@ QString KApp::loadAppInfo(const QString &path)
     appInfo["time"] = QString::number(getLatestFileModifyTime());
     if (appInfo.contains("icon"))
     {
-        QPixmap appIconPixmap = QPixmap(appInfo["path"].toString() + "/" + appInfo["icon"].toString());
-        if (!appIconPixmap.isNull())
-        {
-            appIconPixmap = appIconPixmap.scaled(256, 256, Qt::KeepAspectRatioByExpanding);
-            appIcon.addPixmap(appIconPixmap, QIcon::Normal);
-            appIcon.addPixmap(appIconPixmap, QIcon::Selected);
-        }
+        appIcon = QPixmap(appInfo["path"].toString() + "/" + appInfo["icon"].toString());
     }
     if(appInfo.contains("min_kiko"))
     {

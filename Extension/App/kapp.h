@@ -43,7 +43,7 @@ public:
     QString name() const {return appInfo.value("name").toString();}
     QString path() const { return appInfo.value("path").toString(); }
     QString dataPath() const { return appInfo.value("dataPath").toString(); }
-    const QIcon &icon() const;
+    const QPixmap &icon() const;
     qint64 time() const { return appInfo.value("time").toLongLong(); }
     qint64 getLatestFileModifyTime() const;
     bool isLoaded() const { return loaded; }
@@ -82,7 +82,7 @@ private:
     QVector<AppRes *> appResources;
     QHash<QString, QVariant> appInfo;
     QHash<QString, AppRes *> resHash;
-    QIcon appIcon;
+    QPixmap appIcon;
 
     void setAppWindowEvent();
     void loadFont();

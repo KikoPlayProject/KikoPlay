@@ -2,6 +2,7 @@
 #define APPMENU_H
 
 #include <QMenu>
+#include <QStyledItemDelegate>
 #include "Common/notifier.h"
 class DialogTip;
 class AppMenu : public QMenu, public NotifyInterface
@@ -22,4 +23,19 @@ public:
     virtual void showMessage(const QString &content, int flag, const QVariant &);
 };
 
+class AppItemDelegate : public QStyledItemDelegate
+{
+    Q_OBJECT
+public:
+    explicit AppItemDelegate(int w, int h, QObject *parent = nullptr);
+    // QAbstractItemDelegate interface
+public:
+    virtual void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+    //virtual bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index);
+    virtual QSize sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const;
+signals:
+    void ItemClicked(const QModelIndex &index);
+private:
+    int itemWidth, itemHeight;
+};
 #endif // APPMENU_H
