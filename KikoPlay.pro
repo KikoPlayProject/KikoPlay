@@ -43,6 +43,7 @@ SOURCES += \
     Common/flowlayout.cpp \
     Common/htmlparsersax.cpp \
     Common/kstats.cpp \
+    Common/kupdater.cpp \
     Common/logger.cpp \
     Common/network.cpp \
     Common/notifier.cpp \
@@ -246,6 +247,7 @@ HEADERS += \
     Common/flowlayout.h \
     Common/htmlparsersax.h \
     Common/kstats.h \
+    Common/kupdater.h \
     Common/logger.h \
     Common/lrucache.h \
     Common/network.h \

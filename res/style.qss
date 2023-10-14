@@ -329,6 +329,9 @@ QLabel#ProgressPreview{
 QLabel#CrtIcon{
     border:1px solid #a0a0a0;
 }
+QLabel#BorderLabel{
+    border:1px solid #a0a0a0;
+}
 QLabel#LibraryCountTip, QLabel#SelectedLabelTip{
 @if{DarkMode}
     color: rgb(250,250,250);

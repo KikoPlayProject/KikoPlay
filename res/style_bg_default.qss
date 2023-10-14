@@ -315,6 +315,9 @@ QLabel#ProgressPreview{
 QLabel#CrtIcon{
     border:1px solid #a0a0a0;
 }
+QLabel#BorderLabel{
+    border:1px solid #a0a0a0;
+}
 QLabel#SpaceTip{
     color:#119be3;
 }

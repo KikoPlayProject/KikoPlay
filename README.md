@@ -23,7 +23,8 @@
  - .........
 
 任何人都可以为KikoPlay编写脚本来支持更多弹幕、视频资料以及资源来源，[脚本仓库](https://github.com/KikoPlayProject/KikoPlayScript)  
-还可以通过KikoPlay的Web API实现其他功能，[Web API参考](web/README.md)
+还可以通过KikoPlay的Web API实现其他功能，[Web API参考](web/README.md)  
+自1.0.0起增加了扩展App功能，通过扩展App可以为KikoPlay增加更多自定义功能，[App仓库](https://github.com/KikoPlayProject/KikoPlayApp)
 
 ## 编译
 
@@ -65,6 +66,7 @@ dx_8820832#yeah.net（#→@），或者加QQ群874761809反馈
 
  - 为主程序贡献代码，包括但不限于新功能开发、BUG修复等等
  - 为KikoPlay编写脚本，支持更多弹幕、资料或者资源来源，脚本仓库在[这里](https://github.com/KikoPlayProject/KikoPlayScript)
+ - 开发新的扩展App，为KikoPlay增加更多功能，扩展仓库在[这里](https://github.com/KikoPlayProject/KikoPlayApp)
  - 提升局域网网页访问体验，目前的网页是在[这里](https://github.com/KikoPlayProject/KikoPlay/tree/master/web)
  - 改进[Android局域网客户端]((https://github.com/KikoPlayProject/KikoPlay-Android-LAN))
  - 开发其他平台上的局域网客户端

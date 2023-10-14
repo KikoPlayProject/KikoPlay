@@ -1,64 +1,46 @@
 #include "checkupdate.h"
 #include <QLabel>
-#include <QVBoxLayout>
+#include <QGridLayout>
 #include <QFile>
-#include <QIODevice>
-#include "Common/network.h"
+#include "Common/kupdater.h"
 #include "globalobjects.h"
 CheckUpdate::CheckUpdate(QWidget *parent) : CFramelessDialog(tr("Check For Updates"),parent)
 {
-    QLabel *curVersionLabel=new QLabel(this);
-    QLabel *newVersionLabel=new QLabel(this);
-    QVBoxLayout *versionVLayout=new QVBoxLayout(this);
-    versionVLayout->addWidget(curVersionLabel);
-    versionVLayout->addWidget(newVersionLabel);
-    setResizeable(false);
+    QLabel *curVersionLabel = new QLabel(this);
+    QLabel *newVersionLabel = new QLabel(this);
+    QLabel *versionDescLabel = new QLabel(this);
 
-    QString versionStr=GlobalObjects::kikoVersion;
-    curVersionLabel->setText(tr("Current Version: %1").arg(versionStr));
+    QGridLayout *versionGLayout=new QGridLayout(this);
+    versionGLayout->setContentsMargins(0, 0, 0, 0);
+    versionGLayout->setRowStretch(2, 1);
+    versionGLayout->setColumnStretch(2, 1);
+    versionGLayout->addWidget(curVersionLabel, 0, 1, 1, 2);
+    versionGLayout->addWidget(newVersionLabel, 1, 1, 1, 2);
+    versionGLayout->addWidget(versionDescLabel, 2, 1, 1, 2);
 
+    curVersionLabel->setText(tr("Current Version: %1").arg(GlobalObjects::kikoVersion));
     newVersionLabel->setText(tr("Checking for updates..."));
+    versionDescLabel->setOpenExternalLinks(true);
+    versionDescLabel->setTextInteractionFlags(Qt::TextInteractionFlag::TextSelectableByMouse);
+    versionDescLabel->hide();
+    versionDescLabel->setObjectName(QStringLiteral("BorderLabel"));
+
     showBusyState(true);
-    QTimer::singleShot(500,[this,newVersionLabel,versionStr](){
-        try
+    QObject::connect(KUpdater::instance(), &KUpdater::checkDone, this, [=](){
+        auto updater = KUpdater::instance();
+        if (updater->hasNewVersion())
         {
-            QString updatePath(GlobalObjects::appSetting->value("KikoPlay/checkUpdateURL", "https://raw.githubusercontent.com/KikoPlayProject/KikoPlay/master/newVersion/version.json").toString());
-            Network::Reply reply(Network::httpGet(updatePath,QUrlQuery()));
-            if(reply.hasError) throw Network::NetworkError(reply.errInfo);
-            QJsonObject newVersionObj(Network::toJson(reply.content).object());
-            QString nVersionStr=newVersionObj.value("Version").toString();
-            QString downloadURL=newVersionObj.value("URL").toString();
-            QStringList curVer(versionStr.split('.' ,Qt::SkipEmptyParts)),newVer(nVersionStr.split('.',QString::SkipEmptyParts));
-            int i=0;
-            bool hasNewversion=false;
-            for(;i<3;++i)
-            {
-                int cv=curVer.at(i).toInt(),nv=newVer.at(i).toInt();
-                if(cv<nv)
-                {
-                    hasNewversion=true;
-                    break;
-                }
-                else if(cv>nv)
-                {
-                    hasNewversion=false;
-                    break;
-                }
-            }
-            if(hasNewversion)
-            {
-                newVersionLabel->setText(tr("Find new Version: %1  <a href=\"%2\">Click To Download</a>").arg(nVersionStr).arg(downloadURL));
-				newVersionLabel->setOpenExternalLinks(true);
-            }
-            else
-            {
-                newVersionLabel->setText(tr("Already Newast"));
-            }
+            newVersionLabel->setText(tr("Find new Version: %1  <a href=\"%2\">Click To Download</a>").arg(updater->version()).arg(updater->versionURL()));
+            newVersionLabel->setOpenExternalLinks(true);
+            versionDescLabel->setText(updater->vesrionDescription());
+            versionDescLabel->show();
+            resize(QSize(360*logicalDpiX()/96, 220*logicalDpiY()/96));
         }
-        catch(Network::NetworkError &error)
+        else
         {
-            newVersionLabel->setText(error.errorInfo);
+            newVersionLabel->setText(updater->errInfo().isEmpty()? tr("Already Newast") : updater->errInfo());
         }
         showBusyState(false);
     });
+    KUpdater::instance()->check();
 }

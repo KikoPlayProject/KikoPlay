@@ -29,6 +29,7 @@
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/playcontext.h"
+#include "Common/kupdater.h"
 #include "appmenu.h"
 #include "appbar.h"
 
@@ -246,6 +247,24 @@ void MainWindow::setupUI()
         checkUpdate.exec();
     });
     buttonIcon->addAction(act_checkUpdate);
+    if (KUpdater::instance()->needCheck())
+    {
+        act_checkUpdate->setEnabled(false);
+        act_checkUpdate->setText(tr("Checking..."));
+        QObject::connect(KUpdater::instance(), &KUpdater::checkDone, this, [=](){
+            auto updater = KUpdater::instance();
+            if (updater->hasNewVersion())
+            {
+                act_checkUpdate->setText(tr("Check For Updates[New Version: %1]").arg(updater->version()));
+            }
+            else
+            {
+                act_checkUpdate->setText(tr("Check For Updates"));
+            }
+            act_checkUpdate->setEnabled(true);
+        });
+        KUpdater::instance()->check();
+    }
 
     QAction *act_useTip=new QAction(tr("Usage Tip"), this);
     QObject::connect(act_useTip,&QAction::triggered,[this](){

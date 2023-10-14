@@ -33,8 +33,8 @@ AppMenu::AppMenu(QWidget *p, QWidget *parent)
     const int appItemHeight = 64*logicalDpiY()/96 + appView->fontMetrics().height();
     appView->setItemDelegate(new AppItemDelegate(appItemWidth, appItemHeight, appView));
     appView->setGridSize(QSize(appItemWidth, appItemHeight));
-    appView->setMinimumWidth(appItemWidth * 4 + 8*logicalDpiX()/96);
-    appView->setMinimumHeight(appItemHeight * 2 + 4*logicalDpiX()/96);
+    appView->setMinimumWidth(appItemWidth * 4.2);
+    appView->setMinimumHeight(appItemHeight * 2.2);
 
     QPushButton *refreshApp = new QPushButton(tr("Refresh"), this);
     refreshApp->setObjectName(QStringLiteral("AppRefreshBtn"));
