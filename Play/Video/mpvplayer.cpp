@@ -1104,15 +1104,8 @@ void *MPVPlayer::get_proc_address(void *ctx, const char *name)
 
 void MPVPlayer::loadOptions()
 {
-    QFile defaultOptionFile(":/res/mpvOptions");
-    defaultOptionFile.open(QFile::ReadOnly);
-    QStringList defaultOptions = GlobalObjects::appSetting->value("Play/MPVParameters", QString(defaultOptionFile.readAll())).toString().split('\n');
     QVector<QStringList> optionsGroupList = GlobalObjects::appSetting->value("Play/MPVParameterGroups").value<QVector<QStringList>>();
-    optionsGroupList.prepend(defaultOptions);
-
-    curOptionGroup = GlobalObjects::appSetting->value("Play/DefaultParameterGroup", "default").toString();
     optionGroupKeys = GlobalObjects::appSetting->value("Play/ParameterGroupKeys").toStringList();
-    optionGroupKeys.prepend("default");
 
     if(optionGroupKeys.size() < optionsGroupList.size())
     {
@@ -1122,6 +1115,14 @@ void MPVPlayer::loadOptions()
     {
         loadPredefineOptions(optionGroupKeys, optionsGroupList);
     }
+
+    curOptionGroup = GlobalObjects::appSetting->value("Play/DefaultParameterGroup", "default").toString();
+    QFile defaultOptionFile(":/res/mpvOptions");
+    defaultOptionFile.open(QFile::ReadOnly);
+    QStringList defaultOptions = GlobalObjects::appSetting->value("Play/MPVParameters", QString(defaultOptionFile.readAll())).toString().split('\n');
+    optionGroupKeys.prepend("default");
+    optionsGroupList.prepend(defaultOptions);
+
     optionsGroupMap.clear();
     for(int i = 0; i < optionGroupKeys.size(); ++i)
     {
