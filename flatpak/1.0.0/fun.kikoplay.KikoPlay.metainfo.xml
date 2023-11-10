@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>fun.kikoplay.KikoPlay</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0</project_license>
+  <developer_name>KikoPlay</developer_name>
+  <name>KikoPlay</name>
+  <summary>NOT ONLY A Full-Featured Danmu Player</summary>
+  <summary xml:lang="zh_CN">不仅仅是全功能弹幕播放器 </summary>
+  <recommends>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </recommends>
+  <description>
+    <p>NOT ONLY A Full-Featured Danmu Player.</p>
+    <p xml:lang="zh_CN">不仅仅是全功能弹幕播放器 </p>
+  </description>
+  <url type="homepage">https://github.com/KikoPlayProject/KikoPlay</url>
+  <url type="bugtracker">https://github.com/KikoPlayProject/KikoPlay/issues</url>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Player</caption>
+      <image type="source">https://github.com/KikoPlayProject/KikoPlay/blob/master/screenshot/KikoPlay1.jpg</image>
+    </screenshot>
+    <screenshot type="default">
+      <caption>Data</caption>
+      <image type="source">https://github.com/KikoPlayProject/KikoPlay/blob/master/screenshot/KikoPlay2.jpg</image>
+    </screenshot>
+    <screenshot type="default">
+      <caption>Detail</caption>
+      <image type="source">https://github.com/KikoPlayProject/KikoPlay/blob/master/screenshot/KikoPlay3.jpg</image>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="1.0.0" date="2023-10-05"/>
+  </releases>
+  <launchable type="desktop-id">fun.kikoplay.KikoPlay.desktop</launchable>
+  <content_rating type="oars-1.1"/>
+  <update_contact>valigarmanda55@gmail.com</update_contact>
+</component>
