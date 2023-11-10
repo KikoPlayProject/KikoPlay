@@ -1,0 +1,58 @@
+From b0cb46bd2f9e8da7fe38ce0cfa736ea8e95edfd5 Mon Sep 17 00:00:00 2001
+From: neovali <valigarmanda55@gmail.com>
+Date: Fri, 10 Nov 2023 11:31:45 +0800
+Subject: [PATCH] install
+
+---
+ KikoPlay.pro                                      | 12 +++++-------
+ kikoplay.desktop => fun.kikoplay.KikoPlay.desktop |  5 ++---
+ 2 files changed, 7 insertions(+), 10 deletions(-)
+ rename kikoplay.desktop => fun.kikoplay.KikoPlay.desktop (63%)
+
+diff --git a/KikoPlay.pro b/KikoPlay.pro
+index 9d97573..366bcc8 100644
+--- a/KikoPlay.pro
++++ b/KikoPlay.pro
+@@ -496,15 +496,13 @@ linux-g++* {
+ 
+ unix {
+     # Install settings
+-    target.path += /usr/bin
+-    unix:icons.path = /usr/share/pixmaps
+-    unix:desktop.path = /usr/share/applications
+-    unix:icons.files = kikoplay.png kikoplay.xpm
+-    unix:desktop.files = kikoplay.desktop
+-    unix:web.path = /usr/share/kikoplay/web
++    target.path += /app/bin
++    unix:desktop.path = /app/share/applications
++    unix:desktop.files = fun.kikoplay.KikoPlay.desktop
++    unix:web.path = /app/share/kikoplay/web
+     unix:web.files = web/*
+ 
+-    INSTALLS += target icons desktop web
++    INSTALLS += target desktop web
+     DEFINES += CONFIG_UNIX_DATA
+ 
+     LIBS += -lmpv
+diff --git a/kikoplay.desktop b/fun.kikoplay.KikoPlay.desktop
+similarity index 63%
+rename from kikoplay.desktop
+rename to fun.kikoplay.KikoPlay.desktop
+index cff68d8..d9ba8a1 100644
+--- a/kikoplay.desktop
++++ b/fun.kikoplay.KikoPlay.desktop
+@@ -2,9 +2,8 @@
+ Type=Application
+ Name=KikoPlay
+ Comment=KikoPlay is a full-featured danmu player!
+-TryExec=KikoPlay
+-Exec=env QT_QPA_PLATFORM=xcb KikoPlay
+-Icon=/usr/share/pixmaps/kikoplay.png
++Exec=KikoPlay
++Icon=fun.kikoplay.KikoPlay
+ Terminal=false
+ StartupNotify=true
+ Categories=Qt;AudioVideo;Video;
+-- 
+2.34.1
+

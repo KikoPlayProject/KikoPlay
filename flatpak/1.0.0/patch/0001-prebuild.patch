@@ -1,0 +1,27 @@
+From ca6fc1ec27e4e79cd15441548f4b700a658a0ae5 Mon Sep 17 00:00:00 2001
+From: neovali <valigarmanda55@gmail.com>
+Date: Fri, 10 Nov 2023 11:27:41 +0800
+Subject: [PATCH] prebuild
+
+---
+ Extension/Lua/{lua.pro => Lua.pro} | 0
+ lib/x64/linux/liblua53.a           | 2 +-
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+ rename Extension/Lua/{lua.pro => Lua.pro} (100%)
+
+diff --git a/Extension/Lua/lua.pro b/Extension/Lua/Lua.pro
+similarity index 100%
+rename from Extension/Lua/lua.pro
+rename to Extension/Lua/Lua.pro
+diff --git a/lib/x64/linux/liblua53.a b/lib/x64/linux/liblua53.a
+index d5dc920..bf39146 120000
+--- a/lib/x64/linux/liblua53.a
++++ b/lib/x64/linux/liblua53.a
+@@ -1 +1 @@
+-/usr/lib/x86_64-linux-gnu/liblua5.3.a
+\ No newline at end of file
++/app/lib/liblua.a
+\ No newline at end of file
+-- 
+2.34.1
+
