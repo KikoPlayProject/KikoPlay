@@ -495,15 +495,25 @@ linux-g++* {
 }
 
 unix {
-    # Install settings
-    target.path += /usr/bin
-    unix:icons.path = /usr/share/pixmaps
-    unix:desktop.path = /usr/share/applications
-    unix:icons.files = kikoplay.png kikoplay.xpm
-    unix:desktop.files = kikoplay.desktop
-    unix:web.path = /usr/share/kikoplay/web
-    unix:web.files = web/*
+    isEmpty(PREFIX) {
+        PREFIX = /usr
+    }
+    BINDIR = $$PREFIX/bin
+    DATADIR = $$PREFIX/share
+    PKGDATADIR = $$DATADIR/kikoplay
+    ICONDIR = $$DATADIR/icons/hicolor/128x128/apps
 
+    target.path = $$BINDIR
+
+    desktop.path = $$DATADIR/applications
+    desktop.files += io.gitHub.KikoPlayProject.KikoPlay.desktop
+
+    appdata.path = $$DATADIR/metainfo
+    appdata.files += io.gitHub.KikoPlayProject.KikoPlay.xml
+
+    web.path = $$PKGDATADIR/web
+    web.files = web/*
+    
     INSTALLS += target icons desktop web
     DEFINES += CONFIG_UNIX_DATA
 
