@@ -61,7 +61,7 @@ void GlobalObjects::init()
     const QFileInfo fileInfoConfig(standardLocations.first()); // Take the first location as a file path  
     /* Test Linux/MacOS style environment */  
     if (fileInfoConfig.exists() && !fileInfoConfig.isDir() && fileInfoConfig.isWritable()) {  
-    dataPath = standardLocations.first(); // Set dataPath to the first location  
+    dataPath = standardLocations.first() + "/"; // Set dataPath to the first location  
     }
 #endif
     QDir dir;
@@ -169,7 +169,7 @@ void GlobalObjects::initDatabase(const char *db_names[])
 void GlobalObjects::setDatabase(const char *name, const char *file)
 {
     QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE",name);
-    QString dbFile(dataPath+/file+".db");
+    QString dbFile(dataPath+file+".db");
     bool dbFileExist = QFile::exists(dbFile);
     database.setDatabaseName(dbFile);
     database.open();
