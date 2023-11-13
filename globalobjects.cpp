@@ -169,7 +169,7 @@ void GlobalObjects::initDatabase(const char *db_names[])
 void GlobalObjects::setDatabase(const char *name, const char *file)
 {
     QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE",name);
-    QString dbFile(dataPath+file+".db");
+    QString dbFile(dataPath+/file+".db");
     bool dbFileExist = QFile::exists(dbFile);
     database.setDatabaseName(dbFile);
     database.open();
