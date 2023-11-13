@@ -506,10 +506,13 @@ unix {
     target.path = $$BINDIR
 
     desktop.path = $$DATADIR/applications
-    desktop.files += io.gitHub.KikoPlayProject.KikoPlay.desktop
+    desktop.files += io.github.KikoPlayProject.KikoPlay.desktop
 
     appdata.path = $$DATADIR/metainfo
-    appdata.files += io.gitHub.KikoPlayProject.KikoPlay.xml
+    appdata.files += io.github.KikoPlayProject.KikoPlay.xml
+
+    icons.path = $$ICONDIR
+    icons.files += io.github.KikoPlayProject.KikoPlay.png
 
     web.path = $$PKGDATADIR/web
     web.files = web/*
