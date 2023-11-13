@@ -4,7 +4,7 @@ Name=KikoPlay
 Comment=KikoPlay is a full-featured danmu player!
 TryExec=KikoPlay
 Exec=env QT_QPA_PLATFORM=xcb KikoPlay
-Icon=io.gitHub.KikoPlayProject.KikoPlay
+Icon=io.github.KikoPlayProject.KikoPlay
 Terminal=false
 StartupNotify=true
 Categories=Qt;AudioVideo;Video;
