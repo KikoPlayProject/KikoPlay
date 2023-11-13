@@ -84,7 +84,7 @@ QString AppManager::getAppPath() const
 {
     const QString strApp(QCoreApplication::applicationDirPath()+"/extension/app");
 #ifdef CONFIG_UNIX_DATA
-    const QString strHome(QDir::homePath()+"/.config/kikoplay/extension/app");
+    const QString strHome(GlobalObjects::dataPath+"extension/app");
     const QString strSys("/usr/share/kikoplay/extension/app");
 
     const QFileInfo fileinfoHome(strHome);

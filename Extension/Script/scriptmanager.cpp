@@ -7,6 +7,7 @@
 #include "resourcescript.h"
 #include "bgmcalendarscript.h"
 #include "Common/logger.h"
+#include "globalobjects.h"  
 
 ScriptManager::ScriptManager(QObject *parent) : QObject(parent)
 {
@@ -123,7 +124,7 @@ QString ScriptManager::getScriptPath()
 {
     const QString strApp(QCoreApplication::applicationDirPath()+"/extension/script");
 #ifdef CONFIG_UNIX_DATA
-    const QString strHome(QDir::homePath()+"/.config/kikoplay/extension/script");
+    const QString strHome(GlobalObjects::dataPath+"extension/script");
     const QString strSys("/usr/share/kikoplay/extension/script");
 
     const QFileInfo fileinfoHome(strHome);

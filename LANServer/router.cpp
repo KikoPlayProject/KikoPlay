@@ -12,7 +12,7 @@ Router::Router(QObject *parent) : stefanfrings::HttpRequestHandler(parent)
     fileHandler = new FileHandler(this);
     const QString strApp(QCoreApplication::applicationDirPath()+"/web");
 #ifdef CONFIG_UNIX_DATA
-    const QString strHome(QDir::homePath()+"/.config/kikoplay/web");
+    const QString strHome(GlobalObjects::dataPath+"web");
     const QString strSys("/usr/share/kikoplay/web");
 
     const QFileInfo fileinfoHome(strHome);
