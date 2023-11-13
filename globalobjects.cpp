@@ -57,10 +57,10 @@ void GlobalObjects::init()
 	dataPath = QCoreApplication::applicationDirPath() + "/data/";
 
 #ifdef CONFIG_UNIX_DATA
-	const QFileInfo fileinfoConfig(QStandardPaths::standardLocations(QStandardPaths::DataLocation));
+	const QFileInfo fileinfoConfig(QString QStandardPaths::DataLocation);
 	/* Test Linux/MacOS style environment */
 	if (fileinfoConfig.exists() || fileinfoConfig.isDir() || fileinfoConfig.isWritable()) {
-		dataPath = QStandardPaths::standardLocations(QStandardPaths::DataLocation);
+		dataPath = QString QStandardPaths::DataLocation;
 	}
 #endif
     QDir dir;
