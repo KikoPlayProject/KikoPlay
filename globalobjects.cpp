@@ -61,7 +61,7 @@ void GlobalObjects::init()
     const QFileInfo fileInfoConfig(standardLocations.first()); // Take the first location as a file path  
     /* Test Linux/MacOS style environment */  
     if (fileInfoConfig.exists() || !fileInfoConfig.isDir() || fileInfoConfig.isWritable()) {  
-    dataPath = standardLocations.first() + "/kikoplay/"; // Set dataPath to the first location  
+    dataPath = standardLocations.first() + "/"; // Set dataPath to the first location  
     }
 #endif
     QDir dir;
