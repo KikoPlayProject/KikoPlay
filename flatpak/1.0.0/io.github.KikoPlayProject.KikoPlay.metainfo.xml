@@ -30,15 +30,15 @@
   <screenshots>
     <screenshot type="default">
       <caption>Player</caption>
-      <image type="source">https://github.com/KikoPlayProject/KikoPlay/blob/1.0.0/screenshot/KikoPlay1.jpg</image>
+      <image type="source">https://raw.githubusercontent.com/KikoPlayProject/KikoPlay/1.0.0/screenshot/KikoPlay1.jpg</image>
     </screenshot>
     <screenshot type="default">
       <caption>Data</caption>
-      <image type="source">https://github.com/KikoPlayProject/KikoPlay/blob/1.0.0/screenshot/KikoPlay2.jpg</image>
+      <image type="source">https://raw.githubusercontent.com/KikoPlayProject/KikoPlay/1.0.0/screenshot/KikoPlay2.jpg</image>
     </screenshot>
     <screenshot type="default">
       <caption>Detail</caption>
-      <image type="source">https://github.com/KikoPlayProject/KikoPlay/blob/1.0.0/screenshot/KikoPlay3.jpg</image>
+      <image type="source">https://raw.githubusercontent.com/KikoPlayProject/KikoPlay/1.0.0/screenshot/KikoPlay3.jpg</image>
     </screenshot>
   </screenshots>
   <releases>
