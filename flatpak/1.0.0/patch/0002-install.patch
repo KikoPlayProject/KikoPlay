@@ -1,16 +1,16 @@
-From b0cb46bd2f9e8da7fe38ce0cfa736ea8e95edfd5 Mon Sep 17 00:00:00 2001
+From 05cece0174700a05e80425b81e27684f21ef2ad5 Mon Sep 17 00:00:00 2001
 From: neovali <valigarmanda55@gmail.com>
-Date: Fri, 10 Nov 2023 11:31:45 +0800
+Date: Sat, 11 Nov 2023 08:16:03 +0800
 Subject: [PATCH] install
 
 ---
- KikoPlay.pro                                      | 12 +++++-------
- kikoplay.desktop => fun.kikoplay.KikoPlay.desktop |  5 ++---
- 2 files changed, 7 insertions(+), 10 deletions(-)
- rename kikoplay.desktop => fun.kikoplay.KikoPlay.desktop (63%)
+ KikoPlay.pro                                         | 12 +++++-------
+ ...top => io.github.KikoPlayProject.KikoPlay.desktop |  2 +-
+ 2 files changed, 6 insertions(+), 8 deletions(-)
+ rename kikoplay.desktop => io.github.KikoPlayProject.KikoPlay.desktop (84%)
 
 diff --git a/KikoPlay.pro b/KikoPlay.pro
-index 9d97573..366bcc8 100644
+index 9d97573..5a15449 100644
 --- a/KikoPlay.pro
 +++ b/KikoPlay.pro
 @@ -496,15 +496,13 @@ linux-g++* {
@@ -25,7 +25,7 @@ index 9d97573..366bcc8 100644
 -    unix:web.path = /usr/share/kikoplay/web
 +    target.path += /app/bin
 +    unix:desktop.path = /app/share/applications
-+    unix:desktop.files = fun.kikoplay.KikoPlay.desktop
++    unix:desktop.files = io.github.KikoPlayProject.KikoPlay.desktop
 +    unix:web.path = /app/share/kikoplay/web
      unix:web.files = web/*
  
@@ -34,22 +34,19 @@ index 9d97573..366bcc8 100644
      DEFINES += CONFIG_UNIX_DATA
  
      LIBS += -lmpv
-diff --git a/kikoplay.desktop b/fun.kikoplay.KikoPlay.desktop
-similarity index 63%
+diff --git a/kikoplay.desktop b/io.github.KikoPlayProject.KikoPlay.desktop
+similarity index 84%
 rename from kikoplay.desktop
-rename to fun.kikoplay.KikoPlay.desktop
-index cff68d8..d9ba8a1 100644
+rename to io.github.KikoPlayProject.KikoPlay.desktop
+index cff68d8..3490df2 100644
 --- a/kikoplay.desktop
-+++ b/fun.kikoplay.KikoPlay.desktop
-@@ -2,9 +2,8 @@
- Type=Application
- Name=KikoPlay
++++ b/io.github.KikoPlayProject.KikoPlay.desktop
+@@ -4,7 +4,7 @@ Name=KikoPlay
  Comment=KikoPlay is a full-featured danmu player!
--TryExec=KikoPlay
--Exec=env QT_QPA_PLATFORM=xcb KikoPlay
+ TryExec=KikoPlay
+ Exec=env QT_QPA_PLATFORM=xcb KikoPlay
 -Icon=/usr/share/pixmaps/kikoplay.png
-+Exec=KikoPlay
-+Icon=fun.kikoplay.KikoPlay
++Icon=io.github.KikoPlayProject.KikoPlay
  Terminal=false
  StartupNotify=true
  Categories=Qt;AudioVideo;Video;

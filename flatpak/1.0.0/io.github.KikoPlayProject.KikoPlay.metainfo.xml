@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.KikoPlayProject.KikoPlay</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0</project_license>
+  <developer_name>KikoPlayProject</developer_name>
+  <name>KikoPlay</name>
+  <summary>NOT ONLY A Full-Featured Danmu Player</summary>
+  <recommends>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </recommends>
+  <description>
+    <p>Features:</p>
+    <ul>
+      <li>OpenGL rendering, smooth barrage experience, supports normal scrolling mode/live streaming mode to display barrage</li>
+      <li>Libmpv playback kernel, retaining flexible parameter settings for mpv, supporting real-time progress bar preview</li>
+      <li>Tree shaped playlist for organizing video files at will</li>
+      <li>Support danmu search and download on all mainstream video websites, and support more danmu sources through scripts</li>
+      <li>Flexible barrage shielding rule settings, supporting automatic merging of similar barrages, analysis and annotation of barrage events, improving viewing experience</li>
+      <li>Support batch management of barrage pools and adjustment of barrage timelines to better handle inconsistencies in the duration of local videos and videos on websites</li>
+      <li>Powerful database function, supporting recording and organizing animations you have watched in multiple ways, and supporting more information sources through script expansion</li>
+      <li>LAN service, you can watch it on other devices through a webpage, and there is now an Android version available for selection</li>
+      <li>DLNA function supports screen projection to other devices and can also serve as a media server for other devices to access</li>
+      <li>Integrating functions such as daily playback, resource search, aria2 download, and automatic download, all operations such as download, viewing, and management can be completed in KikoPlay</li>
+    </ul>
+  </description>
+  <url type="homepage">https://github.com/KikoPlayProject/KikoPlay</url>
+  <url type="bugtracker">https://github.com/KikoPlayProject/KikoPlay/issues</url>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Player</caption>
+      <image type="source">https://raw.githubusercontent.com/KikoPlayProject/KikoPlay/1.0.0/screenshot/KikoPlay1.jpg</image>
+    </screenshot>
+    <screenshot type="default">
+      <caption>Data</caption>
+      <image type="source">https://raw.githubusercontent.com/KikoPlayProject/KikoPlay/1.0.0/screenshot/KikoPlay2.jpg</image>
+    </screenshot>
+    <screenshot type="default">
+      <caption>Detail</caption>
+      <image type="source">https://raw.githubusercontent.com/KikoPlayProject/KikoPlay/1.0.0/screenshot/KikoPlay3.jpg</image>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="1.0.0" date="2023-10-05"/>
+  </releases>
+  <launchable type="desktop-id">io.github.KikoPlayProject.KikoPlay.desktop</launchable>
+  <content_rating type="oars-1.1"/>
+  <update_contact>valigarmanda55@gmail.com</update_contact>
+</component>
