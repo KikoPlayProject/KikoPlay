@@ -11,7 +11,7 @@
     <control>keyboard</control>
   </recommends>
   <description>
-    <p>Features:</p>
+    <p>KikoPlay's features:</p>
     <ul>
       <li>OpenGL rendering, smooth barrage experience, supports normal scrolling mode/live streaming mode to display barrage</li>
       <li>Libmpv playback kernel, retaining flexible parameter settings for mpv, supporting real-time progress bar preview</li>
@@ -33,7 +33,7 @@
       <image type="source">https://raw.githubusercontent.com/KikoPlayProject/KikoPlay/1.0.0/screenshot/KikoPlay1.jpg</image>
     </screenshot>
     <screenshot type="default">
-      <caption>Data</caption>
+      <caption>Database</caption>
       <image type="source">https://raw.githubusercontent.com/KikoPlayProject/KikoPlay/1.0.0/screenshot/KikoPlay2.jpg</image>
     </screenshot>
     <screenshot type="default">
