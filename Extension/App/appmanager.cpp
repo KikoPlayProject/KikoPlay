@@ -65,19 +65,97 @@ void AppManager::start(const QModelIndex &index)
     }
 }
 
+void AppManager::autoStart()
+{
+    const QStringList apps = GlobalObjects::appSetting->value("Extension/AutoStartApps").toStringList();
+    autoStartAppIds = QSet<QString>(apps.begin(), apps.end());
+    for (auto app : appList)
+    {
+        if (autoStartAppIds.contains(app->id()))
+        {
+            app->setAutoStart(true);
+            if (app->start(Extension::KApp::LaunchScene::LaunchScene_AutoStart))
+            {
+                QObject::connect(app.get(), &Extension::KApp::appClose, this, &AppManager::appTerminated);
+                QObject::connect(app.get(), &Extension::KApp::appFlash, this, &AppManager::appFlash);
+                emit appLaunched(app.get());
+            }
+        }
+    }
+}
+
 QVariant AppManager::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid()) return QVariant();
     auto &app = appList.at(index.row());
+    AppManager::Columns col = static_cast<Columns>(index.column());
     if (role == Qt::DisplayRole || role == Qt::ToolTipRole)
     {
-        return app->name();
+        switch (col)
+        {
+        case Columns::NAME:
+            return app->name();
+        case Columns::VERSION:
+            return app->version();
+        case Columns::DESC:
+            return app->desc();
+        default:
+            return QVariant();
+        }
     }
     else if (role == Qt::DecorationRole)
     {
-        return app->icon();
+        if (col == Columns::NAME)
+        {
+            return app->icon();
+        }
+    }
+    else if (role == Qt::CheckStateRole)
+    {
+        if (col == Columns::AUTO_START)
+            return app->autoStart()? Qt::CheckState::Checked : Qt::CheckState::Unchecked;
     }
     return QVariant();
+}
+
+bool AppManager::setData(const QModelIndex &index, const QVariant &value, int)
+{
+    auto &app = appList.at(index.row());
+    AppManager::Columns col = static_cast<Columns>(index.column());
+    if (col == Columns::AUTO_START)
+    {
+        bool on = value == Qt::Checked;
+        app->setAutoStart(on);
+        if (on) autoStartAppIds.insert(app->id());
+        else autoStartAppIds.remove(app->id());
+        GlobalObjects::appSetting->setValue("Extension/AutoStartApps", QStringList(autoStartAppIds.begin(), autoStartAppIds.end()));
+        emit dataChanged(index, index);
+    }
+    return false;
+}
+
+QVariant AppManager::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    static QStringList headers({tr("Name"), tr("Version"), tr("Description"), tr("Auto Start")});
+    if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
+    {
+        if(section<headers.size()) return headers.at(section);
+    }
+    return QVariant();
+}
+
+Qt::ItemFlags AppManager::flags(const QModelIndex &index) const
+{
+    Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index);
+    Columns col = static_cast<Columns>(index.column());
+    if (index.isValid())
+    {
+        if (col == Columns::AUTO_START)
+        {
+            return  Qt::ItemIsUserCheckable | defaultFlags;
+        }
+    }
+    return defaultFlags;
 }
 
 QString AppManager::getAppPath() const

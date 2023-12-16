@@ -18,7 +18,8 @@ public:
 public:
     enum LaunchScene
     {
-        LaunchScene_AppMenu
+        LaunchScene_AppMenu,
+        LaunchScene_AutoStart,
     };
 
     KApp &operator=(const KApp&) = delete;
@@ -41,6 +42,10 @@ public:
     lua_State *getState() const { return L; }
     QString id() const {return appInfo.value("id").toString();}
     QString name() const {return appInfo.value("name").toString();}
+    QString version() const {return appInfo.value("version").toString();}
+    QString desc() const {return appInfo.value("desc").toString();}
+    bool autoStart() const {return appInfo.value("autoStart").toBool();}
+    void setAutoStart(bool on) { appInfo["autoStart"] = on; }
     QString path() const { return appInfo.value("path").toString(); }
     QString dataPath() const { return appInfo.value("dataPath").toString(); }
     const QPixmap &icon() const;

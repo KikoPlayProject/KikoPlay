@@ -16,11 +16,15 @@ AppBar::AppBar(QWidget *parent) : QScrollArea(parent)
     setObjectName(QStringLiteral("AppBar"));
     QWidget *container = new QWidget(this);
     container->setMinimumHeight(20*logicalDpiY()/96);
-    setWidget(container);
+    container->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
+
     QHBoxLayout *hLayout = new QHBoxLayout(container);
     hLayout->setContentsMargins(0, 0, 0, 0);
     hLayout->setSpacing(0);
     hLayout->addStretch(1);
+    hLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
+
+    setWidget(container);
     setAlignment(Qt::AlignCenter);
     setWidgetResizable(true);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -42,12 +46,18 @@ void AppBar::addApp(Extension::KApp *app)
     auto iter = std::find_if(appList.begin(), appList.end(), [=](const AppBarBtn *btn){
       return btn->getApp() == app;
     });
-    if (iter != appList.end()) return;
+    if (iter != appList.end())
+    {
+        ensureWidgetVisible(*iter);
+        return;
+    }
     AppBarBtn *appBtn = new AppBarBtn(app, this->widget());
     appList.append(appBtn);
     this->widget()->layout()->addWidget(appBtn);
+    appBtn->show();
     this->isAdding = true;
     this->updateGeometry();
+    ensureWidgetVisible(*iter);
 }
 
 void AppBar::removeApp(Extension::KApp *app)

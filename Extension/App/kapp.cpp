@@ -463,6 +463,7 @@ QString KApp::loadAppInfo(const QString &path)
     appInfo["path"] = QFileInfo(path).absolutePath();
     appInfo["dataPath"] = QString("%1/extension/app_data/%2/").arg(GlobalObjects::dataPath, id());
     appInfo["time"] = QString::number(getLatestFileModifyTime());
+    appInfo.remove("autoStart");
     if (appInfo.contains("icon"))
     {
         appIcon = QPixmap(appInfo["path"].toString() + "/" + appInfo["icon"].toString());

@@ -7,6 +7,7 @@
 #include "Play/Playlist/playlist.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/playcontext.h"
+#include "Extension/App/appmanager.h"
 #ifdef Q_OS_WIN
 #include <Windows.h>
 #include <DbgHelp.h>
@@ -114,5 +115,8 @@ int main(int argc, char *argv[])
     }
     w.show();
 	decodeParam();
+    QTimer::singleShot(100, [](){
+        GlobalObjects::appManager->autoStart();
+    });
     return a.exec();
 }

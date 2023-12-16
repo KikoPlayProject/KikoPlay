@@ -113,6 +113,8 @@ SOURCES += \
     Extension/Script/scriptmodel.cpp \
     Extension/Script/scriptsettingmodel.cpp \
     Download/util.cpp \
+    UI/settings/apppage.cpp \
+    UI/widgets/windowtip.cpp \
     globalobjects.cpp \
     LANServer/apihandler.cpp \
     LANServer/dlna/dlnamediacontroller.cpp \
@@ -322,6 +324,8 @@ HEADERS += \
     Extension/Script/scriptmodel.h \
     Extension/Script/scriptsettingmodel.h \
     Download/util.h \
+    UI/settings/apppage.h \
+    UI/widgets/windowtip.h \
     globalobjects.h \
     LANServer/apihandler.h \
     LANServer/dlna/dlnamediacontroller.h \
