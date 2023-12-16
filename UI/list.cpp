@@ -378,7 +378,8 @@ void ListWindow::initActions()
             restorePlayState = true;
             GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
         }
-        QStringList files = QFileDialog::getOpenFileNames(this,tr("Select Xml File"),"","Xml File(*.xml) ");
+        const QString dialogPath = item->path.isEmpty() ? "" : QFileInfo(item->path).absolutePath();
+        QStringList files = QFileDialog::getOpenFileNames(this,tr("Select Xml File"), dialogPath, "Xml File(*.xml) ");
         if(!files.isEmpty())
         {
             for(auto &file: files)

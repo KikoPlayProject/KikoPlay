@@ -1339,7 +1339,12 @@ void PlayerWindow::setupPlaySettingPage()
             restorePlayState = true;
             GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
         }
-        QString file(QFileDialog::getOpenFileName(this,tr("Select Audio File"),"",tr("Audio (%0);;All Files(*)").arg(GlobalObjects::mpvplayer->audioFormats.join(" "))));
+        QString dialogPath;
+        if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+        {
+            dialogPath = QFileInfo(GlobalObjects::mpvplayer->getCurrentFile()).absolutePath();
+        }
+        QString file(QFileDialog::getOpenFileName(this,tr("Select Audio File"), dialogPath, tr("Audio (%0);;All Files(*)").arg(GlobalObjects::mpvplayer->audioFormats.join(" "))));
         if(!file.isEmpty())
         {
             GlobalObjects::mpvplayer->addAudioTrack(file);
@@ -1376,7 +1381,12 @@ void PlayerWindow::setupPlaySettingPage()
             restorePlayState = true;
             GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
         }
-        QString file(QFileDialog::getOpenFileName(this,tr("Select Sub File"),"",tr("Subtitle (%0);;All Files(*)").arg(GlobalObjects::mpvplayer->subtitleFormats.join(" "))));
+        QString dialogPath;
+        if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+        {
+            dialogPath = QFileInfo(GlobalObjects::mpvplayer->getCurrentFile()).absolutePath();
+        }
+        QString file(QFileDialog::getOpenFileName(this,tr("Select Sub File"), dialogPath ,tr("Subtitle (%0);;All Files(*)").arg(GlobalObjects::mpvplayer->subtitleFormats.join(" "))));
         if(!file.isEmpty())
         {
             GlobalObjects::mpvplayer->addSubtitle(file);

@@ -464,6 +464,7 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
     tagContainerSLayout->setContentsMargins(0,0,0,0);
 
     tagPanel = new TagPanel(container,true,false,true);
+    tagPanel->setSizePolicy(QSizePolicy::Policy::Ignored, QSizePolicy::Ignored);
     QObject::connect(LabelModel::instance(), &LabelModel::tagRemoved, tagPanel, &TagPanel::removeTag);
     QObject::connect(tagPanel, &TagPanel::deleteTag, [this](const QString &tag){
         LabelModel::instance()->removeTag(currentAnime->name(), tag, TagNode::TAG_CUSTOM);
@@ -474,6 +475,7 @@ QWidget *AnimeDetailInfoPage::setupTagPage()
         tagPanel->addTag(tags);
     });
     TagPanel *webTagPanel = new TagPanel(container,false,true);
+    webTagPanel->setSizePolicy(QSizePolicy::Policy::Ignored, QSizePolicy::Ignored);
     tagContainerSLayout->addWidget(tagPanel);
     tagContainerSLayout->addWidget(webTagPanel);
 

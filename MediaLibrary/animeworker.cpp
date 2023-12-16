@@ -1,6 +1,5 @@
 #include "animeworker.h"
 #include "globalobjects.h"
-#include "Common/network.h"
 #include "Common/threadtask.h"
 
 #include <QSqlQuery>
@@ -31,7 +30,9 @@ void AnimeWorker::deleteAnime(Anime *anime)
 
 Anime *AnimeWorker::getAnime(const QString &name)
 {
-    return animesMap.value(name, nullptr);
+    const QString alias = isAlias(name);
+    const QString matchAnimeName = alias.isEmpty()? name : alias;
+    return animesMap.value(matchAnimeName, nullptr);
 }
 
 bool AnimeWorker::hasAnime(const QString &name)
@@ -47,6 +48,7 @@ AnimeWorker::AnimeWorker(QObject *parent):QObject(parent)
     qRegisterMetaType<EpType>("EpType");
     qRegisterMetaType<TagNode::TagType>("TagNode::TagType");
     qRegisterMetaType<AnimeLite>("AnimeLite");
+    aliasLoaded = false;
 }
 
 AnimeWorker::~AnimeWorker()
@@ -857,17 +859,23 @@ void AnimeWorker::loadAlias()
 {
     if(!aliasLoaded)
     {
-        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
-        query.prepare("select Alias, Anime from alias");
-        query.exec();
-        int aliasNo=query.record().indexOf("Alias"),
-            animeNo=query.record().indexOf("Anime");
-        while (query.next())
-        {
-            animeAlias.insert(query.value(animeNo).toString(), query.value(aliasNo).toString());
-            aliasAnime.insert(query.value(aliasNo).toString(), query.value(animeNo).toString());
-        }
-        aliasLoaded = true;
+        ThreadTask task(GlobalObjects::workThread);
+        task.Run([&](){
+            QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+            query.prepare("select Alias, Anime from alias");
+            if (query.exec())
+            {
+                int aliasNo = query.record().indexOf("Alias"),
+                    animeNo = query.record().indexOf("Anime");
+                while (query.next())
+                {
+                    animeAlias.insert(query.value(animeNo).toString(), query.value(aliasNo).toString());
+                    aliasAnime.insert(query.value(aliasNo).toString(), query.value(animeNo).toString());
+                }
+                aliasLoaded = true;
+            }
+            return 0;
+        });
     }
 }
 

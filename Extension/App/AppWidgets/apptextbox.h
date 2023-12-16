@@ -17,6 +17,7 @@ public:
 
     static int append(lua_State *L);
     static int toend(lua_State *L);
+    static int clear(lua_State *L);
 public:
     virtual void bindEvent(AppEvent event, const QString &luaFunc);
 public:

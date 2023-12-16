@@ -18,6 +18,7 @@ void AppTextBox::registEnv(lua_State *L)
     const luaL_Reg members[] = {
         {"append", append},
         {"toend", toend},
+        {"clear", clear},
         {nullptr, nullptr}
     };
     registClassFuncs(L, AppTextBox::MetaName, members, AppWidget::MetaName);
@@ -51,6 +52,15 @@ int AppTextBox::toend(lua_State *L)
         cursor.movePosition(QTextCursor::End);
         textBox->setTextCursor(cursor);
     }, Qt::BlockingQueuedConnection);
+    return 0;
+}
+
+int AppTextBox::clear(lua_State *L)
+{
+    AppWidget *appWidget = checkWidget(L, 1, AppTextBox::MetaName);
+    if (!appWidget) return 0;
+    QPlainTextEdit *textBox = static_cast<QPlainTextEdit *>(appWidget->getWidget());
+    QMetaObject::invokeMethod(textBox, "clear", Qt::BlockingQueuedConnection);
     return 0;
 }
 

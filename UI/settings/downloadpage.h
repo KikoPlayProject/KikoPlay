@@ -15,7 +15,7 @@ public:
     virtual void onClose() override;
 private:
     QLineEdit *maxDownSpeedLimit,*maxUpSpeedLimit,*seedTime,*maxConcurrent;
-    QCheckBox *autoAddtoPlaylist;
+    QCheckBox *autoAddtoPlaylist, *skipMagnetFileSelect;
     QPlainTextEdit *btTrackers;
     QTextEdit *args;
 

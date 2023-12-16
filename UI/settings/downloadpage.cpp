@@ -107,6 +107,12 @@ DownloadPage::DownloadPage(QWidget *parent) : SettingPage(parent)
         GlobalObjects::appSetting->setValue("Download/AutoAddToList",state==Qt::Checked);
     });
 
+    skipMagnetFileSelect = new QCheckBox(tr("Skip Magnet File Selection"),this);
+    skipMagnetFileSelect->setChecked(GlobalObjects::appSetting->value("Download/SkipMagnetFileSelect",false).toBool());
+    QObject::connect(skipMagnetFileSelect,&QCheckBox::stateChanged,[](int state){
+        GlobalObjects::appSetting->setValue("Download/SkipMagnetFileSelect", state==Qt::Checked);
+    });
+
     QLabel *btTrackerLabel=new QLabel(tr("Extra BT Trackers: "),this);
     btTrackers=new QPlainTextEdit(this);
     btTrackers->appendPlainText(GlobalObjects::appSetting->value("Download/Trackers",QStringList()).toStringList().join('\n'));
@@ -143,7 +149,15 @@ DownloadPage::DownloadPage(QWidget *parent) : SettingPage(parent)
     settingGLayout->addWidget(seedTime,2,1,1,2);
     settingGLayout->addWidget(maxConcurrentLabel,3,0);
     settingGLayout->addWidget(maxConcurrent,3,1,1,2);
-    settingGLayout->addWidget(autoAddtoPlaylist,4,0,1,3);
+
+    QHBoxLayout *checkHLayout = new QHBoxLayout;
+    checkHLayout->setContentsMargins(0, 0, 0, 0);
+    checkHLayout->addWidget(autoAddtoPlaylist);
+    checkHLayout->addWidget(skipMagnetFileSelect);
+    checkHLayout->addStretch(1);
+    settingGLayout->addLayout(checkHLayout, 4, 0, 1, 3);
+
+    //settingGLayout->addWidget(autoAddtoPlaylist,4,0,1,3);
     settingGLayout->addWidget(btTrackerLabel,5,0);
     settingGLayout->addWidget(trackerSubscribe, 5, 2);
     settingGLayout->addWidget(btTrackers,6,0,1,3);

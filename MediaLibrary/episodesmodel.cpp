@@ -7,6 +7,7 @@ EpisodesModel::EpisodesModel(Anime *anime, QObject *parent) : QAbstractItemModel
     setAnime(anime);
     QObject::connect(AnimeWorker::instance(), &AnimeWorker::epUpdated, this, [=](const QString &animeName, const QString &epPath){
        if(!currentAnime || currentAnime->name()!=animeName) return;
+       if (!epMap.contains(epPath)) return;
        int pos = epMap[epPath];
        EpInfo &ep = currentEps[pos];
        ep = currentAnime->epList()[pos];

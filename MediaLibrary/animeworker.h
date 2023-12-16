@@ -6,8 +6,9 @@ class QSqlQuery;
 class AnimeWorker : public QObject
 {
     Q_OBJECT
-public:
+    Q_DISABLE_COPY(AnimeWorker)
     explicit AnimeWorker(QObject *parent=nullptr);
+public:
     ~AnimeWorker();
 
 public:
@@ -71,7 +72,7 @@ private:
 
     QMultiMap<QString, QString> animeAlias;
     QMap<QString, QString> aliasAnime;
-    bool aliasLoaded;
+    std::atomic<bool> aliasLoaded;
     void loadAlias();
     QString isAlias(const QString &name);
 
