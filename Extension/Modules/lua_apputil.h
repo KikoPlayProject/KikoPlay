@@ -15,6 +15,7 @@ private:
     static int table2json(lua_State *L);
     static int flash(lua_State *L);
     static int viewTable(lua_State *L);
+    static int gtip(lua_State *L);
 };
 }
 #endif // LUA_APPUTIL_H

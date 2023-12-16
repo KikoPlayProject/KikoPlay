@@ -113,6 +113,7 @@ private:
     void initActions();
     void downloadSelectionChanged();
     void setDetailInfo(DownloadTask *task);
+    void addUrlTask(const QStringList &urls = QStringList(), const QString &path = "");
 signals:
     void playFile(const QString &path);
     void totalProgressUpdate(int progress);

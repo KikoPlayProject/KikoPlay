@@ -593,7 +593,7 @@ void CFramelessDialog::mouseMoveEvent(QMouseEvent *e)
         top = qAbs(y - r.top()) <= 5;
         bottom = qAbs(y - r.bottom()) <= 5;
         bool hor = left | right, ver = top | bottom;
-        qDebug() << "l,r,t,b: " << left << right << top << bottom;
+        // qDebug() << "l,r,t,b: " << left << right << top << bottom;
 
         if(hor && bottom)
         {

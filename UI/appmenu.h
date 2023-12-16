@@ -31,7 +31,6 @@ public:
     // QAbstractItemDelegate interface
 public:
     virtual void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
-    //virtual bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index);
     virtual QSize sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const;
 signals:
     void ItemClicked(const QModelIndex &index);

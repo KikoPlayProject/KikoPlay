@@ -59,16 +59,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     FontIconButton *addUriTask=new FontIconButton(QChar(0xe604), tr("Add URI"), 12, 10, 2*logicalDpiX()/96, downloadContainer);
     addUriTask->setObjectName(QStringLiteral("DownloadToolButton"));
     QObject::connect(addUriTask,&FontIconButton::clicked,[this](){
-        AddUriTask addUriTaskDialog(this);
-        if(QDialog::Accepted==addUriTaskDialog.exec())
-        {
-            for(QString &uri:addUriTaskDialog.uriList)
-            {
-                QString errInfo(GlobalObjects::downloadModel->addUriTask(uri,addUriTaskDialog.dir));
-                if(!errInfo.isEmpty())
-                    QMessageBox::information(this,tr("Error"),tr("An error occurred while adding : URI:\n %1 \n %2").arg(uri).arg(errInfo));
-            }
-        }
+        addUrlTask();
     });
 
     FontIconButton *addTorrentTask=new FontIconButton(QChar(0xe605),tr("Add Torrent"),12, 10, 2*logicalDpiX()/96,downloadContainer);
@@ -358,16 +349,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         resSearchWindow->search(item, true);
     });
     QObject::connect(resSearchWindow,&ResSearchWindow::addTask,this,[this](const QStringList &urls){
-        AddUriTask addUriTaskDialog(this,urls);
-        if(QDialog::Accepted==addUriTaskDialog.exec())
-        {
-            for(QString &uri:addUriTaskDialog.uriList)
-            {
-                QString errInfo(GlobalObjects::downloadModel->addUriTask(uri,addUriTaskDialog.dir));
-                if(!errInfo.isEmpty())
-                    QMessageBox::information(this,tr("Error"),tr("An error occurred while adding : URI:\n %1 \n %2").arg(uri).arg(errInfo));
-            }
-        }
+        addUrlTask(urls);
     });
     AutoDownloadWindow *autoDownloadWindow = new AutoDownloadWindow(containerWidget);
     autoDownloadWindow->setObjectName(QStringLiteral("AutoDownloadWindow"));
@@ -383,16 +365,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         }
         else
         {
-            AddUriTask addUriTaskDialog(this,uris,path);
-            if(QDialog::Accepted==addUriTaskDialog.exec())
-            {
-                for(QString &uri:addUriTaskDialog.uriList)
-                {
-                    QString errInfo(GlobalObjects::downloadModel->addUriTask(uri,addUriTaskDialog.dir));
-                    if(!errInfo.isEmpty())
-                        QMessageBox::information(this,tr("Error"),tr("An error occurred while adding : URI:\n %1 \n %2").arg(uri).arg(errInfo));
-                }
-            }
+            addUrlTask(uris, path);
         }
     });
 
@@ -927,7 +900,7 @@ void DownloadWindow::initActions()
                 GlobalObjects::playlist->addItems(QStringList()<<info.absoluteFilePath(),QModelIndex());
         }
     });
-    QObject::connect(GlobalObjects::downloadModel,&DownloadModel::taskFinish,this,[](DownloadTask *task){
+    QObject::connect(GlobalObjects::downloadModel,&DownloadModel::taskFinish,this,[this](DownloadTask *task){
         if(GlobalObjects::appSetting->value("Download/AutoAddToList",false).toBool())
         {
             QFileInfo info(task->dir,task->title);
@@ -936,6 +909,14 @@ void DownloadWindow::initActions()
                 GlobalObjects::playlist->addFolder(info.absoluteFilePath(),QModelIndex());
             else
                 GlobalObjects::playlist->addItems(QStringList()<<info.absoluteFilePath(),QModelIndex());
+        }
+        if (this->isHidden())
+        {
+            TipParams param;
+            param.showClose = true;
+            param.group = "kiko-download";
+            param.message = tr("Download Complete: %1").arg(task->title);
+            Notifier::getNotifier()->showMessage(Notifier::GLOBAL_NOTIFY, "", 0, QVariant::fromValue(param));
         }
     });
 
@@ -1040,6 +1021,23 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
         selectedTFModel->setContent(nullptr);
         act_CopyURI->setEnabled(false);
         act_SaveTorrent->setEnabled(false);
+    }
+}
+
+void DownloadWindow::addUrlTask(const QStringList &urls, const QString &path)
+{
+    AddUriTask addUriTaskDialog(this, urls, path);
+    if (QDialog::Accepted==addUriTaskDialog.exec())
+    {
+        bool directDownload = GlobalObjects::appSetting->value("Download/SkipMagnetFileSelect", false).toBool();
+        for (const QString &uri : addUriTaskDialog.uriList)
+        {
+            QString errInfo(GlobalObjects::downloadModel->addUriTask(uri, addUriTaskDialog.dir, directDownload));
+            if(!errInfo.isEmpty())
+            {
+                QMessageBox::information(this,tr("Error"),tr("An error occurred while adding : URI:\n %1 \n %2").arg(uri).arg(errInfo));
+            }
+        }
     }
 }
 

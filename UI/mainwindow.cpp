@@ -26,6 +26,7 @@
 #include "scriptplayground.h"
 #include "luatableviewer.h"
 #include "widgets/backgroundwidget.h"
+#include "widgets/windowtip.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/playcontext.h"
@@ -39,6 +40,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setObjectName(QStringLiteral("MainWindow"));
     Notifier::getNotifier()->addNotify(Notifier::MAIN_DIALOG_NOTIFY, this);
+    Notifier::getNotifier()->addNotify(Notifier::GLOBAL_NOTIFY, this);
+    windowTip = new WindowTip(this);
     setupUI();
     // setWindowIcon(QIcon(":/res/kikoplay.ico"));
     QRect defaultGeo(0,0,800*logicalDpiX()/96,480*logicalDpiX()/96), defaultMiniGeo(0,0,200*logicalDpiX()/96, 200*logicalDpiY()/96);
@@ -806,6 +809,21 @@ QVariant MainWindow::showDialog(const QVariant &inputs)
         InputDialog dialog(optMap.value("image").toByteArray(), title, tip,  optMap.value("text").toString(), this);
         int ret = dialog.exec();
         return ret==QDialog::Accepted? QStringList({"accept", dialog.text}):QStringList({"reject", ""});
+    }
+}
+
+void MainWindow::showMessage(const QString &content, int, const QVariant &extra)
+{
+    windowTip->setTop(widgetTitlebar->isVisible()? widgetTitlebar->height() + 4 * logicalDpiY()/96 : 4 * logicalDpiY()/96);
+    if (extra.isValid() && extra.userType() == QMetaType::type("TipParams"))
+    {
+        windowTip->addTip(extra.value<TipParams>());
+    }
+    else
+    {
+        TipParams param;
+        param.message = content;
+        windowTip->addTip(param);
     }
 }
 

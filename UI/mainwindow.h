@@ -35,6 +35,7 @@ class QWinTaskbarButton;
 class QSystemTrayIcon;
 class QProgressBar;
 class AppBar;
+class WindowTip;
 class MainWindow : public CFramelessWindow, public NotifyInterface
 {
     Q_OBJECT
@@ -90,6 +91,7 @@ private:
     HideToTrayType hideToTrayType;
     QProgressBar *downloadToolProgress;
     AppBar *appBar;
+    WindowTip *windowTip;
 
     void setupUI();
     void switchToPlay(const QString &fileToPlay);
@@ -100,6 +102,7 @@ private:
     QWidget *setupDownloadPage();
 public:
     QVariant showDialog(const QVariant &inputs);
+    void showMessage(const QString &content, int, const QVariant &extra=QVariant());
 
 protected:
     virtual void closeEvent(QCloseEvent *event);

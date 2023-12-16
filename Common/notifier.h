@@ -1,6 +1,7 @@
 #ifndef NOTIFIER_H
 #define NOTIFIER_H
 
+#include <QColor>
 #include <QObject>
 #include <QHash>
 #include <QList>
@@ -13,6 +14,17 @@ enum NotifyMessageFlag
     NM_ERROR = 8,
     NM_DARKNESS_BACK = 16
 };
+
+struct TipParams
+{
+    QString group;
+    QString title = "KikoPlay";
+    QString message;
+    int timeout = 4000;
+    bool showClose = false;
+    QColor bgColor = QColor(0x16, 0x9f, 0xe6);
+};
+Q_DECLARE_METATYPE(TipParams)
 
 class NotifyInterface
 {
@@ -40,7 +52,8 @@ public:
         LIBRARY_NOTIFY = 3,
         DOWNLOAD_NOTIFY = 4,
         APP_MENU_NOTIFY = 5,
-        MAIN_DIALOG_NOTIFY
+        MAIN_DIALOG_NOTIFY = 6,
+        GLOBAL_NOTIFY
     };
     void addNotify(NotifyType nType, NotifyInterface *notify);
     void showMessage(NotifyType nType, const QString &content, int flag = 0, const QVariant &extra = QVariant());

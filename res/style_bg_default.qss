@@ -289,6 +289,12 @@ QLabel#labelPlayInfo{
 QLabel#DialogTipLabel{
     color:#ffffff;
 }
+QLabel#WindowTipTitleLabel{
+    color:#ffffff;
+}
+QLabel#WindowTipMsgLabel{
+    color:#ffffff;
+}
 QDialog QLabel {
 @if{DarkMode}
     color: rgb(214,214,214);
@@ -1268,6 +1274,14 @@ QPushButton#DialogCloseButton:hover{
 }
 QPushButton#DialogCloseButton:pressed{
     background-color:rgb(218,46,3);
+    color:rgb(255,255,255);
+}
+QPushButton#TipCloseButton{
+    border:none;
+    background-color:transparent;
+    color:rgb(240,240,240);
+}
+QPushButton#TipCloseButton:hover{
     color:rgb(255,255,255);
 }
 QPushButton#DialogAcceptButton{

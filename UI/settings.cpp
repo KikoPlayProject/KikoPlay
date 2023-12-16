@@ -11,6 +11,7 @@
 #include "settings/lanserverpage.h"
 #include "settings/scriptpage.h"
 #include "settings/mpvshortcutpage.h"
+#include "settings/apppage.h"
 
 Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings"), parent, true)
 {    
@@ -22,13 +23,14 @@ Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings")
     pageSLayout = new QStackedLayout;
     pageSLayout->setContentsMargins(0, 0, 0, 0);
 
-    QStringList pageNames{
+    const QStringList pageNames{
         tr("Appearance"),
         tr("MPV Param"),
         tr("MPV Shortcut Key"),
         tr("Download"),
         tr("LAN Server"),
-        tr("Script")
+        tr("Script"),
+        tr("Extension App"),
     };
 
     for(int i=PAGE_UI;i<PAGE_STOP;++i)
@@ -98,6 +100,9 @@ SettingPage *Settings::getOrCreatePage(Page p)
             break;
         case PAGE_SCRIPT:
             pages[p] = new ScriptPage(this);
+            break;
+        case PAGE_APP:
+            pages[p] = new AppPage(this);
             break;
         default:
             return nullptr;

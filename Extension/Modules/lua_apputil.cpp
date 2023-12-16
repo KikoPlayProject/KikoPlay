@@ -13,6 +13,7 @@
 #include "Common/logger.h"
 #include "Common/notifier.h"
 #include "UI/luatableviewer.h"
+#include "UI/widgets/windowtip.h"
 #include "lua_util.h"
 
 namespace Extension
@@ -25,6 +26,7 @@ void AppUtil::setup()
         {"json2table", json2table},
         {"table2json", table2json},
         {"flash", flash},
+        {"gtip", gtip},
         {"viewtable", viewTable},
         {"compress", LuaUtil::compress},
         {"decompress", LuaUtil::decompress},
@@ -41,6 +43,10 @@ void AppUtil::setup()
         { "NM_SHOWCANCEL", NotifyMessageFlag::NM_SHOWCANCEL },
         { "NM_ERROR", NotifyMessageFlag::NM_ERROR },
         { "NM_DARKNESS_BACK", NotifyMessageFlag::NM_DARKNESS_BACK },
+    });
+    addDataMembers({"kiko", "launch_scene"}, {
+        { "APP_MENU", KApp::LaunchScene::LaunchScene_AppMenu },
+        { "AUTO_START", KApp::LaunchScene::LaunchScene_AutoStart },
     });
 }
 
@@ -166,6 +172,35 @@ int AppUtil::viewTable(lua_State *L)
     model.setRoot(root);
     LuaTableViewer viewer(&model, app->window()->getWidget());
     viewer.exec();
+    return 0;
+}
+
+int AppUtil::gtip(lua_State *L)
+{
+    KApp *app = KApp::getApp(L);
+    if (!app) return 0;
+    // gtip(string)
+    // gtip(param_table)
+    if (lua_type(L, 1) == LUA_TSTRING)
+    {
+        TipParams param;
+        param.message = lua_tostring(L, 1);
+        param.title = app->name();
+        Notifier::getNotifier()->showMessage(Notifier::NotifyType::GLOBAL_NOTIFY, "", 0, QVariant::fromValue(param));
+    }
+    else if (lua_type(L, 1) == LUA_TTABLE)
+    {
+        QVariantMap paramsMap = getValue(L, true, 2).toMap();
+        TipParams param;
+        param.title = app->name();
+        if (paramsMap.contains("title")) param.title = paramsMap["title"].toString();
+        param.group = paramsMap["group"].toString();
+        param.message = paramsMap["message"].toString();
+        if (paramsMap.contains("timeout")) param.timeout = paramsMap["timeout"].toInt();
+        if (paramsMap.contains("bg")) param.bgColor.setRgba(paramsMap["bg"].toUInt());
+        if (paramsMap.contains("showclose")) param.showClose = paramsMap["showclose"].toBool();
+        Notifier::getNotifier()->showMessage(Notifier::NotifyType::GLOBAL_NOTIFY, "", 0, QVariant::fromValue(param));
+    }
     return 0;
 }
 
