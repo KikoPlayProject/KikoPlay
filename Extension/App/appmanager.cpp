@@ -187,6 +187,7 @@ QString AppManager::getAppPath() const
 QVector<QSharedPointer<Extension::KApp>> AppManager::refresApp()
 {
     QVector<QSharedPointer<Extension::KApp>> appList = this->appList;
+    QSet<QString> appIdMap;
     for (int i = appList.size() - 1; i >= 0; --i)
     {
         QSharedPointer<Extension::KApp> app = appList[i];
@@ -214,6 +215,7 @@ QVector<QSharedPointer<Extension::KApp>> AppManager::refresApp()
             }
         }
         existAppPaths.insert(app->path());
+        appIdMap.insert(app->id());
     }
     const QString appRootPath(getAppPath());
     QDir folder(appRootPath);
@@ -226,7 +228,14 @@ QVector<QSharedPointer<Extension::KApp>> AppManager::refresApp()
             Extension::KApp *app = Extension::KApp::create(fileInfo.absoluteFilePath());
             if (app)
             {
-                newAppList.append(QSharedPointer<Extension::KApp>(app));
+                if (appIdMap.contains(app->id()))
+                {
+                    delete app;
+                }
+                else
+                {
+                    newAppList.append(QSharedPointer<Extension::KApp>(app));
+                }
             }
         }
     }

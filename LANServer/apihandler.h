@@ -15,6 +15,7 @@ public:
     void service(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
 private:
     void apiPlaylist(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
+    void apiPlaystate(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
     void apiUpdateTime(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
     void apiDanmu(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
     void apiDanmuFull(stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);

@@ -16,6 +16,7 @@ void DanmuInterface::setup()
         {"addpool", addpool},
         {"getdanmu", getdanmu},
         {"addsrc", addsrc},
+        {"updatepool", updatepool},
         {nullptr, nullptr}
     };
     registerFuncs({"kiko", "danmu"}, funcs);
@@ -41,32 +42,7 @@ int DanmuInterface::launch(lua_State *L)
 int DanmuInterface::getpool(lua_State *L)
 {
     if (lua_gettop(L) != 1) return 0;
-    Pool *pool = nullptr;
-    if (lua_type(L, 1) == LUA_TSTRING)
-    {
-        const QString poolId = lua_tostring(L, 1);
-        pool = GlobalObjects::danmuManager->getPool(poolId, false);
-    }
-    else if (lua_type(L, 1) == LUA_TTABLE)
-    {
-        const QVariantMap params = getValue(L, true, 2).toMap();
-        bool loadDanmu = params.value("load", false).toBool();
-        if (params.contains("id"))
-        {
-            const QString poolId = params.value("id").toString();
-            pool = GlobalObjects::danmuManager->getPool(poolId, loadDanmu);
-        }
-        else
-        {
-            if (params.contains("anime") && params.contains("ep_index") && params.contains("ep_type"))
-            {
-                const QString anime = params.value("anime").toString();
-                double epIndex = params.value("ep_index").toDouble();
-                EpType epType = static_cast<EpType>(params.value("ep_type").toInt());
-                pool = GlobalObjects::danmuManager->getPool(anime, epType, epIndex, loadDanmu);
-            }
-        }
-    }
+    Pool *pool = getPoolFromParam(L);
     if (!pool) return 0;
     pushValue(L, pool->toMap());
     return 1;
@@ -86,6 +62,17 @@ int DanmuInterface::addpool(lua_State *L)
     }
     const QString pid = GlobalObjects::danmuManager->createPool(anime, epType, epIndex, epName);
     lua_pushstring(L, pid.toUtf8().constData());
+    return 1;
+}
+
+int DanmuInterface::updatepool(lua_State *L)
+{
+    if (lua_gettop(L) != 1) return 0;
+    Pool *pool = getPoolFromParam(L);
+    if (!pool) return 0;
+    QVector<QSharedPointer<DanmuComment> > incList;
+    pool->update(-1,&incList);
+    pushValue(L, Pool::exportJson(incList, true).toVariantList());
     return 1;
 }
 
@@ -133,6 +120,36 @@ int DanmuInterface::addsrc(lua_State *L)
     if (srcId < 0) qDeleteAll(danmuList);
     lua_pushinteger(L, srcId);
     return 1;
+}
+
+Pool *DanmuInterface::getPoolFromParam(lua_State *L)
+{
+    if (lua_type(L, -1) == LUA_TSTRING)
+    {
+        const QString poolId = lua_tostring(L, -1);
+        return GlobalObjects::danmuManager->getPool(poolId, false);
+    }
+    else if (lua_type(L, -1) == LUA_TTABLE)
+    {
+        const QVariantMap params = getValue(L, true, 2).toMap();
+        bool loadDanmu = params.value("load", false).toBool();
+        if (params.contains("id"))
+        {
+            const QString poolId = params.value("id").toString();
+            return GlobalObjects::danmuManager->getPool(poolId, loadDanmu);
+        }
+        else
+        {
+            if (params.contains("anime") && params.contains("ep_index") && params.contains("ep_type"))
+            {
+                const QString anime = params.value("anime").toString();
+                double epIndex = params.value("ep_index").toDouble();
+                EpType epType = static_cast<EpType>(params.value("ep_type").toInt());
+                return GlobalObjects::danmuManager->getPool(anime, epType, epIndex, loadDanmu);
+            }
+        }
+    }
+    return nullptr;
 }
 
 DanmuComment *DanmuInterface::parseDanmu(const QVariantMap &dobj)

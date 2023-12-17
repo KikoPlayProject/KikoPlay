@@ -12,6 +12,8 @@
 #include "Extension/Script/scriptmanager.h"
 #include "Extension/Script/danmuscript.h"
 #include "MediaLibrary/animeworker.h"
+#include "Play/Video/mpvplayer.h"
+#include "Play/playcontext.h"
 
 namespace
 {
@@ -49,6 +51,7 @@ void APIHandler::service(stefanfrings::HttpRequest &request, stefanfrings::HttpR
     using Func = void(APIHandler::*)(stefanfrings::HttpRequest &, stefanfrings::HttpResponse &);
     static QMap<QString, Func> routeTable = {
         {"playlist", &APIHandler::apiPlaylist},
+        {"playstate", &APIHandler::apiPlaystate},
         {"updateTime", &APIHandler::apiUpdateTime},
         {"subtitle", &APIHandler::apiSubtitle},
         {"updateDelay", &APIHandler::apiUpdateDelay},
@@ -78,6 +81,53 @@ void APIHandler::apiPlaylist(stefanfrings::HttpRequest &request, stefanfrings::H
     QByteArray data = playlistDoc.toJson();
     QByteArray compressedBytes;
     Network::gzipCompress(data,compressedBytes);
+    response.setHeader("Content-Type", "application/json");
+    response.setHeader("Content-Encoding", "gzip");
+    response.write(compressedBytes, true);
+}
+
+void APIHandler::apiPlaystate(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
+{
+    Logger::logger()->log(Logger::LANServer, QString("[%1]Playstate").arg(request.getPeerAddress().toString()));
+    QVariantMap stateMap;
+    QMetaObject::invokeMethod(GlobalObjects::playlist,[&](){
+        const PlayListItem *item = GlobalObjects::playlist->getCurrentItem();
+        if (item)
+        {
+            QStringList pathStack;
+            const PlayListItem *tmpItem = item->parent;
+            while(tmpItem)
+            {
+                pathStack.push_front(tmpItem->title);
+                tmpItem = tmpItem->parent;
+            }
+            stateMap["cur_item"] = QVariantMap({
+               {"position", pathStack.join('/')},
+               {"src_type", item->type},
+               {"state", item->playTimeState},
+               {"bgm_collection", item->isBgmCollection},
+               {"add_time", item->addTime},
+               {"title", item->title},
+               {"anime_title", item->animeTitle},
+               {"path", item->path},
+               {"pool", item->poolID},
+           });
+        }
+        const QString &file = GlobalObjects::mpvplayer->getCurrentFile();
+        if (!file.isEmpty())
+        {
+            stateMap["player"] = QVariantMap({
+               {"cur_file", file},
+               {"state", (int)GlobalObjects::mpvplayer->getState()},
+               {"duration", PlayContext::context()->duration},
+               {"playtime",  PlayContext::context()->playtime},
+           });
+        }
+
+    },Qt::BlockingQueuedConnection);
+    QByteArray data = QJsonDocument::fromVariant(stateMap).toJson();
+    QByteArray compressedBytes;
+    Network::gzipCompress(data, compressedBytes);
     response.setHeader("Content-Type", "application/json");
     response.setHeader("Content-Encoding", "gzip");
     response.write(compressedBytes, true);
