@@ -16,6 +16,7 @@
 #include "MediaLibrary/animeworker.h"
 #include "MediaLibrary/animeprovider.h"
 #include "Common/notifier.h"
+#include "Common/logger.h"
 
 namespace
 {
@@ -1215,6 +1216,13 @@ void PlayList::removeMatch(const QModelIndexList &matchIndexes)
     }
 }
 
+void PlayList::refreshMatchFilters()
+{
+    QMetaObject::invokeMethod(matchWorker, [this](){
+        matchWorker->updateFilterRules();
+    },Qt::QueuedConnection);
+}
+
 void PlayList::updateItemsDanmu(const QModelIndexList &itemIndexes)
 {
     QList<PlayListItem *> items;
@@ -1614,12 +1622,17 @@ void MatchWorker::match(const QVector<PlayListItem *> &items)
     notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Start"),NotifyMessageFlag::NM_PROCESS|NotifyMessageFlag::NM_SHOWCANCEL);
     bool cancel = false;
     auto conn = QObject::connect(notifier, &Notifier::cancelTrigger, [&](int nType){ if(nType & Notifier::LIST_NOTIFY) cancel=true;});
-    for(auto currentItem: items)
+    for (auto currentItem: items)
     {
-        if(cancel) break;
-        if(currentItem->hasPool()) continue;
-        if(currentItem->type == PlayListItem::ItemType::WEB_URL) continue;
-        if (!QFile::exists(currentItem->path))continue;
+        if (cancel) break;
+        if (currentItem->hasPool()) continue;
+        if (currentItem->type == PlayListItem::ItemType::WEB_URL) continue;
+        if (!QFile::exists(currentItem->path)) continue;
+        if (filterItem(currentItem))
+        {
+            Logger::logger()->log(Logger::APP, tr("Skip Match: %1").arg(currentItem->title));
+            continue;
+        }
         MatchResult match;
         GlobalObjects::danmuManager->localMatch(currentItem->path, match);
         if(!match.success) GlobalObjects::animeProvider->match(GlobalObjects::animeProvider->defaultMatchScript(), currentItem->path, match);
@@ -1669,3 +1682,25 @@ void MatchWorker::match(const QVector<PlayListItem *> &items, const QString &ani
     emit matchDown(matchedItems);
     notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Done"),NotifyMessageFlag::NM_HIDE);
 }
+
+void MatchWorker::updateFilterRules()
+{
+    const QStringList filterStrs = GlobalObjects::appSetting->value("List/MatchFilter").toString().trimmed().split("\n", Qt::SkipEmptyParts);
+    filterRules.clear();
+    for (const QString &str : filterStrs)
+    {
+        QString content = str.trimmed();
+        if (content.isEmpty()) continue;
+        filterRules.append(QRegExp(content, Qt::CaseInsensitive, QRegExp::Wildcard));
+    }
+}
+
+bool MatchWorker::filterItem(PlayListItem *item)
+{
+    for (const QRegExp &rule : filterRules)
+    {
+        if (item && item->path.contains(rule)) return true;
+    }
+    return false;
+}
+

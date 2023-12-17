@@ -288,6 +288,19 @@ void ListWindow::initActions()
     });
     act_autoMatchMode->setChecked(GlobalObjects::appSetting->value("List/AutoMatch", true).toBool());
 
+    act_setMatchFilter = new QAction(tr("Match Filter Setting"), this);
+    QObject::connect(act_setMatchFilter, &QAction::triggered, [this](){
+        InputDialog inputDialog(tr("Macth Filter Setting"),
+                                tr("Set rules line by line, supporting wildcards.\nKikoPlay will skip items matched by the rules during the match process."),
+                                GlobalObjects::appSetting->value("List/MatchFilter").toString(),
+                                true,this, "DialogSize/MatchFilter");
+        if (QDialog::Accepted == inputDialog.exec())
+        {
+            GlobalObjects::appSetting->setValue("List/MatchFilter", inputDialog.text.trimmed());
+            GlobalObjects::playlist->refreshMatchFilters();
+        }
+    });
+
     act_markBgmCollection=new QAction(tr("Mark/Unmark Bangumi Collecion"),this);
     QObject::connect(act_markBgmCollection,&QAction::triggered,[this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
@@ -854,53 +867,51 @@ void ListWindow::matchPool(const QString &scriptId)
     const PlayListItem *item=GlobalObjects::playlist->getItem(indexes.first());
     if(indexes.size()==1 && !item->children)
     {
-        if(!item->children)
+        bool matchSuccess = false;
+        if(!item->hasPool() && item->type == PlayListItem::ItemType::LOCAL_FILE)
         {
-            bool matchSuccess = false;
-            if(!item->hasPool() && item->type == PlayListItem::ItemType::LOCAL_FILE)
+            showMessage(tr("Match Start"),NotifyMessageFlag::NM_PROCESS);
+            MatchResult match;
+            GlobalObjects::danmuManager->localMatch(item->path, match);
+            if(!match.success) GlobalObjects::animeProvider->match(scriptId.isEmpty()?GlobalObjects::animeProvider->defaultMatchScript():scriptId, item->path, match);
+            if(match.success)
             {
-                showMessage(tr("Match Start"),NotifyMessageFlag::NM_PROCESS);
-                MatchResult match;
-                GlobalObjects::danmuManager->localMatch(item->path, match);
-                if(!match.success) GlobalObjects::animeProvider->match(scriptId.isEmpty()?GlobalObjects::animeProvider->defaultMatchScript():scriptId, item->path, match);
-                if(match.success)
-                {
-                    GlobalObjects::playlist->matchIndex(indexes.first(), match);
-                    matchSuccess = true;
-                }
-                showMessage(tr("Match Done"), NotifyMessageFlag::NM_HIDE);
+                GlobalObjects::playlist->matchIndex(indexes.first(), match);
+                matchSuccess = true;
             }
-            if(!matchSuccess)
+            showMessage(tr("Match Done"), NotifyMessageFlag::NM_HIDE);
+        }
+        if(!matchSuccess)
+        {
+            QList<const PlayListItem *> &&siblings=GlobalObjects::playlist->getSiblings(item, false);
+            MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),&siblings,this);
+            if(QDialog::Accepted==matchEditor.exec())
             {
-                QList<const PlayListItem *> &&siblings=GlobalObjects::playlist->getSiblings(item, false);
-                MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),&siblings,this);
-                if(QDialog::Accepted==matchEditor.exec())
+                if(matchEditor.singleEp.type!=EpType::UNKNOWN)
                 {
-                    if(matchEditor.singleEp.type!=EpType::UNKNOWN)
-                    {
-                        MatchResult match;
-                        match.success = true;
-                        match.name = matchEditor.anime;
-                        match.ep = matchEditor.singleEp;
-                        GlobalObjects::playlist->matchIndex(indexes.first(), match);
-                    }
-                    else
-                    {
-                         QList<const PlayListItem *> items;
-                         QList<EpInfo> eps;
-                         for(int i=0;i<siblings.size();++i)
+                    MatchResult match;
+                    match.success = true;
+                    match.name = matchEditor.anime;
+                    match.ep = matchEditor.singleEp;
+                    GlobalObjects::playlist->matchIndex(indexes.first(), match);
+                }
+                else
+                {
+                     QList<const PlayListItem *> items;
+                     QList<EpInfo> eps;
+                     for(int i=0;i<siblings.size();++i)
+                     {
+                         if(matchEditor.epCheckedList[i])
                          {
-                             if(matchEditor.epCheckedList[i])
-                             {
-                                 items.append(siblings[i]);
-                                 eps.append(matchEditor.epList[i]);
-                             }
+                             items.append(siblings[i]);
+                             eps.append(matchEditor.epList[i]);
                          }
-                         GlobalObjects::playlist->matchItems(items, matchEditor.anime, eps);
-                    }
+                     }
+                     GlobalObjects::playlist->matchItems(items, matchEditor.anime, eps);
                 }
             }
         }
+
     } else {
         GlobalObjects::playlist->matchItems(indexes);
     }
@@ -1009,6 +1020,7 @@ QWidget *ListWindow::setupPlaylistPage()
     QMenu *defaultMatchScriptMenu=new QMenu(tr("Default Match Script"), matchSubMenu);
     matchSubMenu->addAction(act_autoMatch);
     matchSubMenu->addAction(act_removeMatch);
+    matchSubMenu->addAction(act_setMatchFilter);
     matchSubMenu->addAction(act_autoMatchMode);
     matchSubMenu->addMenu(defaultMatchScriptMenu);
     defaultMatchScriptMenu->hide();

@@ -10,11 +10,15 @@ class MatchWorker : public QObject
 {
     Q_OBJECT
 public:
-    explicit MatchWorker(QObject *parent = nullptr):QObject(parent){}
+    explicit MatchWorker(QObject *parent = nullptr):QObject(parent) { updateFilterRules(); }
     void match(const QVector<PlayListItem *> &items);
     void match(const QVector<PlayListItem *> &items, const QString &animeTitle, const QList<EpInfo> &eps);
+    void updateFilterRules();
 signals:
     void matchDown(const QList<PlayListItem *> &matchedItems);
+private:
+    QVector<QRegExp> filterRules;
+    bool filterItem(PlayListItem *item);
 };
 
 class PlayList : public QAbstractItemModel
@@ -101,6 +105,7 @@ public slots :
     void matchIndex(QModelIndex &index, const MatchResult &match);
     void matchItems(const QList<const PlayListItem *> &items, const QString &title, const QList<EpInfo> &eps);
     void removeMatch(const QModelIndexList &matchIndexes);
+    void refreshMatchFilters();
 
     void updateItemsDanmu(const QModelIndexList &itemIndexes);
     QModelIndex mergeItems(const QModelIndexList &mergeIndexes);

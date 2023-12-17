@@ -1704,7 +1704,7 @@ void PlayerWindow::setupPlaySettingPage()
 void PlayerWindow::setupSignals()
 {
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::durationChanged,[this](int duration){
-        QCoreApplication::processEvents();
+        // QCoreApplication::processEvents();
         int ts=duration/1000;
         int lmin=ts/60;
         int ls=ts-lmin*60;
