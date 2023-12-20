@@ -98,6 +98,7 @@ if (WIN32)
 endif()
 
 if (UNIX)
+	find_package(Qt5 COMPONENTS DBus REQUIRED)
     # Set default overridable parameters for "/usr/share"
     set(CMAKE_INSTALL_SHAREDIR "/usr/share" CACHE STRING "The default share path")
     # Set default unix data option
@@ -113,6 +114,7 @@ if (UNIX)
     target_link_libraries(${PROJECT_NAME} 
     PRIVATE
         ${mpv_LIBRARIES}
+		Qt5::DBus
     )
 
     if (CONFIG_UNIX_DATA)
