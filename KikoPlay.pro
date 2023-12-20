@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui sql network concurrent websockets
+linux:QT += dbus
 win32:QT += winextras
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
