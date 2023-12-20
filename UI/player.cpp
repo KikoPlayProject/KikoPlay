@@ -1892,32 +1892,29 @@ void PlayerWindow::setupSignals()
             EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_PLAYER_STATE_CHANGED, param});
         }
     });
-    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::stateChanged,[this](MPVPlayer::PlayState state){
-#ifdef Q_OS_WIN
-        if(state==MPVPlayer::Play && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
-        {
-            SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED);
-        }
+
+    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::stateChanged,[this](MPVPlayer::PlayState state) {
+        bool has_video = !GlobalObjects::mpvplayer->getCurrentFile().isEmpty();
+        bool is_playing = (state == MPVPlayer::Play && has_video);
+        if (is_playing)
+            setAwakeRequired();
         else
-        {
-            SetThreadExecutionState(ES_CONTINUOUS);
-        }
-#endif
+            unsetAwakeRequired();
+
         if(onTopWhilePlaying)
-        {
-            emit setStayOnTop(state == MPVPlayer::Play && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty());
-        }
+            emit setStayOnTop(is_playing);
+
         switch(state)
         {
         case MPVPlayer::Play:
-            if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+            if (has_video)
             {
                 this->playPause->setText(QChar(0xe6fb));
                 playerContent->hide();
             }
             break;
         case MPVPlayer::Pause:
-            if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+            if (has_video)
                 this->playPause->setText(QChar(0xe606));
             break;
         case MPVPlayer::EndReached:
@@ -2766,4 +2763,100 @@ void PlayerWindow::wheelEvent(QWheelEvent *event)
 	}
     showMessage(tr("Volume: %0").arg(volume->value()), "playerInfo");
 }
+
+// BEGIN: screen saver manage functions
+#ifdef Q_OS_WIN
+
+// MS Windows API
+
+void setAwakeRequired()
+{
+    SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED
+            | ES_SYSTEM_REQUIRED);
+}
+
+void unsetAwakeRequired()
+{
+    SetThreadExecutionState(ES_CONTINUOUS);
+}
+
+#elif defined(Q_OS_LINUX)
+
+// Communicate to org.freedesktop.ScreenSaver with D-Bus
+// works on most systems including KDE and Gnome.
+
+#include <QDBusConnection>
+#include <QDBusMessage>
+
+namespace
+{
+void sendInhabitMessage(bool type)
+{
+    static bool inhabit_status = false;
+    static quint32 cookie = 0;
+
+    if (inhabit_status == type)
+    {
+        return;
+    }
+
+    QDBusConnection connection = QDBusConnection::sessionBus();
+    if (!connection.isConnected())
+    {
+        // Connot connect to D-Bus
+        return;
+    }
+
+    // Create D-Bus Message
+    QDBusMessage message = QDBusMessage::createMethodCall(
+        "org.freedesktop.ScreenSaver"           // D-Bus service name
+        , "/org/freedesktop/ScreenSaver"        // D-Bus object path
+        , "org.freedesktop.ScreenSaver"         // D-Bus interface name
+        , type ? "Inhibit" : "UnInhibit");      // D-Bus method name
+
+    if (type)
+    {
+        // Method Arguments
+        message << QCoreApplication::applicationName();
+        message << QString("PlayingVideo"); // activity decription
+    } else {
+        message << cookie;
+    }
+
+    QDBusMessage reply = connection.call(message);
+
+    if (reply.type() != QDBusMessage::ReplyMessage)
+    {
+        qDebug() << "Failed to send D-Bus message to screen saver";
+		return;
+    }
+    
+    inhabit_status = type;
+	if (type)
+        cookie = reply.arguments().at(0).toUInt();
+    else
+        cookie = 0;
+}
+}
+
+void setAwakeRequired()
+{
+    sendInhabitMessage(true);
+}
+
+void unsetAwakeRequired()
+{
+    sendInhabitMessage(false);
+}
+
+#else
+
+// Empty stub function for unknown OS
+// TODO: implement for Mac
+
+void setAwakeRequired() {}
+void unsetAwakeRequired() {}
+
+#endif
+// END: screen saver manage functions
 

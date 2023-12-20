@@ -142,4 +142,7 @@ protected:
     virtual void wheelEvent(QWheelEvent *event) override;
 };
 
+void setAwakeRequired();
+void unsetAwakeRequired();
+
 #endif // PLAYERWINDOW_H
