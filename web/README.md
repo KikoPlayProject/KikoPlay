@@ -88,6 +88,39 @@ CommentL:
     "type"(string): 字幕文件格式，"","ass","ssa","srt" 
 }
 ```
+## [Get] /api/playstate
+获取当前播放状态。
+
+返回JSON格式：
+```json
+{
+    "cur_item"(ItemInfo): 播放列表当前在播放的条目信息,
+    "player"(PlayerState): 播放器状态
+}
+```
+ItemInfo:
+```json
+{
+    "position"(string): 条目在播放列表的路径,
+    "src_type(number)": 条目类型, 0： 本地文件，1： url
+    "state"(number): 状态，0：未观看 1：未看完 2：已看完,
+    "bgm_collection"(bool): 是否番组合集,
+    "add_time"(number): 添加时间,
+    "title"(string): 标题,
+    "anime_title"(string): 动画标题,
+    "path"(string): 文件路径,
+    "pool"(string): 弹幕池id
+}
+```
+PlayerState:
+```json
+{
+    "cur_file"(string): 当前播放文件路径或url,
+    "state"(number): 状态，0：播放 1：暂停 2：停止 3：完播,
+    "duration"(number): 时长(s),
+    "playtime"(number): 当前进度(s)
+}
+```
 ## [Get] /api/danmu/full/
 获取完整的弹幕池。KikoPlay会使用屏蔽规则过滤，但不会应用延迟和时间轴修改，这些信息包含在source中，首先对弹幕原始时间应用时间轴偏移(timeline)，之后应用整体延迟(delay)，才能得到最终弹幕的时间。如果`update=true`，则不会返回`source`和`launchScripts`。  
 参数：  

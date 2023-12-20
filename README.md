@@ -22,6 +22,7 @@
  - 集成每日放送、资源搜索、aria2下载、自动下载等功能，在KikoPlay里即可完成下载、观看、管理等全部操作
  - .........
 
+使用说明书参考[KikoPlay使用说明](KikoPlay使用说明.pdf)  
 任何人都可以为KikoPlay编写脚本来支持更多弹幕、视频资料以及资源来源，[脚本仓库](https://github.com/KikoPlayProject/KikoPlayScript)  
 还可以通过KikoPlay的Web API实现其他功能，[Web API参考](web/README.md)  
 自1.0.0起增加了扩展App功能，通过扩展App可以为KikoPlay增加更多自定义功能，[App仓库](https://github.com/KikoPlayProject/KikoPlayApp)
