@@ -1,5 +1,4 @@
 #include "selectepisode.h"
-#include <QTreeWidget>
 #include <QGridLayout>
 #include <QPushButton>
 #include <QLabel>
@@ -9,7 +8,7 @@
 SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent)
     :CFramelessDialog(tr("Select Episode"),parent,true), episodeResult(epResults)
 {
-    episodeWidget=new QTreeWidget(this);
+    episodeWidget = new PressTreeWidget(this);
     episodeWidget->setRootIsDecorated(false);
     episodeWidget->setFont(font());
     episodeWidget->setHeaderLabels(QStringList()<<tr("Title")<<tr("Duration")<<tr("Delay(s)"));
@@ -102,4 +101,18 @@ void SelectEpisode::onAccept()
             episodeResult.removeAt(i);
     }
     CFramelessDialog::onAccept();
+}
+
+void PressTreeWidget::keyPressEvent(QKeyEvent *event)
+{
+    int key = event->key();
+    if (key == Qt::Key_Enter || key == Qt::Key_Return)
+    {
+        QTreeWidgetItem *item = currentItem();
+        if (item)
+        {
+            item->setCheckState(0, item->checkState(0) == Qt::Checked? Qt::Unchecked : Qt::Checked);
+        }
+    }
+    QTreeWidget::keyPressEvent(event);
 }

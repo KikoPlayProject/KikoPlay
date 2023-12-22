@@ -3,7 +3,16 @@
 
 #include "framelessdialog.h"
 #include "Play/Danmu/common.h"
-class QTreeWidget;
+#include <QTreeWidget>
+class PressTreeWidget : public QTreeWidget
+{
+    Q_OBJECT
+public:
+    using QTreeWidget::QTreeWidget;
+protected:
+    virtual void keyPressEvent(QKeyEvent *event) override;
+};
+
 class SelectEpisode : public CFramelessDialog
 {
     Q_OBJECT

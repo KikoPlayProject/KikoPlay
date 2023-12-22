@@ -7,8 +7,8 @@
 #include <QPropertyAnimation>
 #include <QEvent>
 #include <QPainter>
+#include "Common/logger.h"
 #include "globalobjects.h"
-#include "qdebug.h"
 
 WindowTip::WindowTip(QWidget *parent)
     : QObject{parent}
@@ -43,7 +43,7 @@ WindowTip::WindowTip(QWidget *parent)
 void WindowTip::addTip(const TipParams &param)
 {
     QWidget *parentWidget = static_cast<QWidget *>(this->parent());
-    if (!parentWidget->isVisible()) return;
+    if (parentWidget->isHidden()) return;
     TipWindowWidget *tipWidget = nullptr;
     if (!param.group.isEmpty())
     {
@@ -88,7 +88,7 @@ void WindowTip::addTip(const TipParams &param)
         w->hide();
         unusedTips.append(w);
     }
-    qDebug() << "[window_tip]" << param.message;
+    Logger::logger()->log(Logger::APP, "[window_tip]" + param.message);
     layoutTips();
     if(!hideTimer.isActive()) hideTimer.start(timerInterval);
 }
