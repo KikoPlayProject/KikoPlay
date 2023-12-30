@@ -42,6 +42,7 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.0.1" date="2023-12-30"/>
     <release version="1.0.0" date="2023-10-05"/>
   </releases>
   <launchable type="desktop-id">io.github.KikoPlayProject.KikoPlay.desktop</launchable>
