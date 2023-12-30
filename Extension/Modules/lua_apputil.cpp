@@ -13,7 +13,6 @@
 #include "Common/logger.h"
 #include "Common/notifier.h"
 #include "UI/luatableviewer.h"
-#include "UI/widgets/windowtip.h"
 #include "lua_util.h"
 
 namespace Extension

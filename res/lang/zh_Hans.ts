@@ -2421,7 +2421,7 @@ Date: %2
     <message>
         <location filename="../../UI/settings/downloadpage.cpp" line="110"/>
         <source>Skip Magnet File Selection</source>
-        <translation>跳过磁力连接文件选择</translation>
+        <translation type="unfinished">跳过磁力链接文件选择</translation>
     </message>
     <message>
         <location filename="../../UI/settings/downloadpage.cpp" line="116"/>

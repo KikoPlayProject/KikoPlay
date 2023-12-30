@@ -1,5 +1,5 @@
 # <img src="../res/images/kikoplay-4.png" width=24 /> KikoPlay Web接口参考 
-2022.10 By Kikyou，本文档适用于KikoPlay 0.9.1及以上版本
+2023.12 By Kikyou，本文档适用于KikoPlay 1.0.1及以上版本
 
 KikoPlay局域网服务功能提供了一些Web接口供其他客户端（包括网页端，Android端等）使用。
 

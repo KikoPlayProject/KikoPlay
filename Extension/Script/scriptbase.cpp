@@ -5,6 +5,7 @@
 #include "Extension/Modules/lua_htmlparser.h"
 #include "Extension/Modules/lua_regex.h"
 #include "Extension/Modules/lua_stringutil.h"
+#include "Extension/Modules/lua_dir.h"
 #include "Extension/Common/ext_common.h"
 #include <QFile>
 #include <QDir>
@@ -30,6 +31,7 @@ ScriptBase::ScriptBase() : L(nullptr), settingsUpdated(false),hasSetOptionFunc(f
         Extension::XmlReader(L).setup();
         Extension::HtmlParser(L).setup();
         Extension::Regex(L).setup();
+        Extension::Dir(L).setup();
 
         lua_pushstring(L, "kiko_scriptobj");
         lua_pushlightuserdata(L, (void *)this);
