@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql network concurrent websockets
+QT       += core gui sql network concurrent websockets xml
 linux:QT += dbus
 win32:QT += winextras
 
@@ -114,6 +114,9 @@ SOURCES += \
     Extension/Script/scriptmodel.cpp \
     Extension/Script/scriptsettingmodel.cpp \
     Download/util.cpp \
+    Play/Playlist/webdav/qwebdav.cpp \
+    Play/Playlist/webdav/qwebdavdirparser.cpp \
+    Play/Playlist/webdav/qwebdavitem.cpp \
     UI/settings/apppage.cpp \
     UI/widgets/windowtip.cpp \
     globalobjects.cpp \
@@ -325,6 +328,9 @@ HEADERS += \
     Extension/Script/scriptmodel.h \
     Extension/Script/scriptsettingmodel.h \
     Download/util.h \
+    Play/Playlist/webdav/qwebdav.h \
+    Play/Playlist/webdav/qwebdavdirparser.h \
+    Play/Playlist/webdav/qwebdavitem.h \
     UI/settings/apppage.h \
     UI/widgets/windowtip.h \
     globalobjects.h \

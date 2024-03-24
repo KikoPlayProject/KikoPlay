@@ -7,7 +7,7 @@
 #include "globalobjects.h"
 
 PlayContext::PlayContext(QObject *parent)
-    : QObject{parent}, duration(0), playtime(0), curItem(nullptr)
+    : QObject{parent}, duration(0), playtime(0), seekable(false), curItem(nullptr)
 {
 
 }
@@ -50,4 +50,5 @@ void PlayContext::clear()
     path = "";
     duration = 0;
     playtime = 0;
+    seekable = false;
 }

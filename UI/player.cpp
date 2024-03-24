@@ -1717,9 +1717,9 @@ void PlayerWindow::setupSignals()
         timeLabel->setText("00:00"+this->totalTimeStr);
         static_cast<DanmuStatisWidget *>(danmuStatisBar)->setDuration(ts);
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
-        if(currentItem && currentItem->type == PlayListItem::ItemType::LOCAL_FILE)
+        if (currentItem && GlobalObjects::mpvplayer->getSeekable())
         {
-            if(currentItem->playTime>15 && currentItem->playTime<ts-15)
+            if (currentItem->playTime > 15 && currentItem->playTime < ts - 15)
             {
                 GlobalObjects::mpvplayer->seek(currentItem->playTime*1000);
                 showMessage(tr("Jumped to the last play position"));
@@ -1747,11 +1747,11 @@ void PlayerWindow::setupSignals()
         EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_PLAYER_FILE_CHANGED, param});
     });
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::fileChanged,[this](){
-        const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
+        const PlayListItem *currentItem = GlobalObjects::playlist->getCurrentItem();
         progress->setEventMark(QVector<DanmuEvent>());
         progress->setChapterMark(QVector<MPVPlayer::ChapterInfo>());
         QString mediaTitle(GlobalObjects::mpvplayer->getMediaTitle());
-        if(!currentItem)
+        if (!currentItem)
         {
             titleLabel->setText(mediaTitle);
             launch->hide();
@@ -1762,9 +1762,9 @@ void PlayerWindow::setupSignals()
 #endif
             return;
         }
-        if(currentItem->animeTitle.isEmpty())
+        if (currentItem->animeTitle.isEmpty())
         {
-            if(currentItem->type == PlayListItem::ItemType::WEB_URL)
+            if (currentItem->type == PlayListItem::ItemType::WEB_URL)
             {
                 titleLabel->setText(currentItem->title != currentItem->path? currentItem->title : mediaTitle);
             }
@@ -1777,7 +1777,7 @@ void PlayerWindow::setupSignals()
         {
             titleLabel->setText(QString("%1-%2").arg(currentItem->animeTitle,currentItem->title));
         }
-        if(currentItem->hasPool())
+        if (currentItem->hasPool())
         {
             GlobalObjects::danmuPool->setPoolID(currentItem->poolID);
             GlobalObjects::danmuProvider->checkSourceToLaunch(currentItem->poolID);
@@ -1786,42 +1786,42 @@ void PlayerWindow::setupSignals()
         {
             launch->hide();
             GlobalObjects::danmuPool->setPoolID("");
-            if(currentItem->type == PlayListItem::ItemType::LOCAL_FILE)
+            if (currentItem->type == PlayListItem::ItemType::LOCAL_FILE)
             {
                 showMessage(tr("File is not associated with Danmu Pool"));
             }
         }
-        if(autoLoadLocalDanmu && currentItem->type == PlayListItem::ItemType::LOCAL_FILE)
+        if (autoLoadLocalDanmu && currentItem->type == PlayListItem::ItemType::LOCAL_FILE)
         {
             QString danmuFile(currentItem->path.mid(0, currentItem->path.lastIndexOf('.'))+".xml");
             QFileInfo fi(danmuFile);
-            if(fi.exists())
+            if (fi.exists())
             {
                 GlobalObjects::danmuPool->addLocalDanmuFile(danmuFile);
             }
         }
-        if(enableLiveMode->isChecked())
+        if (enableLiveMode->isChecked())
         {
             liveDanmuList->show();
         }
         hasExternalAudio = false;
         hasExternalSub = false;
-        if(currentItem->trackInfo)
+        if (currentItem->trackInfo)
         {
-            for(const QString &audioFile : currentItem->trackInfo->audioFiles)
+            for (const QString &audioFile : currentItem->trackInfo->audioFiles)
             {
                 GlobalObjects::mpvplayer->addAudioTrack(audioFile);
             }
-            for(const QString &subFile : currentItem->trackInfo->subFiles)
+            for (const QString &subFile : currentItem->trackInfo->subFiles)
             {
                 GlobalObjects::mpvplayer->addSubtitle(subFile);
             }
             GlobalObjects::mpvplayer->setSubDelay(currentItem->trackInfo->subDelay);
-            if(currentItem->trackInfo->audioIndex > -1)
+            if (currentItem->trackInfo->audioIndex > -1)
             {
                 GlobalObjects::mpvplayer->setTrackId(MPVPlayer::TrackType::AudioTrack, currentItem->trackInfo->audioIndex);
             }
-            if(currentItem->trackInfo->subIndex > -1)
+            if (currentItem->trackInfo->subIndex > -1)
             {
                 GlobalObjects::mpvplayer->setTrackId(MPVPlayer::TrackType::SubTrack, currentItem->trackInfo->subIndex);
                 GlobalObjects::mpvplayer->hideSubtitle(false);
@@ -1831,7 +1831,7 @@ void PlayerWindow::setupSignals()
         {
             GlobalObjects::mpvplayer->setSubDelay(0);
         }
-        if(resizePercent!=-1 && !miniModeOn) adjustPlayerSize(resizePercent);
+        if (resizePercent!=-1 && !miniModeOn) adjustPlayerSize(resizePercent);
 #ifdef QT_DEBUG
         qDebug()<<"File Changed,Current Item: "<<currentItem->title;
 #endif
@@ -2101,6 +2101,7 @@ void PlayerWindow::setupSignals()
         if(this->miniModeOn && this->miniProgress->isVisible() && !seekable) {
             this->miniProgress->setVisible(false);
         }
+        PlayContext::context()->seekable = seekable;
     });
 
 

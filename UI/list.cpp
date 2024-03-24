@@ -52,6 +52,7 @@ namespace
 
             static QIcon bgmCollectionIcon(":/res/images/bgm-collection.svg");
             static QIcon folderIcon(":/res/images/folder.svg");
+            static QIcon webdavIcon(":/res/images/webdav.svg");
             static QIcon colorMarkerIcon[] =
             {
                 QIcon(":/res/images/mark_red.svg"),
@@ -71,6 +72,10 @@ namespace
             else if(index.data(PlayList::ItemRole::FolderCollectionRole).toBool())
             {
                 marker = &folderIcon;
+            }
+            else if(index.data(PlayList::ItemRole::WebDAVCollectionRole).toBool())
+            {
+                marker = &webdavIcon;
             }
             PlayListItem::Marker colorMarker = (PlayListItem::Marker)index.data(PlayList::ItemRole::ColorMarkerRole).toInt();
             if(marker || colorMarker != PlayListItem::Marker::M_NONE)
@@ -240,6 +245,7 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
             playlistView->setDragEnabled(true);
             act_addCollection->setEnabled(true);
             act_addFolder->setEnabled(true);
+            act_addWebDAVCollection->setEnabled(true);
             act_addItem->setEnabled(true);
             act_addURL->setEnabled(true);
         }
@@ -249,6 +255,7 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
             updatePlaylistActions();
             act_addCollection->setEnabled(false);
             act_addFolder->setEnabled(false);
+            act_addWebDAVCollection->setEnabled(false);
             act_addItem->setEnabled(false);
             act_addURL->setEnabled(false);
             playlistView->setDragEnabled(false);
@@ -310,13 +317,22 @@ void ListWindow::initActions()
         GlobalObjects::playlist->switchBgmCollection(selIndex);
     });
 
-    act_updateFolder=new QAction(tr("Scan Folder Changes"),this);
-    QObject::connect(act_updateFolder,&QAction::triggered,[this](){
+    act_updateFolder = new QAction(tr("Scan Folder/WebDAV Collection Changes"),this);
+    QObject::connect(act_updateFolder, &QAction::triggered, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
-        if (selection.size() == 0)return;
+        if (selection.size() == 0) return;
         QModelIndex selIndex(selection.indexes().first());
-        GlobalObjects::playlist->refreshFolder(selIndex);
+        const PlayListItem *item = GlobalObjects::playlist->getItem(selIndex);
+        if (!item || !item->isCollection()) return;
+        if (item->isWebDAVCollection())
+        {
+            GlobalObjects::playlist->refreshWebDAVCollection(selIndex);
+        }
+        else
+        {
+            GlobalObjects::playlist->refreshFolder(selIndex);
+        }
     });
 
     act_addWebDanmuSource=new QAction(tr("Add Web Danmu Source"),this);
@@ -386,7 +402,7 @@ void ListWindow::initActions()
             return;
         }
         bool restorePlayState = false;
-        if (GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
+        if (GlobalObjects::mpvplayer->needPause())
         {
             restorePlayState = true;
             GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
@@ -423,6 +439,7 @@ void ListWindow::initActions()
         updatePlaylistActions();
         act_addCollection->setEnabled(false);
         act_addFolder->setEnabled(false);
+        act_addWebDAVCollection->setEnabled(false);
         act_addItem->setEnabled(false);
         act_addURL->setEnabled(false);
         playlistView->setDragEnabled(false);
@@ -432,6 +449,7 @@ void ListWindow::initActions()
         playlistView->setDragEnabled(true);
         act_addCollection->setEnabled(true);
         act_addFolder->setEnabled(true);
+        act_addWebDAVCollection->setEnabled(true);
         act_addItem->setEnabled(true);
         act_addURL->setEnabled(true);
     });
@@ -445,6 +463,7 @@ void ListWindow::initActions()
         updatePlaylistActions();
         act_addCollection->setEnabled(false);
         act_addFolder->setEnabled(false);
+        act_addWebDAVCollection->setEnabled(false);
         act_addItem->setEnabled(false);
         act_addURL->setEnabled(false);
         playlistView->setDragEnabled(false);
@@ -454,6 +473,7 @@ void ListWindow::initActions()
         playlistView->setDragEnabled(true);
         act_addCollection->setEnabled(true);
         act_addFolder->setEnabled(true);
+        act_addWebDAVCollection->setEnabled(true);
         act_addItem->setEnabled(true);
         act_addURL->setEnabled(true);
     });
@@ -526,7 +546,7 @@ void ListWindow::initActions()
     act_addItem = new QAction(tr("Add Item"),this);
     QObject::connect(act_addItem,&QAction::triggered,[this](){
         bool restorePlayState = false;
-        if (GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
+        if (GlobalObjects::mpvplayer->needPause())
         {
             restorePlayState = true;
             GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
@@ -553,7 +573,7 @@ void ListWindow::initActions()
     act_addFolder = new QAction(tr("Add Folder"),this);
     QObject::connect(act_addFolder,&QAction::triggered,[this](){
         bool restorePlayState = false;
-        if (GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
+        if (GlobalObjects::mpvplayer->needPause())
         {
             restorePlayState = true;
             GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
@@ -567,6 +587,16 @@ void ListWindow::initActions()
         }
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
+
+    act_addWebDAVCollection = new QAction(tr("Add WebDAV Collection"), this);
+    QObject::connect(act_addWebDAVCollection, &QAction::triggered, [this](){
+        AddWebDAVCollectionDialog dialog(this);
+        if (QDialog::Accepted != dialog.exec()) return;
+        QModelIndex parent = getPSParentIndex();
+        parent = GlobalObjects::playlist->addWebDAVCollection(parent, dialog.title, dialog.url, dialog.user, dialog.password);
+        GlobalObjects::playlist->refreshWebDAVCollection(parent);
+    });
+
     act_PlayOnOtherDevices = new QAction(tr("Play on other devices"), this);
     QObject::connect(act_PlayOnOtherDevices, &QAction::triggered, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
@@ -717,7 +747,7 @@ void ListWindow::initActions()
     QObject::connect(act_addOnlineDanmu,&QAction::triggered,[this](){
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
         bool restorePlayState = false;
-        if (GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
+        if (GlobalObjects::mpvplayer->needPause())
         {
             restorePlayState = true;
             GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
@@ -741,7 +771,7 @@ void ListWindow::initActions()
     act_addLocalDanmu=new QAction(tr("Add Local Danmu"),this);
     QObject::connect(act_addLocalDanmu,&QAction::triggered,[this](){
         bool restorePlayState = false;
-        if (GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
+        if (GlobalObjects::mpvplayer->needPause())
         {
             restorePlayState = true;
             GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
@@ -1016,6 +1046,15 @@ QWidget *ListWindow::setupPlaylistPage()
 
     QMenu *playlistContextMenu=new QMenu(playlistView);
     playlistContextMenu->addAction(act_play);
+
+    QMenu *addSubMenu=new QMenu(tr("Add"),playlistContextMenu);
+    addSubMenu->addAction(act_addCollection);
+    addSubMenu->addAction(act_addItem);
+    addSubMenu->addAction(act_addURL);
+    addSubMenu->addAction(act_addFolder);
+    addSubMenu->addAction(act_addWebDAVCollection);
+    playlistContextMenu->addMenu(addSubMenu);
+
     matchSubMenu=new QMenu(tr("Match"),playlistContextMenu);
     QMenu *defaultMatchScriptMenu=new QMenu(tr("Default Match Script"), matchSubMenu);
     matchSubMenu->addAction(act_autoMatch);
@@ -1105,13 +1144,8 @@ QWidget *ListWindow::setupPlaylistPage()
     danmuSubMenu->addAction(act_updateDanmu);
     danmuSubMenu->addAction(act_exportDanmu);
     playlistContextMenu->addMenu(danmuSubMenu);
-    QMenu *addSubMenu=new QMenu(tr("Add"),playlistContextMenu);
-    addSubMenu->addAction(act_addCollection);
-    addSubMenu->addAction(act_addItem);
-    addSubMenu->addAction(act_addURL);
-    addSubMenu->addAction(act_addFolder);
-    playlistContextMenu->addMenu(addSubMenu);
     playlistContextMenu->addSeparator();
+
     QMenu *editSubMenu=new QMenu(tr("Edit"),playlistContextMenu);
     editSubMenu->addAction(act_merge);
     editSubMenu->addAction(act_cut);
@@ -1187,7 +1221,7 @@ QWidget *ListWindow::setupPlaylistPage()
         {QChar(0xe608), tr("Loop Mode")}
     };
     QList<QAction *> tbActions[tbBtnCount] = {
-        {act_addCollection, act_addItem, act_addURL, act_addFolder},
+        {act_addCollection, act_addItem, act_addURL, act_addFolder, act_addWebDAVCollection},
         {act_remove, act_clear},
         {act_sortSelectionAscending, act_sortSelectionDescending, act_sortAllAscending, act_sortAllDescending},
         {loopModeGroup->actions()}
@@ -1573,5 +1607,52 @@ void AddUrlDialog::onAccept()
         }
     }
     decodeTitle = decodeTitleCheck->isChecked();
+    CFramelessDialog::onAccept();
+}
+
+AddWebDAVCollectionDialog::AddWebDAVCollectionDialog(QWidget *parent) : CFramelessDialog(tr("Add WebDAV Collection"), parent, true)
+{
+    QLabel *titleTip = new QLabel(tr("Title"), this);
+    titleEdit = new QLineEdit(this);
+    QLabel *urlTip = new QLabel(tr("URL"), this);
+    urlEdit = new QLineEdit(this);
+    QLabel *userTip = new QLabel(tr("User"), this);
+    userEdit = new QLineEdit(this);
+    QLabel *passwordTip = new QLabel(tr("Password"), this);
+    passwordEdit = new QLineEdit(this);
+
+    QGridLayout *inputGLayout = new QGridLayout(this);
+    inputGLayout->addWidget(titleTip, 0, 0);
+    inputGLayout->addWidget(titleEdit, 0, 1, 1, 3);
+    inputGLayout->addWidget(urlTip, 1, 0);
+    inputGLayout->addWidget(urlEdit, 1, 1, 1, 3);
+    inputGLayout->addWidget(userTip, 2, 0);
+    inputGLayout->addWidget(userEdit, 2, 1);
+    inputGLayout->addWidget(passwordTip, 2, 2);
+    inputGLayout->addWidget(passwordEdit, 2, 3);
+
+    inputGLayout->setColumnStretch(1, 1);
+    inputGLayout->setColumnStretch(3, 1);
+    inputGLayout->setContentsMargins(0, 0, 0, 0);
+
+    setSizeSettingKey("AddWebDAVCollectionDialog" ,QSize(220*logicalDpiX()/96, 60*logicalDpiY()/96));
+}
+
+void AddWebDAVCollectionDialog::onAccept()
+{
+    title = titleEdit->text().trimmed();
+    url = urlEdit->text().trimmed();
+    user = userEdit->text();
+    password = passwordEdit->text();
+    if (title.isEmpty() || url.isEmpty())
+    {
+        showMessage(tr("Title/URL can't be empty"), NM_ERROR | NM_HIDE);
+        return;
+    }
+    if (!url.endsWith("/"))
+    {
+        showMessage(tr("URL must end with /"), NM_ERROR | NM_HIDE);
+        return;
+    }
     CFramelessDialog::onAccept();
 }

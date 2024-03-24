@@ -9,10 +9,13 @@
 #include <QCollator>
 
 #include "playlistprivate.h"
+#include "webdav/qwebdav.h"
+#include "webdav/qwebdavdirparser.h"
 #include "globalobjects.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/playcontext.h"
+#include "Play/Video/mpvplayer.h"
 #include "MediaLibrary/animeworker.h"
 #include "MediaLibrary/animeprovider.h"
 #include "Common/notifier.h"
@@ -44,7 +47,7 @@ PlayList::PlayList(QObject *parent) : QAbstractItemModel(parent), d_ptr(new Play
     d->loadRecentlist();
     d->loadPlaylist();
     qRegisterMetaType<QList<PlayListItem *> >("QList<PlayListItem *>");
-    matchWorker=new MatchWorker();
+    matchWorker = new MatchWorker();
     matchWorker->moveToThread(GlobalObjects::workThread);
     QObject::connect(GlobalObjects::workThread, &QThread::finished, matchWorker, &QObject::deleteLater);
     QObject::connect(matchWorker, &MatchWorker::matchDown, this, [this](const QList<PlayListItem *> &matchedItems){
@@ -59,6 +62,74 @@ PlayList::PlayList(QObject *parent) : QAbstractItemModel(parent), d_ptr(new Play
             autoMoveToBgmCollection(nIndex);
         }
         d->savePlaylist();
+        emit matchStatusChanged(false);
+    });
+
+    webdavWorker = new WebDAVWorker();
+    webdavWorker->moveToThread(GlobalObjects::workThread);
+    QObject::connect(GlobalObjects::workThread, &QThread::finished, webdavWorker, &QObject::deleteLater);
+    QObject::connect(webdavWorker, &WebDAVWorker::listDown, this, [=](PlayListItem *item, const QString &errInfo, const QList<QWebdavItem> davItems){
+        Q_D(PlayList);
+        Notifier *notifier = Notifier::getNotifier();
+        if (!errInfo.isEmpty())
+        {
+            notifier->showMessage(Notifier::LIST_NOTIFY, errInfo, NM_HIDE);
+        }
+        else
+        {
+            QSet<QString> currentPaths;
+            for(PlayListItem *item : *item->children)
+            {
+                if (item->isWebDAVCollection())
+                {
+                    if (!item->path.isEmpty()) currentPaths << item->path;
+                }
+            }
+            QVector<PlayListItem *> nItems;
+            for (const QWebdavItem &davItem : davItems)
+            {
+                QUrl itemURL(item->path);
+                itemURL.setPath(davItem.path());
+                QString fullPath;
+                if (davItem.isDir())
+                {
+                    fullPath = itemURL.toString();
+                    if (currentPaths.contains(fullPath)) continue;
+                    PlayListItem *newCollection = new PlayListItem(nullptr, false);
+                    newCollection->title = davItem.name();
+                    newCollection->path = fullPath;
+                    newCollection->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
+                    newCollection->webDAVInfo = new WebDAVInfo(*item->webDAVInfo);
+                    nItems.append(newCollection);
+                }
+                else
+                {
+                    itemURL.setUserName(item->webDAVInfo->user);
+                    itemURL.setPassword(item->webDAVInfo->password);
+                    fullPath = itemURL.toString();
+                    if (d->fileItems.contains(fullPath)) continue;
+                    if (!GlobalObjects::mpvplayer->videoFileFormats.contains("*." + davItem.ext().toLower())) continue;
+                    PlayListItem *newItem = new PlayListItem(nullptr, true);
+                    newItem->title = davItem.name();
+                    newItem->path = fullPath;
+                    newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
+                    newItem->type = PlayListItem::ItemType::WEB_URL;
+                    d->fileItems.insert(newItem->path, newItem);
+                    nItems.append(newItem);
+                }
+            }
+            if (!nItems.empty())
+            {
+                QModelIndex index = createIndex(item->parent->children->indexOf(item), 0, item);
+                beginInsertRows(index, item->children->size(), item->children->size() + nItems.size() - 1);
+                for (PlayListItem *sItem : nItems)
+                {
+                    sItem->moveTo(item);
+                }
+                endInsertRows();
+            }
+            notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 item(s)").arg(nItems.size()), NM_HIDE);
+        }
         emit matchStatusChanged(false);
     });
 }
@@ -462,7 +533,7 @@ QModelIndex PlayList::addCollection(QModelIndex parent, const QString &title)
 {
     Q_D(PlayList);
     PlayListItem *newCollection(nullptr);
-    PlayListItem *parentItem= parent.isValid() ? static_cast<PlayListItem*>(parent.internalPointer()) : d->root;
+    PlayListItem *parentItem = parent.isValid() ? static_cast<PlayListItem*>(parent.internalPointer()) : d->root;
     int insertPosition(0);
 	if (parentItem->children)
 	{
@@ -530,7 +601,7 @@ int PlayList::refreshFolder(const QModelIndex &index)
 {
     Q_D(PlayList);
     if(!index.isValid())return 0;
-    PlayListItem *item= static_cast<PlayListItem*>(index.internalPointer());
+    PlayListItem *item = static_cast<PlayListItem*>(index.internalPointer());
     if(!item->children) return 0;
     QVector<PlayListItem *> nItems;
     int c = d->refreshFolder(item, nItems);
@@ -590,6 +661,35 @@ QModelIndex PlayList::addItem(QModelIndex parent, PlayListItem *item)
     d->playListChanged=true;
     d->needRefresh = true;
     return createIndex(parentItem->children->indexOf(item), 0, item);
+}
+
+QModelIndex PlayList::addWebDAVCollection(QModelIndex parent, const QString &title, const QString &url, const QString &user, const QString &password)
+{
+    QModelIndex collectionIndex = addCollection(parent, title);
+    PlayListItem *item = collectionIndex.isValid() ? static_cast<PlayListItem*>(collectionIndex.internalPointer()) : nullptr;
+    if (!item) return collectionIndex;
+    item->webDAVInfo = new WebDAVInfo;
+    item->webDAVInfo->user = user;
+    item->webDAVInfo->password = password;
+    item->path = url;
+    Q_D(PlayList);
+    d->playListChanged=true;
+    d->needRefresh = true;
+    d->incModifyCounter();
+    return collectionIndex;
+}
+
+void PlayList::refreshWebDAVCollection(const QModelIndex &index)
+{
+    if(!index.isValid()) return;
+    PlayListItem *item = static_cast<PlayListItem*>(index.internalPointer());
+    if(!item || !item->isWebDAVCollection()) return;
+    QMetaObject::invokeMethod(webdavWorker, [=](){
+        if (webdavWorker->listDirectory(item))
+        {
+            emit this->matchStatusChanged(true);
+        }
+    },Qt::QueuedConnection);
 }
 
 void PlayList::cutItems(const QModelIndexList &cutIndexes)
@@ -783,7 +883,14 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
             }
             else if(!item->path.isEmpty())
             {
-                tipContent<< tr("Folder Collection");
+                if (item->isWebDAVCollection())
+                {
+                    tipContent<< tr("WebDAV Collection");
+                }
+                else
+                {
+                    tipContent<< tr("Folder Collection");
+                }
                 tipContent<< item->path;
             }
             if (item->addTime > 0)
@@ -843,7 +950,9 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
     case ItemRole::BgmCollectionRole:
         return (item->isBgmCollection && item->children);
     case ItemRole::FolderCollectionRole:
-        return (item->children && !item->path.isEmpty());
+        return (item->children && !item->path.isEmpty() && !item->isWebDAVCollection());
+    case ItemRole::WebDAVCollectionRole:
+        return item->isWebDAVCollection();
     case ItemRole::ColorMarkerRole:
         return item->marker;
     case ItemRole::FilePathRole:
@@ -1265,8 +1374,8 @@ void PlayList::setCurrentPlayTime()
 {
     Q_D(PlayList);
     PlayListItem *currentItem=d->currentItem;
-    if(!currentItem) return;
-    if(currentItem->type != PlayListItem::ItemType::LOCAL_FILE) return;
+    if (!currentItem) return;
+    if (!PlayContext::context()->seekable) return;
     PlayListItem::PlayState lastState = currentItem->playTimeState;
     const int ignoreLength = 15;
     const int playTime = PlayContext::context()->playtime;
@@ -1704,3 +1813,45 @@ bool MatchWorker::filterItem(PlayListItem *item)
     return false;
 }
 
+
+WebDAVWorker::WebDAVWorker(QObject *parent):QObject(parent), curItem(nullptr)
+{
+    qRegisterMetaType<QList<QWebdavItem>>("QList<QWebdavItem>");
+    webdavNetManager = new QWebdav(this);
+    webdavDirParser = new QWebdavDirParser(this);
+    QObject::connect(webdavDirParser, &QWebdavDirParser::finished, this, [=](){
+        if (!this->curItem) return;
+        Notifier::getNotifier()->showMessage(Notifier::LIST_NOTIFY, tr("Fetch Done") ,NotifyMessageFlag::NM_HIDE);
+        emit listDown(this->curItem, "",  webdavDirParser->getList());
+        this->curItem = nullptr;
+    });
+    QObject::connect(webdavDirParser, &QWebdavDirParser::errorChanged, this, [=](const QString &err){
+        if (!this->curItem) return;
+        Notifier::getNotifier()->showMessage(Notifier::LIST_NOTIFY, tr("Fetch Done") ,NotifyMessageFlag::NM_HIDE);
+        emit listDown(this->curItem, err,  {});
+        this->curItem = nullptr;
+    });
+}
+
+bool WebDAVWorker::listDirectory(PlayListItem *item)
+{
+    if (webdavDirParser->isBusy()) return false;
+    if (!item || !item->isWebDAVCollection()) return false;
+
+    curItem = item;
+    webdavNetManager->setConnectionSettings(curItem->webDAVInfo->user, curItem->webDAVInfo->password);
+    if (!webdavDirParser->listDirectory(webdavNetManager, item->path)) return false;
+
+    auto notifier = Notifier::getNotifier();
+    notifier->showMessage(Notifier::LIST_NOTIFY, tr("Fetching Directiory Info..."), NotifyMessageFlag::NM_PROCESS|NotifyMessageFlag::NM_SHOWCANCEL);
+    QObject *tmp = new QObject(this);
+    QObject::connect(notifier, &Notifier::cancelTrigger, tmp, [=](int nType){
+        if (nType & Notifier::LIST_NOTIFY)
+        {
+            webdavDirParser->abort();
+            tmp->deleteLater();
+            Notifier::getNotifier()->showMessage(Notifier::LIST_NOTIFY, tr("Fetch Done") ,NotifyMessageFlag::NM_HIDE);
+        }
+    });
+    return true;
+}

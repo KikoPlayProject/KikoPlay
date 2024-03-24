@@ -83,7 +83,7 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
     addIgnoreWidget(titleBar);
     addIgnoreWidget(title);
 
-    if (autoPauseVideo && GlobalObjects::mpvplayer->getState() == MPVPlayer::Play && !GlobalObjects::mpvplayer->isWebSource())
+    if (autoPauseVideo && GlobalObjects::mpvplayer->needPause())
 	{
 		restorePlayState = true;
 		GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);

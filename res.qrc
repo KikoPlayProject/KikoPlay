@@ -78,5 +78,6 @@
         <file>res/images/tab-close.svg</file>
         <file>res/images/tab-close-hover.svg</file>
         <file>res/images/app.png</file>
+        <file>res/images/webdav.svg</file>
     </qresource>
 </RCC>

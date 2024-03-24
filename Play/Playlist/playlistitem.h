@@ -3,6 +3,8 @@
 #include <QObject>
 
 class PlayList;
+class QXmlStreamReader;
+class QXmlStreamWriter;
 struct ItemTrackInfo
 {
     int subDelay = 0;
@@ -11,13 +13,24 @@ struct ItemTrackInfo
     QStringList subFiles;
     QStringList audioFiles;
 };
+struct WebDAVInfo
+{
+    QString user;
+    QString password;
+};
 
 struct PlayListItem
 {
     PlayListItem(PlayListItem *p = nullptr, bool leaf = false, int insertPosition = -1);
     ~PlayListItem();
 
+    static PlayListItem *parseCollection(QXmlStreamReader &reader, PlayListItem *parent = nullptr);
+    static void writeCollection(QXmlStreamWriter &writer, PlayListItem *item);
+    static PlayListItem *parseItem(QXmlStreamReader &reader, PlayListItem *parent = nullptr);
+    static void writeItem(QXmlStreamWriter &writer, PlayListItem *item);
+
     inline bool isCollection() const { return children; }
+    inline bool isWebDAVCollection() const { return children && webDAVInfo; }
     bool hasPool() const;
     void setLevel(int newLevel);
     void moveTo(PlayListItem *newParent, int insertPosition = -1);
@@ -54,6 +67,7 @@ struct PlayListItem
     QString poolID;
     QString pathHash;
     ItemTrackInfo *trackInfo;
+    WebDAVInfo *webDAVInfo;
 };
 
 #endif // PLAYLISTITEM_H

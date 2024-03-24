@@ -59,7 +59,7 @@ private:
     QTreeView *playlistView;
     QToolButton *playlistPageButton,*danmulistPageButton;
     QStackedLayout *contentStackLayout;
-    QAction *act_play,*act_addCollection,*act_addItem,*act_addURL,*act_addFolder,
+    QAction *act_play,*act_addCollection,*act_addItem,*act_addURL,*act_addFolder, *act_addWebDAVCollection,
             *act_cut,*act_paste,*act_moveUp,*act_moveDown,*act_merge,
             *act_remove,*act_clear, *act_removeMatch, *act_removeInvalid,
             *act_sortSelectionAscending,*act_sortSelectionDescending,*act_sortAllAscending,*act_sortAllDescending,
@@ -113,4 +113,21 @@ private:
 protected:
     virtual void onAccept();
 };
+
+class AddWebDAVCollectionDialog : public CFramelessDialog
+{
+    Q_OBJECT
+public:
+    AddWebDAVCollectionDialog(QWidget *parent = nullptr);
+    QString title;
+    QString url;
+    QString user;
+    QString password;
+private:
+    QLineEdit *titleEdit, *urlEdit, *userEdit, *passwordEdit;
+    // CFramelessDialog interface
+protected:
+    virtual void onAccept();
+};
+
 #endif // LISTWINDOW_H

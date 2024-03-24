@@ -5,7 +5,11 @@
 #include <QSortFilterProxyModel>
 #include "playlistitem.h"
 #include "MediaLibrary/animeinfo.h"
+#include "webdav/qwebdavitem.h"
+
 class PlayListPrivate;
+class QWebdav;
+class QWebdavDirParser;
 class MatchWorker : public QObject
 {
     Q_OBJECT
@@ -19,6 +23,22 @@ signals:
 private:
     QVector<QRegExp> filterRules;
     bool filterItem(PlayListItem *item);
+};
+
+class WebDAVWorker : public QObject
+{
+    Q_OBJECT
+public:
+    explicit WebDAVWorker(QObject *parent = nullptr);
+    bool listDirectory(PlayListItem *item);
+
+    PlayListItem *currentItem() const { return curItem; }
+signals:
+    void listDown(PlayListItem *item, const QString &errInfo, const QList<QWebdavItem> davItems);
+private:
+    PlayListItem *curItem;
+    QWebdavDirParser *webdavDirParser;
+    QWebdav *webdavNetManager;
 };
 
 class PlayList : public QAbstractItemModel
@@ -40,6 +60,7 @@ public:
     {
         BgmCollectionRole = Qt::UserRole+1,
         FolderCollectionRole,
+        WebDAVCollectionRole,
         ColorMarkerRole,
         FilePathRole
     };
@@ -69,6 +90,8 @@ public slots :
     QModelIndex getCollection(QModelIndex parent, const QStringList &path);
     int refreshFolder(const QModelIndex &index);
     QModelIndex addItem(QModelIndex parent, PlayListItem *item);
+    QModelIndex addWebDAVCollection(QModelIndex parent, const QString &title, const QString &url, const QString &user, const QString &password);
+    void refreshWebDAVCollection(const QModelIndex &index);
 
     void deleteItems(const QModelIndexList &deleteIndexes);
     int deleteInvalidItems(const QModelIndexList &indexes);
@@ -134,6 +157,7 @@ public:
 private:
     PlayListPrivate * const d_ptr;
     MatchWorker *matchWorker;
+    WebDAVWorker *webdavWorker;
     Q_DECLARE_PRIVATE(PlayList)
     Q_DISABLE_COPY(PlayList)
 

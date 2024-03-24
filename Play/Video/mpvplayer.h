@@ -60,6 +60,7 @@ public:
     inline bool getMute() const{return mute;}
     inline bool getSeekable() const { return seekable; }
     inline bool isLocalFile() const { return curIsLocalFile; }
+    inline bool needPause() const { return !currentFile.isEmpty() && state == MPVPlayer::Play && seekable; }
     inline const QVector<TrackInfo> &getTrackList(TrackType type){return type==AudioTrack?audioTracks:subTracks;}
     inline double getTime() const{return mpv::qt::get_property(mpv,"playback-time").toDouble();}
     inline int getDuration() const{return currentDuration;}

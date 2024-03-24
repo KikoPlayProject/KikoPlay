@@ -27,20 +27,20 @@ PlayListPrivate::~PlayListPrivate()
 
 void PlayListPrivate::loadPlaylist()
 {
-    if(QFile::exists(plPath+".tmp") && !QFile::exists(plPath))
+    if (QFile::exists(plPath+".tmp") && !QFile::exists(plPath))
     {
         QFile::rename(plPath+".tmp", plPath);
         //TODO LOG
     }
     QFile playlistFile(plPath);
-    bool ret=playlistFile.open(QIODevice::ReadOnly|QIODevice::Text);
-    if(!ret) return;
+    bool ret = playlistFile.open(QIODevice::ReadOnly|QIODevice::Text);
+    if (!ret) return;
     QXmlStreamReader reader(&playlistFile);
     QVector<PlayListItem *> parents;
     QHash<QString,int> nodeNameHash = {
-        {"playlist",0},
-        {"collection",1},
-        {"item",2}
+        {"playlist", 0},
+        {"collection", 1},
+        {"item", 2}
     };
     while(!reader.atEnd())
     {
@@ -55,75 +55,22 @@ void PlayListPrivate::loadPlaylist()
             }
             case 1:
             {
-                PlayListItem *collection=new PlayListItem(parents.last(),false);
-                collection->title=reader.attributes().value("title").toString();
-                collection->isBgmCollection=(reader.attributes().value("bgmCollection")=="true");
-                if(collection->isBgmCollection) bgmCollectionItems.insert(collection->title, collection);
-                collection->path=reader.attributes().value("folderPath").toString();
-                int marker=PlayListItem::Marker::M_NONE;
-                if(reader.attributes().hasAttribute("marker"))
-                    marker = reader.attributes().value("marker").toInt();
-                if(reader.attributes().hasAttribute("addTime"))
-                    collection->addTime = reader.attributes().value("addTime").toLongLong();
-                collection->marker = PlayListItem::Marker(marker);
+                PlayListItem *collection = PlayListItem::parseCollection(reader, parents.last());
+                if(collection->isBgmCollection)
+                    bgmCollectionItems.insert(collection->title, collection);
                 parents.push_back(collection);
                 break;
             }
             case 2:
             {
-                QXmlStreamAttributes attrs = reader.attributes();
-                QString title = attrs.value("title").toString();
-                QString animeTitle = attrs.value("animeTitle").toString();
-                QString poolID = attrs.value("poolID").toString();
-                PlayListItem::ItemType type = PlayListItem::ItemType::LOCAL_FILE;
-                if(attrs.hasAttribute("type"))
-                    type = static_cast<PlayListItem::ItemType>(attrs.value("type").toInt());
-                int playTime = attrs.value("playTime").toInt();
-                int playTimeState = attrs.value("playTimeState").toInt();
-                int marker=PlayListItem::Marker::M_NONE;
-                if(attrs.hasAttribute("marker"))
-                    marker = attrs.value("marker").toInt();
-                qint64 addTime = 0;
-                if(attrs.hasAttribute("addTime"))
-                    addTime = attrs.value("addTime").toLongLong();
-                bool hasTrackInfo = attrs.hasAttribute("subDelay") || attrs.hasAttribute("audioIndex") ||
-                        attrs.hasAttribute("subIndex") || attrs.hasAttribute("sub") || attrs.hasAttribute("audio");
-                ItemTrackInfo trackInfo;
-                if(hasTrackInfo)
+                PlayListItem *item = PlayListItem::parseItem(reader, parents.last());
+                fileItems.insert(item->path, item);
+                mediaPathHash.insert(item->pathHash, item->path);
+                for (auto &pair : recentList)
                 {
-                    if(attrs.hasAttribute("subDelay"))
-                        trackInfo.subDelay = attrs.value("subDelay").toInt();
-                    if(attrs.hasAttribute("audioIndex"))
-                        trackInfo.audioIndex = attrs.value("audioIndex").toInt();
-                    if(attrs.hasAttribute("subIndex"))
-                        trackInfo.subIndex = attrs.value("subIndex").toInt();
-                    if(attrs.hasAttribute("sub"))
-                        trackInfo.subFiles = attrs.value("sub").toString().split('|', Qt::SkipEmptyParts);
-                    if(attrs.hasAttribute("audio"))
-                        trackInfo.audioFiles = attrs.value("audio").toString().split('|', Qt::SkipEmptyParts);
-                }
-
-                QString path = reader.readElementText().trimmed();
-
-                PlayListItem *item=new PlayListItem(parents.last(),true);
-                item->title = title;
-                item->path = path;
-                item->type = type;
-                item->pathHash = QCryptographicHash::hash(path.toUtf8(),QCryptographicHash::Md5).toHex();
-                item->playTime = playTime;
-                item->poolID = poolID;
-                item->playTimeState = PlayListItem::PlayState(playTimeState);
-                item->marker = PlayListItem::Marker(marker);
-                item->addTime = addTime;
-                if(hasTrackInfo)  item->trackInfo = new ItemTrackInfo(trackInfo);
-                fileItems.insert(item->path,item);
-                mediaPathHash.insert(item->pathHash, path);
-                if(!animeTitle.isEmpty())item->animeTitle=animeTitle;
-                for(auto &pair :recentList)
-                {
-                    if(pair.first==item->path)
+                    if (pair.first == item->path)
                     {
-                        pair.second=item->animeTitle.isEmpty()?item->title:QString("%1 %2").arg(item->animeTitle, item->title);
+                        pair.second = item->animeTitle.isEmpty()?item->title:QString("%1 %2").arg(item->animeTitle, item->title);
                         break;
                     }
                 }
@@ -132,23 +79,23 @@ void PlayListPrivate::loadPlaylist()
             }
 
         }
-        if(reader.isEndElement())
+        if (reader.isEndElement())
         {
             int type = nodeNameHash.value(reader.name().toString());
-            if(type==0)
+            if (type == 0)
                 break;
-            else if(type==1)
+            else if (type == 1)
                 parents.pop_back();
         }
         reader.readNext();
     }
-    if(parents.size() > 1 || reader.hasError())
+    if (parents.size() > 1 || reader.hasError())
     {
         Logger::logger()->log(Logger::APP, QString("Playlist File is corrupted: %1").arg(reader.errorString()));
     }
-    for(auto iter= recentList.begin();iter!=recentList.end();)
+    for (auto iter = recentList.begin(); iter != recentList.end(); )
     {
-        if((*iter).second.isEmpty()) //not included in playlist
+        if ((*iter).second.isEmpty()) //not included in playlist
             iter=recentList.erase(iter);
         else
             iter++;
@@ -187,59 +134,25 @@ void PlayListPrivate::incModifyCounter()
 
 void PlayListPrivate::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
 {
-    if(item==root)
+    if (item == root)
     {
         writer.writeStartElement("playlist");
-
     }
     else
     {
         writer.writeStartElement("collection");
-        writer.writeAttribute("title",item->title);
-        writer.writeAttribute("bgmCollection",item->isBgmCollection?"true":"false");
-        if(!item->path.isEmpty())
-            writer.writeAttribute("folderPath",item->path);
-        if(item->marker != PlayListItem::Marker::M_NONE)
-            writer.writeAttribute("marker", QString::number((int)item->marker));
-        if(item->addTime > 0)
-            writer.writeAttribute("addTime", QString::number(item->addTime));
+        PlayListItem::writeCollection(writer, item);
     }
-    for(PlayListItem *child : *item->children)
+    for (PlayListItem *child : *item->children)
     {
-        if(child->children)
+        if (child->children)
         {
             saveItem(writer,child);
         }
         else
         {
             writer.writeStartElement("item");
-            writer.writeAttribute("title", child->title);
-            if(!child->animeTitle.isEmpty())
-                writer.writeAttribute("animeTitle",child->animeTitle);
-            if(!child->poolID.isEmpty())
-                writer.writeAttribute("poolID",child->poolID);
-            if(child->type != PlayListItem::ItemType::LOCAL_FILE)
-                writer.writeAttribute("type",QString::number(child->type));
-            writer.writeAttribute("playTime",QString::number(child->playTime));
-            writer.writeAttribute("playTimeState",QString::number((int)child->playTimeState));
-            if(child->marker != PlayListItem::Marker::M_NONE)
-                writer.writeAttribute("marker", QString::number((int)child->marker));
-            if(item->addTime > 0)
-                writer.writeAttribute("addTime", QString::number(item->addTime));
-            if(child->trackInfo)
-            {
-                if(child->trackInfo->subDelay != 0)
-                    writer.writeAttribute("subDelay",QString::number(child->trackInfo->subDelay));
-                if(child->trackInfo->audioIndex > -1)
-                    writer.writeAttribute("audioIndex",QString::number(child->trackInfo->audioIndex));
-                if(child->trackInfo->subIndex > -1)
-                    writer.writeAttribute("subIndex",QString::number(child->trackInfo->subIndex));
-                if(!child->trackInfo->subFiles.isEmpty())
-                    writer.writeAttribute("sub", child->trackInfo->subFiles.join('|'));
-                if(!child->trackInfo->audioFiles.isEmpty())
-                    writer.writeAttribute("audio", child->trackInfo->audioFiles.join('|'));
-            }
-            writer.writeCharacters(child->path);
+            PlayListItem::writeItem(writer, child);
             writer.writeEndElement();
         }
     }
@@ -438,7 +351,7 @@ int PlayListPrivate::refreshFolder(PlayListItem *folderItem, QVector<PlayListIte
         QString fileName(fileInfo.fileName()), filePath(fileInfo.filePath());
         if (fileInfo.isFile())
         {
-            if(GlobalObjects::mpvplayer->videoFileFormats.contains("*."+fileInfo.suffix().toLower())
+            if (GlobalObjects::mpvplayer->videoFileFormats.contains("*."+fileInfo.suffix().toLower())
                     && !fileItems.contains(filePath))
             {
                 if(oFolder) q_ptr->beginInsertRows(fIndex, folderItem->children->size(), folderItem->children->size());

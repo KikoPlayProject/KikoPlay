@@ -19,6 +19,7 @@ public:
     QString path;
     int duration;
     int playtime;
+    bool seekable;
     const PlayListItem *curItem;
 private:
     explicit PlayContext(QObject *parent = nullptr);
