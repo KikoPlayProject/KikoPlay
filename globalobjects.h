@@ -51,7 +51,7 @@ public:
     static QSqlDatabase getDB(int db);
 
     static constexpr const char *normalFont = "Microsoft Yahei UI";
-    static constexpr const char *kikoVersion = "1.0.1";
+    static constexpr const char *kikoVersion = "1.0.2";
 private:
     static void initDatabase(const char *db_names[]);
     static void setDatabase(const char *name, const char *file);

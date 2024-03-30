@@ -65,6 +65,9 @@ int PlayListInterface::add(lua_State *L)
             if (itemInfo.contains("position")) insertPosition = itemInfo["position"].toString().split("/", Qt::SkipEmptyParts);
             QString path = itemInfo.value("path").toString();
             bool isBgmCollection = itemInfo.value("bgm_collection").toBool();
+            bool isWebDAVCollection = itemInfo.value("webdav_collection").toBool();
+            const QString webDAVUser = itemInfo.value("webdav_user").toString();
+            const QString webDAVPassword = itemInfo.value("webdav_password").toString();
             QMetaObject::invokeMethod(GlobalObjects::playlist, [&](){
                 if (!path.isEmpty())
                 {
@@ -73,7 +76,14 @@ int PlayListInterface::add(lua_State *L)
                     {
                         parent = GlobalObjects::playlist->getCollection(parent, insertPosition);
                     }
-                    GlobalObjects::playlist->addFolder(path, parent, title);
+                    if (isWebDAVCollection)
+                    {
+                        GlobalObjects::playlist->addWebDAVCollection(parent, title, path, webDAVUser, webDAVPassword);
+                    }
+                    else
+                    {
+                        GlobalObjects::playlist->addFolder(path, parent, title);
+                    }
                 }
                 else
                 {
@@ -112,6 +122,7 @@ int PlayListInterface::curitem(lua_State *L)
             {"src_type", item->type},
             {"state", item->playTimeState},
             {"bgm_collection", item->isBgmCollection},
+            {"webdav_collection", item->isWebDAVCollection()},
             {"add_time", item->addTime},
             {"title", item->title},
             {"anime_title", item->animeTitle},
