@@ -1040,7 +1040,17 @@ QWidget *ListWindow::setupPlaylistPage()
     });
 
     QObject::connect(playlistView, &QTreeView::doubleClicked, [this](const QModelIndex &index) {
-        playItem(index, false);
+        QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
+        QModelIndex itemIndex = model->mapToSource(index);
+        const PlayListItem *item = GlobalObjects::playlist->getItem(itemIndex);
+        if (item && item->isWebDAVCollection() && item->children->empty())
+        {
+            GlobalObjects::playlist->refreshWebDAVCollection(itemIndex);
+        }
+        else
+        {
+            playItem(index, false);
+        }
     });
     QObject::connect(playlistView->selectionModel(), &QItemSelectionModel::selectionChanged,this,&ListWindow::updatePlaylistActions);
 
