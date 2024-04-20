@@ -1717,7 +1717,7 @@ void PlayerWindow::setupSignals()
         timeLabel->setText("00:00"+this->totalTimeStr);
         static_cast<DanmuStatisWidget *>(danmuStatisBar)->setDuration(ts);
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
-        if (currentItem && GlobalObjects::mpvplayer->getSeekable())
+        if (currentItem)
         {
             if (currentItem->playTime > 15 && currentItem->playTime < ts - 15)
             {
