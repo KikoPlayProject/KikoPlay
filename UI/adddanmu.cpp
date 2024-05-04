@@ -14,10 +14,12 @@
 #include <QHeaderView>
 #include <QButtonGroup>
 #include <QAction>
+#include <QFileDialog>
 
 #include "Play/Danmu/danmuprovider.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
+#include "Play/Danmu/Provider/localprovider.h"
 #include "Play/Playlist/playlist.h"
 #include "selectepisode.h"
 #include "danmuview.h"
@@ -86,7 +88,7 @@ namespace
     RelWordCache *relCache=nullptr;
 }
 AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,const QStringList &poolList) : CFramelessDialog(tr("Add Danmu"),parent,true,true,autoPauseVideo),
-    danmuPools(poolList),processCounter(0)
+    curItem(item), danmuPools(poolList), processCounter(0)
 {
     if(!relCache) relCache=new RelWordCache();
     Pool *pool = nullptr;
@@ -383,10 +385,11 @@ QWidget *AddDanmu::setupURLPage()
 
 QWidget *AddDanmu::setupSelectedPage()
 {
-    QWidget *selectedPage=new QWidget(this);
-    selectedPage->setFont(QFont(GlobalObjects::normalFont,12));
-    QLabel *tipLabel=new QLabel(tr("Select danmu you want to add:"),selectedPage);
-    selectedDanmuView=new QTreeView(selectedPage);
+    QWidget *selectedPage = new QWidget(this);
+    selectedPage->setFont(QFont(GlobalObjects::normalFont, 12));
+    QLabel *tipLabel = new QLabel(tr("Select danmu you want to add:"), selectedPage);
+    QPushButton *addLocalSrcBtn = new QPushButton(tr("Add Local Danmu File"), selectedPage);
+    selectedDanmuView = new QTreeView(selectedPage);
     selectedDanmuView->setRootIsDecorated(false);
     selectedDanmuView->setFont(selectedPage->font());
     selectedDanmuView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
@@ -401,9 +404,38 @@ QWidget *AddDanmu::setupSelectedPage()
     selectedHeader->setFont(this->font());
     selectedHeader->resizeSection(0, 220*logicalDpiX()/96);
 
-    QVBoxLayout *spVLayout=new QVBoxLayout(selectedPage);
-    spVLayout->addWidget(tipLabel);
-    spVLayout->addWidget(selectedDanmuView);
+    QGridLayout *spGLayout = new QGridLayout(selectedPage);
+    spGLayout->addWidget(tipLabel, 0, 0);
+    spGLayout->addWidget(addLocalSrcBtn, 0, 2);
+    spGLayout->addWidget(selectedDanmuView, 1, 0, 1, 3);
+    spGLayout->setRowStretch(1, 1);
+    spGLayout->setColumnStretch(1, 1);
+
+    QObject::connect(addLocalSrcBtn, &QPushButton::clicked, this, [this](){
+        const QString dialogPath = (!curItem || curItem->path.isEmpty()) ? "" : QFileInfo(curItem->path).absolutePath();
+        QStringList files = QFileDialog::getOpenFileNames(this,tr("Select Xml File"), dialogPath, "Xml File(*.xml) ");
+        if (!files.isEmpty())
+        {
+            for (auto &file: files)
+            {
+                QVector<DanmuComment *> tmplist;
+                LocalProvider::LoadXmlDanmuFile(file, tmplist);
+                int srcCount=tmplist.count();
+                GlobalObjects::blocker->preFilter(tmplist);
+                int filterCount = srcCount - tmplist.count();
+                if (filterCount>0) showMessage(tr("Pre-filter %1 Danmu").arg(filterCount));
+
+                DanmuSource sourceInfo;
+                sourceInfo.scriptData = file;
+                sourceInfo.title = file.mid(file.lastIndexOf('/')+1);
+                sourceInfo.count = tmplist.count();
+
+                selectedDanmuList.append({sourceInfo, tmplist});
+                danmuItemModel->addItem(sourceInfo);
+                selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuList.count()));
+            }
+        }
+    });
 
     QAction *actView=new QAction(tr("View Danmu"),this);
     QObject::connect(actView,&QAction::triggered,this,[this](){
@@ -550,7 +582,9 @@ DanmuItemModel::DanmuItemModel(AddDanmu *dmDialog, bool hasPool, const QString &
 void DanmuItemModel::addItem(const DanmuSource &src)
 {
     beginInsertRows(QModelIndex(),items.count(),items.count());
-    items.append({src.title, src.durationStr(), GlobalObjects::scriptManager->getScript(src.scriptId)->name(), src.count});
+    QSharedPointer<ScriptBase> script = GlobalObjects::scriptManager->getScript(src.scriptId);
+    const QString scriptName = script ? script->name() : "";
+    items.append({src.title, src.durationStr(), scriptName, src.count});
     danmuCheckedList->append(true);
     danmuToPoolList->append(nPool);
     endInsertRows();

@@ -113,6 +113,7 @@ public:
     QList<bool> danmuCheckedList;
     QStringList danmuToPoolList;
 private:
+    const PlayListItem *curItem;
     QToolButton *onlineDanmuPage,*urlDanmuPage,*selectedDanmuPage;
     QLineEdit *keywordEdit;
     QPlainTextEdit *urlEdit;
