@@ -11,6 +11,7 @@ class SearchListModel;
 class QPushButton;
 class QComboBox;
 class ScriptSearchOptionPanel;
+class QSortFilterProxyModel;
 class SearchListModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -51,6 +52,7 @@ private:
     QPushButton *prevPage, *nextPage;
     QComboBox *scriptCombo;
     SearchListModel *searchListModel;
+    QSortFilterProxyModel *searchProxyModel;
     ScriptSearchOptionPanel *scriptOptionPanel;
     int totalPage,currentPage;
     bool isSearching;

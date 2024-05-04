@@ -386,9 +386,9 @@ QWidget *AddDanmu::setupURLPage()
 QWidget *AddDanmu::setupSelectedPage()
 {
     QWidget *selectedPage = new QWidget(this);
+    QPushButton *addLocalSrcBtn = new QPushButton(tr("Add Local Danmu File"), selectedPage);
     selectedPage->setFont(QFont(GlobalObjects::normalFont, 12));
     QLabel *tipLabel = new QLabel(tr("Select danmu you want to add:"), selectedPage);
-    QPushButton *addLocalSrcBtn = new QPushButton(tr("Add Local Danmu File"), selectedPage);
     selectedDanmuView = new QTreeView(selectedPage);
     selectedDanmuView->setRootIsDecorated(false);
     selectedDanmuView->setFont(selectedPage->font());

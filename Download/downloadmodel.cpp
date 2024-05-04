@@ -7,6 +7,8 @@
 #include "Common/network.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
+#include "Common/logger.h"
+
 DownloadWorker *DownloadModel::downloadWorker=nullptr;
 DownloadModel::DownloadModel(QObject *parent) : QAbstractItemModel(parent),currentOffset(0),
     hasMoreTasks(true),rpc(nullptr)
@@ -237,40 +239,51 @@ void DownloadModel::updateItemStatus(const QJsonObject &statusObj)
     }
     QString status(statusObj.value("status").toString());
     DownloadTask::Status newStatus;
-    if(status=="active")
+    if (status == "active")
     {
-        if(item->totalLength>0)
-            newStatus=(item->totalLength==item->completedLength?DownloadTask::Seeding:DownloadTask::Downloading);
+        if (item->totalLength>0)
+        {
+            if (item->totalLength == item->completedLength && !statusObj.value("infoHash").isUndefined())
+            {
+                newStatus = DownloadTask::Seeding;
+            }
+            else
+            {
+                newStatus = DownloadTask::Downloading;
+            }
+        }
         else
-            newStatus=DownloadTask::Downloading;
+        {
+            newStatus = DownloadTask::Downloading;
+        }
     }
-    else if(status=="waiting")
+    else if (status == "waiting")
     {
-        newStatus=DownloadTask::Waiting;
+        newStatus = DownloadTask::Waiting;
     }
-    else if(status=="paused")
+    else if (status == "paused")
     {
-        newStatus=DownloadTask::Paused;
+        newStatus = DownloadTask::Paused;
     }
-    else if(status=="error")
+    else if (status == "error")
     {
-        newStatus=DownloadTask::Error;
+        newStatus = DownloadTask::Error;
     }
-    else if(status=="complete")
+    else if (status == "complete")
     {
-        newStatus=DownloadTask::Complete;
+        newStatus = DownloadTask::Complete;
     }
     else
     {
         Q_ASSERT(false);
     }
-    if(newStatus!=item->status)
+    if (newStatus != item->status)
     {
         switch (newStatus)
         {
         case DownloadTask::Complete:
         {
-            if(!statusObj.value("infoHash").isUndefined() && item->torrentContent.isEmpty())
+            if (!statusObj.value("infoHash").isUndefined() && item->torrentContent.isEmpty())
             {
                 QFileInfo info(item->dir,statusObj.value("infoHash").toString()+".torrent");
                 gidMap.remove(gid);
@@ -283,12 +296,17 @@ void DownloadModel::updateItemStatus(const QJsonObject &statusObj)
                 QMetaObject::invokeMethod(downloadWorker, [item]() {
                     downloadWorker->updateTaskInfo(item);
                 }, Qt::QueuedConnection);
-                emit taskFinish(item);
+                if (item->status != DownloadTask::Seeding)
+                {
+                    emit taskFinish(item);
+                }
             }
+            break;
         }
         case DownloadTask::Seeding:
         {
             item->finishTime=QDateTime::currentSecsSinceEpoch();
+            emit taskFinish(item);
             break;
         }
         default:

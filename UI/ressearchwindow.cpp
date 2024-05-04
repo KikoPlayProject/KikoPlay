@@ -1,6 +1,5 @@
 #include "ressearchwindow.h"
 #include "Extension/Script/scriptmanager.h"
-#include "settings.h"
 #include <QPushButton>
 #include <QComboBox>
 #include <QLineEdit>
@@ -16,7 +15,6 @@
 #include <QUrl>
 #include <QIntValidator>
 #include <QMovie>
-#include "widgets/dialogtip.h"
 #include "Common/notifier.h"
 #include "globalobjects.h"
 #include "stylemanager.h"
@@ -28,7 +26,7 @@ namespace
 ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0),currentPage(0),isSearching(false)
 {
     searchListModel=new SearchListModel(this);
-    QSortFilterProxyModel *searchProxyModel=new QSortFilterProxyModel(this);
+    searchProxyModel=new QSortFilterProxyModel(this);
     searchProxyModel->setSourceModel(searchListModel);
     searchProxyModel->setFilterKeyColumn((int)SearchListModel::Columns::TITLE);
     searchProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -85,7 +83,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     QLineEdit *filterEdit=new QLineEdit(this);
     filterEdit->setPlaceholderText(tr("Filter"));
     filterEdit->setClearButtonEnabled(true);
-    QObject::connect(filterEdit,&QLineEdit::textChanged,[searchProxyModel](const QString &text){
+    QObject::connect(filterEdit,&QLineEdit::textChanged,[this](const QString &text){
         searchProxyModel->setFilterRegExp(text);
     });
 
@@ -130,6 +128,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     searchListView->setFont(QFont(GlobalObjects::normalFont,10));
     searchListView->setIndentation(0);
     searchListView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    searchListView->setSortingEnabled(true);
 
     QObject::connect(StyleManager::getStyleManager(), &StyleManager::styleModelChanged, this, [=](StyleManager::StyleMode mode){
         bool setScrollStyle = (mode==StyleManager::BG_COLOR || mode==StyleManager::DEFAULT_BG ||
@@ -145,32 +144,32 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     });
 
 
-    QObject::connect(searchListView, &QTreeView::doubleClicked,[this,searchProxyModel](const QModelIndex &index){
+    QObject::connect(searchListView, &QTreeView::doubleClicked,[this](const QModelIndex &index){
         QModelIndex selIndex = searchProxyModel->mapToSource(index);
         emit addTask(searchListModel->getMagnetList({selIndex.siblingAtColumn((int)SearchListModel::Columns::TIME)}));
     });
     QAction *download=new QAction(tr("Download"),this);
-    QObject::connect(download,&QAction::triggered,this,[this,searchProxyModel](){
+    QObject::connect(download,&QAction::triggered,this,[this](){
         QItemSelection selection = searchProxyModel->mapSelectionToSource(searchListView->selectionModel()->selection());
         if (selection.size() == 0)return;
         emit addTask(searchListModel->getMagnetList(selection.indexes()));
     });
     QAction *copyTitle=new QAction(tr("Copy Title"),this);
-    QObject::connect(copyTitle,&QAction::triggered,this,[this,searchProxyModel](){
+    QObject::connect(copyTitle,&QAction::triggered,this,[this](){
         QItemSelection selection = searchProxyModel->mapSelectionToSource(searchListView->selectionModel()->selection());
         if (selection.size() == 0)return;
         QClipboard *cb = QApplication::clipboard();
         cb->setText(searchListModel->getItem(selection.indexes().last()).title);
     });
     QAction *copyMagnet=new QAction(tr("Copy Magnet"),this);
-    QObject::connect(copyMagnet,&QAction::triggered,this,[this,searchProxyModel](){
+    QObject::connect(copyMagnet,&QAction::triggered,this,[this](){
         QItemSelection selection = searchProxyModel->mapSelectionToSource(searchListView->selectionModel()->selection());
         if (selection.size() == 0)return;
         QClipboard *cb = QApplication::clipboard();
         cb->setText(searchListModel->getMagnetList(selection.indexes()).join('\n'));
     });
     QAction *openLink=new QAction(tr("Open Link"),this);
-    QObject::connect(openLink,&QAction::triggered,this,[this,searchProxyModel](){
+    QObject::connect(openLink,&QAction::triggered,this,[this](){
         QItemSelection selection = searchProxyModel->mapSelectionToSource(searchListView->selectionModel()->selection());
         if (selection.size() == 0)return;
         ResourceItem item = searchListModel->getItem(selection.indexes().last());
@@ -238,6 +237,7 @@ void ResSearchWindow::search(const QString &keyword, bool setSearchEdit)
         searchListModel->setList(currentScriptId, results);
         pageEdit->setText(QString::number(currentPage));
         totalPageTip->setText(QString("/%1").arg(totalPage));
+        searchProxyModel->sort(-1);
         Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, tr("Down"), NM_HIDE);
     }
     else
