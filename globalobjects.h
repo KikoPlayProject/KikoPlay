@@ -48,7 +48,7 @@ public:
     static constexpr const int Comment_DB=0;
     static constexpr const int Bangumi_DB=1;
     static constexpr const int Download_DB=2;
-    static QSqlDatabase getDB(int db);
+    static QSqlDatabase getDB(int db, bool *hasError = nullptr);
 
     static constexpr const char *normalFont = "Microsoft Yahei UI";
     static constexpr const char *kikoVersion = "1.0.2";

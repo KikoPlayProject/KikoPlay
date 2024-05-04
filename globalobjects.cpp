@@ -63,8 +63,7 @@ void GlobalObjects::init()
 	}
 #endif
     QDir dir;
-    if(!dir.exists(dataPath))
-        dir.mkpath(dataPath);
+    if (!dir.exists(dataPath)) dir.mkpath(dataPath);
 
     registerCustomSettingType();
     appSetting=new QSettings(dataPath+"settings.ini",QSettings::IniFormat);
@@ -74,16 +73,17 @@ void GlobalObjects::init()
     initDatabase(mt_db_names);
 
     auto locNames = GlobalObjects::appSetting->value("KikoPlay/Language", "").toStringList();
-    if(locNames.join("").isEmpty()) {
+    if (locNames.join("").isEmpty())
+    {
         locNames = QLocale().uiLanguages();
     }
     static QTranslator translator;
-    for(const auto &locName:locNames) {
+    for (const auto &locName:locNames)
+    {
         auto loc = QLocale(locName);
-        if(loc.uiLanguages().first().startsWith("en-")) {
-            break;
-        }
-        if(translator.load(loc, "", "", ":/res/lang")) {
+        if (loc.uiLanguages().first().startsWith("en-")) break;
+        if (translator.load(loc, "", "", ":/res/lang"))
+        {
             qApp->installTranslator(&translator);
             break;
         }
@@ -91,23 +91,24 @@ void GlobalObjects::init()
     Notifier::getNotifier();
     EventBus::getEventBus();
     PlayContext::context();
-    workThread=new QThread();
+    QThread::currentThread()->setObjectName(QStringLiteral("mainThread"));
+    workThread = new QThread();
     workThread->setObjectName(QStringLiteral("workThread"));
     workThread->start(QThread::NormalPriority);
-    mpvplayer=new MPVPlayer();
-    danmuPool=new DanmuPool();
-    danmuRender=new DanmuRender();
-    QObject::connect(mpvplayer,&MPVPlayer::positionChanged, danmuPool,&DanmuPool::mediaTimeElapsed);
-    QObject::connect(mpvplayer,&MPVPlayer::positionJumped,danmuPool,&DanmuPool::mediaTimeJumped);
-    playlist=new PlayList();
+    mpvplayer = new MPVPlayer();
+    danmuPool = new DanmuPool();
+    danmuRender = new DanmuRender();
+    QObject::connect(mpvplayer, &MPVPlayer::positionChanged, danmuPool, &DanmuPool::mediaTimeElapsed);
+    QObject::connect(mpvplayer, &MPVPlayer::positionJumped, danmuPool, &DanmuPool::mediaTimeJumped);
+    playlist = new PlayList();
     QObject::connect(playlist, &PlayList::currentMatchChanged, danmuPool, &DanmuPool::setPoolID);
-    blocker=new Blocker();
-    QObject *workObj=new QObject();
+    blocker = new Blocker();
+    QObject *workObj = new QObject();
     workObj->moveToThread(workThread);
-    QMetaObject::invokeMethod(workObj,[workObj](){
+    QMetaObject::invokeMethod(workObj, [workObj](){
         initDatabase(wt_db_names);
         workObj->deleteLater();
-    },Qt::QueuedConnection);
+    }, Qt::QueuedConnection);
     scriptManager = new ScriptManager();
     danmuProvider = new DanmuProvider();
     animeProvider = new AnimeProvider();
@@ -145,12 +146,19 @@ void GlobalObjects::clear()
     appSetting->deleteLater();
 }
 
-QSqlDatabase GlobalObjects::getDB(int db)
+QSqlDatabase GlobalObjects::getDB(int db, bool *hasError)
 {
-    if(QThread::currentThread()->objectName()==QStringLiteral("workThread"))
+    const QString threadName = QThread::currentThread()->objectName();
+    if (hasError) *hasError = false;
+    if (threadName == QStringLiteral("workThread"))
     {
         return QSqlDatabase::database(wt_db_names[db]);
     }
+    else if (threadName == "mainThread")
+    {
+        return QSqlDatabase::database(mt_db_names[db]);
+    }
+    if (hasError) *hasError = true;
     return QSqlDatabase::database(mt_db_names[db]);
 }
 

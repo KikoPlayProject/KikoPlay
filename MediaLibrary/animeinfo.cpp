@@ -171,8 +171,7 @@ const QVector<EpInfo> &Anime::epList()
     if(!epLoaded)
     {
         epInfoList.clear();
-        AnimeWorker::instance()->loadEpInfo(this);
-        epLoaded = true;
+        epLoaded = AnimeWorker::instance()->loadEpInfo(this);
     }
     return epInfoList;
 }

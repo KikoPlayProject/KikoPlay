@@ -20,7 +20,7 @@ public:
     int fetchAnimes(QVector<Anime *> *animes, int offset, int limit);
     int animeCount();
     void loadCrImages(Anime *anime);
-    void loadEpInfo(Anime *anime);
+    bool loadEpInfo(Anime *anime);
 
     void addAnime(const MatchResult &match);
     void addAnime(const QString &name);

@@ -147,30 +147,42 @@ void AnimeWorker::loadCrImages(Anime *anime)
     }
 }
 
-void AnimeWorker::loadEpInfo(Anime *anime)
+bool AnimeWorker::loadEpInfo(Anime *anime)
 {
-    QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
-    query.prepare("select * from episode where Anime=?");
-    query.bindValue(0,anime->name());
-    query.exec();
-    int nameNo=query.record().indexOf("Name"),
-        epIndexNo=query.record().indexOf("EpIndex"),
-        typeNo=query.record().indexOf("Type"),
-        localFileNo=query.record().indexOf("LocalFile"),
-        finishTimeNo=query.record().indexOf("FinishTime"),
-        lastPlayTimeNo=query.record().indexOf("LastPlayTime");
-    while (query.next())
+    bool hasDBError = false;
+    GlobalObjects::getDB(GlobalObjects::Bangumi_DB, &hasDBError);
+    auto loadFunc = [anime](){
+        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+        query.prepare("select * from episode where Anime=?");
+        query.bindValue(0,anime->name());
+        bool ret = query.exec();
+        int nameNo=query.record().indexOf("Name"),
+            epIndexNo=query.record().indexOf("EpIndex"),
+            typeNo=query.record().indexOf("Type"),
+            localFileNo=query.record().indexOf("LocalFile"),
+            finishTimeNo=query.record().indexOf("FinishTime"),
+            lastPlayTimeNo=query.record().indexOf("LastPlayTime");
+        while (query.next())
+        {
+            EpInfo ep;
+            ep.name=query.value(nameNo).toString();
+            ep.type=EpType(query.value(typeNo).toInt());
+            ep.index=query.value(epIndexNo).toDouble();
+            ep.localFile=query.value(localFileNo).toString();
+            ep.finishTime=query.value(finishTimeNo).toLongLong();
+            ep.lastPlayTime=query.value(lastPlayTimeNo).toLongLong();
+            anime->epInfoList.append(ep);
+        }
+        std::sort(anime->epInfoList.begin(), anime->epInfoList.end());
+        return ret;
+    };
+    if (!hasDBError)
     {
-        EpInfo ep;
-        ep.name=query.value(nameNo).toString();
-        ep.type=EpType(query.value(typeNo).toInt());
-        ep.index=query.value(epIndexNo).toDouble();
-        ep.localFile=query.value(localFileNo).toString();
-        ep.finishTime=query.value(finishTimeNo).toLongLong();
-        ep.lastPlayTime=query.value(lastPlayTimeNo).toLongLong();
-        anime->epInfoList.append(ep);
+        return loadFunc();
     }
-    std::sort(anime->epInfoList.begin(), anime->epInfoList.end());
+    // has db error, not in main thread or work thread
+    ThreadTask task(GlobalObjects::workThread);
+    return task.Run(loadFunc, true).toBool();
 }
 
 void AnimeWorker::addAnime(const MatchResult &match)
@@ -385,7 +397,7 @@ void AnimeWorker::updateEpTime(const QString &animeName, const QString &path, bo
                     updateEpTime(animeName, path);
                 }
             }
-            query.prepare("update episode set FinishTime=? where LocalFile=?");  
+            query.prepare("update episode set FinishTime=? where LocalFile=?");
         }
         else
         {

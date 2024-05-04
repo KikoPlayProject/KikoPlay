@@ -9,7 +9,7 @@ public:
 
     }
     template<typename Func>
-    QVariant Run(Func task)
+    QVariant Run(Func task, bool blocking = false)
     {
         if (QThread::currentThread() == taskThread)
 		{
@@ -17,13 +17,22 @@ public:
 		}
 		QObject obj;
 		obj.moveToThread(taskThread);
-		QEventLoop eventLoop;
-		QVariant result;
-        QMetaObject::invokeMethod(&obj,[task, &result, &eventLoop](){
-            result = task();
-            QMetaObject::invokeMethod(&eventLoop, "quit", Qt::QueuedConnection);
-        }, Qt::QueuedConnection);
-        eventLoop.exec();
+        QVariant result;
+        if (blocking)
+        {
+            QMetaObject::invokeMethod(&obj,[task, &result](){
+                result = task();
+            }, Qt::BlockingQueuedConnection);
+        }
+        else
+        {
+            QEventLoop eventLoop;
+            QMetaObject::invokeMethod(&obj,[task, &result, &eventLoop](){
+                result = task();
+                QMetaObject::invokeMethod(&eventLoop, "quit", Qt::QueuedConnection);
+            }, Qt::QueuedConnection);
+            eventLoop.exec();
+        }
         return result;
     }
     template<typename Func>
