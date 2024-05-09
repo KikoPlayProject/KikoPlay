@@ -803,8 +803,16 @@ void ListWindow::initActions()
     });
     act_editPool=new QAction(tr("Edit Danmu Pool"),this);
     QObject::connect(act_editPool,&QAction::triggered,[this](){
-        PoolEditor poolEditor(this);
-        poolEditor.exec();
+        static PoolEditor *poolEditor = nullptr;
+        if (!poolEditor)
+        {
+            poolEditor = new PoolEditor(this);
+            QObject::connect(poolEditor, &PoolEditor::finished, poolEditor, &PoolEditor::deleteLater);
+            QObject::connect(poolEditor, &PoolEditor::destroyed, [](){
+               poolEditor = nullptr;
+            });
+        }
+        poolEditor->show();
     });
     act_copyDanmuText=new QAction(tr("Copy Danmu Text"),this);
     QObject::connect(act_copyDanmuText,&QAction::triggered,[this](){

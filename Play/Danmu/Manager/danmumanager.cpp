@@ -12,7 +12,6 @@
 #include "Common/logger.h"
 #include "../common.h"
 #include "../blocker.h"
-#include "../danmupool.h"
 #include "../danmuprovider.h"
 #include "globalobjects.h"
 

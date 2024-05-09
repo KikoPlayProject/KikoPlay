@@ -23,6 +23,7 @@ public:
 private:
     QVBoxLayout *poolItemVLayout;
     void refreshItems();
+    Pool *curPool;
     QVector<PoolItem *> poolItems;
 };
 

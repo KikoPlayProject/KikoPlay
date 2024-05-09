@@ -1955,7 +1955,7 @@ void PlayerWindow::setupSignals()
             this->timeLabel->setText("00:00/00:00");
             titleLabel->setText(QString());
             GlobalObjects::playlist->cleanCurrentItem();
-            GlobalObjects::danmuPool->cleanUp();
+            GlobalObjects::danmuPool->setPoolID("");
 			GlobalObjects::danmuRender->cleanup();			
             GlobalObjects::mpvplayer->update();
             playerContent->raise();

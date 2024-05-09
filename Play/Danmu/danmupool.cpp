@@ -10,7 +10,6 @@
 #include "blocker.h"
 #include "Manager/danmumanager.h"
 #include "Manager/pool.h"
-#include "Play/Playlist/playlist.h"
 #include "Provider/localprovider.h"
 #include "Common/notifier.h"
 namespace
@@ -55,15 +54,6 @@ QSharedPointer<DanmuComment> DanmuPool::getDanmu(const QModelIndex &index)
     else
     {
         return finalPool.at(index.row());
-    }
-}
-
-void DanmuPool::cleanUp()
-{
-    if(curPool!=emptyPool)
-    {
-        setConnect(emptyPool);
-        GlobalObjects::blocker->resetBlockCount();
     }
 }
 
@@ -301,7 +291,6 @@ void DanmuPool::setConnect(Pool *pool)
 		curPool->setUsed(false);
 	}
     curPool=pool;
-    //poolID=curPool->id();
     reset();
     curPool->setUsed(true);
     beginResetModel();
@@ -410,19 +399,30 @@ void DanmuPool::setMinMergeCount(int val)
 
 void DanmuPool::setPoolID(const QString &pid)
 {
-    if(pid.isEmpty())
+    if (pid.isEmpty())
     {
-        for(int tmpSrc : tmpSourceIds)
+        for (int tmpSrc : tmpSourceIds)
         {
             emptyPool->deleteSource(tmpSrc);
         }
         tmpSourceIds.clear();
     }
-    if(pid==curPool->id()) return;
+    if (pid == curPool->id()) return;
     GlobalObjects::blocker->resetBlockCount();
-    Pool *pool = GlobalObjects::danmuManager->getPool(pid);
-    if(pool) setConnect(pool);
-    else if(curPool!=emptyPool) setConnect(emptyPool);
+    if (pid.isEmpty() && curPool != emptyPool)
+    {
+        setConnect(emptyPool);
+        emit poolIdChanged();
+    }
+    else
+    {
+        Pool *pool = GlobalObjects::danmuManager->getPool(pid);
+        if (pool)
+        {
+            setConnect(pool);
+            emit poolIdChanged();
+        }
+    }
 }
 
 void DanmuPool::mediaTimeElapsed(int newTime)

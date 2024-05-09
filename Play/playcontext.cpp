@@ -24,7 +24,6 @@ void PlayContext::playItem(const PlayListItem *item)
     clear();
     curItem = item;
     path = item->path;
-    GlobalObjects::danmuPool->cleanUp();
     GlobalObjects::danmuRender->cleanup();
     GlobalObjects::mpvplayer->setMedia(path);
 }

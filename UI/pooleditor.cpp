@@ -10,7 +10,6 @@
 #include <QAction>
 #include <QApplication>
 #include "globalobjects.h"
-#include "Play/Danmu/danmuprovider.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Video/mpvplayer.h"
 #include "timelineedit.h"
@@ -22,7 +21,7 @@ namespace
     QVector<PoolItem *> *items;
     PoolEditor *editor;
 }
-PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),parent)
+PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),parent), curPool(nullptr)
 {
     items=&poolItems;
     editor=this;
@@ -38,6 +37,8 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),paren
     poolItemVLayout=new QVBoxLayout(contentWidget);
     poolItemVLayout->addStretch(1);
     refreshItems();
+
+    QObject::connect(GlobalObjects::danmuPool, &DanmuPool::poolIdChanged, this, &PoolEditor::refreshItems);
 
     QPushButton *shareCodeButton=new QPushButton(tr("Share Pool Code"),this);
     QObject::connect(shareCodeButton,&QPushButton::clicked,this,[this](){
@@ -84,18 +85,25 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),paren
 
 void PoolEditor::refreshItems()
 {
-    for(auto item:poolItems)
+    for (auto item : poolItems)
     {
         item->deleteLater();
     }
     poolItems.clear();
-    const auto &sources=GlobalObjects::danmuPool->getPool()->sources();
-    for(auto iter=sources.begin();iter!=sources.end();++iter)
+    if (curPool)
     {
-        PoolItem *poolItem=new PoolItem(&iter.value(),this);
-        poolItems<<poolItem;
-        poolItemVLayout->insertWidget(0,poolItem);
+        disconnect(curPool);
+        curPool = nullptr;
     }
+    curPool = GlobalObjects::danmuPool->getPool();
+    const auto &sources = curPool->sources();
+    for (auto iter = sources.begin(); iter != sources.end(); ++iter)
+    {
+        PoolItem *poolItem = new PoolItem(&iter.value(),this);
+        poolItems << poolItem;
+        poolItemVLayout->insertWidget(0, poolItem);
+    }
+    QObject::connect(curPool, &Pool::poolChanged, this, &PoolEditor::refreshItems);
 }
 
 

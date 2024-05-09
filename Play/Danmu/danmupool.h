@@ -67,11 +67,11 @@ public:
     void setMinMergeCount(int val);
     void setPoolID(const QString &pid);
     void testBlockRule(BlockRule *rule);
-    void cleanUp();
 
 signals:
     void statisInfoChange();
     void eventAnalyzeFinished(const QVector<DanmuEvent> &);
+    void poolIdChanged();
 public slots:
     void mediaTimeElapsed(int newTime);
     void mediaTimeJumped(int newTime);

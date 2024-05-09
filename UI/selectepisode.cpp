@@ -11,6 +11,8 @@ SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent)
     episodeWidget = new PressTreeWidget(this);
     episodeWidget->setRootIsDecorated(false);
     episodeWidget->setFont(font());
+    episodeWidget->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
+    episodeWidget->setContextMenuPolicy(Qt::ActionsContextMenu);
     episodeWidget->setHeaderLabels(QStringList()<<tr("Title")<<tr("Duration")<<tr("Delay(s)"));
     QObject::connect(episodeWidget,&QTreeWidget::itemChanged,[this](QTreeWidgetItem *item, int column){
         int index= episodeWidget->indexOfTopLevelItem(item);
@@ -27,6 +29,7 @@ SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent)
         else
             item->setFlags(item->flags()&~(Qt::ItemIsEditable));
     });
+
 	QCheckBox *selectAllCheck = new QCheckBox(tr("Select All"), this);
     QObject::connect(selectAllCheck, &QCheckBox::stateChanged, [this](int state) {
 		int count = episodeWidget->topLevelItemCount();
@@ -55,9 +58,19 @@ SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent)
             episodeWidget->topLevelItem(i++)->setData(2,0,QString("0"));
         }
     });
+
+    QAction *checkSelection = new QAction(tr("Check Selection Episodes"), this);
+    episodeWidget->addAction(checkSelection);
+    QObject::connect(checkSelection, &QAction::triggered, this, [=](){
+        auto selectedRows = episodeWidget->selectionModel()->selectedRows();
+        for (auto &r : selectedRows)
+        {
+            episodeWidget->topLevelItem(r.row())->setCheckState(0, Qt::CheckState::Checked);
+        }
+    });
+
     QAction *actDelay = new QAction(tr("Auto Set Delay from this Episode"), this);
     episodeWidget->addAction(actDelay);
-    episodeWidget->setContextMenuPolicy(Qt::ContextMenuPolicy::ActionsContextMenu);
     QObject::connect(actDelay, &QAction::triggered, this, [this](){
         if(episodeWidget->selectedItems().isEmpty()) return;
         int pos = episodeWidget->indexOfTopLevelItem(episodeWidget->selectedItems().first());

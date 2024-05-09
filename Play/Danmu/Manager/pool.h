@@ -74,7 +74,6 @@ private:
     friend class DanmuManager;
 signals:
     void poolChanged(bool reset);
-public slots:
 };
 
 #endif // POOL_H
