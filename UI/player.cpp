@@ -1025,12 +1025,13 @@ void PlayerWindow::setupDanmuSettingPage()
 
     QLabel *displayAreaLabel=new QLabel(tr("Display Area"), pageGeneral);
     displayAreaSlider = new OptionSlider(pageGeneral);
-    displayAreaSlider->setLabels({tr("1/4"), tr("1/2"), tr("3/4"), tr("Full")});
+    displayAreaSlider->setLabels({tr("1/8"), tr("1/4"), tr("1/2"), tr("3/4"), tr("Full")});
     displayAreaSlider->setValue(3);
     QObject::connect(displayAreaSlider, &OptionSlider::valueChanged, [](int val){
-        GlobalObjects::danmuRender->setDisplayArea((val + 1.0f) / 4.0f);
+        const float rangeMapping[] = { 0.125, 0.25, 0.5, 0.75, 1.0 };
+        GlobalObjects::danmuRender->setDisplayArea(rangeMapping[val]);
     });
-    displayAreaSlider->setValue(GlobalObjects::appSetting->value("Play/DisplayArea", 3).toInt());
+    displayAreaSlider->setValue(GlobalObjects::appSetting->value("Play/DisplayArea", 4).toInt());
 
 
 //Appearance Page
@@ -1044,7 +1045,7 @@ void PlayerWindow::setupDanmuSettingPage()
         GlobalObjects::danmuRender->setOpacity(val/100.f);
         alphaSlider->setToolTip(QString::number(val));
     });
-    alphaSlider->setValue(GlobalObjects::appSetting->value("Play/DanmuAlpha",100).toInt());
+    alphaSlider->setValue(GlobalObjects::appSetting->value("Play/DanmuAlpha", 60).toInt());
 
     QLabel *strokeWidthLabel=new QLabel(tr("Stroke Width"),pageAppearance);
     strokeWidthSlider=new QSlider(Qt::Horizontal,pageAppearance);

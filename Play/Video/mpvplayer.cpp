@@ -143,7 +143,8 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
     }
 
     mpv_set_option_string(mpv, "terminal", "yes");
-    mpv_set_option_string(mpv, "keep-open", "yes");  
+    mpv_set_option_string(mpv, "keep-open", "yes");
+    mpv_set_option_string(mpv, "vo", "libmpv");
 
     QObject::connect(this, &MPVPlayer::frameSwapped, this,&MPVPlayer::swapped);
 
