@@ -472,7 +472,7 @@ void Pool::addSourceJson(const QJsonArray &array)
     srcInfo.scriptData = array[2].toString();
     srcInfo.delay=array[3].toInt();
     srcInfo.count=0;
-    srcInfo.setTimeline(array[3].toString());
+    srcInfo.setTimeline(array[4].toString());
     QVector<DanmuComment *> emptyList;
     addSource(srcInfo,emptyList);
 }

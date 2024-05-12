@@ -20,8 +20,27 @@ namespace
     QVector<QPair<int,int> > timelineClipBoard;
     QVector<PoolItem *> *items;
     PoolEditor *editor;
+    class PoolSignalBlock
+    {
+    public:
+        PoolSignalBlock()
+        {
+            Pool *curPool = GlobalObjects::danmuPool->getPool();
+            if (curPool && editor)
+            {
+                curPool->disconnect(editor);
+            }
+        }
+        ~PoolSignalBlock()
+        {
+            if (editor)
+            {
+                QObject::connect(GlobalObjects::danmuPool->getPool(), &Pool::poolChanged, editor, &PoolEditor::refreshItems);
+            }
+        }
+    };
 }
-PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),parent), curPool(nullptr)
+PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"), parent, false, true, false), curPool(nullptr)
 {
     items=&poolItems;
     editor=this;
@@ -63,10 +82,11 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"),paren
         if(code.isEmpty() ||
                 (!code.startsWith("kikoplay:pool=") &&
                 !code.startsWith("kikoplay:anime="))) return;
+        PoolSignalBlock block;
         bool ret = GlobalObjects::danmuPool->getPool()->addPoolCode(
                     code.mid(code.startsWith("kikoplay:pool=")?14:15),
                     code.startsWith("kikoplay:anime="));
-        if(ret) refreshItems();
+        if (ret) refreshItems();
         this->showMessage(ret?tr("Code Added"):tr("Code Error"),ret? NM_HIDE:NM_ERROR | NM_HIDE);
     });
 
@@ -92,7 +112,7 @@ void PoolEditor::refreshItems()
     poolItems.clear();
     if (curPool)
     {
-        disconnect(curPool);
+        curPool->disconnect(this);
         curPool = nullptr;
     }
     curPool = GlobalObjects::danmuPool->getPool();
@@ -121,7 +141,7 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
         editor->showMessage(tr("The Timeline Info has been copied"));
     });
     QAction *pasteTimeline=new QAction(tr("Paste TimeLine Info"), this);
-    QObject::connect(pasteTimeline,&QAction::triggered,this,[sourceInfo](){
+    QObject::connect(pasteTimeline,&QAction::triggered,this, [=](){
         if(timelineClipBoard.isEmpty()) return;
         auto timeline=sourceInfo->timelineInfo;
         for(auto &pair:timelineClipBoard)
@@ -132,6 +152,7 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
             if(i<c && timeline.at(i).first==pair.first) continue;
             timeline.insert(i,pair);
         }
+        PoolSignalBlock block;
         GlobalObjects::danmuPool->getPool()->setTimeline(sourceInfo->id,timeline);
         editor->showMessage(tr("Pasted Timeline Info"));
     });
@@ -172,7 +193,8 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
     delaySpinBox->setAlignment(Qt::AlignCenter);
     delaySpinBox->setFixedWidth(80*logicalDpiX()/96);
     QObject::connect(delaySpinBox,&QSpinBox::editingFinished,[delaySpinBox,sourceInfo](){
-       GlobalObjects::danmuPool->getPool()->setDelay(sourceInfo->id,delaySpinBox->value()*1000);
+        PoolSignalBlock block;
+        GlobalObjects::danmuPool->getPool()->setDelay(sourceInfo->id,delaySpinBox->value()*1000);
     });
     QPushButton *editTimeline=new QPushButton(tr("Edit Timeline"),this);
     //editTimeline->setFixedWidth(80*logicalDpiX()/96);
@@ -183,12 +205,14 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
         TimelineEdit timelineEdit(sourceInfo,list,this,curTime);
         if(QDialog::Accepted==timelineEdit.exec())
         {
+            PoolSignalBlock block;
             GlobalObjects::danmuPool->getPool()->setTimeline(sourceInfo->id, timelineEdit.timelineInfo);
         }
     });
 
     QPushButton *deleteButton=new QPushButton(tr("Delete"),this);
     QObject::connect(deleteButton,&QPushButton::clicked,[this,sourceInfo](){
+        PoolSignalBlock block;
         GlobalObjects::danmuPool->getPool()->deleteSource(sourceInfo->id);
         items->removeOne(this);
         this->deleteLater();
@@ -203,6 +227,7 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent):QFrame(parent
         delaySpinBox->setEnabled(false);
         this->parentWidget()->setEnabled(false);
         editor->showBusyState(true);
+        PoolSignalBlock block;
         int addCount = GlobalObjects::danmuPool->getPool()->update(sourceInfo->id);
         if(addCount>0)
         {

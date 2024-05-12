@@ -287,7 +287,7 @@ void DanmuPool::setConnect(Pool *pool)
 {
 	if (curPool)
 	{
-		disconnect(curPool);
+        curPool->disconnect(this);
 		curPool->setUsed(false);
 	}
     curPool=pool;

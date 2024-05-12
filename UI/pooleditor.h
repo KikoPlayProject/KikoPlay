@@ -20,9 +20,9 @@ class PoolEditor : public CFramelessDialog
     friend class PoolItem;
 public:
     explicit PoolEditor(QWidget *parent = nullptr);
+    void refreshItems();
 private:
     QVBoxLayout *poolItemVLayout;
-    void refreshItems();
     Pool *curPool;
     QVector<PoolItem *> poolItems;
 };
