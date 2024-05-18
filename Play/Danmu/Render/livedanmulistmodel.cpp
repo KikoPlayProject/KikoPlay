@@ -1,5 +1,8 @@
 #include "livedanmulistmodel.h"
 #define AlignmentRole Qt::UserRole+1
+#define PrefixLengthRole Qt::UserRole+2
+#define SuffixLengthRole Qt::UserRole+3
+#define AlphaRole Qt::UserRole+4
 
 LiveDanmuListModel::LiveDanmuListModel(QObject *parent)
     : QAbstractItemModel{parent}
@@ -69,6 +72,30 @@ QVariant LiveDanmuListModel::data(const QModelIndex &index, int role) const
     else if(role == AlignmentRole)
     {
         return align;
+    }
+    else if(role == AlphaRole)
+    {
+        return fontAlpha;
+    }
+    else if(role == PrefixLengthRole)
+    {
+        if (dm->mergedList)
+        {
+            if (mergeCountPos == 1) return QString("[%1]").arg(dm->mergedList->count()).length();
+        }
+        else
+        {
+            if (showSender) return dm->sender.length() + 1;
+        }
+        return 0;
+    }
+    else if(role == SuffixLengthRole)
+    {
+        if (dm->mergedList && mergeCountPos == 2)
+        {
+            return QString("[%1]").arg(dm->mergedList->count()).length();
+        }
+        return 0;
     }
     return QVariant();
 }

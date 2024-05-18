@@ -1,6 +1,9 @@
 #include "livedanmuitemdelegate.h"
 #include <QPainter>
 #define AlignmentRole Qt::UserRole+1
+#define PrefixLengthRole Qt::UserRole+2
+#define SuffixLengthRole Qt::UserRole+3
+#define AlphaRole Qt::UserRole+4
 
 LiveDanmuItemDelegate::LiveDanmuItemDelegate(QObject *parent)
     : QStyledItemDelegate{parent}
@@ -17,7 +20,7 @@ void LiveDanmuItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
     QTextLayout layout(text, index.data(Qt::FontRole).value<QFont>());
     layout.setTextOption(textOption);
     int marginY = option.fontMetrics.height() / 4, marginX = option.fontMetrics.height() / 4;
-    QSizeF textRect = textLayout(layout, text, option.rect.width() - 2 * marginX);
+    QSizeF textRect = textLayout(layout, index, option.rect.width() - 2 * marginX);
     painter->save();
     static QBrush bgBrush(QColor(0, 0, 0, 90));
     painter->setBrush(bgBrush);
@@ -43,12 +46,35 @@ QSize LiveDanmuItemDelegate::sizeHint(const QStyleOptionViewItem &option, const 
     textOption.setAlignment(static_cast<Qt::Alignment>(index.data(AlignmentRole).toInt()));
     QTextLayout layout(text, index.data(Qt::FontRole).value<QFont>());
     layout.setTextOption(textOption);
-    QSizeF textRect = textLayout(layout, text, option.rect.width() - 2 * marginX);
+    QSizeF textRect = textLayout(layout, index, option.rect.width() - 2 * marginX);
     return QSize(option.rect.width(), textRect.height() + 2 * marginY);
 }
 
-QSizeF LiveDanmuItemDelegate::textLayout(QTextLayout &layout, const QString &text, int maxWidth) const
+QSizeF LiveDanmuItemDelegate::textLayout(QTextLayout &layout, const QModelIndex &index, int maxWidth) const
 {
+    int prefixLength = index.data(PrefixLengthRole).toInt();
+    int suffixLength = index.data(SuffixLengthRole).toInt();
+    int alpha = index.data(AlphaRole).toInt();
+    QVector<QTextLayout::FormatRange> formats;
+    if (prefixLength > 0)
+    {
+        QTextLayout::FormatRange f;
+        f.start = 0;
+        f.length = prefixLength;
+        f.format.setFontPointSize(layout.font().pointSize() * 0.6);
+        f.format.setForeground(QColor(255, 255, 255, alpha));
+        formats.append(f);
+    }
+    if (suffixLength > 0)
+    {
+        QTextLayout::FormatRange f;
+        f.start = layout.text().length() - suffixLength;
+        f.length = suffixLength;
+        f.format.setFontPointSize(layout.font().pointSize() * 0.6);
+        f.format.setForeground(QColor(255, 255, 255, alpha));
+        formats.append(f);
+    }
+    layout.setFormats(formats);
     double height = 0.0,  widthUsed = 0.0;
     layout.beginLayout();
     int i = 0;

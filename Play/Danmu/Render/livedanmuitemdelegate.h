@@ -15,7 +15,7 @@ public:
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
     QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const;
 private:
-    QSizeF textLayout(QTextLayout &layout, const QString &text, int maxWidth) const;
+    QSizeF textLayout(QTextLayout &layout, const QModelIndex &index, int maxWidth) const;
 };
 
 #endif // LIVEDANMUITEMDELEGATE_H
