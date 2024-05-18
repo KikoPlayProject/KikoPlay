@@ -24,12 +24,17 @@ public:
     inline int getTime() const{return mpv::qt::get_property(mpv,"playback-time").toDouble();}
     inline int getDuration() const{return currentDuration;}
     const QSize getVideoSize();
+    QVariant getMPVPropertyVariant(const QString &property, int &errCode);
+    int setMPVCommand(const QVariant& params);
+    void setClickPause(bool on) { clickPause = on; }
+    bool isClickPause() const { return clickPause; }
 
 signals:
     void durationChanged(double value);
     void positionChanged(double value);
     void stateChanged(PlayState state);
     void mouseWheel(int delta);
+    void mouseClick();
 public:
     void setMedia(const QString &file);
     void setState(PlayState newState);
@@ -54,6 +59,8 @@ private:
     PlayState state;
     int currentDuration;
     int volume;
+    bool clickPause = true;
+    double currentPos = 0;
 
     void handle_mpv_event(mpv_event *event);
     inline int setCommand(const QVariant& params);

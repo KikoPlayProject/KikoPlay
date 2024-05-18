@@ -22,6 +22,7 @@ public:
     static int simplifiedTraditionalTrans(lua_State *L);
     static int envInfo(lua_State *L);
     static int viewTable(lua_State *L);
+    static int allScripts(lua_State *L);
 };
 }
 #endif // LUA_UTIL_H

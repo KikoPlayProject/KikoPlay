@@ -85,17 +85,22 @@ static const QHash<QString, AppWidgetLayoutDependOption> layoutDependOptionHash 
 };
 
 static const QHash<QString, AppEvent> eventHash = {
-    {"click",                 AppEvent::EVENT_CLICK},
-    {"text_changed",          AppEvent::EVENT_TEXT_CHANGED},
-    {"return_pressed",        AppEvent::EVENT_RETURN_PRESSED},
-    {"item_click",            AppEvent::EVENT_ITEM_CLICK},
-    {"item_double_click",     AppEvent::EVENT_ITEM_DOUBLE_CLICK},
-    {"check_state_changed",   AppEvent::EVENT_CHECK_STATE_CHANGED},
-    {"current_changed",       AppEvent::EVENT_CURRENT_CHANGED},
-    {"link_click",            AppEvent::EVENT_LINK_CLICK},
-    {"toggled",               AppEvent::EVENT_TOGGLED},
-    {"value_changed",         AppEvent::EVENT_VALUE_CHANGED},
-    {"scroll_edge",           AppEvent::EVENT_SCROLL_EDGE},
+    {"click",                   AppEvent::EVENT_CLICK},
+    {"text_changed",            AppEvent::EVENT_TEXT_CHANGED},
+    {"return_pressed",          AppEvent::EVENT_RETURN_PRESSED},
+    {"item_click",              AppEvent::EVENT_ITEM_CLICK},
+    {"item_double_click",       AppEvent::EVENT_ITEM_DOUBLE_CLICK},
+    {"item_changed",            AppEvent::EVENT_ITEM_CHANGED},
+    {"check_state_changed",     AppEvent::EVENT_CHECK_STATE_CHANGED},
+    {"current_changed",         AppEvent::EVENT_CURRENT_CHANGED},
+    {"link_click",              AppEvent::EVENT_LINK_CLICK},
+    {"toggled",                 AppEvent::EVENT_TOGGLED},
+    {"value_changed",           AppEvent::EVENT_VALUE_CHANGED},
+    {"slider_moved",            AppEvent::EVENT_SLIDER_MOVED},
+    {"scroll_edge",             AppEvent::EVENT_SCROLL_EDGE},
+    {"player_pos_changed",      AppEvent::EVENT_PLAYER_POS_CHANGED},
+    {"player_state_changed",    AppEvent::EVENT_PLAYER_STATE_CHANGED},
+    {"player_duration_changed", AppEvent::EVENT_PLAYER_DURATION_CHANGED},
 };
 
 AppWidgetOption getWidgetOptionType(const QString &name)

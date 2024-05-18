@@ -16,6 +16,7 @@ private:
     static int flash(lua_State *L);
     static int viewTable(lua_State *L);
     static int gtip(lua_State *L);
+    static int refreshscripts(lua_State *L);
 };
 }
 #endif // LUA_APPUTIL_H

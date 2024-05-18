@@ -1,9 +1,9 @@
 #include "lua_util.h"
 #include "Extension/Script/scriptbase.h"
+#include "Extension/Script/scriptmanager.h"
 #include "Extension/Common/luatablemodel.h"
 #include "Common/network.h"
 #include "Common/notifier.h"
-#include "Common/logger.h"
 #include <QSysInfo>
 #include "globalobjects.h"
 #ifdef Q_OS_WIN
@@ -28,6 +28,7 @@ void LuaUtil::setup()
         {"sttrans", simplifiedTraditionalTrans},
         {"envinfo", envInfo},
         {"viewtable", viewTable},
+        {"allscripts", allScripts},
         {nullptr, nullptr}
     };
     registerFuncs("kiko", commonFuncs);
@@ -382,6 +383,33 @@ int LuaUtil::viewTable(lua_State *L)
     };
     Notifier::getNotifier()->showDialog(Notifier::MAIN_DIALOG_NOTIFY, dialogParam);
     return 0;
+}
+
+int LuaUtil::allScripts(lua_State *L)
+{
+    QVariant info;
+    QMetaObject::invokeMethod(GlobalObjects::scriptManager, [&](){
+        QVariantList scriptList;
+        for (int i = 0; i < ScriptType::UNKNOWN_STYPE; ++i)
+        {
+            auto type = ScriptType(i);
+            for (const auto &s: GlobalObjects::scriptManager->scripts(type))
+            {
+                scriptList.append(QVariantMap{
+                    {"type", i},
+                    {"id", s->id()},
+                    {"name", s->name()},
+                    {"version", s->version()},
+                    {"desc", s->desc()},
+                    {"path", s->getValue("path")}
+                });
+            }
+        }
+        info = scriptList;
+    }, QThread::currentThread() == GlobalObjects::scriptManager->thread()? Qt::DirectConnection : Qt::BlockingQueuedConnection);
+    if (info.isNull()) lua_pushnil(L);
+    else ScriptBase::pushValue(L, info);
+    return 1;
 }
 
 }

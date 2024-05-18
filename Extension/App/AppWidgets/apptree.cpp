@@ -280,6 +280,11 @@ void AppTree::bindEvent(AppEvent event, const QString &luaFunc)
         QObject::connect(tree, &QTreeWidget::itemDoubleClicked, this, &AppTree::onItemDoubleClick);
         break;
     }
+    case AppEvent::EVENT_ITEM_CHANGED:
+    {
+        QObject::connect(tree, &QTreeWidget::itemChanged, this, &AppTree::onItemChanged);
+        break;
+    }
     case AppEvent::EVENT_SCROLL_EDGE:
     {
         QObject::connect(tree->verticalScrollBar(), &QScrollBar::valueChanged, [=](int val){
@@ -578,7 +583,7 @@ void AppTree::parseItems(lua_State *L, QList<QTreeWidgetItem *> &items, AppTree 
     }
 }
 
-void AppTree::onItemClick(QTreeWidgetItem *item)
+void AppTree::onItemClick(QTreeWidgetItem *item, int col)
 {
     if (app && item && bindEvents.contains(AppEvent::EVENT_ITEM_CLICK))
     {
@@ -586,6 +591,10 @@ void AppTree::onItemClick(QTreeWidgetItem *item)
         lua_pushstring(app->getState(), "item");
         AppTreeItem::pushItem(app->getState(), item);  // table key item
         lua_rawset(app->getState(), -3);  // table
+
+        lua_pushstring(app->getState(), "col");
+        lua_pushinteger(app->getState(), col + 1);
+        lua_rawset(app->getState(), -3);
 
         lua_pushstring(app->getState(), "srcId");
         lua_pushstring(app->getState(), this->objectName().toUtf8().constData());
@@ -599,7 +608,7 @@ void AppTree::onItemClick(QTreeWidgetItem *item)
     }
 }
 
-void AppTree::onItemDoubleClick(QTreeWidgetItem *item)
+void AppTree::onItemDoubleClick(QTreeWidgetItem *item, int col)
 {
     if (app && item && bindEvents.contains(AppEvent::EVENT_ITEM_DOUBLE_CLICK))
     {
@@ -607,6 +616,10 @@ void AppTree::onItemDoubleClick(QTreeWidgetItem *item)
         lua_pushstring(app->getState(), "item");
         AppTreeItem::pushItem(app->getState(), item);  // table key item
         lua_rawset(app->getState(), -3);  // table
+
+        lua_pushstring(app->getState(), "col");
+        lua_pushinteger(app->getState(), col + 1);
+        lua_rawset(app->getState(), -3);
 
         lua_pushstring(app->getState(), "srcId");
         lua_pushstring(app->getState(), this->objectName().toUtf8().constData());
@@ -617,6 +630,31 @@ void AppTree::onItemDoubleClick(QTreeWidgetItem *item)
         lua_rawset(app->getState(), -3);
 
         app->eventCall(bindEvents[AppEvent::EVENT_ITEM_DOUBLE_CLICK], 1);
+    }
+}
+
+void AppTree::onItemChanged(QTreeWidgetItem *item, int col)
+{
+    if (app && item && bindEvents.contains(AppEvent::EVENT_ITEM_CHANGED))
+    {
+        lua_newtable(app->getState());  // table
+        lua_pushstring(app->getState(), "item");
+        AppTreeItem::pushItem(app->getState(), item);  // table key item
+        lua_rawset(app->getState(), -3);  // table
+
+        lua_pushstring(app->getState(), "col");
+        lua_pushinteger(app->getState(), col + 1);
+        lua_rawset(app->getState(), -3);
+
+        lua_pushstring(app->getState(), "srcId");
+        lua_pushstring(app->getState(), this->objectName().toUtf8().constData());
+        lua_rawset(app->getState(), -3);
+
+        lua_pushstring(app->getState(), "src");
+        this->luaPush(app->getState());
+        lua_rawset(app->getState(), -3);
+
+        app->eventCall(bindEvents[AppEvent::EVENT_ITEM_CHANGED], 1);
     }
 }
 
@@ -677,7 +715,7 @@ void AppTreeItem::pushItems(lua_State *L, const QList<QTreeWidgetItem *> &items)
 void AppTreeItem::pushItemCol(lua_State *L, QTreeWidgetItem *item, int col)
 {
     static const char *fields[] = {
-        "text", "tip", "child_size", "align", "bg", "fg", "data", "check", "collapse"
+        "text", "tip", "child_size", "align", "bg", "fg", "data", "check", "collapse", "edit"
     };
     lua_newtable(L);  // table
     for (const char *field : fields)
@@ -728,6 +766,10 @@ void AppTreeItem::pushItemCol(lua_State *L, QTreeWidgetItem *item, int col, cons
     else if (field == "collapse")
     {
         pushValue(L, !item->isExpanded());
+    }
+    else if (field == "edit")
+    {
+        pushValue(L, item->flags().testFlag(Qt::ItemIsEditable));
     }
     else
     {
@@ -795,9 +837,11 @@ void AppTreeItem::setItemCol(QTreeWidgetItem *item, int col, const QString &fiel
     }
     else if (field == "icon")
     {
-        
         item->setIcon(col, val.value<QIcon>());
-        
+    }
+    else if (field == "edit")
+    {
+        item->setFlags(val.toBool()? (item->flags() | Qt::ItemIsEditable) : (item->flags() & ~Qt::ItemIsEditable));
     }
 }
 

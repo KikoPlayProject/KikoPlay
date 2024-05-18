@@ -50,6 +50,7 @@ private:
 private slots:
     void onItemClick(QListWidgetItem *item);
     void onItemDoubleClick(QListWidgetItem *item);
+    void onItemChanged(QListWidgetItem *item);
     void onScrollEdge(bool bottom);
 };
 }

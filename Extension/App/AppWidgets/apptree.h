@@ -66,8 +66,9 @@ private:
     static void removeDataRef(lua_State *L, QTreeWidgetItem *item, bool onlyChild = false);
     static void parseItems(lua_State *L, QList<QTreeWidgetItem *> &items, AppTree *appTree);
 private slots:
-    void onItemClick(QTreeWidgetItem *item);
-    void onItemDoubleClick(QTreeWidgetItem *item);
+    void onItemClick(QTreeWidgetItem *item, int col);
+    void onItemDoubleClick(QTreeWidgetItem *item, int col);
+    void onItemChanged(QTreeWidgetItem *item, int col);
     void onScrollEdge(bool bottom);
 };
 

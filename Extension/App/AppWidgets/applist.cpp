@@ -342,6 +342,11 @@ void AppList::bindEvent(AppEvent event, const QString &luaFunc)
         QObject::connect(listWidget, &QListWidget::itemDoubleClicked, this, &AppList::onItemDoubleClick);
         break;
     }
+    case AppEvent::EVENT_ITEM_CHANGED:
+    {
+        QObject::connect(listWidget, &QListWidget::itemChanged, this, &AppList::onItemChanged);
+        break;
+    }
     case AppEvent::EVENT_SCROLL_EDGE:
     {
         QObject::connect(listWidget->verticalScrollBar(), &QScrollBar::valueChanged, [=](int val){
@@ -701,6 +706,8 @@ void AppList::setItem(QListWidgetItem *item, const QString &field, const QVarian
         item->setData(ListItemDataRole, val);
     } else if (field == "icon") {
         item->setIcon(val.value<QIcon>());
+    } else if (field == "edit") {
+        item->setFlags(val.toBool()? (item->flags() | Qt::ItemIsEditable) : (item->flags() & ~Qt::ItemIsEditable));
     }
 }
 
@@ -713,6 +720,7 @@ QVariantMap AppList::itemToMap(QListWidgetItem *item)
         {"bg",  item->background().color().rgb()},
         {"fg",  item->foreground().color().rgb()},
         {"index", item->listWidget()? item->listWidget()->row(item) + 1 : 0},
+        {"edit", item->flags().testFlag(Qt::ItemIsEditable)},
     };
     if (item->flags() & Qt::ItemIsUserCheckable)
     {
@@ -748,6 +756,19 @@ void AppList::onItemDoubleClick(QListWidgetItem *item)
             {"item", itemToMap(item)},
         };
         app->eventCall(bindEvents[AppEvent::EVENT_ITEM_DOUBLE_CLICK], params);
+    }
+}
+
+void AppList::onItemChanged(QListWidgetItem *item)
+{
+    if (app && item && bindEvents.contains(AppEvent::EVENT_ITEM_CHANGED))
+    {
+        const QVariantMap params = {
+            {"srcId", this->objectName()},
+            {"src", QVariant::fromValue((AppWidget *)this)},
+            {"item", itemToMap(item)},
+        };
+        app->eventCall(bindEvents[AppEvent::EVENT_ITEM_CHANGED], params);
     }
 }
 

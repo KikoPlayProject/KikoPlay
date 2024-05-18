@@ -34,6 +34,11 @@ void AppSlider::bindEvent(AppEvent event, const QString &luaFunc)
         QObject::connect(slider, &QSlider::valueChanged, this, &AppSlider::onValueChanged);
         break;
     }
+    case AppEvent::EVENT_SLIDER_MOVED:
+    {
+        QObject::connect(slider, &QSlider::sliderMoved, this, &AppSlider::onSliderMoved);
+        break;
+    }
     default:
         break;
     }
@@ -113,6 +118,19 @@ void AppSlider::onValueChanged(int value)
             {"value", value}
         };
         app->eventCall(bindEvents[AppEvent::EVENT_VALUE_CHANGED], param);
+    }
+}
+
+void AppSlider::onSliderMoved(int value)
+{
+    if (app && bindEvents.contains(AppEvent::EVENT_SLIDER_MOVED))
+    {
+        const QVariantMap param = {
+            {"srcId", this->objectName()},
+            {"src", QVariant::fromValue((AppWidget *)this)},
+            {"value", value}
+        };
+        app->eventCall(bindEvents[AppEvent::EVENT_SLIDER_MOVED], param);
     }
 }
 

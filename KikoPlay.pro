@@ -63,6 +63,7 @@ SOURCES += \
     Extension/App/AppWidgets/apphview.cpp \
     Extension/App/AppWidgets/applabel.cpp \
     Extension/App/AppWidgets/applist.cpp \
+    Extension/App/AppWidgets/appplayer.cpp \
     Extension/App/AppWidgets/appprogress.cpp \
     Extension/App/AppWidgets/appradio.cpp \
     Extension/App/AppWidgets/appslider.cpp \
@@ -277,6 +278,7 @@ HEADERS += \
     Extension/App/AppWidgets/apphview.h \
     Extension/App/AppWidgets/applabel.h \
     Extension/App/AppWidgets/applist.h \
+    Extension/App/AppWidgets/appplayer.h \
     Extension/App/AppWidgets/appprogress.h \
     Extension/App/AppWidgets/appradio.h \
     Extension/App/AppWidgets/appslider.h \

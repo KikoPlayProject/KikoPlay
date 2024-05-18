@@ -34,6 +34,8 @@ SimplePlayer::SimplePlayer(QWidget *parent): QOpenGLWidget(parent)
     refreshTimer = new QTimer(this);
     QObject::connect(refreshTimer,&QTimer::timeout,[this](){
        double curTime = mpv::qt::get_property(mpv,QStringLiteral("playback-time")).toDouble();
+       if (curTime == currentPos) return;
+       currentPos = curTime;
        emit positionChanged(curTime);
     });
 }
@@ -50,11 +52,24 @@ const QSize SimplePlayer::getVideoSize()
     return QSize(mpv::qt::get_property(mpv,"width").toInt(), mpv::qt::get_property(mpv,"height").toInt());
 }
 
+QVariant SimplePlayer::getMPVPropertyVariant(const QString &property, int &errCode)
+{
+    auto ret = mpv::qt::get_property(mpv, property);
+    errCode = mpv::qt::get_error(ret);
+    return ret;
+}
+
+int SimplePlayer::setMPVCommand(const QVariant &params)
+{
+    return mpv::qt::get_error(mpv::qt::command(mpv, params));
+}
+
 void SimplePlayer::setMedia(const QString &file)
 {
     if(!setCommand(QStringList() << "loadfile" << file))
     {
         state = PlayState::Play;
+        currentPos = 0;
         refreshTimer->start(timeRefreshInterval);
         setProperty("pause",false);
         setProperty("volume",volume);
@@ -76,6 +91,7 @@ void SimplePlayer::setState(SimplePlayer::PlayState newState)
     case PlayState::Stop:
         setCommand(QVariantList()<<"stop");
         refreshTimer->stop();
+        currentPos = 0;
     default:
         break;
     }
@@ -212,10 +228,13 @@ void SimplePlayer::setProperty(const QString &name, const QVariant &value)
 
 void SimplePlayer::mousePressEvent(QMouseEvent *event)
 {
-    if(event->button()==Qt::LeftButton)
+    if (event->button() == Qt::LeftButton)
     {
-
-        setProperty("pause", state == PlayState::Play);
+        if (clickPause)
+        {
+            setProperty("pause", state == PlayState::Play);
+        }
+        emit mouseClick();
     }
 }
 

@@ -10,10 +10,13 @@
 #include "Extension/Common/ext_common.h"
 #include "Extension/App/kapp.h"
 #include "Extension/Common/luatablemodel.h"
+#include "Extension/Script/scriptbase.h"
+#include "Extension/Script/scriptmanager.h"
 #include "Common/logger.h"
 #include "Common/notifier.h"
 #include "UI/luatableviewer.h"
 #include "lua_util.h"
+#include "globalobjects.h"
 
 namespace Extension
 {
@@ -27,6 +30,8 @@ void AppUtil::setup()
         {"flash", flash},
         {"gtip", gtip},
         {"viewtable", viewTable},
+        {"allscripts", LuaUtil::allScripts},
+        {"refreshscripts", refreshscripts},
         {"compress", LuaUtil::compress},
         {"decompress", LuaUtil::decompress},
         {"execute", LuaUtil::execute},
@@ -200,6 +205,33 @@ int AppUtil::gtip(lua_State *L)
         if (paramsMap.contains("showclose")) param.showClose = paramsMap["showclose"].toBool();
         Notifier::getNotifier()->showMessage(Notifier::NotifyType::GLOBAL_NOTIFY, "", 0, QVariant::fromValue(param));
     }
+    return 0;
+}
+
+int AppUtil::refreshscripts(lua_State *L)
+{
+    ScriptType stype = ScriptType::UNKNOWN_STYPE;
+    if (lua_gettop(L) > 0 && lua_type(L, 1) == LUA_TNUMBER)
+    {
+        const int t = lua_tointeger(L, 1);
+        if ( t >= 0 && t < ScriptType::UNKNOWN_STYPE)
+        {
+            stype = ScriptType(t);
+        }
+    }
+    QMetaObject::invokeMethod(GlobalObjects::scriptManager, [stype](){
+        if (stype == ScriptType::UNKNOWN_STYPE)
+        {
+            for(int i = ScriptType::DANMU; i < ScriptType::UNKNOWN_STYPE; ++i)
+            {
+                GlobalObjects::scriptManager->refreshScripts(ScriptType(i));
+            }
+        }
+        else
+        {
+            GlobalObjects::scriptManager->refreshScripts(ScriptType(stype));
+        }
+    }, Qt::QueuedConnection);
     return 0;
 }
 
