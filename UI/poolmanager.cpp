@@ -14,7 +14,6 @@
 #include <QApplication>
 #include "Play/Danmu/Manager/managermodel.h"
 #include "Play/Danmu/Manager/danmumanager.h"
-#include "Play/Danmu/danmuprovider.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Playlist/playlistitem.h"
 #include "Play/Playlist/playlist.h"
@@ -291,11 +290,14 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     });
 
     QObject::connect(exportConfirm,&QPushButton::clicked,[this,poolView,managerModel,exportConfirm,cancel,useTimelineCheck,useBlockRule,exportKdFile](){
-        if(!managerModel->hasSelected())return;
+        if(!managerModel->hasSelected()) return;
+        const QString lastDirKey = "FileDialogPath/PoolManagerExport";
+        const QString lastDir = GlobalObjects::appSetting->value(lastDirKey).toString();
         QString directory = QFileDialog::getExistingDirectory(this,
-                                    tr("Select folder"), "",
+                                    tr("Select folder"), lastDir,
                                     QFileDialog::DontResolveSymlinks | QFileDialog::ShowDirsOnly);
-        if (directory.isEmpty())return;
+        if (directory.isEmpty()) return;
+        GlobalObjects::appSetting->setValue(lastDirKey, directory);
         this->showBusyState(true);
         exportConfirm->setText(tr("Exporting..."));
         exportConfirm->setEnabled(false);

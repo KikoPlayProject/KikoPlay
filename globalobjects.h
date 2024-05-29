@@ -2,6 +2,7 @@
 #define GLOBALOBJECTS_H
 #include <QString>
 #include <QSqlDatabase>
+#include <QVector>
 class MPVPlayer;
 class DanmuPool;
 class DanmuRender;
@@ -21,10 +22,11 @@ class ScriptManager;
 class AppManager;
 class AutoDownloadManager;
 class QMainWindow;
+class QElapsedTimer;
 class GlobalObjects
 {
 public:
-    static void init();
+    static void init(QElapsedTimer *elapsedTimer = nullptr);
     static void clear();
     static MPVPlayer *mpvplayer;
     static DanmuPool *danmuPool;
@@ -52,6 +54,10 @@ public:
 
     static constexpr const char *normalFont = "Microsoft Yahei UI";
     static constexpr const char *kikoVersion = "1.0.2";
+
+    static qint64 startupTime;
+    static QVector<QPair<QString, qint64>> stepTime;
+    static qint64 tick(QElapsedTimer *timer, const QString &step);
 private:
     static void initDatabase(const char *db_names[]);
     static void setDatabase(const char *name, const char *file);

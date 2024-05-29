@@ -401,7 +401,8 @@ int LuaUtil::allScripts(lua_State *L)
                     {"name", s->name()},
                     {"version", s->version()},
                     {"desc", s->desc()},
-                    {"path", s->getValue("path")}
+                    {"path", s->getValue("path")},
+                    {"min_kiko", s->getValue("min_kiko")},
                 });
             }
         }

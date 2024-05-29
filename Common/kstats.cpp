@@ -10,7 +10,7 @@
 
 KStats::KStats(QObject *parent) : QObject(parent), baseURL("http://www.kstat.top")
 {
-    statsUV();
+    statsUV(true);
     eventTimer.start(7200 * 1000, this);
 }
 
@@ -28,7 +28,7 @@ void KStats::timerEvent(QTimerEvent *event)
     }
 }
 
-void KStats::statsUV()
+void KStats::statsUV(bool isStartup)
 {
     const qint64 lastTs = GlobalObjects::appSetting->value("Stats/DayFirstStartTime", 0).toLongLong();
     const QDate lastDate = QDateTime::fromSecsSinceEpoch(lastTs).date();
@@ -36,12 +36,22 @@ void KStats::statsUV()
     const qint64 curTs = QDateTime::currentSecsSinceEpoch();
     if (lastTs > 0 && lastDate.daysTo(curDate) <= 0) return;
     GlobalObjects::appSetting->setValue("Stats/DayFirstStartTime", curTs);
-    const QJsonObject uvInfo = {
+    QJsonObject uvInfo = {
         {"ts", curTs},
         {"ev", "uv"},
         {"os", QString("%1 %2").arg(QSysInfo::productType(), QSysInfo::productVersion())},
         {"kv", GlobalObjects::kikoVersion},
     };
+    if (isStartup)
+    {
+        uvInfo["st"] = GlobalObjects::startupTime;
+        QJsonObject stepTime;
+        for (auto &p : GlobalObjects::stepTime)
+        {
+            stepTime[p.first] = p.second;
+        }
+        uvInfo["sst"] = stepTime;
+    }
     post("/stats/", QJsonDocument(uvInfo));
     Logger::logger()->log(Logger::APP, "[KStats]stats uv: " + curDate.toString());
 }

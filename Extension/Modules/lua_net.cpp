@@ -336,7 +336,7 @@ int Net::table2json(lua_State *L)
         return 2;
     }
     lua_pushvalue(L, 1);
-    QVariant table = getValue(L, false);
+    QVariant table = getValue(L, true);
     lua_pop(L, 1);
     QJsonDocument::JsonFormat format = QJsonDocument::JsonFormat::Indented;
     if(params > 1)

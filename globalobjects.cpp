@@ -16,13 +16,13 @@
 #include "Common/notifier.h"
 #include "Common/eventbus.h"
 #include "Common/logger.h"
-#include "Common/kstats.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QApplication>
 #include <QSqlError>
 #include <QFileInfo> 
+#include <QElapsedTimer>
 
 MPVPlayer *GlobalObjects::mpvplayer=nullptr;
 DanmuPool *GlobalObjects::danmuPool=nullptr;
@@ -42,6 +42,8 @@ AutoDownloadManager *GlobalObjects::autoDownloadManager=nullptr;
 QMainWindow *GlobalObjects::mainWindow=nullptr;
 QFont* GlobalObjects::iconfont;
 QString GlobalObjects::dataPath;
+qint64 GlobalObjects::startupTime = 0;
+QVector<QPair<QString, qint64>> GlobalObjects::stepTime;
 
 namespace  {
     const char *mt_db_names[]={"Comment_M", "Bangumi_M","Download_M"};
@@ -51,7 +53,7 @@ namespace  {
 constexpr const char *GlobalObjects::normalFont;
 constexpr const char *GlobalObjects::kikoVersion;
 
-void GlobalObjects::init()
+void GlobalObjects::init(QElapsedTimer *elapsedTimer)
 {
 	dataPath = QCoreApplication::applicationDirPath() + "/data/";
 
@@ -71,6 +73,7 @@ void GlobalObjects::init()
     Logger::logger();
 
     initDatabase(mt_db_names);
+    tick(elapsedTimer, "db");
 
     auto locNames = GlobalObjects::appSetting->value("KikoPlay/Language", "").toStringList();
     if (locNames.join("").isEmpty())
@@ -96,6 +99,8 @@ void GlobalObjects::init()
     workThread->setObjectName(QStringLiteral("workThread"));
     workThread->start(QThread::NormalPriority);
     mpvplayer = new MPVPlayer();
+    tick(elapsedTimer, "player");
+
     danmuPool = new DanmuPool();
     danmuRender = new DanmuRender();
     QObject::connect(mpvplayer, &MPVPlayer::positionChanged, danmuPool, &DanmuPool::mediaTimeElapsed);
@@ -103,6 +108,8 @@ void GlobalObjects::init()
     playlist = new PlayList();
     QObject::connect(playlist, &PlayList::currentMatchChanged, danmuPool, &DanmuPool::setPoolID);
     blocker = new Blocker();
+    tick(elapsedTimer, "list");
+
     QObject *workObj = new QObject();
     workObj->moveToThread(workThread);
     QMetaObject::invokeMethod(workObj, [workObj](){
@@ -112,18 +119,24 @@ void GlobalObjects::init()
     scriptManager = new ScriptManager();
     danmuProvider = new DanmuProvider();
     animeProvider = new AnimeProvider();
-    downloadModel = new DownloadModel();
-    danmuManager = new DanmuManager();
-    lanServer = new LANServer();
-    iconfont = new QFont();
-    autoDownloadManager = new AutoDownloadManager();
-    appManager = new AppManager();
+    tick(elapsedTimer, "script");
 
+    downloadModel = new DownloadModel();
+    autoDownloadManager = new AutoDownloadManager();
+    danmuManager = new DanmuManager();
+    tick(elapsedTimer, "dm");
+
+    lanServer = new LANServer();
+    tick(elapsedTimer, "lan");
+
+    appManager = new AppManager();
+    tick(elapsedTimer, "app");
+
+    iconfont = new QFont();
     int fontId = QFontDatabase::addApplicationFont(":/res/iconfont.ttf");
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
     iconfont->setFamily(fontFamilies.at(0));
     QApplication::setFont(QFont("Microsoft Yahei UI", 10));
-    KStats::instance();
 }
 
 void GlobalObjects::clear()
@@ -160,6 +173,15 @@ QSqlDatabase GlobalObjects::getDB(int db, bool *hasError)
     }
     if (hasError) *hasError = true;
     return QSqlDatabase::database(mt_db_names[db]);
+}
+
+qint64 GlobalObjects::tick(QElapsedTimer *timer, const QString &step)
+{
+    if (!timer) return 0;
+    qint64 elapsed = timer->restart();
+    startupTime += elapsed;
+    stepTime.append(QPair<QString, qint64>(step, elapsed));
+    return elapsed;
 }
 
 void GlobalObjects::initDatabase(const char *db_names[])

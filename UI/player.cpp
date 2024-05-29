@@ -1129,6 +1129,7 @@ void PlayerWindow::setupDanmuSettingPage()
         GlobalObjects::danmuRender->setMergeCountPos(index);
     });
     mergeCountTipPos->setCurrentIndex(GlobalObjects::appSetting->value("Play/MergeCountTip",1).toInt());
+    GlobalObjects::danmuRender->setMergeCountPos(mergeCountTipPos->currentIndex());
 
     enableLiveMode = new QCheckBox(tr("Enable Live Mode"), pageAdvanced);
     QObject::connect(enableLiveMode,&QCheckBox::stateChanged,[=](int state){

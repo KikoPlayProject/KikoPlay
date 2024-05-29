@@ -3,11 +3,15 @@
 #include <QMessageBox>
 #include <QLocalSocket>
 #include <QLocalServer>
+#include <QElapsedTimer>
 #include "globalobjects.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/playcontext.h"
 #include "Extension/App/appmanager.h"
+#include "Common/logger.h"
+#include "Common/kstats.h"
+
 #ifdef Q_OS_WIN
 #include <Windows.h>
 #include <DbgHelp.h>
@@ -72,6 +76,8 @@ bool isRunning()
 
 int main(int argc, char *argv[])
 {
+    QElapsedTimer timer;
+    timer.start();
     QApplication a(argc, argv);
     a.setApplicationName("KikoPlay");
     a.setWindowIcon(QIcon(":/res/images/app.png"));
@@ -79,7 +85,7 @@ int main(int argc, char *argv[])
     SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)AppCrashHandler);
 #endif
     if(isRunning()) return 0;
-    GlobalObjects::init();
+    GlobalObjects::init(&timer);
 
     MainWindow w;
     GlobalObjects::mainWindow = &w;
@@ -114,9 +120,19 @@ int main(int argc, char *argv[])
         }
     }
     w.show();
+    GlobalObjects::tick(&timer, "ui");
 	decodeParam();
     QTimer::singleShot(100, [](){
         GlobalObjects::appManager->autoStart();
     });
+    GlobalObjects::startupTime += timer.elapsed();
+    Logger::logger()->log(Logger::APP, QString("startup time: %1ms").arg(GlobalObjects::startupTime));
+    QStringList stepTimes{"step time: "};
+    for (auto &p : GlobalObjects::stepTime)
+    {
+        stepTimes.append(QString("%1:\t%2").arg(p.first, -10).arg(p.second));
+    }
+    Logger::logger()->log(Logger::APP, stepTimes.join('\n'));
+    KStats::instance();
     return a.exec();
 }

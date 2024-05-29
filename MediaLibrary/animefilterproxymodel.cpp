@@ -13,6 +13,7 @@ void AnimeFilterProxyModel::setFilter(int type, const QString &str)
 {
     filterType=type;
     setFilterRegExp(str);
+    setFilterCaseSensitivity(Qt::CaseInsensitive);
     static_cast<AnimeModel *>(sourceModel())->showStatisMessage();
 }
 

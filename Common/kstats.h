@@ -13,7 +13,7 @@ public:
 protected:
     void timerEvent(QTimerEvent* event);
 private:
-    void statsUV();
+    void statsUV(bool isStartup = false);
 private:
     const QString baseURL;
     QBasicTimer eventTimer;
