@@ -16,6 +16,17 @@
 #ifdef QT_DEBUG
 #include "Common/counter.h"
 #endif
+
+#define SETTING_KEY_DANMUHIDE "Play/HideDanmu"
+#define SETTING_KEY_VIDEO_ASPECT "Play/VidoeAspectRatio"
+#define SETTING_KEY_PLAY_SPEED "Play/PlaySpeed"
+#define SETTING_KEY_BRIGHTNESS "Play/Brightness"
+#define SETTING_KEY_CONTRAST "Play/Contrast"
+#define SETTING_KEY_SATURATION "Play/Saturation"
+#define SETTING_KEY_GAMMA "Play/Gamma"
+#define SETTING_KEY_HUE "Play/Hue"
+#define SETTING_KEY_SHARPEN "Play/Sharpen"
+
 namespace
 {
 const char *vShaderDanmu =
@@ -99,8 +110,9 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
 {
     std::setlocale(LC_NUMERIC, "C");
     mpv = mpv_create();
-    if (!mpv)
-        throw std::runtime_error("could not create mpv context");
+    if (!mpv) throw std::runtime_error("could not create mpv context");
+
+    loadSettings();
     loadOptions();
     const QMap<QString, QString> &optionsMap = optionsGroupMap[curOptionGroup];
     for(auto iter = optionsMap.cbegin(); iter != optionsMap.cend(); ++iter)
@@ -567,7 +579,8 @@ void MPVPlayer::setMute(bool mute)
 
 void MPVPlayer::hideDanmu(bool hide)
 {
-    danmuHide=hide;
+    danmuHide = hide;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_DANMUHIDE, hide);
 }
 
 void MPVPlayer::addSubtitle(const QString &path)
@@ -639,12 +652,16 @@ void MPVPlayer::clearExternalSub()
 void MPVPlayer::setSpeed(double speed)
 {
     speed = std::max(speed, 0.0);
+    playSpeed = speed;
     setMPVProperty("speed",speed);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_PLAY_SPEED, playSpeed);
 }
 
 void MPVPlayer::setVideoAspect(int index)
 {
-    setMPVProperty("video-aspect", videoAspcetVal[index]);
+    setMPVProperty("video-aspect", videoAspectVal[index]);
+    videoAspectIndex = index;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_VIDEO_ASPECT, index);
 }
 
 void MPVPlayer::screenshot(const QString &filename)
@@ -654,32 +671,44 @@ void MPVPlayer::screenshot(const QString &filename)
 
 void MPVPlayer::setBrightness(int val)
 {
-    mpv::qt::set_property(mpv, "brightness", qBound(-100, val, 100));
+    val = qBound(-100, val, 100);
+    mpv::qt::set_property(mpv, "brightness", val);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_BRIGHTNESS, val);
 }
 
 void MPVPlayer::setContrast(int val)
 {
-    mpv::qt::set_property(mpv, "contrast", qBound(-100, val, 100));
+    val = qBound(-100, val, 100);
+    mpv::qt::set_property(mpv, "contrast", val);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_CONTRAST, val);
 }
 
 void MPVPlayer::setSaturation(int val)
 {
-    mpv::qt::set_property(mpv, "saturation", qBound(-100, val, 100));
+    val = qBound(-100, val, 100);
+    mpv::qt::set_property(mpv, "saturation", val);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_SATURATION, val);
 }
 
 void MPVPlayer::setGamma(int val)
 {
-    mpv::qt::set_property(mpv, "gamma", qBound(-100, val, 100));
+    val = qBound(-100, val, 100);
+    mpv::qt::set_property(mpv, "gamma", val);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_GAMMA, val);
 }
 
 void MPVPlayer::setHue(int val)
 {
-    mpv::qt::set_property(mpv, "hue", qBound(-100, val, 100));
+    val = qBound(-100, val, 100);
+    mpv::qt::set_property(mpv, "hue", val);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_HUE, val);
 }
 
 void MPVPlayer::setSharpen(int val)
 {
-    mpv::qt::set_property(mpv, "sharpen", qBound(-4.0, val / 100.0, 4.0));
+    double v = qBound(-4.0, val / 100.0, 4.0);
+    mpv::qt::set_property(mpv, "sharpen", v);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_SHARPEN, (int)(v * 100));
 }
 
 void MPVPlayer::initializeGL()
@@ -903,8 +932,8 @@ void MPVPlayer::handle_mpv_event(mpv_event *event)
         [this](mpv_event *event){
             mpv_event_property *prop = (mpv_event_property *)event->data;
             if (prop->format == MPV_FORMAT_DOUBLE) {
-                double speed = *(double *)prop->data;
-                emit speedChanged(speed);
+                playSpeed = *(double *)prop->data;
+                emit speedChanged(playSpeed);
             }
         }
     },
@@ -1139,6 +1168,33 @@ void MPVPlayer::loadOptions()
     }
     if(!optionsGroupMap.contains(curOptionGroup)) curOptionGroup = "default";
     emit optionGroupChanged();
+}
+
+void MPVPlayer::loadSettings()
+{
+    danmuHide = GlobalObjects::appSetting->value(SETTING_KEY_DANMUHIDE, false).toBool();
+    playSpeed = GlobalObjects::appSetting->value(SETTING_KEY_PLAY_SPEED, "1").toDouble();
+
+    videoAspectIndex = GlobalObjects::appSetting->value(SETTING_KEY_VIDEO_ASPECT, 0).toInt();
+    setMPVProperty("video-aspect", videoAspectVal[videoAspectIndex]);
+
+    brightness = GlobalObjects::appSetting->value(SETTING_KEY_BRIGHTNESS, 0).toInt();
+    setMPVProperty("brightness", brightness);
+
+    contrast = GlobalObjects::appSetting->value(SETTING_KEY_CONTRAST, 0).toInt();
+    setMPVProperty("contrast", contrast);
+
+    saturation = GlobalObjects::appSetting->value(SETTING_KEY_SATURATION, 0).toInt();
+    setMPVProperty("saturation", saturation);
+
+    gamma = GlobalObjects::appSetting->value(SETTING_KEY_GAMMA, 0).toInt();
+    setMPVProperty("gamma", gamma);
+
+    hue = GlobalObjects::appSetting->value(SETTING_KEY_HUE, 0).toInt();
+    setMPVProperty("hue", hue);
+
+    sharpen = GlobalObjects::appSetting->value(SETTING_KEY_SHARPEN, 0).toInt();
+    setMPVProperty("sharpen", sharpen / 100.0);
 }
 
 void MPVPlayer::loadPredefineOptions(QStringList &optionGroupKeys, QVector<QStringList> &optionsGroupList)

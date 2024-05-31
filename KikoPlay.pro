@@ -119,6 +119,7 @@ SOURCES += \
     Play/Playlist/webdav/qwebdavdirparser.cpp \
     Play/Playlist/webdav/qwebdavitem.cpp \
     UI/settings/apppage.cpp \
+    UI/widgets/lazycontainer.cpp \
     UI/widgets/windowtip.cpp \
     globalobjects.cpp \
     LANServer/apihandler.cpp \
@@ -334,6 +335,7 @@ HEADERS += \
     Play/Playlist/webdav/qwebdavdirparser.h \
     Play/Playlist/webdav/qwebdavitem.h \
     UI/settings/apppage.h \
+    UI/widgets/lazycontainer.h \
     UI/widgets/windowtip.h \
     globalobjects.h \
     LANServer/apihandler.h \

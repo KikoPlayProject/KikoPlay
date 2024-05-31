@@ -53,7 +53,7 @@ public:
     const QStringList subtitleFormats{"*.sub","*.srt","*.ass","*.ssa","*.smi","*.rt","*.txt","*.mks","*.vtt","*.sup"};
     const QStringList speedLevel{"0.5","0.75","1","1.25","1.5","2","2.5","3", "3.5", "4"};
     const QStringList videoAspect{tr("Auto"),"4:3","16:9","2.35:1"};
-	const double videoAspcetVal[4] = { -1,4.0 / 3,16.0 / 9,2.35 / 1 };
+    const double videoAspectVal[4] = { -1,4.0 / 3,16.0 / 9,2.35 / 1 };
 
     inline PlayState getState() const {return state;}
     inline bool getDanmuHide() const{return danmuHide;}
@@ -77,6 +77,14 @@ public:
     inline bool enableDirectKey() const {return directKeyMode;}
     int getCurrentTrack(TrackType type) const;
     int getExternalTrackCount(TrackType type) const;
+    int getVideoAspectIndex() const { return videoAspectIndex; }
+    double getPlaySpeed() const { return playSpeed; }
+    int getBrightness() const { return brightness; }
+    int getContrast() const { return contrast; }
+    int getSaturation() const { return saturation; }
+    int getGamma() const { return gamma; }
+    int getHue() const { return hue; }
+    int getSharpen() const { return sharpen; }
 
     VideoSizeInfo getVideoSizeInfo();
     QString expandMediaInfo(const QString &text);
@@ -84,6 +92,7 @@ public:
     void drawTexture(QVector<const DanmuObject *> &objList, float alpha);
 
     void loadOptions();
+    void loadSettings();
     void loadPredefineOptions(QStringList &optionGroupKeys, QVector<QStringList> &optionsGroupList);
     bool setOptionGroup(const QString &key);
     const QStringList &allOptionGroups() const {return optionGroupKeys;}
@@ -166,8 +175,16 @@ private:
     bool curIsLocalFile;
     bool danmuHide;
     int volume;
+    int videoAspectIndex;
     bool oldOpenGLVersion;
+    double playSpeed;
     qint64 cacheSpeed;
+    int brightness;
+    int contrast;
+    int saturation;
+    int gamma;
+    int hue;
+    int sharpen;
     QString currentFile;
     QOpenGLShaderProgram danmuShader;
     QTimer refreshTimer;

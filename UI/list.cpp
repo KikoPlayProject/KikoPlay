@@ -24,11 +24,10 @@
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/blocker.h"
-#include "Play/Danmu/Render/danmurender.h"
-#include "Play/Danmu/danmuprovider.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Download/downloadmodel.h"
+#include "widgets/lazycontainer.h"
 
 namespace
 {
@@ -228,7 +227,7 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
     contentStackLayout=new QStackedLayout();
     contentStackLayout->setContentsMargins(0,0,0,0);
     contentStackLayout->addWidget(setupPlaylistPage());
-    contentStackLayout->addWidget(setupDanmulistPage());
+    contentStackLayout->addWidget(new LazyContainer(this, contentStackLayout, [this](){return this->setupDanmulistPage();}));
     listVLayout->addLayout(contentStackLayout);
 
     infoTip=new InfoTip(this);
@@ -263,7 +262,6 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
     });
 
     updatePlaylistActions();
-	updateDanmuActions();
     setFocusPolicy(Qt::StrongFocus);
     setAcceptDrops(true);
 }
@@ -1363,6 +1361,8 @@ QWidget *ListWindow::setupDanmulistPage()
         danmulistView->scrollTo(GlobalObjects::danmuPool->getCurrentIndex(), QAbstractItemView::PositionAtTop);
     });
 
+    updateDanmuActions();
+
     return danmulistPage;
 }
 
@@ -1470,14 +1470,14 @@ void ListWindow::dropEvent(QDropEvent *event)
 
 void ListWindow::enterEvent(QEvent *)
 {
-    playlistView->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    danmulistView->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    if (playlistView && !playlistView->isHidden()) playlistView->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    if (danmulistView && !danmulistView->isHidden()) danmulistView->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 }
 
 void ListWindow::leaveEvent(QEvent *)
 {
-    playlistView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    danmulistView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    if (playlistView && !playlistView->isHidden()) playlistView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    if (danmulistView && !danmulistView->isHidden()) danmulistView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
 
 void ListWindow::sortSelection(bool allItem, bool ascending)

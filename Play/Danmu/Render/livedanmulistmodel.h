@@ -15,13 +15,16 @@ public:
     void clear();
     QSharedPointer<DanmuComment> getDanmu(const QModelIndex &index);
     void setMaxNum(int m) { maxNum = m; }
-    void setShowSender(bool show) { showSender = show; }
+    void setShowSender(bool show);
+    bool isShowSender() const { return showSender; }
     void setFontFamily(const QString &fontFamily) { danmuFont.setFamily(fontFamily); }
-    void setFontSize(int size) { danmuFont.setPointSize(size); }
+    void setFontSize(int size);
+    int getFontSize() const { return danmuFont.pointSize(); }
     void setAlpha(float a) { fontAlpha = 255 * a; }
     void setMergeCountPos(int pos) { mergeCountPos = pos; }
     void setEnlargeMerged(bool on) { enlargeMerged = on; }
-    void setAlignment(Qt::Alignment alignment) { align = alignment; }
+    void setAlignment(Qt::Alignment alignment);
+    Qt::Alignment alignment() const { return static_cast<Qt::Alignment>(align); }
 signals:
     void danmuAppend();
     // QAbstractItemModel interface

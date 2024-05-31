@@ -28,6 +28,7 @@ protected:
     virtual void dropEvent(QDropEvent *event);
     virtual void paintEvent(QPaintEvent *event);
 };
+
 #ifdef Q_OS_WIN
 class QWinTaskbarProgress;
 class QWinTaskbarButton;
@@ -77,8 +78,8 @@ private:
     QSplitter *playSplitter;
     PlayerWindow *playerWindow;
     ListWindow *listWindow;
-    LibraryWindow *library;
-    DownloadWindow *download;
+    LibraryWindow *library = nullptr;
+    DownloadWindow *download = nullptr;
     LogWindow *logWindow;
     ScriptPlayground *scriptPlayground;
     int listWindowWidth;

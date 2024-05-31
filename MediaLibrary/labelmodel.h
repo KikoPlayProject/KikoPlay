@@ -3,6 +3,7 @@
 #include <QAbstractItemModel>
 #include <QtCore>
 #include <QColor>
+#include <future>
 #include "tagnode.h"
 struct SelectedLabelInfo
 {
@@ -29,6 +30,7 @@ public:
     }
 
     void loadLabels();
+    void waitLabelLoaded();
 
     void selectedLabelList(const QModelIndexList &indexes,  SelectedLabelInfo &selectLabels);
 
@@ -65,6 +67,8 @@ private:
     };
     TagNode *cateTags[C_CUSTOM+1];
     QColor foregroundColor[2];
+    std::future<bool> loadedFlag;
+    bool loaded = false;
 
     void addAnimeInfoTag();
     void addEpPathTag();

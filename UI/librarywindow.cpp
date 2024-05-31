@@ -311,6 +311,7 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(fa
         act_getDetailInfo->setEnabled(hasSelection);
     });
 
+    LabelModel::instance()->waitLabelLoaded();
     labelView=new LabelTreeView(splitter);
     labelView->setObjectName(QStringLiteral("LabelView"));
     labelView->setProperty("cScrollStyle", true);
@@ -333,7 +334,6 @@ LibraryWindow::LibraryWindow(QWidget *parent) : QWidget(parent), animeViewing(fa
     labelProxyModel->setFilterKeyColumn(0);
     labelView->setContextMenuPolicy(Qt::ActionsContextMenu);
 
-    LabelModel::instance()->loadLabels();
     auto expand = [=](){
         labelView->expand(labelProxyModel->index(0,0,QModelIndex()));
         labelView->expand(labelProxyModel->index(1,0,QModelIndex()));

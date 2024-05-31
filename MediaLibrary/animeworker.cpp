@@ -1,11 +1,18 @@
 #include "animeworker.h"
+#include "tagnode.h"
 #include "globalobjects.h"
 #include "Common/threadtask.h"
+#include "Common/lrucache.h"
 
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QSqlError>
 #include <QPainter>
+
+namespace
+{
+LRUCache<QString, QSharedPointer<Anime>> singleAnimeCache{"SingleAnime", 128, true, true};
+}
 
 void AnimeWorker::deleteAnime(Anime *anime)
 {
@@ -39,6 +46,79 @@ bool AnimeWorker::hasAnime(const QString &name)
 {
     if(animesMap.contains(name)) return true;
     return checkAnimeExist(name);
+}
+
+QSharedPointer<Anime> AnimeWorker::getSingleAnime(const QString &name)
+{
+    Anime *anime = getAnime(name);
+    if (anime)
+    {
+        return QSharedPointer<Anime>::create(*anime);
+    }
+    if (singleAnimeCache.contains(name))
+    {
+        return singleAnimeCache.get(name);
+    }
+    ThreadTask task(GlobalObjects::workThread);
+    task.Run([&]() -> int{
+        QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+        query.prepare("select * from anime where Anime=? limit 1");
+        query.bindValue(0, name);
+        query.exec();
+        int animeNo = query.record().indexOf("Anime"),
+            descNo = query.record().indexOf("Desc"),
+            timeNo = query.record().indexOf("AddTime"),
+            airDateNo = query.record().indexOf("AirDate"),
+            epCountNo = query.record().indexOf("EpCount"),
+            urlNo = query.record().indexOf("URL"),
+            scriptIdNo = query.record().indexOf("ScriptId"),
+            scriptDataNo  =query.record().indexOf("ScriptData"),
+            staffNo = query.record().indexOf("Staff"),
+            coverURLNo = query.record().indexOf("CoverURL"),
+            coverNo = query.record().indexOf("Cover");
+        if (query.first())
+        {
+            anime = new Anime;
+            anime->_name = query.value(animeNo).toString();
+            anime->_desc = query.value(descNo).toString();
+            anime->_airDate = query.value(airDateNo).toString();
+            anime->_addTime = query.value(timeNo).toLongLong();
+            anime->_epCount = query.value(epCountNo).toInt();
+            anime->_url = query.value(urlNo).toString();
+            anime->_scriptId = query.value(scriptIdNo).toString();
+            anime->_scriptData = query.value(scriptDataNo).toString();
+            anime->setStaffs(query.value(staffNo).toString());
+            anime->_coverURL = query.value(coverURLNo).toString();
+            anime->_coverData = query.value(coverNo).toByteArray();
+
+            QSqlQuery crtQuery(GlobalObjects::getDB(GlobalObjects::Bangumi_DB));
+            crtQuery.prepare("select Name, Actor, Link, ImageURL from character where Anime=?");
+            crtQuery.bindValue(0,anime->_name);
+            crtQuery.exec();
+            int nameNo = crtQuery.record().indexOf("Name"),
+                actorNo = crtQuery.record().indexOf("Actor"),
+                linkNo = crtQuery.record().indexOf("Link"),
+                imageURLNo = crtQuery.record().indexOf("ImageURL");
+            while (crtQuery.next())
+            {
+                Character crt;
+                crt.name=crtQuery.value(nameNo).toString();
+                crt.actor=crtQuery.value(actorNo).toString();
+                crt.link=crtQuery.value(linkNo).toString();
+                crt.imgURL=crtQuery.value(imageURLNo).toString();
+                anime->characters.append(crt);
+            }
+            return 0;
+        }
+        return -1;
+    }, true);
+    if (anime)
+    {
+        QSharedPointer<Anime> sp(anime);
+        singleAnimeCache.put(name, sp);
+        return sp;
+    }
+    return nullptr;
 }
 
 AnimeWorker::AnimeWorker(QObject *parent):QObject(parent)

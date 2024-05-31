@@ -12,6 +12,13 @@
 #include "Manager/pool.h"
 #include "Provider/localprovider.h"
 #include "Common/notifier.h"
+
+#define SETTING_KEY_ENABLE_ANALYZE "Play/EnableAnalyze"
+#define SETTING_KEY_ENABLE_MERGE "Play/EnableMerge"
+#define SETTING_KEY_MERGE_INTERVAL "Play/MergeInterval"
+#define SETTING_KEY_MAX_DIFF "Play/MaxDiffCount"
+#define SETTING_KEY_MIN_SIM "Play/MinSimCount"
+
 namespace
 {
     struct
@@ -28,12 +35,18 @@ namespace
             return dm1->time<dm2->time;
         }
     } DanmuSPCompare;
+
 }
 DanmuPool::DanmuPool(QObject *parent) : QAbstractItemModel(parent),curPool(nullptr), emptyPool(new Pool("","","",EpType::UNKNOWN,0,this)),
-    currentPosition(0),currentTime(0),extendPos(0),enableAnalyze(true),enableMerged(true),mergeInterval(15*1000),
+    currentPosition(0),currentTime(0),extendPos(0),enableMerged(true),
     maxContentUnsimCount(4),minMergeCount(3)
 {
-    analyzer=new EventAnalyzer(this);
+    enableAnalyze = GlobalObjects::appSetting->value(SETTING_KEY_ENABLE_ANALYZE, true).toBool();
+    enableMerged = GlobalObjects::appSetting->value(SETTING_KEY_ENABLE_MERGE, true).toBool();
+    mergeInterval = GlobalObjects::appSetting->value(SETTING_KEY_MERGE_INTERVAL, 20).toInt() * 1000;
+    maxContentUnsimCount = GlobalObjects::appSetting->value(SETTING_KEY_MAX_DIFF, 4).toInt();
+    minMergeCount = GlobalObjects::appSetting->value(SETTING_KEY_MIN_SIM, 2).toInt();
+    analyzer = new EventAnalyzer(this);
 	setConnect(emptyPool);
 }
 
@@ -350,14 +363,16 @@ void DanmuPool::setStatisInfo()
 void DanmuPool::setAnalyzeEnable(bool enable)
 {
     enableAnalyze = enable;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_ENABLE_ANALYZE, enable);
     setAnalyzation();
 }
 
 void DanmuPool::setMergeEnable(bool enable)
 {
-    if(enable!=enableMerged)
+    if (enable != enableMerged)
     {
-        enableMerged=enable;
+        enableMerged = enable;
+        GlobalObjects::appSetting->setValue(SETTING_KEY_ENABLE_MERGE, enable);
         beginResetModel();
         setMerged();
         endResetModel();
@@ -366,9 +381,10 @@ void DanmuPool::setMergeEnable(bool enable)
 
 void DanmuPool::setMergeInterval(int val)
 {
-    if(val!=mergeInterval)
+    if (val != mergeInterval)
     {
-        mergeInterval=val;
+        mergeInterval = val;
+        GlobalObjects::appSetting->setValue(SETTING_KEY_MERGE_INTERVAL, val);
         beginResetModel();
         setMerged();
         endResetModel();
@@ -377,9 +393,10 @@ void DanmuPool::setMergeInterval(int val)
 
 void DanmuPool::setMaxUnSimCount(int val)
 {
-    if(val!=maxContentUnsimCount)
+    if (val != maxContentUnsimCount)
     {
-        maxContentUnsimCount=val;
+        maxContentUnsimCount = val;
+        GlobalObjects::appSetting->setValue(SETTING_KEY_MAX_DIFF, val);
         beginResetModel();
         setMerged();
         endResetModel();
@@ -388,9 +405,10 @@ void DanmuPool::setMaxUnSimCount(int val)
 
 void DanmuPool::setMinMergeCount(int val)
 {
-    if(val!=minMergeCount)
+    if (val != minMergeCount)
     {
-        minMergeCount=val;
+        minMergeCount = val;
+        GlobalObjects::appSetting->setValue(SETTING_KEY_MIN_SIM, val);
         beginResetModel();
         setMerged();
         endResetModel();

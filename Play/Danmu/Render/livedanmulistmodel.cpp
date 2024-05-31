@@ -1,13 +1,21 @@
 #include "livedanmulistmodel.h"
+#include "globalobjects.h"
 #define AlignmentRole Qt::UserRole+1
 #define PrefixLengthRole Qt::UserRole+2
 #define SuffixLengthRole Qt::UserRole+3
 #define AlphaRole Qt::UserRole+4
 
+#define SETTING_KEY_LIVE_ALIGN_RIGHT "Play/LiveModeAlignRight"
+#define SETTING_KEY_LIVE_SHOW_SENDER "Play/LiveShowSender"
+#define SETTING_KEY_LIVE_DANMU_FONT_SIZE "Play/LiveDanmuFontSize"
+
+
 LiveDanmuListModel::LiveDanmuListModel(QObject *parent)
     : QAbstractItemModel{parent}
 {
-
+    align = GlobalObjects::appSetting->value(SETTING_KEY_LIVE_ALIGN_RIGHT, false).toBool()? Qt::AlignRight : Qt::AlignLeft;
+    showSender = GlobalObjects::appSetting->value(SETTING_KEY_LIVE_SHOW_SENDER, true).toBool();
+    danmuFont.setPointSize(GlobalObjects::appSetting->value(SETTING_KEY_LIVE_DANMU_FONT_SIZE, 10).toInt());
 }
 
 void LiveDanmuListModel::addLiveDanmu(const QVector<DrawTask> &danmuList)
@@ -40,6 +48,24 @@ QSharedPointer<DanmuComment> LiveDanmuListModel::getDanmu(const QModelIndex &ind
 {
     if(!index.isValid()) return nullptr;
     return liveDanmus.at(index.row());
+}
+
+void LiveDanmuListModel::setShowSender(bool show)
+{
+    showSender = show;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_LIVE_SHOW_SENDER, show);
+}
+
+void LiveDanmuListModel::setFontSize(int size)
+{
+    danmuFont.setPointSize(size);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_LIVE_DANMU_FONT_SIZE, size);
+}
+
+void LiveDanmuListModel::setAlignment(Qt::Alignment alignment)
+{
+    align = alignment;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_LIVE_ALIGN_RIGHT, alignment == Qt::AlignRight);
 }
 
 QVariant LiveDanmuListModel::data(const QModelIndex &index, int role) const

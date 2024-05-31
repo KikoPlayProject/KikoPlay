@@ -73,6 +73,15 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
     Logger::logger();
 
     initDatabase(mt_db_names);
+    QThread::currentThread()->setObjectName(QStringLiteral("mainThread"));
+    workThread = new QThread();
+    workThread->setObjectName(QStringLiteral("workThread"));
+    workThread->start(QThread::NormalPriority);
+    QObject workObj;
+    workObj.moveToThread(workThread);
+    QMetaObject::invokeMethod(&workObj, [](){
+        initDatabase(wt_db_names);
+    }, Qt::QueuedConnection);
     tick(elapsedTimer, "db");
 
     auto locNames = GlobalObjects::appSetting->value("KikoPlay/Language", "").toStringList();
@@ -93,11 +102,8 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
     }
     Notifier::getNotifier();
     EventBus::getEventBus();
+
     PlayContext::context();
-    QThread::currentThread()->setObjectName(QStringLiteral("mainThread"));
-    workThread = new QThread();
-    workThread->setObjectName(QStringLiteral("workThread"));
-    workThread->start(QThread::NormalPriority);
     mpvplayer = new MPVPlayer();
     tick(elapsedTimer, "player");
 
@@ -110,12 +116,6 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
     blocker = new Blocker();
     tick(elapsedTimer, "list");
 
-    QObject *workObj = new QObject();
-    workObj->moveToThread(workThread);
-    QMetaObject::invokeMethod(workObj, [workObj](){
-        initDatabase(wt_db_names);
-        workObj->deleteLater();
-    }, Qt::QueuedConnection);
     scriptManager = new ScriptManager();
     danmuProvider = new DanmuProvider();
     animeProvider = new AnimeProvider();

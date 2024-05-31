@@ -31,6 +31,7 @@
 #include "Play/Playlist/playlist.h"
 #include "Play/playcontext.h"
 #include "Common/kupdater.h"
+#include "widgets/lazycontainer.h"
 #include "appmenu.h"
 #include "appbar.h"
 
@@ -455,8 +456,8 @@ void MainWindow::setupUI()
     contentStackLayout=new QStackedLayout();
     contentStackLayout->setContentsMargins(0,0,0,0);
     contentStackLayout->addWidget(setupPlayPage());
-    contentStackLayout->addWidget(setupLibraryPage());
-    contentStackLayout->addWidget(setupDownloadPage());
+    contentStackLayout->addWidget(new LazyContainer(this, contentStackLayout, [this](){return this->setupLibraryPage();}));
+    contentStackLayout->addWidget(new LazyContainer(this, contentStackLayout, [this](){return this->setupDownloadPage();}));
     listWindow->show();
 
     verticalLayout->addLayout(contentStackLayout);
@@ -851,8 +852,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QWidget::closeEvent(event);
     playerWindow->close();
 	playerWindow->deleteLater();
-    library->beforeClose();
-    download->beforeClose();
+    if (library) library->beforeClose();
+    if (download) download->beforeClose();
     GlobalObjects::clear();
     QCoreApplication::instance()->exit();
 }

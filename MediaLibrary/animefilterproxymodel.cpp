@@ -1,8 +1,6 @@
 #include "animefilterproxymodel.h"
 #include "animemodel.h"
 #include "labelmodel.h"
-#include "Common/notifier.h"
-#include "globalobjects.h"
 
 AnimeFilterProxyModel::AnimeFilterProxyModel(AnimeModel *srcModel, QObject *parent):QSortFilterProxyModel(parent),filterType(0), orderType(O_AddTime), ascending(false)
 {

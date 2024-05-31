@@ -1,7 +1,7 @@
 #ifndef ANIMEWORKER_H
 #define ANIMEWORKER_H
 #include "animeinfo.h"
-#include "tagnode.h"
+
 class QSqlQuery;
 class AnimeWorker : public QObject
 {
@@ -29,6 +29,7 @@ public:
     void deleteAnime(Anime *anime);
     Anime *getAnime(const QString &name);
     bool hasAnime(const QString &name);
+    QSharedPointer<Anime> getSingleAnime(const QString &name);
 
     void addEp(const QString &animeName, const EpInfo &ep);
     void removeEp(const QString &animeName, const QString &path);

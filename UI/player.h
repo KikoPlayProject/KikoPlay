@@ -65,23 +65,13 @@ private:
      QString totalTimeStr;
      DanmuLaunch *launchWindow;
 
-     QWidget *danmuSettingPage,*playSettingPage;
-     QCheckBox *danmuSwitch,*hideRollingDanmu,*hideTopDanmu,*hideBottomDanmu,*bold, *glow,
-                *bottomSubtitleProtect,*topSubtitleProtect,*randomSize,
-                *enableAnalyze, *enableMerge,*enlargeMerged, *showPreview, *autoLoadDanmuCheck,
-                *enableLiveMode, *liveModeOnlyRolling, *liveDanmuAlignRight, *liveShowSender;
-     QSpinBox *mergeInterval,*contentSimCount,*minMergeCount;
-     QFontComboBox *fontFamilyCombo;
-     QComboBox *aspectRatioCombo,*playSpeedCombo,*clickBehaviorCombo,*dbClickBehaviorCombo,
-                *mergeCountTipPos;
-     QSlider *speedSlider,*alphaSlider,*strokeWidthSlider,*fontSizeSlider,*maxDanmuCount,
-             *brightnessSlider, *contrastSlider, *saturationSlider, *gammaSlider, *hueSlider, *sharpenSlider,
-             *liveSizeSlider, *liveVRangeSlider;
-     OptionSlider *denseLevel, *displayAreaSlider;
+     QWidget *danmuSettingPage = nullptr;
+     QWidget *playSettingPage = nullptr;
      bool isFullscreen;
      int resizePercent;
      int clickBehavior,dbClickBehaivior;
      int jumpForwardTime, jumpBackwardTime;
+     int liveVRange;
      bool autoLoadLocalDanmu;
      bool hasExternalAudio, hasExternalSub;
 
@@ -94,7 +84,7 @@ private:
      void setupPlaySettingPage();
      void setupSignals();
      void adjustPlayerSize(int percent);
-     void setPlayTime();
+     void setHideDanmu(bool hide);
      void switchItem(bool prev,const QString &nullMsg);
      void adjustProgressInfoPos();
      void exitMiniMode();

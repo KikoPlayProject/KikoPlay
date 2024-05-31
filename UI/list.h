@@ -72,7 +72,7 @@ private:
     int matchStatus;
     QWidget *setupPlaylistPage();
 
-    QTreeView *danmulistView;
+    QTreeView *danmulistView = nullptr;
     QWidget *setupDanmulistPage();
     QAction *act_addOnlineDanmu,*act_addLocalDanmu,*act_editPool,*act_editBlock,
             *act_copyDanmuText,*act_copyDanmuColor,*act_copyDanmuSender,

@@ -11,38 +11,75 @@
 #include "Play/Video/mpvplayer.h"
 #include "livedanmulistmodel.h"
 
+#define SETTING_KEY_BOTTOM_SUB_PROTECT "Play/BottomSubProtect"
+#define SETTING_KEY_TOP_SUB_PROTECT "Play/TopSubProtect"
+#define SETTING_KEY_DANMU_SPEED "Play/DanmuSpeed"
+#define SETTING_KEY_MAX_COUNT "Play/MaxCount"
+#define SETTING_KEY_DENSE_LEVEL "Play/Dense"
+#define SETTING_KEY_DISPLAY_AREA "Play/DisplayArea"
+#define SETTING_KEY_DANMU_ALPHA "Play/DanmuAlpha"
+#define SETTING_KEY_DANMU_STROKE "Play/DanmuStroke"
+#define SETTING_KEY_DANMU_FONT_SIZE "Play/DanmuFontSize"
+#define SETTING_KEY_DANMU_GLOW "Play/DanmuGlow"
+#define SETTING_KEY_DANMU_BOLD "Play/DanmuBold"
+#define SETTING_KEY_DANMU_RANDOM_SIZE "Play/RandomSize"
+#define SETTING_KEY_DANMU_FONT "Play/DanmuFont"
+#define SETTING_KEY_ENLARGE_MERGED "Play/EnlargeMerged"
+#define SETTING_KEY_MERGE_COUNT_POS "Play/MergeCountTip"
+#define SETTING_KEY_ENABLE_LIVE_MODE "Play/EnableLiveMode"
+#define SETTING_KEY_LIVE_MODE_ONLY_ROLLING "Play/LiveModeOnlyRolling"
+
 
 QOpenGLContext *danmuTextureContext=nullptr;
 QOffscreenSurface *surface=nullptr;
+
+namespace
+{
+
+static const char *SETTING_KEY_HIDE_TYPE[DanmuComment::DanmuType::UNKNOW] = {
+    "Play/HideRolling",
+    "Play/HideTop",
+    "Play/HideBottom"
+};
+
+}
 
 DanmuRender::DanmuRender(QObject *parent) : QObject(parent)
 {
     layout_table[DanmuComment::DanmuType::Rolling] = new RollLayout(this);
     layout_table[DanmuComment::DanmuType::Top] = new TopLayout(this);
     layout_table[DanmuComment::DanmuType::Bottom] = new BottomLayout(this);
-    hideLayout[DanmuComment::DanmuType::Rolling] = false;
-    hideLayout[DanmuComment::DanmuType::Top] = false;
-    hideLayout[DanmuComment::DanmuType::Bottom] = false;
-    bottomSubtitleProtect = true;
-    topSubtitleProtect = false;
-    displayAreaRatio = 1.0f;
-    dense = 0;
-    maxCount = -1;
-    danmuOpacity = 1;
-    fontSizeTable[0] = 20;
+
+    for (int i = 0; i < DanmuComment::DanmuType::UNKNOW; ++i)
+    {
+        hideLayout[i] = GlobalObjects::appSetting->value(SETTING_KEY_HIDE_TYPE[i], false).toBool();
+    }
+    bottomSubtitleProtect = GlobalObjects::appSetting->value(SETTING_KEY_BOTTOM_SUB_PROTECT, true).toBool();
+    topSubtitleProtect = GlobalObjects::appSetting->value(SETTING_KEY_TOP_SUB_PROTECT, false).toBool();
+
+    const int rollingSpeed = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_SPEED, 200).toInt();
+    static_cast<RollLayout *>(layout_table[DanmuComment::DanmuType::Rolling])->setSpeed(rollingSpeed);
+
+    displayAreaIndex = GlobalObjects::appSetting->value(SETTING_KEY_DISPLAY_AREA, 4).toInt();
+    displayAreaRatio = rangeMapping[displayAreaIndex];
+    dense = GlobalObjects::appSetting->value(SETTING_KEY_DENSE_LEVEL, 1).toInt();
+    maxCount = GlobalObjects::appSetting->value(SETTING_KEY_MAX_COUNT, 100).toInt();
+    danmuOpacity = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_ALPHA, 60).toInt() / 100.f;
+    fontSizeTable[0] = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_FONT_SIZE, 20).toInt();
     fontSizeTable[1] = fontSizeTable[0] / 1.5;
     fontSizeTable[2] = fontSizeTable[0] * 1.5;
     danmuStyle.fontSizeTable = fontSizeTable;
-    danmuStyle.fontFamily = "Microsoft YaHei";
-    danmuStyle.randomSize = false;
-    danmuStyle.strokeWidth = 3.5;
-	danmuStyle.bold = false;
-    danmuStyle.enlargeMerged = true;
-    danmuStyle.mergeCountPos = 1;
-    danmuStyle.glow = false;
+    danmuStyle.fontFamily = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_FONT, "Microsoft Yahei").toString();
+    danmuStyle.randomSize = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_RANDOM_SIZE, false).toBool();
+    danmuStyle.strokeWidth = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_STROKE, 35).toInt() / 10.f;
+    danmuStyle.bold = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_BOLD, false).toBool();
+    danmuStyle.enlargeMerged = GlobalObjects::appSetting->value(SETTING_KEY_ENLARGE_MERGED, true).toBool();;
+    danmuStyle.mergeCountPos = GlobalObjects::appSetting->value(SETTING_KEY_MERGE_COUNT_POS, 1).toInt();
+    danmuStyle.glow = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_GLOW, false).toBool();
     danmuStyle.glowRadius = 16;
-    enableLiveMode = false;
-    liveModeOnlyRolling = true;
+
+    enableLiveMode = GlobalObjects::appSetting->value(SETTING_KEY_ENABLE_LIVE_MODE, false).toBool();;
+    liveModeOnlyRolling = GlobalObjects::appSetting->value(SETTING_KEY_LIVE_MODE_ONLY_ROLLING, true).toBool();
     liveDanmuListModel = new LiveDanmuListModel(this);
     liveDanmuListModel->setFontFamily(danmuStyle.fontFamily);
 
@@ -117,6 +154,12 @@ void DanmuRender::cleanup()
     liveDanmuListModel->clear();
 }
 
+void DanmuRender::hideDanmu(DanmuComment::DanmuType type, bool hide)
+{
+    hideLayout[type] = hide;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_HIDE_TYPE[type], hide);
+}
+
 QSharedPointer<DanmuComment> DanmuRender::danmuAt(QPointF point)
 {
     auto dm(layout_table[DanmuComment::Top]->danmuAt(point));
@@ -181,18 +224,22 @@ void DanmuRender::refreshDMRect()
 void DanmuRender::setBottomSubtitleProtect(bool bottomOn)
 {
     bottomSubtitleProtect = bottomOn;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_BOTTOM_SUB_PROTECT, bottomSubtitleProtect);
     refreshDMRect();
 }
 
 void DanmuRender::setTopSubtitleProtect(bool topOn)
 {
     topSubtitleProtect = topOn;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_TOP_SUB_PROTECT, topSubtitleProtect);
     refreshDMRect();
 }
 
-void DanmuRender::setDisplayArea(float ratio)
+void DanmuRender::setDisplayArea(int index)
 {
-    displayAreaRatio = ratio;
+    displayAreaIndex = index;
+    displayAreaRatio = rangeMapping[index];
+    GlobalObjects::appSetting->setValue(SETTING_KEY_DISPLAY_AREA, index);
     refreshDMRect();
 }
 
@@ -201,23 +248,28 @@ void DanmuRender::setFontSize(int pt)
     fontSizeTable[0] = pt;
     fontSizeTable[1] = fontSizeTable[0]/1.5;
     fontSizeTable[2] = fontSizeTable[0]*1.5;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_DANMU_FONT_SIZE, pt);
 }
 
 void DanmuRender::setBold(bool bold)
 {
     danmuStyle.bold = bold;
     emit danmuStyleChanged();
+    GlobalObjects::appSetting->setValue(SETTING_KEY_DANMU_BOLD, bold);
 }
 
 void DanmuRender::setGlow(bool on)
 {
     danmuStyle.glow = on;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_DANMU_GLOW, on);
 }
 
 void DanmuRender::setOpacity(float opacity)
 {
-    danmuOpacity = qBound(0.f,opacity,1.f);
+    danmuOpacity = qBound(0.f, opacity, 1.f);
     liveDanmuListModel->setAlpha(danmuOpacity);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_DANMU_ALPHA, (int)(opacity * 100));
+
 }
 
 void DanmuRender::setFontFamily(const QString &family)
@@ -225,44 +277,67 @@ void DanmuRender::setFontFamily(const QString &family)
     danmuStyle.fontFamily = family;
     liveDanmuListModel->setFontFamily(danmuStyle.fontFamily);
     emit danmuStyleChanged();
+    GlobalObjects::appSetting->setValue(SETTING_KEY_DANMU_FONT, family);
 }
 
 void DanmuRender::setSpeed(float speed)
 {
-    static_cast<RollLayout *>(layout_table[0])->setSpeed(speed);
+    static_cast<RollLayout *>(layout_table[DanmuComment::DanmuType::Rolling])->setSpeed(speed);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_DANMU_SPEED, (int)speed);
+}
+
+float DanmuRender::getSpeed() const
+{
+    return static_cast<RollLayout *>(layout_table[DanmuComment::DanmuType::Rolling])->getSpeed();
 }
 
 void DanmuRender::setStrokeWidth(float width)
 {
     danmuStyle.strokeWidth = width;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_DANMU_STROKE, (int)(width * 10));
 }
 
 void DanmuRender::setRandomSize(bool randomSize)
 {
     danmuStyle.randomSize = randomSize;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_DANMU_RANDOM_SIZE, randomSize);
 }
 
 void DanmuRender::setMaxDanmuCount(int count)
 {
     maxCount = count;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_MAX_COUNT, count);
 }
 
 void DanmuRender::setMergeCountPos(int pos)
 {
     danmuStyle.mergeCountPos = pos;
     liveDanmuListModel->setMergeCountPos(pos);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_MERGE_COUNT_POS, pos);
 }
 
 void DanmuRender::setEnlargeMerged(bool enlarge)
 {
     danmuStyle.enlargeMerged = enlarge;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_ENLARGE_MERGED, enlarge);
     liveDanmuListModel->setEnlargeMerged(enlarge);
 }
 
-void DanmuRender::setLiveMode(bool on, bool onlyRolling)
+void DanmuRender::setLiveMode(bool on, int onlyRolling)
 {
     enableLiveMode = on;
-    liveModeOnlyRolling = onlyRolling;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_ENABLE_LIVE_MODE, on);
+    if (onlyRolling != -1)
+    {
+        liveModeOnlyRolling = onlyRolling;
+        GlobalObjects::appSetting->setValue(SETTING_KEY_LIVE_MODE_ONLY_ROLLING, liveModeOnlyRolling);
+    }
+}
+
+void DanmuRender::setDenseLevel(int level)
+{
+    dense = level;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_DENSE_LEVEL, level);
 }
 
 void DanmuRender::prepareDanmu(QVector<DrawTask> *prepareList)

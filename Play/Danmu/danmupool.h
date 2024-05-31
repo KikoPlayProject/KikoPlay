@@ -29,6 +29,8 @@ public:
     inline void reset(){currentTime=0;currentPosition=0;extendPos=0;}
     inline Pool *getPool() {return curPool;}
     inline int getCurrentTime() const {return currentTime;}
+    inline bool isEnableAnalyze() const { return enableAnalyze; }
+    inline bool isEnableMerge() const { return enableMerged; }
 
     QSharedPointer<DanmuComment> getDanmu(const QModelIndex &index);
     void deleteDanmu(QSharedPointer<DanmuComment> danmu);

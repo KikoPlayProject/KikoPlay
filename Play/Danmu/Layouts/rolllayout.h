@@ -14,6 +14,7 @@ public:
     virtual void cleanup() override;
     virtual ~RollLayout();
     void setSpeed(float speed);
+    float getSpeed() const { return base_speed; }
     virtual void removeBlocked();
 
 private:

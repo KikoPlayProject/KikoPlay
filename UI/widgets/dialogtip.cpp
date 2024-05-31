@@ -5,7 +5,6 @@
 #include <QPropertyAnimation>
 #include <QGraphicsOpacityEffect>
 #include <QResizeEvent>
-#include "globalobjects.h"
 #include "Common/notifier.h"
 #include "backgroundfadewidget.h"
 
@@ -23,7 +22,7 @@ DialogTip::DialogTip(QWidget *parent):QWidget(parent), moveHide(false)
     moveAnime->setDuration(animeDuration);
     moveAnime->setEasingCurve(QEasingCurve::OutExpo);
     QObject::connect(moveAnime,&QPropertyAnimation::finished,this, [=](){
-        if(moveHide) hide();
+        if (moveHide) hide();
     });
 
 
@@ -45,10 +44,10 @@ DialogTip::DialogTip(QWidget *parent):QWidget(parent), moveHide(false)
 
 void DialogTip::showMessage(const QString &msg, int type)
 {
-    if(type & NM_ERROR) setStyleSheet(QStringLiteral("border:none;background-color:#f52941;"));
+    if (type & NM_ERROR) setStyleSheet(QStringLiteral("border:none;background-color:#f52941;"));
     else setStyleSheet(QStringLiteral("border:none;background-color:#169fe6;"));
 
-    if(type & NM_PROCESS)
+    if (type & NM_PROCESS)
     {
         static_cast<LoadingIcon *>(busyWidget)->show();
     }
@@ -56,8 +55,8 @@ void DialogTip::showMessage(const QString &msg, int type)
     {
         static_cast<LoadingIcon *>(busyWidget)->hide();
     }
-    if(hideTimer.isActive()) hideTimer.stop();
-    if(type & NM_HIDE)
+    if (hideTimer.isActive()) hideTimer.stop();
+    if (type & NM_HIDE)
     {
         hideTimer.setSingleShot(true);
         hideTimer.start(showDuration);
@@ -80,7 +79,7 @@ void DialogTip::showMessage(const QString &msg, int type)
     infoText->setText(msg);
     infoText->adjustSize();
     adjustSize();
-    if(moveAnime->state() == QAbstractAnimation::Running)
+    if (moveAnime->state() == QAbstractAnimation::Running)
     {
         moveAnime->stop();
         hide();
@@ -88,8 +87,7 @@ void DialogTip::showMessage(const QString &msg, int type)
 
     move((parentWidget()->width() - width()) / 2, y());
     raise();
-
-    if(isHidden())
+    if (isHidden())
     {
         show();
         QPoint endPos(this->x(),0), startPos(this->x(),-this->height());
@@ -102,13 +100,24 @@ void DialogTip::showMessage(const QString &msg, int type)
 
 bool DialogTip::eventFilter(QObject *obj, QEvent *event)
 {
-    if(obj == parent() && event->type() == QEvent::Resize)
+    if (obj == parent() && event->type() == QEvent::Resize)
     {
         QResizeEvent *ev = static_cast<QResizeEvent *>(event);
-        if(!bgDarkWidget->isHidden())
+        if (!bgDarkWidget->isHidden())
             bgDarkWidget->resize(ev->size());
-        if(!isHidden())
-            move((parentWidget()->width()-width())/2,y());
+        if (!isHidden())
+        {
+            int nx = (ev->size().width() - width()) / 2;
+            if (moveAnime->state() == QAbstractAnimation::Running)
+            {
+                moveAnime->setStartValue(QPoint(nx, y()));
+                moveAnime->setEndValue(QPoint(nx, 0));
+            }
+            else
+            {
+                move(nx, y());
+            }
+        }
     }
     return QWidget::eventFilter(obj, event);
 }

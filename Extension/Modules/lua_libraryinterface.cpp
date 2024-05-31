@@ -33,8 +33,8 @@ int LibraryInterface::getanime(lua_State *L)
 {
     if (lua_gettop(L) != 1) return 0;
     const QString animeName = lua_tostring(L, 1);
-    Anime *anime = AnimeWorker::instance()->getAnime(animeName);
-    if(anime)
+    QSharedPointer<Anime> anime = AnimeWorker::instance()->getSingleAnime(animeName);
+    if (anime)
     {
         pushValue(L, anime->toMap(true));
         return 1;

@@ -62,13 +62,21 @@ LabelModel::~LabelModel()
 
 void LabelModel::loadLabels()
 {
-    beginResetModel();
-    if(root) delete root;
+    if (root) return;
+    std::promise<bool> loadedPromise;
+    loadedFlag = loadedPromise.get_future();
     root = new TagNode("root", nullptr, 0, TagNode::TAG_ROOT);
     addAnimeInfoTag();
     addEpPathTag();
     addCustomTag();
-    endResetModel();
+    loadedPromise.set_value(true);
+    loaded = true;
+}
+
+void LabelModel::waitLabelLoaded()
+{
+    if (loaded) return;
+    if (loadedFlag.valid()) loadedFlag.get();
 }
 
 void LabelModel::selectedLabelList(const QModelIndexList &indexes,  SelectedLabelInfo &selectLabels)
