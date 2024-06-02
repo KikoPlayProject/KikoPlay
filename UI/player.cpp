@@ -997,6 +997,7 @@ void PlayerWindow::setupDanmuSettingPage()
     speedSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     speedSlider->setRange(50, 500);
     speedSlider->setValue(GlobalObjects::danmuRender->getSpeed());
+    speedSlider->setToolTip(QString::number(speedSlider->value()));
     QObject::connect(speedSlider,&QSlider::valueChanged,[=](int val){
         GlobalObjects::danmuRender->setSpeed(val);
         speedSlider->setToolTip(QString::number(val));
@@ -1007,6 +1008,7 @@ void PlayerWindow::setupDanmuSettingPage()
     maxDanmuCount->setObjectName(QStringLiteral("PopupPageSlider"));
     maxDanmuCount->setRange(20, 300);
     maxDanmuCount->setValue(GlobalObjects::danmuRender->getMaxDanmuCount());
+    maxDanmuCount->setToolTip(QString::number(maxDanmuCount->value()));
     QObject::connect(maxDanmuCount, &QSlider::valueChanged, [=](int val){
         GlobalObjects::danmuRender->setMaxDanmuCount(val);
         maxDanmuCount->setToolTip(QString::number(val));
@@ -1037,6 +1039,7 @@ void PlayerWindow::setupDanmuSettingPage()
     alphaSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     alphaSlider->setRange(0, 100);
     alphaSlider->setValue(GlobalObjects::danmuRender->getOpacity() * 100);
+    alphaSlider->setToolTip(QString::number(alphaSlider->value()));
     QObject::connect(alphaSlider, &QSlider::valueChanged, [=](int val){
         GlobalObjects::danmuRender->setOpacity(val/100.f);
         alphaSlider->setToolTip(QString::number(val));
@@ -1047,6 +1050,7 @@ void PlayerWindow::setupDanmuSettingPage()
     strokeWidthSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     strokeWidthSlider->setRange(0, 80);
     strokeWidthSlider->setValue(GlobalObjects::danmuRender->getStrokeWidth() * 10);
+    strokeWidthSlider->setToolTip(QString::number(GlobalObjects::danmuRender->getStrokeWidth()));
     QObject::connect(strokeWidthSlider, &QSlider::valueChanged, [=](int val){
         GlobalObjects::danmuRender->setStrokeWidth(val/10.f);
         strokeWidthSlider->setToolTip(QString::number(val/10.));
@@ -1057,6 +1061,7 @@ void PlayerWindow::setupDanmuSettingPage()
     fontSizeSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     fontSizeSlider->setRange(4, 60);
     fontSizeSlider->setValue(GlobalObjects::danmuRender->getFontSize());
+    fontSizeSlider->setToolTip(QString::number(fontSizeSlider->value()));
     QObject::connect(fontSizeSlider, &QSlider::valueChanged, [=](int val){
         GlobalObjects::danmuRender->setFontSize(val);
         fontSizeSlider->setToolTip(QString::number(val));
@@ -1159,6 +1164,7 @@ void PlayerWindow::setupDanmuSettingPage()
     liveSizeSlider->setObjectName(QStringLiteral("PopupPageSlider"));
     liveSizeSlider->setRange(6, 20);
     liveSizeSlider->setValue(GlobalObjects::danmuRender->liveDanmuModel()->getFontSize());
+    liveSizeSlider->setToolTip(QString::number(liveSizeSlider->value()));
     QObject::connect(liveSizeSlider, &QSlider::valueChanged, [=](int val){
         GlobalObjects::danmuRender->liveDanmuModel()->setFontSize(val);
         liveSizeSlider->setToolTip(QString::number(val));

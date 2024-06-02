@@ -7,6 +7,7 @@
 #include "Play/Danmu/danmuprovider.h"
 #include "Play/playcontext.h"
 #include "MediaLibrary/animeprovider.h"
+#include "MediaLibrary/labelmodel.h"
 #include "LANServer/lanserver.h"
 #include "Download/downloadmodel.h"
 #include "Play/Danmu/Manager/danmumanager.h"
@@ -119,6 +120,9 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
     scriptManager = new ScriptManager();
     danmuProvider = new DanmuProvider();
     animeProvider = new AnimeProvider();
+    QMetaObject::invokeMethod(&workObj, [](){
+        LabelModel::instance()->loadLabels();
+    }, Qt::QueuedConnection);
     tick(elapsedTimer, "script");
 
     downloadModel = new DownloadModel();

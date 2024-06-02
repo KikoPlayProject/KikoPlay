@@ -123,8 +123,10 @@ public:
     QString url;
     QString user;
     QString password;
+    QString port;
+    QString path;
 private:
-    QLineEdit *titleEdit, *urlEdit, *userEdit, *passwordEdit;
+    QLineEdit *titleEdit, *urlEdit, *portEdit, *pathEdit, *userEdit, *passwordEdit;
     // CFramelessDialog interface
 protected:
     virtual void onAccept();

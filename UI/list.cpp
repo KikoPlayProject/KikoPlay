@@ -197,7 +197,7 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
     playlistPageButton->setMinimumWidth(80*logicalDpiX()/96);
     playlistPageButton->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Fixed);
     playlistPageButton->setChecked(true);
-    QObject::connect(playlistPageButton,&QToolButton::clicked,[this](){
+    QObject::connect(playlistPageButton, &QToolButton::clicked, this, [this](){
         playlistPageButton->setChecked(true);
         danmulistPageButton->setChecked(false);
         contentStackLayout->setCurrentIndex(0);
@@ -213,7 +213,7 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
     danmulistPageButton->setFixedHeight(30*logicalDpiY()/96);
     danmulistPageButton->setMinimumWidth(80*logicalDpiX()/96);
     danmulistPageButton->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Fixed);
-    QObject::connect(danmulistPageButton,&QToolButton::clicked,[this](){
+    QObject::connect(danmulistPageButton, &QToolButton::clicked, this, [this](){
         playlistPageButton->setChecked(false);
         danmulistPageButton->setChecked(true);
         contentStackLayout->setCurrentIndex(1);
@@ -269,7 +269,7 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
 void ListWindow::initActions()
 {
     act_play = new QAction(tr("Play"),this);
-    QObject::connect(act_play,&QAction::triggered,[this](){
+    QObject::connect(act_play, &QAction::triggered, this, [this](){
         QModelIndexList selection = playlistView->selectionModel()->selectedIndexes();
         QModelIndex index = selection.size() == 0 ? QModelIndex() : selection.last();
         playItem(index);
@@ -277,7 +277,7 @@ void ListWindow::initActions()
     act_autoMatch=new QAction(tr("Associate Danmu Pool"),this);
 	QObject::connect(act_autoMatch, &QAction::triggered, this, [=]() {matchPool(); });
     act_removeMatch=new QAction(tr("Remove Match"),this);
-    QObject::connect(act_removeMatch,&QAction::triggered,[this](){
+    QObject::connect(act_removeMatch, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
@@ -294,7 +294,7 @@ void ListWindow::initActions()
     act_autoMatchMode->setChecked(GlobalObjects::appSetting->value("List/AutoMatch", true).toBool());
 
     act_setMatchFilter = new QAction(tr("Match Filter Setting"), this);
-    QObject::connect(act_setMatchFilter, &QAction::triggered, [this](){
+    QObject::connect(act_setMatchFilter, &QAction::triggered, this, [this](){
         InputDialog inputDialog(tr("Macth Filter Setting"),
                                 tr("Set rules line by line, supporting wildcards.\nKikoPlay will skip items matched by the rules during the match process."),
                                 GlobalObjects::appSetting->value("List/MatchFilter").toString(),
@@ -307,7 +307,7 @@ void ListWindow::initActions()
     });
 
     act_markBgmCollection=new QAction(tr("Mark/Unmark Bangumi Collecion"),this);
-    QObject::connect(act_markBgmCollection,&QAction::triggered,[this](){
+    QObject::connect(act_markBgmCollection, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
@@ -316,7 +316,7 @@ void ListWindow::initActions()
     });
 
     act_updateFolder = new QAction(tr("Scan Folder/WebDAV Collection Changes"),this);
-    QObject::connect(act_updateFolder, &QAction::triggered, [this](){
+    QObject::connect(act_updateFolder, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0) return;
@@ -334,7 +334,7 @@ void ListWindow::initActions()
     });
 
     act_addWebDanmuSource=new QAction(tr("Add Web Danmu Source"),this);
-    QObject::connect(act_addWebDanmuSource,&QAction::triggered,[this](){
+    QObject::connect(act_addWebDanmuSource, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
@@ -388,7 +388,7 @@ void ListWindow::initActions()
 
     });
     act_addLocalDanmuSource=new QAction(tr("Add Local Danmu Source"),this);
-    QObject::connect(act_addLocalDanmuSource,&QAction::triggered,[this](){
+    QObject::connect(act_addLocalDanmuSource, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
@@ -428,7 +428,7 @@ void ListWindow::initActions()
         showMessage(tr("Done adding"), NotifyMessageFlag::NM_HIDE);
     });
     act_updateDanmu=new QAction(tr("Update Danmu"),this);
-    QObject::connect(act_updateDanmu,&QAction::triggered,[this](){
+    QObject::connect(act_updateDanmu, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
@@ -452,7 +452,7 @@ void ListWindow::initActions()
         act_addURL->setEnabled(true);
     });
     act_exportDanmu=new QAction(tr("Export Danmu"),this);
-    QObject::connect(act_exportDanmu,&QAction::triggered,[this](){
+    QObject::connect(act_exportDanmu, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
@@ -477,7 +477,7 @@ void ListWindow::initActions()
     });
 
     act_shareResourceCode=new QAction(tr("Resource Code"),this);
-    QObject::connect(act_shareResourceCode,&QAction::triggered,[this](){
+    QObject::connect(act_shareResourceCode, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
@@ -509,7 +509,7 @@ void ListWindow::initActions()
         }
     });
     act_sharePoolCode=new QAction(tr("Danmu Pool Code"),this);
-    QObject::connect(act_sharePoolCode,&QAction::triggered,[this](){
+    QObject::connect(act_sharePoolCode, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
@@ -535,14 +535,14 @@ void ListWindow::initActions()
     });
 
     act_addCollection=new QAction(tr("Add Collection"),this);
-    QObject::connect(act_addCollection,&QAction::triggered,[this](){
+    QObject::connect(act_addCollection, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QModelIndex newIndex = model->mapFromSource(GlobalObjects::playlist->addCollection(getPSParentIndex(),QObject::tr("new collection")));
         playlistView->scrollTo(newIndex, QAbstractItemView::PositionAtCenter);
         playlistView->edit(newIndex);
     });
     act_addItem = new QAction(tr("Add Item"),this);
-    QObject::connect(act_addItem,&QAction::triggered,[this](){
+    QObject::connect(act_addItem, &QAction::triggered, this, [this](){
         bool restorePlayState = false;
         if (GlobalObjects::mpvplayer->needPause())
         {
@@ -558,7 +558,7 @@ void ListWindow::initActions()
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
     act_addURL = new QAction(tr("Add URL"), this);
-    QObject::connect(act_addURL, &QAction::triggered, [this](){
+    QObject::connect(act_addURL, &QAction::triggered, this, [this](){
         AddUrlDialog dialog(this);
         if(QDialog::Accepted != dialog.exec()) return;
         QModelIndex parent = getPSParentIndex();
@@ -569,7 +569,7 @@ void ListWindow::initActions()
         GlobalObjects::playlist->addURL(dialog.urls, parent, dialog.decodeTitle);
     });
     act_addFolder = new QAction(tr("Add Folder"),this);
-    QObject::connect(act_addFolder,&QAction::triggered,[this](){
+    QObject::connect(act_addFolder, &QAction::triggered, this, [this](){
         bool restorePlayState = false;
         if (GlobalObjects::mpvplayer->needPause())
         {
@@ -587,7 +587,7 @@ void ListWindow::initActions()
     });
 
     act_addWebDAVCollection = new QAction(tr("Add WebDAV Collection"), this);
-    QObject::connect(act_addWebDAVCollection, &QAction::triggered, [this](){
+    QObject::connect(act_addWebDAVCollection, &QAction::triggered, this, [this](){
         AddWebDAVCollectionDialog dialog(this);
         if (QDialog::Accepted != dialog.exec()) return;
         QModelIndex parent = getPSParentIndex();
@@ -596,7 +596,7 @@ void ListWindow::initActions()
     });
 
     act_PlayOnOtherDevices = new QAction(tr("Play on other devices"), this);
-    QObject::connect(act_PlayOnOtherDevices, &QAction::triggered, [this](){
+    QObject::connect(act_PlayOnOtherDevices, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
@@ -618,7 +618,7 @@ void ListWindow::initActions()
 
     act_cut=new QAction(tr("Cut"),this);
     act_cut->setShortcut(QString("Ctrl+X"));
-    QObject::connect(act_cut,&QAction::triggered,[this](){
+    QObject::connect(act_cut, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
@@ -626,7 +626,7 @@ void ListWindow::initActions()
     });
     act_paste=new QAction(tr("Paste"),this);
     act_paste->setShortcut(QString("Ctrl+V"));
-    QObject::connect(act_paste,&QAction::triggered,[this](){
+    QObject::connect(act_paste, &QAction::triggered, this, [this](){
         GlobalObjects::playlist->pasteItems(getPSParentIndex());
     });
     act_moveUp=new QAction(tr("Move Up"),this);
@@ -638,7 +638,7 @@ void ListWindow::initActions()
         GlobalObjects::playlist->moveUpDown(model->mapToSource(index),true);
     });
     act_moveDown=new QAction(tr("Move Down"),this);
-    QObject::connect(act_moveDown,&QAction::triggered,[this](){
+    QObject::connect(act_moveDown, &QAction::triggered, this, [this](){
         QModelIndexList selection = playlistView->selectionModel()->selectedIndexes();
         if(selection.size()==0)return;
         QModelIndex index(selection.last());
@@ -646,7 +646,7 @@ void ListWindow::initActions()
         GlobalObjects::playlist->moveUpDown(model->mapToSource(index),false);
     });
     act_merge=new QAction(tr("Merge"),this);
-    QObject::connect(act_merge,&QAction::triggered,[this](){
+    QObject::connect(act_merge, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if(selection.size()==0)return;
@@ -657,7 +657,7 @@ void ListWindow::initActions()
 
     act_remove=new QAction(tr("Remove"),this);
     act_remove->setShortcut(QKeySequence::Delete);
-    QObject::connect(act_remove,&QAction::triggered,[this](){
+    QObject::connect(act_remove, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
@@ -665,7 +665,7 @@ void ListWindow::initActions()
     });
 
     act_removeInvalid=new QAction(tr("Remove Invalid Items"),this);
-    QObject::connect(act_removeInvalid,&QAction::triggered,[this](){
+    QObject::connect(act_removeInvalid, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
@@ -673,7 +673,7 @@ void ListWindow::initActions()
     });
 
     act_clear=new QAction(tr("Clear"),this);
-    QObject::connect(act_clear,&QAction::triggered,[this](){
+    QObject::connect(act_clear, &QAction::triggered, this, [this](){
        QMessageBox::StandardButton btn =QMessageBox::question(this,tr("Clear"),tr("Are you sure to clear the list ?"),QMessageBox::Yes|QMessageBox::No);
        if(btn==QMessageBox::Yes)
        {
@@ -682,7 +682,7 @@ void ListWindow::initActions()
     });
 
     act_browseFile=new QAction(tr("Browse File"),this);
-    QObject::connect(act_browseFile,&QAction::triggered,[this](){
+    QObject::connect(act_browseFile, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
         if (selection.size() == 0)return;
@@ -698,19 +698,19 @@ void ListWindow::initActions()
     });
 
     act_sortSelectionAscending = new QAction(tr("Sort Ascending"),this);
-    QObject::connect(act_sortSelectionAscending,&QAction::triggered,[this](){
+    QObject::connect(act_sortSelectionAscending, &QAction::triggered, this, [this](){
         sortSelection(false,true);
     });
     act_sortSelectionDescending = new QAction(tr("Sort Descending"),this);
-    QObject::connect(act_sortSelectionDescending,&QAction::triggered,[this](){
+    QObject::connect(act_sortSelectionDescending, &QAction::triggered, this, [this](){
         sortSelection(false,false);
     });
     act_sortAllAscending = new QAction(tr("Sort All Ascending"),this);
-    QObject::connect(act_sortAllAscending,&QAction::triggered,[this](){
+    QObject::connect(act_sortAllAscending, &QAction::triggered, this, [this](){
         sortSelection(true,true);
     });
     act_sortAllDescending = new QAction(tr("Sort All Descending"),this);
-    QObject::connect(act_sortAllDescending,&QAction::triggered,[this](){
+    QObject::connect(act_sortAllDescending, &QAction::triggered, this, [this](){
         sortSelection(true,false);
     });
 
@@ -735,14 +735,14 @@ void ListWindow::initActions()
     act_random->setCheckable(true);
     act_random->setData(QVariant(int(PlayList::Random)));
     loopModeGroup->addAction(act_random);
-    QObject::connect(loopModeGroup,&QActionGroup::triggered,[this](QAction *action){
+    QObject::connect(loopModeGroup, &QActionGroup::triggered, this, [this](QAction *action){
         GlobalObjects::playlist->setLoopMode(static_cast<PlayList::LoopMode>(action->data().toInt()));
         GlobalObjects::appSetting->setValue("List/LoopMode",loopModeGroup->actions().indexOf(loopModeGroup->checkedAction()));
     });
     loopModeGroup->actions().at(GlobalObjects::appSetting->value("List/LoopMode",1).toInt())->trigger();
 
     act_addOnlineDanmu=new QAction(tr("Add Online Danmu"),this);
-    QObject::connect(act_addOnlineDanmu,&QAction::triggered,[this](){
+    QObject::connect(act_addOnlineDanmu, &QAction::triggered, this, [this](){
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
         bool restorePlayState = false;
         if (GlobalObjects::mpvplayer->needPause())
@@ -767,7 +767,7 @@ void ListWindow::initActions()
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
     act_addLocalDanmu=new QAction(tr("Add Local Danmu"),this);
-    QObject::connect(act_addLocalDanmu,&QAction::triggered,[this](){
+    QObject::connect(act_addLocalDanmu, &QAction::triggered, this, [this](){
         bool restorePlayState = false;
         if (GlobalObjects::mpvplayer->needPause())
         {
@@ -795,12 +795,12 @@ void ListWindow::initActions()
         if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
     act_editBlock=new QAction(tr("Edit Block Rules"),this);
-    QObject::connect(act_editBlock,&QAction::triggered,[this](){
+    QObject::connect(act_editBlock, &QAction::triggered, this, [this](){
         BlockEditor blockEditor(this);
         blockEditor.exec();
     });
     act_editPool=new QAction(tr("Edit Danmu Pool"),this);
-    QObject::connect(act_editPool,&QAction::triggered,[this](){
+    QObject::connect(act_editPool, &QAction::triggered, this, [this](){
         static PoolEditor *poolEditor = nullptr;
         if (!poolEditor)
         {
@@ -813,22 +813,22 @@ void ListWindow::initActions()
         poolEditor->show();
     });
     act_copyDanmuText=new QAction(tr("Copy Danmu Text"),this);
-    QObject::connect(act_copyDanmuText,&QAction::triggered,[this](){
+    QObject::connect(act_copyDanmuText, &QAction::triggered, this, [this](){
         QClipboard *cb = QApplication::clipboard();
         cb->setText(getSelectedDanmu()->text);
     });
     act_copyDanmuColor=new QAction(tr("Copy Danmu Color"),this);
-    QObject::connect(act_copyDanmuColor,&QAction::triggered,[this](){
+    QObject::connect(act_copyDanmuColor, &QAction::triggered, this, [this](){
         QClipboard *cb = QApplication::clipboard();
         cb->setText(QString::number(getSelectedDanmu()->color,16));
     });
     act_copyDanmuSender=new QAction(tr("Copy Danmu Sender"),this);
-    QObject::connect(act_copyDanmuSender,&QAction::triggered,[this](){
+    QObject::connect(act_copyDanmuSender, &QAction::triggered, this, [this](){
         QClipboard *cb = QApplication::clipboard();
         cb->setText(getSelectedDanmu()->sender);
     });
     act_blockText=new QAction(tr("Block Text"),this);
-    QObject::connect(act_blockText,&QAction::triggered,[this](){
+    QObject::connect(act_blockText, &QAction::triggered, this, [this](){
         BlockRule *rule=new BlockRule;
         rule->blockField=BlockRule::Field::DanmuText;
         rule->relation=BlockRule::Relation::Contain;
@@ -840,7 +840,7 @@ void ListWindow::initActions()
         showMessage(tr("Blocked"), NotifyMessageFlag::NM_HIDE);
     });
     act_blockColor=new QAction(tr("Block Color"),this);
-    QObject::connect(act_blockColor,&QAction::triggered,[this](){
+    QObject::connect(act_blockColor, &QAction::triggered, this, [this](){
         BlockRule *rule=new BlockRule;
         rule->blockField=BlockRule::Field::DanmuColor;
         rule->relation=BlockRule::Relation::Equal;
@@ -852,7 +852,7 @@ void ListWindow::initActions()
         showMessage(tr("Blocked"), NotifyMessageFlag::NM_HIDE);
     });
     act_blockSender=new QAction(tr("Block Sender"),this);
-    QObject::connect(act_blockSender,&QAction::triggered,[this](){
+    QObject::connect(act_blockSender, &QAction::triggered, this, [this](){
         BlockRule *rule=new BlockRule;
         rule->blockField=BlockRule::Field::DanmuSender;
         rule->relation=BlockRule::Relation::Equal;
@@ -864,17 +864,17 @@ void ListWindow::initActions()
         showMessage(tr("Blocked"), NotifyMessageFlag::NM_HIDE);
     });
     act_deleteDanmu=new QAction(tr("Delete"),this);
-    QObject::connect(act_deleteDanmu,&QAction::triggered,[this](){
+    QObject::connect(act_deleteDanmu, &QAction::triggered, this, [this](){
         GlobalObjects::danmuPool->deleteDanmu(getSelectedDanmu());
     });
     act_jumpToTime=new QAction(tr("Jump to"),this);
-    QObject::connect(act_jumpToTime,&QAction::triggered,[this](){
+    QObject::connect(act_jumpToTime, &QAction::triggered, this, [this](){
         MPVPlayer::PlayState state=GlobalObjects::mpvplayer->getState();
         if(state==MPVPlayer::PlayState::Play || state==MPVPlayer::PlayState::Pause)
             GlobalObjects::mpvplayer->seek(getSelectedDanmu()->time);
     });
 
-    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::fileChanged,[this](){
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::fileChanged, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         playlistView->scrollTo(model->mapFromSource(GlobalObjects::playlist->getCurrentIndex()), QAbstractItemView::EnsureVisible);
     });
@@ -1039,13 +1039,13 @@ QWidget *ListWindow::setupPlaylistPage()
     proxyModel->setSourceModel(GlobalObjects::playlist);
     playlistView->setModel(proxyModel);
 
-    QObject::connect(filter,&FilterBox::filterChanged,[proxyModel,filter](){
+    QObject::connect(filter, &FilterBox::filterChanged, this, [proxyModel,filter](){
         QRegExp regExp(filter->text(),filter->caseSensitivity(), filter->patternSyntax());
         proxyModel->setFilterRole(filter->searchType() == FilterBox::FilePath? PlayList::FilePathRole : Qt::DisplayRole);
         proxyModel->setFilterRegExp(regExp);
     });
 
-    QObject::connect(playlistView, &QTreeView::doubleClicked, [this](const QModelIndex &index) {
+    QObject::connect(playlistView, &QTreeView::doubleClicked, this, [this](const QModelIndex &index) {
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QModelIndex itemIndex = model->mapToSource(index);
         const PlayListItem *item = GlobalObjects::playlist->getItem(itemIndex);
@@ -1114,7 +1114,7 @@ QWidget *ListWindow::setupPlaylistPage()
             matchPool(scriptId);
         }
     });
-    QObject::connect(matchCheckGroup,&QActionGroup::triggered,[](QAction *act){
+    QObject::connect(matchCheckGroup, &QActionGroup::triggered, this, [](QAction *act){
         QString scriptId = act->data().toString();
         if(!scriptId.isEmpty())
         {
@@ -1357,7 +1357,7 @@ QWidget *ListWindow::setupDanmulistPage()
     constexpr const int Index_UpdatePool = 0;
     constexpr const int Index_LocatePosition = 3;
     QObject::connect(btns[Index_UpdatePool], &QToolButton::clicked, this, &ListWindow::updateCurrentPool);
-    QObject::connect(btns[Index_LocatePosition], &QToolButton::clicked, [this]() {
+    QObject::connect(btns[Index_LocatePosition], &QToolButton::clicked, this, [this]() {
         danmulistView->scrollTo(GlobalObjects::danmuPool->getCurrentIndex(), QAbstractItemView::PositionAtTop);
     });
 
@@ -1634,26 +1634,38 @@ AddWebDAVCollectionDialog::AddWebDAVCollectionDialog(QWidget *parent) : CFramele
     titleEdit = new QLineEdit(this);
     QLabel *urlTip = new QLabel(tr("URL"), this);
     urlEdit = new QLineEdit(this);
+    QLabel *portTip = new QLabel(tr("Port"), this);
+    portEdit = new QLineEdit(this);
+    QLabel *pathTip = new QLabel(tr("Path"), this);
+    pathEdit = new QLineEdit(this);
     QLabel *userTip = new QLabel(tr("User"), this);
     userEdit = new QLineEdit(this);
     QLabel *passwordTip = new QLabel(tr("Password"), this);
     passwordEdit = new QLineEdit(this);
+
+    QIntValidator *intValidator = new QIntValidator(this);
+    intValidator->setBottom(0);
+    portEdit->setValidator(intValidator);
 
     QGridLayout *inputGLayout = new QGridLayout(this);
     inputGLayout->addWidget(titleTip, 0, 0);
     inputGLayout->addWidget(titleEdit, 0, 1, 1, 3);
     inputGLayout->addWidget(urlTip, 1, 0);
     inputGLayout->addWidget(urlEdit, 1, 1, 1, 3);
-    inputGLayout->addWidget(userTip, 2, 0);
-    inputGLayout->addWidget(userEdit, 2, 1);
-    inputGLayout->addWidget(passwordTip, 2, 2);
-    inputGLayout->addWidget(passwordEdit, 2, 3);
+    inputGLayout->addWidget(portTip, 2, 0);
+    inputGLayout->addWidget(portEdit, 2, 1);
+    inputGLayout->addWidget(pathTip, 2, 2);
+    inputGLayout->addWidget(pathEdit, 2, 3);
+    inputGLayout->addWidget(userTip, 3, 0);
+    inputGLayout->addWidget(userEdit, 3, 1);
+    inputGLayout->addWidget(passwordTip, 3, 2);
+    inputGLayout->addWidget(passwordEdit, 3, 3);
 
     inputGLayout->setColumnStretch(1, 1);
     inputGLayout->setColumnStretch(3, 1);
     inputGLayout->setContentsMargins(0, 0, 0, 0);
 
-    setSizeSettingKey("AddWebDAVCollectionDialog" ,QSize(220*logicalDpiX()/96, 60*logicalDpiY()/96));
+    setSizeSettingKey("AddWebDAVCollectionDialog" ,QSize(300*logicalDpiX()/96, 100*logicalDpiY()/96));
 }
 
 void AddWebDAVCollectionDialog::onAccept()
@@ -1671,6 +1683,28 @@ void AddWebDAVCollectionDialog::onAccept()
     {
         showMessage(tr("URL must end with /"), NM_ERROR | NM_HIDE);
         return;
+    }
+    if (!portEdit->text().isEmpty())
+    {
+        QUrl tUrl(url);
+        bool ok = false;
+        int port = portEdit->text().toInt(&ok);
+        if (ok)
+        {
+            tUrl.setPort(port);
+            url = tUrl.toString();
+        }
+    }
+    if (!pathEdit->text().trimmed().isEmpty())
+    {
+        if (!pathEdit->text().endsWith("/"))
+        {
+            showMessage(tr("Path must end with /"), NM_ERROR | NM_HIDE);
+            return;
+        }
+        QUrl tUrl(url);
+        tUrl.setPath(pathEdit->text().trimmed());
+        url = tUrl.toString();
     }
     CFramelessDialog::onAccept();
 }

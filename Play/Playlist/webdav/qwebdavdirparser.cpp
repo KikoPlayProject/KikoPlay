@@ -181,6 +181,7 @@ void QWebdavDirParser::abort()
 
     m_reply = 0;
     m_busy = false;
+    emit errorChanged("WebDAV Abort");
 }
 
 void QWebdavDirParser::replyFinished()
@@ -219,6 +220,7 @@ void QWebdavDirParser::replyFinished()
         }
         else {
             QByteArray data = m_reply->readAll();
+            qInfo(QString(data).toStdString().c_str());
             //        if(data.isEmpty()) {
             //            qDebug() << "QWebdavDirParser::replyFinished() | Reply has no data."; //<< m_reply->rawHeaderPairs();
             //        }
