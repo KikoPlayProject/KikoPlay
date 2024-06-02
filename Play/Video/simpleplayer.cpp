@@ -180,6 +180,7 @@ void SimplePlayer::handle_mpv_event(mpv_event *event)
             if (prop->format == MPV_FORMAT_DOUBLE)
             {
                 double time = *(double *)prop->data;
+                currentDuration = time;
                 emit durationChanged(time);
             }
         }

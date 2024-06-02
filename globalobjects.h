@@ -53,7 +53,7 @@ public:
     static QSqlDatabase getDB(int db, bool *hasError = nullptr);
 
     static constexpr const char *normalFont = "Microsoft Yahei UI";
-    static constexpr const char *kikoVersion = "1.0.2";
+    static constexpr const char *kikoVersion = "1.0.3";
 
     static qint64 startupTime;
     static QVector<QPair<QString, qint64>> stepTime;

@@ -22,7 +22,7 @@ public:
     };
 public:
     inline int getTime() const{return mpv::qt::get_property(mpv,"playback-time").toDouble();}
-    inline int getDuration() const{return currentDuration;}
+    inline double getDuration() const{return currentDuration;}
     const QSize getVideoSize();
     QVariant getMPVPropertyVariant(const QString &property, int &errCode);
     int setMPVCommand(const QVariant& params);
@@ -57,7 +57,7 @@ private:
     QTimer *refreshTimer;
     const int timeRefreshInterval=400;
     PlayState state;
-    int currentDuration;
+    double currentDuration;
     int volume;
     bool clickPause = true;
     double currentPos = 0;
