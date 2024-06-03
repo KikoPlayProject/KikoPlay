@@ -2,6 +2,7 @@
 #define PLAYLISTINTERFACE_H
 
 #include "modulebase.h"
+struct PlayListItem;
 namespace Extension
 {
 
@@ -13,6 +14,9 @@ public:
 private:
     static int add(lua_State *L);
     static int curitem(lua_State *L);
+    static int get(lua_State *L);
+
+    static QVariantMap getItemInfo(const PlayListItem *item);
 };
 
 }

@@ -11,6 +11,7 @@ void PlayListInterface::setup()
     const luaL_Reg funcs[] = {
         {"add", add},
         {"curitem", curitem},
+        {"get", get},
         {nullptr, nullptr}
     };
     registerFuncs({"kiko", "playlist"}, funcs);
@@ -117,22 +118,69 @@ int PlayListInterface::curitem(lua_State *L)
             pathStack.push_front(tmpItem->title);
             tmpItem = tmpItem->parent;
         }
-        itemInfo = QVariantMap({
-            {"position", pathStack.join('/')},
-            {"src_type", item->type},
-            {"state", item->playTimeState},
-            {"bgm_collection", item->isBgmCollection},
-            {"webdav_collection", item->isWebDAVCollection()},
-            {"add_time", item->addTime},
-            {"title", item->title},
-            {"anime_title", item->animeTitle},
-            {"path", item->path},
-            {"pool", item->poolID},
-        });
+        QVariantMap info = getItemInfo(item);
+        info["position"] = pathStack.join('/');
+        itemInfo = info;
     }, Qt::BlockingQueuedConnection);
     if (itemInfo.isNull()) lua_pushnil(L);
     else pushValue(L, itemInfo);
     return 1;
+}
+
+int PlayListInterface::get(lua_State *L)
+{
+    if (lua_gettop(L) < 1 || lua_type(L, 1) != LUA_TSTRING)
+    {
+        return 0;
+    }
+    const QStringList path = QString(lua_tostring(L, 1)).split("/", Qt::SkipEmptyParts);
+    QVariant itemInfo;
+    QMetaObject::invokeMethod(GlobalObjects::playlist, [&](){
+        const PlayListItem *item = GlobalObjects::playlist->getItem(QModelIndex(), path);
+        if (!item) return;
+        QStringList pathStack;
+        const PlayListItem *tmpItem = item->parent;
+        while(tmpItem)
+        {
+            pathStack.push_front(tmpItem->title);
+            tmpItem = tmpItem->parent;
+        }
+        QVariantMap info = getItemInfo(item);
+        info["position"] = pathStack.join('/');
+        if (item->children && !item->children->empty())
+        {
+            pathStack.push_back(item->title);
+            const QString childPos = pathStack.join('/');
+            QVariantList childrenInfo;
+            for (const PlayListItem *c : *item->children)
+            {
+                QVariantMap i = getItemInfo(c);
+                i["position"] = childPos;
+                childrenInfo.append(i);
+            }
+            info["children"] = childrenInfo;
+        }
+        itemInfo = info;
+    }, Qt::BlockingQueuedConnection);
+    if (itemInfo.isNull()) lua_pushnil(L);
+    else pushValue(L, itemInfo);
+    return 1;
+}
+
+QVariantMap PlayListInterface::getItemInfo(const PlayListItem *item)
+{
+    if (!item) return QVariantMap();
+    return QVariantMap({
+       {"src_type", item->type},
+       {"state", item->playTimeState},
+       {"bgm_collection", item->isBgmCollection},
+       {"webdav_collection", item->isWebDAVCollection()},
+       {"add_time", item->addTime},
+       {"title", item->title},
+       {"anime_title", item->animeTitle},
+       {"path", item->path},
+       {"pool", item->poolID},
+   });
 }
 
 

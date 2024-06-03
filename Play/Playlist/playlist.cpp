@@ -168,6 +168,34 @@ QList<const PlayListItem *> PlayList::getSiblings(const PlayListItem *item, bool
     return siblings;
 }
 
+const PlayListItem *PlayList::getItem(QModelIndex parent, const QStringList &path)
+{
+    Q_D(PlayList);
+    PlayListItem *item = parent.isValid() ? static_cast<PlayListItem*>(parent.internalPointer()) : d->root;
+    if (path.isEmpty() || !item) return item;
+    if (!item->children) return nullptr;
+    for (const QString &p : path)
+    {
+        if (!item || !item->children) return nullptr;
+        bool hasPath = false;
+        for (int i = 0; i < item->children->size(); ++i)
+        {
+            PlayListItem *child = (*item->children)[i];
+            if (child->title == p && child->children)
+            {
+                hasPath = true;
+                item = child;
+                break;
+            }
+        }
+        if (!hasPath)
+        {
+            return nullptr;
+        }
+    }
+    return item;
+}
+
 PlayList::LoopMode PlayList::getLoopMode() const
 {
     Q_D(const PlayList);
