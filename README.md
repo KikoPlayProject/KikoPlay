@@ -27,6 +27,12 @@
 还可以通过KikoPlay的Web API实现其他功能，[Web API参考](web/README.md)  
 自1.0.0起增加了扩展App功能，通过扩展App可以为KikoPlay增加更多自定义功能，[App仓库](https://github.com/KikoPlayProject/KikoPlayApp)
 
+## 下载
+
+可以从 [Github](https://github.com/KikoPlayProject/KikoPlay/releases) 或 [百度网盘](https://pan.baidu.com/s/1gyT0FU9rioaa77znhAUx2w) 或 QQ群文件 下载 Windows 版和 Linux 版
+
+Linux 用户也可以通过 [Flathub](https://flathub.org/apps/io.github.KikoPlayProject.KikoPlay) 下载安装使用 KikoPlay
+
 ## 编译
 
 KikoPlay基于以下项目：
@@ -54,10 +60,6 @@ macOS使用Homebrew包管理器：https://github.com/KikoPlayProject/Homebrew-Ki
 
 关于cmake编译请参见[这里](cmake_build.md) （cmake编译方法为其他网友提供，随着版本更新可能失效，需要用户自行调整）
 
-
-## 下载
-
-可以从[Github](https://github.com/KikoPlayProject/KikoPlay/releases) 或 [百度网盘](https://pan.baidu.com/s/1gyT0FU9rioaa77znhAUx2w) 或 QQ群文件 下载Windows版
 
 ## 反馈
 
