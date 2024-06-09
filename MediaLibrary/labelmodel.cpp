@@ -460,7 +460,7 @@ TagNode *LabelModel::insertNode(TagNode *parent, const QString &strPath, int cou
 
 TagNode *LabelModel::insertNodeIndex(TagNode *parent, const QString &strPath, int count, TagNode::TagType type, char split)
 {
-    auto titles(strPath.splitRef(split, QString::SkipEmptyParts));
+    auto titles(strPath.splitRef(split, Qt::SkipEmptyParts));
     if(titles.size()==0) return parent;
     TagNode *current = parent;
     QModelIndex currentIndex;
@@ -503,7 +503,7 @@ TagNode *LabelModel::insertNodeIndex(TagNode *parent, const QString &strPath, in
 
 void LabelModel::removeNodeIndex(TagNode *parent, const QString &strPath, bool removeAll, char split)
 {
-    auto titles(strPath.splitRef(split, QString::SkipEmptyParts));
+    auto titles(strPath.splitRef(split, Qt::SkipEmptyParts));
     if(titles.size()==0) return;
     TagNode *current = parent;
     QModelIndex currentIndex;
@@ -641,6 +641,7 @@ bool LabelProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right
 {
     static QCollator comparer;
     TagNode *lNode = static_cast<TagNode*>(left.internalPointer()), *rNode = static_cast<TagNode*>(right.internalPointer());
+    if (!lNode || !rNode) return false;
     switch (lNode->tagType)
     {
     case TagNode::TAG_ROOT_CATE:
@@ -672,6 +673,7 @@ bool LabelProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source
 {
     QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
     TagNode *node = static_cast<TagNode*>(index.internalPointer());
+    if (!node) return true;
     if(node->tagType==TagNode::TAG_CUSTOM)
     {
         return node->tagTitle.contains(filterRegExp());
