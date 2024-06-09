@@ -82,6 +82,7 @@ DanmuRender::DanmuRender(QObject *parent) : QObject(parent)
     liveModeOnlyRolling = GlobalObjects::appSetting->value(SETTING_KEY_LIVE_MODE_ONLY_ROLLING, true).toBool();
     liveDanmuListModel = new LiveDanmuListModel(this);
     liveDanmuListModel->setFontFamily(danmuStyle.fontFamily);
+    liveDanmuListModel->setAlpha(danmuOpacity);
 
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::resized,this,&DanmuRender::refreshDMRect);
 

@@ -4152,13 +4152,13 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">使用提示</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="281"/>
+        <location filename="../../UI/mainwindow.cpp" line="287"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
         <location filename="../../UI/mainwindow.cpp" line="73"/>
-        <location filename="../../UI/mainwindow.cpp" line="290"/>
+        <location filename="../../UI/mainwindow.cpp" line="296"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
@@ -4183,29 +4183,34 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation>使用提示</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="295"/>
+        <location filename="../../UI/mainwindow.cpp" line="281"/>
+        <source>Feedback</source>
+        <translation>意见反馈</translation>
+    </message>
+    <message>
+        <location filename="../../UI/mainwindow.cpp" line="301"/>
         <source>Player</source>
         <translation>播放</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="296"/>
+        <location filename="../../UI/mainwindow.cpp" line="302"/>
         <source>Library</source>
         <translation>资料</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="297"/>
+        <location filename="../../UI/mainwindow.cpp" line="303"/>
         <source>Download</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="704"/>
-        <location filename="../../UI/mainwindow.cpp" line="899"/>
+        <location filename="../../UI/mainwindow.cpp" line="710"/>
+        <location filename="../../UI/mainwindow.cpp" line="905"/>
         <source>Updating...</source>
         <translation>更新中...</translation>
     </message>
     <message>
-        <location filename="../../UI/mainwindow.cpp" line="709"/>
-        <location filename="../../UI/mainwindow.cpp" line="904"/>
+        <location filename="../../UI/mainwindow.cpp" line="715"/>
+        <location filename="../../UI/mainwindow.cpp" line="910"/>
         <source>Add %1 Danmu</source>
         <translation>添加了 %1 条弹幕</translation>
     </message>
@@ -4364,24 +4369,24 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">第%0话 %1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1731"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1770"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1759"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1798"/>
         <source>Match Start</source>
         <translation>开始关联...</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1742"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1770"/>
         <source>Skip Match: %1</source>
         <translation>跳过关联：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1750"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1778"/>
         <source>Failed: %1</source>
         <translation>失败：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1757"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1776"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1785"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1804"/>
         <source>Success: %1</source>
         <translation>成功：%1</translation>
     </message>
@@ -4390,8 +4395,8 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">需要手动关联：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1762"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1792"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1790"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1820"/>
         <source>Match Done</source>
         <translation>关联结束</translation>
     </message>
@@ -4567,15 +4572,15 @@ Set shortcuts through MPV Parameter input-conf</source>
 <context>
     <name>PlayList</name>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="232"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="260"/>
         <source>File exist or Unsupported format</source>
         <translation>文件已在列表中或格式不支持</translation>
     </message>
     <message>
         <location filename="../../Play/Playlist/playlist.cpp" line="131"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="264"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="328"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="610"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="292"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="356"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="638"/>
         <source>Add %1 item(s)</source>
         <translation>添加了 %1 个项目</translation>
     </message>
@@ -4594,22 +4599,22 @@ Folder Collection
 %2</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="919"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="947"/>
         <source>Unplayed</source>
         <translation>未观看</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="921"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="949"/>
         <source>Finished</source>
         <translation>已看完</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="926"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="954"/>
         <source>PlayTo: %1:%2</source>
         <translation>播放到：%1:%2</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1100"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1128"/>
         <source>File Not Exist</source>
         <translation>文件不存在</translation>
     </message>
@@ -4622,7 +4627,7 @@ Folder Collection
         <translation type="vanished">失败：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1258"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1286"/>
         <source>Success: %1</source>
         <translation>成功：%1</translation>
     </message>
@@ -4635,58 +4640,58 @@ Folder Collection
         <translation type="vanished">关联结束</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="392"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="420"/>
         <source>Add %1 URL item(s)</source>
         <translation>添加了 %1 条URL</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="882"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="910"/>
         <source>Bangumi Collection</source>
         <translation>番组集合</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="888"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="916"/>
         <source>WebDAV Collection</source>
         <translation>WebDAV合集</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="892"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="920"/>
         <source>Folder Collection</source>
         <translation>目录集合</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="899"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="914"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="927"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="942"/>
         <source>Add Time: %1</source>
         <translation>添加时间：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="909"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="937"/>
         <source>Web Item</source>
         <translation>网络来源</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1349"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1377"/>
         <source>Update Start</source>
         <translation>开始更新</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1365"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1393"/>
         <source>Updating: %1</source>
         <translation>正在更新：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1370"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1398"/>
         <source>Update Done</source>
         <translation>更新结束</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1605"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1633"/>
         <source>Exporting: %1</source>
         <translation>正在导出：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1613"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1641"/>
         <source>Export Down</source>
         <translation>导出完成</translation>
     </message>
@@ -6961,14 +6966,14 @@ Eps: %2
 <context>
     <name>WebDAVWorker</name>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1824"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1830"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1853"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1852"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1858"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1881"/>
         <source>Fetch Done</source>
         <translation>获取完成</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1846"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1874"/>
         <source>Fetching Directiory Info...</source>
         <translation>获取目录信息...</translation>
     </message>

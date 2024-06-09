@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QMainWindow>
 #include <QFontDatabase>
+#include <QElapsedTimer>
 #include "Extension/Common/ext_common.h"
 #include "Extension/Modules/lua_apputil.h"
 #include "Extension/Modules/lua_regex.h"
@@ -29,6 +30,7 @@
 #include "appframelessdialog.h"
 #include "Common/threadtask.h"
 #include "Common/logger.h"
+#include "Common/kstats.h"
 #include "globalobjects.h"
 
 namespace Extension
@@ -77,6 +79,9 @@ KApp::~KApp()
 bool KApp::start(LaunchScene scene)
 {
     if (loaded) return true;
+
+    QElapsedTimer timer;
+    timer.start();
 
     L = luaL_newstate();
     if (!L) return false;
@@ -140,6 +145,7 @@ bool KApp::start(LaunchScene scene)
 #endif
     }, Qt::QueuedConnection);
     loaded = true;
+    KStats::instance()->statsUseApp(id(), version(), timer.elapsed());
     return true;
 }
 

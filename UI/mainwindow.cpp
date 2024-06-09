@@ -278,6 +278,12 @@ void MainWindow::setupUI()
     });
     buttonIcon->addAction(act_useTip);
 
+    QAction *act_feedback = new QAction(tr("Feedback"), this);
+    QObject::connect(act_feedback, &QAction::triggered, [](){
+        QDesktopServices::openUrl(QUrl("https://support.qq.com/product/655998"));
+    });
+    buttonIcon->addAction(act_feedback);
+
     QAction *act_about=new QAction(tr("About"), this);
     QObject::connect(act_about,&QAction::triggered,[this](){
         About about(buttonIcon);

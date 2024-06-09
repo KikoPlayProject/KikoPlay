@@ -10,6 +10,8 @@ class KStats: public QObject
     KStats(QObject *parent = nullptr);
 public:
     static KStats *instance();
+public:
+    void statsUseApp(const QString &appId, const QString &appVersion, qint64 tc);
 protected:
     void timerEvent(QTimerEvent* event);
 private:
@@ -17,6 +19,7 @@ private:
 private:
     const QString baseURL;
     QBasicTimer eventTimer;
+    QJsonObject getBaseInfo(const QString &ev, qint64 ts = -1);
     void post(const QString &path, const QJsonDocument &doc);
 };
 
