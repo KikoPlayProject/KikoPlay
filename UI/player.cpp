@@ -1310,6 +1310,14 @@ void PlayerWindow::setupPlaySettingPage()
     QLabel *audioTrackLabel=new QLabel(tr("Audio Track"),pagePlay);
     QComboBox *audioTrackCombo=new QComboBox(pagePlay);
     audioTrackCombo->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
+
+    for(auto &t : GlobalObjects::mpvplayer->getTrackList(MPVPlayer::TrackType::AudioTrack))
+    {
+        audioTrackCombo->addItem(t.title);
+    }
+    audioTrackCombo->addItem(tr("Clear External Audio Files"));
+    audioTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentTrack(MPVPlayer::TrackType::AudioTrack));
+
     QObject::connect(audioTrackCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[audioTrackCombo](int index){
         if(index==audioTrackCombo->count() - 1)
         {
@@ -1349,6 +1357,15 @@ void PlayerWindow::setupPlaySettingPage()
     QLabel *subtitleTrackLabel=new QLabel(tr("Subtitle Track"),pagePlay);
     QComboBox *subtitleTrackCombo=new QComboBox(pagePlay);
     subtitleTrackCombo->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
+
+    for(auto &t : GlobalObjects::mpvplayer->getTrackList(MPVPlayer::TrackType::SubTrack))
+    {
+        subtitleTrackCombo->addItem(t.title);
+    }
+    subtitleTrackCombo->addItem(tr("Hide"));
+    subtitleTrackCombo->addItem(tr("Clear External Sub Files"));
+    subtitleTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentTrack(MPVPlayer::TrackType::SubTrack));
+
     QObject::connect(subtitleTrackCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[subtitleTrackCombo](int index){
         if(index==subtitleTrackCombo->count() - 1)
         {

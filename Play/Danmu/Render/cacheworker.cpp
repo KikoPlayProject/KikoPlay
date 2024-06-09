@@ -28,7 +28,7 @@ namespace
 }
 CacheWorker::CacheWorker(const DanmuStyle *style):danmuStyle(style)
 {
-    danmuFont.setFamily(danmuStyle->fontFamily);
+    changeDanmuStyle();
     danmuStrokePen.setWidthF(danmuStyle->strokeWidth);
     danmuStrokePen.setJoinStyle(Qt::RoundJoin);
     danmuStrokePen.setCapStyle(Qt::RoundCap);
