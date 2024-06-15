@@ -20,6 +20,7 @@
  - 局域网服务，你可以通过网页在其他设备上观看，现在还有[Android端](https://github.com/KikoPlayProject/KikoPlay-Android-LAN)可供选择
  - DLNA功能支持投屏到其他设备，也可以作为媒体服务器供其他设备访问
  - 集成每日放送、资源搜索、aria2下载、自动下载等功能，在KikoPlay里即可完成下载、观看、管理等全部操作
+ - 1.0.0起支持lua扩展app，通过扩展app可以为KikoPlay添加更多功能，包括bangumi同步、网页视频下载、m3u8直播等等
  - .........
 
 使用说明书参考[KikoPlay使用说明](KikoPlay使用说明.pdf)  
