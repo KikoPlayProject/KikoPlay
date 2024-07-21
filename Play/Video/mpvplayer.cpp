@@ -1174,6 +1174,7 @@ void MPVPlayer::loadSettings()
 {
     danmuHide = GlobalObjects::appSetting->value(SETTING_KEY_DANMUHIDE, false).toBool();
     playSpeed = GlobalObjects::appSetting->value(SETTING_KEY_PLAY_SPEED, "1").toDouble();
+    setMPVProperty("speed", playSpeed);
 
     videoAspectIndex = GlobalObjects::appSetting->value(SETTING_KEY_VIDEO_ASPECT, 0).toInt();
     setMPVProperty("video-aspect", videoAspectVal[videoAspectIndex]);
