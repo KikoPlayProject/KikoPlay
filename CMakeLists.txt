@@ -17,9 +17,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt5 COMPONENTS Widgets Core Gui Network Concurrent Sql Svg REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Core Gui Network Concurrent Sql Svg WebSockets Xml REQUIRED)
 find_package(ZLIB REQUIRED)
-add_subdirectory(Script/lua)
+add_subdirectory(Extension/Lua)
 
 function(include_sub_directories_recursively ROOT_DIR)
     if (IS_DIRECTORY ${ROOT_DIR})
@@ -79,6 +79,8 @@ PRIVATE
     Qt::Concurrent 
     Qt::Sql
     Qt::Svg
+    Qt::WebSockets
+    Qt::Xml
     myLua53
 )
 
