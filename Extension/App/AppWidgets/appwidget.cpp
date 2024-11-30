@@ -489,6 +489,7 @@ int AppWidget::removechild(lua_State *L)
     if (child)
     {
         child->deleteLater();
+        if (child->widget) child->widget->deleteLater();
     }
     return 0;
 }

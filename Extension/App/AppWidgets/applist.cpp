@@ -155,7 +155,7 @@ int AppList::set(lua_State *L)
     }
     QListWidget *listWidget = static_cast<QListWidget *>(appWidget->getWidget());
     // set(pos, key, val)
-    const int row = lua_tointeger(L, 3) - 1;
+    const int row = lua_tointeger(L, 2) - 1;
     QListWidgetItem *item = listWidget->item(row);
     if (!item) return 0;
     const QString key = lua_tostring(L, 3);
@@ -680,17 +680,17 @@ void AppList::setItem(QListWidgetItem *item, const QString &field, const QVarian
         }
     } else if (field == "bg") {
         bool ok = false;
-        const int bgColor = val.toInt(&ok);
+        const uint bgColor = val.toUInt(&ok);
         if (ok)
         {
-            item->setBackground(QColor((bgColor >> 16)&0xff, (bgColor >> 8)&0xff, bgColor&0xff));
+            item->setBackground(QColor((bgColor >> 16)&0xff, (bgColor >> 8)&0xff, bgColor&0xff, bgColor >> 24));
         }
     } else if (field == "fg") {
         bool ok = false;
-        const int fgColor = val.toInt(&ok);
+        const uint fgColor = val.toUInt(&ok);
         if (ok)
         {
-            item->setForeground(QColor((fgColor >> 16)&0xff, (fgColor >> 8)&0xff, fgColor&0xff));
+            item->setForeground(QColor((fgColor >> 16)&0xff, (fgColor >> 8)&0xff, fgColor&0xff, fgColor >> 24));
         }
     } else if (field == "check") {
         if (val.toString().toLower() == "none")
@@ -716,19 +716,33 @@ QVariantMap AppList::itemToMap(QListWidgetItem *item)
     QVariantMap itemMap = {
         {"text", item->text()},
         {"tip", item->toolTip()},
-        {"align", item->textAlignment()},
-        {"bg",  item->background().color().rgb()},
-        {"fg",  item->foreground().color().rgb()},
         {"index", item->listWidget()? item->listWidget()->row(item) + 1 : 0},
         {"edit", item->flags().testFlag(Qt::ItemIsEditable)},
     };
-    if (item->flags() & Qt::ItemIsUserCheckable)
+    if (item->data(Qt::BackgroundRole).isValid())
+    {
+        itemMap["bg"] = item->background().color().rgba();
+    }
+    if (item->data(Qt::ForegroundRole).isValid())
+    {
+        itemMap["fg"] = item->foreground().color().rgba();
+    }
+    if (item->data(Qt::CheckStateRole).isValid())
     {
         itemMap["check"] = item->checkState() == Qt::Checked;
+    }
+    if (item->data(Qt::DecorationRole).isValid())
+    {
+        QIcon icon = item->icon();
+        itemMap["icon"] = icon.pixmap(icon.availableSizes()[0]).toImage();
     }
     if (item->data(ListItemDataRole).isValid())
     {
         itemMap["data"] = item->data(ListItemDataRole);
+    }
+    if (item->data(Qt::TextAlignmentRole).isValid())
+    {
+        itemMap["align"] = item->textAlignment();
     }
     return itemMap;
 }
