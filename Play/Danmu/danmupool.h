@@ -20,17 +20,20 @@ public:
     explicit DanmuPool(QObject *parent = nullptr);
     virtual ~DanmuPool();
 
-    inline bool hasPool() const {return curPool!=emptyPool;}
-    inline QModelIndex getCurrentIndex(){return (currentPosition >= 0 && currentPosition < finalPool.count())?createIndex(currentPosition, 0,finalPool.at(currentPosition).data()):QModelIndex();}
-    inline void recyclePrepareList(QVector<DrawTask> *list){list->clear();prepareListPool.append(list);}
-    inline bool isEmpty() const{return danmuPool.isEmpty();}
-    inline int totalCount() const {return danmuPool.count();}
-    inline const StatisInfo &getStatisInfo(){return statisInfo;}
-    inline void reset(){currentTime=0;currentPosition=0;extendPos=0;}
-    inline Pool *getPool() {return curPool;}
-    inline int getCurrentTime() const {return currentTime;}
-    inline bool isEnableAnalyze() const { return enableAnalyze; }
-    inline bool isEnableMerge() const { return enableMerged; }
+    bool hasPool() const {return curPool!=emptyPool;}
+    QModelIndex getCurrentIndex(){return (currentPosition >= 0 && currentPosition < finalPool.count())?createIndex(currentPosition, 0,finalPool.at(currentPosition).data()):QModelIndex();}
+    void recyclePrepareList(QVector<DrawTask> *list){list->clear();prepareListPool.append(list);}
+    bool isEmpty() const{return danmuPool.isEmpty();}
+    int totalCount() const {return danmuPool.count();}
+    const StatisInfo &getStatisInfo(){return statisInfo;}
+    void reset(){currentTime=0;currentPosition=0;extendPos=0;}
+    Pool *getPool() {return curPool;}
+    int getCurrentTime() const {return currentTime;}
+    bool isEnableAnalyze() const { return enableAnalyze; }
+    bool isEnableMerge() const { return enableMerged; }
+    int getMinMergeCount() const { return minMergeCount; }
+    int getMergeInterval() const { return mergeInterval / 1000; }
+    bool isLoadLocalDanmu() const { return loadLoaclDanmu; }
 
     QSharedPointer<DanmuComment> getDanmu(const QModelIndex &index);
     void deleteDanmu(QSharedPointer<DanmuComment> danmu);
@@ -52,6 +55,7 @@ private:
 
     bool enableAnalyze;
     bool enableMerged;
+    bool loadLoaclDanmu;
     int mergeInterval; //ms
     int maxContentUnsimCount;
     int minMergeCount;
@@ -64,6 +68,7 @@ private:
 public:
     void setAnalyzeEnable(bool enable);
     void setMergeEnable(bool enable);
+    void setLoadLocalDanmu(bool loadLocal);
     void setMergeInterval(int val);
     void setMaxUnSimCount(int val);
     void setMinMergeCount(int val);
@@ -74,6 +79,11 @@ signals:
     void statisInfoChange();
     void eventAnalyzeFinished(const QVector<DanmuEvent> &);
     void poolIdChanged();
+    void triggerUpdate();
+    void triggerAdd();
+    void triggerEditPool();
+    void triggerEditBlockRules();
+
 public slots:
     void mediaTimeElapsed(int newTime);
     void mediaTimeJumped(int newTime);

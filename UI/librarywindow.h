@@ -2,9 +2,10 @@
 #define LIBRARYWINDOW_H
 
 #include <QWidget>
-#include <QLineEdit>
 #include <QTreeView>
+#include <QListView>
 #include "Common/notifier.h"
+#include "UI/widgets/klineedit.h"
 class Anime;
 class QListView;
 class QToolButton;
@@ -18,6 +19,31 @@ class LabelProxyModel;
 class AnimeItemDelegate;
 class AnimeDetailInfoPage;
 class DialogTip;
+
+class AnimeListView : public QListView
+{
+    Q_OBJECT
+    Q_PROPERTY(QColor itemBorderColor READ getItemBorderColor WRITE setItemBorderColor)
+public:
+    using QListView::QListView;
+
+    QColor getItemBorderColor() const {return itemBorderColor;}
+    void setItemBorderColor(const QColor& color)
+    {
+        itemBorderColor =  color;
+        emit itemBorderColorChanged(itemBorderColor);
+    }
+
+signals:
+    void itemBorderColorChanged(QColor color);
+
+protected:
+    virtual void resizeEvent(QResizeEvent *event);
+
+private:
+    QColor itemBorderColor;
+};
+
 class LabelTreeView : public QTreeView
 {
     Q_OBJECT
@@ -60,7 +86,7 @@ signals:
 private:
     QColor topLevelColor, childLevelColor, countFColor, countBColor;
 };
-class AnimeFilterBox : public QLineEdit
+class AnimeFilterBox : public KLineEdit
 {
     Q_OBJECT
 public:
@@ -76,23 +102,29 @@ class LibraryWindow : public QWidget, public NotifyInterface
     Q_OBJECT
 public:
     explicit LibraryWindow(QWidget *parent = nullptr);
+    void initUI();
+    QLayout *initLibrarayBtns(QWidget *parent);
+    void initAnimeView();
+    void initLabelView();
     void beforeClose();
 
 private:
     AnimeModel *animeModel;
     AnimeFilterProxyModel *proxyModel;
     LabelProxyModel *labelProxyModel;
-    QListView *animeListView;
+    AnimeListView *animeListView;
     LabelTreeView *labelView;
     QSplitter *splitter;
+    bool isMovedCollapse{false};
     DialogTip *dialogTip;
-    AnimeDetailInfoPage *detailPage;
-    QPushButton *backButton;
+    AnimeDetailInfoPage *detailPage{nullptr};
+    QPushButton *filterCheckBtn;
     bool animeViewing;
     void searchAddAnime(Anime *srcAnime = nullptr);
 signals:
     void playFile(const QString &file);
     void switchBackground(const QPixmap &pixmap, bool setPixmap);
+    void updateFilterCounter(int c);
 public slots:
     // QWidget interface
 protected:

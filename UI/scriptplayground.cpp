@@ -1,4 +1,5 @@
 #include "scriptplayground.h"
+#include "UI/widgets/kpushbutton.h"
 #include <QTextBlock>
 #include <QPainter>
 #include <QSyntaxHighlighter>
@@ -154,7 +155,7 @@ private:
 };
 }
 
-CodeEditor::CodeEditor(QWidget *parent) : QPlainTextEdit(parent)
+CodeEditor::CodeEditor(QWidget *parent) : KPlainTextEdit(parent)
 {
     setObjectName(QStringLiteral("LuaCodeEditor"));
     hoverColor = QColor(Qt::transparent);
@@ -199,7 +200,7 @@ void CodeEditor::updateLineNumberArea(const QRect &rect, int dy)
 
 void CodeEditor::resizeEvent(QResizeEvent *e)
 {
-    QPlainTextEdit::resizeEvent(e);
+    KPlainTextEdit::resizeEvent(e);
 
     QRect cr = contentsRect();
     lineNumberArea->setGeometry(QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
@@ -304,7 +305,7 @@ void CodeEditor::keyPressEvent(QKeyEvent *event)
 
     if (!keySet.contains(key))
     {
-        QPlainTextEdit::keyPressEvent(event);
+        KPlainTextEdit::keyPressEvent(event);
         return;
     }
 
@@ -384,7 +385,6 @@ void CodeEditor::keyPressEvent(QKeyEvent *event)
     {
         int pos = cursor.positionInBlock();
         const QString text = cursor.block().text();
-        QChar prev, next;
         if(pos > 0 && pos < text.size())
         {
             if(pairChar.contains(text[pos-1]) && text[pos]==pairChar[text[pos-1]])
@@ -469,13 +469,13 @@ void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
 ScriptPlayground::ScriptPlayground(QWidget *parent) :
     CFramelessDialog(tr("Script Playground"), parent, false, true, false), executor(new PlaygroundScript)
 {
-    QPushButton *run = new QPushButton(tr("Run"), this);
+    KPushButton *run = new KPushButton(tr("Run"), this);
     CodeEditor *editor = new CodeEditor(this);
     editor->setFont(QFont("Consolas", 12));
 
     LuaHighLighter *highlighter = new LuaHighLighter();
     highlighter->setDocument(editor->document());
-    QPlainTextEdit *outputView = new QPlainTextEdit(this);
+    QPlainTextEdit *outputView = new KPlainTextEdit(this);
     outputView->setReadOnly(true);
     QSplitter *splitter=new QSplitter(Qt::Vertical, this);
     splitter->setObjectName(QStringLiteral("NormalSplitter"));
@@ -491,8 +491,7 @@ ScriptPlayground::ScriptPlayground(QWidget *parent) :
     playgroundGlayout->addWidget(splitter, 1, 0, 1, 4);
     playgroundGlayout->setRowStretch(1, 1);
     playgroundGlayout->setColumnStretch(3, 1);
-    playgroundGlayout->setContentsMargins(0, 0, 0, 0);
-    setSizeSettingKey("DialogSize/ScriptPlayground",QSize(700*logicalDpiX()/96, 400*logicalDpiY()/96));
+    setSizeSettingKey("DialogSize/ScriptPlayground",QSize(700, 400));
 
     QObject::connect(run, &QPushButton::clicked, this, [=](){
         run->setEnabled(false);

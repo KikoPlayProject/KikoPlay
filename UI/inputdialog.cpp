@@ -4,24 +4,26 @@
 #include <QLabel>
 #include <QGridLayout>
 #include "Common/notifier.h"
+#include "UI/ela/ElaLineEdit.h"
+#include "UI/widgets/kplaintextedit.h"
 
 InputDialog::InputDialog(const QString &title, const QString &tip, const QString &text, bool canEmpty, QWidget *parent, const QString &sizeKey)
     : CFramelessDialog (title,parent,true)
 {
-   QLabel *tipLabel=new QLabel(tip,this);
-   edit=new QPlainTextEdit(text,this);
+   QLabel *tipLabel = new QLabel(tip,this);
+   edit = new KPlainTextEdit(this, false);
+   edit->setPlainText(text);
    edit->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
    QGridLayout *inputGLayout=new QGridLayout(this);
    inputGLayout->addWidget(tipLabel, 0, 0);
    inputGLayout->addWidget(edit, 1, 0);
    inputGLayout->setRowStretch(1, 1);
    inputGLayout->setColumnStretch(0, 1);
-   inputGLayout->setContentsMargins(0, 0, 0, 0);
-   this->canEmpty=canEmpty;
-   if(tip.isEmpty()) tipLabel->hide();
-   if(!sizeKey.isEmpty())
+   this->canEmpty = canEmpty;
+   if (tip.isEmpty()) tipLabel->hide();
+   if (!sizeKey.isEmpty())
    {
-       setSizeSettingKey(sizeKey,QSize(200*logicalDpiX()/96,50*logicalDpiY()/96));
+       setSizeSettingKey(sizeKey,QSize(300, 60));
    }
 }
 
@@ -103,15 +105,15 @@ void InputDialog::onAccept()
 LineInputDialog::LineInputDialog(const QString &title, const QString &tip, const QString &text, const QString &sizeKey, bool canEmpty, QWidget *parent)
     : CFramelessDialog(title,parent,true)
 {
-    QLabel *tipLabel=new QLabel(tip,this);
-    edit=new QLineEdit(text,this);
+    QLabel* tipLabel = new QLabel(tip, this);
+    edit = new ElaLineEdit(this);
+    edit->setText(text);
     QObject::connect(edit, &QLineEdit::returnPressed, this, &LineInputDialog::onAccept);
     QGridLayout *inputGLayout=new QGridLayout(this);
     inputGLayout->addWidget(tipLabel, 0, 0);
     inputGLayout->addWidget(edit, 0, 1);
     inputGLayout->setRowStretch(0, 1);
     inputGLayout->setColumnStretch(1, 1);
-    inputGLayout->setContentsMargins(0, 0, 0, 0);
     this->canEmpty=canEmpty;
     if(!sizeKey.isEmpty())
     {

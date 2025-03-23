@@ -25,289 +25,59 @@
 #include "MediaLibrary/capturelistmodel.h"
 #include "MediaLibrary/animeprovider.h"
 #include "MediaLibrary/animeworker.h"
+#include "MediaLibrary/animeitemdelegate.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Common/flowlayout.h"
 #include "Common/network.h"
+#include "UI/animeepisodeeditor.h"
+#include "UI/ela/ElaMenu.h"
+#include "UI/inputdialog.h"
+#include "UI/widgets/fonticonbutton.h"
 #include "captureview.h"
 #include "gifcapture.h"
 #include "charactereditor.h"
 #include "animeinfoeditor.h"
+#include "widgets/floatscrollbar.h"
 #include "globalobjects.h"
 
 int CharacterWidget::maxCrtItemWidth = 0;
 int CharacterWidget::crtItemHeight = 0;
 
-namespace
-{
-    class ShadowLabel : public QWidget
-    {
-    public:
-        ShadowLabel(QWidget *parent=nullptr) : QWidget(parent)
-        {
-            setStyleSheet(QStringLiteral("background:transparent;"));
-            coverLabel = new QLabel(this);
-            coverLabel->setAlignment(Qt::AlignCenter);
-            coverLabel->setScaledContents(true);
-            QHBoxLayout *sLayout = new QHBoxLayout(this);
-            sLayout->addWidget(coverLabel);
-            QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(this);
-            shadowEffect->setOffset(0, 0);
-            shadowEffect->setBlurRadius(12);
-            shadowEffect->setColor(Qt::white);
-            coverLabel->setGraphicsEffect(shadowEffect);
-            setFixedSize(160*logicalDpiX()/96,220*logicalDpiY()/96);
-        }
-        QPixmap getShadowPixmap(const QPixmap &cover)
-        {
-            coverLabel->setPixmap(cover);
-            QPixmap pixmap(size());
-            pixmap.fill(Qt::transparent);
-            render(&pixmap);
-            return pixmap;
-        }
-    private:
-        QLabel *coverLabel;
-    };
-}
 AnimeDetailInfoPage::AnimeDetailInfoPage(QWidget *parent) : QWidget(parent), currentAnime(nullptr)
 {
-    coverLabel=new QLabel(this);
-    coverLabel->setAlignment(Qt::AlignCenter);
-    coverLabel->setScaledContents(true);
-    coverLabel->installEventFilter(this);
-
-    coverLabelShadow = new ShadowLabel();
-
-    QAction *actCopyCover = new QAction(tr("Copy Cover"), this);
-    QObject::connect(actCopyCover, &QAction::triggered, this, [=](){
-        if(currentAnime && !currentAnime->rawCover().isNull())
-        {
-            QApplication::clipboard()->setPixmap(currentAnime->rawCover());
-        }
-    });
-    QAction *actPasteCover = new QAction(tr("Paste Cover"), this);
-    QObject::connect(actPasteCover, &QAction::triggered, this, [=](){
-        QImage img = QApplication::clipboard()->image();
-        if(img.isNull()) return;
-        CaptureView viewer(QPixmap::fromImage(img), this);
-        if(QDialog::Accepted == viewer.exec())
-        {
-            QByteArray imgBytes;
-            QBuffer bufferImage(&imgBytes);
-            bufferImage.open(QIODevice::WriteOnly);
-            img.save(&bufferImage, "JPG");
-            currentAnime->setCover(imgBytes);
-            coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->rawCover()));
-        }
-    });
-    QAction *actCleanCover = new QAction(tr("Clean Cover"), this);
-    QObject::connect(actCleanCover, &QAction::triggered, this, [=](){
-        currentAnime->setCover(QByteArray());
-        coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(QPixmap(":/res/images/cover.png")));
-    });
-    QAction *actDownloadCover = new QAction(tr("Re-Download Cover"), this);
-    QObject::connect(actDownloadCover, &QAction::triggered, this, [=](){
-        if(currentAnime && !currentAnime->coverURL().isEmpty())
-        {
-            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Cover Image..."), NM_PROCESS | NM_DARKNESS_BACK);
-            Network::Reply reply(Network::httpGet(currentAnime->coverURL(), QUrlQuery()));
-            if(reply.hasError)
-            {
-                Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, reply.errInfo, NM_HIDE | NM_ERROR);
-                return;
-            }
-            currentAnime->setCover(reply.content);
-            coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->rawCover()));
-            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NM_HIDE);
-        }
-    });
-    QAction *actLocalCover = new QAction(tr("Select From File"), this);
-    QObject::connect(actLocalCover, &QAction::triggered, this, [=](){
-        if(currentAnime)
-        {
-            QString fileName = QFileDialog::getOpenFileName(this, tr("Select Cover"), "", "Image Files(*.jpg *.png);;All Files(*)");
-            if(!fileName.isEmpty())
-            {
-                QImage cover(fileName);
-                QByteArray imgBytes;
-                QBuffer bufferImage(&imgBytes);
-                bufferImage.open(QIODevice::WriteOnly);
-                cover.save(&bufferImage, "JPG");
-                currentAnime->setCover(imgBytes);
-                coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->rawCover()));
-            }
-        }
-    });
-    coverLabel->addAction(actCopyCover);
-    coverLabel->addAction(actPasteCover);
-    coverLabel->addAction(actCleanCover);
-    coverLabel->addAction(actDownloadCover);
-    coverLabel->addAction(actLocalCover);
-    coverLabel->setContextMenuPolicy(Qt::ActionsContextMenu);
-
-    QWidget *titleContainer = new QWidget(this);
-    titleLabel=new QLabel(titleContainer);
-    titleLabel->setObjectName(QStringLiteral("AnimeDetailTitle"));
-    titleLabel->setFont(QFont(GlobalObjects::normalFont,20));
-    titleLabel->setWordWrap(true);
-    titleLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
-    QObject::connect(titleLabel, &QLabel::linkActivated, this, [=](const QString &url){
-        if(url == editAnimeURL && currentAnime)
-        {
-            AnimeInfoEditor editor(currentAnime, this);
-            if(QDialog::Accepted == editor.exec())
-            {
-                QVector<std::function<void (QSqlQuery *)>> queries;
-                if(editor.airDateChanged)
-                {
-                    queries.append(AnimeWorker::instance()->updateAirDate(currentAnime->name(), editor.airDate(), currentAnime->airDate()));
-                    currentAnime->setAirDate(editor.airDate());
-                }
-                if(editor.epsChanged)
-                {
-                    queries.append(AnimeWorker::instance()->updateEpCount(currentAnime->name(), editor.epCount()));
-                    currentAnime->setEpCount(editor.epCount());
-                }
-                if(editor.staffChanged)
-                {
-                    queries.append(AnimeWorker::instance()->updateStaffInfo(currentAnime->name(), editor.staffs()));
-                    currentAnime->setStaffs(editor.staffs());
-                }
-                if(editor.descChanged)
-                {
-                    queries.append(AnimeWorker::instance()->updateDescription(currentAnime->name(), editor.desc()));
-                    currentAnime->setDesc(editor.desc());
-                }
-                if(!queries.isEmpty())
-                {
-                    AnimeWorker::instance()->runQueryGroup(queries);
-                    refreshCurInfo();
-                }
-            }
-            return;
-        }
-        QDesktopServices::openUrl(QUrl(url));
-    });
-
-    viewInfoLabel=new QLabel(titleContainer);
-    viewInfoLabel->setObjectName(QStringLiteral("AnimeDetailViewInfo"));
-    viewInfoLabel->setFont(QFont(GlobalObjects::normalFont,12));
-    viewInfoLabel->setWordWrap(true);
-    viewInfoLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
-    viewInfoLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    QScrollArea *viewInfoScrollArea = new QScrollArea(titleContainer);
-    viewInfoScrollArea->setWidget(viewInfoLabel);
-    viewInfoScrollArea->setWidgetResizable(true);
-
-    QHBoxLayout *titleHLayout = new QHBoxLayout(titleContainer);
-    titleHLayout->setContentsMargins(0, 0, 0, 0);
-    titleHLayout->addWidget(coverLabel);
-    QVBoxLayout *textVLayout = new QVBoxLayout();
-    textVLayout->addWidget(titleLabel);
-    textVLayout->addSpacing(8*logicalDpiY()/96);
-    textVLayout->addWidget(viewInfoScrollArea);
-    textVLayout->setContentsMargins(0, 0, 0, 0);
-    titleHLayout->addItem(textVLayout);
-
-    QWidget *pageContainer = new QWidget(this);
-
-    QStringList pageButtonTexts = {
-        tr("Description"),
-        tr("Episodes"),
-        tr("Characters"),
-        tr("Tag"),
-        tr("Capture")
-    };
-    QFontMetrics fm = QToolButton().fontMetrics();
-    int btnHeight = fm.height() + 10*logicalDpiY()/96;
-    int btnWidth = 0;
-    for(const QString &t : pageButtonTexts)
-    {
-        btnWidth = qMax(btnWidth, fm.horizontalAdvance(t));
-    }
-    btnWidth += 40*logicalDpiX()/96;
-
-    QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
-    pageButtonHLayout->setContentsMargins(0,0,0,0);
-    pageButtonHLayout->setSpacing(0);
-
-    QButtonGroup *btnGroup = new QButtonGroup(this);
-
-    for(int i = 0; i < pageButtonTexts.size(); ++i)
-    {
-        QToolButton *btn = new QToolButton(pageContainer);
-        btn->setText(pageButtonTexts[i]);
-        btn->setCheckable(true);
-        btn->setToolButtonStyle(Qt::ToolButtonTextOnly);
-        btn->setObjectName(QStringLiteral("AnimeInfoPage"));
-        btn->setFixedSize(QSize(btnWidth, btnHeight));
-        pageButtonHLayout->addWidget(btn);
-        btnGroup->addButton(btn, i);
-    }
-    pageButtonHLayout->addStretch(1);
-    QStackedLayout *contentStackLayout=new QStackedLayout();
-    contentStackLayout->setContentsMargins(0,0,0,0);
-    contentStackLayout->addWidget(setupDescriptionPage());
-    contentStackLayout->addWidget(setupEpisodesPage());
-    contentStackLayout->addWidget(setupCharacterPage());
-    contentStackLayout->addWidget(setupTagPage());
-    contentStackLayout->addWidget(setupCapturePage());
-
-    QObject::connect(btnGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, [contentStackLayout](int id, bool checked) {
-        if (checked)
-            contentStackLayout->setCurrentIndex(id);
-    });
-    btnGroup->button(0)->setChecked(true);
-
-    QVBoxLayout *pageVLayout = new QVBoxLayout(pageContainer);
-    pageVLayout->setContentsMargins(0,0,0,0);
-    pageVLayout->addLayout(pageButtonHLayout);
-    pageVLayout->addSpacing(5*logicalDpiY()/96);
-    pageVLayout->addLayout(contentStackLayout);
-
-    QGridLayout *pageGLayout=new QGridLayout(this);
-    pageGLayout->setContentsMargins(5*logicalDpiY()/96,5*logicalDpiY()/96,0,0);
-    pageGLayout->addWidget(titleContainer, 0, 0);
-    pageGLayout->addWidget(pageContainer, 1, 0);
-    pageGLayout->setRowStretch(1,1);
+    initPageUI();
 }
 
 void AnimeDetailInfoPage::setAnime(Anime *anime)
 {
     currentAnime = anime;
+    curEpLoaded = false;
+    curCaptrueLoaded = false;
     epModel->setAnime(nullptr);
     epDelegate->setAnime(nullptr);
-    epNames.clear();
     characterList->clear();
     tagPanel->clear();
     captureModel->setAnimeName("");
-    if(!currentAnime)
+    pageSLayout->setCurrentIndex(0);
+    static_cast<QScrollArea *>(pageSLayout->widget(0))->verticalScrollBar()->setValue(0);
+    if (!currentAnime)
     {
         return;
     }
-
-    static QPixmap nullCover(":/res/images/cover.png");
-    coverLabel->setPixmap(static_cast<ShadowLabel *>(coverLabelShadow)->getShadowPixmap(currentAnime->rawCover().isNull()?nullCover:currentAnime->rawCover()));
-
+    updateCover();
     refreshCurInfo();
-
-    epModel->setAnime(currentAnime);
-    epDelegate->setAnime(currentAnime);
-
-    captureModel->setAnimeName(currentAnime->name());
-
     setCharacters();
     setTags();
 }
 
 bool AnimeDetailInfoPage::eventFilter(QObject *watched, QEvent *event)
 {
-    if(watched==coverLabel)
+    if (watched==coverLabel)
     {
         if (event->type() == QEvent::MouseButtonDblClick)
         {
-            if(currentAnime && !currentAnime->rawCover().isNull())
+            if (currentAnime && !currentAnime->rawCover().isNull())
             {
                 CaptureView viewer(currentAnime->rawCover(), this);
                 viewer.exec();
@@ -318,102 +88,294 @@ bool AnimeDetailInfoPage::eventFilter(QObject *watched, QEvent *event)
     return QWidget::eventFilter(watched,event);
 }
 
-
-QWidget *AnimeDetailInfoPage::setupDescriptionPage()
+void AnimeDetailInfoPage::initPageUI()
 {
-    descInfo=new QTextEdit(this);
-    descInfo->setObjectName(QStringLiteral("AnimeDetailDesc"));
-    descInfo->setReadOnly(true);
-    return descInfo;
+    QWidget *titleContainer = new QWidget(this);
+    titleLabel = new QLabel(titleContainer);
+    titleLabel->setObjectName(QStringLiteral("AnimeDetailTitle"));
+    titleLabel->setFont(QFont(GlobalObjects::normalFont, 20));
+    titleLabel->setOpenExternalLinks(true);
+
+    GlobalObjects::iconfont->setPointSize(16);
+    QPushButton *backButton = new QPushButton(titleContainer);
+    backButton->setFont(*GlobalObjects::iconfont);
+    backButton->setText(QChar(0xe945));
+    backButton->setObjectName(QStringLiteral("AnimeDetailBack"));
+    QObject::connect(backButton, &QPushButton::clicked, this, &AnimeDetailInfoPage::back);
+
+    QPushButton *editButton =  new QPushButton(titleContainer);
+    editButton->setFont(*GlobalObjects::iconfont);
+    editButton->setText(QChar(0xe60a));
+    editButton->setObjectName(QStringLiteral("LibraryPageButton"));
+    QObject::connect(editButton, &QPushButton::clicked, this, [=](){
+        AnimeInfoEditor editor(currentAnime, this);
+        if (QDialog::Accepted != editor.exec()) return;
+        QVector<std::function<void (QSqlQuery *)>> queries;
+        if (editor.airDateChanged)
+        {
+            queries.append(AnimeWorker::instance()->updateAirDate(currentAnime->name(), editor.airDate(), currentAnime->airDate()));
+            currentAnime->setAirDate(editor.airDate());
+        }
+        if (editor.epsChanged)
+        {
+            queries.append(AnimeWorker::instance()->updateEpCount(currentAnime->name(), editor.epCount()));
+            currentAnime->setEpCount(editor.epCount());
+        }
+        if (editor.staffChanged)
+        {
+            queries.append(AnimeWorker::instance()->updateStaffInfo(currentAnime->name(), editor.staffs()));
+            currentAnime->setStaffs(editor.staffs());
+        }
+        if (editor.descChanged)
+        {
+            queries.append(AnimeWorker::instance()->updateDescription(currentAnime->name(), editor.desc()));
+            currentAnime->setDesc(editor.desc());
+        }
+        if (!queries.isEmpty())
+        {
+            AnimeWorker::instance()->runQueryGroup(queries);
+            refreshCurInfo();
+        }
+    });
+
+    QHBoxLayout *titleHLayout = new QHBoxLayout(titleContainer);
+    titleHLayout->addSpacing(16);
+    titleHLayout->addWidget(backButton);
+    titleHLayout->addSpacing(16);
+    titleHLayout->addWidget(titleLabel);
+    titleHLayout->addWidget(editButton);
+    titleHLayout->addStretch(1);
+
+    QWidget *btnContainer = new QWidget(this);
+    const int btnMinWidth = 46;
+
+    QButtonGroup *btnGroup = new QButtonGroup(btnContainer);
+    QPushButton *infoPageBtn = new FontIconButton(QChar(0xec19), "", 14, 14, 10, this);
+    infoPageBtn->setObjectName(QStringLiteral("TaskTypeToolButton"));
+    infoPageBtn->setContentsMargins(8, 4, 4, 4);
+    infoPageBtn->setMinimumWidth(btnMinWidth);
+    infoPageBtn->setCheckable(true);
+    infoPageBtn->setChecked(true);
+    btnGroup->addButton(infoPageBtn, 0);
+
+    QPushButton *episodePageBtn = new FontIconButton(QChar(0xe639), "", 14, 14, 10, this);
+    episodePageBtn->setObjectName(QStringLiteral("TaskTypeToolButton"));
+    episodePageBtn->setContentsMargins(8, 4, 4, 4);
+    episodePageBtn->setMinimumWidth(btnMinWidth);
+    episodePageBtn->setCheckable(true);
+    btnGroup->addButton(episodePageBtn, 1);
+
+    QPushButton *capturePageBtn = new FontIconButton(QChar(0xe6e6), "", 14, 14, 10, this);
+    capturePageBtn->setObjectName(QStringLiteral("TaskTypeToolButton"));
+    capturePageBtn->setContentsMargins(8, 4, 4, 4);
+    capturePageBtn->setMinimumWidth(btnMinWidth);
+    capturePageBtn->setCheckable(true);
+    btnGroup->addButton(capturePageBtn, 2);
+
+    QVBoxLayout *btnVLayout = new QVBoxLayout(btnContainer);
+    btnVLayout->setSpacing(10);
+    btnVLayout->addWidget(infoPageBtn);
+    btnVLayout->addWidget(episodePageBtn);
+    btnVLayout->addWidget(capturePageBtn);
+    btnVLayout->addStretch(1);
+
+    QWidget *pageContainer = new QWidget(this);
+    pageSLayout = new QStackedLayout(pageContainer);
+    pageSLayout->setContentsMargins(0, 0, 0, 0);
+
+    pageSLayout->addWidget(initInfoPage());
+    pageSLayout->addWidget(initEpisodePage());
+    pageSLayout->addWidget(initCapturePage());
+    QObject::connect(btnGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, [=](int id, bool checked) {
+        if (checked)
+        {
+            pageSLayout->setCurrentIndex(id);
+        }
+    });
+    QObject::connect(pageSLayout, &QStackedLayout::currentChanged, this, [=](int index){
+        QAbstractButton *btn = btnGroup->button(index);
+        if (btn) btn->setChecked(true);
+        if (btn == episodePageBtn && !curEpLoaded)
+        {
+            curEpLoaded = true;
+            epModel->setAnime(currentAnime);
+            epDelegate->setAnime(currentAnime);
+        }
+        else if (btn == capturePageBtn && !curCaptrueLoaded)
+        {
+            curCaptrueLoaded = true;
+            captureModel->setAnimeName(currentAnime->name());
+        }
+    });
+
+    QGridLayout *animeGLayout = new QGridLayout(this);
+    animeGLayout->setContentsMargins(0, 4, 4, 4);
+    animeGLayout->addWidget(titleContainer, 0, 0, 1, 2);
+    animeGLayout->addWidget(btnContainer, 1, 0, 1, 1);
+    animeGLayout->addWidget(pageContainer, 1, 1, 1, 1);
+    animeGLayout->setRowStretch(1, 1);
+    animeGLayout->setColumnStretch(1, 1);
 }
 
-QWidget *AnimeDetailInfoPage::setupEpisodesPage()
+QWidget *AnimeDetailInfoPage::initInfoPage()
 {
-    QTreeView *episodeView=new QTreeView(this);
-    episodeView->setObjectName(QStringLiteral("AnimeDetailEpisode"));
-    episodeView->setRootIsDecorated(false);
-    episodeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    epDelegate = new EpItemDelegate(this);
-    episodeView->setItemDelegate(epDelegate);
-    episodeView->setFont(font());
-    epModel=new EpisodesModel(nullptr,this);
-    episodeView->setModel(epModel);
-    episodeView->setAlternatingRowColors(true);
-    QAction *addEpAction=new QAction(tr("Add Episode(s)"), this);
-    QObject::connect(addEpAction,&QAction::triggered,[this](){
-        QStringList files = QFileDialog::getOpenFileNames(this,tr("Select media files"),"",
-                                                         QString("Video Files(%1);;All Files(*) ").arg(GlobalObjects::mpvplayer->videoFileFormats.join(" ")));
-        if (files.count())
+    QWidget *pageContainer = new QWidget(this);
+
+    coverLabel = new QLabel(pageContainer);
+    coverLabel->setAlignment(Qt::AlignCenter);
+    coverLabel->setScaledContents(true);
+    coverLabel->installEventFilter(this);
+    initCoverActions();
+
+    viewInfoLabel = new QLabel(pageContainer);
+    viewInfoLabel->setObjectName(QStringLiteral("AnimeDetailViewInfo"));
+    viewInfoLabel->setFont(QFont(GlobalObjects::normalFont, 12));
+    viewInfoLabel->setWordWrap(true);
+    viewInfoLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
+    viewInfoLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    viewInfoLabel->setOpenExternalLinks(true);
+
+    QScrollArea *viewInfoScrollArea = new QScrollArea(pageContainer);
+    viewInfoScrollArea->setWidget(viewInfoLabel);
+    viewInfoScrollArea->setWidgetResizable(true);
+    new FloatScrollBar(viewInfoScrollArea->verticalScrollBar(), viewInfoScrollArea);
+
+    QHBoxLayout *infoHLayout = new QHBoxLayout();
+    infoHLayout->setContentsMargins(0, 0, 16, 0);
+    infoHLayout->addWidget(coverLabel);
+    infoHLayout->addSpacing(16);
+    infoHLayout->addWidget(viewInfoScrollArea);
+
+    QVBoxLayout *pageVLayout = new QVBoxLayout(pageContainer);
+    pageVLayout->setContentsMargins(0, 0, 32, 4);
+    pageVLayout->addLayout(infoHLayout);
+    pageVLayout->addSpacing(8);
+    pageVLayout->addWidget(initInfoPageCharcters());
+    pageVLayout->addSpacing(8);
+    pageVLayout->addWidget(initInfoPageTags());
+    pageVLayout->addSpacing(8);
+    pageVLayout->addWidget(initInfoPageStaffs());
+    pageVLayout->addSpacing(32);
+    pageVLayout->addStretch(1);
+
+    QScrollArea *pageScrollArea = new QScrollArea(this);
+    pageScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    pageScrollArea->setWidget(pageContainer);
+    pageScrollArea->setWidgetResizable(true);
+    new FloatScrollBar(pageScrollArea->verticalScrollBar(), pageScrollArea);
+    return pageScrollArea;
+}
+
+QWidget *AnimeDetailInfoPage::initEpisodePage()
+{
+    QWidget *epPageContainer = new QWidget(this);
+    QVBoxLayout *epVLayout = new QVBoxLayout(epPageContainer);
+    epVLayout->setContentsMargins(0, 0, 16, 16);
+
+    FontIconButton *addButton = new FontIconButton(QChar(0xe667), tr("Add Episode(s)"), 12, 10, 2, epPageContainer);
+    addButton->setObjectName(QStringLiteral("FontIconToolButton"));
+    QObject::connect(addButton, &QPushButton::clicked, this, [=](){
+        const QStringList files = QFileDialog::getOpenFileNames(this, tr("Select media files"), "",
+                                    QString("Video Files(%1);;All Files(*) ").arg(GlobalObjects::mpvplayer->videoFileFormats.join(" ")));
+        if (!files.isEmpty())
         {
-            for(auto &file:files)
+            for (auto &file : files)
             {
                 epModel->addEp(file);
             }
         }
     });
 
-    QAction *deleteAction=new QAction(tr("Delete"), this);
-    QObject::connect(deleteAction,&QAction::triggered,[this,episodeView](){
+    FontIconButton *clearInvalidButton = new FontIconButton(QChar(0xe637), tr("Delete Invalid Episodes"), 12, 10, 2, epPageContainer);
+    clearInvalidButton->setObjectName(QStringLiteral("FontIconToolButton"));
+
+    QObject::connect(clearInvalidButton,  &QPushButton::clicked, this, [=](){
+        Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Remove %1 invalid episodes").arg(epModel->removeInvalidEp()),
+                                             NotifyMessageFlag::NM_HIDE);
+    });
+
+    QHBoxLayout *toolBtnHLayout = new QHBoxLayout;
+    toolBtnHLayout->setContentsMargins(0, 0, 0, 0);
+    toolBtnHLayout->setSpacing(6);
+    toolBtnHLayout->addWidget(addButton);
+    toolBtnHLayout->addWidget(clearInvalidButton);
+    toolBtnHLayout->addStretch(1);
+    epVLayout->addLayout(toolBtnHLayout);
+
+    QTreeView *episodeView = new QTreeView(this);
+    // episodeView->setObjectName(QStringLiteral("AnimeDetailEpisode"));
+    episodeView->setRootIsDecorated(false);
+    episodeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    epDelegate = new EpItemDelegate(this);
+    episodeView->setItemDelegate(epDelegate);
+    episodeView->setFont(QFont(GlobalObjects::normalFont, 10));
+    episodeView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
+    epModel = new EpisodesModel(nullptr, this);
+    episodeView->setModel(epModel);
+    episodeView->setAlternatingRowColors(true);
+    new FloatScrollBar(episodeView->verticalScrollBar(), episodeView);
+
+    epVLayout->addWidget(episodeView);
+
+    ElaMenu *epMenu = new ElaMenu(episodeView);
+
+    QAction *deleteAction = epMenu->addAction(tr("Delete"));
+    QObject::connect(deleteAction, &QAction::triggered, episodeView, [=](){
         auto selection = episodeView->selectionModel()->selectedRows((int)EpisodesModel::Columns::LOCALFILE);
-        if (selection.size() == 0)return;
+        if (selection.empty()) return;
         QModelIndex selectedIndex = selection.last();
-        if(selectedIndex.isValid())
+        if (selectedIndex.isValid())
         {
             int epCount = epModel->rowCount(QModelIndex());
             QHash<QString, int> pathCounter;
-            for(int i = 0; i<epCount; ++i)
+            for (int i = 0; i < epCount; ++i)
             {
                 QString file(epModel->data(epModel->index(i, (int)EpisodesModel::Columns::LOCALFILE, QModelIndex()), Qt::DisplayRole).toString());
                 ++pathCounter[file.mid(0, file.lastIndexOf('/'))];
             }
             QString localFile = epModel->data(selectedIndex, Qt::DisplayRole).toString();
             QString filePath = localFile.mid(0, localFile.lastIndexOf('/'));
-            if(pathCounter.value(filePath, 0)<2)
+            if (pathCounter.value(filePath, 0) < 2)
             {
                 LabelModel::instance()->removeTag(currentAnime->name(), filePath, TagNode::TAG_FILE);
             }
             epModel->removeEp(selection.last());
         }
     });
-    QAction *deleteInvalidAction=new QAction(tr("Delete Invalid Episodes"), this);
-    QObject::connect(deleteInvalidAction,&QAction::triggered,[this](){
-        Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Remove %1 invalid episodes").arg(epModel->removeInvalidEp()),
-                                             NotifyMessageFlag::NM_HIDE);
-    });
-    QAction *addAction=new QAction(tr("Add to Playlist"), this);
-    QObject::connect(addAction,&QAction::triggered,[episodeView,this](){
+    QAction *addAction = epMenu->addAction(tr("Add to Playlist"));
+    QObject::connect(addAction, &QAction::triggered, episodeView, [=](){
         auto selection = episodeView->selectionModel()->selectedRows((int)EpisodesModel::Columns::LOCALFILE);
-        if (selection.size() == 0)return;
+        if (selection.empty()) return;
         QStringList items;
-        for(const QModelIndex &index : selection)
+        for (const QModelIndex &index : selection)
         {
             if (index.isValid())
             {
                 QString localFile = epModel->data(index, Qt::DisplayRole).toString();
-                if(QFile::exists(localFile)) items<<localFile;
+                if (QFile::exists(localFile)) items << localFile;
             }
         }
         Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Add %1 items to Playlist").arg(GlobalObjects::playlist->addItems(items,QModelIndex())),
                                              NotifyMessageFlag::NM_HIDE);
     });
-    QAction *playAction=new QAction(tr("Play"), this);
-    QObject::connect(playAction,&QAction::triggered,[episodeView,this](){
+    QAction *playAction = epMenu->addAction(tr("Play"));
+    QObject::connect(playAction, &QAction::triggered, episodeView, [=](){
         auto selection = episodeView->selectionModel()->selectedRows((int)EpisodesModel::Columns::LOCALFILE);
-        if (selection.size() == 0)return;
+        if (selection.empty()) return;
         QFileInfo info(epModel->data(selection.last(), Qt::DisplayRole).toString());
-        if(!info.exists())
+        if (!info.exists())
         {
             Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("File Not Exist"), NotifyMessageFlag::NM_ERROR|NotifyMessageFlag::NM_HIDE);
             return;
         }
         emit playFile(info.absoluteFilePath());
     });
-    QAction *explorerViewAction=new QAction(tr("Browse File"), this);
-    QObject::connect(explorerViewAction,&QAction::triggered,[this,episodeView](){
+    QAction *explorerViewAction = epMenu->addAction(tr("Browse File"));
+    QObject::connect(explorerViewAction, &QAction::triggered, episodeView, [=](){
         auto selection = episodeView->selectionModel()->selectedRows((int)EpisodesModel::Columns::LOCALFILE);
-        if (selection.size() == 0)return;
+        if (selection.empty()) return;
         QFileInfo info(epModel->data(selection.last(), Qt::DisplayRole).toString());
-        if(!info.exists())
+        if (!info.exists())
         {
             Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("File Not Exist"), NotifyMessageFlag::NM_ERROR|NotifyMessageFlag::NM_HIDE);
             return;
@@ -421,172 +383,102 @@ QWidget *AnimeDetailInfoPage::setupEpisodesPage()
 #ifdef Q_OS_WIN
         QProcess::startDetached("Explorer", {"/select,", QDir::toNativeSeparators(info.absoluteFilePath())});
 #else
-        QDesktopServices::openUrl(QUrl("file:///" + QDir::toNativeSeparators(info.absolutePath())));
+            QDesktopServices::openUrl(QUrl("file:///" + QDir::toNativeSeparators(info.absolutePath())));
 #endif
     });
 
-    QAction *autoGetEpNames=new QAction(tr("Auto Get Epsoide Names"),this);
-    autoGetEpNames->setCheckable(true);
-    autoGetEpNames->setChecked(true);
-    QObject::connect(autoGetEpNames, &QAction::toggled, epDelegate, &EpItemDelegate::setAutoGetEpInfo);
+    episodeView->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(episodeView, &QTreeView::customContextMenuRequested, this, [=](){
+        auto selection = episodeView->selectionModel()->selectedRows((int)EpisodesModel::Columns::LOCALFILE);
+        if (selection.empty()) return;
+        epMenu->exec(QCursor::pos());
+    });
 
-    episodeView->setContextMenuPolicy(Qt::ActionsContextMenu);
-    episodeView->addAction(playAction);
-    episodeView->addAction(addAction);
-    episodeView->addAction(explorerViewAction);
-    episodeView->addAction(addEpAction);
-    episodeView->addAction(deleteAction);
-    episodeView->addAction(deleteInvalidAction);
-    episodeView->addAction(autoGetEpNames);
+    QObject::connect(episodeView, &QTreeView::doubleClicked, this, [=](const QModelIndex &index){
+        if (index.column() == static_cast<int>(EpisodesModel::Columns::TITLE) && currentAnime)
+        {
+            AnimeEpisodeEditor epEditor(currentAnime, index.data(EpisodesModel::EpRole).value<EpInfo>(), this);
+            if (QDialog::Accepted == epEditor.exec() && epEditor.epChanged)
+            {
+                epModel->setData(index, QVariant::fromValue<EpInfo>(epEditor.curEp), Qt::EditRole);
+            }
+        }
+    });
 
     QHeaderView *epHeader = episodeView->header();
-    epHeader->setFont(font());
-    epHeader->resizeSection(0, 260*logicalDpiX()/96);
-    epHeader->resizeSection(1, 160*logicalDpiX()/96);
-    return episodeView;
+    // epHeader->setObjectName(QStringLiteral("AnimeDetailEpisodeHeader"));
+    epHeader->resizeSection(0, 300);
+    epHeader->resizeSection(1, 160);
+    epHeader->resizeSection(2, 160);
+
+    return epPageContainer;
 }
 
-QWidget *AnimeDetailInfoPage::setupCharacterPage()
+QWidget *AnimeDetailInfoPage::initCapturePage()
 {
-    characterList = new QListWidget(this);
-    characterList->setObjectName(QStringLiteral("AnimeDetailCharacterList"));
-    characterList->setViewMode(QListView::IconMode);
-    characterList->setResizeMode(QListView::Adjust);
-    characterList->setMovement(QListView::Static);
-    characterList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    return characterList;
-}
+    QWidget *capturePageContainer = new QWidget(this);
+    QVBoxLayout *captureVLayout = new QVBoxLayout(capturePageContainer);
 
-QWidget *AnimeDetailInfoPage::setupTagPage()
-{
-    QWidget *container = new QWidget(this);
-    tagContainerSLayout = new QStackedLayout(container);
-    tagContainerSLayout->setContentsMargins(0,0,0,0);
-
-    tagPanel = new TagPanel(container,true,false,true);
-    tagPanel->setSizePolicy(QSizePolicy::Policy::Ignored, QSizePolicy::Ignored);
-    QObject::connect(LabelModel::instance(), &LabelModel::tagRemoved, tagPanel, &TagPanel::removeTag);
-    QObject::connect(tagPanel, &TagPanel::deleteTag, [this](const QString &tag){
-        LabelModel::instance()->removeTag(currentAnime->name(), tag, TagNode::TAG_CUSTOM);
-    });
-    QObject::connect(tagPanel,&TagPanel::tagAdded, [this](const QString &tag){
-        QStringList tags{tag};
-        LabelModel::instance()->addCustomTags(currentAnime->name(), tags);
-        tagPanel->addTag(tags);
-    });
-    TagPanel *webTagPanel = new TagPanel(container,false,true);
-    webTagPanel->setSizePolicy(QSizePolicy::Policy::Ignored, QSizePolicy::Ignored);
-    tagContainerSLayout->addWidget(tagPanel);
-    tagContainerSLayout->addWidget(webTagPanel);
-
-    QAction *webTagAction=new QAction(tr("Tags on Web"), this);
-    tagPanel->addAction(webTagAction);
-    QObject::connect(webTagAction,&QAction::triggered,this,[this, webTagAction, webTagPanel](){
-        if(currentAnime->scriptId().isEmpty()) return;
-        QStringList tags;
-        webTagAction->setEnabled(false);
-        Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Tags..."), NotifyMessageFlag::NM_DARKNESS_BACK | NotifyMessageFlag::NM_PROCESS);
-        ScriptState state = GlobalObjects::animeProvider->getTags(currentAnime, tags);
-        if(state)
-        {
-            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Add the Selected Tags from the Right-Click Menu"), NotifyMessageFlag::NM_HIDE);
-            webTagPanel->clear();
-            webTagPanel->addTag(tags);
-            webTagPanel->setChecked(tagPanel->tags());
-            tagContainerSLayout->setCurrentIndex(1);
-        } else {
-            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, state.info, NotifyMessageFlag::NM_ERROR | NotifyMessageFlag::NM_HIDE);
-        }
-        webTagAction->setEnabled(true);
-    });
-
-    QAction *webTagOKAction=new QAction(tr("Add Selected Tags"), this);
-    QObject::connect(webTagOKAction,&QAction::triggered,this,[this,webTagPanel](){
-        QStringList tags(webTagPanel->getSelectedTags());
-        if(tags.count()==0) return;
-        LabelModel::instance()->addCustomTags(currentAnime->name(), tags);
-        tagPanel->clear();
-        auto &tagMap=LabelModel::instance()->customTags();
-        tags.clear();
-        for(auto iter=tagMap.begin();iter!=tagMap.end();++iter)
-        {
-            if(iter.value().contains(currentAnime->name()))
-                tags.append(iter.key());
-        }
-        tagPanel->addTag(tags);
-        tagContainerSLayout->setCurrentIndex(0);
-    });
-    QAction *webTagCancelAction=new QAction(tr("Cancel"), this);
-    QObject::connect(webTagCancelAction,&QAction::triggered,this,[this](){
-       tagContainerSLayout->setCurrentIndex(0);
-    });
-    webTagPanel->addAction(webTagOKAction);
-    webTagPanel->addAction(webTagCancelAction);
-    return container;
-}
-
-QWidget *AnimeDetailInfoPage::setupCapturePage()
-{
-    captureModel=new CaptureListModel("",this);
+    captureModel = new CaptureListModel("", this);
     QObject::connect(captureModel,&CaptureListModel::fetching,this,[](bool on){
-        if(on)  Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Loading..."), NotifyMessageFlag::NM_PROCESS);
+        if (on)  Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Loading..."), NotifyMessageFlag::NM_PROCESS);
         else Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Loading..."), NotifyMessageFlag::NM_HIDE);
     });
-    QListView *captureView=new QListView(this);
+
+    QListView *captureView = new QListView(this);
     captureView->setObjectName(QStringLiteral("captureView"));
-    captureView->setSelectionMode(QAbstractItemView::SingleSelection);
-    captureView->setIconSize(QSize(200*logicalDpiX()/96,112*logicalDpiY()/96));
+    captureView->setSelectionMode(QAbstractItemView::ContiguousSelection);
+    captureView->setIconSize(QSize(200, 112));
     captureView->setViewMode(QListView::IconMode);
     captureView->setUniformItemSizes(true);
     captureView->setResizeMode(QListView::Adjust);
     captureView->setMovement(QListView::Static);
     captureView->setWordWrap(true);
     captureView->setEditTriggers(QAbstractItemView::SelectedClicked);
-
     captureView->setModel(captureModel);
+    new FloatScrollBar(captureView->verticalScrollBar(), captureView);
+
+    captureVLayout->addWidget(captureView);
+
     QAction* actListMode = new QAction(tr("List Mode"),this);
     actListMode->setCheckable(true);
-    QObject::connect(actListMode, &QAction::triggered,[captureView](bool)
-    {
+    QObject::connect(actListMode, &QAction::triggered, captureView, [=](bool){
         captureView->setViewMode(QListView::ListMode);
     });
     QAction* actIconMode = new QAction(tr("Icon Mode"));
     actIconMode->setCheckable(true);
-    QObject::connect(actIconMode, &QAction::triggered,[captureView](bool)
-    {
+    QObject::connect(actIconMode, &QAction::triggered, captureView, [=](bool){
         captureView->setViewMode(QListView::IconMode);
     });
-    QAction* actCopy = new QAction(tr("Copy"),this);
-    QObject::connect(actCopy, &QAction::triggered,[captureView,this](bool)
-    {
+    QAction* actCopy = new QAction(tr("Copy"), this);
+    QObject::connect(actCopy, &QAction::triggered, captureView, [=](bool){
         auto selection = captureView->selectionModel()->selectedRows();
-        if(selection.size()==0) return;
-        const AnimeImage *item=captureModel->getCaptureItem(selection.first().row());
-        if(item->type == AnimeImage::CAPTURE)
+        if (selection.empty()) return;
+        const AnimeImage *item = captureModel->getCaptureItem(selection.first().row());
+        if (item->type == AnimeImage::CAPTURE)
         {
-            QPixmap img(captureModel->getFullCapture(selection.first().row()));
-            QApplication::clipboard()->setPixmap(img);
+         QPixmap img(captureModel->getFullCapture(selection.first().row()));
+         QApplication::clipboard()->setPixmap(img);
         }
     });
-    QAction* actSave = new QAction(tr("Save"),this);
-    QObject::connect(actSave, &QAction::triggered,[this,captureView](bool)
-    {
+    QAction* actSave = new QAction(tr("Save"), this);
+    QObject::connect(actSave, &QAction::triggered, captureView, [=](bool){
         auto selection = captureView->selectionModel()->selectedRows();
-        if(selection.size()==0) return;
-        const AnimeImage *item=captureModel->getCaptureItem(selection.first().row());
-        if(item->type == AnimeImage::CAPTURE)
+        if (selection.empty()) return;
+        const AnimeImage *item = captureModel->getCaptureItem(selection.first().row());
+        if (item->type == AnimeImage::CAPTURE)
         {
             QString fileName = QFileDialog::getSaveFileName(this, tr("Save Capture"), item->info, "JPEG Images (*.jpg);;PNG Images (*.png)");
             if(!fileName.isEmpty())
             {
-                QPixmap img(captureModel->getFullCapture(selection.first().row()));
-                img.save(fileName);
+             QPixmap img(captureModel->getFullCapture(selection.first().row()));
+             img.save(fileName);
             }
         }
-        else if(item->type == AnimeImage::SNIPPET)
+        else if (item->type == AnimeImage::SNIPPET)
         {
             QString snippetFilePath(captureModel->getSnippetFile(selection.first().row()));
-            if(snippetFilePath.isEmpty())
+            if (snippetFilePath.isEmpty())
             {
                 Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Snippet %1 Lost").arg(item->timeId), NM_HIDE | NM_ERROR);
                 return;
@@ -603,17 +495,16 @@ QWidget *AnimeDetailInfoPage::setupCapturePage()
         }
 
     });
-    QAction* actSaveGIF = new QAction(tr("Save As GIF"),this);
-    QObject::connect(actSaveGIF, &QAction::triggered,[this,captureView](bool)
-    {
+    QAction *actSaveGIF = new QAction(tr("Save As GIF"), this);
+    QObject::connect(actSaveGIF, &QAction::triggered, captureView, [=](bool){
         auto selection = captureView->selectionModel()->selectedRows();
-        if(selection.size()==0) return;
+        if (selection.empty()) return;
         const AnimeImage *item=captureModel->getCaptureItem(selection.first().row());
-        if(item->type != AnimeImage::SNIPPET) return;
+        if (item->type != AnimeImage::SNIPPET) return;
 
 
         QString snippetFilePath(captureModel->getSnippetFile(selection.first().row()));
-        if(snippetFilePath.isEmpty())
+        if (snippetFilePath.isEmpty())
         {
             Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Snippet %1 Lost").arg(item->timeId), NM_HIDE | NM_ERROR);
             return;
@@ -625,28 +516,26 @@ QWidget *AnimeDetailInfoPage::setupCapturePage()
             GlobalObjects::mpvplayer->setMute(GlobalObjects::mpvplayer->getMute());
         }
     });
-    QAction* actAdd = new QAction(tr("Add"),this);
-    QObject::connect(actAdd, &QAction::triggered,[=](bool)
-    {
+    QAction* actAdd = new QAction(tr("Add"), this);
+    QObject::connect(actAdd, &QAction::triggered, captureView, [=](bool){
         QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), "", "JPEG Images (*.jpg);;PNG Images (*.png)");
-        if(!fileName.isEmpty())
+        if (!fileName.isEmpty())
         {
             AnimeWorker::instance()->saveCapture(currentAnime->name(), QFileInfo(fileName).fileName(), QImage(fileName));
         }
     });
-    QAction* actRemove = new QAction(tr("Remove"),this);
-    QObject::connect(actRemove, &QAction::triggered,[captureView,this](bool)
-    {
+    QAction* actRemove = new QAction(tr("Remove"), this);
+    QObject::connect(actRemove, &QAction::triggered, captureView, [=](bool){
         auto selection = captureView->selectionModel()->selectedRows();
-        if(selection.size()==0) return;
-		captureModel->deleteRow(selection.first().row());
+        if(selection.empty()) return;
+        captureModel->deleteRow(selection.first().row());
     });
-    QAction *explorerViewAction=new QAction(tr("Browse File"), this);
-    QObject::connect(explorerViewAction,&QAction::triggered,[=](){
+    QAction *explorerViewAction = new QAction(tr("Browse File"), this);
+    QObject::connect(explorerViewAction, &QAction::triggered, captureView, [=](){
         auto selection = captureView->selectionModel()->selectedRows();
-        if(selection.size()==0) return;
+        if (selection.size()==0) return;
         QString snippetFilePath(captureModel->getSnippetFile(selection.first().row()));
-        if(!snippetFilePath.isEmpty())
+        if (!snippetFilePath.isEmpty())
         {
             QFileInfo snippetFile(snippetFilePath);
 #ifdef Q_OS_WIN
@@ -657,8 +546,8 @@ QWidget *AnimeDetailInfoPage::setupCapturePage()
         }
     });
 
-    QMenu *contexMenu = new QMenu(this);
-    QActionGroup *group=new QActionGroup(this);
+    QMenu *contexMenu = new ElaMenu(captureView);
+    QActionGroup *group = new QActionGroup(this);
     group->addAction(actIconMode);
     group->addAction(actListMode);
     actIconMode->setChecked(true);
@@ -672,10 +561,9 @@ QWidget *AnimeDetailInfoPage::setupCapturePage()
     contexMenu->addAction(actIconMode);
     contexMenu->addAction(actListMode);
     captureView->setContextMenuPolicy(Qt::CustomContextMenu);
-    QObject::connect(captureView, &QListView::customContextMenuRequested, [=]()
-    {
+    QObject::connect(captureView, &QListView::customContextMenuRequested, captureView, [=](){
         auto selection = captureView->selectionModel()->selectedRows();
-        if(selection.size()==0)
+        if (selection.empty())
         {
             actCopy->setEnabled(false);
             actSave->setEnabled(false);
@@ -698,24 +586,272 @@ QWidget *AnimeDetailInfoPage::setupCapturePage()
         CaptureView view(captureModel,index.row(),this->parentWidget());
         view.exec();
     });
-    return captureView;
+
+    return capturePageContainer;
+}
+
+QWidget *AnimeDetailInfoPage::initInfoPageCharcters()
+{
+    QWidget *crtContainer = new QWidget(this);
+    QVBoxLayout *crtVLayout = new QVBoxLayout(crtContainer);
+    crtVLayout->setContentsMargins(0, 0, 16, 0);
+
+    QLabel *crtTip = new QLabel(tr("Charcters"), crtContainer);
+    crtTip->setFont(QFont(GlobalObjects::normalFont, 16));
+    crtTip->setObjectName(QStringLiteral("AnimeDetailInfoTitle"));
+
+    characterList = new QListWidget(crtContainer);
+    characterList->setContentsMargins(12, 8, 0, 8);
+    characterList->setObjectName(QStringLiteral("AnimeDetailCharacterList"));
+    characterList->setViewMode(QListView::IconMode);
+    characterList->setResizeMode(QListView::Adjust);
+    characterList->setMovement(QListView::Static);
+    characterList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    characterList->setWrapping(false);
+    characterList->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+    characterList->setMaximumHeight(104);
+    new FloatScrollBar(characterList->horizontalScrollBar(), characterList);
+
+    crtVLayout->addWidget(crtTip);
+    crtVLayout->addSpacing(4);
+    crtVLayout->addWidget(characterList);
+
+    return crtContainer;
+}
+
+QWidget *AnimeDetailInfoPage::initInfoPageTags()
+{
+    QWidget *tagContainer = new QWidget(this);
+    QVBoxLayout *infoVLayout = new QVBoxLayout(tagContainer);
+    infoVLayout->setContentsMargins(0, 0, 16, 0);
+
+    QLabel *tagTip = new QLabel(tr("Tag"), tagContainer);
+    tagTip->setFont(QFont(GlobalObjects::normalFont, 16));
+    tagTip->setObjectName(QStringLiteral("AnimeDetailInfoTitle"));
+
+    QWidget *container = new QWidget(tagContainer);
+    container->setObjectName(QStringLiteral("AnimeDetailTagList"));
+    container->setMinimumHeight(80);
+    tagContainerSLayout = new QStackedLayout(container);
+    tagContainerSLayout->setContentsMargins(0,0,0,0);
+
+    infoVLayout->addWidget(tagTip);
+    infoVLayout->addSpacing(4);
+    infoVLayout->addWidget(container);
+
+    tagPanel = new TagPanel(container, true, false, true);
+    tagPanel->setSizePolicy(QSizePolicy::Policy::Ignored, QSizePolicy::Ignored);
+    QObject::connect(LabelModel::instance(), &LabelModel::tagRemoved, tagPanel, &TagPanel::removeTag);
+    QObject::connect(tagPanel, &TagPanel::deleteTag, [this](const QString &tag){
+        LabelModel::instance()->removeTag(currentAnime->name(), tag, TagNode::TAG_CUSTOM);
+    });
+    QObject::connect(tagPanel,&TagPanel::tagAdded, [this](const QString &tag){
+        QStringList tags{tag};
+        LabelModel::instance()->addCustomTags(currentAnime->name(), tags);
+        tagPanel->addTag(tags);
+    });
+    TagPanel *webTagPanel = new TagPanel(container,false,true);
+    webTagPanel->setSizePolicy(QSizePolicy::Policy::Ignored, QSizePolicy::Ignored);
+    tagContainerSLayout->addWidget(tagPanel);
+    tagContainerSLayout->addWidget(webTagPanel);
+
+    QAction *webTagAction=new QAction(tr("Tags on Web"), this);
+    tagPanel->addAction(webTagAction);
+    QObject::connect(webTagAction, &QAction::triggered, this, [=](){
+        if (currentAnime->scriptId().isEmpty()) return;
+        QStringList tags;
+        webTagAction->setEnabled(false);
+        Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Tags..."), NotifyMessageFlag::NM_DARKNESS_BACK | NotifyMessageFlag::NM_PROCESS);
+        ScriptState state = GlobalObjects::animeProvider->getTags(currentAnime, tags);
+        if (state)
+        {
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Add the Selected Tags from the Right-Click Menu"), NotifyMessageFlag::NM_HIDE);
+            webTagPanel->clear();
+            webTagPanel->addTag(tags);
+            webTagPanel->setChecked(tagPanel->tags());
+            tagContainerSLayout->setCurrentIndex(1);
+        } else {
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, state.info, NotifyMessageFlag::NM_ERROR | NotifyMessageFlag::NM_HIDE);
+        }
+        webTagAction->setEnabled(true);
+    });
+
+    QAction *webTagOKAction = new QAction(tr("Add Selected Tags"), this);
+    QObject::connect(webTagOKAction, &QAction::triggered, this, [=](){
+        QStringList tags(webTagPanel->getSelectedTags());
+        if (tags.empty()) return;
+        LabelModel::instance()->addCustomTags(currentAnime->name(), tags);
+        tagPanel->clear();
+        auto &tagMap=LabelModel::instance()->customTags();
+        tags.clear();
+        for (auto iter = tagMap.begin(); iter != tagMap.end(); ++iter)
+        {
+            if (iter.value().contains(currentAnime->name()))
+            {
+                tags.append(iter.key());
+            }
+        }
+        tagPanel->addTag(tags);
+        tagContainerSLayout->setCurrentIndex(0);
+    });
+    QAction *webTagCancelAction=new QAction(tr("Cancel"), this);
+    QObject::connect(webTagCancelAction,&QAction::triggered, this, [=](){
+        tagContainerSLayout->setCurrentIndex(0);
+    });
+    webTagPanel->addAction(webTagOKAction);
+    webTagPanel->addAction(webTagCancelAction);
+
+    return tagContainer;
+}
+
+QWidget *AnimeDetailInfoPage::initInfoPageStaffs()
+{
+    QWidget *staffContainer = new QWidget(this);
+    QVBoxLayout *infoVLayout = new QVBoxLayout(staffContainer);
+    infoVLayout->setContentsMargins(0, 0, 16, 0);
+
+    QLabel *staffTip = new QLabel(tr("Staff"), staffContainer);
+    staffTip->setFont(QFont(GlobalObjects::normalFont, 16));
+    staffTip->setObjectName(QStringLiteral("AnimeDetailInfoTitle"));
+
+    staffInfoLabel = new QLabel(staffContainer);
+    staffInfoLabel->setObjectName(QStringLiteral("AnimeDetailStaffInfo"));
+    staffInfoLabel->setFont(QFont(GlobalObjects::normalFont, 12));
+    staffInfoLabel->setWordWrap(true);
+    staffInfoLabel->setOpenExternalLinks(true);
+    staffInfoLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
+    staffInfoLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    staffInfoLabel->setContentsMargins(10, 8, 8, 8);
+
+
+    infoVLayout->addWidget(staffTip);
+    infoVLayout->addSpacing(4);
+    infoVLayout->addWidget(staffInfoLabel);
+
+    return staffContainer;
+}
+
+void AnimeDetailInfoPage::initCoverActions()
+{
+    ElaMenu *coverMenu = new ElaMenu(coverLabel);
+    QAction *actCopyCover = coverMenu->addAction(tr("Copy Cover"));
+    QObject::connect(actCopyCover, &QAction::triggered, this, [=](){
+        if(currentAnime && !currentAnime->rawCover().isNull())
+        {
+            QApplication::clipboard()->setPixmap(currentAnime->rawCover());
+        }
+    });
+    QAction *actPasteCover = coverMenu->addAction(tr("Paste Cover"));
+    QObject::connect(actPasteCover, &QAction::triggered, this, [=](){
+        QImage img = QApplication::clipboard()->image();
+        if (img.isNull()) return;
+        CaptureView viewer(QPixmap::fromImage(img), this);
+        if (QDialog::Accepted == viewer.exec())
+        {
+            QByteArray imgBytes;
+            QBuffer bufferImage(&imgBytes);
+            bufferImage.open(QIODevice::WriteOnly);
+            img.save(&bufferImage, "JPG");
+            currentAnime->setCover(imgBytes);
+            updateCover();
+        }
+    });
+    QAction *actCleanCover = coverMenu->addAction(tr("Clean Cover"));
+    QObject::connect(actCleanCover, &QAction::triggered, this, [=](){
+        currentAnime->setCover(QByteArray());
+        updateCover();
+    });
+    QAction *actDownloadCover = coverMenu->addAction(tr("Re-Download Cover"));
+    QObject::connect(actDownloadCover, &QAction::triggered, this, [=](){
+        if (currentAnime && !currentAnime->coverURL().isEmpty())
+        {
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Cover Image..."), NM_PROCESS | NM_DARKNESS_BACK);
+            Network::Reply reply(Network::httpGet(currentAnime->coverURL(), QUrlQuery()));
+            if (reply.hasError)
+            {
+                Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, reply.errInfo, NM_HIDE | NM_ERROR);
+                return;
+            }
+            currentAnime->setCover(reply.content);
+            updateCover();
+            Notifier::getNotifier()->showMessage(Notifier::LIBRARY_NOTIFY, tr("Fetching Down"), NM_HIDE);
+        }
+    });
+    QAction *actLocalCover = coverMenu->addAction(tr("Select From File"));
+    QObject::connect(actLocalCover, &QAction::triggered, this, [=](){
+        if(currentAnime)
+        {
+            QString fileName = QFileDialog::getOpenFileName(this, tr("Select Cover"), "", "Image Files(*.jpg *.png);;All Files(*)");
+            if(!fileName.isEmpty())
+            {
+                QImage cover(fileName);
+                QByteArray imgBytes;
+                QBuffer bufferImage(&imgBytes);
+                bufferImage.open(QIODevice::WriteOnly);
+                cover.save(&bufferImage, "JPG");
+                currentAnime->setCover(imgBytes);
+                updateCover();
+            }
+        }
+    });
+
+    coverLabel->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(coverLabel, &QLabel::customContextMenuRequested, this, [=](const QPoint &pos){
+       coverMenu->popup(coverLabel->mapToGlobal(pos));
+    });
+}
+
+void AnimeDetailInfoPage::updateCover()
+{
+    static QPixmap nullCover(":/res/images/null-cover.png");
+
+    const int pxR = devicePixelRatio();
+    const int w = AnimeItemDelegate::CoverWidth * 1.3;
+    const int h = AnimeItemDelegate::CoverHeight * 1.3;
+    QPixmap dest(w*pxR, h*pxR);
+    dest.setDevicePixelRatio(pxR);
+    dest.fill(Qt::transparent);
+    QPainter painter(&dest);
+    painter.setRenderHints(QPainter::Antialiasing, true);
+    painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
+    QPainterPath path;
+    path.addRoundedRect(0, 0, w, h, 8, 8);
+    painter.setClipPath(path);
+    painter.drawPixmap(QRect(0, 0, w, h), currentAnime->rawCover().isNull() ? nullCover : currentAnime->rawCover());
+
+    coverLabel->setPixmap(dest);
 }
 
 void AnimeDetailInfoPage::refreshCurInfo()
 {
-    titleLabel->setText(QString("<style> a {text-decoration: none} </style><a style='color: white;' href = \"%1\">%2</a> &nbsp;&nbsp;"
-                                "<font face=\"%3\"><a style='color: white;' href = \"%4\">%5</a></font>")
-                        .arg(currentAnime->url(), currentAnime->name(), GlobalObjects::iconfont->family(), editAnimeURL, "&#xe60a;"));
-    QStringList stafflist;
-    for(const auto &p: currentAnime->staffList())
-    {
-        stafflist.append(p.first+": "+p.second);
-    }
-    viewInfoLabel->setText(QObject::tr("Add Time: %1\nDate: %3\nEps: %2\n%4").arg(currentAnime->addTimeStr()).arg(currentAnime->epCount()).
-                           arg(currentAnime->airDate()).arg(stafflist.join('\n')));
+    titleLabel->setText(QString("<a style='color: white; text-decoration: none;' href = \"%1\">%2</a>")
+                            .arg(currentAnime->url(), currentAnime->name()));
+
+    const QString itemTpl = "<p><font style='color: #d0d0d0;'>%1</font>%2</p>";
+    QString displayDesc = currentAnime->description();
+    displayDesc.replace("\n", "<br/>");
+    QStringList animeInfoList{
+        itemTpl.arg(tr("Adding Time: "), currentAnime->addTimeStr()),
+        itemTpl.arg(tr("Air Date: "), currentAnime->airDate()),
+        itemTpl.arg(tr("Episode Count: ")).arg(currentAnime->epCount()),
+        QString("<div>%1</div>").arg(displayDesc),
+    };
+    viewInfoLabel->setText(animeInfoList.join("\n"));
     viewInfoLabel->adjustSize();
 
-    descInfo->setText(currentAnime->description());
+    QStringList stafflist;
+    static QRegularExpression urlRe("^https?://[^\\s/$.?#].[^\\s]*$");
+    for (const auto &p: currentAnime->staffList())
+    {
+        auto match = urlRe.match(p.second);
+        bool isURL = match.hasMatch() && match.capturedLength() == p.second.length();
+        stafflist.append(QString("<p style='color: rgb(240,240,240);'><font style='color: #d0d0d0;'>%1:</font> %2</p>").
+                         arg(p.first, isURL ? QString("<a style='color: rgb(96, 208, 252);' href = \"%1\">%2</a>").arg(p.second, p.second) : p.second));
+    }
+    staffInfoLabel->clear();
+    staffInfoLabel->adjustSize();
+    staffInfoLabel->setText(stafflist.join("\n"));
+    staffInfoLabel->adjustSize();
 }
 
 CharacterWidget *AnimeDetailInfoPage::createCharacterWidget(const Character &crt)
@@ -734,40 +870,50 @@ void AnimeDetailInfoPage::setCharacters()
 {
     CharacterPlaceholderWidget *addCharacter = new CharacterPlaceholderWidget;
     QObject::connect(addCharacter, &CharacterPlaceholderWidget::addCharacter, this, &AnimeDetailInfoPage::addCharacter);
-    CharacterWidget::maxCrtItemWidth = addCharacter->sizeHint().width();
+    CharacterWidget::maxCrtItemWidth = addCharacter->layout()->sizeHint().width();
     CharacterWidget::crtItemHeight = 0;
     QVector<CharacterWidget *> crtWidgets;
-    for(auto &character: currentAnime->crList(true))
+    for (auto &character : currentAnime->crList(true))
     {
         CharacterWidget *crtItem = createCharacterWidget(character);
-        CharacterWidget::maxCrtItemWidth = qMax(CharacterWidget::maxCrtItemWidth, crtItem->sizeHint().width());
-        CharacterWidget::crtItemHeight = crtItem->sizeHint().height();
+        CharacterWidget::maxCrtItemWidth = qMax(CharacterWidget::maxCrtItemWidth, crtItem->layout()->sizeHint().width());
+        CharacterWidget::crtItemHeight = crtItem->layout()->sizeHint().height();
         crtWidgets.append(crtItem);
     }
 
-    CharacterWidget::maxCrtItemWidth = qMin(CharacterWidget::maxCrtItemWidth, 240 * logicalDpiX()/96);
-    CharacterWidget::crtItemHeight = qMax(CharacterWidget::crtItemHeight, 70 * logicalDpiY() / 96);
+    CharacterWidget::maxCrtItemWidth = qMin(CharacterWidget::maxCrtItemWidth, CharacterWidget::minCrtItemWidth);
+    CharacterWidget::crtItemHeight = qMax(CharacterWidget::crtItemHeight, CharacterWidget::minCrtItemHeight);
 
-    for(auto crtItem: crtWidgets)
+    for (auto crtItem : crtWidgets)
     {
-        QListWidgetItem *listItem=new QListWidgetItem(characterList);
+        QListWidgetItem *listItem = new QListWidgetItem(characterList);
         characterList->setItemWidget(listItem, crtItem);
-        listItem->setSizeHint(QSize(CharacterWidget::maxCrtItemWidth, CharacterWidget::crtItemHeight));
+        int maxW = qMin(crtItem->layout()->sizeHint().width(), CharacterWidget::minCrtItemWidth);
+        listItem->setSizeHint(QSize(maxW, CharacterWidget::crtItemHeight));
     }
 
-    QListWidgetItem *listItem=new QListWidgetItem(characterList);
-    characterList->setItemWidget(listItem, addCharacter);
-    listItem->setSizeHint(QSize(CharacterWidget::maxCrtItemWidth, CharacterWidget::crtItemHeight));
+    QListWidgetItem *placeholderItem = new QListWidgetItem(characterList);
+    characterList->setItemWidget(placeholderItem, addCharacter);
+    placeholderItem->setSizeHint(QSize(addCharacter->layout()->sizeHint().width(), CharacterWidget::crtItemHeight));
 }
 
 void AnimeDetailInfoPage::setTags()
 {
     auto &tagMap=LabelModel::instance()->customTags();
     QStringList tags;
-    for(auto iter=tagMap.begin();iter!=tagMap.end();++iter)
+    for (auto iter=tagMap.begin(); iter!=tagMap.end(); ++iter)
     {
-        if(iter.value().contains(currentAnime->name()))
+        if (iter.value().contains(currentAnime->name()))
             tags<<iter.key();
+    }
+    int lastLeafTagPos = -1;
+    for (int i = 0; i < tags.size(); ++i)
+    {
+        if (!tags[i].contains('/'))
+        {
+            ++lastLeafTagPos;
+            std::swap(tags[i], tags[lastLeafTagPos]);
+        }
     }
     tagPanel->addTag(tags);
     tagContainerSLayout->setCurrentIndex(0);
@@ -848,7 +994,7 @@ void AnimeDetailInfoPage::addCharacter()
 {
     if(!currentAnime) return;
     CharacterEditor editor(currentAnime, nullptr, this);
-    if(QDialog::Accepted == editor.exec())
+    if (QDialog::Accepted == editor.exec())
     {
         delete characterList->item(characterList->count()-1);
         Character newCrt;
@@ -860,26 +1006,27 @@ void AnimeDetailInfoPage::addCharacter()
         CharacterWidget *crtItem = createCharacterWidget(newCrt);
         QListWidgetItem *listItem=new QListWidgetItem(characterList);
         characterList->setItemWidget(listItem, crtItem);
-        listItem->setSizeHint(QSize(CharacterWidget::maxCrtItemWidth, CharacterWidget::crtItemHeight));
+        int maxW = qMin(crtItem->layout()->sizeHint().width(), CharacterWidget::minCrtItemWidth);
+        listItem->setSizeHint(QSize(maxW, CharacterWidget::crtItemHeight));
 
         CharacterPlaceholderWidget *addCharacter = new CharacterPlaceholderWidget;
         QObject::connect(addCharacter, &CharacterPlaceholderWidget::addCharacter, this, &AnimeDetailInfoPage::addCharacter);
         QListWidgetItem *placeholderItem=new QListWidgetItem(characterList);
         characterList->setItemWidget(placeholderItem, addCharacter);
-        placeholderItem->setSizeHint(QSize(CharacterWidget::maxCrtItemWidth, CharacterWidget::crtItemHeight));
+        placeholderItem->setSizeHint(QSize(addCharacter->layout()->sizeHint().width(), CharacterWidget::crtItemHeight));
     }
 }
 
 void AnimeDetailInfoPage::modifyCharacter(CharacterWidget *crtItem)
 {
-    if(!currentAnime) return;
+    if (!currentAnime) return;
     CharacterEditor editor(currentAnime, &crtItem->crt, this);
-    if(QDialog::Accepted == editor.exec())
+    if (QDialog::Accepted == editor.exec())
     {
         Character &srcCrt = crtItem->crt;
         bool modified = editor.name != srcCrt.name || editor.link != srcCrt.link ||
             editor.actor != srcCrt.actor;
-        if(modified)
+        if (modified)
         {
             Character newCrt;
             newCrt.name = editor.name;
@@ -912,15 +1059,20 @@ CharacterWidget::CharacterWidget(const Character &character, QWidget *parent) : 
     QObject::connect(actRemove, &QAction::triggered, this, [=](){
         emit removeCharacter(this);
     });
-    setContextMenuPolicy(Qt::ActionsContextMenu);
-    addAction(actModify);
-    addAction(actRemove);
+    setContextMenuPolicy(Qt::CustomContextMenu);
+    ElaMenu* ctxMenu = new ElaMenu(this);
+    ctxMenu->addAction(actModify);
+    ctxMenu->addAction(actRemove);
+    QObject::connect(this, &QWidget::customContextMenuRequested, this, [=](const QPoint &pos){
+        ctxMenu->popup(this->mapToGlobal(pos));
+    });
 
-    iconLabel=new QLabel(this);
+    iconLabel = new QLabel(this);
     iconLabel->setScaledContents(true);
     iconLabel->setObjectName(QStringLiteral("CrtIcon"));
-    iconLabel->setFixedSize(iconSize*logicalDpiX()/96, iconSize*logicalDpiY()/96);
+    iconLabel->setFixedSize(iconSize, iconSize);
     iconLabel->setAlignment(Qt::AlignCenter);
+    iconLabel->installEventFilter(this);
 
     QAction *actCopyImage = new QAction(tr("Copy Image"), this);
     QObject::connect(actCopyImage, &QAction::triggered, this, [=](){
@@ -946,14 +1098,19 @@ CharacterWidget::CharacterWidget(const Character &character, QWidget *parent) : 
         emit selectLocalImage(this);
     });
 
-    iconLabel->addAction(actCopyImage);
-    iconLabel->addAction(actPasteImage);
-    iconLabel->addAction(actCleanImage);
-    iconLabel->addAction(actDownloadImage);
-    iconLabel->addAction(actLocalImage);
-    iconLabel->setContextMenuPolicy(Qt::ActionsContextMenu);
+    ElaMenu* iconMenu = new ElaMenu(iconLabel);
+    iconMenu->addAction(actCopyImage);
+    iconMenu->addAction(actPasteImage);
+    iconMenu->addAction(actCleanImage);
+    iconMenu->addAction(actDownloadImage);
+    iconMenu->addAction(actLocalImage);
+    iconLabel->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(iconLabel, &QLabel::customContextMenuRequested, iconLabel, [=](const QPoint &pos){
+        iconMenu->popup(iconLabel->mapToGlobal(pos));
+    });
 
-    nameLabel=new QLabel(this);
+    nameLabel = new QLabel(this);
+    nameLabel->setFont(QFont(GlobalObjects::normalFont, 13));
     nameLabel->setOpenExternalLinks(true);
 
     infoLabel=new QLabel(this);
@@ -1002,54 +1159,62 @@ void CharacterWidget::refreshText()
 
 void CharacterWidget::mouseDoubleClickEvent(QMouseEvent *)
 {
-    if(!crt.image.isNull())
+    emit modifyCharacter(this);
+}
+
+bool CharacterWidget::eventFilter(QObject *watched, QEvent *event)
+{
+    if (watched == iconLabel && event->type() == QEvent::MouseButtonDblClick)
     {
-        CaptureView viewer(crt.image, this);
-        viewer.exec();
+        if (!crt.image.isNull())
+        {
+            CaptureView viewer(crt.image, this);
+            viewer.exec();
+        }
+        return true;
     }
+    return QWidget::eventFilter(watched, event);
 }
 
 TagPanel::TagPanel(QWidget *parent, bool allowDelete, bool checkAble, bool allowAdd):QWidget(parent),
-    currentTagButton(nullptr), allowCheck(checkAble), adding(false)
+    currentTagButton(nullptr), allowCheck(checkAble)
 {
     setLayout(new FlowLayout(this));
+    setContextMenuPolicy(Qt::CustomContextMenu);
 
-    tagEdit = new QLineEdit(this);
-    tagEdit->setFont(QFont(GlobalObjects::normalFont,14));
-    tagEdit->hide();
-    setContextMenuPolicy(Qt::ActionsContextMenu);
-    QAction *actAddTag=new QAction(tr("Add"),this);
-    QObject::connect(actAddTag,&QAction::triggered,[this](){
-        if(adding) return;
-        adding = true;
-        tagEdit->clear();
-        layout()->addWidget(tagEdit);
-        tagEdit->show();
-        tagEdit->setFocus();
-    });
-    QObject::connect(tagEdit, &QLineEdit::editingFinished, this, [this](){
-       adding = false;
-       layout()->removeWidget(tagEdit);
-       QString tag=tagEdit->text().trimmed();
-       tagEdit->hide();
-       if(tagList.contains(tag) || tag.isEmpty()) return;
-       emit tagAdded(tag);
+    QAction *actAddTag = new QAction(tr("Add"),this);
+    QObject::connect(actAddTag, &QAction::triggered, this, [=](){
+        LineInputDialog input(tr("Add Tag"), tr("Tag"), "", "DialogSize/AddTag", false, this);
+        if (QDialog::Accepted == input.exec())
+        {
+            const QString tag = input.text.trimmed();
+            if (tagList.contains(tag) || tag.isEmpty()) return;
+            emit tagAdded(tag);
+        }
     });
 
     addAction(actAddTag);
     actAddTag->setEnabled(allowAdd);
 
-    tagContextMenu = new QMenu(this);
+    QObject::connect(this, &TagPanel::customContextMenuRequested, this, [=](const QPoint &pos){
+        ElaMenu* menu = new ElaMenu(this);
+        menu->setAttribute(Qt::WA_DeleteOnClose);
+        menu->addActions(this->actions());
+        if (!allowAdd) menu->removeAction(actAddTag);
+        menu->popup(this->mapToGlobal(pos));
+    });
+
+    tagContextMenu = new ElaMenu(this);
     QAction *actCopy=new QAction(tr("Copy"),this);
     tagContextMenu->addAction(actCopy);
-    QObject::connect(actCopy,&QAction::triggered,[this](){
-        if(!currentTagButton) return;
+    QObject::connect(actCopy, &QAction::triggered, this, [=](){
+        if (!currentTagButton) return;
         QApplication::clipboard()->setText(currentTagButton->text());
     });
     QAction *actRemoveTag=new QAction(tr("Delete"),this);
     tagContextMenu->addAction(actRemoveTag);
-    QObject::connect(actRemoveTag,&QAction::triggered,[this](){
-        if(!currentTagButton) return;
+    QObject::connect(actRemoveTag, &QAction::triggered, this, [=](){
+        if (!currentTagButton) return;
         emit deleteTag(currentTagButton->text());
         tagList.remove(currentTagButton->text());
         currentTagButton->deleteLater();
@@ -1061,24 +1226,22 @@ TagPanel::TagPanel(QWidget *parent, bool allowDelete, bool checkAble, bool allow
 
 void TagPanel::addTag(const QStringList &tags)
 {
-    layout()->removeWidget(tagEdit);
-    tagEdit->hide();
-    adding = false;
-    for(const QString &tag:tags)
+    for (const QString &tag : tags)
     {
-        if(tagList.contains(tag))continue;
+        if (tagList.contains(tag)) continue;
         QPushButton *tagButton=new QPushButton(tag,this);
         tagButton->setObjectName(QStringLiteral("TagButton"));
         tagButton->setCheckable(allowCheck);
-        tagButton->setFont(QFont(GlobalObjects::normalFont,14));
+        tagButton->setFont(QFont(GlobalObjects::normalFont, 12));
         tagButton->setContextMenuPolicy(Qt::CustomContextMenu);
-        QObject::connect(tagButton, &QPushButton::customContextMenuRequested,this,[this, tagButton](const QPoint &pos){
+        QObject::connect(tagButton, &QPushButton::customContextMenuRequested, this, [=](const QPoint &pos){
             currentTagButton = tagButton;
             tagContextMenu->exec(tagButton->mapToGlobal(pos));
         });
         layout()->addWidget(tagButton);
         tagList.insert(tag,tagButton);
     }
+    updateGeometry();
 }
 
 void TagPanel::removeTag(const QString &tag)
@@ -1119,6 +1282,11 @@ QStringList TagPanel::getSelectedTags()
     return tags;
 }
 
+QSize TagPanel::sizeHint() const
+{
+    return layout()->sizeHint();
+}
+
 CharacterPlaceholderWidget::CharacterPlaceholderWidget(QWidget *parent) : QWidget(parent)
 {
     setObjectName(QStringLiteral("CharacterPlaceholder"));
@@ -1127,7 +1295,6 @@ CharacterPlaceholderWidget::CharacterPlaceholderWidget(QWidget *parent) : QWidge
     iconLabel->setFont(*GlobalObjects::iconfont);
     iconLabel->setText(QChar(0xe6f3));
     iconLabel->setAlignment(Qt::AlignCenter);
-    iconLabel->setObjectName(QStringLiteral("CharacterPlaceholderIcon"));
 
     QLabel *infoLabel=new QLabel(tr("Add Character"), this);
     infoLabel->setFont(QFont(GlobalObjects::normalFont, 10));

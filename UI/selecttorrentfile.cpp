@@ -3,10 +3,10 @@
 #include <QTreeView>
 #include <QPushButton>
 #include <QLabel>
-#include <QCheckBox>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include "Common/notifier.h"
+#include "UI/ela/ElaCheckBox.h"
 #include "widgets/dirselectwidget.h"
 #include "Download/torrent.h"
 SelectTorrentFile::SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *parent, const QString &path) : CFramelessDialog(tr("Add Torrent"),parent,true),model(nullptr)
@@ -24,13 +24,13 @@ SelectTorrentFile::SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *pare
     QObject::connect(torrentFileView, &TorrentTreeView::normColorChanged, model, &TorrentFileModel::setNormColor);
 
 
-    QCheckBox *selectAll=new QCheckBox(tr("Select All"),this);
+    QCheckBox *selectAll = new ElaCheckBox(tr("Select All"),this);
     selectAll->setChecked(true);
-    QObject::connect(selectAll,&QCheckBox::stateChanged,[this](int state){
+    QObject::connect(selectAll, &QCheckBox::stateChanged, this, [this](int state){
         model->checkAll(state==Qt::Checked);
     });
-    QCheckBox *selectVideo=new QCheckBox(tr("Select Video"),this);
-    QObject::connect(selectVideo,&QCheckBox::stateChanged,[this](int state){
+    QCheckBox *selectVideo = new ElaCheckBox(tr("Select Video"), this);
+    QObject::connect(selectVideo, &QCheckBox::stateChanged, this, [this](int state){
         model->checkVideoFiles(state==Qt::Checked);
     });
     QLabel *checkedFileSizeLabel=new QLabel(this);

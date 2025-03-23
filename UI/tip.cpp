@@ -17,6 +17,7 @@ Tip::Tip(QWidget *parent) : CFramelessDialog (tr("Tip"),parent)
         tipText = tipText.replace("{AppPath}", QCoreApplication::applicationDirPath());
         tipContent->setText(tipText);
     }
+    tipContent->adjustSize();
     QVBoxLayout *tipVLayout=new QVBoxLayout(this);
     tipVLayout->addWidget(tipContent);
     tipVLayout->addStretch(1);

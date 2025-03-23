@@ -1,7 +1,5 @@
 #include "dlnadiscover.h"
 #include <QTreeView>
-#include <QCheckBox>
-#include <QPushButton>
 #include <QLabel>
 #include <QHeaderView>
 #include <QGridLayout>
@@ -13,11 +11,12 @@
 #include "LANServer/dlna/upnpctrlpoint.h"
 #include "LANServer/dlna/dlnamediacontroller.h"
 #include "Play/Playlist/playlistitem.h"
+#include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 
 DLNADiscover::DLNADiscover(const PlayListItem *item, QWidget *parent) : CFramelessDialog(tr("Select DLNA Device"), parent, true)
 {
-    QPushButton *refreshDevice = new QPushButton(tr("Refresh"), this);
+    QPushButton *refreshDevice = new KPushButton(tr("Refresh"), this);
     deviceView = new QTreeView(this);
     deviceView->setRootIsDecorated(false);
     deviceView->setAlternatingRowColors(true);
@@ -27,7 +26,6 @@ DLNADiscover::DLNADiscover(const PlayListItem *item, QWidget *parent) : CFramele
     discoverGLayout->addWidget(deviceView, 1, 0, 1, 3);
     discoverGLayout->setRowStretch(1, 1);
     discoverGLayout->setColumnStretch(1, 1);
-    discoverGLayout->setContentsMargins(0, 0, 0, 0);
 
     UPnPCtrlPoint *ctrlPoint = new UPnPCtrlPoint(this);
     deviceView->setModel(ctrlPoint);
@@ -38,29 +36,7 @@ DLNADiscover::DLNADiscover(const PlayListItem *item, QWidget *parent) : CFramele
         QUdpSocket tmpSocket;
         tmpSocket.connectToHost(deviceIP, 1900);
         QHostAddress httpServerIP = tmpSocket.localAddress();
-        /*
-        bool findIP = false;
-        for(QNetworkInterface interface : QNetworkInterface::allInterfaces())
-        {
-            if(interface.flags().testFlag(QNetworkInterface::IsUp))
-            {
-                for(QNetworkAddressEntry entry : interface.addressEntries())
-                {
-                    if(entry.ip().protocol() == QAbstractSocket::IPv4Protocol)
-                    {
-                        if(entry.ip().isInSubnet(deviceIP, entry.prefixLength()))
-                        {
-                            httpServerIP = entry.ip();
-                            findIP = true;
-                            break;
-                        }
-                    }
-                }
-                if(findIP) break;
-            }
-        }
-        if(!findIP) return false;
-        */
+
         showBusyState(true);
         refreshDevice->setEnabled(false);
         QString port = QString::number(GlobalObjects::appSetting->value("Server/Port", 8000).toUInt());

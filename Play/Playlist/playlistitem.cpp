@@ -8,6 +8,7 @@
 #define XML_FIELD_POOLID "poolID"
 #define XML_FIELD_TYPE "type"
 #define XML_FIELD_PLAYTIME "playTime"
+#define XML_FIELD_DURATION "duration"
 #define XML_FIELD_PLAYTIME_STATE "playTimeState"
 #define XML_FIELD_TRACK_SUB_DELAY "subDelay"
 #define XML_FIELD_TRACK_AUDIO_INDEX "audioIndex"
@@ -108,6 +109,7 @@ PlayListItem *PlayListItem::parseItem(QXmlStreamReader &reader, PlayListItem *pa
     if (attrs.hasAttribute(XML_FIELD_TYPE))
         type = static_cast<PlayListItem::ItemType>(attrs.value(XML_FIELD_TYPE).toInt());
     const int playTime = attrs.value(XML_FIELD_PLAYTIME).toInt();
+    const int duration = attrs.value(XML_FIELD_DURATION).toInt();
     const int playTimeState = attrs.value(XML_FIELD_PLAYTIME_STATE).toInt();
     int marker = PlayListItem::Marker::M_NONE;
     if (attrs.hasAttribute(XML_FIELD_MARKER))
@@ -142,6 +144,7 @@ PlayListItem *PlayListItem::parseItem(QXmlStreamReader &reader, PlayListItem *pa
     item->type = type;
     item->pathHash = QCryptographicHash::hash(path.toUtf8(),QCryptographicHash::Md5).toHex();
     item->playTime = playTime;
+    item->duration = duration;
     item->poolID = poolID;
     item->playTimeState = PlayListItem::PlayState(playTimeState);
     item->marker = PlayListItem::Marker(marker);
@@ -162,6 +165,7 @@ void PlayListItem::writeItem(QXmlStreamWriter &writer, PlayListItem *item)
     if (item->type != PlayListItem::ItemType::LOCAL_FILE)
         writer.writeAttribute(XML_FIELD_TYPE, QString::number(item->type));
     writer.writeAttribute(XML_FIELD_PLAYTIME, QString::number(item->playTime));
+    writer.writeAttribute(XML_FIELD_DURATION, QString::number(item->duration));
     writer.writeAttribute(XML_FIELD_PLAYTIME_STATE, QString::number((int)item->playTimeState));
     if (item->marker != PlayListItem::Marker::M_NONE)
         writer.writeAttribute(XML_FIELD_MARKER, QString::number((int)item->marker));

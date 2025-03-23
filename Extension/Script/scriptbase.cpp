@@ -20,7 +20,7 @@ namespace
 }
 ScriptBase::ScriptBase() : L(nullptr), settingsUpdated(false),hasSetOptionFunc(false),sType(ScriptType::UNKNOWN_STYPE)
 {
-    settingPath = GlobalObjects::dataPath + "extension/script_data/";
+    settingPath = GlobalObjects::context()->dataPath + "extension/script_data/";
     L = luaL_newstate();
     if(L)
     {

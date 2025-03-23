@@ -362,7 +362,7 @@ int LuaUtil::envInfo(lua_State *L)
     lua_rawset(L, -3); //table
 
     lua_pushstring(L, "data_path"); // table key
-    lua_pushstring(L, GlobalObjects::dataPath.toStdString().c_str()); // tabel key value
+    lua_pushstring(L, GlobalObjects::context()->dataPath.toStdString().c_str()); // tabel key value
     lua_rawset(L, -3); //table
 
     return 1;

@@ -1,6 +1,8 @@
 #include "appbutton.h"
 #include <QPushButton>
 #include "Extension/App/kapp.h"
+#include "UI/ela/ElaTheme.h"
+#include "qpainter.h"
 
 namespace  Extension
 {

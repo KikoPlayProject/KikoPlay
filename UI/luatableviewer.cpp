@@ -8,6 +8,7 @@
 #include <QSettings>
 #include <QSortFilterProxyModel>
 #include "Extension/Common/luatablemodel.h"
+#include "UI/ela/ElaMenu.h"
 #include "globalobjects.h"
 
 LuaTableViewer::LuaTableViewer(LuaTableModel *model, QWidget *parent) :
@@ -21,7 +22,7 @@ LuaTableViewer::LuaTableViewer(LuaTableModel *model, QWidget *parent) :
     view->setModel(proxyModel);
     view->setSortingEnabled(true);
 
-    QAction *copy=new QAction(tr("Copy"), this);
+    QAction *copy = new QAction(tr("Copy"), this);
     QObject::connect(copy, &QAction::triggered, this, [=](){
         int column = view->columnAt(view->mapFromGlobal(QCursor::pos()).x());
         auto selectedRows= view->selectionModel()->selectedRows(column);
@@ -30,7 +31,12 @@ LuaTableViewer::LuaTableViewer(LuaTableModel *model, QWidget *parent) :
         cb->setText(selectedRows.first().data(Qt::ToolTipRole).toString());
     });
     view->addAction(copy);
-    view->setContextMenuPolicy(Qt::ActionsContextMenu);
+    view->setContextMenuPolicy(Qt::CustomContextMenu);
+    ElaMenu *actionMenu = new ElaMenu(view);
+    actionMenu->addAction(copy);
+    QObject::connect(view, &QTreeView::customContextMenuRequested, this, [=](){
+        actionMenu->exec(QCursor::pos());
+    });
 
     QVariant headerState(GlobalObjects::appSetting->value("HeaderViewState/LuaTableView"));
     if(!headerState.isNull())

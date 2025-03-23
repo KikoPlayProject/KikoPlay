@@ -4,12 +4,15 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QLabel>
-#include <QCheckBox>
 #include <QGridLayout>
 #include <QFileDialog>
 #include <QLineEdit>
 #include <QProcess>
 #include <QSharedPointer>
+#include "UI/ela/ElaCheckBox.h"
+#include "UI/ela/ElaLineEdit.h"
+#include "UI/ela/ElaSpinBox.h"
+#include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 #include "Common/notifier.h"
 
@@ -21,12 +24,12 @@ GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *par
     QWidget *playerWindowWidget=QWidget::createWindowContainer(native_wnd);
     playerWindowWidget->setMouseTracking(true);
     playerWindowWidget->setParent(this);
-    playerWindowWidget->setMinimumSize(400*logicalDpiX()/96, 225*logicalDpiY()/96);
+    playerWindowWidget->setMinimumSize(400, 225);
     smPlayer->show();
 
-    QSpinBox *durationSpin = new QSpinBox(this);
-    durationSpin->setRange(1, 15);
-    QLabel *durationTip = new QLabel(tr("Snippet Length(1~15s)"), this);
+    QSpinBox *durationSpin = new ElaSpinBox(this);
+    durationSpin->setRange(1, 20);
+    QLabel *durationTip = new QLabel(tr("Snippet Length(1~20s)"), this);
     if(!showDuration)
     {
         durationTip->hide();
@@ -34,13 +37,13 @@ GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *par
     }
 
     QLabel *frameSizeTip = new QLabel(tr("Frame Size"), this);
-    QLineEdit *frameW = new QLineEdit(this);
-    QLineEdit *frameH = new QLineEdit(this);
+    QLineEdit *frameW = new ElaLineEdit(this);
+    QLineEdit *frameH = new ElaLineEdit(this);
     QLabel *timesTip = new QLabel(tr("x"), this);
-    QCheckBox *constrainScale = new QCheckBox(tr("Constrain Scale"), this);
+    QCheckBox *constrainScale = new ElaCheckBox(tr("Constrain Scale"), this);
     constrainScale->setChecked(true);
 
-    QSpinBox *frameRateSpin = new QSpinBox(this);
+    QSpinBox *frameRateSpin = new ElaSpinBox(this);
     frameRateSpin->setRange(1, 60);
     frameRateSpin->setValue(15);
     QLabel *frameRateTip = new QLabel(tr("Frame Rate"), this);
@@ -51,7 +54,7 @@ GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *par
     frameH->setValidator(validator);
     frameW->setValidator(validator);
 
-    saveFile = new QPushButton(tr("Save To File"), this);
+    saveFile = new KPushButton(tr("Save To File"), this);
 
     QGridLayout *sGLayout = new QGridLayout(this);
     sGLayout->addWidget(playerWindowWidget, 0,  0, 1, 11);
@@ -63,16 +66,15 @@ GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *par
     sGLayout->addWidget(frameH, 1, 3);
     sGLayout->addWidget(constrainScale, 1, 4);
 
-    sGLayout->addWidget(frameRateTip, 1, 5);
-    sGLayout->addWidget(frameRateSpin, 1, 6);
+    sGLayout->addWidget(frameRateTip, 2, 0);
+    sGLayout->addWidget(frameRateSpin, 2, 1);
 
-    sGLayout->addWidget(durationTip, 1, 7);
-    sGLayout->addWidget(durationSpin, 1, 8);
-    sGLayout->addWidget(saveFile, 1, 10);
+    sGLayout->addWidget(durationTip, 2, 3);
+    sGLayout->addWidget(durationSpin, 2, 4);
+    sGLayout->addWidget(saveFile, 1, 10, 2, 1);
 
     sGLayout->setColumnStretch(9, 1);
     sGLayout->setRowStretch(0, 1);
-    sGLayout->setContentsMargins(0, 0, 0, 0);
 
     double curTime = fileName.isEmpty()? GlobalObjects::mpvplayer->getTime() : 0;
     if(showDuration)
@@ -152,7 +154,7 @@ GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *par
         }
     });
     smPlayer->setMedia(fileName.isEmpty()?GlobalObjects::mpvplayer->getCurrentFile():fileName);
-    setSizeSettingKey("DialogSize/GIFCapture",QSize(500*logicalDpiX()/96,280*logicalDpiY()/96));
+    setSizeSettingKey("DialogSize/GIFCapture",QSize(500, 280));
 }
 
 bool GIFCapture::ffmpegCut(const QString &input, const QString &output, int w, int h, int r, double start, int duration)

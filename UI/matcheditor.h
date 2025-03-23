@@ -24,9 +24,9 @@ public:
     const PlayListItem *curItem;
 
 private:
-    QToolButton *searchPage,*customPage;
     QLineEdit *animeEdit, *epEdit, *epIndexEdit;
     QComboBox *epTypeCombo;
+    int pageIndex{0};
 
     QAbstractItemModel *animeModel, *epModel;
 

@@ -2,6 +2,7 @@
 #define PLAYCONTEXT_H
 
 #include <QObject>
+#include <QImage>
 struct PlayListItem;
 
 class PlayContext : public QObject
@@ -20,6 +21,7 @@ public:
     int duration;
     int playtime;
     bool seekable;
+    QImage stopFrame;
     const PlayListItem *curItem;
 private:
     explicit PlayContext(QObject *parent = nullptr);

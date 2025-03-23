@@ -3,6 +3,7 @@
 #include <QString>
 #include <QSqlDatabase>
 #include <QVector>
+#include <QIcon>
 class MPVPlayer;
 class DanmuPool;
 class DanmuRender;
@@ -23,6 +24,34 @@ class AppManager;
 class AutoDownloadManager;
 class QMainWindow;
 class QElapsedTimer;
+
+struct GlobalContext
+{
+    void init();
+
+    QString lang{"en-US"};
+
+    QString dataPath;
+
+    float devicePixelRatioF{1.0f};
+
+    int curMainPage{0};
+
+    qint64 startupTime;
+    QVector<QPair<QString, qint64>> stepTime;
+    qint64 tick(QElapsedTimer *timer, const QString &step);
+
+    enum class DBType
+    {
+        Comment,
+        Bangumi,
+        Download,
+    };
+    QSqlDatabase getDB(DBType db, bool *hasError = nullptr);
+
+    QIcon getFontIcon(QChar iconChar, QColor fontColor);
+};
+
 class GlobalObjects
 {
 public:
@@ -45,19 +74,12 @@ public:
     static AppManager *appManager;
     static AutoDownloadManager *autoDownloadManager;
     static QMainWindow *mainWindow;
-    static QString dataPath;
 
-    static constexpr const int Comment_DB=0;
-    static constexpr const int Bangumi_DB=1;
-    static constexpr const int Download_DB=2;
-    static QSqlDatabase getDB(int db, bool *hasError = nullptr);
+    static GlobalContext *context();
 
     static constexpr const char *normalFont = "Microsoft Yahei UI";
-    static constexpr const char *kikoVersion = "1.0.3";
+    static constexpr const char *kikoVersion = "2.0.0";
 
-    static qint64 startupTime;
-    static QVector<QPair<QString, qint64>> stepTime;
-    static qint64 tick(QElapsedTimer *timer, const QString &step);
 private:
     static void initDatabase(const char *db_names[]);
     static void setDatabase(const char *name, const char *file);

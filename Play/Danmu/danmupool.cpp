@@ -18,6 +18,7 @@
 #define SETTING_KEY_MERGE_INTERVAL "Play/MergeInterval"
 #define SETTING_KEY_MAX_DIFF "Play/MaxDiffCount"
 #define SETTING_KEY_MIN_SIM "Play/MinSimCount"
+#define SETTING_KEY_AUTO_LOAD_LOCAL_DANMU "Play/AutoLoadLocalDanmu"
 
 namespace
 {
@@ -46,6 +47,7 @@ DanmuPool::DanmuPool(QObject *parent) : QAbstractItemModel(parent),curPool(nullp
     mergeInterval = GlobalObjects::appSetting->value(SETTING_KEY_MERGE_INTERVAL, 20).toInt() * 1000;
     maxContentUnsimCount = GlobalObjects::appSetting->value(SETTING_KEY_MAX_DIFF, 4).toInt();
     minMergeCount = GlobalObjects::appSetting->value(SETTING_KEY_MIN_SIM, 2).toInt();
+    loadLoaclDanmu = GlobalObjects::appSetting->value(SETTING_KEY_AUTO_LOAD_LOCAL_DANMU, true).toBool();
     analyzer = new EventAnalyzer(this);
 	setConnect(emptyPool);
 }
@@ -331,30 +333,37 @@ void DanmuPool::setStatisInfo()
     statisInfo.mergeCount=0;
     statisInfo.totalCount=danmuPool.count();
     int curMinuteCount=0;
-    int startTime=0;
+    int startTime = -1;
     for(auto iter=danmuPool.cbegin();iter!=danmuPool.cend();++iter)
     {
-        if(iter==danmuPool.cbegin())
+        if ((*iter)->mergedList)
         {
-            startTime=(*iter)->time;
+            statisInfo.mergeCount += (*iter)->mergedList->count();
         }
-        if((*iter)->time-startTime<1000)
+        if ((*iter)->blockBy != -1)
+        {
+            statisInfo.blockCount++;
+            continue;
+        }
+        if (startTime < 0)
+        {
+            startTime = qMax((*iter)->time, 0);
+        }
+        if ((*iter)->time - startTime < 1000)
+        {
             curMinuteCount++;
+        }
         else
         {
-            statisInfo.countOfSecond.append(QPair<int,int>(startTime/1000,curMinuteCount));
-            if(curMinuteCount>statisInfo.maxCountOfMinute)
+            statisInfo.countOfSecond.append(QPair<int,int>(startTime / 1000, curMinuteCount));
+            if (curMinuteCount > statisInfo.maxCountOfMinute)
                 statisInfo.maxCountOfMinute=curMinuteCount;
-            curMinuteCount=1;
-            startTime=(*iter)->time;
+            curMinuteCount = 1;
+            startTime = (*iter)->time;
         }
-        if((*iter)->blockBy!=-1)
-            statisInfo.blockCount++;
-        if((*iter)->mergedList)
-            statisInfo.mergeCount+=(*iter)->mergedList->count();
     }
     statisInfo.countOfSecond.append(QPair<int, int>(startTime / 1000, curMinuteCount));
-	if (curMinuteCount>statisInfo.maxCountOfMinute)
+    if (curMinuteCount > statisInfo.maxCountOfMinute)
 		statisInfo.maxCountOfMinute = curMinuteCount;
     emit statisInfoChange();
 
@@ -379,12 +388,18 @@ void DanmuPool::setMergeEnable(bool enable)
     }
 }
 
+void DanmuPool::setLoadLocalDanmu(bool loadLocal)
+{
+    loadLoaclDanmu = loadLocal;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_AUTO_LOAD_LOCAL_DANMU, loadLoaclDanmu);
+}
+
 void DanmuPool::setMergeInterval(int val)
 {
     if (val != mergeInterval)
     {
         mergeInterval = val;
-        GlobalObjects::appSetting->setValue(SETTING_KEY_MERGE_INTERVAL, val);
+        GlobalObjects::appSetting->setValue(SETTING_KEY_MERGE_INTERVAL, val / 1000);
         beginResetModel();
         setMerged();
         endResetModel();

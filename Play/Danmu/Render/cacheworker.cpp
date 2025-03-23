@@ -34,6 +34,66 @@ CacheWorker::CacheWorker(const DanmuStyle *style):danmuStyle(style)
     danmuStrokePen.setCapStyle(Qt::RoundCap);
 }
 
+QImage CacheWorker::createPreviewImage(const DanmuStyle *style, const DanmuComment *comment)
+{
+    QFont danmuFont;
+    danmuFont.setFamily(style->fontFamily);
+    danmuFont.setBold(style->bold);
+    if (style->randomSize)
+    {
+        danmuFont.setPointSize(QRandomGenerator::global()->bounded(style->fontSizeTable[DanmuComment::FontSizeLevel::Small],
+            style->fontSizeTable[DanmuComment::FontSizeLevel::Large]));
+    }
+    else
+    {
+        danmuFont.setPointSize(style->fontSizeTable[comment->fontSizeLevel]);
+    }
+
+    QFontMetrics metrics(danmuFont);
+    int left = qAbs(metrics.leftBearing(comment->text.front()));
+    QSize imgSize = metrics.size(0, comment->text) + QSize(style->strokeWidth*2 + left, style->strokeWidth);
+    int py = qAbs((imgSize.height() - metrics.height()) / 2 + metrics.ascent());
+
+    QPainterPath path;
+    path.addText(left + style->strokeWidth, py, danmuFont, comment->text);
+
+    QImage img(imgSize * style->devicePixelRatioF, QImage::Format_ARGB32_Premultiplied);
+    img.setDevicePixelRatio(style->devicePixelRatioF);
+    img.fill(Qt::transparent);
+    QPainter painter(&img);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::TextAntialiasing);
+    if (style->strokeWidth > 0)
+    {
+        QPen danmuStrokePen;
+        danmuStrokePen.setWidthF(style->strokeWidth);
+        danmuStrokePen.setJoinStyle(Qt::RoundJoin);
+        danmuStrokePen.setCapStyle(Qt::RoundCap);
+        danmuStrokePen.setColor(comment->color == 0x000000 ? Qt::white : Qt::black);
+        painter.strokePath(path, danmuStrokePen);
+        painter.drawPath(path);
+    }
+    int r = (comment->color>>16)&0xff, g = (comment->color>>8)&0xff, b = comment->color&0xff;
+    if (style->randomColor)
+    {
+        r = QRandomGenerator::global()->bounded(0, 256);
+        g = QRandomGenerator::global()->bounded(0, 256);
+        b = QRandomGenerator::global()->bounded(0, 256);
+    }
+    painter.fillPath(path, QColor(r, g, b));
+    if (style->glow)
+    {
+        QImage tmp(img);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        painter.fillRect(img.rect(), QColor(0, 0, 0));
+        qt_blurImage(img, style->glowRadius, true);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+        painter.drawImage(0, 0, tmp);
+    }
+    painter.end();
+    return img;
+}
+
 void CacheWorker::cleanCache()
 {
 #ifdef QT_DEBUG
@@ -190,6 +250,12 @@ void CacheWorker::createImage(CacheMiddleInfo &midInfo)
     QPainter painter(img);
     painter.setRenderHint(QPainter::Antialiasing);
     int r=(comment->color>>16)&0xff,g=(comment->color>>8)&0xff,b=comment->color&0xff;
+    if (danmuStyle->randomColor)
+    {
+        r = QRandomGenerator::global()->bounded(0, 256);
+        g = QRandomGenerator::global()->bounded(0, 256);
+        b = QRandomGenerator::global()->bounded(0, 256);
+    }
     if(strokeWidth>0)
     {
         danmuStrokePen.setColor(comment->color==0x000000?Qt::white:Qt::black);

@@ -26,6 +26,11 @@
 #define SETTING_KEY_GAMMA "Play/Gamma"
 #define SETTING_KEY_HUE "Play/Hue"
 #define SETTING_KEY_SHARPEN "Play/Sharpen"
+#define SETTING_KEY_CLICK_BEHAVIOR "Play/ClickBehavior"
+#define SETTING_KEY_DB_CLICK_BEHAVIOR "Play/DBClickBehavior"
+#define SETTING_KEY_SHOW_PREVIEW "Play/ShowPreview"
+#define SETTING_KEY_SHOW_RECENT "Play/ShowRecent"
+#define SETTING_KEY_USE_SAMPLE2DARRAY "Play/Sampler2DArray"
 
 namespace
 {
@@ -131,7 +136,7 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
         throw std::runtime_error("could not initialize mpv context");
 
     mpv_request_log_messages(mpv, "v");
-    for(auto iter = optionsMap.cbegin(); iter != optionsMap.cend(); ++iter)
+    for (auto iter = optionsMap.cbegin(); iter != optionsMap.cend(); ++iter)
     {
         if(optionsBeforeInit.contains(iter.key())) continue;
         int ret = mpv::qt::set_option_variant(mpv, iter.key(), iter.value());
@@ -139,19 +144,6 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
         {
             Logger::logger()->log(Logger::MPV, QString("[kiko][option error]: %1, %2").arg(iter.key(), QString::number(ret)));
         }
-    }
-
-    directKeyMode = GlobalObjects::appSetting->value("Play/MPVDirectKeyMode", false).toBool();
-    using ShortCutInfo = QPair<QString, QPair<QString,QString>>;
-    auto shortcutList = GlobalObjects::appSetting->value("Play/MPVShortcuts").value<QList<ShortCutInfo>>();
-    for(auto &s : shortcutList)
-    {
-        modifyShortcut(s.first, s.first, s.second.first);
-    }
-    auto keyMapping = GlobalObjects::appSetting->value("Play/MPVDirectModeKeyMapping").value<QVector<QPair<QString, QString>>>();
-    for(auto &pair : keyMapping)
-    {
-        directModeKeyMapping[pair.first] = pair.second;
     }
 
     mpv_set_option_string(mpv, "terminal", "yes");
@@ -195,7 +187,7 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
         }
     });
 
-    if(GlobalObjects::appSetting->value("Play/ShowPreview", true).toBool())
+    if (isShowPreview)
     {
         mpvPreview = new MPVPreview(QSize(220*logicalDpiX()/96,124*logicalDpiY()/96));
         previewThread = new QThread();
@@ -380,121 +372,6 @@ void MPVPlayer::drawTexture(QVector<const DanmuObject *> &objList, float alpha)
     }
 }
 
-void MPVPlayer::modifyShortcut(const QString &key, const QString &newKey, const QString &command)
-{
-    if(key != newKey)
-    {
-        mpvShortcuts.remove(key);
-    }
-    if(newKey.isEmpty() || command.isEmpty()) return;
-    QList<QStringList> commands;
-    QStringList commandStrs = command.split(';', Qt::SkipEmptyParts);
-    for(const QString &cStr : commandStrs)
-    {
-        QStringList commandParts;
-        QString curPart;
-        int state = 0;
-        bool escape = false;
-        for(QChar c : cStr)
-        {
-            if(state==0) {
-                if(escape) {
-                    curPart.append('\\');
-                    curPart.append(c);
-                    escape = false;
-                } else if(c.isSpace()) {
-					if(!curPart.isEmpty())
-						commandParts.append(curPart);
-                    state = 1;
-                    curPart.clear();
-                } else if(c=='\'') {
-                    state = 2;
-                } else if(c=='"') {
-                    state = 3;
-                } else {
-                    curPart.append(c);
-                    escape = (c=='\\');
-                }
-            } else if(state==1) {
-                if(!c.isSpace()) {
-                    curPart.append(c);
-                    state = 0;
-                }
-            } else if(state==2) {
-                if(escape) {
-                    curPart.append('\\');
-                    curPart.append(c);
-                    escape = false;
-                } else if(c=='\'') {
-                    state = 0;
-                } else {
-                    curPart.append(c);
-                    escape = (c=='\\');
-                }
-            } else if(state==3) {
-                if(escape) {
-                    curPart.append('\\');
-                    curPart.append(c);
-                    escape = false;
-                } else if(c=='"') {
-                    state = 0;
-                } else {
-                    curPart.append(c);
-                    escape = (c=='\\');
-                }
-            }
-        }
-        if(!curPart.isEmpty()) commandParts.append(curPart);
-        commands.append(commandParts);
-    }
-    mpvShortcuts[newKey] = {commands, command};
-}
-
-int MPVPlayer::runShortcut(const QString &key, int keyEventType)
-{
-    if(directKeyMode)
-    {
-        QStringList command;
-        if(keyEventType==1)
-            command << "keydown";
-        else if(keyEventType==2)
-            command << "keyup";
-        else
-            command << "keypress";
-        command << directModeKeyMapping.value(key, key);
-        return setMPVCommand(command);
-    }
-    else
-    {
-        if(!mpvShortcuts.contains(key)) return -1;
-        const auto &shortcut = mpvShortcuts[key];
-        int ret = 0;
-        for(const auto &command : shortcut.first)
-        {
-            ret = setMPVCommand(command);
-        }
-        return ret;
-    }
-}
-
-void MPVPlayer::setDirectKeyMode(bool on)
-{
-    directKeyMode = on;
-    GlobalObjects::appSetting->setValue("Play/MPVDirectKeyMode", directKeyMode);
-}
-
-void MPVPlayer::setDirectModeKeyMapping(const QString &key, const QString *val)
-{
-    if(!val)
-    {
-        directModeKeyMapping.remove(key);
-    }
-    else
-    {
-        directModeKeyMapping[key] = *val;
-    }
-}
-
 void MPVPlayer::setMedia(const QString &file)
 {
     if(!setMPVCommand(QStringList() << "loadfile" << file))
@@ -587,14 +464,14 @@ void MPVPlayer::addSubtitle(const QString &path)
 {
     setMPVCommand(QVariantList() << "sub-add" << path << "cached");
 	loadTracks();
-    emit trackInfoChange(SubTrack);
+    //emit trackInfoChange(SubTrack);
 }
 
 void MPVPlayer::addAudioTrack(const QString &path)
 {
     setMPVCommand(QVariantList() << "audio-add" << path << "cached");
     loadTracks();
-    emit trackInfoChange(AudioTrack);
+    //emit trackInfoChange(AudioTrack);
 }
 
 void MPVPlayer::clearExternalAudio()
@@ -711,6 +588,36 @@ void MPVPlayer::setSharpen(int val)
     GlobalObjects::appSetting->setValue(SETTING_KEY_SHARPEN, (int)(v * 100));
 }
 
+void MPVPlayer::setClickBehavior(int val)
+{
+    clickBehavior = val;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_CLICK_BEHAVIOR, clickBehavior);
+}
+
+void MPVPlayer::setDbClickBehavior(int val)
+{
+    dbClickBehaivior = val;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_DB_CLICK_BEHAVIOR, dbClickBehaivior);
+}
+
+void MPVPlayer::setShowPreview(bool on)
+{
+    GlobalObjects::appSetting->setValue(SETTING_KEY_SHOW_PREVIEW, on);
+}
+
+void MPVPlayer::setShowRecent(bool on)
+{
+    isShowRecent = on;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_SHOW_RECENT, on);
+    emit showRecentChanged(on);
+}
+
+void MPVPlayer::setUseSample2DArray(bool on)
+{
+    useSample2DArray = on;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_USE_SAMPLE2DARRAY, on);
+}
+
 void MPVPlayer::initializeGL()
 {
     QOpenGLFunctions *glFuns=context()->functions();
@@ -735,10 +642,10 @@ void MPVPlayer::initializeGL()
 		++version;
 	}
     oldOpenGLVersion = mainVersion<4;
-    if(oldOpenGLVersion) qInfo()<<"Unsupport sampler2D Array";
-    bool useSample2DArray = GlobalObjects::appSetting->value("Play/Sampler2DArray",true).toBool();
+    if (oldOpenGLVersion) qInfo()<<"Unsupport sampler2D Array";
+    useSample2DArray = GlobalObjects::appSetting->value(SETTING_KEY_USE_SAMPLE2DARRAY, true).toBool();
 	if (!oldOpenGLVersion && !useSample2DArray) oldOpenGLVersion = true;
-    if(oldOpenGLVersion)
+    if (oldOpenGLVersion)
     {
         danmuShader.addShaderFromSourceCode(QOpenGLShader::Vertex, vShaderDanmu_Old);
         danmuShader.addShaderFromSourceCode(QOpenGLShader::Fragment, fShaderDanmu_Old);
@@ -763,6 +670,12 @@ void MPVPlayer::initializeGL()
 
 void MPVPlayer::paintGL()
 {
+    if (state == PlayState::Stop)
+    {
+        QOpenGLFunctions *glFuns=context()->functions();
+        glFuns->glClearColor(0, 0, 0, 0);
+        return;
+    }
     mpv_opengl_fbo mpfbo{static_cast<int>(defaultFramebufferObject()),
                 static_cast<int>(width()*devicePixelRatioF()),  static_cast<int>(height()*devicePixelRatioF()), 0};
     int flip_y{1};
@@ -775,7 +688,7 @@ void MPVPlayer::paintGL()
     // See render_gl.h on what OpenGL environment mpv expects, and
     // other API details.
     mpv_render_context_render(mpv_gl, params);
-    if(!danmuHide)
+    if (!danmuHide)
     {
         QOpenGLFramebufferObject::bindDefault();
         QOpenGLPaintDevice fboPaintDevice(width()*devicePixelRatioF(), height()*devicePixelRatioF());
@@ -1196,6 +1109,11 @@ void MPVPlayer::loadSettings()
 
     sharpen = GlobalObjects::appSetting->value(SETTING_KEY_SHARPEN, 0).toInt();
     setMPVProperty("sharpen", sharpen / 100.0);
+
+    clickBehavior = GlobalObjects::appSetting->value(SETTING_KEY_CLICK_BEHAVIOR, 0).toInt();
+    dbClickBehaivior = GlobalObjects::appSetting->value(SETTING_KEY_DB_CLICK_BEHAVIOR, 0).toInt();
+    isShowPreview = GlobalObjects::appSetting->value(SETTING_KEY_SHOW_PREVIEW, true).toBool();
+    isShowRecent = GlobalObjects::appSetting->value(SETTING_KEY_SHOW_RECENT, true).toBool();
 }
 
 void MPVPlayer::loadPredefineOptions(QStringList &optionGroupKeys, QVector<QStringList> &optionsGroupList)

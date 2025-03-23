@@ -7,10 +7,12 @@
 #include <QResizeEvent>
 #include "Common/notifier.h"
 #include "backgroundfadewidget.h"
+#include <QPainter>
+#include <QPainterPath>
 
 DialogTip::DialogTip(QWidget *parent):QWidget(parent), moveHide(false)
 {
-    infoText=new QLabel(this);
+    infoText = new QLabel(this);
     infoText->setObjectName(QStringLiteral("DialogTipLabel"));
     infoText->setOpenExternalLinks(true);
     infoText->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
@@ -44,8 +46,15 @@ DialogTip::DialogTip(QWidget *parent):QWidget(parent), moveHide(false)
 
 void DialogTip::showMessage(const QString &msg, int type)
 {
-    if (type & NM_ERROR) setStyleSheet(QStringLiteral("border:none;background-color:#f52941;"));
-    else setStyleSheet(QStringLiteral("border:none;background-color:#169fe6;"));
+    if (type & NM_ERROR)
+    {
+        backColor = QColor(245, 41, 65);
+    }
+    else
+    {
+        backColor = QColor(22, 159, 230);
+    }
+    update();
 
     if (type & NM_PROCESS)
     {
@@ -120,4 +129,35 @@ bool DialogTip::eventFilter(QObject *obj, QEvent *event)
         }
     }
     return QWidget::eventFilter(obj, event);
+}
+
+void DialogTip::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setBrush(backColor);
+    painter.setPen(Qt::NoPen);
+
+    QPainterPath path;
+    qreal left = rect().left();
+    qreal right = rect().right();
+    qreal top = rect().top();
+    qreal bottom = rect().bottom();
+    qreal r = 8;
+
+    path.moveTo(left, top);
+    path.lineTo(right, top);
+    path.lineTo(right, bottom - r);
+
+    QRectF bottomRightCorner(right - 2*r, bottom - 2*r, 2*r, 2*r);
+    path.arcTo(bottomRightCorner, 0, -90);
+
+    path.lineTo(left + r, bottom);
+
+    QRectF bottomLeftCorner(left, bottom - 2*r, 2*r, 2*r);
+    path.arcTo(bottomLeftCorner, -90, -90);
+
+    path.closeSubpath();
+
+    painter.drawPath(path);
 }

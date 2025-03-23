@@ -20,9 +20,15 @@
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Danmu/Provider/localprovider.h"
-#include "Play/Playlist/playlist.h"
+#include "Play/Playlist/playlistitem.h"
+#include "UI/ela/ElaComboBox.h"
+#include "UI/ela/ElaLineEdit.h"
+#include "UI/ela/ElaMenu.h"
+#include "UI/ela/ElaPivot.h"
+#include "UI/widgets/kplaintextedit.h"
+#include "UI/widgets/kpushbutton.h"
 #include "selectepisode.h"
-#include "danmuview.h"
+#include "dialogs/danmuview.h"
 #include "Play/Danmu/blocker.h"
 #include "Extension/Script/scriptmanager.h"
 #include "widgets/scriptsearchoptionpanel.h"
@@ -36,7 +42,7 @@ namespace
     public:
         explicit RelWordCache():cacheChanged(false)
         {
-             QFile cacheFile(GlobalObjects::dataPath + "relCache");
+             QFile cacheFile(GlobalObjects::context()->dataPath + "relCache");
              if(cacheFile.open(QIODevice::ReadOnly))
              {
                 QDataStream fs(&cacheFile);
@@ -65,7 +71,7 @@ namespace
         {
             if(cacheChanged)
             {
-                QFile cacheFile(GlobalObjects::dataPath + "relCache");
+                QFile cacheFile(GlobalObjects::context()->dataPath + "relCache");
                 if(cacheFile.open(QIODevice::WriteOnly))
                 {
                     QDataStream fs(&cacheFile);
@@ -90,53 +96,23 @@ namespace
 AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,const QStringList &poolList) : CFramelessDialog(tr("Add Danmu"),parent,true,true,autoPauseVideo),
     curItem(item), danmuPools(poolList), processCounter(0)
 {
-    if(!relCache) relCache=new RelWordCache();
+    if (!relCache) relCache=new RelWordCache();
     Pool *pool = nullptr;
     if(item) pool=GlobalObjects::danmuManager->getPool(item->poolID, false);
     danmuItemModel=new DanmuItemModel(this,!danmuPools.isEmpty(),pool?pool->toEp().toString():(item?item->title:""),this);
 
     QVBoxLayout *danmuVLayout=new QVBoxLayout(this);
-    danmuVLayout->setContentsMargins(0,0,0,0);
-    danmuVLayout->setSpacing(0);
+    auto margins = danmuVLayout->contentsMargins();
+    margins.setTop(0);
+    danmuVLayout->setContentsMargins(margins);
 
-    QFont normalFont(GlobalObjects::normalFont,12);
-    QStringList pageButtonTexts = {
-        tr("Search"),
-        tr("URL"),
-        tr("Selected")
-    };
-    QToolButton **infoBtnPtrs[] = {
-        &onlineDanmuPage, &urlDanmuPage, &selectedDanmuPage
-    };
-    QFontMetrics fm(normalFont);
-    int btnHeight = fm.height() + 10*logicalDpiY()/96;
-    int btnWidth = 0;
-    for(const QString &t : pageButtonTexts)
-    {
-        btnWidth = qMax(btnWidth, fm.horizontalAdvance(t));
-    }
-    btnWidth += 40*logicalDpiX()/96;
+    tab = new ElaPivot(this);
+    tab->appendPivot(tr("Search"));
+    tab->appendPivot(tr("URL"));
+    tab->appendPivot(tr("Staging"));
+    tab->setCurrentIndex(0);
 
-    QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
-    pageButtonHLayout->setContentsMargins(0,0,0,0);
-    pageButtonHLayout->setSpacing(0);
-    QButtonGroup *btnGroup = new QButtonGroup(this);
-    for(int i = 0; i < pageButtonTexts.size(); ++i)
-    {
-        *infoBtnPtrs[i] = new QToolButton(this);
-        QToolButton *tb = *infoBtnPtrs[i];
-        tb->setFont(normalFont);
-        tb->setText(pageButtonTexts[i]);
-        tb->setCheckable(true);
-        tb->setToolButtonStyle(Qt::ToolButtonTextOnly);
-        tb->setFixedSize(QSize(btnWidth, btnHeight));
-        tb->setObjectName(QStringLiteral("DialogPageButton"));
-        pageButtonHLayout->addWidget(tb);
-        btnGroup->addButton(tb, i);
-    }
-    onlineDanmuPage->setChecked(true);
-    pageButtonHLayout->addStretch(1);
-    danmuVLayout->addLayout(pageButtonHLayout);
+    danmuVLayout->addWidget(tab);
 
     QStackedLayout *contentStackLayout=new QStackedLayout();
     contentStackLayout->setContentsMargins(0,0,0,0);
@@ -144,11 +120,9 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,
     contentStackLayout->addWidget(setupURLPage());
     contentStackLayout->addWidget(setupSelectedPage());
     danmuVLayout->addLayout(contentStackLayout);
-    QObject::connect(btnGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, [contentStackLayout](int id, bool checked) {
-        if (checked)
-        {
-            contentStackLayout->setCurrentIndex(id);
-        }
+
+    QObject::connect(tab, &ElaPivot::pCurrentIndexChanged, this, [=](){
+        contentStackLayout->setCurrentIndex(tab->getCurrentIndex());
     });
 
     QString itemInfo(item?(item->animeTitle.isEmpty()?item->title:QString("%1-%2").arg(item->animeTitle).arg(item->title)):"");
@@ -156,17 +130,18 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,
     itemInfoLabel->setFont(QFont(GlobalObjects::normalFont,10,QFont::Bold));
     itemInfoLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     danmuVLayout->addWidget(itemInfoLabel);
+    if (!item) itemInfoLabel->hide();
 
     keywordEdit->setText(item?(item->animeTitle.isEmpty()?item->title:item->animeTitle):"");
     keywordEdit->installEventFilter(this);
     searchButton->setAutoDefault(false);
     searchButton->setDefault(false);
-    if(item && !item->animeTitle.isEmpty())
+    if (item && !item->animeTitle.isEmpty())
     {
         themeWord=item->animeTitle;
         relWordWidget->setRelWordList(relCache->get(themeWord));
     }
-    setSizeSettingKey("DialogSize/AddDanmu", QSize(600*logicalDpiX()/96, 500*logicalDpiY()/96));
+    setSizeSettingKey("DialogSize/AddDanmu", QSize(800, 600));
 }
 
 void AddDanmu::search()
@@ -216,7 +191,6 @@ void AddDanmu::search()
     endProcess();
 }
 
-
 int AddDanmu::addSearchItem(QList<DanmuSource> &sources)
 {
     if(sources.empty()) return 0;
@@ -263,13 +237,13 @@ int AddDanmu::addSearchItem(QList<DanmuSource> &sources)
                     src.count = tmplist.count();
                     selectedDanmuList.append({src, tmplist});
                     danmuItemModel->addItem(src);
-                    selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuList.count()));
+                    tab->setPivotText(2, tr("Staging(%1)").arg(selectedDanmuList.count()));
                     ++succNum;
                 }
             }
         }
     }
-    selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuList.count()));
+    tab->setPivotText(2, tr("Staging(%1)").arg(selectedDanmuList.count()));
     return succNum;
 }
 
@@ -305,7 +279,7 @@ QWidget *AddDanmu::setupSearchPage()
 {
     QWidget *searchPage=new QWidget(this);
     searchPage->setFont(QFont(GlobalObjects::normalFont,10));
-    sourceCombo=new QComboBox(searchPage);
+    sourceCombo=new ElaComboBox(searchPage);
     scriptOptionPanel = new ScriptSearchOptionPanel(searchPage);
     QObject::connect(sourceCombo, &QComboBox::currentTextChanged, this, [=](const QString &){
         QString curId = sourceCombo->currentData().toString();
@@ -325,16 +299,18 @@ QWidget *AddDanmu::setupSearchPage()
         ++index;
     }
     if (defaultIndex != -1) sourceCombo->setCurrentIndex(defaultIndex);
-    keywordEdit=new QLineEdit(searchPage);
-    searchButton=new QPushButton(tr("Search"),searchPage);
-    QObject::connect(searchButton,&QPushButton::clicked,this,&AddDanmu::search);
+    keywordEdit = new ElaLineEdit(searchPage);
+    searchButton = new KPushButton(tr("Search"), searchPage);
+    QObject::connect(searchButton, &QPushButton::clicked, this, &AddDanmu::search);
     relWordWidget=new RelWordWidget(this);
-    searchResultWidget=new QListWidget(searchPage);
+    searchResultWidget = new QListWidget(searchPage);
+    searchResultWidget->setObjectName(QStringLiteral("DanmuSearchResList"));
     QObject::connect(relWordWidget, &RelWordWidget::relWordClicked, [this](const QString &relWord){
        keywordEdit->setText(relWord);
        search();
     });
     QGridLayout *searchPageGLayout=new QGridLayout(searchPage);
+    searchPageGLayout->setContentsMargins(0, 0, 0, 0);
     searchPageGLayout->addWidget(sourceCombo,0,0);
     searchPageGLayout->addWidget(keywordEdit,0,1);
     searchPageGLayout->addWidget(searchButton,0,2);
@@ -352,10 +328,10 @@ QWidget *AddDanmu::setupURLPage()
     QWidget *urlPage=new QWidget(this);
     urlPage->setFont(QFont(GlobalObjects::normalFont,10));
 
-    urlEdit = new QPlainTextEdit(urlPage);
+    urlEdit = new KPlainTextEdit(urlPage);
     urlEdit->setPlaceholderText(tr("One URL per line"));
 
-    addUrlButton=new QPushButton(tr("Add URL"),urlPage);
+    addUrlButton = new KPushButton(tr("Add URL"), urlPage);
     addUrlButton->setMinimumWidth(150);
     addUrlButton->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
     QObject::connect(addUrlButton,&QPushButton::clicked,this,&AddDanmu::addURL);
@@ -372,8 +348,12 @@ QWidget *AddDanmu::setupURLPage()
         supportUrlInfo->append(pair.second.join('\n'));
     }
     supportUrlInfo->setReadOnly(true);
+    QTextCursor cursor = supportUrlInfo->textCursor();
+    cursor.movePosition(QTextCursor::Start);
+    supportUrlInfo->setTextCursor(cursor);
 
     QVBoxLayout *localVLayout=new QVBoxLayout(urlPage);
+    localVLayout->setContentsMargins(0, 0, 0, 0);
     localVLayout->addWidget(urlEdit);
     localVLayout->addWidget(addUrlButton);
     localVLayout->addSpacing(10);
@@ -386,7 +366,7 @@ QWidget *AddDanmu::setupURLPage()
 QWidget *AddDanmu::setupSelectedPage()
 {
     QWidget *selectedPage = new QWidget(this);
-    QPushButton *addLocalSrcBtn = new QPushButton(tr("Add Local Danmu File"), selectedPage);
+    QPushButton *addLocalSrcBtn = new KPushButton(tr("Add Local Danmu File"), selectedPage);
     selectedPage->setFont(QFont(GlobalObjects::normalFont, 12));
     QLabel *tipLabel = new QLabel(tr("Select danmu you want to add:"), selectedPage);
     selectedDanmuView = new QTreeView(selectedPage);
@@ -402,9 +382,10 @@ QWidget *AddDanmu::setupSelectedPage()
     selectedDanmuView->setItemDelegate(new PoolComboDelegate(danmuPools,this));
     QHeaderView *selectedHeader = selectedDanmuView->header();
     selectedHeader->setFont(this->font());
-    selectedHeader->resizeSection(0, 220*logicalDpiX()/96);
+    selectedHeader->resizeSection(0, 220);
 
     QGridLayout *spGLayout = new QGridLayout(selectedPage);
+    spGLayout->setContentsMargins(0, 0, 0, 0);
     spGLayout->addWidget(tipLabel, 0, 0);
     spGLayout->addWidget(addLocalSrcBtn, 0, 2);
     spGLayout->addWidget(selectedDanmuView, 1, 0, 1, 3);
@@ -432,7 +413,7 @@ QWidget *AddDanmu::setupSelectedPage()
 
                 selectedDanmuList.append({sourceInfo, tmplist});
                 danmuItemModel->addItem(sourceInfo);
-                selectedDanmuPage->setText(tr("Selected(%1)").arg(selectedDanmuList.count()));
+                tab->setPivotText(2, tr("Staging(%1)").arg(selectedDanmuList.count()));
             }
         }
     });
@@ -463,9 +444,14 @@ QWidget *AddDanmu::setupSelectedPage()
         }
     });
 
-    selectedDanmuView->setContextMenuPolicy(Qt::ContextMenuPolicy::ActionsContextMenu);
-    selectedDanmuView->addAction(actView);
-    selectedDanmuView->addAction(actAutoSetPoolID);
+    selectedDanmuView->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+    ElaMenu *actionMenu = new ElaMenu(selectedDanmuView);
+    QObject::connect(selectedDanmuView, &QTreeView::customContextMenuRequested, this, [=](){
+        if (!selectedDanmuView->selectionModel()->hasSelection()) return;
+        actionMenu->exec(QCursor::pos());
+    });
+    actionMenu->addAction(actView);
+    actionMenu->addAction(actAutoSetPoolID);
     return selectedPage;
 }
 
@@ -552,7 +538,7 @@ SearchItemWidget::SearchItemWidget(const DanmuSource &item):source(item)
     descLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
     descLabel->setText(QString("<font size=\"3\" face=\"Microsoft Yahei\">%1</font>").arg(item.desc.trimmed()));
     descLabel->setToolTip(item.desc);
-    QPushButton *addItemButton=new QPushButton(tr("Add"),this);
+    QPushButton *addItemButton = new KPushButton(tr("Add"), this);
     QObject::connect(addItemButton,&QPushButton::clicked,this,[this,addItemButton](){
 		addItemButton->setEnabled(false);
         emit addSearchItem(this);
@@ -728,7 +714,10 @@ void PoolComboDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
 RelWordWidget::RelWordWidget(QWidget *parent):QWidget(parent)
 {
     QHBoxLayout *relHLayout = new QHBoxLayout(this);
-    relHLayout->setContentsMargins(0,0,0,0);
+    auto contentMargins = this->contentsMargins();
+    contentMargins.setTop(0);
+    contentMargins.setBottom(0);
+    relHLayout->setContentsMargins(contentMargins);
     relHLayout->addStretch(1);
     setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
 }

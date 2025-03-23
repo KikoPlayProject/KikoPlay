@@ -22,4 +22,5 @@ private:
     QComboBox *logTypeCombo;
     MPVPropertyViewer *mpvPropViewer;
 };
+
 #endif // MPVLOG_H

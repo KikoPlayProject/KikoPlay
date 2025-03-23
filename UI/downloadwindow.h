@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QTreeView>
+#include <QListView>
 #include "Common/notifier.h"
 class Aria2JsonRPC;
 class QLabel;
@@ -15,6 +16,7 @@ class CTorrentFileModel;
 class PeerModel;
 class DialogTip;
 class TorrentTreeView;
+class ResSearchWindow;
 class PeerTreeView : public QTreeView
 {
     Q_OBJECT
@@ -61,10 +63,10 @@ protected:
     virtual void paintEvent(QPaintEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
 private:
-    int blockWidth = 12*logicalDpiX()/96;
-    int blockHeight = 12*logicalDpiY()/96;
-    int marginX = 2*logicalDpiX()/96;
-    int marginY = 2*logicalDpiY()/96;
+    int blockWidth = 14;
+    int blockHeight = 14;
+    int marginX = 2;
+    int marginY = 2;
     QColor borderColor, fillColorF, fillColorU;
     int blockCount = 0;
     QVector<int> blockState;
@@ -81,7 +83,8 @@ private:
     const int backgoundRefreshInterval=10000;
 
     QSplitter *contentSplitter;
-    QTreeView *downloadView;
+    // QTreeView *downloadView;
+    QListView *downloadView;
     TorrentTreeView *fileInfoView;
     BlockWidget *blockView;
     CTorrentFileModel *selectedTFModel;
@@ -103,7 +106,10 @@ private:
     QButtonGroup *taskTypeButtonGroup;
     QTimer *refreshTimer;
 
-    QWidget *setupLeftPanel(QWidget *parent);
+    ResSearchWindow *resSearchWindow;
+
+    QWidget *initLeftPanel(QWidget *parent);
+    QWidget *initDownloadPage();
     QWidget *setupGeneralInfoPage(QWidget *parent);
     QWidget *setupFileInfoPage(QWidget *parent);
     QWidget *setupBlockPage(QWidget *parent);
@@ -113,7 +119,10 @@ private:
     void initActions();
     void downloadSelectionChanged();
     void setDetailInfo(DownloadTask *task);
+
     void addUrlTask(const QStringList &urls = QStringList(), const QString &path = "");
+    void addTorrentTask();
+    void showSettings();
 signals:
     void playFile(const QString &path);
     void totalProgressUpdate(int progress);

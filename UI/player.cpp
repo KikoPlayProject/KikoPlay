@@ -1,7 +1,6 @@
 #include "player.h"
 #include <QVBoxLayout>
 #include <QStackedLayout>
-#include <QCheckBox>
 #include <QFontComboBox>
 #include <QSlider>
 #include <QSpinBox>
@@ -13,11 +12,17 @@
 #include <QGraphicsOpacityEffect>
 #include <QButtonGroup>
 #include <QListView>
+#include <QLineEdit>
 
 #include "Play/Danmu/Manager/danmumanager.h"
+#include "UI/dialogs/mpvconfediror.h"
+#include "UI/ela/ElaMenu.h"
+#include "UI/inputdialog.h"
+#include "UI/widgets/elidedlabel.h"
+#include "UI/widgets/klineedit.h"
+#include "qwidgetaction.h"
 #include "widgets/clickslider.h"
 #include "widgets/danmustatiswidget.h"
-#include "widgets/optionslider.h"
 #include "widgets/smoothscrollbar.h"
 #include "capture.h"
 #include "mediainfo.h"
@@ -39,13 +44,17 @@
 #include "danmulaunch.h"
 #include "globalobjects.h"
 #include "Common/eventbus.h"
+#include "Common/keyactionmodel.h"
+#include "widgets/optionmenu.h"
+#include "ela/ElaToolButton.h"
+#include "ela/ElaSpinBox.h"
+#include "ela/ElaSlider.h"
+#include "ela/ElaToggleSwitch.h"
+#include "ela/ElaTheme.h"
 
-#define SETTING_KEY_CLICK_BEHAVIOR "Play/ClickBehavior"
-#define SETTING_KEY_DB_CLICK_BEHAVIOR "Play/DBClickBehavior"
 #define SETTING_KEY_FORWARD_JUMP "Play/ForwardJump"
 #define SETTING_KEY_BACKWARD_JUMP "Play/BackwardJump"
-#define SETTING_KEY_SHOW_PREVIEW "Play/ShowPreview"
-#define SETTING_KEY_AUTO_LOAD_LOCAL_DANMU "Play/AutoLoadLocalDanmu"
+#define SETTING_KEY_CUSTOM_PLAYBACK_RATE "Play/CustomPlaybackRate"
 
 namespace
 {
@@ -183,126 +192,6 @@ private:
     QTimer hideTimer;
 };
 
-class RecentItem : public QWidget
-{
-public:
-    explicit RecentItem(QWidget *parent=nullptr):QWidget(parent)
-    {
-        setObjectName(QStringLiteral("RecentItem"));
-        titleLabel=new QLabel(this);
-        titleLabel->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
-        titleLabel->setObjectName(QStringLiteral("RecentItemLabel"));
-        deleteItem=new QPushButton(this);
-        deleteItem->setObjectName(QStringLiteral("RecentItemDeleteButton"));
-        QObject::connect(deleteItem,&QPushButton::clicked,[this](){
-            GlobalObjects::playlist->removeRecentItem(path);
-        });
-        GlobalObjects::iconfont->setPointSize(10);
-        deleteItem->setFont(*GlobalObjects::iconfont);
-        deleteItem->setText(QChar(0xe60b));
-        deleteItem->hide();
-        QHBoxLayout *itemHLayout=new QHBoxLayout(this);
-        itemHLayout->addStretch(1);
-        itemHLayout->addWidget(titleLabel);
-        itemHLayout->addStretch(1);
-        itemHLayout->addWidget(deleteItem);
-        setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
-    }
-    void setData(const QPair<QString,QString> &pair)
-    {
-        path=pair.first;
-        titleLabel->setText(pair.second);
-        titleLabel->adjustSize();
-        adjustSize();
-        show();
-    }
-private:
-    QLabel *titleLabel;
-    QPushButton *deleteItem;
-    QString path;
-protected:
-    virtual void mouseReleaseEvent(QMouseEvent *event)
-    {
-        if(event->button()==Qt::LeftButton)
-        {
-            const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(path);
-            if (curItem)
-            {
-                PlayContext::context()->playItem(curItem);
-            }
-        }
-        event->accept();
-    }
-    virtual void enterEvent(QEvent *event)
-    {
-        deleteItem->show();
-        QWidget::enterEvent(event);
-    }
-    virtual void leaveEvent(QEvent *event)
-    {
-        deleteItem->hide();
-        QWidget::leaveEvent(event);
-    }
-};
-class PlayerContent : public QWidget
-{
-public:
-    explicit PlayerContent(QWidget *parent=nullptr):QWidget(parent)
-    {
-        setObjectName(QStringLiteral("PlayerContent"));
-        logo=new QLabel(this);
-        logo->setPixmap(QPixmap(":/res/images/kikoplay-5.png"));
-        logo->setAlignment(Qt::AlignCenter);
-        QVBoxLayout *pcVLayout=new QVBoxLayout(this);
-        pcVLayout->addStretch(1);
-        pcVLayout->addWidget(logo);
-        pcVLayout->addSpacing(10);
-        for(int i=0;i<GlobalObjects::playlist->maxRecentItems;++i)
-        {
-            RecentItem *recentItem=new RecentItem(this);
-            pcVLayout->addWidget(recentItem);
-            items.append(recentItem);
-        }
-        pcVLayout->addStretch(1);
-        refreshItems();
-
-        logo->installEventFilter(this);
-    }
-    void refreshItems()
-    {
-        int i=0;
-        const int maxRecentCount=GlobalObjects::playlist->maxRecentItems;
-        auto &recent=GlobalObjects::playlist->recent();
-        for(;i<maxRecentCount && i<recent.count();++i)
-            items[i]->setData(recent[i]);
-        while(i<maxRecentCount)
-            items[i++]->hide();
-    }
-    bool eventFilter(QObject *watched, QEvent *event)
-    {
-        if(watched==logo && event->type() == QEvent::MouseButtonRelease)
-        {
-            QStringList files = QFileDialog::getOpenFileNames(this,tr("Select one or more media files"),"",
-                                                             QString("Video Files(%1);;All Files(*) ").arg(GlobalObjects::mpvplayer->videoFileFormats.join(" ")));
-            if(!files.isEmpty())
-            {
-                GlobalObjects::playlist->addItems(files,QModelIndex());
-                const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(files.first());
-                if (curItem)
-                {
-                    PlayContext::context()->playItem(curItem);
-                }
-
-            }
-
-            return true;
-        }
-        return QWidget::eventFilter(watched,event);
-    }
-private:
-    QList<RecentItem *> items;
-    QLabel *logo;
-};
 class EdgeFadeEffect : public QGraphicsEffect
 {
     // QGraphicsEffect interface
@@ -319,6 +208,7 @@ protected:
     {
         QPixmap source = sourcePixmap();
         QImage composionImg(source.size(), QImage::Format_ARGB32_Premultiplied);
+        composionImg.setDevicePixelRatio(source.devicePixelRatio());
         composionImg.fill(0);
         QLinearGradient fillGradient;
         fillGradient.setColorAt(0, QColor(0, 0, 0, 0));
@@ -326,6 +216,7 @@ protected:
         fillGradient.setStart(0, 0);
         fillGradient.setFinalStop(0, qMin(fadeHeight, composionImg.height() * 0.1));
         QPainter tp(&composionImg);
+        tp.setRenderHints(QPainter::Antialiasing);
         tp.fillRect(composionImg.rect(), QBrush(fillGradient));
         tp.setCompositionMode(QPainter::CompositionMode_SourceIn);
         tp.drawPixmap(0, 0, source);
@@ -335,333 +226,63 @@ protected:
 };
 
 }
-PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent),autoHideControlPanel(true),
-    onTopWhilePlaying(false),isFullscreen(false),resizePercent(-1),jumpForwardTime(5),jumpBackwardTime(5),
-    autoLoadLocalDanmu(true), hasExternalAudio(false), hasExternalSub(false), miniModeOn(false),
-    mouseLPressed(false), moving(false)
+PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent)
 {
     Notifier::getNotifier()->addNotify(Notifier::PLAYER_NOTIFY, this);
     setWindowFlags(Qt::FramelessWindowHint);
+
     QWidget *centralWidget = new QWidget(this);
     centralWidget->setMouseTracking(true);
     setCentralWidget(centralWidget);
-    QWidget *contralContainer = new QWidget(centralWidget);
+    setContentsMargins(0, 0, 0, 0);
+
+    initActions();
+    initSettings();
 
     launchWindow = new DanmuLaunch(this);
 
-    playInfo=new InfoTips(centralWidget);
-
-    progressInfo=new QWidget(centralWidget);
-    QStackedLayout *piSLayout = new QStackedLayout(progressInfo);
-    piSLayout->setStackingMode(QStackedLayout::StackAll);
-    piSLayout->setContentsMargins(0,0,0,0);
-    piSLayout->setSpacing(0);
-    QWidget *tiWidget = new QWidget(progressInfo);
-    QVBoxLayout *piVLayout = new QVBoxLayout(tiWidget);
-    piVLayout->setContentsMargins(0,0,0,0);
-    piVLayout->setSpacing(0);
-    QHBoxLayout *piHLayout = new QHBoxLayout();
-    piHLayout->setContentsMargins(0,0,0,0);
-    piHLayout->setSpacing(0);
-
-    timeInfoTip=new QLabel(tiWidget);
-    timeInfoTip->setObjectName(QStringLiteral("TimeInfoTip"));
-    timeInfoTip->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    previewLabel=new QLabel(progressInfo);
-    previewLabel->setObjectName(QStringLiteral("ProgressPreview"));
-    isShowPreview = GlobalObjects::appSetting->value(SETTING_KEY_SHOW_PREVIEW, true).toBool();
-    piVLayout->addStretch(1);
-    piHLayout->addWidget(timeInfoTip);
-    piHLayout->addStretch(1);
-    piVLayout->addLayout(piHLayout);
-    piSLayout->addWidget(tiWidget);
-    piSLayout->addWidget(previewLabel);
-    previewLabel->hide();
-    progressInfo->hide();
-
-    QObject::connect(&previewTimer,&QTimer::timeout,[this](){
-        if(isShowPreview && !progressInfo->isHidden() && previewLabel->isHidden())
-        {
-            QPixmap *pixmap = GlobalObjects::mpvplayer->getPreview(progress->curMousePos()/1000);
-            if(pixmap)
-            {
-                previewLabel->resize(pixmap->width(), pixmap->height());
-                previewLabel->setPixmap(*pixmap);
-                timeInfoTip->setMaximumWidth(pixmap->width());
-                adjustProgressInfoPos();
-                previewLabel->show();
-            }
-        }
-        previewTimer.stop();
-    });
-
-    playerContent=new PlayerContent(contralContainer);
-    //playerContent->show();
-    playerContent->raise();
-
-    playInfoPanel=new QWidget(contralContainer);
-    playInfoPanel->setObjectName(QStringLiteral("widgetPlayInfo"));
-    playInfoPanel->hide();
-
-    playListCollapseButton=new QPushButton(contralContainer);
-    playListCollapseButton->setObjectName(QStringLiteral("widgetPlayListCollapse"));
-    GlobalObjects::iconfont->setPointSize(12);
-    playListCollapseButton->setFont(*GlobalObjects::iconfont);
-    playListCollapseButton->setText(QChar(GlobalObjects::appSetting->value("MainWindow/ListVisibility",true).toBool()?0xe945:0xe946));
-    playListCollapseButton->hide();
-
-    DanmuStatisWidget *statWidget = new DanmuStatisWidget(contralContainer);
-    statWidget->setObjectName(QStringLiteral("DanmuStatisBar"));
-    QObject::connect(GlobalObjects::danmuPool,&DanmuPool::statisInfoChange,statWidget,&DanmuStatisWidget::refreshStatis);
-    danmuStatisBar = statWidget;
-    danmuStatisBar->setMinimumHeight(statisBarHeight);
-    danmuStatisBar->hide();
-
-    QFont normalFont;
-    normalFont.setFamily(GlobalObjects::normalFont);
-    normalFont.setPointSize(12);
-
-    titleLabel=new QLabel(playInfoPanel);
-    titleLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    titleLabel->setObjectName(QStringLiteral("labelTitle"));
-    titleLabel->setFont(normalFont);
-
-    constexpr const int infoBtnCount = 4;
-    QPair<QChar, QString> infoButtonTexts[infoBtnCount] = {
-        {QChar(0xe727), tr("Media Info")},
-        {QChar(0xe720), tr("Window Size")},
-        {QChar(0xe741), tr("Screenshot")},
-        {QChar(0xe65a), tr("On Top")}
-    };
-    QToolButton **infoBtnPtrs[infoBtnCount] = {
-        &mediaInfo, &windowSize, &screenshot, &stayOnTop
-    };
-    GlobalObjects::iconfont->setPointSize(12);
-    QHBoxLayout *infoHLayout=new QHBoxLayout(playInfoPanel);
-    infoHLayout->setSpacing(0);
-    infoHLayout->addWidget(titleLabel);
-    infoHLayout->addStretch(1);
-    for(int i = 0; i < infoBtnCount; ++i)
-    {
-        *infoBtnPtrs[i] = new QToolButton(playInfoPanel);
-        QToolButton *tb = *infoBtnPtrs[i];
-        tb->setFont(*GlobalObjects::iconfont);
-        tb->setText(infoButtonTexts[i].first);
-        tb->setToolTip(infoButtonTexts[i].second);
-        tb->setObjectName(QStringLiteral("ListEditButton"));
-        tb->setToolButtonStyle(Qt::ToolButtonTextOnly);
-        tb->setPopupMode(QToolButton::InstantPopup);
-        infoHLayout->addWidget(tb);
-#ifdef Q_OS_MACOS
-        tb->setProperty("hideMenuIndicator", true);
-#endif
-    }
-
-    playControlPanel=new QWidget(contralContainer);
-    playControlPanel->setObjectName(QStringLiteral("widgetPlayControl"));
-    playControlPanel->hide();
-
-    QVBoxLayout *controlVLayout=new QVBoxLayout(playControlPanel);
-    controlVLayout->setSpacing(0);
-    progress=new ClickSlider(playControlPanel);
-    progress->setObjectName(QStringLiteral("widgetProcessSlider"));
-    progress->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Minimum);
-    progress->setTracking(false);
-    progressPressed=false;
-    progress->setMouseTracking(true);
-    controlVLayout->addWidget(progress);
-
-    GlobalObjects::iconfont->setPointSize(24);
-
-    timeLabel=new QLabel("00:00/00:00",playControlPanel);
-    timeLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    timeLabel->setObjectName(QStringLiteral("labelTime"));
-    normalFont.setPointSize(10);
-    timeLabel->setFont(normalFont);
-
-    playPause=new QPushButton(playControlPanel);
-    playPause->setFont(*GlobalObjects::iconfont);
-    playPause->setText(QChar(0xe606));
-    //play_pause->setFixedSize(buttonWidth,buttonHeight);
-    playPause->setObjectName(QStringLiteral("widgetPlayControlButtons"));
-    playPause->setToolTip(tr("Play/Pause(Space)"));
-
-    GlobalObjects::iconfont->setPointSize(20);
-    int buttonWidth=36*logicalDpiX()/96,buttonHeight=36*logicalDpiY()/96;
-
-    prev=new QPushButton(playControlPanel);
-    prev->setFont(*GlobalObjects::iconfont);
-    prev->setText(QChar(0xe69b));
-    prev->setFixedSize(buttonWidth,buttonHeight);
-    prev->setToolTip(tr("Prev(PageUp)"));
-    prev->setObjectName(QStringLiteral("widgetPlayControlButtons"));
-
-    next=new QPushButton(playControlPanel);
-    next->setFont(*GlobalObjects::iconfont);
-    next->setText(QChar(0xe940));
-    next->setFixedSize(buttonWidth,buttonHeight);
-    next->setToolTip(tr("Next(PageDown)"));
-    next->setObjectName(QStringLiteral("widgetPlayControlButtons"));
-
-    stop=new QPushButton(playControlPanel);
-    stop->setFont(*GlobalObjects::iconfont);
-    stop->setText(QChar(0xe6fa));
-    stop->setFixedSize(buttonWidth,buttonHeight);
-    stop->setToolTip(tr("Stop"));
-    stop->setObjectName(QStringLiteral("widgetPlayControlButtons"));
-
-    mute=new QPushButton(playControlPanel);
-    mute->setFont(*GlobalObjects::iconfont);
-    mute->setText(QChar(0xe62c));
-    mute->setFixedSize(buttonWidth,buttonHeight);
-    mute->setToolTip(tr("Mute/Unmute"));
-    mute->setObjectName(QStringLiteral("widgetPlayControlButtons"));
-
-    GlobalObjects::iconfont->setPointSize(18);
-
-    launch=new QPushButton(playControlPanel);
-    launch->setFont(*GlobalObjects::iconfont);
-    launch->setText(QChar(0xe947));
-    launch->setFixedSize(buttonWidth,buttonHeight);
-    launch->setToolTip(tr("Launch Danmu"));
-    launch->setObjectName(QStringLiteral("widgetPlayControlButtons"));
-    launch->hide();
-
-    setting=new QPushButton(playControlPanel);
-    setting->setFont(*GlobalObjects::iconfont);
-    setting->setText(QChar(0xe607));
-    setting->setFixedSize(buttonWidth,buttonHeight);
-    setting->setToolTip(tr("Play Setting"));
-    setting->setObjectName(QStringLiteral("widgetPlayControlButtons"));
-
-    danmu=new QPushButton(playControlPanel);
-    danmu->setFont(*GlobalObjects::iconfont);
-    danmu->setText(QChar(0xe622));
-    danmu->setFixedSize(buttonWidth,buttonHeight);
-    danmu->setToolTip(tr("Danmu Setting"));
-    danmu->setObjectName(QStringLiteral("widgetPlayControlButtons"));
-
-    fullscreen=new QPushButton(playControlPanel);
-    fullscreen->setFont(*GlobalObjects::iconfont);
-    fullscreen->setText(QChar(0xe621));
-    fullscreen->setFixedSize(buttonWidth,buttonHeight);
-    fullscreen->setToolTip(tr("FullScreen"));
-    fullscreen->setObjectName(QStringLiteral("widgetPlayControlButtons"));
-
-    volume=new QSlider(Qt::Horizontal,playControlPanel);
-    volume->setObjectName(QStringLiteral("widgetVolumeSlider"));
-    volume->setFixedWidth(100*logicalDpiX()/96);
-    volume->setMinimum(0);
-    volume->setMaximum(150);
-    volume->setSingleStep(1);
-
-    ctrlPressCount=0;
-    altPressCount=0;
-    QObject::connect(&doublePressTimer,&QTimer::timeout,[this](){
-        ctrlPressCount=0;
-        altPressCount=0;
-        doublePressTimer.stop();
-    });
-    QObject::connect(&hideCursorTimer,&QTimer::timeout,[this](){
-        if(isFullscreen)setCursor(Qt::BlankCursor);
-    });
-
-
-    QStackedLayout *controlSLayout = new QStackedLayout();
-    controlSLayout->setStackingMode(QStackedLayout::StackAll);
-    controlSLayout->setContentsMargins(0,0,0,0);
-    controlSLayout->setSpacing(0);
-
-    QWidget *btnContainer = new QWidget(playControlPanel);
-    QHBoxLayout *buttonHLayout=new QHBoxLayout(btnContainer);
-    //QWidget *Container = new QWidget(playControlPanel);
-    //QHBoxLayout *buttonHLayout=new QHBoxLayout(btnContainer);
-
-    //buttonHLayout->addWidget(timeLabel);
-    buttonHLayout->addStretch(3);
-    buttonHLayout->addWidget(stop);
-    buttonHLayout->addWidget(prev);
-    buttonHLayout->addWidget(playPause);
-    buttonHLayout->addWidget(next);
-    buttonHLayout->addWidget(mute);
-    buttonHLayout->addWidget(volume);
-    buttonHLayout->addStretch(2);
-    buttonHLayout->addWidget(launch);
-    buttonHLayout->addWidget(setting);
-    buttonHLayout->addWidget(danmu);
-    buttonHLayout->addWidget(fullscreen);
-
-    controlSLayout->addWidget(btnContainer);
-    controlSLayout->addWidget(timeLabel);
-
-    //controlVLayout->addLayout(buttonHLayout);
-    controlVLayout->addLayout(controlSLayout);
-
-    miniProgress = new ClickSlider(contralContainer);
-    miniProgress->setObjectName(QStringLiteral("MiniProgressSlider"));
-    miniProgress->hide();
-
+    QWidget *playerLayer = initPlayerLayer(centralWidget);
+    QWidget *liveDanmuLayer = initLiveDanmuLayer(centralWidget);
     GlobalObjects::mpvplayer->setParent(centralWidget);
-    setContentsMargins(0,0,0,0);
     GlobalObjects::mpvplayer->setIccProfileOption();
-
-    contralContainer->setMouseTracking(true);
-    QVBoxLayout *contralVLayout = new QVBoxLayout(contralContainer);
-    contralVLayout->setContentsMargins(0,0,0,0);
-    contralVLayout->setSpacing(0);
-    contralVLayout->addWidget(playInfoPanel);
-    contralVLayout->addStretch(1);
-    contralVLayout->addWidget(miniProgress);
-    contralVLayout->addWidget(danmuStatisBar);
-    contralVLayout->addWidget(playControlPanel);
-
-    QWidget *liveDanmuContainer = new QWidget(centralWidget);
-    liveDanmuList = new QListView(liveDanmuContainer);
-    liveDanmuList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    liveDanmuList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    liveDanmuList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
-    liveDanmuList->setObjectName(QStringLiteral("LiveDanmuList"));
-    liveDanmuList->setVerticalScrollBar(new SmoothScrollBar(liveDanmuList));
-    liveDanmuList->setResizeMode(QListView::ResizeMode::Adjust);
-    liveDanmuList->setGraphicsEffect(new EdgeFadeEffect);
-    liveDanmuList->setModel(GlobalObjects::danmuRender->liveDanmuModel());
-    liveDanmuList->setItemDelegate(new LiveDanmuItemDelegate(this));
-    QVBoxLayout *liveVLayout = new QVBoxLayout(liveDanmuContainer);
-    liveVLayout->addStretch(1);
-    liveVLayout->addWidget(liveDanmuList, 0, GlobalObjects::danmuRender->liveDanmuModel()->alignment());
-    liveDanmuList->hide();
-    liveVRange = GlobalObjects::appSetting->value("Play/LiveVRange", 40).toInt();
 
     QStackedLayout *playerSLayout = new QStackedLayout(centralWidget);
     playerSLayout->setStackingMode(QStackedLayout::StackAll);
     playerSLayout->setContentsMargins(0,0,0,0);
     playerSLayout->setSpacing(0);
-    playerSLayout->addWidget(contralContainer);
-    playerSLayout->addWidget(liveDanmuContainer);
+    playerSLayout->addWidget(playerLayer);
+    playerSLayout->addWidget(liveDanmuLayer);
     playerSLayout->addWidget(GlobalObjects::mpvplayer);
 
-    initActions();
-    setupSignals();
+    initSignals();
     setFocusPolicy(Qt::StrongFocus);
     setAcceptDrops(true);
-
-    clickBehavior = GlobalObjects::appSetting->value(SETTING_KEY_CLICK_BEHAVIOR, 0).toInt();
-    dbClickBehaivior = GlobalObjects::appSetting->value(SETTING_KEY_DB_CLICK_BEHAVIOR, 0).toInt();
-    jumpForwardTime = GlobalObjects::appSetting->value(SETTING_KEY_FORWARD_JUMP, 5).toInt();
-    jumpBackwardTime = GlobalObjects::appSetting->value(SETTING_KEY_BACKWARD_JUMP, 5).toInt();
-    autoLoadLocalDanmu = GlobalObjects::appSetting->value(SETTING_KEY_AUTO_LOAD_LOCAL_DANMU, true).toBool();
+    showPlayerRegion(false);
 }
 
-void PlayerWindow::toggleListCollapseState(bool on)
+void PlayerWindow::toggleListCollapseState(int listType)
 {
-    playListCollapseButton->setText(on?QChar(0xe945):QChar(0xe946));
+    const QVector<QPushButton *> sideBtns = { playlistBtn, danmuBtn, subBtn };
+    for (QPushButton *btn : sideBtns)
+    {
+        btn->setChecked(false);
+    }
+    if (listType >= 0 && listType < sideBtns.size())
+    {
+        sideBtns[listType]->setChecked(true);
+    }
 }
 
 void PlayerWindow::toggleFullScreenState(bool on)
 {
+    if (miniModeOn)
+    {
+        exitMiniMode();
+        return;
+    }
     isFullscreen=on;
-    if(isFullscreen) fullscreen->setText(QChar(0xe6ac));
-    else fullscreen->setText(QChar(0xe621));
+    if(isFullscreen) fullscreen->setText(QChar(0xe82b));
+    else fullscreen->setText(QChar(0xe649));
     if(isFullscreen)
     {
         hideCursorTimer.start(hideCursorTimeout);
@@ -675,93 +296,72 @@ void PlayerWindow::toggleFullScreenState(bool on)
 
 void PlayerWindow::initActions()
 {
-    windowSizeGroup=new QActionGroup(this);
-    QAction *act_size50p = new QAction("50%",this);
-    act_size50p->setCheckable(true);
-    act_size50p->setData(QVariant(50));
-    windowSizeGroup->addAction(act_size50p);
-    QAction *act_size75p = new QAction("75%",this);
-    act_size75p->setCheckable(true);
-    act_size75p->setData(QVariant(75));
-    windowSizeGroup->addAction(act_size75p);
-    QAction *act_size100p = new QAction("100%",this);
-    act_size100p->setCheckable(true);
-    act_size100p->setData(QVariant(100));
-    windowSizeGroup->addAction(act_size100p);
-    QAction *act_size150p = new QAction("150%",this);
-    act_size150p->setCheckable(true);
-    act_size150p->setData(QVariant(150));
-    windowSizeGroup->addAction(act_size150p);
-    QAction *act_size200p = new QAction("200%",this);
-    act_size200p->setCheckable(true);
-    act_size200p->setData(QVariant(200));
-    windowSizeGroup->addAction(act_size200p);
-    QAction *act_sizeFix = new QAction(tr("Fix"),this);
-    act_sizeFix->setCheckable(true);
-    act_sizeFix->setData(QVariant(-1));
-    windowSizeGroup->addAction(act_sizeFix);
-
-    QObject::connect(windowSizeGroup,&QActionGroup::triggered,[this](QAction *action){
-        resizePercent=action->data().toInt();
-        if(resizePercent==-1)return;
-        adjustPlayerSize(resizePercent);
-    });
-    windowSizeGroup->actions().at(GlobalObjects::appSetting->value("Play/WindowSize",2).toInt())->trigger();
-    actMiniMode = new QAction(tr("Mini Mode"),this);
-    QObject::connect(actMiniMode, &QAction::triggered, this, [this](){
-        if(!GlobalObjects::mpvplayer->getCurrentFile().isEmpty() && !miniModeOn)
+    actMiniMode = new QAction(tr("Mini Mode"), this);
+    QObject::connect(actMiniMode, &QAction::triggered, this, [=](){
+        if (miniModeOn)
         {
-            if(isFullscreen)
+            exitMiniMode();
+            return;
+        }
+        if (isFullscreen)
+        {
+            toggleFullScreenState(!isFullscreen);
+            emit enterFullScreen(isFullscreen);
+            return;
+        }
+        if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty() && !miniModeOn)
+        {
+            if (isFullscreen)
             {
                 toggleFullScreenState(!isFullscreen);
-                emit showFullScreen(isFullscreen);
+                emit enterFullScreen(isFullscreen);
             }
             miniModeOn = true;
             playInfoPanel->hide();
             playControlPanel->hide();
-            danmuStatisBar->hide();
+            if (volumeSettingPage) volumeSettingPage->hide();
+            if (playInfoPage) playInfoPage->hide();
+            if (sidePanel) sidePanel->hide();
             if (danmuSettingPage) danmuSettingPage->hide();
             if (playSettingPage) playSettingPage->hide();
             emit miniMode(true);
         }
     });
-    windowSize->addActions(windowSizeGroup->actions());
-    windowSize->addAction(actMiniMode);
 
-    actScreenshotSrc = new QAction(tr("Original Video"),this);
-    QObject::connect(actScreenshotSrc,&QAction::triggered,[this](){
+    actScreenshotSrc = new QAction(tr("Original Video"), this);
+    QObject::connect(actScreenshotSrc, &QAction::triggered, this, [=](){
         QTemporaryFile tmpImg("XXXXXX.jpg");
-        if(tmpImg.open())
+        if (tmpImg.open())
         {
             GlobalObjects::mpvplayer->screenshot(tmpImg.fileName());
             QImage captureImage(tmpImg.fileName());
-            const PlayListItem *curItem=GlobalObjects::playlist->getCurrentItem();
-            Capture captureDialog(captureImage,screenshot,curItem);
+            const PlayListItem *curItem = GlobalObjects::playlist->getCurrentItem();
+            Capture captureDialog(captureImage,playPause,curItem);
             QRect geo(captureDialog.geometry());
             geo.moveCenter(this->geometry().center());
             captureDialog.move(geo.topLeft());
             captureDialog.exec();
         }
     });
-    actScreenshotAct = new QAction(tr("Actual content"),this);
-    QObject::connect(actScreenshotAct,&QAction::triggered,[this](){
+    actScreenshotAct = new QAction(tr("Actual content"), this);
+    QObject::connect(actScreenshotAct, &QAction::triggered, this, [=](){
         QImage captureImage(GlobalObjects::mpvplayer->grabFramebuffer());
-        if(liveDanmuList->isVisible())
+        if (liveDanmuList->isVisible())
         {
             QPainter p(&captureImage);
             p.drawPixmap(liveDanmuList->pos(), liveDanmuList->grab());
         }
-        const PlayListItem *curItem=GlobalObjects::playlist->getCurrentItem();
-        Capture captureDialog(captureImage,screenshot,curItem);
+        const PlayListItem *curItem = GlobalObjects::playlist->getCurrentItem();
+        Capture captureDialog(captureImage,playPause,curItem);
         QRect geo(captureDialog.geometry());
         geo.moveCenter(this->geometry().center());
         captureDialog.move(geo.topLeft());
         captureDialog.exec();
     });
-    actSnippet = new QAction(tr("Snippet Capture"),this);
-    QObject::connect(actSnippet,&QAction::triggered,[this](){
-        const PlayListItem *curItem=GlobalObjects::playlist->getCurrentItem();
-        if(!curItem) return;
+    actSnippet = new QAction(tr("Snippet Capture"), this);
+    QObject::connect(actSnippet, &QAction::triggered, this, [=](){
+        const PlayListItem *curItem = GlobalObjects::playlist->getCurrentItem();
+        if (!curItem) return;
         SnippetCapture snippet(this);
         QRect geo(0,0,400*logicalDpiX()/96,600*logicalDpiY()/96);
         geo.moveCenter(this->geometry().center());
@@ -769,10 +369,10 @@ void PlayerWindow::initActions()
         snippet.exec();
         GlobalObjects::mpvplayer->setMute(GlobalObjects::mpvplayer->getMute());
     });
-    actGIF = new QAction(tr("GIF Capture"),this);
-    QObject::connect(actGIF,&QAction::triggered,[this](){
-        const PlayListItem *curItem=GlobalObjects::playlist->getCurrentItem();
-        if(!curItem) return;
+    actGIF = new QAction(tr("GIF Capture"), this);
+    QObject::connect(actGIF, &QAction::triggered, this, [=](){
+        const PlayListItem *curItem = GlobalObjects::playlist->getCurrentItem();
+        if (!curItem) return;
         GIFCapture gifCapture("", true, this);
         QRect geo(0,0,400*logicalDpiX()/96,600*logicalDpiY()/96);
         geo.moveCenter(this->geometry().center());
@@ -780,51 +380,9 @@ void PlayerWindow::initActions()
         gifCapture.exec();
         GlobalObjects::mpvplayer->setMute(GlobalObjects::mpvplayer->getMute());
     });
-    screenshot->addAction(actScreenshotSrc);
-    screenshot->addAction(actScreenshotAct);
-    screenshot->addAction(actSnippet);
-    screenshot->addAction(actGIF);
 
-    stayOnTopGroup=new QActionGroup(this);
-    QAction *act_onTopPlaying = new QAction(tr("While Playing"),this);
-    act_onTopPlaying->setCheckable(true);
-    act_onTopPlaying->setData(QVariant(0));
-    stayOnTopGroup->addAction(act_onTopPlaying);
-    QAction *act_onTopAlways = new QAction(tr("Always"),this);
-    act_onTopAlways->setCheckable(true);
-    act_onTopAlways->setData(QVariant(1));
-    stayOnTopGroup->addAction(act_onTopAlways);
-    QAction *act_onTopNever = new QAction(tr("Never"),this);
-    act_onTopNever->setCheckable(true);
-    act_onTopNever->setData(QVariant(2));
-    stayOnTopGroup->addAction(act_onTopNever);
-    QObject::connect(stayOnTopGroup,&QActionGroup::triggered,[this](QAction *action){
-        switch (action->data().toInt())
-        {
-        case 0:
-            onTopWhilePlaying=true;
-            if(GlobalObjects::mpvplayer->getState()==MPVPlayer::Play && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
-                emit setStayOnTop(true);
-			else
-				emit setStayOnTop(false);
-            break;
-        case 1:
-            onTopWhilePlaying=false;
-            emit setStayOnTop(true);
-            break;
-        case 2:
-            onTopWhilePlaying=false;
-            emit setStayOnTop(false);
-            break;
-        default:
-            break;
-        }
-    });
-    stayOnTopGroup->actions().at(GlobalObjects::appSetting->value("Play/StayOnTop",0).toInt())->trigger();
-    stayOnTop->addActions(stayOnTopGroup->actions());
-
-    actPlayPause=new QAction(tr("Play/Pause"),this);
-    QObject::connect(actPlayPause,&QAction::triggered,[](){
+    actPlayPause = new QAction(tr("Play/Pause"), this);
+    QObject::connect(actPlayPause, &QAction::triggered, this, [](){
         MPVPlayer::PlayState state=GlobalObjects::mpvplayer->getState();
         switch(state)
         {
@@ -844,53 +402,53 @@ void PlayerWindow::initActions()
             break;
         }
     });
-    actFullscreen=new QAction(tr("Fullscreen"),this);
-    QObject::connect(actFullscreen,&QAction::triggered,[this](){
+    actFullscreen = new QAction(tr("Fullscreen"),this);
+    QObject::connect(actFullscreen, &QAction::triggered, this, [=](){
         toggleFullScreenState(!isFullscreen);
-        emit showFullScreen(isFullscreen);
+        emit enterFullScreen(isFullscreen);
     });
-    actPrev=new QAction(tr("Prev"),this);
-    QObject::connect(actPrev,&QAction::triggered,[this](){
+    actPrev = new QAction(tr("Prev"),this);
+    QObject::connect(actPrev, &QAction::triggered, this, [=](){
         switchItem(true,tr("No prev item"));
     });
-    actNext=new QAction(tr("Next"),this);
-    QObject::connect(actNext,&QAction::triggered,[this](){
+    actNext = new QAction(tr("Next"),this);
+    QObject::connect(actNext, &QAction::triggered, this, [=](){
         switchItem(false,tr("No next item"));
     });
-    contexMenu=new QMenu(this);
-    ctxText=contexMenu->addAction("");
-    QObject::connect(ctxText,&QAction::triggered,[this](){
+    contexMenu = new ElaMenu(this);
+    ctxText = contexMenu->addAction("");
+    QObject::connect(ctxText, &QAction::triggered, this, [=](){
         currentDanmu=nullptr;
     });
-    ctxCopy=contexMenu->addAction(tr("Copy Text"));
-    QObject::connect(ctxCopy,&QAction::triggered,[this](){
+    ctxCopy = contexMenu->addAction(tr("Copy Text"));
+    QObject::connect(ctxCopy, &QAction::triggered, this, [=](){
         if(currentDanmu.isNull())return;
         QClipboard *cb = QApplication::clipboard();
         cb->setText(currentDanmu->text);
         currentDanmu=nullptr;
     });
     contexMenu->addSeparator();
-    ctxBlockText=contexMenu->addAction(tr("Block Text"));
-    QObject::connect(ctxBlockText,&QAction::triggered,[this](){
-        if(currentDanmu.isNull())return;
+    ctxBlockText = contexMenu->addAction(tr("Block Text"));
+    QObject::connect(ctxBlockText, &QAction::triggered, this, [=](){
+        if (currentDanmu.isNull())return;
         BlockRule *rule = new BlockRule(currentDanmu->text, BlockRule::Field::DanmuText, BlockRule::Relation::Contain);
         rule->name = tr("Text Rule");
         GlobalObjects::blocker->addBlockRule(rule);
         currentDanmu=nullptr;
         showMessage(tr("Block Rule Added"));
     });
-    ctxBlockUser=contexMenu->addAction(tr("Block User"));
-    QObject::connect(ctxBlockUser,&QAction::triggered,[this](){
-        if(currentDanmu.isNull())return;
+    ctxBlockUser = contexMenu->addAction(tr("Block User"));
+    QObject::connect(ctxBlockUser, &QAction::triggered, this, [=](){
+        if (currentDanmu.isNull())return;
         BlockRule *rule = new BlockRule(currentDanmu->sender, BlockRule::Field::DanmuSender, BlockRule::Relation::Equal);
         rule->name = tr("User Rule");
         GlobalObjects::blocker->addBlockRule(rule);
         currentDanmu=nullptr;
         showMessage(tr("Block Rule Added"));
     });
-    ctxBlockColor=contexMenu->addAction(tr("Block Color"));
-    QObject::connect(ctxBlockColor,&QAction::triggered,[this](){
-        if(currentDanmu.isNull())return;
+    ctxBlockColor = contexMenu->addAction(tr("Block Color"));
+    QObject::connect(ctxBlockColor, &QAction::triggered, this, [=](){
+        if (currentDanmu.isNull())return;
         BlockRule *rule = new BlockRule(QString::number(currentDanmu->color,16), BlockRule::Field::DanmuColor, BlockRule::Relation::Equal);
         rule->name = tr("Color Rule");
         GlobalObjects::blocker->addBlockRule(rule);
@@ -899,442 +457,49 @@ void PlayerWindow::initActions()
     });
 }
 
-void PlayerWindow::setupDanmuSettingPage()
+
+void PlayerWindow::initPlaySetting()
 {
-    danmuSettingPage=new QWidget(this->centralWidget());
-    danmuSettingPage->setObjectName(QStringLiteral("PopupPage"));
-    danmuSettingPage->installEventFilter(this);
-
-    QToolButton *generalPage=new QToolButton(danmuSettingPage);
-    generalPage->setText(tr("General"));
-    generalPage->setCheckable(true);
-    generalPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    generalPage->setObjectName(QStringLiteral("DialogPageButton"));
-    generalPage->setChecked(true);
-
-    QToolButton *appearancePage=new QToolButton(danmuSettingPage);
-    appearancePage->setText(tr("Appearance"));
-    appearancePage->setCheckable(true);
-    appearancePage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    appearancePage->setObjectName(QStringLiteral("DialogPageButton"));
-
-    QToolButton *advancedPage=new QToolButton(danmuSettingPage);
-    advancedPage->setText(tr("Advanced"));
-    advancedPage->setCheckable(true);
-    advancedPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    advancedPage->setObjectName(QStringLiteral("DialogPageButton"));
-
-    const int btnH = generalPage->fontMetrics().height() + 10*logicalDpiY()/96;
-    generalPage->setFixedHeight(btnH);
-    appearancePage->setFixedHeight(btnH);
-    advancedPage->setFixedHeight(btnH);
-
-    QStackedLayout *danmuSettingSLayout=new QStackedLayout();
-    QButtonGroup *btnGroup=new QButtonGroup(this);
-    btnGroup->addButton(generalPage,0);
-    btnGroup->addButton(appearancePage,1);
-    btnGroup->addButton(advancedPage,2);
-    QObject::connect(btnGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[danmuSettingSLayout](int id, bool checked){
-        if(checked)
-        {
-            danmuSettingSLayout->setCurrentIndex(id);
-        }
-    });
-
-    QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
-    pageButtonHLayout->addWidget(generalPage);
-    pageButtonHLayout->addWidget(appearancePage);
-    pageButtonHLayout->addWidget(advancedPage);
-
-    QVBoxLayout *danmuSettingVLayout=new QVBoxLayout(danmuSettingPage);
-    danmuSettingVLayout->addLayout(pageButtonHLayout);
-    danmuSettingVLayout->addLayout(danmuSettingSLayout);
-
-//General Page
-    QWidget *pageGeneral=new QWidget(danmuSettingPage);
-
-    QLabel *hideLabel=new QLabel(tr("Hide Danmu"), pageGeneral);
-    QCheckBox *danmuSwitch = new QCheckBox(tr("All"), pageGeneral);
-    danmuSwitch->setToolTip("Double Press Ctrl");
-    danmuSwitch->setChecked(GlobalObjects::mpvplayer->getDanmuHide());
-    QObject::connect(danmuSwitch, &QCheckBox::stateChanged, [=](int state){
-        setHideDanmu(state == Qt::Checked);
-    });
-
-    QCheckBox *hideRollingDanmu = new QCheckBox(tr("Rolling"), pageGeneral);
-    hideRollingDanmu->setChecked(GlobalObjects::danmuRender->isHidden(DanmuComment::Rolling));
-    QObject::connect(hideRollingDanmu, &QCheckBox::stateChanged, [](int state){
-        GlobalObjects::danmuRender->hideDanmu(DanmuComment::Rolling, state == Qt::Checked);
-    });
-
-    QCheckBox *hideTopDanmu = new QCheckBox(tr("Top"), pageGeneral);
-    hideTopDanmu->setChecked(GlobalObjects::danmuRender->isHidden(DanmuComment::Top));
-    QObject::connect(hideTopDanmu, &QCheckBox::stateChanged, [](int state){
-        GlobalObjects::danmuRender->hideDanmu(DanmuComment::Top, state == Qt::Checked);
-    });
-
-    QCheckBox *hideBottomDanmu = new QCheckBox(tr("Bottom"), pageGeneral);
-    hideBottomDanmu->setChecked(GlobalObjects::danmuRender->isHidden(DanmuComment::Bottom));
-    QObject::connect(hideBottomDanmu, &QCheckBox::stateChanged, [](int state){
-        GlobalObjects::danmuRender->hideDanmu(DanmuComment::Bottom, state == Qt::Checked);
-    });
-
-    QLabel *subProtectLabel = new QLabel(tr("Sub Protect"), pageGeneral);
-    QCheckBox *bottomSubtitleProtect = new QCheckBox(tr("Bottom Sub"),pageGeneral);
-    bottomSubtitleProtect->setChecked(GlobalObjects::danmuRender->isBottomSubProtect());
-    QObject::connect(bottomSubtitleProtect, &QCheckBox::stateChanged,[](int state){
-        GlobalObjects::danmuRender->setBottomSubtitleProtect(state == Qt::Checked);
-    });
-
-    QCheckBox *topSubtitleProtect = new QCheckBox(tr("Top Sub"), pageGeneral);
-    topSubtitleProtect->setChecked(GlobalObjects::danmuRender->isTopSubProtect());
-    QObject::connect(topSubtitleProtect, &QCheckBox::stateChanged, [](int state){
-        GlobalObjects::danmuRender->setTopSubtitleProtect(state == Qt::Checked);
-    });
-
-    QLabel *speedLabel = new QLabel(tr("Rolling Speed"), pageGeneral);
-    QSlider *speedSlider = new QSlider(Qt::Horizontal, pageGeneral);
-    speedSlider->setObjectName(QStringLiteral("PopupPageSlider"));
-    speedSlider->setRange(50, 500);
-    speedSlider->setValue(GlobalObjects::danmuRender->getSpeed());
-    speedSlider->setToolTip(QString::number(speedSlider->value()));
-    QObject::connect(speedSlider,&QSlider::valueChanged,[=](int val){
-        GlobalObjects::danmuRender->setSpeed(val);
-        speedSlider->setToolTip(QString::number(val));
-    });
-
-    QLabel *maxDanmuCountLabel = new QLabel(tr("Max Count"), pageGeneral);
-    QSlider *maxDanmuCount = new QSlider(Qt::Horizontal,pageGeneral);
-    maxDanmuCount->setObjectName(QStringLiteral("PopupPageSlider"));
-    maxDanmuCount->setRange(20, 300);
-    maxDanmuCount->setValue(GlobalObjects::danmuRender->getMaxDanmuCount());
-    maxDanmuCount->setToolTip(QString::number(maxDanmuCount->value()));
-    QObject::connect(maxDanmuCount, &QSlider::valueChanged, [=](int val){
-        GlobalObjects::danmuRender->setMaxDanmuCount(val);
-        maxDanmuCount->setToolTip(QString::number(val));
-    });
-
-    QLabel *denseLabel = new QLabel(tr("Dense Level"), pageGeneral);
-    OptionSlider *denseLevel = new OptionSlider(pageGeneral);
-    denseLevel->setLabels({tr("Uncovered"), tr("General"), tr("Dense")});
-    denseLevel->setValue(GlobalObjects::danmuRender->dense);
-    QObject::connect(denseLevel, &OptionSlider::valueChanged, [](int index){
-        GlobalObjects::danmuRender->setDenseLevel(index);
-    });
-
-    QLabel *displayAreaLabel = new QLabel(tr("Display Area"), pageGeneral);
-    OptionSlider *displayAreaSlider = new OptionSlider(pageGeneral);
-    displayAreaSlider->setLabels({tr("1/8"), tr("1/4"), tr("1/2"), tr("3/4"), tr("Full")});
-    displayAreaSlider->setValue(GlobalObjects::danmuRender->getDisplayAreaIndex());
-    QObject::connect(displayAreaSlider, &OptionSlider::valueChanged, [](int val){
-        GlobalObjects::danmuRender->setDisplayArea(val);
-    });
-
-
-//Appearance Page
-    QWidget *pageAppearance=new QWidget(danmuSettingPage);
-
-    QLabel *alphaLabel = new QLabel(tr("Danmu Alpha"), pageAppearance);
-    QSlider *alphaSlider = new QSlider(Qt::Horizontal, pageAppearance);
-    alphaSlider->setObjectName(QStringLiteral("PopupPageSlider"));
-    alphaSlider->setRange(0, 100);
-    alphaSlider->setValue(GlobalObjects::danmuRender->getOpacity() * 100);
-    alphaSlider->setToolTip(QString::number(alphaSlider->value()));
-    QObject::connect(alphaSlider, &QSlider::valueChanged, [=](int val){
-        GlobalObjects::danmuRender->setOpacity(val/100.f);
-        alphaSlider->setToolTip(QString::number(val));
-    });
-
-    QLabel *strokeWidthLabel = new QLabel(tr("Stroke Width"), pageAppearance);
-    QSlider *strokeWidthSlider = new QSlider(Qt::Horizontal, pageAppearance);
-    strokeWidthSlider->setObjectName(QStringLiteral("PopupPageSlider"));
-    strokeWidthSlider->setRange(0, 80);
-    strokeWidthSlider->setValue(GlobalObjects::danmuRender->getStrokeWidth() * 10);
-    strokeWidthSlider->setToolTip(QString::number(GlobalObjects::danmuRender->getStrokeWidth()));
-    QObject::connect(strokeWidthSlider, &QSlider::valueChanged, [=](int val){
-        GlobalObjects::danmuRender->setStrokeWidth(val/10.f);
-        strokeWidthSlider->setToolTip(QString::number(val/10.));
-    });
-
-    QLabel *fontSizeLabel = new QLabel(tr("Font Size"), pageAppearance);
-    QSlider *fontSizeSlider = new QSlider(Qt::Horizontal, pageAppearance);
-    fontSizeSlider->setObjectName(QStringLiteral("PopupPageSlider"));
-    fontSizeSlider->setRange(4, 60);
-    fontSizeSlider->setValue(GlobalObjects::danmuRender->getFontSize());
-    fontSizeSlider->setToolTip(QString::number(fontSizeSlider->value()));
-    QObject::connect(fontSizeSlider, &QSlider::valueChanged, [=](int val){
-        GlobalObjects::danmuRender->setFontSize(val);
-        fontSizeSlider->setToolTip(QString::number(val));
-    });
-
-    QCheckBox *glow = new QCheckBox(tr("Glow"), pageAppearance);
-    glow->setChecked(GlobalObjects::danmuRender->isGlow());
-    QObject::connect(glow, &QCheckBox::stateChanged, [](int state){
-        GlobalObjects::danmuRender->setGlow(state == Qt::Checked);
-    });
-
-    QCheckBox *bold = new QCheckBox(tr("Bold"), pageAppearance);
-    bold->setChecked(GlobalObjects::danmuRender->isBold());
-    QObject::connect(bold,&QCheckBox::stateChanged,[](int state){
-        GlobalObjects::danmuRender->setBold(state == Qt::Checked);
-    });
-
-    QCheckBox *randomSize = new QCheckBox(tr("Random Size"),pageAppearance);
-    randomSize->setChecked(GlobalObjects::danmuRender->isRandomSize());
-    QObject::connect(randomSize,&QCheckBox::stateChanged,[](int state){
-        GlobalObjects::danmuRender->setRandomSize(state == Qt::Checked);
-    });
-
-    QFontComboBox *fontFamilyCombo = new QFontComboBox(pageAppearance);
-    fontFamilyCombo->setMaximumWidth(160 *logicalDpiX()/96);
-    QLabel *fontLabel = new QLabel(tr("Font"), pageAppearance);
-    fontFamilyCombo->setCurrentFont(QFont(GlobalObjects::danmuRender->getFontFamily()));
-    QObject::connect(fontFamilyCombo, &QFontComboBox::currentFontChanged, [](const QFont &newFont){
-        GlobalObjects::danmuRender->setFontFamily(newFont.family());
-    });
-
-//Advanced Page
-    QWidget *pageAdvanced=new QWidget(danmuSettingPage);
-
-    QCheckBox *enableAnalyze = new QCheckBox(tr("Enable Danmu Event Analyze"), pageAdvanced);
-    enableAnalyze->setChecked(GlobalObjects::danmuPool->isEnableAnalyze());
-    QObject::connect(enableAnalyze, &QCheckBox::stateChanged, [](int state){
-        GlobalObjects::danmuPool->setAnalyzeEnable(state == Qt::Checked);
-    });
-
-    QCheckBox *enableMerge = new QCheckBox(tr("Enable Danmu Merge"), pageAdvanced);
-    enableMerge->setChecked(GlobalObjects::danmuPool->isEnableMerge());
-    QObject::connect(enableMerge, &QCheckBox::stateChanged, [](int state){
-        GlobalObjects::danmuPool->setMergeEnable(state == Qt::Checked);
-    });
-
-    QCheckBox *enlargeMerged = new QCheckBox(tr("Enlarge Merged Danmu"),pageAdvanced);
-    enlargeMerged->setChecked(GlobalObjects::danmuRender->isEnlargeMerged());
-    QObject::connect(enlargeMerged, &QCheckBox::stateChanged, [](int state){
-        GlobalObjects::danmuRender->setEnlargeMerged(state == Qt::Checked);
-    });
-
-    QLabel *mergeCountTipLabel = new QLabel(tr("Merge Count Tip Position"), pageAdvanced);
-    QComboBox *mergeCountTipPos = new QComboBox(pageAdvanced);
-    mergeCountTipPos->addItems(QStringList({tr("Hidden"), tr("Forward"), tr("Backward")}));
-    mergeCountTipPos->setCurrentIndex(GlobalObjects::danmuRender->getMergeCountPos());
-    QObject::connect(mergeCountTipPos, (void (QComboBox:: *)(int))&QComboBox::currentIndexChanged, [](int index){
-        GlobalObjects::danmuRender->setMergeCountPos(index);
-    });
-
-    QCheckBox *enableLiveMode = new QCheckBox(tr("Enable Live Mode"), pageAdvanced);
-    enableLiveMode->setChecked(GlobalObjects::danmuRender->isLiveModeOn());
-    QObject::connect(enableLiveMode,&QCheckBox::stateChanged,[=](int state){
-        GlobalObjects::danmuRender->setLiveMode(state == Qt::Checked);
-        if(GlobalObjects::playlist->getCurrentItem() && !GlobalObjects::mpvplayer->getDanmuHide())
-        {
-            liveDanmuList->setVisible(state == Qt::Checked);
-        }
-    });
-
-    QCheckBox *liveModeOnlyRolling = new QCheckBox(tr("Live Only Rolling"), pageAdvanced);
-    liveModeOnlyRolling->setChecked(GlobalObjects::danmuRender->isLiveOnlyRolling());
-    QObject::connect(liveModeOnlyRolling, &QCheckBox::stateChanged, [](int state){
-        GlobalObjects::danmuRender->setLiveMode(GlobalObjects::danmuRender->isLiveModeOn(), state == Qt::Checked? 1: 0);
-    });
-
-    QCheckBox *liveDanmuAlignRight = new QCheckBox(tr("Live Align Right"), pageAdvanced);
-    liveDanmuAlignRight->setChecked(GlobalObjects::danmuRender->liveDanmuModel()->alignment() == Qt::AlignRight);
-    QObject::connect(liveDanmuAlignRight, &QCheckBox::stateChanged, [=](int state){
-        if (state == Qt::Checked)
-        {
-            GlobalObjects::danmuRender->liveDanmuModel()->setAlignment(Qt::AlignRight);
-            liveDanmuList->parentWidget()->layout()->setAlignment(liveDanmuList, Qt::AlignRight);
-        }
-        else
-        {
-            GlobalObjects::danmuRender->liveDanmuModel()->setAlignment(Qt::AlignLeft);
-            liveDanmuList->parentWidget()->layout()->setAlignment(liveDanmuList, Qt::AlignLeft);
-        }
-    });
-
-    QCheckBox *liveShowSender = new QCheckBox(tr("Live Show Sender"), pageAdvanced);
-    liveShowSender->setChecked(GlobalObjects::danmuRender->liveDanmuModel()->isShowSender());
-    QObject::connect(liveShowSender, &QCheckBox::stateChanged, [](int state){
-        GlobalObjects::danmuRender->liveDanmuModel()->setShowSender(state == Qt::Checked);
-    });
-
-    QLabel *liveDanmuSizeLable = new QLabel(tr("Live Danmu Size"), pageAdvanced);
-    QSlider *liveSizeSlider = new QSlider(Qt::Horizontal, pageAdvanced);
-    liveSizeSlider->setObjectName(QStringLiteral("PopupPageSlider"));
-    liveSizeSlider->setRange(6, 20);
-    liveSizeSlider->setValue(GlobalObjects::danmuRender->liveDanmuModel()->getFontSize());
-    liveSizeSlider->setToolTip(QString::number(liveSizeSlider->value()));
-    QObject::connect(liveSizeSlider, &QSlider::valueChanged, [=](int val){
-        GlobalObjects::danmuRender->liveDanmuModel()->setFontSize(val);
-        liveSizeSlider->setToolTip(QString::number(val));
-    });
-
-    QLabel *liveVRangeLable = new QLabel(tr("Live Vertical Range"), pageAdvanced);
-    QSlider *liveVRangeSlider = new QSlider(Qt::Horizontal, pageAdvanced);
-    liveVRangeSlider->setObjectName(QStringLiteral("PopupPageSlider"));
-    liveVRangeSlider->setRange(20, 95);
-    QObject::connect(liveVRangeSlider, &QSlider::valueChanged, [=](int val){
-        liveDanmuList->setFixedHeight(static_cast<float>(val) / 100 * height());
-        liveVRangeSlider->setToolTip(QString::number(val));
-        liveVRange = val;
-    });
-    liveVRangeSlider->setValue(liveVRange);
-
-
-    QGridLayout *generalGLayout=new QGridLayout(pageGeneral);
-    generalGLayout->setContentsMargins(0,0,0,0);
-    QHBoxLayout *hideHLayout = new QHBoxLayout();
-    hideHLayout->setContentsMargins(0,0,0,0);
-    hideHLayout->setSpacing(6*logicalDpiX()/96);
-    hideHLayout->addWidget(danmuSwitch);
-    hideHLayout->addWidget(hideRollingDanmu);
-    hideHLayout->addWidget(hideTopDanmu);
-    hideHLayout->addWidget(hideBottomDanmu);
-    hideHLayout->addStretch(1);
-    generalGLayout->addWidget(hideLabel, 0, 0);
-    generalGLayout->addItem(hideHLayout, 0, 1);
-    generalGLayout->addWidget(denseLabel, 1, 0);
-    generalGLayout->addWidget(denseLevel, 1, 1);
-    generalGLayout->addWidget(speedLabel, 2, 0);
-    generalGLayout->addWidget(speedSlider, 2, 1);
-    generalGLayout->addWidget(maxDanmuCountLabel, 3, 0);
-    generalGLayout->addWidget(maxDanmuCount, 3, 1);
-    generalGLayout->addWidget(displayAreaLabel, 4, 0);
-    generalGLayout->addWidget(displayAreaSlider, 4, 1);
-    generalGLayout->addWidget(subProtectLabel, 5, 0);
-    QHBoxLayout *subProtectHLayout = new QHBoxLayout();
-    subProtectHLayout->setContentsMargins(0,0,0,0);
-    subProtectHLayout->setSpacing(6*logicalDpiX()/96);
-    subProtectHLayout->addWidget(bottomSubtitleProtect);
-    subProtectHLayout->addWidget(topSubtitleProtect);
-    subProtectHLayout->addStretch(1);
-    generalGLayout->addItem(subProtectHLayout, 5, 1);
-
-    QGridLayout *appearanceGLayout=new QGridLayout(pageAppearance);
-    appearanceGLayout->setContentsMargins(0,0,0,0);
-    appearanceGLayout->setColumnStretch(0,1);
-    appearanceGLayout->setColumnStretch(1,1);
-    appearanceGLayout->addWidget(fontLabel,0,0);
-    appearanceGLayout->addWidget(fontFamilyCombo,1,0);
-    appearanceGLayout->addWidget(fontSizeLabel,2,0);
-    appearanceGLayout->addWidget(fontSizeSlider,3,0);
-    appearanceGLayout->addWidget(strokeWidthLabel,4,0);
-    appearanceGLayout->addWidget(strokeWidthSlider,5,0);
-    appearanceGLayout->addWidget(alphaLabel,0,1);
-    appearanceGLayout->addWidget(alphaSlider,1,1);
-    appearanceGLayout->addWidget(glow,2,1);
-    appearanceGLayout->addWidget(bold,3,1);
-    appearanceGLayout->addWidget(randomSize,4,1);
-
-    QGridLayout *mergeGLayout=new QGridLayout(pageAdvanced);
-    mergeGLayout->setContentsMargins(0,0,0,0);
-    mergeGLayout->setColumnStretch(0,1);
-    mergeGLayout->setColumnStretch(1,1);
-    mergeGLayout->addWidget(enableAnalyze,0,0);
-    mergeGLayout->addWidget(enableMerge,1,0);
-    mergeGLayout->addWidget(enlargeMerged,2,0);
-    mergeGLayout->addWidget(mergeCountTipLabel, 3, 0);
-    mergeGLayout->addWidget(mergeCountTipPos, 4, 0);
-    mergeGLayout->addWidget(enableLiveMode, 0, 1);
-    mergeGLayout->addWidget(liveModeOnlyRolling, 1, 1);
-    mergeGLayout->addWidget(liveDanmuAlignRight, 2, 1);
-    mergeGLayout->addWidget(liveShowSender, 3, 1);
-    mergeGLayout->addWidget(liveDanmuSizeLable, 4, 1);
-    mergeGLayout->addWidget(liveSizeSlider, 5, 1);
-    mergeGLayout->addWidget(liveVRangeLable, 5, 0);
-    mergeGLayout->addWidget(liveVRangeSlider, 6, 0);
-
-    danmuSettingSLayout->setContentsMargins(4,4,4,4);
-    danmuSettingSLayout->addWidget(pageGeneral);
-    danmuSettingSLayout->addWidget(pageAppearance);
-    danmuSettingSLayout->addWidget(pageAdvanced);
-    danmuSettingPage->hide();
+    playSettingPage = new OptionMenu(this->centralWidget());
+    playSettingPage->installEventFilter(this);
+    OptionMenu *menu = static_cast<OptionMenu *>(playSettingPage);
+    OptionMenuPanel *rootPanel = menu->defaultMenuPanel();
+    setTrackPage(rootPanel);
+    setPlaybackRatePage(rootPanel);
+    setDisplayPage(rootPanel);
+    setMPVConfPage(rootPanel);
 }
 
-void PlayerWindow::setupPlaySettingPage()
+void PlayerWindow::setTrackPage(OptionMenuPanel *rootPanel)
 {
-    playSettingPage=new QWidget(this->centralWidget());
-    playSettingPage->setObjectName(QStringLiteral("PopupPage"));
-    playSettingPage->installEventFilter(this);
+    ElaSelfTheme *btnSelfTheme = new ElaSelfTheme(rootPanel);
+    btnSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicText, Qt::white);
+    btnSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicText, Qt::white);
 
-    QToolButton *playPage=new QToolButton(playSettingPage);
-    playPage->setText(tr("Play"));
-    playPage->setCheckable(true);
-    playPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    playPage->setObjectName(QStringLiteral("DialogPageButton"));
-    playPage->setChecked(true);
+    ElaSelfTheme *spinSelfTheme = new ElaSelfTheme(rootPanel);
+    spinSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicBase, QColor(255, 255, 255, 40));
+    spinSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicBase, QColor(255, 255, 255, 40));
+    spinSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicText, Qt::white);
+    spinSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicText, Qt::white);
+    spinSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicBaseDeep, QColor(255, 255, 255, 60));
+    spinSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicBaseDeep, QColor(255, 255, 255, 60));
+    spinSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicHoverAlpha, QColor(255, 255, 255, 80));
+    spinSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicHoverAlpha, QColor(255, 255, 255, 80));
+    spinSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicPressAlpha, QColor(255, 255, 255, 60));
+    spinSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicPressAlpha, QColor(255, 255, 255, 60));
+    spinSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicBorder, QColor(255, 255, 255, 60));
+    spinSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicBorder, QColor(255, 255, 255, 60));
 
-    QToolButton *behaviorPage=new QToolButton(playSettingPage);
-    behaviorPage->setText(tr("Behavior"));
-    behaviorPage->setCheckable(true);
-    behaviorPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    behaviorPage->setObjectName(QStringLiteral("DialogPageButton"));
+    OptionMenuItem *audioTrackMenu = rootPanel->addMenu(tr("Audio Track"));
+    OptionMenuPanel *audioPanel = audioTrackMenu->addSubMenuPanel();
+    ElaToolButton *addAudioTrack = new ElaToolButton(audioPanel);
+    addAudioTrack->setSelfTheme(btnSelfTheme);
+    addAudioTrack->setText(tr("Add"));
+    audioPanel->addTitleMenu(tr("Audio Track"))->setWidget(addAudioTrack);
+    audioPanel->addSpliter();
+    OptionMenuItem *clearAudioMenu = audioPanel->addMenu(tr("Clear External Audio Files"));
 
-    QToolButton *colorPage=new QToolButton(playSettingPage);
-    colorPage->setText(tr("Color"));
-    colorPage->setCheckable(true);
-    colorPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    colorPage->setObjectName(QStringLiteral("DialogPageButton"));
-
-    const int btnH = playPage->fontMetrics().height() + 10*logicalDpiY()/96;
-    playPage->setFixedHeight(btnH);
-    behaviorPage->setFixedHeight(btnH);
-    colorPage->setFixedHeight(btnH);
-
-    QStackedLayout *playSettingSLayout=new QStackedLayout();
-    QButtonGroup *btnGroup = new QButtonGroup(this);
-    btnGroup->addButton(playPage, 0);
-    btnGroup->addButton(behaviorPage, 1);
-    btnGroup->addButton(colorPage, 2);
-    QObject::connect(btnGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, [=](int id, bool checked) {
-        if (checked)
-        {
-            playSettingSLayout->setCurrentIndex(id);
-        }
-    });
-
-
-    QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
-    pageButtonHLayout->addWidget(playPage);
-    pageButtonHLayout->addWidget(behaviorPage);
-    pageButtonHLayout->addWidget(colorPage);
-
-    QVBoxLayout *playSettingVLayout=new QVBoxLayout(playSettingPage);
-    playSettingVLayout->addLayout(pageButtonHLayout);
-    playSettingVLayout->addLayout(playSettingSLayout);
-
-//Play Page
-    QWidget *pagePlay=new QWidget(playSettingPage);
-
-    QLabel *audioTrackLabel=new QLabel(tr("Audio Track"),pagePlay);
-    QComboBox *audioTrackCombo=new QComboBox(pagePlay);
-    audioTrackCombo->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
-
-    for(auto &t : GlobalObjects::mpvplayer->getTrackList(MPVPlayer::TrackType::AudioTrack))
-    {
-        audioTrackCombo->addItem(t.title);
-    }
-    audioTrackCombo->addItem(tr("Clear External Audio Files"));
-    audioTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentTrack(MPVPlayer::TrackType::AudioTrack));
-
-    QObject::connect(audioTrackCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[audioTrackCombo](int index){
-        if(index==audioTrackCombo->count() - 1)
-        {
-            GlobalObjects::playlist->clearCurrentAudio();
-            GlobalObjects::mpvplayer->clearExternalAudio();
-            audioTrackCombo->blockSignals(true);
-            audioTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentTrack(MPVPlayer::TrackType::AudioTrack));
-            audioTrackCombo->blockSignals(false);
-        }
-        else
-        {
-            GlobalObjects::mpvplayer->setTrackId(MPVPlayer::TrackType::AudioTrack, index);
-            GlobalObjects::playlist->setCurrentAudioIndex(index);
-        }
-    });
-    QPushButton *addAudioTrackButton=new QPushButton(tr("Add"),pagePlay);
-    QObject::connect(addAudioTrackButton,&QPushButton::clicked,[this](){
+    QObject::connect(addAudioTrack, &ElaToolButton::clicked, this, [=](){
         bool restorePlayState = false;
         if (GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
         {
@@ -1347,45 +512,37 @@ void PlayerWindow::setupPlaySettingPage()
             dialogPath = QFileInfo(GlobalObjects::mpvplayer->getCurrentFile()).absolutePath();
         }
         QString file(QFileDialog::getOpenFileName(this,tr("Select Audio File"), dialogPath, tr("Audio (%0);;All Files(*)").arg(GlobalObjects::mpvplayer->audioFormats.join(" "))));
-        if(!file.isEmpty())
+        if (!file.isEmpty())
         {
             GlobalObjects::mpvplayer->addAudioTrack(file);
         }
-        if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
+        if (restorePlayState) GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
 
-    QLabel *subtitleTrackLabel=new QLabel(tr("Subtitle Track"),pagePlay);
-    QComboBox *subtitleTrackCombo=new QComboBox(pagePlay);
-    subtitleTrackCombo->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
-
-    for(auto &t : GlobalObjects::mpvplayer->getTrackList(MPVPlayer::TrackType::SubTrack))
-    {
-        subtitleTrackCombo->addItem(t.title);
-    }
-    subtitleTrackCombo->addItem(tr("Hide"));
-    subtitleTrackCombo->addItem(tr("Clear External Sub Files"));
-    subtitleTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentTrack(MPVPlayer::TrackType::SubTrack));
-
-    QObject::connect(subtitleTrackCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[subtitleTrackCombo](int index){
-        if(index==subtitleTrackCombo->count() - 1)
-        {
-            GlobalObjects::playlist->clearCurrentSub();
-            GlobalObjects::mpvplayer->clearExternalSub();
-            subtitleTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentTrack(MPVPlayer::TrackType::SubTrack));
-        }
-        else if(index==subtitleTrackCombo->count() - 2)
-        {
-            GlobalObjects::mpvplayer->hideSubtitle(true);
-        }
-        else
-        {
-            GlobalObjects::mpvplayer->hideSubtitle(false);
-            GlobalObjects::mpvplayer->setTrackId(MPVPlayer::TrackType::SubTrack, index);
-            GlobalObjects::playlist->setCurrentSubIndex(index);
-        }
+    QObject::connect(clearAudioMenu, &OptionMenuItem::click, this, [](){
+        GlobalObjects::playlist->clearCurrentAudio();
+        GlobalObjects::mpvplayer->clearExternalAudio();
     });
-    QPushButton *addSubtitleButton=new QPushButton(tr("Add"),pagePlay);
-    QObject::connect(addSubtitleButton,&QPushButton::clicked,[this](){
+
+
+    OptionMenuItem *subTrackMenu = rootPanel->addMenu(tr("Sub Track"));
+    OptionMenuPanel *subPanel = subTrackMenu->addSubMenuPanel();
+    ElaToolButton *addSubTrack = new ElaToolButton(subPanel);
+    addSubTrack->setSelfTheme(btnSelfTheme);
+    addSubTrack->setText(tr("Add"));
+    subPanel->addTitleMenu(tr("Sub Track"))->setWidget(addSubTrack);
+    subPanel->addSpliter();
+    OptionMenuItem *subDelayMenu = subPanel->addMenu(tr("Subtitle Delay(s)"));
+    subDelayMenu->setSelectAble(false);
+    ElaSpinBox *delaySpinBox = new ElaSpinBox(subDelayMenu);
+    delaySpinBox->setSelfTheme(spinSelfTheme);
+    delaySpinBox->getLineEdit()->setObjectName(QStringLiteral("DelaySpinLineEdit"));
+    delaySpinBox->setRange(INT_MIN,INT_MAX);
+    subDelayMenu->setWidget(delaySpinBox);
+    OptionMenuItem *hideSubMenu = subPanel->addMenu(tr("Hide Sub"));
+    OptionMenuItem *clearSubMenu = subPanel->addMenu(tr("Clear External Sub Files"));
+
+    QObject::connect(addSubTrack, &ElaToolButton::clicked, this, [=](){
         bool restorePlayState = false;
         if (GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
         {
@@ -1397,183 +554,274 @@ void PlayerWindow::setupPlaySettingPage()
         {
             dialogPath = QFileInfo(GlobalObjects::mpvplayer->getCurrentFile()).absolutePath();
         }
-        QString file(QFileDialog::getOpenFileName(this,tr("Select Sub File"), dialogPath ,tr("Subtitle (%0);;All Files(*)").arg(GlobalObjects::mpvplayer->subtitleFormats.join(" "))));
-        if(!file.isEmpty())
+        QString file(QFileDialog::getOpenFileName(this, tr("Select Sub File"), dialogPath ,tr("Subtitle (%0);;All Files(*)").arg(GlobalObjects::mpvplayer->subtitleFormats.join(" "))));
+        if (!file.isEmpty())
         {
             GlobalObjects::mpvplayer->addSubtitle(file);
         }
-        if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
+        if (restorePlayState) GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
-    QLabel *subtitleDelayLabel=new QLabel(tr("Subtitle Delay(s)"),pagePlay);
-    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::trackInfoChange, [=](MPVPlayer::TrackType type){
-        if(type == MPVPlayer::TrackType::AudioTrack)
-        {
-            audioTrackCombo->blockSignals(true);
-            audioTrackCombo->clear();
-            for(auto &t : GlobalObjects::mpvplayer->getTrackList(MPVPlayer::TrackType::AudioTrack))
-            {
-                if(t.isExternal && !t.externalFile.isEmpty())
-                {
-                    GlobalObjects::playlist->addCurrentAudio(t.externalFile);
-                }
-                audioTrackCombo->addItem(t.title);
-            }
-            audioTrackCombo->addItem(tr("Clear External Audio Files"));
-            audioTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentTrack(MPVPlayer::TrackType::AudioTrack));
-            audioTrackCombo->blockSignals(false);
-        }
-        else if(type == MPVPlayer::TrackType::SubTrack)
-        {
-            subtitleTrackCombo->blockSignals(true);
-            subtitleTrackCombo->clear();
-            for(auto &t : GlobalObjects::mpvplayer->getTrackList(MPVPlayer::TrackType::SubTrack))
-            {
-                if(t.isExternal && !t.externalFile.isEmpty())
-                {
-                    GlobalObjects::playlist->addCurrentSub(t.externalFile);
-                }
-                subtitleTrackCombo->addItem(t.title);
-            }
-            subtitleTrackCombo->addItem(tr("Hide"));
-            subtitleTrackCombo->addItem(tr("Clear External Sub Files"));
-            subtitleTrackCombo->setCurrentIndex(GlobalObjects::mpvplayer->getCurrentTrack(MPVPlayer::TrackType::SubTrack));
-            subtitleTrackCombo->blockSignals(false);
-        }
-    });
-    QSpinBox *delaySpinBox=new QSpinBox(pagePlay);
-    delaySpinBox->setRange(INT_MIN,INT_MAX);
-    delaySpinBox->setObjectName(QStringLiteral("Delay"));
-    delaySpinBox->setAlignment(Qt::AlignCenter);
+
     QObject::connect(delaySpinBox,&QSpinBox::editingFinished,[delaySpinBox](){
-       GlobalObjects::mpvplayer->setSubDelay(delaySpinBox->value());
-       GlobalObjects::playlist->setCurrentSubDelay(delaySpinBox->value());
+        GlobalObjects::mpvplayer->setSubDelay(delaySpinBox->value());
+        GlobalObjects::playlist->setCurrentSubDelay(delaySpinBox->value());
     });
     QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::subDelayChanged, delaySpinBox, &QSpinBox::setValue);
 
-    QLabel *aspectLabel = new QLabel(tr("Aspect Ratio"),pagePlay);
-    QComboBox *aspectRatioCombo = new QComboBox(playSettingPage);
-    aspectRatioCombo->addItems(GlobalObjects::mpvplayer->videoAspect);
-    aspectRatioCombo->setCurrentIndex(GlobalObjects::mpvplayer->getVideoAspectIndex());
-    QObject::connect(aspectRatioCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[](int index){
-        GlobalObjects::mpvplayer->setVideoAspect(index);
+    QObject::connect(hideSubMenu, &OptionMenuItem::click, this, [=](){
+        GlobalObjects::mpvplayer->hideSubtitle(true);
+        subPanel->clearCheckGroup("sub_track_group");
+        subTrackMenu->setInfoText("");
     });
 
-    QLabel *speedLabel = new QLabel(tr("Play Speed"), pagePlay);
-    QComboBox *playSpeedCombo = new QComboBox(pagePlay);
-    playSpeedCombo->setInsertPolicy(QComboBox::NoInsert);
-	playSpeedCombo->setEditable(true);
-    playSpeedCombo->addItems(GlobalObjects::mpvplayer->speedLevel);
-    playSpeedCombo->setCurrentText(QString::number(GlobalObjects::mpvplayer->getPlaySpeed()));
-    QObject::connect(playSpeedCombo,&QComboBox::currentTextChanged,[](const QString &text){
-        bool ok = false;
-        double speed = text.toDouble(&ok);
-        if(ok) GlobalObjects::mpvplayer->setSpeed(speed);
-    });
-    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::speedChanged, [=](double val){
-        playSpeedCombo->blockSignals(true);
-        playSpeedCombo->setCurrentText(QString::number(val));
-        playSpeedCombo->blockSignals(false);
+    QObject::connect(clearSubMenu, &OptionMenuItem::click, this, [](){
+        GlobalObjects::playlist->clearCurrentSub();
+        GlobalObjects::mpvplayer->clearExternalSub();
     });
 
-    QComboBox *mpvParaGroupCombo = new QComboBox(pagePlay);
-    mpvParaGroupCombo->setInsertPolicy(QComboBox::NoInsert);
-    mpvParaGroupCombo->setEditable(false);
-    mpvParaGroupCombo->addItems(GlobalObjects::mpvplayer->allOptionGroups());
-    mpvParaGroupCombo->setCurrentText(GlobalObjects::mpvplayer->currentOptionGroup());
-    QObject::connect(mpvParaGroupCombo, &QComboBox::currentTextChanged, [](const QString &group){
-        if(GlobalObjects::mpvplayer->setOptionGroup(group))
+    auto trackRefresh = [=](MPVPlayer::TrackType type){
+        if (type == MPVPlayer::TrackType::AudioTrack)
         {
-            Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tr("Switch to option group \"%1\"").arg(GlobalObjects::mpvplayer->currentOptionGroup()));
+            const QString audioTrackFlag = "audio_track";
+            audioPanel->removeFlag(audioTrackFlag);
+            audioTrackMenu->setInfoText("");
+            auto &audioTrackList = GlobalObjects::mpvplayer->getTrackList(MPVPlayer::TrackType::AudioTrack);
+            const int trackIdx = GlobalObjects::mpvplayer->getCurrentTrack(MPVPlayer::TrackType::AudioTrack);
+            int curIdx = 0;
+            for (auto &t : audioTrackList)
+            {
+                if (t.isExternal && !t.externalFile.isEmpty())
+                {
+                    GlobalObjects::playlist->addCurrentAudio(t.externalFile);
+                }
+                OptionMenuItem *item = audioPanel->addMenu(t.title);
+                item->setCheckable(true);
+                item->setCheckGroup("audio_track_group");
+                item->setFlag(audioTrackFlag);
+                if (curIdx == trackIdx)
+                {
+                    item->setChecking(true);
+                    audioTrackMenu->setInfoText(t.title);
+                }
+                QObject::connect(item, &OptionMenuItem::click, this, [=](){
+                    GlobalObjects::mpvplayer->setTrackId(MPVPlayer::TrackType::AudioTrack, curIdx);
+                    GlobalObjects::playlist->setCurrentAudioIndex(curIdx);
+                    audioTrackMenu->setInfoText(t.title);
+                });
+                ++curIdx;
+            }
         }
+        else if (type == MPVPlayer::TrackType::SubTrack)
+        {
+            const QString subTrackFlag = "sub_track";
+            subPanel->removeFlag(subTrackFlag);
+            subTrackMenu->setInfoText("");
+            auto &subTrackList = GlobalObjects::mpvplayer->getTrackList(MPVPlayer::TrackType::SubTrack);
+            int trackIdx = GlobalObjects::mpvplayer->getCurrentTrack(MPVPlayer::TrackType::SubTrack);
+            int curIdx = 0;
+            for (auto &t : subTrackList)
+            {
+                if (t.isExternal && !t.externalFile.isEmpty())
+                {
+                    GlobalObjects::playlist->addCurrentSub(t.externalFile);
+                }
+                OptionMenuItem *item = subPanel->addMenu(t.title);
+                item->setCheckable(true);
+                item->setCheckGroup("sub_track_group");
+                item->setFlag(subTrackFlag);
+                if (curIdx == trackIdx)
+                {
+                    item->setChecking(true);
+                    subTrackMenu->setInfoText(t.title);
+                }
+                QObject::connect(item, &OptionMenuItem::click, this, [=](){
+                    GlobalObjects::mpvplayer->hideSubtitle(false);
+                    GlobalObjects::mpvplayer->setTrackId(MPVPlayer::TrackType::SubTrack, curIdx);
+                    GlobalObjects::playlist->setCurrentSubIndex(curIdx);
+                    subTrackMenu->setInfoText(t.title);
+                });
+                ++curIdx;
+            }
+        }
+    };
+
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::trackInfoChange, this, trackRefresh);
+    trackRefresh(MPVPlayer::TrackType::AudioTrack);
+    trackRefresh(MPVPlayer::TrackType::SubTrack);
+}
+
+void PlayerWindow::setPlaybackRatePage(OptionMenuPanel *rootPanel)
+{
+    ElaSelfTheme *btnSelfTheme = new ElaSelfTheme(rootPanel);
+    btnSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicText, Qt::white);
+    btnSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicText, Qt::white);
+
+    OptionMenuItem *playRateMenu = rootPanel->addMenu(tr("Playback Rate"));
+    OptionMenuPanel *ratePanel = playRateMenu->addSubMenuPanel();
+    ElaToolButton *customRateBtn = new ElaToolButton(ratePanel);
+    customRateBtn->setSelfTheme(btnSelfTheme);
+    customRateBtn->setText(tr("Custom"));
+    OptionMenuItem *titleMenu = ratePanel->addTitleMenu(tr("Playback Rate"));
+    titleMenu->setWidget(customRateBtn);
+    OptionMenuPanel *customPanel = titleMenu->addSubMenuPanel();
+    QObject::connect(customRateBtn, &ElaToolButton::clicked, titleMenu, &OptionMenuItem::switchTo);
+    customPanel->addTitleMenu(tr("Custom"));
+    OptionMenuItem *customSliderMenu = customPanel->addMenu("");
+    customSliderMenu->setSelectAble(false);
+    ElaSlider *customSlider = new ElaSlider(Qt::Orientation::Horizontal, customSliderMenu);
+    customSlider->setRange(0, 198);
+    customSlider->setSingleStep(1);
+    customSliderMenu->setWidget(customSlider, true);
+    OptionMenuItem *tipMenu = customPanel->addMenu("");
+    tipMenu->setTextCenter(true);
+    tipMenu->setSelectAble(false);
+    ratePanel->addSpliter();
+
+    auto rateSetter = [](const QString &data){
+        bool ok = false;
+        double speed = data.toDouble(&ok);
+        if (speed <= 0) return;
+        if (ok) GlobalObjects::mpvplayer->setSpeed(speed);
+    };
+
+    const QString checkGroup = "playback_rate";
+    OptionMenuItem *customMenu = ratePanel->addMenu("");
+    customMenu->setCheckable(true);
+    customMenu->setCheckGroup(checkGroup);
+
+    bool matchRate = false;
+    double curRate = GlobalObjects::mpvplayer->getPlaySpeed();
+    playRateMenu->setInfoText(QString::number(curRate));
+    for (const QString &rate : GlobalObjects::mpvplayer->speedLevel)
+    {
+        OptionMenuItem *m = ratePanel->addMenu(rate);
+        m->setCheckable(true);
+        m->setCheckGroup(checkGroup);
+        m->setData(rate);
+        if (rate.toDouble() == curRate)
+        {
+            m->setChecking(true);
+            matchRate = true;
+        }
+        QObject::connect(m, &OptionMenuItem::click, this, [=](){
+            rateSetter(m->menuData().toString());
+        });
+    }
+    if (matchRate)
+    {
+        const QString settingRate = GlobalObjects::appSetting->value(SETTING_KEY_CUSTOM_PLAYBACK_RATE, "1.0").toString();
+        customMenu->setText(tr("Custom(%1)").arg(settingRate));
+        customMenu->setData(settingRate);
+    }
+    else
+    {
+        customMenu->setText(tr("Custom(%1)").arg(QString::number(curRate)));
+        customMenu->setChecking(true);
+        customMenu->setData(QString::number(curRate));
+    }
+    tipMenu->setText(customMenu->menuData().toString() + "x");
+    customSlider->setValue((customMenu->menuData().toString().toDouble() - 0.1) / 0.05);
+    QObject::connect(customMenu, &OptionMenuItem::click, this, [=](){
+        rateSetter(customMenu->menuData().toString());
     });
-    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::optionGroupChanged, [=](){
-        mpvParaGroupCombo->blockSignals(true);
-        mpvParaGroupCombo->clear();
-        mpvParaGroupCombo->addItems(GlobalObjects::mpvplayer->allOptionGroups());
-        mpvParaGroupCombo->setCurrentText(GlobalObjects::mpvplayer->currentOptionGroup());
-        mpvParaGroupCombo->blockSignals(false);
+
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::speedChanged, this, [=](double val){
+        playRateMenu->setInfoText(QString::number(val));
+        if (!customMenu->isChecking())
+        {
+            QVector<OptionMenuItem *> items = ratePanel->getCheckGroupMenus(checkGroup);
+            for (int i = items.size() - 1; i >= 0; --i)
+            {
+                if (items[i]->menuData().toString().toDouble() == val)
+                {
+                    items[i]->setChecking(true);
+                    return;
+                }
+            }
+        }
+        customMenu->setText(tr("Custom(%1)").arg(QString::number(val)));
+        customMenu->setChecking(true);
+        customMenu->setData(QString::number(val));
     });
 
-    QPushButton *editMpvOptions = new QPushButton(tr("MPV Parameter Settings"), pagePlay);
-    QObject::connect(editMpvOptions, &QPushButton::clicked, [this](){
-        Settings settings(Settings::PAGE_MPV, this);
-        QRect geo(0,0,420*logicalDpiX()/96,600*logicalDpiY()/96);
-        geo.moveCenter(this->geometry().center());
-        settings.move(mapToGlobal(geo.topLeft()));
-        settings.exec();
+    QObject::connect(customSlider, &ElaSlider::valueChanged, this, [=](int val){
+        const QString rate = QString::number(val * 0.05 + 0.1);
+        tipMenu->setText(rate + "x");
+        customMenu->setData(rate);
+        customMenu->setText(tr("Custom(%1)").arg(rate));
+        if (customMenu->isChecking())
+        {
+            rateSetter(rate);
+        }
+        GlobalObjects::appSetting->setValue(SETTING_KEY_CUSTOM_PLAYBACK_RATE, rate);
     });
 
-    QPushButton *showMpvLog=new QPushButton(tr("MPV Log"), pagePlay);
-    QObject::connect(showMpvLog,&QPushButton::clicked, this, &PlayerWindow::showMPVLog);
+}
 
-//Behavior Page
-    QWidget *pageBehavior=new QWidget(playSettingPage);
+void PlayerWindow::setDisplayPage(OptionMenuPanel *rootPanel)
+{
+    ElaSelfTheme *btnSelfTheme = new ElaSelfTheme(rootPanel);
+    btnSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicText, Qt::white);
+    btnSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicText, Qt::white);
 
-    QLabel *clickBehaivorLabel = new QLabel(tr("Click Behavior"), pageBehavior);
-    QComboBox *clickBehaviorCombo = new QComboBox(playSettingPage);
-    clickBehaviorCombo->addItem(tr("Play/Pause"));
-    clickBehaviorCombo->addItem(tr("Show/Hide PlayControl"));
-    clickBehaviorCombo->setCurrentIndex(clickBehavior);
-    QObject::connect(clickBehaviorCombo, (void (QComboBox:: *)(int))&QComboBox::currentIndexChanged, [this](int index){
-        clickBehavior = index;
-        GlobalObjects::appSetting->setValue(SETTING_KEY_CLICK_BEHAVIOR, index);
-    });
+    OptionMenuItem *displayMenu = rootPanel->addMenu(tr("Display/Window Settings"));
+    OptionMenuPanel *displayPanel = displayMenu->addSubMenuPanel();
+    displayPanel->addTitleMenu(tr("Display Settings"));
+    displayPanel->addSpliter();
 
-    QLabel *dbClickBehaivorLabel = new QLabel(tr("Double Click Behavior"), pageBehavior);
-    QComboBox *dbClickBehaviorCombo = new QComboBox(playSettingPage);
-    dbClickBehaviorCombo->addItem(tr("FullScreen"));
-    dbClickBehaviorCombo->addItem(tr("Play/Pause"));
-    dbClickBehaviorCombo->setCurrentIndex(dbClickBehaivior);
-    QObject::connect(dbClickBehaviorCombo, (void (QComboBox:: *)(int))&QComboBox::currentIndexChanged, [this](int index){
-        dbClickBehaivior = index;
-        GlobalObjects::appSetting->setValue(SETTING_KEY_DB_CLICK_BEHAVIOR, index);
-    });
+    OptionMenuItem *aspectMenu = displayPanel->addMenu(tr("Aspect Ratio"));
+    OptionMenuPanel *aspectPanel = aspectMenu->addSubMenuPanel();
+    aspectPanel->addTitleMenu(aspectMenu->text());
+    aspectPanel->addSpliter();
 
-    QLabel *forwardTimeLabel = new QLabel(tr("Forward Jump Time(s)"), pageBehavior);
-    QSpinBox *forwardTimeSpin = new QSpinBox(pageBehavior);
-    forwardTimeSpin->setRange(1, 20);
-    forwardTimeSpin->setAlignment(Qt::AlignCenter);
-    forwardTimeSpin->setObjectName(QStringLiteral("Delay"));
-    forwardTimeSpin->setValue(jumpForwardTime);
-    QObject::connect(forwardTimeSpin, &QSpinBox::editingFinished, this, [=](){
-        jumpForwardTime = forwardTimeSpin->value();
-        GlobalObjects::appSetting->setValue(SETTING_KEY_FORWARD_JUMP, jumpForwardTime);
-    });
+    OptionMenuItem *colorMenu = displayPanel->addMenu(tr("Color"));
+    OptionMenuPanel *colorPanel = colorMenu->addSubMenuPanel();
+    ElaToolButton *colorResetBtn = new ElaToolButton(colorPanel);
+    colorResetBtn->setSelfTheme(btnSelfTheme);
+    colorResetBtn->setText(tr("Reset"));
+    colorPanel->addTitleMenu(colorMenu->text())->setWidget(colorResetBtn);
+    colorPanel->addSpliter();
 
-    QLabel *backwardTimeLabel = new QLabel(tr("Backward Jump Time(s)"), pageBehavior);
-    QSpinBox *backwardTimeSpin = new QSpinBox(pageBehavior);
-    backwardTimeSpin->setRange(1, 20);
-    backwardTimeSpin->setAlignment(Qt::AlignCenter);
-    backwardTimeSpin->setObjectName(QStringLiteral("Delay"));
-    backwardTimeSpin->setValue(jumpBackwardTime);
-    QObject::connect(backwardTimeSpin, &QSpinBox::editingFinished, this, [=](){
-        jumpBackwardTime = backwardTimeSpin->value();
-        GlobalObjects::appSetting->setValue(SETTING_KEY_BACKWARD_JUMP,jumpBackwardTime);
-    });
+    OptionMenuItem *windowSizeMenu = displayPanel->addMenu(tr("Window Size"));
+    OptionMenuPanel *windowSizePanel = windowSizeMenu->addSubMenuPanel();
+    windowSizePanel->addTitleMenu(windowSizeMenu->text());
+    windowSizePanel->addSpliter();
 
-    QCheckBox *showPreview = new QCheckBox(tr("Show Preview Over ProgressBar(Need Restart)"), pageBehavior);
-    showPreview->setChecked(isShowPreview);
-    QObject::connect(showPreview, &QCheckBox::stateChanged, [](int state){
-        GlobalObjects::appSetting->setValue(SETTING_KEY_SHOW_PREVIEW, state == Qt::Checked);
-    });
+    OptionMenuItem *topMenu = displayPanel->addMenu(tr("On Top"));
+    OptionMenuPanel *topPanel = topMenu->addSubMenuPanel();
+    topPanel->addTitleMenu(topMenu->text());
+    topPanel->addSpliter();
 
-    QCheckBox *autoLoadDanmuCheck = new QCheckBox(tr("Auto Load Local Danmu"), pageBehavior);
-    autoLoadDanmuCheck->setChecked(autoLoadLocalDanmu);
-    QObject::connect(autoLoadDanmuCheck, &QCheckBox::stateChanged, [this](int state){
-        autoLoadLocalDanmu = (state==Qt::Checked);
-        GlobalObjects::appSetting->setValue(SETTING_KEY_AUTO_LOAD_LOCAL_DANMU, autoLoadLocalDanmu);
-    });
+    const QStringList &aspectSettings = GlobalObjects::mpvplayer->videoAspect;
+    int curAspectIdx = GlobalObjects::mpvplayer->getVideoAspectIndex();
+    const QString aspectCheckGroup = "video_aspect";
+    for (int i = 0; i < aspectSettings.size(); ++i)
+    {
+        OptionMenuItem *m = aspectPanel->addMenu(aspectSettings[i]);
+        m->setCheckable(true);
+        m->setCheckGroup(aspectCheckGroup);
+        m->setData(i);
+        if (i == curAspectIdx)
+        {
+            m->setChecking(true);
+            aspectMenu->setInfoText(aspectSettings[i]);
+        }
+        QObject::connect(m, &OptionMenuItem::click, this, [=](){
+            int idx = m->menuData().toInt();
+            GlobalObjects::mpvplayer->setVideoAspect(idx);
+            aspectMenu->setInfoText(GlobalObjects::mpvplayer->videoAspect[idx]);
+        });
+    }
 
-
-//Color Page
-    QWidget *pageColor=new QWidget(playSettingPage);
-
-    QLabel *brightnessLabel = new QLabel(tr("Brightness"), pageColor);
-    QSlider *brightnessSlider = new QSlider(Qt::Horizontal, pageColor);
-    brightnessSlider->setObjectName(QStringLiteral("PopupPageSlider"));
+    const int sliderMinW = 150;
+    OptionMenuItem *brightnessMenu = colorPanel->addMenu(tr("Brightness"));
+    brightnessMenu->setSelectAble(false);
+    ElaSlider *brightnessSlider = new ElaSlider(Qt::Orientation::Horizontal, brightnessMenu);
     brightnessSlider->setRange(-100, 100);
     brightnessSlider->setValue(GlobalObjects::mpvplayer->getBrightness());
-    QObject::connect(brightnessSlider, &QSlider::valueChanged, [=](int val){
+    brightnessSlider->setMinimumWidth(sliderMinW);
+    brightnessMenu->setWidget(brightnessSlider);
+    QObject::connect(brightnessSlider, &QSlider::valueChanged, this, [=](int val){
         GlobalObjects::mpvplayer->setBrightness(val);
         brightnessSlider->setToolTip(QString::number(val));
     });
@@ -1583,12 +831,14 @@ void PlayerWindow::setupPlaySettingPage()
         brightnessSlider->blockSignals(false);
     });
 
-    QLabel *contrastLabel = new QLabel(tr("Contrast"), pageColor);
-    QSlider *contrastSlider = new QSlider(Qt::Horizontal, pageColor);
-    contrastSlider->setObjectName(QStringLiteral("PopupPageSlider"));
+    OptionMenuItem *contrastMenu = colorPanel->addMenu(tr("Contrast"));
+    contrastMenu->setSelectAble(false);
+    ElaSlider *contrastSlider = new ElaSlider(Qt::Horizontal, contrastMenu);
     contrastSlider->setRange(-100, 100);
     contrastSlider->setValue(GlobalObjects::mpvplayer->getContrast());
-    QObject::connect(contrastSlider, &QSlider::valueChanged, [=](int val){
+    contrastSlider->setMinimumWidth(sliderMinW);
+    contrastMenu->setWidget(contrastSlider);
+    QObject::connect(contrastSlider, &QSlider::valueChanged, this, [=](int val){
         GlobalObjects::mpvplayer->setContrast(val);
         contrastSlider->setToolTip(QString::number(val));
     });
@@ -1598,12 +848,14 @@ void PlayerWindow::setupPlaySettingPage()
         contrastSlider->blockSignals(false);
     });
 
-    QLabel *saturationLabel = new QLabel(tr("Saturation"), pageColor);
-    QSlider *saturationSlider = new QSlider(Qt::Horizontal, pageColor);
-    saturationSlider->setObjectName(QStringLiteral("PopupPageSlider"));
+    OptionMenuItem *saturationMenu = colorPanel->addMenu(tr("Saturation"));
+    saturationMenu->setSelectAble(false);
+    ElaSlider *saturationSlider = new ElaSlider(Qt::Horizontal, saturationMenu);
     saturationSlider->setRange(-100, 100);
     saturationSlider->setValue(GlobalObjects::mpvplayer->getSaturation());
-    QObject::connect(saturationSlider, &QSlider::valueChanged, [=](int val){
+    saturationSlider->setMinimumWidth(sliderMinW);
+    saturationMenu->setWidget(saturationSlider);
+    QObject::connect(saturationSlider, &QSlider::valueChanged, this, [=](int val){
         GlobalObjects::mpvplayer->setSaturation(val);
         saturationSlider->setToolTip(QString::number(val));
     });
@@ -1613,12 +865,14 @@ void PlayerWindow::setupPlaySettingPage()
         saturationSlider->blockSignals(false);
     });
 
-    QLabel *gammaLabel=new QLabel(tr("Gamma"),pageColor);
-    QSlider *gammaSlider = new QSlider(Qt::Horizontal,pageColor);
-    gammaSlider->setObjectName(QStringLiteral("PopupPageSlider"));
+    OptionMenuItem *gammaMenu = colorPanel->addMenu(tr("Gamma"));
+    gammaMenu->setSelectAble(false);
+    ElaSlider *gammaSlider = new ElaSlider(Qt::Horizontal, gammaMenu);
     gammaSlider->setRange(-100, 100);
     gammaSlider->setValue(GlobalObjects::mpvplayer->getGamma());
-    QObject::connect(gammaSlider, &QSlider::valueChanged, [=](int val){
+    gammaSlider->setMinimumWidth(sliderMinW);
+    gammaMenu->setWidget(gammaSlider);
+    QObject::connect(gammaSlider, &QSlider::valueChanged, this, [=](int val){
         GlobalObjects::mpvplayer->setGamma(val);
         gammaSlider->setToolTip(QString::number(val));
     });
@@ -1628,12 +882,14 @@ void PlayerWindow::setupPlaySettingPage()
         gammaSlider->blockSignals(false);
     });
 
-    QLabel *hueLabel = new QLabel(tr("Hue"),pageColor);
-    QSlider *hueSlider = new QSlider(Qt::Horizontal,pageColor);
-    hueSlider->setObjectName(QStringLiteral("PopupPageSlider"));
+    OptionMenuItem *hueMenu = colorPanel->addMenu(tr("Hue"));
+    hueMenu->setSelectAble(false);
+    ElaSlider *hueSlider = new ElaSlider(Qt::Horizontal, hueMenu);
     hueSlider->setRange(-100, 100);
-    gammaSlider->setValue(GlobalObjects::mpvplayer->getHue());
-    QObject::connect(hueSlider, &QSlider::valueChanged, [=](int val){
+    hueSlider->setValue(GlobalObjects::mpvplayer->getHue());
+    hueSlider->setMinimumWidth(sliderMinW);
+    hueMenu->setWidget(hueSlider);
+    QObject::connect(hueSlider, &QSlider::valueChanged, this, [=](int val){
         GlobalObjects::mpvplayer->setHue(val);
         hueSlider->setToolTip(QString::number(val));
     });
@@ -1643,23 +899,24 @@ void PlayerWindow::setupPlaySettingPage()
         hueSlider->blockSignals(false);
     });
 
-    QLabel *sharpenLabel=new QLabel(tr("Sharpen"),pageColor);
-    QSlider *sharpenSlider=new QSlider(Qt::Horizontal,pageColor);
-    sharpenSlider->setObjectName(QStringLiteral("PopupPageSlider"));
+    OptionMenuItem *sharpenMenu = colorPanel->addMenu(tr("Sharpen"));
+    sharpenMenu->setSelectAble(false);
+    ElaSlider *sharpenSlider = new ElaSlider(Qt::Horizontal, sharpenMenu);
     sharpenSlider->setRange(-200, 200);
     sharpenSlider->setValue(GlobalObjects::mpvplayer->getSharpen());
-    QObject::connect(sharpenSlider, &QSlider::valueChanged, [=](int val){
+    sharpenSlider->setMinimumWidth(sliderMinW);
+    sharpenMenu->setWidget(sharpenSlider);
+    QObject::connect(sharpenSlider, &QSlider::valueChanged, this, [=](int val){
         GlobalObjects::mpvplayer->setSharpen(val);
         sharpenSlider->setToolTip(QString::number(val));
     });
-    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::sharpenChanged, [=](double val){
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::sharpenChanged, this, [=](double val){
         sharpenSlider->blockSignals(true);
         sharpenSlider->setValue(val * 100);
         sharpenSlider->blockSignals(false);
     });
 
-    QPushButton *colorReset = new QPushButton(tr("Reset"), pageColor);
-    QObject::connect(colorReset, &QPushButton::clicked, [=](){
+    QObject::connect(colorResetBtn, &ElaToolButton::clicked, this, [=](){
         brightnessSlider->setValue(0);
         contrastSlider->setValue(0);
         saturationSlider->setValue(0);
@@ -1668,77 +925,661 @@ void PlayerWindow::setupPlaySettingPage()
         sharpenSlider->setValue(0);
     });
 
-    playSettingSLayout->addWidget(pagePlay);
-    playSettingSLayout->addWidget(pageBehavior);
-    playSettingSLayout->addWidget(pageColor);
-    playSettingSLayout->setContentsMargins(4,4,4,4);
+    const int defaultSizeIndex = GlobalObjects::appSetting->value("Play/WindowSize", 2).toInt();
+    const QString windowSizeCheckGroup = "window_size";
+    for (int i = 0; i < playerWindowSize.size(); ++i)
+    {
+        OptionMenuItem *m = windowSizePanel->addMenu(playerWindowSizeTip[i]);
+        m->setCheckable(true);
+        m->setCheckGroup(windowSizeCheckGroup);
+        m->setData(i);
+        if (i == defaultSizeIndex)
+        {
+            m->setChecking(true);
+            windowSizeMenu->setInfoText(playerWindowSizeTip[i]);
+        }
+        QObject::connect(m, &OptionMenuItem::click, this, [=](){
+            int idx = m->menuData().toInt();
+            windowSizeMenu->setInfoText(playerWindowSizeTip[i]);
+            resizePercent = playerWindowSize[idx];
+            if (resizePercent != -1)
+            {
+                adjustPlayerSize(resizePercent);
+            }
+            GlobalObjects::appSetting->setValue("Play/WindowSize", idx);
+        });
+    }
 
-    QGridLayout *playSettingGLayout=new QGridLayout(pagePlay);
-    playSettingGLayout->setContentsMargins(0,0,0,0);
-    playSettingGLayout->setColumnStretch(1, 1);
-    //playSettingGLayout->setRowStretch(0, 1);
-    //playSettingGLayout->setRowStretch(7, 1);
-    playSettingGLayout->addWidget(audioTrackLabel,1,0);
-    playSettingGLayout->addWidget(audioTrackCombo,1,1);
-    playSettingGLayout->addWidget(addAudioTrackButton,1,2);
-    playSettingGLayout->addWidget(subtitleTrackLabel,2,0);
-    playSettingGLayout->addWidget(subtitleTrackCombo,2,1);
-    playSettingGLayout->addWidget(addSubtitleButton,2,2);
-    playSettingGLayout->addWidget(subtitleDelayLabel,3,0);
-    playSettingGLayout->addWidget(delaySpinBox,3,1, 1,2);
-    playSettingGLayout->addWidget(aspectLabel,4,0);
-    playSettingGLayout->addWidget(aspectRatioCombo,4,1,1,2);
-    playSettingGLayout->addWidget(speedLabel,5,0);
-    playSettingGLayout->addWidget(playSpeedCombo,5,1,1,2);
-    QHBoxLayout *bottomBtnHLayout=new QHBoxLayout();
-    bottomBtnHLayout->addWidget(mpvParaGroupCombo);
-    bottomBtnHLayout->addWidget(editMpvOptions);
-    bottomBtnHLayout->addWidget(showMpvLog);
-    playSettingGLayout->addLayout(bottomBtnHLayout,6,0,1,3);
-
-
-    QGridLayout *appearanceGLayout=new QGridLayout(pageBehavior);
-    appearanceGLayout->setContentsMargins(0,0,0,0);
-    appearanceGLayout->setColumnStretch(1, 1);
-    //appearanceGLayout->setRowStretch(0,1);
-    //appearanceGLayout->setRowStretch(6,1);
-    appearanceGLayout->addWidget(clickBehaivorLabel,1,0);
-    appearanceGLayout->addWidget(clickBehaviorCombo,1,1);
-    appearanceGLayout->addWidget(dbClickBehaivorLabel,2,0);
-    appearanceGLayout->addWidget(dbClickBehaviorCombo,2,1);
-    appearanceGLayout->addWidget(forwardTimeLabel,3,0);
-    appearanceGLayout->addWidget(forwardTimeSpin,3,1);
-    appearanceGLayout->addWidget(backwardTimeLabel,4,0);
-    appearanceGLayout->addWidget(backwardTimeSpin,4,1);
-    appearanceGLayout->addWidget(showPreview,5,0,1,2);
-    appearanceGLayout->addWidget(autoLoadDanmuCheck,6,0,1,2);
-
-
-    QGridLayout *colorGLayout=new QGridLayout(pageColor);
-    colorGLayout->setContentsMargins(0,0,0,0);
-    colorGLayout->setColumnStretch(1, 1);
-    //colorGLayout->setRowStretch(0,1);
-    //colorGLayout->setRowStretch(8,1);
-    colorGLayout->addWidget(brightnessLabel,1,0);
-    colorGLayout->addWidget(brightnessSlider,1,1);
-    colorGLayout->addWidget(contrastLabel,2,0);
-    colorGLayout->addWidget(contrastSlider,2,1);
-    colorGLayout->addWidget(saturationLabel,3,0);
-    colorGLayout->addWidget(saturationSlider,3,1);
-    colorGLayout->addWidget(gammaLabel,4,0);
-    colorGLayout->addWidget(gammaSlider,4,1);
-    colorGLayout->addWidget(hueLabel,5,0);
-    colorGLayout->addWidget(hueSlider,5,1);
-    colorGLayout->addWidget(sharpenLabel,6,0);
-    colorGLayout->addWidget(sharpenSlider,6,1);
-    colorGLayout->addWidget(colorReset,7,0,1,2);
-
-    playSettingPage->hide();
+    const int defaultPin = GlobalObjects::appSetting->value("Play/StayOnTop", 0).toInt();
+    QStringList pinTip{tr("While Playing"), tr("Always"), tr("Never")};
+    const QString pinCheckGroup = "on_top";
+    for (int i = 0; i < pinTip.size(); ++i)
+    {
+        OptionMenuItem *m = topPanel->addMenu(pinTip[i]);
+        m->setCheckable(true);
+        m->setCheckGroup(pinCheckGroup);
+        if (i == defaultPin)
+        {
+            m->setChecking(true);
+            topMenu->setInfoText(pinTip[i]);
+        }
+        QObject::connect(m, &OptionMenuItem::click, this, [=](){
+            updateTopStatus(i);
+            topMenu->setInfoText(m->text());
+        });
+    }
 }
 
-void PlayerWindow::setupSignals()
+void PlayerWindow::setMPVConfPage(OptionMenuPanel *rootPanel)
 {
-    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::durationChanged,[this](int duration){
+    ElaSelfTheme *btnSelfTheme = new ElaSelfTheme(rootPanel);
+    btnSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicText, Qt::white);
+    btnSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicText, Qt::white);
+
+    OptionMenuItem *confMenu = rootPanel->addMenu(tr("MPV Conf"));
+    OptionMenuPanel *confPanel = confMenu->addSubMenuPanel();
+    ElaToolButton *addConfBtn = new ElaToolButton(confPanel);
+    addConfBtn->setSelfTheme(btnSelfTheme);
+    addConfBtn->setText(tr("Add"));
+    confPanel->addTitleMenu(tr("MPV Conf"))->setWidget(addConfBtn);
+    confPanel->addSpliter();
+
+    QObject::connect(addConfBtn, &ElaToolButton::clicked, this, [=](){
+        MPVConfEdiror editor(this);
+        QRect geo(0, 0, 600, 500);
+        geo.moveCenter(this->geometry().center());
+        editor.move(mapToGlobal(geo.topLeft()));
+        editor.exec();
+    });
+
+    auto refreshConf = [=](){
+        const QString confFlag = "mpv_conf";
+        confPanel->removeFlag(confFlag);
+        const QStringList &confList = GlobalObjects::mpvplayer->allOptionGroups();
+        const QString curConf = GlobalObjects::mpvplayer->currentOptionGroup();
+        const QString aspectCheckGroup = "mpv_conf";
+        for (int i = 0; i < confList.size(); ++i)
+        {
+            OptionMenuItem *m = confPanel->addMenu(confList[i]);
+            m->setCheckable(true);
+            m->setCheckGroup(aspectCheckGroup);
+            m->setFlag(confFlag);
+            m->setData(confList[i]);
+            if (confList[i] == curConf)
+            {
+                m->setChecking(true);
+                confMenu->setInfoText(confList[i]);
+            }
+            QObject::connect(m, &OptionMenuItem::click, this, [=](){
+                if(GlobalObjects::mpvplayer->setOptionGroup(m->menuData().toString()))
+                {
+                    confMenu->setInfoText(m->menuData().toString());
+                    Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tr("Switch to option group \"%1\"").arg(GlobalObjects::mpvplayer->currentOptionGroup()));
+                }
+            });
+        }
+    };
+
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::optionGroupChanged, this, refreshConf);
+    refreshConf();
+}
+
+void PlayerWindow::initDanmuSettting()
+{
+    danmuSettingPage = new OptionMenu(this->centralWidget());
+    danmuSettingPage->installEventFilter(this);
+    OptionMenu *menu = static_cast<OptionMenu *>(danmuSettingPage);
+    OptionMenuPanel *rootPanel = menu->defaultMenuPanel();
+
+    setHidePage(rootPanel);
+    setDanmuDisplayPage(rootPanel);
+    setLiveModePage(rootPanel);
+    setDanmuOptionItems(rootPanel);
+}
+
+void PlayerWindow::setHidePage(OptionMenuPanel *rootPanel)
+{
+    ElaSelfTheme *switchSelfTheme = new ElaSelfTheme(rootPanel);
+    switchSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicBase, QColor(255, 255, 255, 40));
+    switchSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicBase, QColor(255, 255, 255, 40));
+    switchSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicHover, QColor(255, 255, 255, 80));
+    switchSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicHover, QColor(255, 255, 255, 80));
+    switchSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicBorder, QColor(255, 255, 255, 60));
+    switchSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicBorder, QColor(255, 255, 255, 60));
+    switchSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::ToggleSwitchNoToggledCenter, QColor(255, 255, 255, 90));
+    switchSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::ToggleSwitchNoToggledCenter, QColor(255, 255, 255, 90));
+
+    OptionMenuItem *hideDanmuMenu = rootPanel->addMenu(tr("Hide Danmu"));
+    OptionMenuPanel *hidePanel = hideDanmuMenu->addSubMenuPanel();
+    hidePanel->addTitleMenu(tr("Hide Danmu"));
+    hidePanel->addSpliter();
+
+    ElaToggleSwitch *hideSwitch = new ElaToggleSwitch(hideDanmuMenu);
+    hideSwitch->setSelfTheme(switchSelfTheme);
+    hideSwitch->setIsToggled(GlobalObjects::mpvplayer->getDanmuHide());
+    hideDanmuMenu->setWidget(hideSwitch);
+
+    OptionMenuItem *hideAllMenu = hidePanel->addMenu(tr("All"));
+    hideAllMenu->setCheckable(true);
+    QObject::connect(hideSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked) {
+        setHideDanmu(checked);
+        hideAllMenu->setChecking(checked);
+    });
+    QObject::connect(hideAllMenu, &OptionMenuItem::click, this, [=](){
+        setHideDanmu(hideAllMenu->isChecking());
+        hideSwitch->setIsToggled(hideAllMenu->isChecking());
+    });
+
+    OptionMenuItem *hideRollingMenu = hidePanel->addMenu(tr("Rolling"));
+    hideRollingMenu->setCheckable(true);
+    hideRollingMenu->setChecking(GlobalObjects::danmuRender->isHidden(DanmuComment::Rolling));
+    QObject::connect(hideRollingMenu, &OptionMenuItem::click, this, [=](){
+        GlobalObjects::danmuRender->hideDanmu(DanmuComment::Rolling, hideRollingMenu->isChecking());
+    });
+
+    OptionMenuItem *hideTopMenu = hidePanel->addMenu(tr("Top"));
+    hideTopMenu->setCheckable(true);
+    hideTopMenu->setChecking(GlobalObjects::danmuRender->isHidden(DanmuComment::Top));
+    QObject::connect(hideTopMenu, &OptionMenuItem::click, this, [=](){
+        GlobalObjects::danmuRender->hideDanmu(DanmuComment::Top, hideTopMenu->isChecking());
+    });
+
+    OptionMenuItem *hideBottomMenu = hidePanel->addMenu(tr("Bottom"));
+    hideBottomMenu->setCheckable(true);
+    hideBottomMenu->setChecking(GlobalObjects::danmuRender->isHidden(DanmuComment::Bottom));
+    QObject::connect(hideBottomMenu, &OptionMenuItem::click, this, [=](){
+        GlobalObjects::danmuRender->hideDanmu(DanmuComment::Bottom, hideBottomMenu->isChecking());
+    });
+}
+
+void PlayerWindow::setDanmuDisplayPage(OptionMenuPanel *rootPanel)
+{
+    OptionMenuItem *displayMenu = rootPanel->addMenu(tr("Display Settings"));
+    OptionMenuPanel *displayPanel = displayMenu->addSubMenuPanel();
+    displayPanel->addTitleMenu(displayMenu->text());
+    displayPanel->addSpliter();
+
+    OptionMenuItem *denseLevelMenu = displayPanel->addMenu(tr("Dense Level"));
+    OptionMenuPanel *denseLevelPanel = denseLevelMenu->addSubMenuPanel();
+    denseLevelPanel->addTitleMenu(tr("Dense Level"));
+    denseLevelPanel->addSpliter();
+    const QStringList denseLevels = {tr("Uncovered"), tr("General"), tr("Dense")};
+    for (int i = 0; i < denseLevels.size(); ++i)
+    {
+        OptionMenuItem *m = denseLevelPanel->addMenu(denseLevels[i]);
+        m->setCheckable(true);
+        if (i == GlobalObjects::danmuRender->dense)
+        {
+            m->setChecking(true);
+            denseLevelMenu->setInfoText(denseLevels[i]);
+        }
+        m->setCheckGroup("dense_level");
+        QObject::connect(m, &OptionMenuItem::click, this, [=](){
+            GlobalObjects::danmuRender->setDenseLevel(i);
+            denseLevelMenu->setInfoText(m->text());
+        });
+    }
+
+
+    OptionMenuItem *displayAreaMenu = displayPanel->addMenu(tr("Display Area"));
+    OptionMenuPanel *displayAreaPanel = displayAreaMenu->addSubMenuPanel();
+    displayAreaPanel->addTitleMenu(displayAreaMenu->text());
+    displayAreaPanel->addSpliter();
+    const QStringList displayAreas = {tr("1/8"), tr("1/4"), tr("1/2"), tr("3/4"), tr("Full")};
+    for (int i = 0; i < displayAreas.size(); ++i)
+    {
+        OptionMenuItem *m = displayAreaPanel->addMenu(displayAreas[i]);
+        m->setCheckable(true);
+        if (i == GlobalObjects::danmuRender->getDisplayAreaIndex())
+        {
+            m->setChecking(true);
+            displayAreaMenu->setInfoText(displayAreas[i]);
+        }
+        m->setCheckGroup("display_area");
+        QObject::connect(m, &OptionMenuItem::click, this, [=](){
+            GlobalObjects::danmuRender->setDisplayArea(i);
+            displayAreaMenu->setInfoText(m->text());
+        });
+    }
+
+    OptionMenuItem *subProtectMenu = displayPanel->addMenu(tr("Sub Protect"));
+    OptionMenuPanel *subProtectPanel = subProtectMenu->addSubMenuPanel();
+    subProtectPanel->addTitleMenu(subProtectMenu->text());
+    subProtectPanel->addSpliter();
+    OptionMenuItem *bottomSubProtectMenu = subProtectPanel->addMenu(tr("Bottom Sub"));
+    bottomSubProtectMenu->setCheckable(true);
+    bottomSubProtectMenu->setChecking(GlobalObjects::danmuRender->isBottomSubProtect());
+    OptionMenuItem *topSubProtectMenu = subProtectPanel->addMenu(tr("Top Sub"));
+    topSubProtectMenu->setCheckable(true);
+    topSubProtectMenu->setChecking(GlobalObjects::danmuRender->isTopSubProtect());
+    QString subProtectInfoText;
+    if (bottomSubProtectMenu->isChecking()) subProtectInfoText = tr("Bottom");
+    if (topSubProtectMenu->isChecking())
+    {
+        subProtectInfoText += subProtectInfoText.isEmpty()? tr("Top") : "|" + tr("Top");
+    }
+    subProtectMenu->setInfoText(subProtectInfoText);
+    QObject::connect(bottomSubProtectMenu, &OptionMenuItem::click, this, [=](){
+        GlobalObjects::danmuRender->setBottomSubtitleProtect(bottomSubProtectMenu->isChecking());
+        if (bottomSubProtectMenu->isChecking())
+        {
+            subProtectMenu->setInfoText(topSubProtectMenu->isChecking()? tr("Bottom") + "|" + tr("Top") : tr("Bottom"));
+        }
+        else
+        {
+            subProtectMenu->setInfoText(topSubProtectMenu->isChecking()? tr("Top") : "");
+        }
+    });
+    QObject::connect(topSubProtectMenu, &OptionMenuItem::click, this, [=](){
+        GlobalObjects::danmuRender->setTopSubtitleProtect(topSubProtectMenu->isChecking());
+        if (bottomSubProtectMenu->isChecking())
+        {
+            subProtectMenu->setInfoText(topSubProtectMenu->isChecking()? tr("Bottom") + "|" + tr("Top") : tr("Bottom"));
+        }
+        else
+        {
+            subProtectMenu->setInfoText(topSubProtectMenu->isChecking()? tr("Top") : "");
+        }
+    });
+
+    OptionMenuItem *danmuCountMenu = displayPanel->addMenu(tr("Max Count"));
+    OptionMenuPanel *danmuCountPanel = danmuCountMenu->addSubMenuPanel();
+    danmuCountPanel->addTitleMenu(danmuCountMenu->text());
+    OptionMenuItem *danmuCountSliderMenu = danmuCountPanel->addMenu("");
+    danmuCountSliderMenu->setSelectAble(false);
+    ElaSlider *danmuCountSlider = new ElaSlider(Qt::Orientation::Horizontal, danmuCountSliderMenu);
+    danmuCountSlider->setRange(20, 300);
+    danmuCountSlider->setValue(GlobalObjects::danmuRender->getMaxDanmuCount());
+    danmuCountSliderMenu->setWidget(danmuCountSlider, true);
+    OptionMenuItem *tipMenu = danmuCountPanel->addMenu(QString::number(danmuCountSlider->value()));
+    tipMenu->setTextCenter(true);
+    tipMenu->setSelectAble(false);
+    danmuCountMenu->setInfoText(QString::number(danmuCountSlider->value()));
+    QObject::connect(danmuCountSlider, &QSlider::valueChanged, this, [=](int val){
+        GlobalObjects::danmuRender->setMaxDanmuCount(val);
+        tipMenu->setText(QString::number(val));
+        danmuCountMenu->setInfoText(QString::number(val));
+    });
+
+    OptionMenuItem *danmuSpeedMenu = displayPanel->addMenu(tr("Rolling Speed"));
+    OptionMenuPanel *danmuSpeedPanel = danmuSpeedMenu->addSubMenuPanel();
+    danmuSpeedPanel->addTitleMenu(danmuSpeedMenu->text());
+    OptionMenuItem *danmuSpeedSliderMenu = danmuSpeedPanel->addMenu("");
+    danmuSpeedSliderMenu->setSelectAble(false);
+    ElaSlider *danmuSpeedSlider = new ElaSlider(Qt::Orientation::Horizontal, danmuSpeedSliderMenu);
+    danmuSpeedSlider->setRange(50, 500);
+    danmuSpeedSlider->setValue(GlobalObjects::danmuRender->getSpeed());
+    danmuSpeedSliderMenu->setWidget(danmuSpeedSlider, true);
+    OptionMenuItem *tipSpeedMenu = danmuSpeedPanel->addMenu(QString::number(danmuSpeedSlider->value()));
+    tipSpeedMenu->setTextCenter(true);
+    tipSpeedMenu->setSelectAble(false);
+    danmuSpeedMenu->setInfoText(QString::number(danmuSpeedSlider->value()));
+    QObject::connect(danmuSpeedSlider, &QSlider::valueChanged, this, [=](int val){
+        GlobalObjects::danmuRender->setSpeed(val);
+        tipSpeedMenu->setText(QString::number(val));
+        danmuSpeedMenu->setInfoText(QString::number(val));
+    });
+}
+
+void PlayerWindow::setLiveModePage(OptionMenuPanel *rootPanel)
+{
+    ElaSelfTheme *switchSelfTheme = new ElaSelfTheme(rootPanel);
+    switchSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicBase, QColor(255, 255, 255, 40));
+    switchSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicBase, QColor(255, 255, 255, 40));
+    switchSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicHover, QColor(255, 255, 255, 80));
+    switchSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicHover, QColor(255, 255, 255, 80));
+    switchSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicBorder, QColor(255, 255, 255, 60));
+    switchSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicBorder, QColor(255, 255, 255, 60));
+    switchSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::ToggleSwitchNoToggledCenter, QColor(255, 255, 255, 90));
+    switchSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::ToggleSwitchNoToggledCenter, QColor(255, 255, 255, 90));
+
+    OptionMenuItem *liveModeMenu = rootPanel->addMenu(tr("Live Mode"));
+    OptionMenuPanel *liveModePanel = liveModeMenu->addSubMenuPanel();
+    liveModePanel->addTitleMenu(tr("Live Mode"));
+    liveModePanel->addSpliter();
+
+    ElaToggleSwitch *liveSwitch = new ElaToggleSwitch(liveModeMenu);
+    liveSwitch->setSelfTheme(switchSelfTheme);
+    liveSwitch->setIsToggled(GlobalObjects::danmuRender->isLiveModeOn());
+    liveModeMenu->setWidget(liveSwitch);
+
+    QObject::connect(liveSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked) {
+        GlobalObjects::danmuRender->setLiveMode(checked);
+        if(GlobalObjects::playlist->getCurrentItem() && !GlobalObjects::mpvplayer->getDanmuHide())
+        {
+            liveDanmuList->setVisible(checked);
+        }
+    });
+
+    OptionMenuItem *liveRollingMenu = liveModePanel->addMenu(tr("Only Rolling Danmu"));
+    liveRollingMenu->setCheckable(true);
+    liveRollingMenu->setChecking(GlobalObjects::danmuRender->isLiveOnlyRolling());
+    QObject::connect(liveRollingMenu, &OptionMenuItem::click, this, [=](){
+        GlobalObjects::danmuRender->setLiveMode(GlobalObjects::danmuRender->isLiveModeOn(), liveRollingMenu->isChecking()? 1: 0);
+    });
+
+    OptionMenuItem *liveAlignRightMenu = liveModePanel->addMenu(tr("Align Right"));
+    liveAlignRightMenu->setCheckable(true);
+    liveAlignRightMenu->setChecking(GlobalObjects::danmuRender->liveDanmuModel()->alignment() == Qt::AlignRight);
+    QObject::connect(liveAlignRightMenu, &OptionMenuItem::click, this, [=](){
+        if (liveAlignRightMenu->isChecking())
+        {
+            GlobalObjects::danmuRender->liveDanmuModel()->setAlignment(Qt::AlignRight);
+            liveDanmuList->parentWidget()->layout()->setAlignment(liveDanmuList, Qt::AlignRight);
+        }
+        else
+        {
+            GlobalObjects::danmuRender->liveDanmuModel()->setAlignment(Qt::AlignLeft);
+            liveDanmuList->parentWidget()->layout()->setAlignment(liveDanmuList, Qt::AlignLeft);
+        }
+    });
+
+    OptionMenuItem *liveShowSenderMenu = liveModePanel->addMenu(tr("Show Sender"));
+    liveShowSenderMenu->setCheckable(true);
+    liveShowSenderMenu->setChecking(GlobalObjects::danmuRender->liveDanmuModel()->isShowSender());
+    QObject::connect(liveShowSenderMenu, &OptionMenuItem::click, this, [=](){
+        GlobalObjects::danmuRender->liveDanmuModel()->setShowSender(liveShowSenderMenu->isChecking());
+    });
+
+    const int sliderMinW = 150;
+    OptionMenuItem *liveDanmuSizeMenu = liveModePanel->addMenu(tr("Live Danmu Size"));
+    liveDanmuSizeMenu->setSelectAble(false);
+    ElaSlider *liveSizeSlider = new ElaSlider(Qt::Horizontal, liveDanmuSizeMenu);
+    liveSizeSlider->setRange(6, 20);
+    liveSizeSlider->setValue(GlobalObjects::danmuRender->liveDanmuModel()->getFontSize());
+    liveSizeSlider->setToolTip(QString::number(liveSizeSlider->value()));
+    liveSizeSlider->setMinimumWidth(sliderMinW);
+    liveDanmuSizeMenu->setWidget(liveSizeSlider);
+    QObject::connect(liveSizeSlider, &QSlider::valueChanged, this, [=](int val){
+        GlobalObjects::danmuRender->liveDanmuModel()->setFontSize(val);
+        liveSizeSlider->setToolTip(QString::number(val));
+    });
+
+    OptionMenuItem *liveVRangeMenu = liveModePanel->addMenu(tr("Vertical Range"));
+    ElaSlider *liveVRangeSlider = new ElaSlider(Qt::Horizontal, liveVRangeMenu);
+    liveVRangeSlider->setRange(20, 95);
+    liveVRangeSlider->setMinimumWidth(sliderMinW);
+    liveVRangeMenu->setWidget(liveVRangeSlider);
+    QObject::connect(liveVRangeSlider, &QSlider::valueChanged, this, [=](int val){
+        liveDanmuList->setFixedHeight(static_cast<float>(val) / 100 * height());
+        liveVRangeSlider->setToolTip(QString::number(val));
+        liveVRange = val;
+    });
+    liveVRangeSlider->setValue(this->liveVRange);
+
+}
+
+void PlayerWindow::setDanmuOptionItems(OptionMenuPanel *rootPanel)
+{
+    const int sliderMinW = 120;
+    OptionMenuItem *alphaMenu = rootPanel->addMenu(tr("Opacity"));
+    alphaMenu->setSelectAble(false);
+    ElaSlider *alphaSlider = new ElaSlider(Qt::Horizontal, alphaMenu);
+    alphaSlider->setRange(0, 100);
+    alphaSlider->setValue(GlobalObjects::danmuRender->getOpacity() * 100);
+    alphaSlider->setToolTip(QString::number(alphaSlider->value()));
+    alphaSlider->setMinimumWidth(sliderMinW);
+    alphaMenu->setWidget(alphaSlider);
+    QObject::connect(alphaSlider, &QSlider::valueChanged, this, [=](int val){
+        GlobalObjects::danmuRender->setOpacity(val/100.f);
+        alphaSlider->setToolTip(QString::number(val));
+    });
+
+    OptionMenuItem *fontSizeMenu = rootPanel->addMenu(tr("Font Size"));
+    fontSizeMenu->setSelectAble(false);
+    ElaSlider *fontSizeSlider = new ElaSlider(Qt::Horizontal, fontSizeMenu);
+    fontSizeSlider->setRange(4, 80);
+    fontSizeSlider->setValue(GlobalObjects::danmuRender->getFontSize());
+    fontSizeSlider->setToolTip(QString::number(fontSizeSlider->value()));
+    fontSizeSlider->setMinimumWidth(sliderMinW);
+    fontSizeMenu->setWidget(fontSizeSlider);
+    QObject::connect(fontSizeSlider, &QSlider::valueChanged, this, [=](int val){
+        GlobalObjects::danmuRender->setFontSize(val);
+        fontSizeSlider->setToolTip(QString::number(val));
+    });
+
+    OptionMenuItem *moreMenu = rootPanel->addMenu(tr("More Settings"));
+    QObject::connect(moreMenu, &OptionMenuItem::click, this, [=](){
+        Settings settings(Settings::PAGE_DANMU, this);
+        QRect geo(0, 0, 420, 600);
+        geo.moveCenter(this->geometry().center());
+        settings.move(mapToGlobal(geo.topLeft()));
+        danmuSettingPage->hide();
+        settings.exec();
+    });
+
+}
+
+void PlayerWindow::initVolumeSetting()
+{
+    volumeSettingPage = new OptionMenu(this->centralWidget());
+    volumeSettingPage->installEventFilter(this);
+    OptionMenu *menu = static_cast<OptionMenu *>(volumeSettingPage);
+    OptionMenuPanel *rootPanel = menu->defaultMenuPanel();
+
+    OptionMenuItem *volumeMenu = rootPanel->addMenu("");
+    volumeMenu->setFixHeight(140);
+    volumeMenu->setMinWidth(30);
+    volumeMenu->setSelectAble(false);
+    volumeSlider = new ElaSlider(Qt::Vertical, volumeMenu);
+    volumeSlider->setMinimum(0);
+    volumeSlider->setMaximum(150);
+    volumeSlider->setSingleStep(1);
+
+    QObject::connect(volumeSlider, &QSlider::valueChanged, this, [=](int val){
+        GlobalObjects::mpvplayer->setVolume(val);
+        volumeSlider->setToolTip(QString::number(val));
+    });
+    volumeSlider->setValue(GlobalObjects::appSetting->value("Play/Volume", 50).toInt());
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::volumeChanged, volumeSlider, [=](int value){
+        volumeSlider->blockSignals(true);
+        volumeSlider->setValue(value);
+        volumeSlider->blockSignals(false);
+    });
+
+    volumeMenu->setMarginRight(14);
+    volumeMenu->setWidget(volumeSlider, true);
+    volumeSettingPage->hide();
+
+    QObject::connect(&volumeHideTimer, &QTimer::timeout, this, [=](){
+        volumeSettingPage->hide();
+    });
+
+}
+
+QPoint PlayerWindow::getPopupMenuPos(QWidget *ref, QWidget *popup, int topSpace)
+{
+    QPoint refCenter = ref->mapToGlobal(QPoint(ref->width() / 2, 0));
+    QPoint playerRefCenter = this->mapFromGlobal(refCenter);
+    int x = playerRefCenter.x() - popup->width() / 2;
+    int y = playerRefCenter.y() - popup->height() - topSpace;
+    if (x + popup->width() > this->width()) x = this->width() - popup->width() - 10;
+    return QPoint(x, y);
+}
+
+void PlayerWindow::updateTopStatus(int option)
+{
+    switch (option)
+    {
+    case 0:
+        onTopWhilePlaying = true;
+        emit setStayOnTop(GlobalObjects::mpvplayer->getState()==MPVPlayer::Play && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty());
+        break;
+    case 1:
+        onTopWhilePlaying = false;
+        emit setStayOnTop(true);
+        break;
+    case 2:
+        onTopWhilePlaying = false;
+        emit setStayOnTop(false);
+        break;
+    default:
+        break;
+    }
+    GlobalObjects::appSetting->setValue("Play/StayOnTop", option);
+}
+
+void PlayerWindow::showPlayerRegion(bool on)
+{
+    playInfoPanel->setVisible(on);
+    progress->setVisible(on);
+    timeLabel->setVisible(on);
+    launchDanmuEdit->setVisible(on);
+}
+
+QWidget *PlayerWindow::initPlayerLayer(QWidget *parent)
+{
+    // flow tip & preview
+    playInfo = new InfoTips(parent);
+    initProgressPreview(parent);
+
+    QWidget *playerLayerContainer = new QWidget(parent);
+
+    // logo, recent list
+    playerContent = new PlayerContent(playerLayerContainer);
+    playerContent->raise();
+
+    // title info
+    playInfoPanel = new QWidget(playerLayerContainer);
+    playInfoPanel->setObjectName(QStringLiteral("widgetPlayInfo"));
+    playInfoPanel->hide();
+    initPlayInfo(playInfoPanel);
+
+    // side panel
+    initSidePanel(playerLayerContainer);
+
+    // control area
+    playControlPanel = new QWidget(playerLayerContainer);
+    playControlPanel->setObjectName(QStringLiteral("widgetPlayControl"));
+    playControlPanel->hide();
+
+    progress = new ClickSlider(playControlPanel);
+    //progress->setObjectName(QStringLiteral("ProgressSlider"));
+    progress->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Minimum);
+    progress->setTracking(false);
+    progress->setMouseTracking(true);
+
+    DanmuStatisWidget *statWidget = new DanmuStatisWidget(playControlPanel);
+    statWidget->setObjectName(QStringLiteral("DanmuStatisBar"));
+    statWidget->setRefSlider(progress);
+    QObject::connect(GlobalObjects::danmuPool, &DanmuPool::statisInfoChange, statWidget, &DanmuStatisWidget::refreshStatis);
+    danmuStatisBar = statWidget;
+    const int statisBarHeight = 50;
+    danmuStatisBar->setMinimumHeight(statisBarHeight);
+    danmuStatisBar->hide();
+
+    QVBoxLayout *controlVLayout = new QVBoxLayout(playControlPanel);
+    controlVLayout->setSpacing(0);
+    controlVLayout->addStretch(1);
+    controlVLayout->addWidget(statWidget);
+    controlVLayout->addWidget(progress);
+    controlVLayout->addLayout(initPlayControl(playControlPanel));
+
+    miniProgress = new ClickSlider(playerLayerContainer);
+    // miniProgress->setObjectName(QStringLiteral("MiniProgressSlider"));
+    miniProgress->hide();
+
+    playerLayerContainer->setMouseTracking(true);
+    QVBoxLayout *contralVLayout = new QVBoxLayout(playerLayerContainer);
+    contralVLayout->setContentsMargins(0,0,0,0);
+    contralVLayout->setSpacing(0);
+    contralVLayout->addWidget(playInfoPanel);
+    contralVLayout->addStretch(1);
+    contralVLayout->addWidget(miniProgress);
+    contralVLayout->addWidget(playControlPanel);
+
+    return playerLayerContainer;
+}
+
+QWidget *PlayerWindow::initLiveDanmuLayer(QWidget *parent)
+{
+    QWidget *liveDanmuContainer = new QWidget(parent);
+    liveDanmuList = new QListView(liveDanmuContainer);
+    liveDanmuList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    liveDanmuList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    liveDanmuList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    liveDanmuList->setObjectName(QStringLiteral("LiveDanmuList"));
+    liveDanmuList->setVerticalScrollBar(new SmoothScrollBar(liveDanmuList));
+    liveDanmuList->setResizeMode(QListView::ResizeMode::Adjust);
+    liveDanmuList->setGraphicsEffect(new EdgeFadeEffect);
+    liveDanmuList->setModel(GlobalObjects::danmuRender->liveDanmuModel());
+    liveDanmuList->setItemDelegate(new LiveDanmuItemDelegate(this));
+    QVBoxLayout *liveVLayout = new QVBoxLayout(liveDanmuContainer);
+    liveVLayout->addStretch(1);
+    liveVLayout->addWidget(liveDanmuList, 0, GlobalObjects::danmuRender->liveDanmuModel()->alignment());
+    liveDanmuList->hide();
+    liveVRange = GlobalObjects::appSetting->value("Play/LiveVRange", 40).toInt();
+    return liveDanmuContainer;
+}
+
+void PlayerWindow::initSettings()
+{
+    const int defaultSize = GlobalObjects::appSetting->value("Play/WindowSize", 2).toInt();
+    if (defaultSize >= 0 && defaultSize < playerWindowSize.size())
+    {
+        resizePercent = playerWindowSize[defaultSize];
+        if (resizePercent != -1)
+        {
+            adjustPlayerSize(resizePercent);
+        }
+    }
+
+    const int defaultPin = GlobalObjects::appSetting->value("Play/StayOnTop", 0).toInt();
+    updateTopStatus(defaultPin);
+
+    jumpForwardTime = GlobalObjects::appSetting->value(SETTING_KEY_FORWARD_JUMP, 5).toInt();
+    jumpBackwardTime = GlobalObjects::appSetting->value(SETTING_KEY_BACKWARD_JUMP, 5).toInt();
+}
+
+void PlayerWindow::initProgressPreview(QWidget *parent)
+{
+    progressInfo = new QWidget(parent);
+    QStackedLayout *piSLayout = new QStackedLayout(progressInfo);
+    piSLayout->setStackingMode(QStackedLayout::StackAll);
+    piSLayout->setContentsMargins(0,0,0,0);
+    piSLayout->setSpacing(0);
+    QWidget *tiWidget = new QWidget(progressInfo);
+    QVBoxLayout *piVLayout = new QVBoxLayout(tiWidget);
+    piVLayout->setContentsMargins(0,0,0,0);
+    piVLayout->setSpacing(0);
+    QHBoxLayout *piHLayout = new QHBoxLayout();
+    piHLayout->setContentsMargins(0,0,0,0);
+    piHLayout->setSpacing(0);
+
+    timeInfoTip = new QLabel(tiWidget);
+    timeInfoTip->setObjectName(QStringLiteral("TimeInfoTip"));
+    timeInfoTip->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    previewLabel = new QLabel(progressInfo);
+    previewLabel->setObjectName(QStringLiteral("ProgressPreview"));
+    piVLayout->addStretch(1);
+    piHLayout->addWidget(timeInfoTip);
+    piHLayout->addStretch(1);
+    piVLayout->addLayout(piHLayout);
+    piSLayout->addWidget(tiWidget);
+    piSLayout->addWidget(previewLabel);
+    previewLabel->hide();
+    progressInfo->hide();
+
+    QObject::connect(&previewTimer, &QTimer::timeout, this, [=](){
+        if (GlobalObjects::mpvplayer->getShowPreview() && !progressInfo->isHidden() && previewLabel->isHidden())
+        {
+            QPixmap *pixmap = GlobalObjects::mpvplayer->getPreview(progress->curMousePos()/1000);
+            if (pixmap)
+            {
+                previewLabel->resize(pixmap->width(), pixmap->height());
+                previewLabel->setPixmap(*pixmap);
+                timeInfoTip->setMaximumWidth(pixmap->width());
+                adjustProgressInfoPos();
+                previewLabel->show();
+            }
+        }
+        previewTimer.stop();
+    });
+}
+
+void PlayerWindow::initSignals()
+{
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::durationChanged, this, [this](int duration){
         // QCoreApplication::processEvents();
         int ts=duration/1000;
         int lmin=ts/60;
@@ -1764,7 +1605,7 @@ void PlayerWindow::setupSignals()
         qDebug()<<"Duration Changed";
 #endif
     });
-    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::fileChanged, [](){
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::fileChanged, this, [](){
         if (!EventBus::getEventBus()->hasListener(EventBus::EVENT_PLAYER_FILE_CHANGED)) return;
         QVariantMap param = {
             { "file", GlobalObjects::mpvplayer->getCurrentFile() }
@@ -1781,8 +1622,9 @@ void PlayerWindow::setupSignals()
         }
         EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_PLAYER_FILE_CHANGED, param});
     });
-    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::fileChanged,[this](){
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::fileChanged, this, [this](){
         const PlayListItem *currentItem = GlobalObjects::playlist->getCurrentItem();
+        showPlayerRegion(true);
         progress->setEventMark(QVector<DanmuEvent>());
         progress->setChapterMark(QVector<MPVPlayer::ChapterInfo>());
         QString mediaTitle(GlobalObjects::mpvplayer->getMediaTitle());
@@ -1826,7 +1668,7 @@ void PlayerWindow::setupSignals()
                 showMessage(tr("File is not associated with Danmu Pool"));
             }
         }
-        if (autoLoadLocalDanmu && currentItem->type == PlayListItem::ItemType::LOCAL_FILE)
+        if (GlobalObjects::danmuPool->isLoadLocalDanmu() && currentItem->type == PlayListItem::ItemType::LOCAL_FILE)
         {
             QString danmuFile(currentItem->path.mid(0, currentItem->path.lastIndexOf('.'))+".xml");
             QFileInfo fi(danmuFile);
@@ -1839,8 +1681,6 @@ void PlayerWindow::setupSignals()
         {
             liveDanmuList->show();
         }
-        hasExternalAudio = false;
-        hasExternalSub = false;
         if (currentItem->trackInfo)
         {
             for (const QString &audioFile : currentItem->trackInfo->audioFiles)
@@ -1871,33 +1711,35 @@ void PlayerWindow::setupSignals()
         qDebug()<<"File Changed,Current Item: "<<currentItem->title;
 #endif
     });
-    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::chapterChanged, [this](){
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::chapterChanged, this, [this](){
         progress->setChapterMark(GlobalObjects::mpvplayer->getChapters());
     });
-    QObject::connect(GlobalObjects::playlist,&PlayList::currentMatchChanged,[this](){
+    QObject::connect(GlobalObjects::playlist, &PlayList::currentMatchChanged, this, [this](){
         const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
         if(currentItem->animeTitle.isEmpty())
             titleLabel->setText(currentItem->title);
         else
             titleLabel->setText(QString("%1-%2").arg(currentItem->animeTitle, currentItem->title));
     });
-    QObject::connect(GlobalObjects::danmuPool, &DanmuPool::eventAnalyzeFinished,progress,&ClickSlider::setEventMark);
-    QObject::connect(GlobalObjects::playlist,&PlayList::recentItemsUpdated,[this](){
-        static_cast<PlayerContent *>(playerContent)->refreshItems();
-    });
-    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::positionChanged,[this](int newtime){
+    QObject::connect(GlobalObjects::danmuPool, &DanmuPool::eventAnalyzeFinished, progress, &ClickSlider::setEventMark);
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::positionChanged, this, [this](int newtime){
         const int cs = newtime / 1000;
         const int cmin = cs / 60;
         const int cls = cs - cmin * 60;
         PlayContext::context()->playtime = cs;
-        if(!progressPressed) progress->setValue(newtime);
+        if(!progressPressed)
+        {
+            progress->blockSignals(true);
+            progress->setValue(newtime);
+            progress->blockSignals(false);
+        }
         if(miniModeOn) miniProgress->setValue(newtime);
         timeLabel->setText(QString("%1:%2%3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(this->totalTimeStr));
     });
-    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::bufferingStateChanged,[this](int val){
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::bufferingStateChanged, this, [this](int val){
         timeLabel->setText(tr("Buffering: %1%, %2").arg(val).arg(formatSize(true, GlobalObjects::mpvplayer->getCacheSpeed())));
     });
-    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::refreshPreview,[this](int timePos, QPixmap *pixmap){
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::refreshPreview, this, [this](int timePos, QPixmap *pixmap){
         int cp = progress->curMousePos() / 1000;
         if(!progressInfo->isHidden() && qAbs(timePos-cp)<3)
         {
@@ -1910,7 +1752,7 @@ void PlayerWindow::setupSignals()
             //previewLabel->adjustSize();
         }
     });
-    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::stateChanged, [](MPVPlayer::PlayState state){
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::stateChanged, this, [](MPVPlayer::PlayState state){
         if (!EventBus::getEventBus()->hasListener(EventBus::EVENT_PLAYER_STATE_CHANGED)) return;
         QVariantMap param = {
             { "state", (int)state }
@@ -1928,7 +1770,7 @@ void PlayerWindow::setupSignals()
         }
     });
 
-    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::stateChanged,[this](MPVPlayer::PlayState state) {
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::stateChanged, this, [this](MPVPlayer::PlayState state) {
         bool has_video = !GlobalObjects::mpvplayer->getCurrentFile().isEmpty();
         bool is_playing = (state == MPVPlayer::Play && has_video);
         if (is_playing)
@@ -1944,17 +1786,17 @@ void PlayerWindow::setupSignals()
         case MPVPlayer::Play:
             if (has_video)
             {
-                this->playPause->setText(QChar(0xe6fb));
+                this->playPause->setText(QChar(0xe632));
                 playerContent->hide();
             }
             break;
         case MPVPlayer::Pause:
             if (has_video)
-                this->playPause->setText(QChar(0xe606));
+                this->playPause->setText(QChar(0xe628));
             break;
         case MPVPlayer::EndReached:
 		{
-            this->playPause->setText(QChar(0xe606));
+            this->playPause->setText(QChar(0xe628));
 			GlobalObjects::danmuPool->reset();
 			GlobalObjects::danmuRender->cleanup();
             GlobalObjects::playlist->setCurrentPlayTime();
@@ -1974,7 +1816,7 @@ void PlayerWindow::setupSignals()
         {
             QCoreApplication::processEvents();
             launch->hide();
-            playPause->setText(QChar(0xe606));
+            playPause->setText(QChar(0xe628));
             progress->setValue(0);
             progress->setRange(0, 0);
             progress->setEventMark(QVector<DanmuEvent>());
@@ -1987,25 +1829,30 @@ void PlayerWindow::setupSignals()
             progressInfo->adjustSize();
             this->timeLabel->setText("00:00/00:00");
             titleLabel->setText(QString());
-            GlobalObjects::playlist->cleanCurrentItem();
+            //GlobalObjects::playlist->cleanCurrentItem();
             GlobalObjects::danmuPool->setPoolID("");
-			GlobalObjects::danmuRender->cleanup();			
-            GlobalObjects::mpvplayer->update();
+            GlobalObjects::danmuRender->cleanup();
+            //QTimer::singleShot(100, GlobalObjects::mpvplayer, "update");
             playerContent->raise();
             playerContent->show();
             liveDanmuList->hide();
+            danmuStatisBar->hide();
             PlayContext::context()->clear();
+            showPlayerRegion(false);
             break;
         }
         }
     });
     QObject::connect(playPause,&QPushButton::clicked,actPlayPause,&QAction::trigger);
 
-    QObject::connect(stop,&QPushButton::clicked,[](){
+    QObject::connect(stop, &QPushButton::clicked, this, [=](){
+        if (isFullscreen) actFullscreen->trigger();
         QCoreApplication::processEvents();
+        //PlayContext::context()->stopFrame = GlobalObjects::mpvplayer->grabFramebuffer();
+        GlobalObjects::playlist->cleanCurrentItem();
         GlobalObjects::mpvplayer->setState(MPVPlayer::Stop);
     });
-    QObject::connect(progress,&ClickSlider::sliderClick,[](int pos){
+    QObject::connect(progress, &ClickSlider::sliderClick, this, [](int pos){
         MPVPlayer::PlayState state=GlobalObjects::mpvplayer->getState();
         switch(state)
         {
@@ -2017,7 +1864,7 @@ void PlayerWindow::setupSignals()
             break;
         }
     });
-    QObject::connect(progress,&ClickSlider::sliderUp,[this](int pos){
+    QObject::connect(progress, &ClickSlider::sliderUp, this, [this](int pos){
         this->progressPressed=false;
         MPVPlayer::PlayState state=GlobalObjects::mpvplayer->getState();
         switch(state)
@@ -2030,27 +1877,26 @@ void PlayerWindow::setupSignals()
             break;
         }
     });
-    QObject::connect(progress,&ClickSlider::sliderPressed,[this](){
-        this->progressPressed=true;
+    QObject::connect(progress, &ClickSlider::sliderPressed, this, [this](){
+        this->progressPressed = true;
     });
-    QObject::connect(progress,&ClickSlider::sliderReleased,[this](){
-        this->progressPressed=false;
+    QObject::connect(progress, &ClickSlider::sliderReleased, this, [this](){
+        this->progressPressed = false;
     });
-    QObject::connect(progress,&ClickSlider::mouseMove,[this](int, int ,int pos, const QString &desc){
-        int cs=pos/1000;
-        int cmin=cs/60;
-        int cls=cs-cmin*60;
-        QString timeTip(QString("%1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')));
-        if(!desc.isEmpty())
-            timeTip+="\n"+desc;
+    QObject::connect(progress, &ClickSlider::mouseMove, this, [this](int, int ,int pos, const QString &desc){
+        int cs = pos / 1000;
+        int cmin = cs / 60;
+        int cls = cs - cmin * 60;
+        QString timeTip(QString("%1:%2").arg(cmin, 2, 10, QChar('0')).arg(cls, 2, 10, QChar('0')));
+        if (!desc.isEmpty()) timeTip += "\n" + desc;
         timeInfoTip->setText(timeTip);
         timeInfoTip->adjustSize();
-        if(previewTimer.isActive()) previewTimer.stop();
-        if(isShowPreview && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+        if (previewTimer.isActive()) previewTimer.stop();
+        if (GlobalObjects::mpvplayer->getShowPreview() && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
         {
             previewLabel->clear();
             QPixmap *pixmap = GlobalObjects::mpvplayer->getPreview(cs, false);
-            if(pixmap)
+            if (pixmap)
             {
                 previewLabel->resize(pixmap->width(), pixmap->height());
                 previewLabel->setPixmap(*pixmap);
@@ -2071,15 +1917,15 @@ void PlayerWindow::setupSignals()
         progressInfo->show();
         progressInfo->raise();
     });
-    QObject::connect(progress,&ClickSlider::mouseEnter,[this](){
+    QObject::connect(progress, &ClickSlider::mouseEnter, this, [this](){
 		if (GlobalObjects::playlist->getCurrentItem() != nullptr && GlobalObjects::danmuPool->totalCount()>0)
 			danmuStatisBar->show();
     });
-    QObject::connect(progress,&ClickSlider::mouseLeave,[this](){
+    QObject::connect(progress, &ClickSlider::mouseLeave, this, [this](){
         danmuStatisBar->hide();
         progressInfo->hide();
     });
-    QObject::connect(miniProgress,&ClickSlider::sliderClick,[](int pos){
+    QObject::connect(miniProgress, &ClickSlider::sliderClick, this, [](int pos){
         MPVPlayer::PlayState state=GlobalObjects::mpvplayer->getState();
         switch(state)
         {
@@ -2091,54 +1937,35 @@ void PlayerWindow::setupSignals()
             break;
         }
     });
-    QObject::connect(volume,&QSlider::valueChanged,[this](int val){
-        GlobalObjects::mpvplayer->setVolume(val);
-        volume->setToolTip(QString::number(val));
-    });
-    volume->setValue(GlobalObjects::appSetting->value("Play/Volume", 50).toInt());
-    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::volumeChanged, [this](int value){
-        volume->setValue(value);
-    });
 
-    QObject::connect(mute,&QPushButton::clicked,[this](){
-        if(GlobalObjects::mpvplayer->getMute())
-        {
-            GlobalObjects::mpvplayer->setMute(false);
-            this->mute->setText(QChar(0xe62c));
-        }
-        else
-        {
-            GlobalObjects::mpvplayer->setMute(true);
-            this->mute->setText(QChar(0xe61e));
-        }
+
+    QObject::connect(mute, &QPushButton::clicked, this, [=](){
+        GlobalObjects::mpvplayer->setMute(!GlobalObjects::mpvplayer->getMute());
     });
-    if(GlobalObjects::appSetting->value("Play/Mute",false).toBool())
+    if (GlobalObjects::appSetting->value("Play/Mute", false).toBool())
+    {
         mute->click();
-    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::muteChanged, [this](bool mute){
-        if(mute)
-        {
-            this->mute->setText(QChar(0xe61e));
-        }
-        else
-        {
-            this->mute->setText(QChar(0xe62c));
-        }
+    }
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::muteChanged, this, [=](bool mute){
+        this->mute->setText(mute? QChar(0xe726) : QChar(0xe725));
     });
-    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::seekableChanged, [this](bool seekable){
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::seekableChanged, this, [this](bool seekable){
         this->progress->setVisible(seekable);
         actSnippet->setEnabled(seekable);
         actGIF->setEnabled(seekable);
-        if(!seekable) {
+        if (!seekable)
+        {
             progressInfo->hide();
         }
-        if(this->miniModeOn && this->miniProgress->isVisible() && !seekable) {
+        if(this->miniModeOn && this->miniProgress->isVisible() && !seekable)
+        {
             this->miniProgress->setVisible(false);
         }
         PlayContext::context()->seekable = seekable;
     });
 
 
-    QObject::connect(launch, &QPushButton::clicked, [this]() {
+    QObject::connect(launch, &QPushButton::clicked, this, [this]() {
         launchWindow->exec();
     });
     QObject::connect(GlobalObjects::danmuProvider, &DanmuProvider::sourceCheckDown, this, [=](const QString &poolId, const QStringList &supportedScripts){
@@ -2153,10 +1980,10 @@ void PlayerWindow::setupSignals()
         }
     });
 
-	QObject::connect(danmu, &QPushButton::clicked, [this]() {
+    QObject::connect(danmu, &QPushButton::clicked, this, [this]() {
         if (!danmuSettingPage)
         {
-            setupDanmuSettingPage();
+            initDanmuSettting();
         }
         if (!danmuSettingPage->isHidden())
 		{
@@ -2168,16 +1995,15 @@ void PlayerWindow::setupSignals()
             playSettingPage->hide();
             return;
         }
-        danmuSettingPage->resize(danmuSettingPage->layout()->sizeHint() + QSize(40*logicalDpiX()/96, 0));
+        danmuSettingPage->resize(danmuSettingPage->sizeHint());
         danmuSettingPage->show();
 		danmuSettingPage->raise();
-        QPoint leftTop(width() - danmuSettingPage->width() - 10, height() - playControlPanel->height() - danmuSettingPage->height() - 2);
-        danmuSettingPage->move(leftTop);
+        danmuSettingPage->move(getPopupMenuPos(danmu, danmuSettingPage, 10));
     });
-    QObject::connect(setting,&QPushButton::clicked,[this](){
+    QObject::connect(setting, &QPushButton::clicked, this, [this](){
         if (!playSettingPage)
         {
-            setupPlaySettingPage();
+            initPlaySetting();
         }
         if (!playSettingPage->isHidden())
 		{
@@ -2189,32 +2015,17 @@ void PlayerWindow::setupSignals()
             danmuSettingPage->hide();
             return;
         }
-        playSettingPage->resize(playSettingPage->layout()->sizeHint() + QSize(40*logicalDpiX()/96, 0));
+        playSettingPage->resize(playSettingPage->sizeHint());
         playSettingPage->show();
 		playSettingPage->raise();
-        QPoint leftTop(width() - playSettingPage->width() - 10, height() - playControlPanel->height() - playSettingPage->height() - 2);
-        playSettingPage->move(leftTop);
+        playSettingPage->move(getPopupMenuPos(setting, playSettingPage, 10));
     });
-    QObject::connect(next,&QPushButton::clicked,actNext,&QAction::trigger);
-    QObject::connect(prev,&QPushButton::clicked,actPrev,&QAction::trigger);
+    QObject::connect(next, &QPushButton::clicked, actNext, &QAction::trigger);
+    QObject::connect(prev, &QPushButton::clicked, actPrev, &QAction::trigger);
     QObject::connect(fullscreen,&QPushButton::clicked,actFullscreen,&QAction::trigger);
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::toggleFullScreen, actFullscreen,&QAction::trigger);
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::toggleMiniMode, actMiniMode, &QAction::trigger);
 
-    QObject::connect(playListCollapseButton,&QPushButton::clicked,this,[this](){
-        if(playListCollapseButton->text()==QChar(0xe946))
-            playListCollapseButton->setText(QChar(0xe945));
-        else
-            playListCollapseButton->setText(QChar(0xe946));
-        emit toggleListVisibility();
-    });
-
-    QObject::connect(mediaInfo,&QToolButton::clicked,[this](){
-        if (GlobalObjects::mpvplayer->getCurrentFile().isEmpty()) return;
-        MediaInfo mediaInfoDialog(this);
-        QRect geo(0,0,400*logicalDpiX()/96,600*logicalDpiY()/96);
-        geo.moveCenter(this->geometry().center());
-        mediaInfoDialog.move(mapToGlobal(geo.topLeft()));
-        mediaInfoDialog.exec();
-    });
     QObject::connect(GlobalObjects::danmuRender->liveDanmuModel(), &LiveDanmuListModel::danmuAppend, this, [this](){
         SmoothScrollBar *liveDanmuVScroll = static_cast<SmoothScrollBar*>(liveDanmuList->verticalScrollBar());
         liveDanmuVScroll->setValue(liveDanmuVScroll->maximum());
@@ -2231,7 +2042,7 @@ void PlayerWindow::adjustPlayerSize(int percent)
         aspectRatio = double(videoSize.width)/videoSize.height;
     else
         aspectRatio = double(videoSize.dwidth)/videoSize.dheight;
-    double scale = percent / 100.0;
+    double scale = percent / 100.0 / devicePixelRatioF();
     emit resizePlayer(videoSize.width * scale,videoSize.height * scale,aspectRatio);
 }
 
@@ -2241,7 +2052,7 @@ void PlayerWindow::setHideDanmu(bool hide)
     {
         GlobalObjects::mpvplayer->hideDanmu(true);
         liveDanmuList->setVisible(false);
-        this->danmu->setText(QChar(0xe620));
+        this->danmu->setText(QChar(0xe618));
     }
     else
     {
@@ -2250,7 +2061,7 @@ void PlayerWindow::setHideDanmu(bool hide)
         {
             liveDanmuList->setVisible(true);
         }
-        this->danmu->setText(QChar(0xe622));
+        this->danmu->setText(QChar(0xe619));
     }
 }
 
@@ -2284,6 +2095,289 @@ void PlayerWindow::showMessage(const QString &msg, const QString &type, int time
     }
 }
 
+QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
+{
+    GlobalObjects::iconfont->setPointSize(20);
+    QFont normalFont;
+    normalFont.setFamily(GlobalObjects::normalFont);
+
+    timeLabel = new QLabel("00:00/00:00",playControlPanel);
+    timeLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    timeLabel->setObjectName(QStringLiteral("labelTime"));
+    normalFont.setPointSize(10);
+    timeLabel->setFont(normalFont);
+
+    playPause = new QPushButton(playControlPanel);
+    playPause->setFont(*GlobalObjects::iconfont);
+    playPause->setText(QChar(0xe628));
+    playPause->setObjectName(QStringLiteral("PlayControlButton"));
+    playPause->setToolTip(tr("Play/Pause(Space)"));
+
+    prev = new QPushButton(playControlPanel);
+    prev->setFont(*GlobalObjects::iconfont);
+    prev->setText(QChar(0xe78c));
+    prev->setToolTip(tr("Prev(PageUp)"));
+    prev->setObjectName(QStringLiteral("PlayControlButton"));
+
+    next = new QPushButton(playControlPanel);
+    next->setFont(*GlobalObjects::iconfont);
+    next->setText(QChar(0xea3b));
+    next->setToolTip(tr("Next(PageDown)"));
+    next->setObjectName(QStringLiteral("PlayControlButton"));
+
+    GlobalObjects::iconfont->setPointSize(18);
+
+    stop = new QPushButton(playControlPanel);
+    stop->setFont(*GlobalObjects::iconfont);
+    stop->setText(QChar(0xea89));
+    stop->setToolTip(tr("Stop"));
+    stop->setObjectName(QStringLiteral("PlayControlButton"));
+
+    mute = new QPushButton(playControlPanel);
+    mute->setFont(*GlobalObjects::iconfont);
+    mute->setText(QChar(0xe725));
+    mute->setToolTip(tr("Mute/Unmute"));
+    mute->setObjectName(QStringLiteral("PlayControlButton"));
+    mute->installEventFilter(this);
+
+    GlobalObjects::iconfont->setPointSize(18);
+
+    launch = new QPushButton(playControlPanel);
+    launch->setFont(*GlobalObjects::iconfont);
+    launch->setText(QChar(0xe947));
+    launch->setToolTip(tr("Launch Danmu"));
+    launch->setObjectName(QStringLiteral("PlayControlButton"));
+    launch->hide();
+
+    setting = new QPushButton(playControlPanel);
+    setting->setFont(*GlobalObjects::iconfont);
+    setting->setText(QChar(0xe625));
+    setting->setToolTip(tr("Play Setting"));
+    setting->setObjectName(QStringLiteral("PlayControlButton"));
+
+    danmu = new QPushButton(playControlPanel);
+    danmu->setFont(*GlobalObjects::iconfont);
+    danmu->setText(QChar(0xe619));
+    danmu->setToolTip(tr("Danmu Setting"));
+    danmu->setObjectName(QStringLiteral("PlayControlButton"));
+
+    fullscreen = new QPushButton(playControlPanel);
+    fullscreen->setFont(*GlobalObjects::iconfont);
+    fullscreen->setText(QChar(0xe649));
+    fullscreen->setToolTip(tr("FullScreen"));
+    fullscreen->setObjectName(QStringLiteral("PlayControlButton"));
+
+
+    launchDanmuEdit = new KLineEdit(playControlPanel);
+    launchDanmuEdit->setPlaceholderText(tr("Launch Danmu"));
+    QMargins textMargins = launchDanmuEdit->textMargins();
+    textMargins.setRight(6);
+    launchDanmuEdit->setTextMargins(textMargins);
+    normalFont.setPointSize(12);
+    launchDanmuEdit->setFont(normalFont);
+    launchDanmuEdit->setObjectName(QStringLiteral("LaunchDanmuEdit"));
+
+    QPushButton *launchOptionBtn = new QPushButton(launchDanmuEdit);
+    launchOptionBtn->setObjectName(QStringLiteral("LaunchOptionButton"));
+    GlobalObjects::iconfont->setPointSize(12);
+    launchOptionBtn->setFont(*GlobalObjects::iconfont);
+    launchOptionBtn->setText(QChar(0xea02));
+    launchOptionBtn->setCursor(Qt::ArrowCursor);
+    launchOptionBtn->setFocusPolicy(Qt::NoFocus);
+    QWidgetAction *optionsAction = new QWidgetAction(this);
+    optionsAction->setDefaultWidget(launchOptionBtn);
+    launchDanmuEdit->addAction(optionsAction, QLineEdit::LeadingPosition);
+
+    ctrlPressCount = 0;
+    altPressCount = 0;
+    QObject::connect(&doublePressTimer, &QTimer::timeout, this, [=](){
+        ctrlPressCount=0;
+        altPressCount=0;
+        doublePressTimer.stop();
+    });
+    QObject::connect(&hideCursorTimer, &QTimer::timeout, this, [=](){
+        if (isFullscreen) setCursor(Qt::BlankCursor);
+    });
+
+    QHBoxLayout *buttonHLayout=new QHBoxLayout();
+    buttonHLayout->setContentsMargins(8, 6, 8, 6);
+    buttonHLayout->setSpacing(10);
+
+    buttonHLayout->addWidget(prev);
+    buttonHLayout->addSpacing(8);
+    buttonHLayout->addWidget(playPause);
+    buttonHLayout->addSpacing(6);
+    buttonHLayout->addWidget(next);
+    buttonHLayout->addSpacing(4);
+    buttonHLayout->addWidget(stop);
+    buttonHLayout->addWidget(mute);
+    buttonHLayout->addWidget(timeLabel);
+    buttonHLayout->addStretch(5);
+    buttonHLayout->addWidget(launchDanmuEdit);
+    buttonHLayout->addStretch(7);
+    buttonHLayout->addWidget(launch);
+    buttonHLayout->addWidget(setting);
+    buttonHLayout->addWidget(danmu);
+    buttonHLayout->addWidget(fullscreen);
+
+    return buttonHLayout;
+}
+
+void PlayerWindow::initPlayInfo(QWidget *playInfoPanel)
+{
+    QFont normalFont;
+    normalFont.setFamily(GlobalObjects::normalFont);
+    normalFont.setPointSize(12);
+
+    titleLabel = new ElidedLabel("", playInfoPanel);
+    titleLabel->setFontColor(QColor(255, 255, 255));
+    // titleLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    titleLabel->setObjectName(QStringLiteral("labelTitle"));
+    titleLabel->setFont(normalFont);
+
+    constexpr const int infoBtnCount = 3;
+    QPair<QChar, QString> infoButtonTexts[infoBtnCount] = {
+        {QChar(0xe6ca), tr("Media Info")},
+        {QChar(0xe655), tr("Screenshot")},
+        {QChar(0xe866), tr("Mini Mode")}
+    };
+    QPushButton *mediaInfoBtn{nullptr}, *captureBtn{nullptr}, *miniModeBtn{nullptr};
+    QPushButton **infoBtnPtrs[infoBtnCount] = {
+        &mediaInfoBtn, &captureBtn, &miniModeBtn
+    };
+    GlobalObjects::iconfont->setPointSize(16);
+    QHBoxLayout *infoHLayout = new QHBoxLayout(playInfoPanel);
+    infoHLayout->setSpacing(10);
+    infoHLayout->addWidget(titleLabel);
+    //infoHLayout->addStretch(1);
+    for (int i = 0; i < infoBtnCount; ++i)
+    {
+        *infoBtnPtrs[i] = new QPushButton(playInfoPanel);
+        QPushButton *tb = *infoBtnPtrs[i];
+        tb->setFont(*GlobalObjects::iconfont);
+        tb->setText(infoButtonTexts[i].first);
+        tb->setToolTip(infoButtonTexts[i].second);
+        tb->setObjectName(QStringLiteral("PlayControlButton"));
+        infoHLayout->addWidget(tb);
+    }
+
+    QObject::connect(mediaInfoBtn, &QPushButton::clicked, this, [this](){
+        if (GlobalObjects::mpvplayer->getCurrentFile().isEmpty()) return;
+        MediaInfo mediaInfoDialog(this);
+        QRect geo(0,0,400*logicalDpiX()/96,600*logicalDpiY()/96);
+        geo.moveCenter(this->geometry().center());
+        mediaInfoDialog.move(mapToGlobal(geo.topLeft()));
+        mediaInfoDialog.exec();
+    });
+
+    auto showPlayInfoPage = [=](const QString &panelName){
+        if (!playInfoPage) initPlayInfoPage();
+        OptionMenu *menu = static_cast<OptionMenu *>(playInfoPage);
+        OptionMenuPanel *showPanel = menu->getPanel(panelName);
+        if (!showPanel) return;
+        if (showPanel == menu->currentWidget() && !menu->isHidden())
+        {
+            menu->hide();
+            return;
+        }
+        if (menu->isHidden())
+        {
+            menu->setCurrentWidget(showPanel);
+            menu->resize(menu->sizeHint());
+            menu->move(QPoint(playInfoPanel->width() - menu->width() - 10, playInfoPanel->height()));
+            menu->show();
+            menu->raise();
+        }
+        else
+        {
+            menu->raise();
+            menu->setPanel(showPanel, OptionMenu::TopRight);
+        }
+    };
+    QObject::connect(captureBtn, &QPushButton::clicked, this, [=](){
+        showPlayInfoPage("default");
+    });
+    QObject::connect(miniModeBtn, &QPushButton::clicked, actMiniMode, &QAction::trigger);
+}
+
+void PlayerWindow::initPlayInfoPage()
+{
+    playInfoPage = new OptionMenu(this->centralWidget());
+    playInfoPage->installEventFilter(this);
+    OptionMenu *menu = static_cast<OptionMenu *>(playInfoPage);
+
+    OptionMenuPanel *capturePanel = menu->defaultMenuPanel();
+    QVector<QAction *> captureActions = {actScreenshotSrc, actScreenshotAct, actSnippet, actGIF};
+    for (int i = 0; i < captureActions.size(); ++i)
+    {
+        QAction *a = captureActions[i];
+        OptionMenuItem *m = capturePanel->addMenu(a->text());
+        m->setMinWidth(160);
+        QObject::connect(m, &OptionMenuItem::click, this, [=](){
+            playInfoPage->hide();
+            a->trigger();
+        });
+    }
+
+}
+
+void PlayerWindow::initSidePanel(QWidget *parent)
+{
+    sidePanel = new QWidget(parent);
+    sidePanel->setObjectName(QStringLiteral("widgetPlayerSidePanel"));
+
+    constexpr const int sideBtnCount = 3;
+    QPair<QChar, QString> sideButtonTexts[sideBtnCount] = {
+        {QChar(0xe63c), tr("Playlist")},
+        {QChar(0xe627), tr("Danmu")},
+        {QChar(0xe67a), tr("Subtitle")}
+    };
+
+    QPushButton **sideBtnPtrs[sideBtnCount] = {
+        &playlistBtn, &danmuBtn, &subBtn
+    };
+    GlobalObjects::iconfont->setPointSize(16);
+    QHBoxLayout *sideHLayout = new QHBoxLayout(sidePanel);
+    QVBoxLayout *sideVLayout = new QVBoxLayout();
+    sideVLayout->setSpacing(8);
+    for (int i = 0; i < sideBtnCount; ++i)
+    {
+        *sideBtnPtrs[i] = new QPushButton(sidePanel);
+        QPushButton *tb = *sideBtnPtrs[i];
+        tb->setFont(*GlobalObjects::iconfont);
+        tb->setText(sideButtonTexts[i].first);
+        tb->setToolTip(sideButtonTexts[i].second);
+        tb->setObjectName(QStringLiteral("PlaySideButton"));
+        tb->setCheckable(true);
+        sideVLayout->addWidget(tb);
+    }
+    sideHLayout->addStretch(1);
+    sideHLayout->addLayout(sideVLayout);
+    sidePanel->resize(sidePanel->sizeHint());
+    sidePanel->hide();
+
+    bool listVisibility = GlobalObjects::appSetting->value("MainWindow/ListVisibility", true).toBool();
+    if (listVisibility) playlistBtn->setChecked(true);
+
+    QObject::connect(playlistBtn, &QPushButton::clicked, this, [=](){
+        danmuBtn->setChecked(false);
+        subBtn->setChecked(false);
+        emit toggleListVisibility(0);
+    });
+    QObject::connect(danmuBtn, &QPushButton::clicked, this, [=](){
+        playlistBtn->setChecked(false);
+        subBtn->setChecked(false);
+        emit toggleListVisibility(1);
+    });
+    QObject::connect(subBtn, &QPushButton::clicked, this, [=](){
+        danmuBtn->setChecked(false);
+        playlistBtn->setChecked(false);
+        emit toggleListVisibility(2);
+    });
+
+
+}
+
 void PlayerWindow::switchItem(bool prev, const QString &nullMsg)
 {
     while(true)
@@ -2314,8 +2408,9 @@ void PlayerWindow::switchItem(bool prev, const QString &nullMsg)
 
 void PlayerWindow::adjustProgressInfoPos()
 {
-    int ty=danmuStatisBar->isHidden()?height()-playControlPanel->height()-progressInfo->height():
-                                      height()-playControlPanel->height()-progressInfo->height()-statisBarHeight;
+    //int ty=danmuStatisBar->isHidden()?height()-playControlPanel->height()-progressInfo->height():
+    //                                  height()-playControlPanel->height()-progressInfo->height()-statisBarHeight;
+    int ty = height()-playControlPanel->height()-progressInfo->height()+(danmuStatisBar->isHidden()?0:danmuStatisBar->height()/3);
     int nx = progress->curMouseX()-progressInfo->width()/3;
     if(nx+progressInfo->width()>width()) nx = width()-progressInfo->width();
     progressInfo->move(nx<0?0:nx,ty);
@@ -2338,9 +2433,9 @@ void PlayerWindow::setCentralWidget(QWidget *widget)
 
 void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
 {
-    if(miniModeOn)
+    if (miniModeOn)
     {
-        if(mouseLPressed && pressPos!=event->globalPos())
+        if (mouseLPressed && pressPos != event->globalPos())
         {
             emit moveWindow(event->globalPos());
             event->accept();
@@ -2348,7 +2443,7 @@ void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
         }
         else if(GlobalObjects::mpvplayer->getSeekable())
         {
-            if(height()-event->pos().y()<miniProgress->height()+10)
+            if (height()-event->pos().y() < miniProgress->height() + 10)
             {
                 miniProgress->show();
             }
@@ -2359,50 +2454,56 @@ void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
         }
         return;
     }
-    if(!autoHideControlPanel) return;
-    if(isFullscreen)
+    if (!autoHideControlPanel) return;
+    if (launchDanmuEdit->hasFocus()) return;
+    if (isFullscreen)
     {
         setCursor(Qt::ArrowCursor);
         hideCursorTimer.start(hideCursorTimeout);
     }
-    if(clickBehavior==1)return;
-    const QPoint pos=event->pos();
-    if(height()-pos.y()<playControlPanel->height()+40)
+    if (GlobalObjects::mpvplayer->getClickBehavior() == 1)return;
+    const QPoint pos = event->pos();
+    if (height()-pos.y() < playControlPanel->height() + 40)
     {
         playControlPanel->show();
-        playInfoPanel->show();
+        if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+        {
+            playInfoPanel->show();
+        }
         hideCursorTimer.stop();
     }
-    else if(pos.y()<playInfoPanel->height())
+    else if(pos.y() < playInfoPanel->height())
     {
-         playInfoPanel->show();
-         playControlPanel->hide();
-         hideCursorTimer.stop();
+        if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+        {
+            playInfoPanel->show();
+        }
+        playControlPanel->hide();
+        hideCursorTimer.stop();
     } 
     else
     {
         playInfoPanel->hide();
         playControlPanel->hide();
-        danmuStatisBar->hide();
     }
-    if(this->width()-pos.x()<playlistCollapseWidth+20)
+    if (this->width() - pos.x() < sidePanel->width())
     {
-        playListCollapseButton->show();
+        sidePanel->show();
     }
     else
     {
-        playListCollapseButton->hide();
+        sidePanel->hide();
     }
 }
 
 void PlayerWindow::mouseDoubleClickEvent(QMouseEvent *)
 {
-    if(miniModeOn)
+    if (miniModeOn)
     {
         exitMiniMode();
         return;
     }
-    dbClickBehaivior==0?actFullscreen->trigger():actPlayPause->trigger();
+    (GlobalObjects::mpvplayer->getDbClickBehavior() == 0 ? actFullscreen : actPlayPause)->trigger();
 }
 
 void PlayerWindow::mousePressEvent(QMouseEvent *event)
@@ -2417,48 +2518,59 @@ void PlayerWindow::mousePressEvent(QMouseEvent *event)
 
 void PlayerWindow::mouseReleaseEvent(QMouseEvent *event)
 {
-    if(miniModeOn && event->button()==Qt::LeftButton)
+    if (miniModeOn && event->button() == Qt::LeftButton)
     {
-        if(mouseLPressed && moving)
+        if (mouseLPressed && moving)
             moving = false;
         else
             actPlayPause->trigger();
         mouseLPressed = false;
         return;
     }
-    if(event->button()==Qt::LeftButton)
+    if (event->button()==Qt::LeftButton)
     {
         if (danmuSettingPage && !danmuSettingPage->isHidden())
         {
             if (!danmuSettingPage->underMouse())
+            {
                 danmuSettingPage->hide();
+                return;
+            }
         }
         if (playSettingPage && !playSettingPage->isHidden())
         {
-            if(!playSettingPage->underMouse())
-                playSettingPage->hide();
-        }
-        else
-        {
-            if(clickBehavior==1)
+            if (!playSettingPage->underMouse())
             {
-                if(playControlPanel->isHidden())
-                {
-                    playControlPanel->show();
-                    playInfoPanel->show();
-                    playListCollapseButton->show();
-                }
-                else
-                {
-                    playInfoPanel->hide();
-                    playControlPanel->hide();
-                    playListCollapseButton->hide();
-                }
+                playSettingPage->hide();
+                return;
+            }
+        }
+        if (playInfoPage && !playInfoPage->isHidden())
+        {
+            if (!playInfoPage->underMouse())
+            {
+                playInfoPage->hide();
+                return;
+            }
+        }
+        if (GlobalObjects::mpvplayer->getClickBehavior() == 1)
+        {
+            if (playControlPanel->isHidden())
+            {
+                playControlPanel->show();
+                playInfoPanel->show();
+                sidePanel->show();
             }
             else
             {
-                actPlayPause->trigger();
+                playInfoPanel->hide();
+                playControlPanel->hide();
+                sidePanel->hide();
             }
+        }
+        else
+        {
+            actPlayPause->trigger();
         }
     }
 }
@@ -2466,22 +2578,23 @@ void PlayerWindow::mouseReleaseEvent(QMouseEvent *event)
 void PlayerWindow::resizeEvent(QResizeEvent *)
 {
     playInfoPanel->setMaximumWidth(width());
-    playListCollapseButton->setGeometry(width()-playlistCollapseWidth,(height()-playlistCollapseHeight)/2,playlistCollapseWidth,playlistCollapseHeight);
+    sidePanel->move(QPoint(width() - sidePanel->width(), (height() - sidePanel->height()) / 2));
+    //playListCollapseButton->setGeometry(width()-playlistCollapseWidth,(height()-playlistCollapseHeight)/2,playlistCollapseWidth,playlistCollapseHeight);
     if (playSettingPage && !playSettingPage->isHidden())
     {
-        playSettingPage->resize(playSettingPage->layout()->sizeHint() + QSize(40*logicalDpiX()/96, 0));
-        QPoint leftTop(width() - playSettingPage->width() - 10, height() - playControlPanel->height() - playSettingPage->height() - 2);
-        playSettingPage->move(leftTop);
+        playSettingPage->move(getPopupMenuPos(setting, playSettingPage, 10));
     }
     if (danmuSettingPage && !danmuSettingPage->isHidden())
 	{
-        danmuSettingPage->resize(danmuSettingPage->layout()->sizeHint() + QSize(40*logicalDpiX()/96, 0));
-        QPoint leftTop(width() - danmuSettingPage->width() - 10, height() - playControlPanel->height() - danmuSettingPage->height() - 2);
-		danmuSettingPage->move(leftTop);
+        danmuSettingPage->move(getPopupMenuPos(danmu, danmuSettingPage, 10));
 	}
-    playerContent->resize(400*logicalDpiX()/96, 400*logicalDpiY()/96);
+    if (playInfoPage && !playInfoPage->isHidden())
+    {
+        playInfoPage->move(QPoint(width() - playInfoPage->width() - 10, playInfoPanel->height()));
+    }
+    playerContent->resize(qMax<int>(width() * 0.7, 580), height());
     playerContent->move((width()-playerContent->width())/2,(height()-playerContent->height())/2);
-    int y = height() - 20*logicalDpiY()/96 - (miniModeOn? miniProgress->height() : playControlPanel->height());
+    int y = height() - 20 - (miniModeOn? miniProgress->height() : playControlPanel->height());
     static_cast<InfoTips *>(playInfo)->setBottom(y);
     static_cast<InfoTips *>(playInfo)->updatePosition();
     liveDanmuList->setFixedSize(width() * 0.45, height() * static_cast<float>(liveVRange) / 100);
@@ -2490,16 +2603,18 @@ void PlayerWindow::resizeEvent(QResizeEvent *)
 
 void PlayerWindow::leaveEvent(QEvent *)
 {
-    if(autoHideControlPanel)
+    if (autoHideControlPanel)
     {
-        QTimer::singleShot(500, [this](){
-            this->playControlPanel->hide();
-            this->playInfoPanel->hide();
-            this->playListCollapseButton->hide();
-            this->danmuStatisBar->hide();
-        });
+        if (!launchDanmuEdit->hasFocus())
+        {
+            QTimer::singleShot(500, [this](){
+                this->playControlPanel->hide();
+                this->playInfoPanel->hide();
+                this->sidePanel->hide();
+            });
+        }
     }
-    if(miniModeOn && !miniProgress->isHidden())
+    if (miniModeOn && !miniProgress->isHidden())
     {
         QTimer::singleShot(500, [this](){
             miniProgress->hide();
@@ -2509,7 +2624,7 @@ void PlayerWindow::leaveEvent(QEvent *)
 
 bool PlayerWindow::eventFilter(QObject *watched, QEvent *event)
 {
-    if(watched==danmuSettingPage || watched==playSettingPage)
+    if (watched == danmuSettingPage || watched == playSettingPage)
     {
         if (event->type() == QEvent::Show)
         {
@@ -2523,27 +2638,60 @@ bool PlayerWindow::eventFilter(QObject *watched, QEvent *event)
         }
         return false;
     }
+    if (watched == mute)
+    {
+        if (!volumeSettingPage) initVolumeSetting();
+        if (event->type() == QEvent::Enter)
+        {
+            volumeSettingPage->show();
+            volumeSettingPage->raise();
+            QPoint leftTop(mute->geometry().center().x(), height() - playControlPanel->height() - volumeSettingPage->height() + 10);
+            volumeSettingPage->move(getPopupMenuPos(mute, volumeSettingPage));
+            volumeHideTimer.stop();
+            return true;
+        }
+        else if (event->type() == QEvent::Leave)
+        {
+            volumeHideTimer.start(300);
+            return true;
+        }
+    }
+    if (watched == volumeSettingPage)
+    {
+        if (event->type() == QEvent::Leave)
+        {
+            volumeSettingPage->hide();
+            return true;
+        }
+        else if (event->type() == QEvent::Enter)
+        {
+            volumeHideTimer.stop();
+            return true;
+        }
+    }
     return QWidget::eventFilter(watched,event);
 }
 
 void PlayerWindow::keyPressEvent(QKeyEvent *event)
 {
+    if (QApplication::focusWidget()->inherits("QLineEdit")) return QWidget::keyPressEvent(event);
+
     int key = event->key();
     switch (key)
     {
     case Qt::Key_Control:
     {
-        if(altPressCount>0)
+        if (altPressCount > 0)
         {
             altPressCount=0;
             doublePressTimer.stop();
         }
-        if(!doublePressTimer.isActive())
+        if (!doublePressTimer.isActive())
         {
             doublePressTimer.start(500);
         }
         ctrlPressCount++;
-        if(ctrlPressCount==2)
+        if (ctrlPressCount == 2)
         {
             setHideDanmu(!GlobalObjects::mpvplayer->getDanmuHide());
             doublePressTimer.stop();
@@ -2590,104 +2738,28 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
         }
         break;
     }
-    case Qt::Key_Space:
-        actPlayPause->trigger();
-        break;
-    case Qt::Key_Enter:
-    case Qt::Key_Return:
-        if(miniModeOn)
-        {
-            exitMiniMode();
-            break;
-        }
-        actFullscreen->trigger();
-        break;
-    case Qt::Key_Escape:
-        if(isFullscreen)
-            actFullscreen->trigger();
-        else
-            miniModeOn?exitMiniMode():actMiniMode->trigger();
-        break;
-    case Qt::Key_Down:
-    case Qt::Key_Up:
-        QApplication::sendEvent(volume, event);
-        showMessage(tr("Volume: %0").arg(volume->value()), "playerInfo");
-        break;
-    case Qt::Key_Right:
-        if (event->modifiers() == Qt::ControlModifier)
-        {
-            GlobalObjects::mpvplayer->frameStep();
-            showMessage(tr("Frame Step:Forward"), "playerInfo");
-        }
-        else
-            GlobalObjects::mpvplayer->seek(jumpForwardTime, true);
-        break;
-    case Qt::Key_Left:
-        if (event->modifiers() == Qt::ControlModifier)
-        {
-            GlobalObjects::mpvplayer->frameStep(false);
-            showMessage(tr("Frame Step:Backward"), "playerInfo");
-        }
-        else
-            GlobalObjects::mpvplayer->seek(-jumpBackwardTime, true);
-        break;
-    case Qt::Key_PageUp:
-        actPrev->trigger();
-        break;
-    case Qt::Key_PageDown:
-        actNext->trigger();
-        break;
-    case Qt::Key_F5:
-        emit refreshPool();
-        break;
     default:
-        QWidget::keyPressEvent(event);
+        break;
     }
-    if(event->key()==Qt::Key_Control || event->key()==Qt::Key_Shift || event->key()==Qt::Key_Alt)
-        return;
-    QString pressKeyStr = QKeySequence(event->modifiers()|event->key()).toString();
-    if(GlobalObjects::mpvplayer->enableDirectKey())
-    {
-        GlobalObjects::mpvplayer->runShortcut(pressKeyStr.toLower(), 1);
-    }
-    else
-    {
-        const auto &shortcuts = GlobalObjects::mpvplayer->getShortcuts();
-        if(shortcuts.contains(pressKeyStr))
-        {
-            int ret = GlobalObjects::mpvplayer->runShortcut(pressKeyStr);
-            showMessage(tr("%1 Command: %2, ret = %3").arg(pressKeyStr, shortcuts[pressKeyStr].second).arg(ret));
-        }
-    }
+    const QString pressKeyStr = QKeySequence(event->modifiers()|event->key()).toString();
+    KeyActionModel::instance()->runAction(pressKeyStr, KeyActionItem::KEY_PRESS, this);
 }
 
 void PlayerWindow::keyReleaseEvent(QKeyEvent *event)
 {
-    if(event->key()==Qt::Key_Control || event->key()==Qt::Key_Shift || event->key()==Qt::Key_Alt)
-    {
-        QWidget::keyReleaseEvent(event);
-        return;
-    }
-    QString pressKeyStr = QKeySequence(event->modifiers()|event->key()).toString();
-    if(GlobalObjects::mpvplayer->enableDirectKey())
-    {
-        GlobalObjects::mpvplayer->runShortcut(pressKeyStr.toLower(), 2);
-    }
-    else
-    {
-        QWidget::keyReleaseEvent(event);
-    }
+    const QString pressKeyStr = QKeySequence(event->modifiers()|event->key()).toString();
+    KeyActionModel::instance()->runAction(pressKeyStr, KeyActionItem::KEY_RELEASE, this);
 }
 
 void PlayerWindow::contextMenuEvent(QContextMenuEvent *)
 {
-    currentDanmu = GlobalObjects::danmuRender->danmuAt(mapFromGlobal(QCursor::pos()));
-    if(!currentDanmu && liveDanmuList->isVisible())
+    currentDanmu = GlobalObjects::danmuRender->danmuAt(mapFromGlobal(QCursor::pos()) * devicePixelRatioF());
+    if (!currentDanmu && liveDanmuList->isVisible())
     {
         QModelIndex index = liveDanmuList->indexAt(liveDanmuList->mapFromGlobal(QCursor::pos()));
         currentDanmu = GlobalObjects::danmuRender->liveDanmuModel()->getDanmu(index);
     }
-    if(currentDanmu.isNull()) return;
+    if (currentDanmu.isNull()) return;
     ctxText->setText(currentDanmu->text);
     ctxBlockUser->setText(tr("Block User %1").arg(currentDanmu->sender));
     contexMenu->exec(QCursor::pos());
@@ -2698,9 +2770,7 @@ void PlayerWindow::closeEvent(QCloseEvent *)
     GlobalObjects::playlist->setCurrentPlayTime();
     GlobalObjects::appSetting->beginGroup("Play");
     GlobalObjects::appSetting->setValue("LiveVRange", liveVRange);
-    GlobalObjects::appSetting->setValue("WindowSize",windowSizeGroup->actions().indexOf(windowSizeGroup->checkedAction()));
-    GlobalObjects::appSetting->setValue("StayOnTop",stayOnTopGroup->actions().indexOf(stayOnTopGroup->checkedAction()));
-    GlobalObjects::appSetting->setValue("Volume",volume->value());
+    GlobalObjects::appSetting->setValue("Volume",volumeSlider->value());
     GlobalObjects::appSetting->setValue("Mute",GlobalObjects::mpvplayer->getMute());
     GlobalObjects::appSetting->endGroup();
 }
@@ -2760,7 +2830,7 @@ void PlayerWindow::dropEvent(QDropEvent *event)
             }
         }
     }
-    if(!fileList.isEmpty())
+    if (!fileList.isEmpty())
     {
         GlobalObjects::playlist->addItems(fileList,QModelIndex());
         const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(fileList.first());
@@ -2770,7 +2840,7 @@ void PlayerWindow::dropEvent(QDropEvent *event)
         }
 
     }
-    for(QString dir:dirList)
+    for (const QString &dir : dirList)
     {
         GlobalObjects::playlist->addFolder(dir,QModelIndex());
     }
@@ -2778,19 +2848,19 @@ void PlayerWindow::dropEvent(QDropEvent *event)
 
 void PlayerWindow::wheelEvent(QWheelEvent *event)
 {
-	int val = volume->value();
-    if ((val > 0 && val < volume->maximum()) || (val == 0 && event->angleDelta().y()>0) ||
-            (val == volume->maximum() && event->angleDelta().y() < 0))
+    int val = volumeSlider->value();
+    if ((val > 0 && val < volumeSlider->maximum()) || (val == 0 && event->angleDelta().y()>0) ||
+        (val == volumeSlider->maximum() && event->angleDelta().y() < 0))
 	{
 		static bool inProcess = false;
 		if (!inProcess)
 		{
-			inProcess = true;
-			QApplication::sendEvent(volume, event);
+            inProcess = true;
+            QApplication::sendEvent(volumeSlider, event);
 			inProcess = false;
 		}
 	}
-    showMessage(tr("Volume: %0").arg(volume->value()), "playerInfo");
+    showMessage(tr("Volume: %0").arg(volumeSlider->value()), "playerInfo");
 }
 
 // BEGIN: screen saver manage functions
@@ -2889,3 +2959,262 @@ void unsetAwakeRequired() {}
 #endif
 // END: screen saver manage functions
 
+
+PlayerContent::PlayerContent(QWidget *parent):QWidget(parent)
+{
+    setMouseTracking(true);
+    setObjectName(QStringLiteral("PlayerContent"));
+
+    logo = new QLabel(this);
+    GlobalObjects::iconfont->setPointSize(96);
+    logo->setFont(*GlobalObjects::iconfont);
+    logo->setText(QChar(0xe654));
+    logo->setAlignment(Qt::AlignCenter);
+
+    const int btnMinWidth = 200;
+    QFont btnFont{GlobalObjects::normalFont, 12};
+    QPushButton *openFileBtn = new QPushButton(tr("Open File"), this);
+    openFileBtn->setObjectName(QStringLiteral("PlayerContentButton"));
+    openFileBtn->setMinimumWidth(btnMinWidth);
+    openFileBtn->setFont(btnFont);
+    QPushButton *openUrlBtn = new QPushButton(tr("Open URL"), this);
+    openUrlBtn->setObjectName(QStringLiteral("PlayerContentButton"));
+    openUrlBtn->setMinimumWidth(btnMinWidth);
+    openUrlBtn->setFont(btnFont);
+    QHBoxLayout *btnHLayout = new QHBoxLayout;
+    btnHLayout->setContentsMargins(0, 0, 0, 0);
+    btnHLayout->addStretch(1);
+    btnHLayout->addWidget(openFileBtn);
+    btnHLayout->addSpacing(64);
+    btnHLayout->addWidget(openUrlBtn);
+    btnHLayout->addStretch(1);
+
+    recentTip = new QLabel(tr("Recently Played"), this);
+    recentTip->setObjectName(QStringLiteral("RecentlyPlayedTip"));
+
+    recentItemsContainer = new QWidget(this);
+    QGridLayout *itemGLayout = new QGridLayout(recentItemsContainer);
+    itemGLayout->setContentsMargins(0, 0, 0, 0);
+    itemGLayout->setColumnStretch(0, 1);
+    itemGLayout->setColumnStretch(1, 1);
+    itemGLayout->setRowStretch(0, 1);
+    itemGLayout->setRowStretch(1, 1);
+    for (int i = 0; i < GlobalObjects::playlist->maxRecentItems; ++i)
+    {
+        RecentItem *recentItem = new RecentItem(recentItemsContainer);
+        itemGLayout->addWidget(recentItem, i / 2, i % 2);
+        items.append(recentItem);
+    }
+
+    QVBoxLayout *pcVLayout = new QVBoxLayout(this);
+    pcVLayout->addStretch(1);
+    pcVLayout->addWidget(logo);
+    pcVLayout->addSpacing(40);
+    pcVLayout->addLayout(btnHLayout);
+    pcVLayout->addSpacing(30);
+    pcVLayout->addWidget(recentTip);
+    pcVLayout->addWidget(recentItemsContainer);
+    pcVLayout->addStretch(1);
+    refreshItems();
+
+    logo->installEventFilter(this);
+
+    QObject::connect(openFileBtn, &QPushButton::clicked, this, &PlayerContent::openFile);
+    QObject::connect(openUrlBtn, &QPushButton::clicked, this, &PlayerContent::openUrl);
+    QObject::connect(GlobalObjects::playlist, &PlayList::recentItemsUpdated, this, &PlayerContent::refreshItems);
+    QObject::connect(GlobalObjects::playlist, &PlayList::recentItemInfoUpdated, this, [=](int index){
+        auto &recent = GlobalObjects::playlist->recent();
+        if (index >= recent.size()) return;
+        for (RecentItem *rItem : items)
+        {
+            if (rItem->path == recent[index].path)
+            {
+                rItem->setData(recent[index]);
+                break;
+            }
+        }
+    });
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::showRecentChanged, this, [=](bool on){
+        auto &recent = GlobalObjects::playlist->recent();
+        logo->setVisible(recent.empty() || !GlobalObjects::mpvplayer->getShowRecent());
+        recentTip->setVisible(!recent.empty() && GlobalObjects::mpvplayer->getShowRecent());
+        recentItemsContainer->setVisible(!recent.empty() && GlobalObjects::mpvplayer->getShowRecent());
+    });
+
+}
+
+void PlayerContent::refreshItems()
+{
+    int i = 0;
+    const int maxRecentCount = GlobalObjects::playlist->maxRecentItems;
+    auto &recent = GlobalObjects::playlist->recent();
+    for (; i < maxRecentCount && i<recent.count(); ++i)
+    {
+        items[i]->setData(recent[i]);
+    }
+    while (i < maxRecentCount)
+    {
+        items[i++]->hide();
+    }
+    logo->setVisible(recent.empty() || !GlobalObjects::mpvplayer->getShowRecent());
+    recentTip->setVisible(!recent.empty() && GlobalObjects::mpvplayer->getShowRecent());
+    recentItemsContainer->setVisible(!recent.empty() && GlobalObjects::mpvplayer->getShowRecent());
+}
+
+bool PlayerContent::eventFilter(QObject *watched, QEvent *event)
+{
+    if (watched == logo && event->type() == QEvent::MouseButtonRelease)
+    {
+        openFile();
+        return true;
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
+void PlayerContent::openFile()
+{
+    const QStringList files = QFileDialog::getOpenFileNames(this,tr("Select one or more media files"),"",
+        QString("Video Files(%1);;All Files(*) ").arg(GlobalObjects::mpvplayer->videoFileFormats.join(" ")));
+    if (!files.isEmpty())
+    {
+        GlobalObjects::playlist->addItems(files, QModelIndex());
+        const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(files.first());
+        if (curItem)
+        {
+            PlayContext::context()->playItem(curItem);
+        }
+    }
+}
+
+void PlayerContent::openUrl()
+{
+    LineInputDialog input(tr("Open URL"), tr("URL"), "", "DialogSize/PlayerOpenURL", false, this);
+    if (QDialog::Accepted == input.exec())
+    {
+        GlobalObjects::playlist->addURL({input.text}, QModelIndex());
+        PlayContext::context()->playURL(input.text);
+    }
+}
+
+RecentItem::RecentItem(QWidget *parent):QWidget(parent)
+{
+    setMinimumHeight(96);
+    setObjectName(QStringLiteral("RecentItem"));
+    coverLabel = new QLabel(this);
+    coverLabel->setFixedSize(128, 72);
+    coverLabel->setScaledContents(true);
+
+    titleLabel = new QLabel(this);
+    titleLabel->setFont(QFont(GlobalObjects::normalFont, 9));
+    timeLabel = new QLabel(this);
+    timeLabel->setFont(QFont(GlobalObjects::normalFont, 9));
+    titleLabel->setObjectName(QStringLiteral("RecentItemLabel"));
+    timeLabel->setObjectName(QStringLiteral("RecentItemTimeLabel"));
+    deleteItem = new QPushButton(this);
+    deleteItem->setObjectName(QStringLiteral("RecentItemDeleteButton"));
+    QObject::connect(deleteItem, &QPushButton::clicked, this, [this](){
+        GlobalObjects::playlist->removeRecentItem(path);
+    });
+    GlobalObjects::iconfont->setPointSize(10);
+    deleteItem->setFont(*GlobalObjects::iconfont);
+    deleteItem->setText(QChar(0xe60b));
+    deleteItem->hide();
+
+    QWidget *textContainer = new QWidget(this);
+    textContainer->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
+    QVBoxLayout *textVLayout = new QVBoxLayout(textContainer);
+    textVLayout->setContentsMargins(0, 2, 0, 0);
+    textVLayout->addWidget(titleLabel);
+    textVLayout->addWidget(timeLabel);
+    textVLayout->addStretch(1);
+    textVLayout->addWidget(deleteItem, 0, Qt::AlignRight | Qt::AlignVCenter);
+
+    QHBoxLayout *itemHLayout = new QHBoxLayout(this);
+    itemHLayout->addWidget(coverLabel);
+    itemHLayout->addWidget(textContainer);
+    setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
+}
+
+void RecentItem::setData(const RecentlyPlayedItem &item)
+{
+    path = item.path;
+    titleLabel->setText(item.title);
+    titleLabel->setToolTip(item.title);
+    titleLabel->adjustSize();
+    if (item.playTimeState == PlayListItem::PlayState::FINISH)
+    {
+        timeLabel->setText(tr("Finished"));
+    }
+    else if (item.duration > 0 && item.playtime > 0)
+    {
+        const int d_min = item.duration / 60;
+        const int d_sec = item.duration - d_min * 60;
+        const int p_min = item.playtime / 60;
+        const int p_sec = item.playtime - p_min * 60;
+        timeLabel->setText(tr("%1:%2/%3:%4").arg(p_min, 2, 10, QChar('0')).arg(p_sec, 2, 10, QChar('0')).
+                           arg(d_min, 2, 10, QChar('0')).arg(d_sec, 2, 10, QChar('0')));
+    }
+    timeLabel->adjustSize();
+    if (item.stopFrame.isNull())
+    {
+        coverLabel->setPixmap(nullCover());
+    }
+    else
+    {
+        coverLabel->setPixmap(QPixmap::fromImage(item.stopFrame));
+    }
+    coverLabel->adjustSize();
+    adjustSize();
+    show();
+}
+
+QSize RecentItem::sizeHint() const
+{
+    return layout()->sizeHint();
+}
+
+const QPixmap &RecentItem::nullCover()
+{
+    static QPixmap nullCoverPixmap;
+    if (nullCoverPixmap.isNull())
+    {
+        const int w = 160, h = 90;
+        const float pxR = GlobalObjects::context()->devicePixelRatioF;
+        nullCoverPixmap = QPixmap(w * pxR, h * pxR);
+        nullCoverPixmap.setDevicePixelRatio(pxR);
+        nullCoverPixmap.fill(Qt::transparent);
+        QPainter painter(&nullCoverPixmap);
+        painter.setRenderHints(QPainter::Antialiasing, true);
+        painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
+        QPainterPath path;
+        path.addRoundedRect(0, 0, w, h, 8, 8);
+        painter.setClipPath(path);
+        painter.drawPixmap(QRect(0, 0, w, h), QPixmap(":/res/images/null-cover-recent.png"));
+    }
+    return nullCoverPixmap;
+}
+
+void RecentItem::mouseReleaseEvent(QMouseEvent *event)
+{
+    if(event->button()==Qt::LeftButton)
+    {
+        const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(path);
+        if (curItem)
+        {
+            PlayContext::context()->playItem(curItem);
+        }
+    }
+    event->accept();
+}
+
+void RecentItem::enterEvent(QEvent *event)
+{
+    deleteItem->show();
+    QWidget::enterEvent(event);
+}
+
+void RecentItem::leaveEvent(QEvent *event)
+{
+    deleteItem->hide();
+    QWidget::leaveEvent(event);
+}

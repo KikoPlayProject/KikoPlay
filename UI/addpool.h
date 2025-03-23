@@ -17,10 +17,9 @@ public:
     EpType epType;
     double epIndex;
 private:
-    QToolButton *searchPage,*customPage;
-    QStackedLayout *contentStackLayout;
     QLineEdit *animeEdit, *epEdit, *epIndexEdit;
     QComboBox *epTypeCombo;
+    int pageIndex{0};
 
     QTreeView *epView;
     QAbstractItemModel *animeModel, *epModel;

@@ -2,14 +2,20 @@
 #include <QFile>
 #include <QApplication>
 #include <QVariant>
+#include <QFont>
 #include "Common/eventbus.h"
 #include "globalobjects.h"
 
-StyleManager::StyleManager():QObject(),mode(UNKNOWN)
+#define SETTING_KEY_STYLE_USE_THEMECOLOR "Style/UseThemeColor"
+#define SETTING_KEY_STYLE_THEMECOLOR "Style/ThemeColor"
+
+
+StyleManager::StyleManager():QObject()
 {
-    normalQSS = loadQSS(":/res/style.qss");
-    bgQSS = loadQSS(":/res/style_bg.qss");
-    defaultBgQSS = loadQSS(":/res/style_bg_default.qss");
+    qss = loadQSS(":/res/style.qss");
+
+    useThemeColor = GlobalObjects::appSetting->value(SETTING_KEY_STYLE_USE_THEMECOLOR, false).toBool();
+    themeColor = GlobalObjects::appSetting->value(SETTING_KEY_STYLE_THEMECOLOR, QColor(28, 160, 228)).value<QColor>();
 }
 
 StyleManager *StyleManager::getStyleManager()
@@ -18,51 +24,45 @@ StyleManager *StyleManager::getStyleManager()
     return &styleManager;
 }
 
-void StyleManager::setQSS(StyleMode mode, const QColor &color)
+void StyleManager::initStyle(bool hasBackground)
 {
-    if(mode == this->mode && color == themeColor) return;
-    emit styleModelChanged(mode);
-    pushEvent();
-    this->mode = mode;
-    if(mode == StyleMode::BG_COLOR)
+    setCondVariable("useThemeColor", useThemeColor, false);
+    setCondVariable("hasBackground", hasBackground, false);
+    if (useThemeColor && themeColor.isValid())
     {
-        if(color.isValid())
-        {
-            themeColor = color;
-        }
         setColorHash();
-        qApp->setStyleSheet(setQSS(bgQSS));
     }
-    else if(mode == StyleMode::DEFAULT_BG)
+    qApp->setStyleSheet(setQSS(qss));
+}
+
+void StyleManager::setThemeColor(const QColor &color)
+{
+    pushEvent();
+    if (color.isValid())
     {
-        qApp->setStyleSheet(setQSS(defaultBgQSS));
+        useThemeColor = true;
+        themeColor = color;
+        setColorHash();
+        GlobalObjects::appSetting->setValue(SETTING_KEY_STYLE_THEMECOLOR, themeColor);
     }
-    else if(mode == StyleMode::NO_BG)
+    else
     {
-        qApp->setStyleSheet(setQSS(normalQSS));
+        useThemeColor = false;
     }
+    setCondVariable("useThemeColor", useThemeColor, false);
+    qApp->setStyleSheet(setQSS(qss));
+    updateAppFont();
+    GlobalObjects::appSetting->setValue(SETTING_KEY_STYLE_USE_THEMECOLOR, useThemeColor);
 }
 
 void StyleManager::setCondVariable(const QString &name, bool val, bool refresh)
 {
-    if(condHash.contains(name) && condHash[name] == val) return;
+    if (condHash.contains(name) && condHash[name] == val) return;
     condHash[name] = val;
     emit condVariableChanged(name, val);
-    if(!refresh) return;
-    if (name == "DarkMode") pushEvent();
-    if(mode == StyleMode::BG_COLOR)
-    {
-        setColorHash();
-        qApp->setStyleSheet(setQSS(bgQSS));
-    }
-    else if(mode == StyleMode::DEFAULT_BG)
-    {
-        qApp->setStyleSheet(setQSS(defaultBgQSS));
-    }
-    else if(mode == StyleMode::NO_BG)
-    {
-        qApp->setStyleSheet(setQSS(normalQSS));
-    }
+    if (!refresh) return;
+    qApp->setStyleSheet(setQSS(qss));
+    updateAppFont();
 }
 
 QString StyleManager::loadQSS(const QString &fn)
@@ -122,7 +122,7 @@ QColor StyleManager::getColorPalette(const QColor &color, int index)
     return QColor::fromHsv(h, s, v);
 }
 
-QString StyleManager::setQSS(const QString &qss, const QVariantMap *extraVal)
+QString StyleManager::setQSS(const QString &qss, const QVariantMap *extraVal) const
 {
     QVector<QPair<QString, bool>> replacedStack{{"", true}};
     int state = 0;
@@ -217,9 +217,23 @@ QString StyleManager::toString(const QColor &color)
 void StyleManager::pushEvent()
 {
     if (!EventBus::getEventBus()->hasListener(EventBus::EVENT_APP_STYLE_CHANGED)) return;
+    QVariantMap condsMap;
+    for (auto iter = condHash.begin(); iter != condHash.end(); ++iter)
+    {
+        condsMap.insert(iter.key(), iter.value());
+    }
     const QVariantMap param = {
-        { "mode", static_cast<int>(mode) },
-        { "dark_mode", condHash.value("DarkMode", false) },
+        { "conds", condsMap },
+        { "themeColor", useThemeColor ? themeColor.rgb() : -1}
     };
     EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_APP_STYLE_CHANGED, param});
+}
+
+void StyleManager::updateAppFont()
+{
+    QFont font = qApp->font();
+    font.setPixelSize(13);
+    font.setFamily(GlobalObjects::normalFont);
+    font.setHintingPreference(QFont::PreferNoHinting);
+    qApp->setFont(font);
 }

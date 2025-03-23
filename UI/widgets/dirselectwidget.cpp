@@ -8,17 +8,18 @@
 #include <QSettings>
 #include <QApplication>
 #include "Download/util.h"
+#include "UI/ela/ElaComboBox.h"
+#include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent), dirChanged(false)
 {
-    dirList=GlobalObjects::appSetting->value("Download/PathList",QStringList()).toStringList();
-    dirEdit=new QComboBox(this);
-    dirEdit->setEditable(true);
-    dirEdit->setObjectName(QStringLiteral("DirEdit"));
+    dirList = GlobalObjects::appSetting->value("Download/PathList", QStringList()).toStringList();
+    dirEdit = new ElaComboBox(this);
+    static_cast<ElaComboBox *>(dirEdit)->setEditable(true);
     dirEdit->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     dirEdit->addItems(dirList);
     dirEdit->setCurrentIndex(0);
-    dirEdit->setFont(QFont(GlobalObjects::normalFont,13));
+    dirEdit->setFont(QFont(GlobalObjects::normalFont, 13));
 
 
     QLabel *spaceTip=new QLabel(this);
@@ -26,9 +27,9 @@ DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent), dirChanged(
     QHBoxLayout *dirHLayout=new QHBoxLayout();
     dirHLayout->addStretch(1);
     dirHLayout->addWidget(spaceTip);
-    dirHLayout->addSpacing(20*logicalDpiX()/96);
+    dirHLayout->addSpacing(32);
     dirHLayout->setContentsMargins(0, 0, 0, 0);
-    spaceTip->setFont(QFont(GlobalObjects::normalFont,8));
+    spaceTip->setFont(QFont(GlobalObjects::normalFont, 8));
     dirEdit->setLayout(dirHLayout);
     freeSpace=getAvailableBytes(getDir());
     spaceTip->setText(formatSize(false,freeSpace));
@@ -39,11 +40,11 @@ DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent), dirChanged(
 		dirChanged = true;
     });
 
-    QPushButton *selectDir=new QPushButton(this);
-    selectDir->setObjectName(QStringLiteral("SelectDirButton"));
-    GlobalObjects::iconfont->setPointSize(17);
+    QPushButton *selectDir = new KPushButton(this);
+    GlobalObjects::iconfont->setPointSize(18);
     selectDir->setFont(*GlobalObjects::iconfont);
     selectDir->setText(QChar(0xe616));
+    selectDir->setFixedHeight(40);
 
     QObject::connect(selectDir,&QPushButton::clicked,[this](){
         QString directory = QFileDialog::getExistingDirectory(this,

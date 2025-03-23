@@ -6,15 +6,22 @@
 #include <QPushButton>
 #include <QApplication>
 #include <QPlainTextEdit>
-#include <QCheckBox>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QStyle>
 
+#include "UI/ela/ElaCheckBox.h"
+#include "UI/ela/ElaLineEdit.h"
+#include "UI/ela/ElaMenu.h"
+#include "UI/widgets/floatscrollbar.h"
+#include "UI/widgets/klineedit.h"
+#include "UI/widgets/kplaintextedit.h"
+#include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 #include "pooleditor.h"
 #include "adddanmu.h"
 #include "matcheditor.h"
-#include "blockeditor.h"
+#include "dialogs/blockeditor.h"
 #include "inputdialog.h"
 #include "dlnadiscover.h"
 #include "widgets/loadingicon.h"
@@ -34,67 +41,133 @@ namespace
     class PlayListItemDelegate: public QStyledItemDelegate
     {
     public:
-        explicit PlayListItemDelegate(QObject* parent = nullptr) : QStyledItemDelegate(parent)
-        { }
+        explicit PlayListItemDelegate(QObject* parent = nullptr) : QStyledItemDelegate(parent) { }
 
-        void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+        QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override
         {
-            QStyleOptionViewItem ViewOption(option);
+            KLineEdit *editor = new KLineEdit(parent);
+            QFont f(parent->font());
+            f.setPointSize(11);
+            editor->setFont(f);
+            return editor;
+        }
+
+        void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
+        {
+            QStyleOptionViewItem viewOption(option);
+            initStyleOption(&viewOption, index);
             QColor itemForegroundColor = index.data(Qt::ForegroundRole).value<QBrush>().color();
             if (itemForegroundColor.isValid())
             {
                 if (itemForegroundColor != option.palette.color(QPalette::WindowText))
-                    ViewOption.palette.setColor(QPalette::HighlightedText, itemForegroundColor);
+                {
+                    viewOption.palette.setColor(QPalette::HighlightedText, itemForegroundColor);
+                }
 
             }
-            QStyledItemDelegate::paint(painter, ViewOption, index);
 
-            static QIcon bgmCollectionIcon(":/res/images/bgm-collection.svg");
-            static QIcon folderIcon(":/res/images/folder.svg");
-            static QIcon webdavIcon(":/res/images/webdav.svg");
-            static QIcon colorMarkerIcon[] =
+            painter->save();
+            painter->setRenderHint(QPainter::Antialiasing);
+            QRect itemRect = viewOption.rect;
+            if (viewOption.state & QStyle::State_Selected)
             {
-                QIcon(":/res/images/mark_red.svg"),
-                QIcon(":/res/images/mark_blue.svg"),
-                QIcon(":/res/images/mark_green.svg"),
-                QIcon(":/res/images/mark_orange.svg"),
-                QIcon(":/res/images/mark_pink.svg"),
-                QIcon(":/res/images/mark_yellow.svg"),
-                QIcon()
-            };
+                if (viewOption.state & QStyle::State_MouseOver)
+                {
+                    painter->fillRect(itemRect, QColor(255, 255, 255, 40));
+                }
+                else
+                {
+                    painter->fillRect(itemRect, QColor(255, 255, 255, 40));
+                }
+            }
+            else
+            {
+                if (viewOption.state & QStyle::State_MouseOver)
+                {
+                    painter->fillRect(itemRect, QColor(255, 255, 255, 40));
+                }
+            }
+            painter->restore();
+
+
+            static QIcon bgmCollectionIcon(":/res/images/playlist-bgm.svg");
+            static QIcon folderIcon(":/res/images/playlist-folder.svg");
+            static QIcon webdavIcon(":/res/images/playlist-web-folder.svg");
+            static QIcon colorMarkerIcon[] =
+                {
+                    QIcon(":/res/images/mark_red.svg"),
+                    QIcon(":/res/images/mark_blue.svg"),
+                    QIcon(":/res/images/mark_green.svg"),
+                    QIcon(":/res/images/mark_orange.svg"),
+                    QIcon(":/res/images/mark_pink.svg"),
+                    QIcon(":/res/images/mark_yellow.svg"),
+                    QIcon()
+                };
             QIcon *marker(nullptr);
-            if(index.data(PlayList::ItemRole::BgmCollectionRole).toBool())
+            if (index.data(PlayList::ItemRole::BgmCollectionRole).toBool())
             {
                 marker = &bgmCollectionIcon;
 
             }
-            else if(index.data(PlayList::ItemRole::FolderCollectionRole).toBool())
+            else if (index.data(PlayList::ItemRole::FolderCollectionRole).toBool())
             {
                 marker = &folderIcon;
             }
-            else if(index.data(PlayList::ItemRole::WebDAVCollectionRole).toBool())
+            else if (index.data(PlayList::ItemRole::WebDAVCollectionRole).toBool())
             {
                 marker = &webdavIcon;
             }
-            PlayListItem::Marker colorMarker = (PlayListItem::Marker)index.data(PlayList::ItemRole::ColorMarkerRole).toInt();
-            if(marker || colorMarker != PlayListItem::Marker::M_NONE)
-            {
-                QRect decoration = option.rect;
-                decoration.setHeight(decoration.height()-10);
-                decoration.setWidth(decoration.height());
-                decoration.moveCenter(option.rect.center());
-                decoration.moveRight(option.rect.width()+option.rect.x()-10);
-                if(marker)
-                {
-                    marker->paint(painter, decoration);
-                }
 
-                if(colorMarker != PlayListItem::Marker::M_NONE)
-                {
-                    if(marker) decoration.moveLeft(decoration.left() - decoration.width() - 4);
-                    colorMarkerIcon[colorMarker].paint(painter, decoration);
-                }
+            int markerWidth = 16;
+            QStyle *style = viewOption.widget ? viewOption.widget->style() : QApplication::style();
+            QRect iconRect = style->subElementRect(QStyle::SubElement::SE_ItemViewItemDecoration, &viewOption, viewOption.widget);
+            QRect textRect = style->subElementRect(QStyle::SubElement::SE_ItemViewItemText, &viewOption, viewOption.widget);
+            if (marker)
+            {
+                QRect markerRect = textRect;
+                markerRect.setLeft(markerRect.right() - markerWidth - 4);
+                markerRect.setRight(markerRect.right() - 4);
+                marker->paint(painter, markerRect);
+                textRect.setRight(markerRect.left());
             }
+
+            PlayListItem::Marker colorMarker = (PlayListItem::Marker)index.data(PlayList::ItemRole::ColorMarkerRole).toInt();
+            if (colorMarker != PlayListItem::Marker::M_NONE)
+            {
+                QRect markerRect = textRect;
+                int right = markerRect.right() - 4;
+                int left = markerRect.right() - markerWidth - 4;
+
+                markerRect.setLeft(left);
+                markerRect.setRight(right);
+                textRect.setRight(left);
+                colorMarkerIcon[colorMarker].paint(painter, markerRect);
+            }
+
+
+            painter->save();
+            painter->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform | QPainter::TextAntialiasing);
+
+            if (!viewOption.icon.isNull())
+            {
+                QIcon::Mode mode = QIcon::Normal;
+                QIcon::State state = viewOption.state & QStyle::State_Open ? QIcon::On : QIcon::Off;
+                viewOption.icon.paint(painter, iconRect, viewOption.decorationAlignment, mode, state);
+            }
+            if (!viewOption.text.isEmpty())
+            {
+                textRect.adjust(4, 0, -4, 0);
+                static QFont textFont(GlobalObjects::normalFont, 11);
+                painter->setFont(textFont);
+                if (painter->fontMetrics().horizontalAdvance(viewOption.text) > textRect.width())
+                {
+                    viewOption.text = painter->fontMetrics().elidedText(viewOption.text, Qt::ElideRight, textRect.width());
+                }
+                painter->setPen(viewOption.palette.color(QPalette::HighlightedText));
+                painter->drawText(textRect, viewOption.displayAlignment, viewOption.text);
+            }
+            painter->restore();
+
         }
     };
     class TextColorDelegate: public QStyledItemDelegate
@@ -105,15 +178,22 @@ namespace
 
         void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
         {
-            QStyleOptionViewItem ViewOption(option);
+            QStyleOptionViewItem viewOption(option);
+            initStyleOption(&viewOption, index);
             QColor itemForegroundColor = index.data(Qt::ForegroundRole).value<QBrush>().color();
             if (itemForegroundColor.isValid())
             {
                 if (itemForegroundColor != option.palette.color(QPalette::WindowText))
-                    ViewOption.palette.setColor(QPalette::HighlightedText, itemForegroundColor);
+                    viewOption.palette.setColor(QPalette::HighlightedText, itemForegroundColor);
 
             }
-            QStyledItemDelegate::paint(painter, ViewOption, index);
+            if (index.column() == 1)
+            {
+                const QString format = index.parent().isValid() ? "  %1 %2" : "%1 %2";
+                viewOption.text = format.arg(index.siblingAtColumn(0).data().toString(), index.data().toString());
+            }
+            QStyle *style = viewOption.widget ? viewOption.widget->style() : QApplication::style();
+            style->drawControl(QStyle::CE_ItemViewItem, &viewOption, painter, viewOption.widget);
         }
     };
     class InfoTip : public QWidget
@@ -130,7 +210,7 @@ namespace
             infoText->setObjectName(QStringLiteral("labelListInfo"));
             infoText->setFont(QFont(GlobalObjects::normalFont,10));
             infoText->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
-            cancelBtn = new QPushButton(QObject::tr("Cancel"), this);
+            cancelBtn = new KPushButton(QObject::tr("Cancel"), this);
             QHBoxLayout *infoBarHLayout=new QHBoxLayout(this);
             infoBarHLayout->setContentsMargins(5,0,5,0);
             infoBarHLayout->setSpacing(4);
@@ -147,19 +227,17 @@ namespace
         }
         void showMessage(const QString &msg,int flag)
         {
-            if(hideTimer.isActive())
-                hideTimer.stop();
-            if(flag&NotifyMessageFlag::NM_HIDE)
+            if (hideTimer.isActive()) hideTimer.stop();
+            if (flag & NotifyMessageFlag::NM_HIDE)
             {
                 hideTimer.setSingleShot(true);
                 hideTimer.start(3000);
             }
-            QString icon;
-            if(flag&NotifyMessageFlag::NM_PROCESS)
+            if (flag & NotifyMessageFlag::NM_PROCESS)
                 loadingIcon->show();
             else
                 loadingIcon->hide();
-            if(flag&NotifyMessageFlag::NM_SHOWCANCEL)
+            if (flag & NotifyMessageFlag::NM_SHOWCANCEL)
                 cancelBtn->show();
             else
                 cancelBtn->hide();
@@ -177,63 +255,12 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
 {
     Notifier::getNotifier()->addNotify(Notifier::LIST_NOTIFY, this);
     comparer.setNumericMode(true);
+
     initActions();
-
-    QVBoxLayout *listVLayout=new QVBoxLayout(this);
-    listVLayout->setContentsMargins(0,0,0,0);
-    listVLayout->setSpacing(0);
-
-    QFont normalFont(GlobalObjects::normalFont,11);
-    QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
-    pageButtonHLayout->setContentsMargins(0,0,0,0);
-    pageButtonHLayout->setSpacing(0);
-    playlistPageButton = new QToolButton(this);
-    playlistPageButton->setFont(normalFont);
-    playlistPageButton->setText(tr("MediaList"));
-    playlistPageButton->setObjectName(QStringLiteral("ListPageButton"));
-    playlistPageButton->setCheckable(true);
-    playlistPageButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    playlistPageButton->setFixedHeight(30*logicalDpiY()/96);
-    playlistPageButton->setMinimumWidth(80*logicalDpiX()/96);
-    playlistPageButton->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Fixed);
-    playlistPageButton->setChecked(true);
-    QObject::connect(playlistPageButton, &QToolButton::clicked, this, [this](){
-        playlistPageButton->setChecked(true);
-        danmulistPageButton->setChecked(false);
-        contentStackLayout->setCurrentIndex(0);
-        infoTip->raise();
-    });
-
-    danmulistPageButton = new QToolButton(this);
-    danmulistPageButton->setFont(normalFont);
-    danmulistPageButton->setText(tr("DanmuList"));
-    danmulistPageButton->setObjectName(QStringLiteral("ListPageButton"));
-    danmulistPageButton->setCheckable(true);
-    danmulistPageButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    danmulistPageButton->setFixedHeight(30*logicalDpiY()/96);
-    danmulistPageButton->setMinimumWidth(80*logicalDpiX()/96);
-    danmulistPageButton->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Fixed);
-    QObject::connect(danmulistPageButton, &QToolButton::clicked, this, [this](){
-        playlistPageButton->setChecked(false);
-        danmulistPageButton->setChecked(true);
-        contentStackLayout->setCurrentIndex(1);
-        infoTip->raise();
-    });
-
-    pageButtonHLayout->addWidget(playlistPageButton);
-    pageButtonHLayout->addWidget(danmulistPageButton);
-    listVLayout->addLayout(pageButtonHLayout);
-
-    contentStackLayout=new QStackedLayout();
-    contentStackLayout->setContentsMargins(0,0,0,0);
-    contentStackLayout->addWidget(setupPlaylistPage());
-    contentStackLayout->addWidget(new LazyContainer(this, contentStackLayout, [this](){return this->setupDanmulistPage();}));
-    listVLayout->addLayout(contentStackLayout);
-
-    infoTip=new InfoTip(this);
-    infoTip->hide();
-    infoTip->setWindowFlag(Qt::WindowStaysOnTopHint);
-    //QObject::connect(GlobalObjects::playlist,&PlayList::message,this,&ListWindow::showMessage);
+    initListUI();
+    updatePlaylistActions();
+    setFocusPolicy(Qt::StrongFocus);
+    setAcceptDrops(true);
 
     QObject::connect(GlobalObjects::playlist,&PlayList::matchStatusChanged, this, [this](bool on){
         matchStatus+=(on?1:-1);
@@ -260,10 +287,6 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
             playlistView->setDragEnabled(false);
         }
     });
-
-    updatePlaylistActions();
-    setFocusPolicy(Qt::StrongFocus);
-    setAcceptDrops(true);
 }
 
 void ListWindow::initActions()
@@ -275,7 +298,7 @@ void ListWindow::initActions()
         playItem(index);
     });
     act_autoMatch=new QAction(tr("Associate Danmu Pool"),this);
-	QObject::connect(act_autoMatch, &QAction::triggered, this, [=]() {matchPool(); });
+    QObject::connect(act_autoMatch, &QAction::triggered, this, [=]() {matchPool(); });
     act_removeMatch=new QAction(tr("Remove Match"),this);
     QObject::connect(act_removeMatch, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
@@ -283,27 +306,6 @@ void ListWindow::initActions()
         if (selection.size() == 0)return;
         QModelIndexList indexes(selection.indexes());
         GlobalObjects::playlist->removeMatch(indexes);
-    });
-    act_autoMatchMode=new QAction(tr("Auto Match Mode"),this);
-    act_autoMatchMode->setCheckable(true);
-    act_autoMatchMode->setChecked(true);
-    QObject::connect(act_autoMatchMode,&QAction::toggled, this, [](bool checked){
-        GlobalObjects::playlist->setAutoMatch(checked);
-        GlobalObjects::appSetting->setValue("List/AutoMatch",checked);
-    });
-    act_autoMatchMode->setChecked(GlobalObjects::appSetting->value("List/AutoMatch", true).toBool());
-
-    act_setMatchFilter = new QAction(tr("Match Filter Setting"), this);
-    QObject::connect(act_setMatchFilter, &QAction::triggered, this, [this](){
-        InputDialog inputDialog(tr("Macth Filter Setting"),
-                                tr("Set rules line by line, supporting wildcards.\nKikoPlay will skip items matched by the rules during the match process."),
-                                GlobalObjects::appSetting->value("List/MatchFilter").toString(),
-                                true,this, "DialogSize/MatchFilter");
-        if (QDialog::Accepted == inputDialog.exec())
-        {
-            GlobalObjects::appSetting->setValue("List/MatchFilter", inputDialog.text.trimmed());
-            GlobalObjects::playlist->refreshMatchFilters();
-        }
     });
 
     act_markBgmCollection=new QAction(tr("Mark/Unmark Bangumi Collecion"),this);
@@ -369,7 +371,7 @@ void ListWindow::initActions()
             {
                 Pool *pool=GlobalObjects::danmuManager->getPool(poolIdMap.value(addDanmuDialog.danmuToPoolList.at(i++)));
                 DanmuSource &sourceInfo=(*iter).first;
-				QVector<DanmuComment *> &danmuList=(*iter).second;
+                QVector<DanmuComment *> &danmuList=(*iter).second;
                 if(pool)
                 {
                     showMessage(tr("Adding: %1").arg(pool->epTitle()),NotifyMessageFlag::NM_PROCESS);
@@ -411,7 +413,7 @@ void ListWindow::initActions()
         {
             for(auto &file: files)
             {
-				QVector<DanmuComment *> tmplist;
+                QVector<DanmuComment *> tmplist;
                 LocalProvider::LoadXmlDanmuFile(file,tmplist);
                 DanmuSource sourceInfo;
                 sourceInfo.scriptData = file;
@@ -757,7 +759,7 @@ void ListWindow::initActions()
             for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
             {
                 DanmuSource &sourceInfo=(*iter).first;
-				QVector<DanmuComment *> &danmuList=(*iter).second;
+                QVector<DanmuComment *> &danmuList=(*iter).second;
                 if(pool->addSource(sourceInfo,danmuList,iter==addDanmuDialog.selectedDanmuList.end()-1)<0)
                 {
                     qDeleteAll(danmuList);
@@ -779,7 +781,7 @@ void ListWindow::initActions()
         {
             for(auto &file: files)
             {
-				QVector<DanmuComment *> tmplist;
+                QVector<DanmuComment *> tmplist;
                 LocalProvider::LoadXmlDanmuFile(file,tmplist);
                 DanmuSource sourceInfo;
                 sourceInfo.title=file.mid(file.lastIndexOf('/')+1);
@@ -878,6 +880,10 @@ void ListWindow::initActions()
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         playlistView->scrollTo(model->mapFromSource(GlobalObjects::playlist->getCurrentIndex()), QAbstractItemView::EnsureVisible);
     });
+
+    QObject::connect(GlobalObjects::danmuPool, &DanmuPool::triggerAdd, act_addOnlineDanmu, &QAction::trigger);
+    QObject::connect(GlobalObjects::danmuPool, &DanmuPool::triggerEditPool, act_editPool, &QAction::trigger);
+    QObject::connect(GlobalObjects::danmuPool, &DanmuPool::triggerEditBlockRules, act_editBlock, &QAction::trigger);
 }
 
 QModelIndex ListWindow::getPSParentIndex()
@@ -891,7 +897,7 @@ QModelIndex ListWindow::getPSParentIndex()
 QSharedPointer<DanmuComment> ListWindow::getSelectedDanmu()
 {
     QModelIndexList selection =danmulistView->selectionModel()->selectedRows();
-    return GlobalObjects::danmuPool->getDanmu(selection.last());
+    return GlobalObjects::danmuPool->getDanmu(danmulistProxyModel->mapToSource(selection.last()));
 }
 
 void ListWindow::matchPool(const QString &scriptId)
@@ -953,9 +959,100 @@ void ListWindow::matchPool(const QString &scriptId)
     }
 }
 
+void ListWindow::initListUI()
+{
+    QGridLayout *listGLayout = new QGridLayout(this);
+    listGLayout->setContentsMargins(0,0,0,0);
+    listGLayout->setSpacing(0);
+
+    QStackedLayout *titleSLayout = new QStackedLayout;
+    titleContainer = new QWidget(this);
+    titleContainer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+    QHBoxLayout *titleHLayout = new QHBoxLayout(titleContainer);
+    titleHLayout->setContentsMargins(0, 0, 0, 0);
+    QLabel *listTitleLabel = new QLabel(tr("PlayList"), titleContainer);
+    listTitleLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    listTitleLabel->setObjectName(QStringLiteral("ListTitleLabel"));
+    QFont titleFont;
+    titleFont.setFamily(GlobalObjects::normalFont);
+    titleFont.setPointSize(12);
+    listTitleLabel->setFont(titleFont);
+
+    QPushButton *searchButton = new QPushButton(titleContainer);
+    searchButton->setObjectName(QStringLiteral("ListSearchButton"));
+    GlobalObjects::iconfont->setPointSize(14);
+    searchButton->setFont(*GlobalObjects::iconfont);
+    searchButton->setText(QChar(0xea8a));
+
+    titleHLayout->addSpacing(8);
+    titleHLayout->addWidget(listTitleLabel);
+    titleHLayout->addStretch(1);
+    titleHLayout->addWidget(searchButton);
+    titleHLayout->addSpacing(8);
+
+    QWidget *filterContainer = new QWidget(this);
+    QHBoxLayout *filterHLayout = new QHBoxLayout(filterContainer);
+    filterHLayout->setContentsMargins(8, 8, 8, 8);
+
+    filterEdit = new KLineEdit(filterContainer);
+    filterHLayout->addWidget(filterEdit);
+    filterEdit->setFont(QFont(GlobalObjects::normalFont, 12));
+    filterEdit->setObjectName(QStringLiteral("ListFilterLineEdit"));
+    QMargins textMargins = filterEdit->textMargins();
+    textMargins.setLeft(6);
+    filterEdit->setTextMargins(textMargins);
+    QPushButton *clearBtn = new QPushButton(filterEdit);
+    clearBtn->setObjectName(QStringLiteral("ListSearchButton"));
+    GlobalObjects::iconfont->setPointSize(12);
+    clearBtn->setFont(*GlobalObjects::iconfont);
+    clearBtn->setText(QChar(0xe60b));
+    clearBtn->setCursor(Qt::ArrowCursor);
+    clearBtn->setFocusPolicy(Qt::NoFocus);
+    QWidgetAction *clearAction = new QWidgetAction(this);
+    clearAction->setDefaultWidget(clearBtn);
+    filterEdit->addAction(clearAction, QLineEdit::TrailingPosition);
+
+    QObject::connect(searchButton, &QPushButton::clicked, this, [=](){titleSLayout->setCurrentIndex(1);});
+    QObject::connect(clearBtn, &QPushButton::clicked, this, [=](){filterEdit->clear(); titleSLayout->setCurrentIndex(0);});
+    QObject::connect(filterEdit, &QLineEdit::textChanged, this, [=](const QString &text){
+        if (currentProxyModel)
+        {
+            QRegExp regExp(text, Qt::CaseInsensitive);
+            currentProxyModel->setFilterRole(Qt::DisplayRole);
+            currentProxyModel->setFilterRegExp(regExp);
+        }
+    });
+
+    titleSLayout->addWidget(titleContainer);
+    titleSLayout->addWidget(filterContainer);
+
+    contentStackLayout = new QStackedLayout();
+    contentStackLayout->setContentsMargins(0,0,0,0);
+    contentStackLayout->addWidget(initPlaylistPage());
+    contentStackLayout->addWidget(new LazyContainer(this, contentStackLayout, [this](){return this->initDanmulistPage();}));
+    contentStackLayout->addWidget(new LazyContainer(this, contentStackLayout, [this](){return this->initSublistPage();}));
+
+    QObject::connect(contentStackLayout, &QStackedLayout::currentChanged, this, [=](int index){
+        const QStringList listNames{tr("PlayList"), tr("Danmu"), tr("Subtitle")};
+        if (index >= 0 && index < listNames.size())
+        {
+            listTitleLabel->setText(listNames[index]);
+            titleSLayout->setCurrentIndex(0);
+        }
+    });
+
+    listGLayout->addLayout(titleSLayout, 0, 0);
+    listGLayout->addLayout(contentStackLayout, 1, 0);
+    listGLayout->setRowStretch(1, 1);
+
+    infoTip = new InfoTip(this);
+    infoTip->hide();
+}
+
 void ListWindow::updatePlaylistActions()
 {
-    if(actionDisable)
+    if (actionDisable)
     {
         matchSubMenu->setEnabled(false);
         markSubMenu->setEnabled(false);
@@ -987,7 +1084,10 @@ void ListWindow::updatePlaylistActions()
     act_browseFile->setEnabled(hasPlaylistSelection);
     act_exportDanmu->setEnabled(hasPlaylistSelection);
     act_updateFolder->setEnabled(hasPlaylistSelection);
-    act_paste->setEnabled(GlobalObjects::playlist->canPaste());  
+    act_paste->setEnabled(GlobalObjects::playlist->canPaste());
+    act_PlayOnOtherDevices->setEnabled(hasPlaylistSelection);
+    act_sharePoolCode->setEnabled(hasPlaylistSelection);
+    act_shareResourceCode->setEnabled(hasPlaylistSelection);
 }
 
 void ListWindow::updateDanmuActions()
@@ -1003,23 +1103,19 @@ void ListWindow::updateDanmuActions()
     act_deleteDanmu->setEnabled(hasDanmuSelection);
 }
 
-QWidget *ListWindow::setupPlaylistPage()
+QWidget *ListWindow::initPlaylistPage()
 {
-    QWidget *playlistPage=new QWidget(this);
+    QWidget *playlistPage = new QWidget(this);
     playlistPage->setObjectName(QStringLiteral("playlistPage"));
 
-    QVBoxLayout *playlistPageVLayout=new QVBoxLayout(playlistPage);
+    QVBoxLayout *playlistPageVLayout = new QVBoxLayout(playlistPage);
     playlistPageVLayout->setContentsMargins(0,0,0,0);
     playlistPageVLayout->setSpacing(0);
-    FilterBox *filter=new FilterBox(playlistPage);
-    filter->setObjectName(QStringLiteral("filterBox"));
-    filter->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Minimum);
-    playlistPageVLayout->addWidget(filter);
 
-    playlistView=new QTreeView(playlistPage);
+    playlistView = new QTreeView(playlistPage);
     playlistView->setObjectName(QStringLiteral("playlist"));
     playlistView->setAnimated(true);
-    playlistView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
+    playlistView->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
     playlistView->setEditTriggers(QAbstractItemView::SelectedClicked);
     playlistView->setDragEnabled(true);
     playlistView->setAcceptDrops(true);
@@ -1029,21 +1125,17 @@ QWidget *ListWindow::setupPlaylistPage()
     playlistView->header()->hide();
     playlistView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     playlistView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    playlistView->setFont(QFont(GlobalObjects::normalFont,12));
+    playlistView->setFont(QFont(GlobalObjects::normalFont, 16));
     playlistView->setContextMenuPolicy(Qt::CustomContextMenu);
-    playlistView->setIndentation(12*logicalDpiX()/96);
+    playlistView->setIndentation(12);
     playlistView->setItemDelegate(new PlayListItemDelegate(this));
+    new FloatScrollBar(playlistView->verticalScrollBar(), playlistView);
 
-    QSortFilterProxyModel *proxyModel=new QSortFilterProxyModel(this);
-    proxyModel->setRecursiveFilteringEnabled(true);
-    proxyModel->setSourceModel(GlobalObjects::playlist);
-    playlistView->setModel(proxyModel);
-
-    QObject::connect(filter, &FilterBox::filterChanged, this, [proxyModel,filter](){
-        QRegExp regExp(filter->text(),filter->caseSensitivity(), filter->patternSyntax());
-        proxyModel->setFilterRole(filter->searchType() == FilterBox::FilePath? PlayList::FilePathRole : Qt::DisplayRole);
-        proxyModel->setFilterRegExp(regExp);
-    });
+    playlistProxyModel = new QSortFilterProxyModel(this);
+    playlistProxyModel->setRecursiveFilteringEnabled(true);
+    playlistProxyModel->setSourceModel(GlobalObjects::playlist);
+    playlistView->setModel(playlistProxyModel);
+    currentProxyModel = playlistProxyModel;
 
     QObject::connect(playlistView, &QTreeView::doubleClicked, this, [this](const QModelIndex &index) {
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
@@ -1058,12 +1150,12 @@ QWidget *ListWindow::setupPlaylistPage()
             playItem(index, false);
         }
     });
-    QObject::connect(playlistView->selectionModel(), &QItemSelectionModel::selectionChanged,this,&ListWindow::updatePlaylistActions);
+    QObject::connect(playlistView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ListWindow::updatePlaylistActions);
 
-    QMenu *playlistContextMenu=new QMenu(playlistView);
+    QMenu *playlistContextMenu = new ElaMenu(playlistView);
     playlistContextMenu->addAction(act_play);
 
-    QMenu *addSubMenu=new QMenu(tr("Add"),playlistContextMenu);
+    QMenu *addSubMenu = new ElaMenu(tr("Add"),playlistContextMenu);
     addSubMenu->addAction(act_addCollection);
     addSubMenu->addAction(act_addItem);
     addSubMenu->addAction(act_addURL);
@@ -1071,39 +1163,26 @@ QWidget *ListWindow::setupPlaylistPage()
     addSubMenu->addAction(act_addWebDAVCollection);
     playlistContextMenu->addMenu(addSubMenu);
 
-    matchSubMenu=new QMenu(tr("Match"),playlistContextMenu);
-    QMenu *defaultMatchScriptMenu=new QMenu(tr("Default Match Script"), matchSubMenu);
+    matchSubMenu = new ElaMenu(tr("Match"),playlistContextMenu);
     matchSubMenu->addAction(act_autoMatch);
     matchSubMenu->addAction(act_removeMatch);
-    matchSubMenu->addAction(act_setMatchFilter);
-    matchSubMenu->addAction(act_autoMatchMode);
-    matchSubMenu->addMenu(defaultMatchScriptMenu);
-    defaultMatchScriptMenu->hide();
+
     QAction *matchSep = new QAction(this);
     matchSep->setSeparator(true);
     playlistContextMenu->addMenu(matchSubMenu);
     QActionGroup *matchCheckGroup = new QActionGroup(this);
     auto matchProviders = GlobalObjects::animeProvider->getMatchProviders();
     static QList<QAction *> matchActions;
-    if(matchProviders.count()>0)
+    if (matchProviders.count() > 0)
     {
-        defaultMatchScriptMenu->show();
         matchSubMenu->addAction(matchSep);
         QString defaultSctiptId = GlobalObjects::animeProvider->defaultMatchScript();
-        for(const auto &p : matchProviders)
+        for (const auto &p : matchProviders)
         {
             QAction *mAct = new QAction(p.first);
             mAct->setData(p.second); //id
             matchActions.append(mAct);
             matchSubMenu->addAction(mAct);
-            QAction *mCheckAct = defaultMatchScriptMenu->addAction(p.first);
-            matchCheckGroup->addAction(mCheckAct);
-            mCheckAct->setCheckable(true);
-            mCheckAct->setData(p.second);
-            if(p.second == defaultSctiptId)
-            {
-                mCheckAct->setChecked(true);
-            }
         }
     }
     QObject::connect(matchSubMenu, &QMenu::triggered, this, [this, matchCheckGroup](QAction *act){
@@ -1123,38 +1202,29 @@ QWidget *ListWindow::setupPlaylistPage()
     });
     QObject::connect(GlobalObjects::animeProvider, &AnimeProvider::matchProviderChanged, this, [=](){
          auto matchProviders = GlobalObjects::animeProvider->getMatchProviders();
-         for(QAction *mAct : matchActions)
+         for (QAction *mAct : matchActions)
          {
              matchSubMenu->removeAction(mAct);
          }
          qDeleteAll(matchActions);
-		 matchActions.clear();
+         matchActions.clear();
          matchSubMenu->removeAction(matchSep);
-         for(QAction *act : defaultMatchScriptMenu->actions())
-         {
-            matchCheckGroup->removeAction(act);
-         }
-         defaultMatchScriptMenu->clear();
-         if(matchProviders.count()>0)
+
+         if (matchProviders.count() > 0)
          {
              QString defaultSctiptId = GlobalObjects::animeProvider->defaultMatchScript();
              matchSubMenu->addAction(matchSep);
-             for(const auto &p : matchProviders)
+             for (const auto &p : matchProviders)
              {
                  QAction *mAct = new QAction(p.first);
                  mAct->setData(p.second); //id
                  matchActions.append(mAct);
                  matchSubMenu->addAction(mAct);
-                 QAction *mCheckAct = defaultMatchScriptMenu->addAction(p.first);
-                 matchCheckGroup->addAction(mCheckAct);
-                 mCheckAct->setCheckable(true);
-                 mCheckAct->setData(p.second);
-                 mCheckAct->setChecked(p.second == defaultSctiptId);
              }
          }
     });
 
-    QMenu *danmuSubMenu=new QMenu(tr("Danmu"),playlistContextMenu);
+    QMenu *danmuSubMenu = new ElaMenu(tr("Danmu"),playlistContextMenu);
     danmuSubMenu->addAction(act_addWebDanmuSource);
     danmuSubMenu->addAction(act_addLocalDanmuSource);
     danmuSubMenu->addAction(act_updateDanmu);
@@ -1162,7 +1232,7 @@ QWidget *ListWindow::setupPlaylistPage()
     playlistContextMenu->addMenu(danmuSubMenu);
     playlistContextMenu->addSeparator();
 
-    QMenu *editSubMenu=new QMenu(tr("Edit"),playlistContextMenu);
+    QMenu *editSubMenu = new ElaMenu(tr("Edit"),playlistContextMenu);
     editSubMenu->addAction(act_merge);
     editSubMenu->addAction(act_cut);
     editSubMenu->addAction(act_paste);
@@ -1170,7 +1240,7 @@ QWidget *ListWindow::setupPlaylistPage()
     playlistView->addAction(act_paste);
     playlistContextMenu->addMenu(editSubMenu);
 
-    markSubMenu=new QMenu(tr("Mark"),playlistContextMenu);
+    markSubMenu = new ElaMenu(tr("Mark"),playlistContextMenu);
     markSubMenu->addAction(act_markBgmCollection);
     markSubMenu->addSeparator();
 
@@ -1186,7 +1256,7 @@ QWidget *ListWindow::setupPlaylistPage()
         ("")
     };
     QActionGroup *markerGroup = new QActionGroup(this);
-    for(int i = 0; i<=PlayListItem::Marker::M_NONE; ++i)
+    for (int i = 0; i<=PlayListItem::Marker::M_NONE; ++i)
     {
         QAction *act = markSubMenu->addAction(QIcon(colorMarkerIcon[i]), markerName[i]);
         markerGroup->addAction(act);
@@ -1202,18 +1272,19 @@ QWidget *ListWindow::setupPlaylistPage()
     });
     playlistContextMenu->addMenu(markSubMenu);
     playlistContextMenu->addAction(act_remove);
+    playlistView->addAction(act_remove);
 
-    QMenu *moveSubMenu=new QMenu(tr("Move"),playlistContextMenu);
+    QMenu *moveSubMenu = new ElaMenu(tr("Move"),playlistContextMenu);
     moveSubMenu->addAction(act_moveUp);
     moveSubMenu->addAction(act_moveDown);
     playlistContextMenu->addMenu(moveSubMenu);
-    QMenu *sortSubMenu=new QMenu(tr("Sort"),playlistContextMenu);
+    QMenu *sortSubMenu = new ElaMenu(tr("Sort"),playlistContextMenu);
     sortSubMenu->addAction(act_sortSelectionAscending);
     sortSubMenu->addAction(act_sortSelectionDescending);
     playlistContextMenu->addMenu(sortSubMenu);
     playlistContextMenu->addSeparator();
 
-    QMenu *shareSubMenu=new QMenu(tr("Share"),playlistContextMenu);
+    QMenu *shareSubMenu = new ElaMenu(tr("Share"),playlistContextMenu);
     shareSubMenu->addAction(act_sharePoolCode);
     shareSubMenu->addAction(act_shareResourceCode);
     playlistContextMenu->addMenu(shareSubMenu);
@@ -1223,44 +1294,39 @@ QWidget *ListWindow::setupPlaylistPage()
     playlistContextMenu->addAction(act_removeInvalid);
     playlistContextMenu->addAction(act_browseFile);
 
-    QObject::connect(playlistView,&QTreeView::customContextMenuRequested,[=](){
+    QObject::connect(playlistView, &QTreeView::customContextMenuRequested, playlistView, [=](){
         playlistContextMenu->exec(QCursor::pos());
     });
 
     playlistPageVLayout->addWidget(playlistView);
 
-    constexpr const int tbBtnCount = 4;
+    constexpr const int tbBtnCount = 2;
     QPair<QChar, QString> tbButtonTexts[tbBtnCount] = {
-        {QChar(0xe6f3), tr("Add")},
-        {QChar(0xe68e), tr("Remove")},
-        {QChar(0xe60e), tr("Sort")},
-        {QChar(0xe608), tr("Loop Mode")}
+        {QChar(0xe667), tr("Add")},
+        {QChar(0xe64c), tr("Loop Mode")}
     };
     QList<QAction *> tbActions[tbBtnCount] = {
         {act_addCollection, act_addItem, act_addURL, act_addFolder, act_addWebDAVCollection},
-        {act_remove, act_clear},
-        {act_sortSelectionAscending, act_sortSelectionDescending, act_sortAllAscending, act_sortAllDescending},
         {loopModeGroup->actions()}
     };
 
     GlobalObjects::iconfont->setPointSize(14);
-    QHBoxLayout *listEditHLayout=new QHBoxLayout();
-    listEditHLayout->setContentsMargins(0,0,0,0);
+    QHBoxLayout *listEditHLayout = new QHBoxLayout();
+    listEditHLayout->setContentsMargins(4, 8, 4, 8);
 
-    for(int i = 0; i < tbBtnCount; ++i)
+    for (int i = 0; i < tbBtnCount; ++i)
     {
         QToolButton *tb = new QToolButton(playlistPage);
         tb->setFont(*GlobalObjects::iconfont);
         tb->setText(tbButtonTexts[i].first);
         tb->setToolTip(tbButtonTexts[i].second);
-        tb->addActions(tbActions[i]);
         tb->setObjectName(QStringLiteral("ListEditButton"));
         tb->setToolButtonStyle(Qt::ToolButtonTextOnly);
         tb->setPopupMode(QToolButton::InstantPopup);
+        QMenu *popupMenu = new ElaMenu(tb);
+        popupMenu->addActions(tbActions[i]);
+        tb->setMenu(popupMenu);
         listEditHLayout->addWidget(tb);
-#ifdef Q_OS_MACOS
-        tb->setProperty("hideMenuIndicator", true);
-#endif
     }
     listEditHLayout->addStretch(1);
     playlistPageVLayout->addLayout(listEditHLayout);
@@ -1268,9 +1334,9 @@ QWidget *ListWindow::setupPlaylistPage()
     return playlistPage;
 }
 
-QWidget *ListWindow::setupDanmulistPage()
+QWidget *ListWindow::initDanmulistPage()
 {
-    QWidget *danmulistPage=new QWidget(this);
+    QWidget *danmulistPage = new QWidget(this);
     danmulistPage->setObjectName(QStringLiteral("danmulistPage"));
     QVBoxLayout *danmulistPageVLayout=new QVBoxLayout(danmulistPage);
     danmulistPageVLayout->setContentsMargins(0,0,0,0);
@@ -1286,29 +1352,37 @@ QWidget *ListWindow::setupDanmulistPage()
     danmulistView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     danmulistView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     danmulistView->setFont(normalFont);
+    danmulistView->header()->hide();
     danmulistView->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
     danmulistView->setItemDelegate(new TextColorDelegate(this));
+    new FloatScrollBar(danmulistView->verticalScrollBar(), danmulistView);
 
-    danmulistView->setContextMenuPolicy(Qt::ActionsContextMenu);
-    danmulistView->addAction(act_copyDanmuText);
-    danmulistView->addAction(act_copyDanmuColor);
-    danmulistView->addAction(act_copyDanmuSender);
-    QAction *act_separator0=new QAction(this);
-    act_separator0->setSeparator(true);
-    danmulistView->addAction(act_separator0);
-    danmulistView->addAction(act_blockText);
-    danmulistView->addAction(act_blockColor);
-    danmulistView->addAction(act_blockSender);
-    QAction *act_separator1=new QAction(this);
-    act_separator1->setSeparator(true);
-    danmulistView->addAction(act_separator1);
-    danmulistView->addAction(act_deleteDanmu);
-    danmulistView->addAction(act_jumpToTime);
+    QMenu *danmulistContextMenu = new ElaMenu(danmulistView);
 
-    //QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
-    //proxyModel->setSourceModel(GlobalObjects::danmuPool);
-    danmulistView->setModel(GlobalObjects::danmuPool);
-	QObject::connect(danmulistView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ListWindow::updateDanmuActions);
+    danmulistView->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(danmulistView, &QTreeView::customContextMenuRequested, danmulistView, [=](){
+        danmulistContextMenu->exec(QCursor::pos());
+    });
+    danmulistContextMenu->addAction(act_copyDanmuText);
+    danmulistContextMenu->addAction(act_copyDanmuColor);
+    danmulistContextMenu->addAction(act_copyDanmuSender);
+    danmulistContextMenu->addSeparator();
+
+    danmulistContextMenu->addAction(act_blockText);
+    danmulistContextMenu->addAction(act_blockColor);
+    danmulistContextMenu->addAction(act_blockSender);
+    danmulistContextMenu->addSeparator();
+
+    danmulistContextMenu->addAction(act_deleteDanmu);
+    danmulistContextMenu->addAction(act_jumpToTime);
+
+
+    danmulistProxyModel = new QSortFilterProxyModel(this);
+    danmulistProxyModel->setSourceModel(GlobalObjects::danmuPool);
+    danmulistProxyModel->setFilterKeyColumn(1);
+    danmulistView->setModel(danmulistProxyModel);
+    danmulistView->hideColumn(0);
+    QObject::connect(danmulistView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ListWindow::updateDanmuActions);
     QObject::connect(GlobalObjects::danmuPool, &DanmuPool::modelReset, this, &ListWindow::updateDanmuActions);
 
 
@@ -1318,52 +1392,72 @@ QWidget *ListWindow::setupDanmulistPage()
     danmulistHeader->resizeSection(0,fontMetrics.horizontalAdvance("00:00")+10);
     danmulistPageVLayout->addWidget(danmulistView);
 
-    constexpr const int tbBtnCount = 4;
+    constexpr const int tbBtnCount = 5;
     QPair<QChar, QString> tbButtonTexts[tbBtnCount] = {
-        {QChar(0xe636), tr("Update Danmu Pool")},
+        {QChar(0xe631), tr("Update Danmu Pool")},
         {QChar(0xe667), tr("Add Danmu")},
+        {QChar(0xe6c1), tr("Block")},
         {QChar(0xe60a), tr("Edit")},
         {QChar(0xe602), tr("Position")}
     };
     QList<QAction *> tbActions[tbBtnCount] = {
         {},
         {act_addOnlineDanmu, act_addLocalDanmu},
-        {act_editPool, act_editBlock},
+        {act_editBlock},
+        {act_editPool},
         {}
     };
 
     QVector<QToolButton *> btns(tbBtnCount);
     GlobalObjects::iconfont->setPointSize(14);
-    QHBoxLayout *poolEditHLayout=new QHBoxLayout();
-    for(int i = 0; i < tbBtnCount; ++i)
+    QHBoxLayout *poolEditHLayout = new QHBoxLayout();
+    poolEditHLayout->setContentsMargins(4, 8, 4, 8);
+    for (int i = 0; i < tbBtnCount; ++i)
     {
         QToolButton *tb = new QToolButton(danmulistPage);
         btns[i] = tb;
         tb->setFont(*GlobalObjects::iconfont);
         tb->setText(tbButtonTexts[i].first);
         tb->setToolTip(tbButtonTexts[i].second);
-        tb->addActions(tbActions[i]);
         tb->setObjectName(QStringLiteral("ListEditButton"));
         tb->setToolButtonStyle(Qt::ToolButtonTextOnly);
         tb->setPopupMode(QToolButton::InstantPopup);
+        if (!tbActions[i].empty())
+        {
+            if (tbActions[i].size() == 1)
+            {
+                QObject::connect(tb, &QToolButton::clicked, tbActions[i][0], &QAction::trigger);
+            }
+            else
+            {
+                QMenu *popupMenu = new ElaMenu(tb);
+                popupMenu->addActions(tbActions[i]);
+                tb->setMenu(popupMenu);
+            }
+        }
         poolEditHLayout->addWidget(tb);
-#ifdef Q_OS_MACOS
-        tb->setProperty("hideMenuIndicator", true);
-#endif
+
     }
     poolEditHLayout->addStretch(1);
     danmulistPageVLayout->addLayout(poolEditHLayout);
 
     constexpr const int Index_UpdatePool = 0;
-    constexpr const int Index_LocatePosition = 3;
+    constexpr const int Index_LocatePosition = 4;
     QObject::connect(btns[Index_UpdatePool], &QToolButton::clicked, this, &ListWindow::updateCurrentPool);
     QObject::connect(btns[Index_LocatePosition], &QToolButton::clicked, this, [this]() {
-        danmulistView->scrollTo(GlobalObjects::danmuPool->getCurrentIndex(), QAbstractItemView::PositionAtTop);
+        danmulistView->scrollTo(danmulistProxyModel->mapFromSource(GlobalObjects::danmuPool->getCurrentIndex()), QAbstractItemView::PositionAtTop);
     });
 
     updateDanmuActions();
 
     return danmulistPage;
+}
+
+QWidget *ListWindow::initSublistPage()
+{
+    QWidget *sublistPage = new QWidget(this);
+
+    return sublistPage;
 }
 
 int ListWindow::updateCurrentPool()
@@ -1395,7 +1489,8 @@ void ListWindow::infoCancelClicked()
 
 void ListWindow::resizeEvent(QResizeEvent *)
 {
-    infoTip->setGeometry(0,height()-90,width(),50);
+    QTreeView *refView = danmulistView && danmulistView->isVisible() ? danmulistView : playlistView;
+    infoTip->setGeometry(0, titleContainer->height() + refView->height() - infoTipHeight, width(), infoTipHeight);
     infoTip->raise();
 }
 
@@ -1410,7 +1505,7 @@ void ListWindow::dragEnterEvent(QDragEnterEvent *event)
 void ListWindow::dropEvent(QDropEvent *event)
 {
     QList<QUrl> urls(event->mimeData()->urls());
-    if(playlistPageButton->isChecked())
+    if (currentList() == 0)
     {
         QStringList fileList,dirList;
         for(QUrl &url:urls)
@@ -1443,7 +1538,7 @@ void ListWindow::dropEvent(QDropEvent *event)
             GlobalObjects::playlist->addFolder(dir,pointIndex);
         }
     }
-    else if(danmulistPageButton->isChecked())
+    else if (currentList() == 1)
     {
         for(QUrl &url:urls)
         {
@@ -1452,7 +1547,7 @@ void ListWindow::dropEvent(QDropEvent *event)
                 QFileInfo fi(url.toLocalFile());
                 if(fi.isFile() && "xml"==fi.suffix())
                 {
-					QVector<DanmuComment *> tmplist;
+                    QVector<DanmuComment *> tmplist;
                     LocalProvider::LoadXmlDanmuFile(fi.filePath(),tmplist);
                     DanmuSource sourceInfo;
                     sourceInfo.title=fi.fileName();
@@ -1468,16 +1563,21 @@ void ListWindow::dropEvent(QDropEvent *event)
     }
 }
 
-void ListWindow::enterEvent(QEvent *)
+void ListWindow::setCurrentList(int listType)
 {
-    if (playlistView && !playlistView->isHidden()) playlistView->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    if (danmulistView && !danmulistView->isHidden()) danmulistView->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    filterEdit->clear();
+    const QVector<QSortFilterProxyModel *> models{playlistProxyModel, danmulistProxyModel, nullptr};
+    currentProxyModel = nullptr;
+    if (listType < models.size())
+    {
+        currentProxyModel = models[listType];
+    }
+    contentStackLayout->setCurrentIndex(listType);
 }
 
-void ListWindow::leaveEvent(QEvent *)
+int ListWindow::currentList() const
 {
-    if (playlistView && !playlistView->isHidden()) playlistView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    if (danmulistView && !danmulistView->isHidden()) danmulistView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    return contentStackLayout->currentIndex();
 }
 
 void ListWindow::sortSelection(bool allItem, bool ascending)
@@ -1496,7 +1596,7 @@ void ListWindow::sortSelection(bool allItem, bool ascending)
         }
         else
         {
-            for(QModelIndex index : selection.indexes())
+            for (QModelIndex index : selection.indexes())
             {
                 GlobalObjects::playlist->sortItems(index,ascending);
             }
@@ -1517,82 +1617,23 @@ void ListWindow::playItem(const QModelIndex &index, bool playChild)
 void ListWindow::showMessage(const QString &msg, int flag, const QVariant &)
 {
     infoTip->show();
-    infoTip->setGeometry(0, height() - 60*logicalDpiY()/96, width(), 30*logicalDpiX()/96);
+    infoTip->raise();
+    QTreeView *refView = danmulistView && danmulistView->isVisible() ? danmulistView : playlistView;
+    infoTip->setGeometry(0, titleContainer->height() + refView->height() - infoTipHeight, width(), infoTipHeight);
     static_cast<InfoTip *>(infoTip)->showMessage(msg,flag);
 }
 
-FilterBox::FilterBox(QWidget *parent) :
-    QLineEdit(parent),
-    patternGroup(new QActionGroup(this)),
-    searchTypeGroup(new QActionGroup(this))
-{
-    setClearButtonEnabled(true);
-    setFont(QFont(GlobalObjects::normalFont,12));
-    connect(this, &QLineEdit::textChanged, this, &FilterBox::filterChanged);
-
-    QMenu *menu = new QMenu(this);
-
-    searchTypeGroup->setExclusive(true);
-    QAction *searchTypeAction = menu->addAction(tr("Title"));
-    searchTypeAction->setData(QVariant(int(SearchType::Title)));
-    searchTypeAction->setCheckable(true);
-    searchTypeAction->setChecked(true);
-    searchTypeGroup->addAction(searchTypeAction);
-    searchTypeAction = menu->addAction(tr("File Path"));
-    searchTypeAction->setCheckable(true);
-    searchTypeAction->setData(QVariant(int(SearchType::FilePath)));
-    searchTypeGroup->addAction(searchTypeAction);
-    connect(searchTypeGroup, &QActionGroup::triggered, this, &FilterBox::filterChanged);
-    menu->addSeparator();
-
-    actCaseSensitivity = menu->addAction(tr("Case Sensitive"));
-    actCaseSensitivity->setCheckable(true);
-    connect(actCaseSensitivity, &QAction::toggled, this, &FilterBox::filterChanged);
-
-    menu->addSeparator();
-    patternGroup->setExclusive(true);
-    QAction *patternAction = menu->addAction(tr("Fixed String"));
-    patternAction->setData(QVariant(int(QRegExp::FixedString)));
-    patternAction->setCheckable(true);
-    patternAction->setChecked(true);
-    patternGroup->addAction(patternAction);
-    patternAction = menu->addAction(tr("Regular Expression"));
-    patternAction->setCheckable(true);
-    patternAction->setData(QVariant(int(QRegExp::RegExp2)));
-    patternGroup->addAction(patternAction);
-    patternAction = menu->addAction(tr("Wildcard"));
-    patternAction->setCheckable(true);
-    patternAction->setData(QVariant(int(QRegExp::Wildcard)));
-    patternGroup->addAction(patternAction);
-    connect(patternGroup, &QActionGroup::triggered, this, &FilterBox::filterChanged);
-
-    QToolButton *optionsButton = new QToolButton;
-
-    optionsButton->setCursor(Qt::ArrowCursor);
-
-    optionsButton->setFocusPolicy(Qt::NoFocus);
-    optionsButton->setObjectName(QStringLiteral("FilterOptionButton"));
-    GlobalObjects::iconfont->setPointSize(14);
-    optionsButton->setFont(*GlobalObjects::iconfont);
-    optionsButton->setText(QChar(0xe609));
-    optionsButton->setMenu(menu);
-    optionsButton->setPopupMode(QToolButton::InstantPopup);
-
-    QWidgetAction *optionsAction = new QWidgetAction(this);
-    optionsAction->setDefaultWidget(optionsButton);
-    addAction(optionsAction, QLineEdit::LeadingPosition);
-}
 
 AddUrlDialog::AddUrlDialog(QWidget *parent) : CFramelessDialog(tr("Add URL"), parent, true), decodeTitle(false)
 {
     QLabel *tipLabel = new QLabel(tr("Enter URL(http, https, smb), separate multiple urls with line breaks"), this);
-    edit = new QPlainTextEdit(this);
-    newCollectionCheck = new QCheckBox(tr("Add to new collection"), this);
-    collectionEdit = new QLineEdit(this);
+    edit = new KPlainTextEdit(this, false);
+    newCollectionCheck = new ElaCheckBox(tr("Add to new collection"), this);
+    collectionEdit = new ElaLineEdit(this);
     collectionEdit->setPlaceholderText(tr("Input Collection Name"));
     collectionEdit->setEnabled(false);
     QObject::connect(newCollectionCheck, &QCheckBox::stateChanged, collectionEdit, &QLineEdit::setEnabled);
-    decodeTitleCheck = new QCheckBox(tr("Decode Title From URL"), this);
+    decodeTitleCheck = new ElaCheckBox(tr("Decode Title From URL"), this);
 
     QGridLayout *inputGLayout = new QGridLayout(this);
     inputGLayout->addWidget(tipLabel, 0, 0, 1, 2);
@@ -1602,9 +1643,8 @@ AddUrlDialog::AddUrlDialog(QWidget *parent) : CFramelessDialog(tr("Add URL"), pa
     inputGLayout->addWidget(decodeTitleCheck, 3, 0, 1, 2);
     inputGLayout->setRowStretch(1, 1);
     inputGLayout->setColumnStretch(1, 1);
-    inputGLayout->setContentsMargins(0, 0, 0, 0);
 
-    setSizeSettingKey("AddURLDialog" ,QSize(200*logicalDpiX()/96, 60*logicalDpiY()/96));
+    setSizeSettingKey("AddURLDialog" ,QSize(200, 120));
 }
 
 void AddUrlDialog::onAccept()
@@ -1631,17 +1671,17 @@ void AddUrlDialog::onAccept()
 AddWebDAVCollectionDialog::AddWebDAVCollectionDialog(QWidget *parent) : CFramelessDialog(tr("Add WebDAV Collection"), parent, true)
 {
     QLabel *titleTip = new QLabel(tr("Title"), this);
-    titleEdit = new QLineEdit(this);
+    titleEdit = new ElaLineEdit(this);
     QLabel *urlTip = new QLabel(tr("URL"), this);
-    urlEdit = new QLineEdit(this);
+    urlEdit = new ElaLineEdit(this);
     QLabel *portTip = new QLabel(tr("Port"), this);
-    portEdit = new QLineEdit(this);
+    portEdit = new ElaLineEdit(this);
     QLabel *pathTip = new QLabel(tr("Path"), this);
-    pathEdit = new QLineEdit(this);
+    pathEdit = new ElaLineEdit(this);
     QLabel *userTip = new QLabel(tr("User"), this);
-    userEdit = new QLineEdit(this);
+    userEdit = new ElaLineEdit(this);
     QLabel *passwordTip = new QLabel(tr("Password"), this);
-    passwordEdit = new QLineEdit(this);
+    passwordEdit = new ElaLineEdit(this);
 
     QIntValidator *intValidator = new QIntValidator(this);
     intValidator->setBottom(0);
@@ -1663,9 +1703,8 @@ AddWebDAVCollectionDialog::AddWebDAVCollectionDialog(QWidget *parent) : CFramele
 
     inputGLayout->setColumnStretch(1, 1);
     inputGLayout->setColumnStretch(3, 1);
-    inputGLayout->setContentsMargins(0, 0, 0, 0);
 
-    setSizeSettingKey("AddWebDAVCollectionDialog" ,QSize(300*logicalDpiX()/96, 100*logicalDpiY()/96));
+    setSizeSettingKey("AddWebDAVCollectionDialog" ,QSize(300, 120));
 }
 
 void AddWebDAVCollectionDialog::onAccept()

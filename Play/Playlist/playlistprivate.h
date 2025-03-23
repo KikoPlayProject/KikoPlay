@@ -2,6 +2,7 @@
 #define PLAYLISTPRIVATE_H
 #include "playlist.h"
 #include <QXmlStreamWriter>
+
 class PlayListPrivate
 {
 public:
@@ -13,11 +14,13 @@ public:
     bool playListChanged, needRefresh;
     PlayList::LoopMode loopMode;
     bool autoMatch;
+    bool autoAddExternal;
     int modifyCounter;
     bool saveFinishTimeOnce;
 
     QList<PlayListItem *> itemsClipboard;
-    QList<QPair<QString, QString> > recentList;
+    ///QList<QPair<QString, QString> > recentList;
+    QVector<RecentlyPlayedItem> recentList;
     QHash<QString, PlayListItem *> fileItems, bgmCollectionItems;
     QHash<QString, QString> mediaPathHash;
     QReadWriteLock pathHashLock;
@@ -30,6 +33,7 @@ public:
     void loadRecentlist();
     void saveRecentlist();
     void updateRecentlist(PlayListItem *item);
+    void updateRecentItemInfo(const PlayListItem *item, const QImage &cover);
 
     PlayListItem *getPrevOrNextItem(bool prev);
     bool addSubFolder(QString folderStr, PlayListItem *parent, int &itemCount);

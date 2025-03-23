@@ -16,33 +16,10 @@
 class QPlainTextEdit;
 class QCheckBox;
 struct DanmuComment;
-class FilterBox : public QLineEdit
-{
-    Q_OBJECT
-public:
-    enum SearchType
-    {
-        Title, FilePath
-    };
-    explicit FilterBox(QWidget *parent = nullptr);
-    inline Qt::CaseSensitivity caseSensitivity() const
-    {
-        return actCaseSensitivity->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
-    }
-    inline QRegExp::PatternSyntax patternSyntax() const
-    {
-        return static_cast<QRegExp::PatternSyntax>(patternGroup->checkedAction()->data().toInt());
-    }
-    inline SearchType searchType() const
-    {
-        return static_cast<SearchType>(searchTypeGroup->checkedAction()->data().toInt());
-    }
-signals:
-    void filterChanged();
-private:
-    QAction *actCaseSensitivity;
-    QActionGroup *patternGroup, *searchTypeGroup;
-};
+class FloatScrollBar;
+class QLineEdit;
+class QSortFilterProxyModel;
+
 class ListWindow : public QWidget, public NotifyInterface
 {
     Q_OBJECT
@@ -54,10 +31,18 @@ private:
     inline QSharedPointer<DanmuComment> getSelectedDanmu();
     void matchPool(const QString &scriptId = "");
 
-    QWidget *infoTip;
+    void initListUI();
+
+    QLineEdit *filterEdit;
+    QSortFilterProxyModel *currentProxyModel{nullptr};
+    QSortFilterProxyModel *playlistProxyModel{nullptr};
+    QSortFilterProxyModel *danmulistProxyModel{nullptr};
+
+    QWidget *titleContainer{nullptr};
+    QWidget *infoTip{nullptr};
+    const int infoTipHeight = 40;
 
     QTreeView *playlistView;
-    QToolButton *playlistPageButton,*danmulistPageButton;
     QStackedLayout *contentStackLayout;
     QAction *act_play,*act_addCollection,*act_addItem,*act_addURL,*act_addFolder, *act_addWebDAVCollection,
             *act_cut,*act_paste,*act_moveUp,*act_moveDown,*act_merge,
@@ -65,28 +50,30 @@ private:
             *act_sortSelectionAscending,*act_sortSelectionDescending,*act_sortAllAscending,*act_sortAllDescending,
             *act_noLoopOne,*act_noLoopAll,*act_loopOne,*act_loopAll,*act_random,
             *act_browseFile,*act_autoMatch,*act_exportDanmu,*act_addWebDanmuSource, *act_addLocalDanmuSource, *act_updateDanmu,
-            *act_sharePoolCode, *act_shareResourceCode, *act_autoMatchMode, *act_setMatchFilter, *act_markBgmCollection, *act_updateFolder, *act_PlayOnOtherDevices;
+            *act_sharePoolCode, *act_shareResourceCode, *act_markBgmCollection, *act_updateFolder, *act_PlayOnOtherDevices;
     QMenu *matchSubMenu, *markSubMenu;
     bool actionDisable;
     QActionGroup *loopModeGroup;
     int matchStatus;
-    QWidget *setupPlaylistPage();
+    QWidget *initPlaylistPage();
 
     QTreeView *danmulistView = nullptr;
-    QWidget *setupDanmulistPage();
+    QWidget *initDanmulistPage();
     QAction *act_addOnlineDanmu,*act_addLocalDanmu,*act_editPool,*act_editBlock,
             *act_copyDanmuText,*act_copyDanmuColor,*act_copyDanmuSender,
             *act_blockText,*act_blockColor,*act_blockSender,
             *act_jumpToTime, *act_deleteDanmu;
+
+    QWidget *initSublistPage();
 
 
 protected:
     virtual void resizeEvent(QResizeEvent *event);
     virtual void dragEnterEvent(QDragEnterEvent *event);
     virtual void dropEvent(QDropEvent *event);
-    virtual void enterEvent(QEvent *event);
-    virtual void leaveEvent(QEvent *event);
 public slots:
+    void setCurrentList(int listType);
+    int currentList() const;
     void sortSelection(bool allItem,bool ascending);
     void playItem(const QModelIndex &index,bool playChild=true);
 

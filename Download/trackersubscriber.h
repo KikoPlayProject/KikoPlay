@@ -28,6 +28,7 @@ public:
     void remove(int index);
     void check(int index = -1);
     void setAutoCheck(bool on);
+    bool isAutoCheck() const;
     QStringList allTrackers() const;
     QStringList getTrackers(int index) const;
 signals:

@@ -65,26 +65,30 @@ public:
         FilePathRole
     };
 
-    const int maxRecentItems=4;
+    const int maxRecentItems = 4;
     const PlayListItem *getCurrentItem() const;
     QModelIndex getCurrentIndex() const;
-    inline const PlayListItem *getItem(const QModelIndex &index){return index.isValid()?static_cast<PlayListItem*>(index.internalPointer()):nullptr; }
+    const PlayListItem *getItem(const QModelIndex &index){return index.isValid()?static_cast<PlayListItem*>(index.internalPointer()):nullptr; }
     QList<const PlayListItem *> getSiblings(const PlayListItem *item, bool sameAnime=true);
     const PlayListItem *getItem(QModelIndex parent, const QStringList &path);
     LoopMode getLoopMode() const;
     bool canPaste() const;
-    const QList<QPair<QString,QString> > &recent();
+    const QVector<RecentlyPlayedItem> &recent();
     void removeRecentItem(const QString &path);
     void setFinishTimeOnce(bool on);
     bool saveFinishTimeOnce();
     bool hasPath(const QString &path) const;
+    bool isAutoMatch() const;
+    QString matchFilters() const;
+    bool isAddExternal() const;
 signals:
     void currentInvaild();
     void currentMatchChanged(const QString &pid);
     void recentItemsUpdated();
+    void recentItemInfoUpdated(int index);
     void matchStatusChanged(bool on);
 public slots :
-    int addItems(QStringList &items, QModelIndex parent);
+    int addItems(const QStringList &items, QModelIndex parent);
     int addFolder(QString folderStr, QModelIndex parent, const QString &name = "");
     int addURL(const QStringList &urls, QModelIndex parent, bool decodeTitle = false);
     QModelIndex addCollection(QModelIndex parent, const QString &title);
@@ -125,11 +129,12 @@ public slots :
     void checkCurrentItem(PlayListItem *itemDeleted);
 
     void setAutoMatch(bool on);
+    void setAddExternal(bool on);
     void matchItems(const QModelIndexList &matchIndexes);
     void matchIndex(QModelIndex &index, const MatchResult &match);
     void matchItems(const QList<const PlayListItem *> &items, const QString &title, const QList<EpInfo> &eps);
     void removeMatch(const QModelIndexList &matchIndexes);
-    void refreshMatchFilters();
+    void setMatchFilters(const QString &filters);
 
     void updateItemsDanmu(const QModelIndexList &itemIndexes);
     QModelIndex mergeItems(const QModelIndexList &mergeIndexes);

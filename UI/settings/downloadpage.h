@@ -2,36 +2,38 @@
 #define DOWNLOADPAGE_H
 #include "settingpage.h"
 #include "../framelessdialog.h"
-class QLineEdit;
 class QPlainTextEdit;
-class QCheckBox;
 class QTextEdit;
 class DownloadPage : public SettingPage
 {
     Q_OBJECT
 public:
     DownloadPage(QWidget *parent = nullptr);
-    virtual void onAccept() override;
-    virtual void onClose() override;
-private:
-    QLineEdit *maxDownSpeedLimit,*maxUpSpeedLimit,*seedTime,*maxConcurrent;
-    QCheckBox *autoAddtoPlaylist, *skipMagnetFileSelect;
-    QPlainTextEdit *btTrackers;
-    QTextEdit *args;
-
-    bool downSpeedChange = false;
-    bool upSpeedChange = false;
-    bool btTrackerChange = false;
-    bool concurrentChange = false;
-    bool seedTimeChange = false;
-    bool argChange = false;
 };
-class TrackerSubscribeDialog : public CFramelessDialog
+
+class TrackerEditDialog : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    TrackerSubscribeDialog(QWidget *parent = nullptr);
-
+    TrackerEditDialog(QWidget *parent = nullptr);
+    bool manualTrackerListChanged = false;
+private:
+    QPlainTextEdit *btTrackers{nullptr};
+protected:
+    void onAccept() override;
 };
+
+class Aria2OptionEditDialog : public CFramelessDialog
+{
+    Q_OBJECT
+public:
+    Aria2OptionEditDialog(QWidget *parent = nullptr);
+    bool argChanged = false;
+private:
+    QTextEdit *argEdit{nullptr};
+protected:
+    void onAccept() override;
+};
+
 
 #endif // DOWNLOADPAGE_H

@@ -401,7 +401,7 @@ int AppWidget::setstyle(lua_State *L)
     QVariantMap extraVals {
         {"AppPath", app->path()},
         {"AppDataPath", app->dataPath()},
-        {"StyleBGMode", StyleManager::getStyleManager()->currentMode() == StyleManager::StyleMode::BG_COLOR},
+        //{"StyleBGMode", StyleManager::getStyleManager()->currentMode() == StyleManager::StyleMode::BG_COLOR},
     };
     if (lua_gettop(L) == 3 || lua_type(L, 3) == LUA_TTABLE)
     {

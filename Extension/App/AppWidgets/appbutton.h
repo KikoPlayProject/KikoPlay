@@ -1,13 +1,14 @@
 #ifndef APPBUTTON_H
 #define APPBUTTON_H
 
+#include <UI/widgets/kpushbutton.h>
 #include "appwidget.h"
-#include <QPushButton>
-class AppPushButton : public QPushButton
+class AppPushButton : public KPushButton
 {
     Q_OBJECT
 public:
-    using QPushButton::QPushButton;
+    using KPushButton::KPushButton;
+
 };
 
 namespace Extension

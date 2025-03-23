@@ -21,6 +21,7 @@ public:
     void setFontSize(int size);
     int getFontSize() const { return danmuFont.pointSize(); }
     void setAlpha(float a) { fontAlpha = 255 * a; }
+    void setRandomColor(bool on) { isRandomColor = on; }
     void setMergeCountPos(int pos) { mergeCountPos = pos; }
     void setEnlargeMerged(bool on) { enlargeMerged = on; }
     void setAlignment(Qt::Alignment alignment);
@@ -35,7 +36,7 @@ public:
     int columnCount(const QModelIndex &parent) const { return parent.isValid()? 0 : 1; }
     QVariant data(const QModelIndex &index, int role) const;
 private:
-    std::deque<QSharedPointer<DanmuComment>> liveDanmus;
+    std::deque<QPair<QSharedPointer<DanmuComment>, QColor>> liveDanmus;
     int maxNum = 100;
     bool showSender = true;
     int fontAlpha = 255;
@@ -43,6 +44,7 @@ private:
     bool enlargeMerged = true;
     int align = Qt::AlignLeft;
     QFont danmuFont;
+    bool isRandomColor = false;
 };
 
 #endif // LIVEDANMULISTMODEL_H

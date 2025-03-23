@@ -4,6 +4,7 @@
 #include <QGraphicsDropShadowEffect>
 #include <QApplication>
 #include <QPainter>
+#include <QPainterPath>
 #include <QPushButton>
 #include <QMouseEvent>
 #include <QToolTip>
@@ -13,81 +14,34 @@
 int AnimeItemDelegate::CoverWidth = 0;
 int AnimeItemDelegate::CoverHeight = 0;
 int AnimeItemDelegate::TitleHeight = 0;
-namespace
-{
-class AnimeItemWidget : public QWidget
-{
-public:
-    explicit AnimeItemWidget(QWidget *parent=nullptr):QWidget(parent),selected(false)
-    {
-        setObjectName(QStringLiteral("AnimeItemBg"));
-        imgLabel = new QLabel(this);
-        imgLabel->setAlignment(Qt::AlignCenter);
-        imgLabel->setScaledContents(true);
-        imgLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
-        titleLabel=new QLabel(this);
-        titleLabel->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
-        titleLabel->setObjectName(QStringLiteral("AnimeItemTitle"));
-        titleLabel->setFont(QFont(GlobalObjects::normalFont, 10));
-        QVBoxLayout *aiVLayout=new QVBoxLayout(this);
-        aiVLayout->addWidget(imgLabel);
-        QHBoxLayout *titleHLayout = new QHBoxLayout;
-        titleHLayout->addStretch(1);
-        titleHLayout->addWidget(titleLabel);
-        titleHLayout->addStretch(1);
-        titleHLayout->setContentsMargins(0, 0, 0, 0);
-        aiVLayout->addItem(titleHLayout);
-        shadowEffect = new QGraphicsDropShadowEffect(this);
-        shadowEffect->setOffset(0, 0);
-        shadowEffect->setBlurRadius(12);
-        imgLabel->setGraphicsEffect(shadowEffect);
-        AnimeItemDelegate::CoverWidth = 130*logicalDpiX()/96;
-        AnimeItemDelegate::TitleHeight = titleLabel->fontMetrics().height();
-        AnimeItemDelegate::CoverHeight = 180*logicalDpiY()/96;
-        setFixedSize(AnimeItemDelegate::CoverWidth, AnimeItemDelegate::CoverHeight + AnimeItemDelegate::TitleHeight);
-        titleLabel->setMaximumWidth(AnimeItemDelegate::CoverWidth-20*logicalDpiX()/96);
-    }
-    void setTitle(const QString &title)
-    {
-        QFontMetrics fm(titleLabel->fontMetrics());
-        titleLabel->setText(fm.elidedText(title,Qt::ElideRight, AnimeItemDelegate::CoverWidth-30*logicalDpiX()/96));
-    }
-    void setCover(const QPixmap &pixmap)
-    {
-        static QPixmap nullCover(":/res/images/cover.png");
-        imgLabel->setPixmap(pixmap.isNull()?nullCover:pixmap);
-    }
-    void setHover(bool on)
-    {
-        if(!selected)
-        {
-            shadowEffect->setColor(on?Qt::blue:Qt::black);
-            shadowEffect->setBlurRadius(12);
-        }
-    }
-    void setSelected(bool on)
-    {
-        selected=on;
-        if(selected)
-        {
-            shadowEffect->setColor(Qt::red);
-            shadowEffect->setBlurRadius(14);
-        }
-    }
-    QRect titleRect()
-    {
-        return titleLabel->geometry();
-    }
-private:
-    QLabel *imgLabel,*titleLabel;
-    QGraphicsDropShadowEffect *shadowEffect;
-    bool selected;
-};
-}
-AnimeItemDelegate::AnimeItemDelegate(QObject *parent):QStyledItemDelegate(parent),
-    contentWidget(new AnimeItemWidget()),pixmap(CoverWidth,CoverHeight+TitleHeight), blockCoverFetch(false)
-{
 
+AnimeItemDelegate::AnimeItemDelegate(QObject *parent):QStyledItemDelegate(parent), blockCoverFetch(false)
+{
+    AnimeItemDelegate::CoverWidth = 153;
+    AnimeItemDelegate::CoverHeight = 208;
+    titleFont.setFamily(GlobalObjects::normalFont);
+    titleFont.setPointSize(11);
+    AnimeItemDelegate::TitleHeight = QFontMetrics(titleFont).height() + 4;
+
+    const float pxR = GlobalObjects::context()->devicePixelRatioF;
+    nullCoverPixmap = QPixmap(AnimeItemDelegate::CoverWidth*pxR, AnimeItemDelegate::CoverHeight*pxR);
+    nullCoverPixmap.setDevicePixelRatio(pxR);
+    nullCoverPixmap.fill(Qt::transparent);
+    QPainter painter(&nullCoverPixmap);
+    painter.setRenderHints(QPainter::Antialiasing, true);
+    painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
+    QPainterPath path;
+    path.addRoundedRect(0, 0, AnimeItemDelegate::CoverWidth, AnimeItemDelegate::CoverHeight, 8, 8);
+    painter.setClipPath(path);
+    painter.drawPixmap(QRect(0, 0, AnimeItemDelegate::CoverWidth, AnimeItemDelegate::CoverHeight), QPixmap(":/res/images/null-cover.png"));
+
+    borderPen.setWidth(2);
+    borderPen.setColor(QColor(28, 160, 228));
+}
+
+void AnimeItemDelegate::setBorderColor(const QColor &color)
+{
+    borderPen.setColor(color);
 }
 
 
@@ -95,16 +49,36 @@ void AnimeItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
 {
     QStyleOptionViewItem viewOption(option);
     initStyleOption(&viewOption,index);
-    AnimeItemWidget *animeItemWidget=static_cast<AnimeItemWidget *>(contentWidget.data());
-	Anime *anime = (Anime *)index.data(AnimeRole).value<void *>();
-    animeItemWidget->setCover(anime->cover(blockCoverFetch));
-    animeItemWidget->setTitle(index.data(Qt::DisplayRole).toString());
-    animeItemWidget->setSelected(viewOption.state.testFlag(QStyle::State_Selected));
-    animeItemWidget->setHover(viewOption.state.testFlag(QStyle::State_MouseOver));
+    Anime *anime = (Anime *)index.data(AnimeRole).value<void *>();
 
-    pixmap.fill(Qt::transparent);
-    contentWidget->render(&pixmap);
-    painter->drawPixmap(option.rect.x(), option.rect.y(), pixmap);
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing, true);
+    painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
+
+    QRect coverRect(option.rect.x(), option.rect.y(), AnimeItemDelegate::CoverWidth, AnimeItemDelegate::CoverHeight);
+    coverRect.adjust(6, 6, -6, -6);
+    QPixmap coverPixmap(anime->cover(blockCoverFetch));
+    painter->drawPixmap(coverRect, coverPixmap.isNull() ? nullCoverPixmap : coverPixmap);
+    if (viewOption.state.testFlag(QStyle::State_MouseOver))
+    {
+        painter->save();
+        painter->setPen(borderPen);
+        painter->setBrush(Qt::NoBrush);
+        painter->drawRoundedRect(coverRect, 8, 8);
+        painter->restore();
+    }
+
+    QRect titleRect(option.rect.x(), option.rect.y() + AnimeItemDelegate::CoverHeight, AnimeItemDelegate::CoverWidth, AnimeItemDelegate::TitleHeight);
+    titleRect.adjust(6, 0, -6, 0);
+    painter->setFont(titleFont);
+    painter->setPen(titleColor);
+    QString drawText = index.data(Qt::DisplayRole).toString();
+    if (painter->fontMetrics().horizontalAdvance(drawText) > titleRect.width())
+    {
+        drawText = painter->fontMetrics().elidedText(drawText, Qt::ElideRight, titleRect.width());
+    }
+    painter->drawText(titleRect, Qt::AlignCenter, drawText);
+    painter->restore();
 }
 
 bool AnimeItemDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index)
@@ -114,10 +88,8 @@ bool AnimeItemDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, co
     {
     case QEvent::MouseMove:
     {
-        AnimeItemWidget *animeItemWidget=static_cast<AnimeItemWidget *>(contentWidget.data());
-        QRect rect=animeItemWidget->titleRect();
-        rect.moveTo(rect.x() + option.rect.x(), rect.y() + option.rect.y());
-        if(rect.contains(pEvent->pos()))
+        QRect titleRect(option.rect.x(), option.rect.y() + AnimeItemDelegate::CoverHeight, AnimeItemDelegate::CoverWidth, AnimeItemDelegate::TitleHeight);
+        if (titleRect.contains(pEvent->pos()))
             QToolTip::showText(pEvent->globalPos(), index.model()->data(index,Qt::DisplayRole).toString());
         else
             QToolTip::hideText();
@@ -125,7 +97,7 @@ bool AnimeItemDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, co
     }
     case QEvent::MouseButtonPress:
     {
-        if(pEvent->button()==Qt::LeftButton && !(pEvent->modifiers()&Qt::ControlModifier)
+        if (pEvent->button() == Qt::LeftButton && !(pEvent->modifiers()&Qt::ControlModifier)
                 && !(pEvent->modifiers()&Qt::ShiftModifier))
             emit ItemClicked(index);
         break;
@@ -138,5 +110,5 @@ bool AnimeItemDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, co
 
 QSize AnimeItemDelegate::sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const
 {
-    return QSize(CoverWidth,CoverHeight+TitleHeight);
+    return QSize(CoverWidth, CoverHeight+TitleHeight);
 }

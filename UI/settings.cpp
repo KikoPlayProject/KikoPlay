@@ -4,36 +4,42 @@
 #include <QLabel>
 #include <QGridLayout>
 #include <QStackedLayout>
+#include <QScrollArea>
+#include "UI/widgets/floatscrollbar.h"
 #include "globalobjects.h"
-#include "settings/stylepage.h"
-#include "settings/mpvpage.h"
+#include "settings/generalpage.h"
+#include "settings/danmupage.h"
+#include "settings/playerpage.h"
+#include "settings/playlistpage.h"
 #include "settings/downloadpage.h"
 #include "settings/lanserverpage.h"
 #include "settings/scriptpage.h"
-#include "settings/mpvshortcutpage.h"
+#include "settings/keyactionpage.h"
 #include "settings/apppage.h"
 
-Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings"), parent, true)
+Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings"), parent)
 {    
     QListWidget *pageList = new QListWidget(this);
-    pageList->setFont(QFont(GlobalObjects::normalFont,10));
+    pageList->setFont(QFont(GlobalObjects::normalFont, 11));
     pageList->setObjectName(QStringLiteral("SettingPageList"));
     pageList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    pageList->setFixedWidth(180);
 
     pageSLayout = new QStackedLayout;
-    pageSLayout->setContentsMargins(0, 0, 0, 0);
 
     const QStringList pageNames{
-        tr("Appearance"),
-        tr("MPV Param"),
-        tr("MPV Shortcut Key"),
+        tr("General"),
+        tr("Danmu"),
+        tr("Player"),
+        tr("Playlist"),
+        tr("Shortcut Key"),
         tr("Download"),
         tr("LAN Server"),
         tr("Script"),
         tr("Extension App"),
     };
 
-    for(int i=PAGE_UI;i<PAGE_STOP;++i)
+    for (int i = PAGE_GENERAL; i < PAGE_STOP; ++i)
     {
         pages[Page(i)] =nullptr;
         pageList->addItem(pageNames[i]);
@@ -50,22 +56,13 @@ Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings")
     });
 
     QGridLayout *gLayout = new QGridLayout(this);
-    gLayout->setContentsMargins(0, 0, 0, 0);
+    gLayout->setHorizontalSpacing(10);
+    gLayout->setContentsMargins(4, 4, 4, 4);
     gLayout->addWidget(pageList, 0, 0);
     gLayout->addLayout(pageSLayout, 0, 1);
     gLayout->setColumnStretch(1, 1);
 
-    setSizeSettingKey("DialogSize/Setting",QSize(400*logicalDpiX()/96,360*logicalDpiY()/96));
-}
-
-
-void Settings::onAccept()
-{
-    for(auto &p : pages)
-    {
-        if(p) p->onAccept();
-    }
-    CFramelessDialog::onAccept();
+    setSizeSettingKey("DialogSize/Setting",QSize(400, 400));
 }
 
 void Settings::onClose()
@@ -83,14 +80,20 @@ SettingPage *Settings::getOrCreatePage(Page p)
     {
         switch (p)
         {
-        case PAGE_UI:
-            pages[p] = new StylePage(this);
+        case PAGE_GENERAL:
+            pages[p] = new GeneralPage(this);
             break;
-        case PAGE_MPV:
-            pages[p] = new MPVPage(this);
+        case PAGE_DANMU:
+            pages[p] = new DanmuPage(this);
             break;
-        case PAGE_MPVSHORTCUT:
-            pages[p] = new MPVShortcutPage(this);
+        case PAGE_PLAYER:
+            pages[p] = new PlayerPage(this);
+            break;
+        case PAGE_PLAYLIST:
+            pages[p] = new PlaylistPage(this);
+            break;
+        case PAGE_KEYACTION:
+            pages[p] = new KeyActionPage(this);
             break;
         case PAGE_DOWN:
             pages[p] = new DownloadPage(this);
@@ -109,7 +112,13 @@ SettingPage *Settings::getOrCreatePage(Page p)
         }
         QObject::connect(pages[p], &SettingPage::showBusyState, this, &Settings::showBusyState);
         QObject::connect(pages[p], &SettingPage::showMessage, this, &Settings::showMessage);
-        QScopedPointer<QLayoutItem>(pageSLayout->replaceWidget(pageSLayout->widget(p), pages[p]));
+
+        QScrollArea *pageScrollArea = new QScrollArea(this);
+        pageScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        pageScrollArea->setWidget(pages[p]);
+        pageScrollArea->setWidgetResizable(true);
+        new FloatScrollBar(pageScrollArea->verticalScrollBar(), pageScrollArea);
+        QScopedPointer<QLayoutItem>(pageSLayout->replaceWidget(pageSLayout->widget(p), pageScrollArea));
     }
     return pages[p];
 }

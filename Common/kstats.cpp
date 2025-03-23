@@ -54,9 +54,9 @@ void KStats::statsUV(bool isStartup)
     QJsonObject uvInfo = getBaseInfo("uv", curTs);
     if (isStartup)
     {
-        uvInfo["st"] = GlobalObjects::startupTime;
+        uvInfo["st"] = GlobalObjects::context()->startupTime;
         QJsonObject stepTime;
-        for (auto &p : GlobalObjects::stepTime)
+        for (auto &p : GlobalObjects::context()->stepTime)
         {
             stepTime[p.first] = p.second;
         }

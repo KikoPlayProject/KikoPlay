@@ -20,14 +20,21 @@ LiveDanmuListModel::LiveDanmuListModel(QObject *parent)
 
 void LiveDanmuListModel::addLiveDanmu(const QVector<DrawTask> &danmuList)
 {
-    if(danmuList.isEmpty()) return;
+    if (danmuList.isEmpty()) return;
     beginInsertRows(QModelIndex(), liveDanmus.size(), liveDanmus.size() + danmuList.size() - 1);
-    for(const DrawTask &t : danmuList)
+    for (const DrawTask &t : danmuList)
     {
-        liveDanmus.push_back(t.comment);
+        int r = (t.comment->color>>16) & 0xff, g = (t.comment->color >> 8) & 0xff, b = t.comment->color & 0xff;
+        if (isRandomColor)
+        {
+            r = QRandomGenerator::global()->bounded(0, 256);
+            g = QRandomGenerator::global()->bounded(0, 256);
+            b = QRandomGenerator::global()->bounded(0, 256);
+        }
+        liveDanmus.push_back({t.comment, QColor(r, g, b)});
     }
     endInsertRows();
-    if(liveDanmus.size() > maxNum)
+    if (liveDanmus.size() > maxNum)
     {
         int rmSize = liveDanmus.size() - maxNum / 2;
         beginRemoveRows(QModelIndex(), 0, rmSize - 1);
@@ -46,8 +53,8 @@ void LiveDanmuListModel::clear()
 
 QSharedPointer<DanmuComment> LiveDanmuListModel::getDanmu(const QModelIndex &index)
 {
-    if(!index.isValid()) return nullptr;
-    return liveDanmus.at(index.row());
+    if (!index.isValid()) return nullptr;
+    return liveDanmus.at(index.row()).first;
 }
 
 void LiveDanmuListModel::setShowSender(bool show)
@@ -70,24 +77,26 @@ void LiveDanmuListModel::setAlignment(Qt::Alignment alignment)
 
 QVariant LiveDanmuListModel::data(const QModelIndex &index, int role) const
 {
-    if(!index.isValid()) return QVariant();
-    const QSharedPointer<DanmuComment> &dm = liveDanmus.at(index.row());
-    if(role == Qt::DisplayRole)
+    if (!index.isValid()) return QVariant();
+    const QSharedPointer<DanmuComment> &dm = liveDanmus.at(index.row()).first;
+    if (role == Qt::DisplayRole)
     {
-        if(dm->mergedList)
+        if (dm->mergedList)
         {
             if(mergeCountPos == 0) return dm->text;
             return QString(mergeCountPos == 1? "[%1]%2" : "%2[%1]").arg(dm->mergedList->count()).arg(dm->text);
         }
         return showSender? (dm->sender + ": " + dm->text) : dm->text;
     }
-    else if(role == Qt::ForegroundRole)
+    else if (role == Qt::ForegroundRole)
     {
-        return QColor((dm->color>>16)&0xff, (dm->color>>8)&0xff, dm->color&0xff, fontAlpha);
+        QColor c = liveDanmus.at(index.row()).second;
+        c.setAlpha(fontAlpha);
+        return c;
     }
-    else if(role == Qt::FontRole)
+    else if (role == Qt::FontRole)
     {
-        if(dm->mergedList && enlargeMerged)
+        if (dm->mergedList && enlargeMerged)
         {
             QFont largerFont(danmuFont);
             largerFont.setPointSize(danmuFont.pointSize() * 1.5);
@@ -95,15 +104,15 @@ QVariant LiveDanmuListModel::data(const QModelIndex &index, int role) const
         }
         return danmuFont;
     }
-    else if(role == AlignmentRole)
+    else if (role == AlignmentRole)
     {
         return align;
     }
-    else if(role == AlphaRole)
+    else if (role == AlphaRole)
     {
         return fontAlpha;
     }
-    else if(role == PrefixLengthRole)
+    else if (role == PrefixLengthRole)
     {
         if (dm->mergedList)
         {
@@ -115,7 +124,7 @@ QVariant LiveDanmuListModel::data(const QModelIndex &index, int role) const
         }
         return 0;
     }
-    else if(role == SuffixLengthRole)
+    else if (role == SuffixLengthRole)
     {
         if (dm->mergedList && mergeCountPos == 2)
         {

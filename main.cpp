@@ -6,7 +6,6 @@
 #include <QElapsedTimer>
 #include "globalobjects.h"
 #include "Play/Playlist/playlist.h"
-#include "Play/Video/mpvplayer.h"
 #include "Play/playcontext.h"
 #include "Extension/App/appmanager.h"
 #include "Common/logger.h"
@@ -36,16 +35,23 @@ LONG AppCrashHandler(EXCEPTION_POINTERS *pException)
 void decodeParam()
 {
     QStringList args = QCoreApplication::arguments();
-    if(args.count()<=1) return;
+    if(args.count() <= 1) return;
     args.pop_front();
     QStringList urlList = args;
-    if(!urlList.empty())
+    if (!urlList.empty())
     {
-        GlobalObjects::playlist->addURL(urlList,QModelIndex());
-        const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(urlList.last());
-        if (curItem)
+        if (GlobalObjects::playlist->isAddExternal())
         {
-            GlobalObjects::mpvplayer->setMedia(curItem->path);
+            GlobalObjects::playlist->addURL(urlList,QModelIndex());
+            const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(urlList.last());
+            if (curItem)
+            {
+                PlayContext::context()->playItem(curItem);
+            }
+        }
+        else
+        {
+            PlayContext::context()->playURL(urlList.last());
         }
     }
 }
@@ -76,6 +82,18 @@ bool isRunning()
 
 int main(int argc, char *argv[])
 {
+    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
+    QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
+    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
+#else
+    //根据实际屏幕缩放比例更改
+    qputenv("QT_SCALE_FACTOR", "1.5");
+#endif
+#endif
+
     QElapsedTimer timer;
     timer.start();
     QApplication a(argc, argv);
@@ -89,6 +107,7 @@ int main(int argc, char *argv[])
 
     MainWindow w;
     GlobalObjects::mainWindow = &w;
+    GlobalObjects::context()->devicePixelRatioF = w.devicePixelRatioF();
     QLocalServer *singleServer=new QLocalServer(&a);
     QObject::connect(singleServer, &QLocalServer::newConnection, [singleServer,&w](){
         QLocalSocket *localSocket = singleServer->nextPendingConnection();
@@ -99,11 +118,18 @@ int main(int argc, char *argv[])
         s >> args;
         if (args.count() > 0)
         {
-            GlobalObjects::playlist->addURL(args,QModelIndex());
-            const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(args.last());
-            if (curItem)
+            if (GlobalObjects::playlist->isAddExternal())
             {
-                PlayContext::context()->playItem(curItem);
+                GlobalObjects::playlist->addURL(args, QModelIndex());
+                const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(args.last());
+                if (curItem)
+                {
+                    PlayContext::context()->playItem(curItem);
+                }
+            }
+            else
+            {
+                PlayContext::context()->playURL(args.last());
             }
         }
         w.raise();
@@ -119,16 +145,18 @@ int main(int argc, char *argv[])
             singleServer->listen("KikoPlaySingleServer");
         }
     }
+    w.raise();
+    w.activateWindow();
     w.show();
-    GlobalObjects::tick(&timer, "ui");
+    GlobalObjects::context()->tick(&timer, "ui");
 	decodeParam();
     QTimer::singleShot(100, [](){
         GlobalObjects::appManager->autoStart();
     });
-    GlobalObjects::startupTime += timer.elapsed();
-    Logger::logger()->log(Logger::APP, QString("startup time: %1ms").arg(GlobalObjects::startupTime));
+    GlobalObjects::context()->startupTime += timer.elapsed();
+    Logger::logger()->log(Logger::APP, QString("startup time: %1ms").arg(GlobalObjects::context()->startupTime));
     QStringList stepTimes{"step time: "};
-    for (auto &p : GlobalObjects::stepTime)
+    for (auto &p : GlobalObjects::context()->stepTime)
     {
         stepTimes.append(QString("%1:\t%2").arg(p.first, -10).arg(p.second));
     }

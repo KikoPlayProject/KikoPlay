@@ -15,6 +15,7 @@ private:
     QLabel *infoText;
     QWidget *busyWidget;
     QTimer hideTimer;
+    QColor backColor;
     BackgroundFadeWidget *bgDarkWidget;
     QPropertyAnimation *moveAnime;
     bool moveHide;
@@ -22,5 +23,6 @@ private:
     const int showDuration = 2500;
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
 };
 #endif // DIALOGTIP_H

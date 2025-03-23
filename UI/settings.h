@@ -9,19 +9,20 @@ class Settings : public CFramelessDialog
 public:
     enum Page
     {
-        PAGE_UI,
-        PAGE_MPV,
-        PAGE_MPVSHORTCUT,
+        PAGE_GENERAL,
+        PAGE_DANMU,
+        PAGE_PLAYER,
+        PAGE_PLAYLIST,
+        PAGE_KEYACTION,
         PAGE_DOWN,
         PAGE_LAN,
         PAGE_SCRIPT,
         PAGE_APP,
         PAGE_STOP
     };
-    Settings(Page page=PAGE_UI, QWidget *parent = nullptr);
+    Settings(Page page=PAGE_GENERAL, QWidget *parent = nullptr);
     const SettingPage *getPage(Page page) const {return pages[page];}
 protected:
-    void onAccept() override;
     void onClose() override;
 private:
     QHash<Page, SettingPage *> pages;

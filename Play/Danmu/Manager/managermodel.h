@@ -23,6 +23,7 @@ public:
     void addSrcNode(DanmuPoolNode *epNode, DanmuPoolSourceNode *srcNode);
     void addPoolNode(const QString &animeTitle, const EpInfo &ep, const QString &pid);
     void renamePoolNode(DanmuPoolNode *epNode, const QString &animeTitle, const QString &epTitle, const QString &pid);
+    void setCheckable(bool on);
 
     enum class Columns
     {
@@ -31,6 +32,7 @@ public:
 
 private:
     QList<DanmuPoolNode *> animeNodeList;
+    bool nodeCheckAble{false};
     const QStringList headers={tr("Title"),tr("Source"),tr("Delay"),tr("Danmu Count")};
 
     void refreshChildrenCheckStatus(const QModelIndex &index);

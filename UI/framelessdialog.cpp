@@ -32,7 +32,7 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
     titleBar = new QWidget(backWidget);
 
     title=new QLabel(titleStr, titleBar);
-    title->setFont(QFont(GlobalObjects::normalFont,10));
+    title->setFont(QFont(GlobalObjects::normalFont, 13));
     title->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
     title->setOpenExternalLinks(true);
 
@@ -63,12 +63,12 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
     acceptButton->setDefault(false);
     acceptButton->setAutoDefault(false);
 
-    busyLabel = new LoadingIcon(QColor(153, 153, 153), this);
+    busyLabel = new LoadingIcon(QColor(200, 200, 200), this);
     busyLabel->setFixedSize(QSize(btnH*0.9, btnH*0.9));
     busyLabel->hide();
 
     QHBoxLayout *titleHBLayout=new QHBoxLayout(titleBar);
-    titleHBLayout->setContentsMargins(8*logicalDpiX()/96, 8*logicalDpiY()/96, 8*logicalDpiX()/96, 8*logicalDpiY()/96);
+    titleHBLayout->setContentsMargins(12, 8, 8, 8);
     titleHBLayout->addWidget(title, 0, Qt::AlignVCenter);
     titleHBLayout->addWidget(busyLabel);
     titleHBLayout->addSpacing(btnH * 0.2);

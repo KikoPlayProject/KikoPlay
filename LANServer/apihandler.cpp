@@ -407,7 +407,7 @@ void APIHandler::apiScreenshot(stefanfrings::HttpRequest &request, stefanfrings:
                     if(data.contains("duration")) //snippet task
                     {
                         qint64 timeId = QDateTime::currentDateTime().toMSecsSinceEpoch();
-                        QString snippetPath(GlobalObjects::appSetting->value("Play/SnippetPath", GlobalObjects::dataPath + "/snippet").toString());
+                        QString snippetPath(GlobalObjects::appSetting->value("Play/SnippetPath", GlobalObjects::context()->dataPath + "/snippet").toString());
                         QDir dir;
                         if(!dir.exists(snippetPath)) dir.mkpath(snippetPath);
                         QString fileName(QString("%1/%2.%3").arg(snippetPath, QString::number(timeId), fi.suffix()));

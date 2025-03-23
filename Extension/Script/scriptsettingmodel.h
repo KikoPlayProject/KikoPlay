@@ -20,6 +20,12 @@ public:
     {
         editor->setGeometry(option.rect);
     }
+    QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override
+    {
+        QSize size = QStyledItemDelegate::sizeHint(option, index);
+        size.setHeight(size.height() + 12);
+        return size;
+    }
 };
 
 struct SettingTreeItem

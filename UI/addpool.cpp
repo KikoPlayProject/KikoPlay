@@ -12,6 +12,11 @@
 #include <QComboBox>
 #include <QButtonGroup>
 #include <QAbstractItemModel>
+#include "UI/ela/ElaComboBox.h"
+#include "UI/ela/ElaLineEdit.h"
+#include "UI/ela/ElaMenu.h"
+#include "UI/ela/ElaPivot.h"
+#include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 #include "Common/lrucache.h"
 #include "Common/notifier.h"
@@ -146,55 +151,33 @@ namespace
 }
 AddPool::AddPool(QWidget *parent, const QString &srcAnime, const EpInfo &ep) : CFramelessDialog(tr("Add Danmu Pool"),parent,true)
 {
-    QVBoxLayout *addPoolVLayout=new QVBoxLayout(this);
-    addPoolVLayout->setContentsMargins(0,0,0,0);
-    addPoolVLayout->setSpacing(0);
+
     setFont(QFont(GlobalObjects::normalFont,12));
 
-    searchPage=new QToolButton(this);
-    searchPage->setText(tr("Search"));
-    searchPage->setCheckable(true);
-    searchPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    searchPage->setObjectName(QStringLiteral("DialogPageButton"));
-    searchPage->setChecked(true);
+    ElaPivot *tab = new ElaPivot(this);
+    tab->appendPivot(tr("Search"));
+    tab->appendPivot(tr("Custom"));
+    tab->setCurrentIndex(0);
 
-    customPage=new QToolButton(this);
-    customPage->setText(tr("Custom"));
-    customPage->setCheckable(true);
-    customPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    customPage->setObjectName(QStringLiteral("DialogPageButton"));
 
-    QFontMetrics fm(fontMetrics());
-    int btnH = fm.height() + 10 * logicalDpiY()/96;
-    int btnW = qMax(fm.horizontalAdvance(customPage->text()), fm.horizontalAdvance(searchPage->text()));
-    QSize pageButtonSize(btnW*2, btnH);
-    searchPage->setFixedSize(pageButtonSize);
-    customPage->setFixedSize(pageButtonSize);
-
-    QButtonGroup *btnGroup=new QButtonGroup(this);
-    btnGroup->addButton(searchPage,0);
-    btnGroup->addButton(customPage,1);
-    QObject::connect(btnGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[this](int id, bool checked){
-        if(checked)
-        {
-            contentStackLayout->setCurrentIndex(id);
-        }
-    });
-
-    QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
-    pageButtonHLayout->setContentsMargins(0,0,0,0);
-    pageButtonHLayout->setSpacing(0);
-    pageButtonHLayout->addWidget(searchPage);
-    pageButtonHLayout->addWidget(customPage);
-    pageButtonHLayout->addStretch(1);
-    addPoolVLayout->addLayout(pageButtonHLayout);
-
-    contentStackLayout=new QStackedLayout();
+    QStackedLayout *contentStackLayout=new QStackedLayout();
     contentStackLayout->setContentsMargins(0,0,0,0);
     contentStackLayout->addWidget(setupSearchPage(srcAnime, ep));
     contentStackLayout->addWidget(setupCustomPage(srcAnime, ep));
-    addPoolVLayout->addLayout(contentStackLayout);
 
+    QObject::connect(tab, &ElaPivot::pCurrentIndexChanged, this, [=](){
+        pageIndex = tab->getCurrentIndex();
+        contentStackLayout->setCurrentIndex(pageIndex);
+    });
+
+
+    QVBoxLayout *addPoolVLayout=new QVBoxLayout(this);
+    auto margins = addPoolVLayout->contentsMargins();
+    margins.setTop(0);
+    addPoolVLayout->setContentsMargins(margins);
+
+    addPoolVLayout->addWidget(tab);
+    addPoolVLayout->addLayout(contentStackLayout);
 
     renamePool=(!srcAnime.isEmpty() && ep.type!=EpType::UNKNOWN);
     if(renamePool) setTitle(tr("Rename Danmu Pool"));
@@ -210,24 +193,22 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
 
     QWidget *animePage = new QWidget(pageContainer);
 
-    QComboBox *scriptCombo = new QComboBox(animePage);
-    ScriptSearchOptionPanel *scriptOptionPanel = new ScriptSearchOptionPanel(searchPage);
+    QComboBox *scriptCombo = new ElaComboBox(animePage);
+    ScriptSearchOptionPanel *scriptOptionPanel = new ScriptSearchOptionPanel(animePage);
     QObject::connect(scriptCombo, &QComboBox::currentTextChanged, this, [=](const QString &){
         QString curId = scriptCombo->currentData().toString();
         scriptOptionPanel->setScript(GlobalObjects::scriptManager->getScript(curId));
         if(scriptOptionPanel->hasOptions()) scriptOptionPanel->show();
         else scriptOptionPanel->hide();
     });
-    for(const auto &s : GlobalObjects::animeProvider->getSearchProviders())
+    for (const auto &s : GlobalObjects::animeProvider->getSearchProviders())
     {
         scriptCombo->addItem(s.first, s.second);
     }
     scriptCombo->addItem(tr("Local DB"), "Kiko.Local");
 
-    QLineEdit *keywordEdit=new QLineEdit(animePage);
-    keywordEdit->setText(srcAnime);
-
-    QPushButton *searchButton=new QPushButton(tr("Search"),animePage);
+    QLineEdit *keywordEdit = new ElaLineEdit(srcAnime, animePage);
+    QPushButton *searchButton = new KPushButton(tr("Search"), animePage);
 
     animeModel = new AnimeModel(this);
     if(!scriptCombo->currentData().isNull())
@@ -246,6 +227,7 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
     animeView->setContextMenuPolicy(Qt::ActionsContextMenu);
 
     QGridLayout *animePageGLayout=new QGridLayout(animePage);
+    animePageGLayout->setContentsMargins(0, 0, 0, 0);
     animePageGLayout->addWidget(scriptCombo,0,0);
     animePageGLayout->addWidget(keywordEdit,0,1);
     animePageGLayout->addWidget(searchButton,0,2);
@@ -310,14 +292,20 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
     QObject::connect(keywordEdit,&QLineEdit::returnPressed,searchButton,&QPushButton::click);
 
     QWidget *epPage = new QWidget(pageContainer);
-    QPushButton *backBtn = new QPushButton(tr("Back"), epPage);
+    QPushButton *backBtn = new KPushButton(tr("Back"), epPage);
     QLabel *animeLabel = new QLabel(epPage);
     epView = new QTreeView(epPage);
     epView->setRootIsDecorated(false);
     epView->setSelectionMode(QAbstractItemView::SingleSelection);
-    epView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    epView->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    QAction *copyEp=new QAction(tr("Copy"), this);
+    ElaMenu *actionMenu = new ElaMenu(epView);
+    QObject::connect(epView, &QTreeView::customContextMenuRequested, this, [=](){
+        if (!epView->selectionModel()->hasSelection()) return;
+        actionMenu->exec(QCursor::pos());
+    });
+
+    QAction *copyEp = actionMenu->addAction(tr("Copy"));
     QObject::connect(copyEp, &QAction::triggered, this, [=](){
         auto selectedRows= epView->selectionModel()->selectedRows((int)EpModel::Columns::EPNAME);
         if(selectedRows.count()==0) return;
@@ -380,31 +368,32 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
 
 QWidget *AddPool::setupCustomPage(const QString &srcAnime, const EpInfo &ep)
 {
-    QWidget *customPage=new QWidget(this);
+    QWidget *customPage = new QWidget(this);
     QFont normalFont(GlobalObjects::normalFont,10);
     customPage->setFont(normalFont);
 
-    QLabel *animeTip=new QLabel(tr("Anime Title"),customPage);
-    animeEdit=new QLineEdit(srcAnime, customPage);
+    QLabel *animeTip = new QLabel(tr("Anime Title"),customPage);
+    animeEdit = new ElaLineEdit(srcAnime, customPage);
 
     QLabel *epTypeTip=new QLabel(tr("Episode Type"),customPage);
-    epTypeCombo=new QComboBox(customPage);
+    epTypeCombo = new ElaComboBox(customPage);
     epTypeCombo->addItems(QStringList(std::begin(EpTypeName), std::end(EpTypeName)));
 
-    QLabel *epIndexTip=new QLabel(tr("Episode Index"),customPage);
-    epIndexEdit=new QLineEdit(customPage);
+    QLabel *epIndexTip = new QLabel(tr("Episode Index"),customPage);
+    epIndexEdit = new ElaLineEdit(customPage);
     epIndexEdit->setValidator(new QRegExpValidator(QRegExp("\\d+\\.?(\\d+)?"),epIndexEdit));
 
-    QLabel *epTitleTip=new QLabel(tr("Episode Title"),customPage);
-    epEdit=new QLineEdit(ep.name, customPage);
+    QLabel *epTitleTip = new QLabel(tr("Episode Title"),customPage);
+    epEdit = new ElaLineEdit(ep.name, customPage);
 
-    if(ep.type!=EpType::UNKNOWN)
+    if (ep.type != EpType::UNKNOWN)
     {
         epTypeCombo->setCurrentIndex(ep.type-1);
         epIndexEdit->setText(QString::number(ep.index));
     }
 
     QGridLayout *customGLayout=new QGridLayout(customPage);
+    customGLayout->setContentsMargins(0, 0, 0, 0);
     customGLayout->addWidget(animeTip, 0, 0, 1, 2);
     customGLayout->addWidget(animeEdit, 1, 0, 1, 2);
     customGLayout->addWidget(epTypeTip, 2, 0);
@@ -423,7 +412,7 @@ QWidget *AddPool::setupCustomPage(const QString &srcAnime, const EpInfo &ep)
 
 void AddPool::onAccept()
 {
-    if(searchPage->isChecked())
+    if (pageIndex == 0)
     {
         auto selectedRows= epView->selectionModel()->selectedRows((int)EpModel::Columns::EPNAME);
         if(selectedRows.count()==0)
@@ -438,25 +427,27 @@ void AddPool::onAccept()
         this->epIndex = ep.index;
         this->epType = ep.type;
     }
-    else if(customPage->isChecked())
+    else if (pageIndex == 1)
     {
         this->anime = animeEdit->text().trimmed();
         this->ep = epEdit->text().trimmed();
         this->epIndex = epIndexEdit->text().toDouble();
         this->epType = EpType(epTypeCombo->currentIndex()+1);
     }
-    if(anime.isEmpty() || epIndexEdit->text().trimmed().isEmpty())
+    if (anime.isEmpty() || epIndexEdit->text().trimmed().isEmpty())
     {
         showMessage(tr("Anime Title and Episode Index should not be empty"), NM_ERROR | NM_HIDE);
         return;
     }
-    if(!renamePool && GlobalObjects::danmuManager->getPool(anime, epType, epIndex, false))
+    if (!renamePool && GlobalObjects::danmuManager->getPool(anime, epType, epIndex, false))
     {
         showMessage(tr("Pool Already Exists"), NM_ERROR | NM_HIDE);
         return;
     }
-    if(!lastSearchCacheId.isEmpty())
+    if (!lastSearchCacheId.isEmpty())
+    {
         animeCache.put(lastSearchCacheId,  static_cast<AnimeModel *>(animeModel)->animeBases());
+    }
     CFramelessDialog::onAccept();
 }
 

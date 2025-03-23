@@ -73,6 +73,7 @@ public:
         {
             static QBrush normalBrush;
             int c=(comment->color==0xffffff && !StyleManager::getStyleManager()->getCondVariable("DarkMode")?0:comment->color);
+            c = comment->color;
             normalBrush.setColor(QColor((c>>16)&0xff,(c>>8)&0xff,c&0xff));
             return normalBrush;
         }

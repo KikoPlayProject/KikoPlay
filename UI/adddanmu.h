@@ -13,6 +13,7 @@ class QTreeView;
 class QPlainTextEdit;
 struct PlayListItem;
 class AddDanmu;
+class ElaPivot;
 class ScriptSearchOptionPanel;
 class SearchItemWidget:public QWidget
 {
@@ -114,8 +115,8 @@ public:
     QStringList danmuToPoolList;
 private:
     const PlayListItem *curItem;
-    QToolButton *onlineDanmuPage,*urlDanmuPage,*selectedDanmuPage;
     QLineEdit *keywordEdit;
+    ElaPivot *tab{nullptr};
     QPlainTextEdit *urlEdit;
     QPushButton *searchButton, *addUrlButton;
     QComboBox *sourceCombo;

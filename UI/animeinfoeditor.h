@@ -6,6 +6,8 @@ class Anime;
 class QDateEdit;
 class QTextEdit;
 class QLineEdit;
+class ElaCalendarPicker;
+class ElaSpinBox;
 class AliasModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -67,6 +69,19 @@ public:
         return defaultFlags | Qt::ItemIsEditable;
     }
 };
+class AliasPanel : public QWidget
+{
+    Q_OBJECT
+public:
+    AliasPanel(const QString &animeName, QWidget *parent = nullptr);
+    void addAlias(const QString &alias);
+private:
+    const QString anime;
+    QStringList aliasList;
+    // QWidget interface
+public:
+    QSize sizeHint() const;
+};
 class AnimeInfoEditor : public CFramelessDialog
 {
     Q_OBJECT
@@ -86,8 +101,8 @@ public:
 private:
     Anime *curAnime;
     StaffModel *staffModel;
-    QDateEdit *dateEdit;
-    QLineEdit *epsEdit;
+    ElaCalendarPicker *dateEdit;
+    ElaSpinBox *epsSpin;
     QTextEdit *descEdit;
 };
 

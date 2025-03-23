@@ -12,12 +12,14 @@
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 
+#define XML_FIELD_RECENT_COVER "cover"
+
 PlayListPrivate::PlayListPrivate(PlayList *pl) : root(new PlayListItem), currentItem(nullptr), playListChanged(false),
     needRefresh(true), loopMode(PlayList::NO_Loop_All), autoMatch(true), modifyCounter(0), saveFinishTimeOnce(true), q_ptr(pl)
 {
     PlayListItem::playlist = pl;
-    plPath = GlobalObjects::dataPath + "playlist.xml";
-    rectPath = GlobalObjects::dataPath + "recent.xml";
+    plPath = GlobalObjects::context()->dataPath + "playlist.xml";
+    rectPath = GlobalObjects::context()->dataPath + "recent.xml";
 }
 
 PlayListPrivate::~PlayListPrivate()
@@ -42,9 +44,9 @@ void PlayListPrivate::loadPlaylist()
         {"collection", 1},
         {"item", 2}
     };
-    while(!reader.atEnd())
+    while (!reader.atEnd())
     {
-        if(reader.isStartElement())
+        if (reader.isStartElement())
         {
             switch (nodeNameHash.value(reader.name().toString()))
             {
@@ -66,11 +68,14 @@ void PlayListPrivate::loadPlaylist()
                 PlayListItem *item = PlayListItem::parseItem(reader, parents.last());
                 fileItems.insert(item->path, item);
                 mediaPathHash.insert(item->pathHash, item->path);
-                for (auto &pair : recentList)
+                for (auto &r : recentList)
                 {
-                    if (pair.first == item->path)
+                    if (r.path == item->path)
                     {
-                        pair.second = item->animeTitle.isEmpty()?item->title:QString("%1 %2").arg(item->animeTitle, item->title);
+                        r.title = item->animeTitle.isEmpty()?item->title:QString("%1\n%2").arg(item->animeTitle, item->title);
+                        r.duration = item->duration;
+                        r.playtime = item->playTime;
+                        r.playTimeState = item->playTimeState;
                         break;
                     }
                 }
@@ -95,18 +100,22 @@ void PlayListPrivate::loadPlaylist()
     }
     for (auto iter = recentList.begin(); iter != recentList.end(); )
     {
-        if ((*iter).second.isEmpty()) //not included in playlist
-            iter=recentList.erase(iter);
+        if ((*iter).title.isEmpty()) //not included in playlist
+        {
+            iter = recentList.erase(iter);
+        }
         else
+        {
             iter++;
+        }
     }
 }
 
 void PlayListPrivate::savePlaylist()
 {
-    if(!playListChanged)return;
+    if (!playListChanged)return;
     QFile playlistFile(plPath+".tmp");
-    bool ret=playlistFile.open(QIODevice::WriteOnly|QIODevice::Text);
+    bool ret = playlistFile.open(QIODevice::WriteOnly|QIODevice::Text);
     if(!ret) return;
     QXmlStreamWriter writer(&playlistFile);
     writer.setAutoFormatting(true);
@@ -165,14 +174,22 @@ void PlayListPrivate::loadRecentlist()
     bool ret=recentlistFile.open(QIODevice::ReadOnly|QIODevice::Text);
     if(!ret) return;
     QXmlStreamReader reader(&recentlistFile);
-    while(!reader.atEnd())
+    while (!reader.atEnd())
     {
-        if(reader.isStartElement())
+        if (reader.isStartElement())
         {
-            QStringRef name=reader.name();
-            if(name=="item")
+            QStringRef name = reader.name();
+            if (name == "item")
             {
-                recentList.append(QPair<QString,QString>(reader.readElementText().trimmed(),QString()));
+                QXmlStreamAttributes attrs = reader.attributes();
+                RecentlyPlayedItem item;
+                if (attrs.hasAttribute(XML_FIELD_RECENT_COVER))
+                {
+                    const QByteArray coverBase64 = attrs.value(XML_FIELD_RECENT_COVER).toString().toLatin1();
+                    item.stopFrame.loadFromData(QByteArray::fromBase64(coverBase64));
+                }
+                item.path = reader.readElementText().trimmed();
+                recentList.append(item);
             }
         }
         reader.readNext();
@@ -182,16 +199,24 @@ void PlayListPrivate::loadRecentlist()
 void PlayListPrivate::saveRecentlist()
 {
     QFile recentlistFile(rectPath);
-    bool ret=recentlistFile.open(QIODevice::WriteOnly|QIODevice::Text);
+    bool ret = recentlistFile.open(QIODevice::WriteOnly|QIODevice::Text);
     if(!ret) return;
     QXmlStreamWriter writer(&recentlistFile);
     writer.setAutoFormatting(true);
     writer.writeStartDocument();
     writer.writeStartElement("recentlist");
-    for(auto &pair :recentList)
+    for (auto &r :recentList)
     {
         writer.writeStartElement("item");
-        writer.writeCharacters(pair.first);
+        if (!r.stopFrame.isNull())
+        {
+            QByteArray data;
+            QBuffer buffer(&data);
+            buffer.open(QIODevice::WriteOnly);
+            r.stopFrame.save(&buffer, "PNG");
+            writer.writeAttribute(XML_FIELD_RECENT_COVER, data.toBase64());
+        }
+        writer.writeCharacters(r.path);
         writer.writeEndElement();
     }
     writer.writeEndElement();
@@ -201,17 +226,59 @@ void PlayListPrivate::saveRecentlist()
 void PlayListPrivate::updateRecentlist(PlayListItem *item)
 {
     Q_Q(PlayList);
-    if(!item) return;
-    for(auto iter= recentList.begin();iter!=recentList.end();)
+    if (!item) return;
+    for (auto iter = recentList.begin(); iter != recentList.end(); )
     {
-        if((*iter).first==item->path)
-            iter=recentList.erase(iter);
+        if ((*iter).path == item->path)
+        {
+            iter = recentList.erase(iter);
+        }
         else
+        {
             iter++;
+        }
     }
-    recentList.push_front(QPair<QString,QString>(item->path,item->animeTitle.isEmpty()?item->title:QString("%1 %2").arg(item->animeTitle, item->title)));
-    if(recentList.count()>q->maxRecentItems) recentList.pop_back();
+    RecentlyPlayedItem recentItem;
+    recentItem.path = item->path;
+    recentItem.title = item->animeTitle.isEmpty() ? item->title : QString("%1\n%2").arg(item->animeTitle, item->title);
+    recentList.push_front(recentItem);
+    if (recentList.count() > q->maxRecentItems) recentList.pop_back();
     emit q->recentItemsUpdated();
+}
+
+void PlayListPrivate::updateRecentItemInfo(const PlayListItem *item, const QImage &cover)
+{
+    Q_Q(PlayList);
+    int index = 0;
+    for (RecentlyPlayedItem &recentItem : recentList)
+    {
+        if (recentItem.path == item->path)
+        {
+            recentItem.duration = item->duration;
+            recentItem.playtime = item->playTime;
+            recentItem.playTimeState = item->playTimeState;
+
+            if (!cover.isNull())
+            {
+                const int w = 160, h = 90;
+                QImage dest(w * GlobalObjects::context()->devicePixelRatioF, h * GlobalObjects::context()->devicePixelRatioF, QImage::Format_ARGB32_Premultiplied);
+                dest.setDevicePixelRatio(GlobalObjects::context()->devicePixelRatioF);
+                dest.fill(Qt::transparent);
+                QPainter painter(&dest);
+                painter.setRenderHints(QPainter::Antialiasing, true);
+                painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
+                QPainterPath path;
+                path.addRoundedRect(0, 0, w, h, 8, 8);
+                painter.setClipPath(path);
+                painter.drawImage(QRect(0, 0, w, h), cover);
+                recentItem.stopFrame = dest;
+            }
+            emit q->recentItemInfoUpdated(index);
+
+            break;
+        }
+        ++index;
+    }
 }
 
 PlayListItem *PlayListPrivate::getPrevOrNextItem(bool prev)

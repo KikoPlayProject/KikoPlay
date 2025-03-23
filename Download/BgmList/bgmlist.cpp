@@ -408,7 +408,7 @@ bool BgmList::getLocalSeasons()
 
 QString BgmList::curLocalPath() const
 {
-    return GlobalObjects::dataPath + "/calendar/" + curScriptId + "/";
+    return GlobalObjects::context()->dataPath + "/calendar/" + curScriptId + "/";
 }
 
 QString BgmList::getSiteName(const QString &url)

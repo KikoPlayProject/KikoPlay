@@ -216,7 +216,7 @@ void LabelModel::removeTag(const QModelIndex &index)
 {
     if(!index.isValid()) return;
     TagNode *node = static_cast<TagNode*>(index.internalPointer());
-    if(node->tagType != TagNode::TAG_CUSTOM) return;
+    if (node->tagType != TagNode::TAG_CUSTOM) return;
     QStringList nodePaths;
     QVector<TagNode *> nodes({node});
     while(!nodes.empty())
@@ -584,23 +584,29 @@ void LabelModel::setCheckStatus(TagNode *node, bool checked)
 void LabelModel::selectScript(QSet<QString> &scriptTags)
 {
     TagNode *scriptCate = root->subNodes->value(C_SCRIPT);
-    for(TagNode *c : *scriptCate->subNodes)
+    for (TagNode *c : *scriptCate->subNodes)
     {
-        if(c->checkStatus==Qt::Checked)
+        if (c->checkStatus == Qt::Checked)
+        {
             scriptTags.insert(c->tagFilter);
+        }
     }
 }
 
 void LabelModel::selectTime(QSet<QString> &timeTags)
 {
     TagNode *timeCate = root->subNodes->value(C_TIME);
-    for(TagNode *c : *timeCate->subNodes)
+    for (TagNode *c : *timeCate->subNodes)
     {
-        if(c->checkStatus!=Qt::Unchecked)
+        if (c->checkStatus != Qt::Unchecked)
         {
-            for(TagNode *monthNode:*c->subNodes)
-				if(monthNode->checkStatus==Qt::Checked)
-					timeTags.insert(monthNode->tagFilter);
+            for (TagNode *monthNode : *c->subNodes)
+            {
+                if (monthNode->checkStatus == Qt::Checked)
+                {
+                    timeTags.insert(monthNode->tagFilter);
+                }
+            }
         }
     }
 }
@@ -610,25 +616,25 @@ void LabelModel::selectFile(QStringList &paths)
     TagNode *timeCate = root->subNodes->value(C_FILE);
     static QList<TagNode *> nodes;
     nodes.clear();
-    for(TagNode *c : *timeCate->subNodes)
+    for (TagNode *c : *timeCate->subNodes)
     {
         if(c->checkStatus!=Qt::Unchecked)
         {
             nodes.append(c);
         }
     }
-    while(!nodes.empty())
+    while (!nodes.empty())
     {
         TagNode *n = nodes.takeFirst();
-        if(n->checkStatus == Qt::Checked)
+        if (n->checkStatus == Qt::Checked)
         {
             paths.append(n->tagFilter);
         }
-        else if(n->checkStatus == Qt::PartiallyChecked)
+        else if (n->checkStatus == Qt::PartiallyChecked)
         {
-            if(n->subNodes)
+            if (n->subNodes)
             {
-                for(TagNode *s:*n->subNodes)
+                for (TagNode *s:*n->subNodes)
                 {
                     nodes.append(s);
                 }

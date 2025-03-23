@@ -298,6 +298,12 @@ void DanmuManagerModel::renamePoolNode(DanmuPoolNode *epNode, const QString &ani
     }
 }
 
+void DanmuManagerModel::setCheckable(bool on)
+{
+    nodeCheckAble = on;
+    emit dataChanged(index(0, 0, QModelIndex()), index(animeNodeList.size() - 1, 0, QModelIndex()), QVector<int>{Qt::CheckStateRole});
+}
+
 void DanmuManagerModel::refreshChildrenCheckStatus(const QModelIndex &index)
 {
     QList<QModelIndex> pIndexes;
@@ -370,30 +376,55 @@ QVariant DanmuManagerModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid()) return QVariant();
     DanmuPoolNode *item = static_cast<DanmuPoolNode*>(index.internalPointer());
-    int col=index.column();
+    Columns col = Columns(index.column());
     switch (role)
     {
     case Qt::DisplayRole:
     {
-        if(col==0)
+        if (col == Columns::TITLE)
             return item->title;
-        else if(col==1 && item->type==DanmuPoolNode::SourecNode)
+        else if (col == Columns::SOURCE && item->type == DanmuPoolNode::SourecNode)
             return item->idInfo;
-        else if(col==2 && item->type==DanmuPoolNode::SourecNode)
+        else if (col == Columns::DELAY && item->type == DanmuPoolNode::SourecNode)
             return static_cast<DanmuPoolSourceNode *>(item)->delay/1000;
-        else if(col==3)
+        else if (col == Columns::COUNT)
             return item->danmuCount;
+        break;
+    }
+    case Qt::ToolTipRole:
+    {
+        if (col == Columns::TITLE)
+            return item->title;
+        else if (col == Columns::DELAY && item->type == DanmuPoolNode::SourecNode)
+        {
+            if (static_cast<DanmuPoolSourceNode *>(item)->hasTimeline)
+            {
+                return tr("Danmu Source with Timeline Adjustment");
+            }
+        }
         break;
     }
     case Qt::EditRole:
     {
-        if(col==2 && item->type==DanmuPoolNode::SourecNode)
+        if (col == Columns::DELAY && item->type == DanmuPoolNode::SourecNode)
             return static_cast<DanmuPoolSourceNode *>(item)->delay/1000;
+        break;
+    }
+    case Qt::DecorationRole:
+    {
+        if (col == Columns::DELAY && item->type == DanmuPoolNode::SourecNode)
+        {
+            if (static_cast<DanmuPoolSourceNode *>(item)->hasTimeline)
+            {
+                static QIcon timeLineTip = GlobalObjects::context()->getFontIcon(0xe6b5, QColor(220, 220, 220));
+                return timeLineTip;
+            }
+        }
         break;
     }
     case Qt::CheckStateRole:
     {
-        if(col==0)
+        if (col == Columns::TITLE && nodeCheckAble)
             return item->checkStatus;
         break;
     }
@@ -413,7 +444,7 @@ QVariant DanmuManagerModel::headerData(int section, Qt::Orientation orientation,
 Qt::ItemFlags DanmuManagerModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index);
-    if (index.isValid() && index.column()==0)
+    if (index.isValid() && index.column()==0 && nodeCheckAble)
     {
         return  Qt::ItemIsUserCheckable | defaultFlags;
     }

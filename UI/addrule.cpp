@@ -7,6 +7,9 @@
 #include <QTreeView>
 #include <QDateTime>
 #include <QSettings>
+#include "UI/ela/ElaComboBox.h"
+#include "UI/ela/ElaLineEdit.h"
+#include "UI/ela/ElaSpinBox.h"
 #include "globalobjects.h"
 #include "Download/autodownloadmanager.h"
 #include "widgets/dirselectwidget.h"
@@ -17,7 +20,7 @@
 
 AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add Rule"),parent, true, true, false)
 {
-    if(rule)
+    if (rule)
     {
         addRule=false;
         curRule=rule;
@@ -29,55 +32,55 @@ AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add
         curRule=new DownloadRule();
     }
 
-    QLabel *nameLabel=new QLabel(tr("Title:"), this);
-    nameEdit=new QLineEdit(curRule->name, this);
+    QLabel *nameLabel = new QLabel(tr("Title:"), this);
+    nameEdit = new ElaLineEdit(curRule->name, this);
 
-    QLabel *searchWordLabel=new QLabel(tr("Search Word:"),this);
-    searchWordEdit=new QLineEdit(curRule->searchWord,this);
+    QLabel *searchWordLabel = new QLabel(tr("Search Word:"),this);
+    searchWordEdit = new ElaLineEdit(curRule->searchWord,this);
 
-    QLabel *filterWordLabel=new QLabel(tr("Filter Word(Separator: ';'):"),this);
-    filterWordEdit=new QLineEdit(curRule->filterWord,this);
+    QLabel *filterWordLabel = new QLabel(tr("Filter Word(Separator: ';'):"),this);
+    filterWordEdit = new ElaLineEdit(curRule->filterWord,this);
 
-    QLabel *scriptLabel=new QLabel(tr("Search Script:"),this);
-    scriptIdCombo=new QComboBox(this);
+    QLabel *scriptLabel = new QLabel(tr("Search Script:"),this);
+    scriptIdCombo = new ElaComboBox(this);
     scriptOptionPanel = new ScriptSearchOptionPanel(this);
 
-    for(auto &item:GlobalObjects::scriptManager->scripts(ScriptType::RESOURCE))
+    for (auto &item : GlobalObjects::scriptManager->scripts(ScriptType::RESOURCE))
     {
-        scriptIdCombo->addItem(item->name(),item->id());
+        scriptIdCombo->addItem(item->name(), item->id());
     }
-    scriptIdCombo->setCurrentIndex(addRule?0:scriptIdCombo->findData(curRule->scriptId));
+    scriptIdCombo->setCurrentIndex(addRule ? 0 : scriptIdCombo->findData(curRule->scriptId));
 
     QString curId = scriptIdCombo->currentData().toString();
     scriptOptionPanel->setScript(GlobalObjects::scriptManager->getScript(curId), &curRule->searchOptions);
-    if(scriptOptionPanel->hasOptions()) scriptOptionPanel->show();
+    if (scriptOptionPanel->hasOptions()) scriptOptionPanel->show();
     else scriptOptionPanel->hide();
 
-    QLabel *downloadLabel=new QLabel(tr("After discovering new uri:"),this);
-    downloadCombo=new QComboBox(this);
+    QLabel *downloadLabel = new QLabel(tr("After discovering new uri:"),this);
+    downloadCombo = new ElaComboBox(this);
     downloadCombo->addItems(QStringList({tr("Add download task"), tr("Put it in the staging area")}));
-    downloadCombo->setCurrentIndex(curRule->download?0:1);
+    downloadCombo->setCurrentIndex(curRule->download ? 0 : 1);
 
-    QLabel *minMaxSizeLabel=new QLabel(tr("Min/Max Size(MB,0: No limit):"),this);
-    minSizeSpin=new QSpinBox(this);
+    QLabel *minMaxSizeLabel = new QLabel(tr("Min/Max Size(MB,0: No limit):"),this);
+    minSizeSpin = new ElaSpinBox(this);
     minSizeSpin->setRange(0, INT_MAX);
     minSizeSpin->setValue(curRule->minSize);
-    maxSizeSpin=new QSpinBox(this);
+    maxSizeSpin = new ElaSpinBox(this);
     maxSizeSpin->setMinimum(0);
     maxSizeSpin->setRange(0, INT_MAX);
     maxSizeSpin->setValue(curRule->maxSize);
 
-    QLabel *searchIntervalSpinLabel=new QLabel(tr("Search Interval(min):"),this);
-    searchIntervalSpin=new QSpinBox(this);
+    QLabel *searchIntervalSpinLabel = new QLabel(tr("Search Interval(min):"),this);
+    searchIntervalSpin = new ElaSpinBox(this);
     searchIntervalSpin->setRange(1, INT_MAX);
     searchIntervalSpin->setValue(curRule->searchInterval);
 
-    QLabel *filePathLabel=new QLabel(tr("File Path:"),this);
-    filePathSelector=new DirSelectWidget(this);
+    QLabel *filePathLabel = new QLabel(tr("File Path:"),this);
+    filePathSelector = new DirSelectWidget(this);
     filePathSelector->setDir(curRule->filePath);
 
     QLabel *previewLabel=new QLabel(tr("Preview:"), this);
-    preview=new QTreeView(this);
+    preview = new QTreeView(this);
     previewModel = new PreviewModel(this);
     preview->setRootIsDecorated(false);
     preview->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -87,7 +90,7 @@ AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add
         showMessage(err, NM_ERROR | NM_HIDE);
     });
 
-    QGridLayout *addRuleGLayout=new QGridLayout(this);
+    QGridLayout *addRuleGLayout = new QGridLayout(this);
     addRuleGLayout->addWidget(nameLabel, 0, 0);
     addRuleGLayout->addWidget(nameEdit, 0, 1);
     addRuleGLayout->addWidget(searchWordLabel, 1, 0);
@@ -104,6 +107,7 @@ AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add
     minMaxHLayout->setContentsMargins(0,0,0,0);
     minMaxHLayout->addWidget(minSizeSpin);
     minMaxHLayout->addWidget(maxSizeSpin);
+    minMaxHLayout->addStretch(1);
     addRuleGLayout->addLayout(minMaxHLayout, 6, 1);
     addRuleGLayout->addWidget(searchIntervalSpinLabel, 7, 0);
     addRuleGLayout->addWidget(searchIntervalSpin, 7, 1);
@@ -116,7 +120,7 @@ AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add
     addRuleGLayout->setColumnStretch(1,1);
 
     setupSignals();
-    setSizeSettingKey("DialogSize/AddRule", QSize(400*logicalDpiX()/96,600*logicalDpiY()/96));
+    setSizeSettingKey("DialogSize/AddRule", QSize(500, 600));
 }
 
 void AddRule::setupSignals()
@@ -138,7 +142,7 @@ void AddRule::setupSignals()
        scriptIdCombo->setEnabled(true);
        searchWordEdit->setEnabled(true);
     });
-    QObject::connect(scriptIdCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged,[this](){
+    QObject::connect(scriptIdCombo, (void (QComboBox:: *)(int))&QComboBox::currentIndexChanged, this, [this](){
         QString curId = scriptIdCombo->currentData().toString();
         const QMap<QString, QString> *optionPtr = curId == curRule->scriptId? &curRule->searchOptions : nullptr;
         scriptOptionPanel->setScript(GlobalObjects::scriptManager->getScript(curId), optionPtr);

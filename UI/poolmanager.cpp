@@ -7,7 +7,6 @@
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QStackedLayout>
-#include <QCheckBox>
 #include <QLabel>
 #include <QAction>
 #include <QSortFilterProxyModel>
@@ -18,10 +17,15 @@
 #include "Play/Playlist/playlistitem.h"
 #include "Play/Playlist/playlist.h"
 #include "Common/notifier.h"
+#include "UI/ela/ElaCheckBox.h"
+#include "UI/ela/ElaLineEdit.h"
+#include "UI/ela/ElaMenu.h"
+#include "UI/ela/ElaSpinBox.h"
+#include "UI/widgets/kpushbutton.h"
 #include "timelineedit.h"
 #include "adddanmu.h"
 #include "addpool.h"
-#include "danmuview.h"
+#include "dialogs/danmuview.h"
 #include "inputdialog.h"
 #include "globalobjects.h"
 namespace
@@ -31,7 +35,7 @@ namespace
 PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Manager"),parent)
 {
     comparer.setNumericMode(true);
-    setFont(QFont(GlobalObjects::normalFont,10));
+    setFont(QFont(GlobalObjects::normalFont, 10));
     QTreeView *poolView=new QTreeView(this);
     poolView->setSelectionMode(QAbstractItemView::SingleSelection);
     poolView->setFont(this->font());
@@ -46,7 +50,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     proxyModel->setRecursiveFilteringEnabled(true);
     poolView->setModel(proxyModel);
     poolView->setSortingEnabled(true);
-    poolView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    poolView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     QLabel *stateLabel=new QLabel(this);
     stateLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
@@ -62,7 +66,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         QModelIndexList indexList = poolView->selectionModel()->selectedRows();
         if(indexList.size()==0)return;
         DanmuPoolSourceNode *srcNode=managerModel->getSourceNode(proxyModel->mapToSource(indexList.first()));
-        if(!srcNode)return;
+        if (!srcNode) return;
         QVector<SimpleDanmuInfo> simpleDanmuList;
         Pool *pool=GlobalObjects::danmuManager->getPool(srcNode->parent->idInfo);
         if(pool)
@@ -73,6 +77,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
             if(QDialog::Accepted==timeLineEdit.exec())
             {
                 pool->setTimeline(srcNode->srcId,timeLineEdit.timelineInfo);
+                srcNode->hasTimeline = !pool->sources()[srcNode->srcId].timelineInfo.isEmpty();
             }
         }
 
@@ -250,47 +255,59 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         view.exec();
     });
 
-    poolView->addAction(actView);
-    poolView->addAction(act_addWebSource);
-    poolView->addAction(act_editTimeLine);
-    QAction *act_separator0=new QAction(this);
-    act_separator0->setSeparator(true);
-    poolView->addAction(act_separator0);
+    ElaMenu *actionMenu = new ElaMenu(poolView);
+    QObject::connect(poolView, &QTreeView::customContextMenuRequested, this, [=](){
+        if (!poolView->selectionModel()->hasSelection()) return;
+        const QModelIndex selectIndex = proxyModel->mapToSource(poolView->selectionModel()->selectedRows().first());
+        bool isPoolNode = managerModel->getPoolNode(selectIndex);
+        bool isSourceNode = managerModel->getSourceNode(selectIndex);
 
-    poolView->addAction(act_addPool);
-    poolView->addAction(act_renamePool);
+        actView->setEnabled(isPoolNode);
+        act_addWebSource->setEnabled(isPoolNode);
+        act_editTimeLine->setEnabled(isSourceNode);
+        act_renamePool->setEnabled(isPoolNode);
+        act_copyPoolCode->setEnabled(isPoolNode);
+        act_pastePoolCode->setEnabled(isPoolNode);
 
-    QAction *act_separator1=new QAction(this);
-    act_separator1->setSeparator(true);
-    poolView->addAction(act_separator1);
+        actionMenu->exec(QCursor::pos());
+    });
 
-    poolView->addAction(act_copyPoolCode);
-    poolView->addAction(act_pastePoolCode);
+    actionMenu->addAction(actView);
+    actionMenu->addAction(act_addWebSource);
+    actionMenu->addAction(act_editTimeLine);
+    actionMenu->addSeparator();
 
-    QPushButton *cancel=new QPushButton(tr("Cancel"),this);
+    actionMenu->addAction(act_addPool);
+    actionMenu->addAction(act_renamePool);
+    actionMenu->addSeparator();
+
+    actionMenu->addAction(act_copyPoolCode);
+    actionMenu->addAction(act_pastePoolCode);
+
+    KPushButton *cancel = new KPushButton(tr("Cancel"),this);
     cancel->hide();
 
     QWidget *exportPage=new QWidget(this);
     QHBoxLayout *exportHLayout=new QHBoxLayout(exportPage);
     exportHLayout->setContentsMargins(0,0,0,0);
-    QCheckBox *exportKdFile=new QCheckBox(tr("Export KikoPlay Format"), exportPage);
-    QCheckBox *useTimelineCheck=new QCheckBox(tr("Apply delay and timeline info"), exportPage);
+    QCheckBox *exportKdFile = new ElaCheckBox(tr("Export KikoPlay Format"), exportPage);
+    QCheckBox *useTimelineCheck = new ElaCheckBox(tr("Apply delay and timeline info"), exportPage);
     useTimelineCheck->setChecked(true);
-    QCheckBox *useBlockRule=new QCheckBox(tr("Apply block rules"),exportPage);
-    QPushButton *exportConfirm=new QPushButton(tr("Export"),exportPage);
+    QCheckBox *useBlockRule = new ElaCheckBox(tr("Apply block rules"),exportPage);
+    KPushButton *exportConfirm=new KPushButton(tr("Export"),exportPage);
     exportHLayout->addWidget(exportKdFile);
     exportHLayout->addWidget(useTimelineCheck);
     exportHLayout->addWidget(useBlockRule);
     exportHLayout->addStretch(1);
     exportHLayout->addWidget(exportConfirm);
 
-    QObject::connect(exportKdFile,&QCheckBox::stateChanged, this,[useBlockRule,useTimelineCheck](int state){
+    QObject::connect(exportKdFile, &QCheckBox::stateChanged, this, [=](int state){
        useBlockRule->setEnabled(state!=Qt::Checked);
        useTimelineCheck->setEnabled(state!=Qt::Checked);
     });
 
-    QObject::connect(exportConfirm,&QPushButton::clicked,[this,poolView,managerModel,exportConfirm,cancel,useTimelineCheck,useBlockRule,exportKdFile](){
-        if(!managerModel->hasSelected()) return;
+    QObject::connect(exportConfirm, &KPushButton::clicked, this, [=](){
+        if (!managerModel->hasSelected()) return;
         const QString lastDirKey = "FileDialogPath/PoolManagerExport";
         const QString lastDir = GlobalObjects::appSetting->value(lastDirKey).toString();
         QString directory = QFileDialog::getExistingDirectory(this,
@@ -328,11 +345,11 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     QHBoxLayout *deleteHLayout=new QHBoxLayout(deletePage);
     deleteHLayout->setContentsMargins(0,0,0,0);
     QLabel *deleteTipLabel=new QLabel(tr("Check the items to delete"),deletePage);
-    QPushButton *deleteConfirm=new QPushButton(tr("Delete"),deletePage);
+    KPushButton *deleteConfirm=new KPushButton(tr("Delete"),deletePage);
     deleteHLayout->addWidget(deleteTipLabel);
     deleteHLayout->addStretch(1);
     deleteHLayout->addWidget(deleteConfirm);
-    QObject::connect(deleteConfirm,&QPushButton::clicked,[this,stateLabel,poolView,managerModel,deleteConfirm,cancel](){
+    QObject::connect(deleteConfirm,&KPushButton::clicked,[this,stateLabel,poolView,managerModel,deleteConfirm,cancel](){
         if(!managerModel->hasSelected())return;
         this->showBusyState(true);
         deleteConfirm->setText(tr("Deleting..."));
@@ -352,11 +369,11 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     QHBoxLayout *updateHLayout=new QHBoxLayout(updatePage);
     updateHLayout->setContentsMargins(0,0,0,0);
     QLabel *updateTipLabel=new QLabel(tr("Check the items to update danmu"),updatePage);
-    QPushButton *updateConfirm=new QPushButton(tr("Update"),updatePage);
+    KPushButton *updateConfirm=new KPushButton(tr("Update"),updatePage);
     updateHLayout->addWidget(updateTipLabel);
     updateHLayout->addStretch(1);
     updateHLayout->addWidget(updateConfirm);
-    QObject::connect(updateConfirm,&QPushButton::clicked,[this,stateLabel,poolView,managerModel,updateConfirm,cancel](){
+    QObject::connect(updateConfirm,&KPushButton::clicked,[this,stateLabel,poolView,managerModel,updateConfirm,cancel](){
         if(!managerModel->hasSelected())return;
         this->showBusyState(true);
         updateConfirm->setText(tr("Updating..."));
@@ -372,18 +389,45 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
     });
 
+    QWidget *setDelayPage = new QWidget(this);
+    QHBoxLayout *delayHLayout = new QHBoxLayout(setDelayPage);
+    setDelayPage->setContentsMargins(0, 0, 0, 0);
+    QLabel *setDelayTipLabel = new QLabel(tr("Check the items to set delay(s)"), setDelayPage);
+    ElaSpinBox *delaySpin = new ElaSpinBox(setDelayPage);
+    delaySpin->setRange(INT_MIN, INT_MAX);
+    KPushButton *delayConfirm = new KPushButton(tr("Set"), setDelayPage);
+    delayHLayout->addWidget(setDelayTipLabel);
+    delayHLayout->addStretch(1);
+    delayHLayout->addWidget(delaySpin);
+    delayHLayout->addWidget(delayConfirm);
+    QObject::connect(delayConfirm, &KPushButton::clicked, this, [=](){
+        if (!managerModel->hasSelected()) return;
+        this->showBusyState(true);
+        cancel->setEnabled(false);
+        delayConfirm->setEnabled(false);
+
+        int delay = delaySpin->value();
+        managerModel->setDelay(delay);
+
+        this->showBusyState(false);
+        cancel->setEnabled(true);
+        delayConfirm->setEnabled(true);
+        stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
+    });
+
+
     QWidget *mainPage=new QWidget(this);
-    QPushButton *importKdFile=new QPushButton(tr("Import"), mainPage);
-    QPushButton *exportPool=new QPushButton(tr("Export Pool(s)"),mainPage);
-    QPushButton *addDanmuPool=new QPushButton(tr("Add"), mainPage);
-    QPushButton *deletePool=new QPushButton(tr("Delete Pool(s)"),mainPage);
-    QPushButton *updatePool=new QPushButton(tr("Update Pool(s)"),mainPage);
-    QPushButton *setDelay=new QPushButton(tr("Set Delay"),mainPage);
-    QLineEdit *searchEdit=new QLineEdit(this);
+    KPushButton *importKdFile=new KPushButton(tr("Import"), mainPage);
+    KPushButton *exportPool=new KPushButton(tr("Export Pool(s)"),mainPage);
+    KPushButton *addDanmuPool=new KPushButton(tr("Add"), mainPage);
+    KPushButton *deletePool=new KPushButton(tr("Delete Pool(s)"),mainPage);
+    KPushButton *updatePool=new KPushButton(tr("Update Pool(s)"),mainPage);
+    KPushButton *setDelay=new KPushButton(tr("Set Delay"),mainPage);
+    QLineEdit *searchEdit=new ElaLineEdit(this);
     searchEdit->setPlaceholderText(tr("Search"));
-    searchEdit->setMinimumWidth(150*logicalDpiX()/96);
+    searchEdit->setMinimumWidth(150);
     searchEdit->setClearButtonEnabled(true);
-    QObject::connect(searchEdit,&QLineEdit::textChanged,[proxyModel](const QString &keyword){
+    QObject::connect(searchEdit, &QLineEdit::textChanged, this, [proxyModel](const QString &keyword){
         proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
         proxyModel->setFilterRegExp(keyword);
     });
@@ -404,6 +448,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     funcStackLayout->addWidget(exportPage);
     funcStackLayout->addWidget(deletePage);
     funcStackLayout->addWidget(updatePage);
+    funcStackLayout->addWidget(setDelayPage);
 
     auto setControlEnable = [=](bool enable){
         poolView->setEnabled(enable);
@@ -415,10 +460,11 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         setDelay->setEnabled(enable);
     };
 
-    QObject::connect(cancel,&QPushButton::clicked,[funcStackLayout](){
+    QObject::connect(cancel, &KPushButton::clicked, this, [=](){
        funcStackLayout->setCurrentIndex(0);
+        managerModel->setCheckable(false);
     });
-    QObject::connect(importKdFile,&QPushButton::clicked,[=](){
+    QObject::connect(importKdFile, &KPushButton::clicked, this, [=](){
         QStringList files = QFileDialog::getOpenFileNames(this,tr("Select KikoPlay Danmu Pool File"),"","KikoPlay Danmu Pool File(*.kd)");
         if(files.isEmpty()) return;
         this->showBusyState(true);
@@ -435,12 +481,13 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         importKdFile->setText(tr("Import"));
         setControlEnable(true);
     });
-    QObject::connect(exportPool,&QPushButton::clicked,[cancel, exportHLayout,funcStackLayout](){
+    QObject::connect(exportPool, &KPushButton::clicked, this, [=](){
         exportHLayout->addWidget(cancel);
         cancel->show();
         funcStackLayout->setCurrentIndex(1);
+        managerModel->setCheckable(true);
     });
-    QObject::connect(addDanmuPool,&QPushButton::clicked,[this,managerModel](){
+    QObject::connect(addDanmuPool, &KPushButton::clicked, this, [=](){
         AddPool addPool(this);
         if(QDialog::Accepted==addPool.exec())
         {
@@ -449,55 +496,43 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
             managerModel->addPoolNode(addPool.anime, ep, pid);
         }
     });
-    QObject::connect(deletePool,&QPushButton::clicked,[cancel, deleteHLayout,funcStackLayout](){
+    QObject::connect(deletePool, &KPushButton::clicked, this, [=](){
         deleteHLayout->addWidget(cancel);
         cancel->show();
         funcStackLayout->setCurrentIndex(2);
+        managerModel->setCheckable(true);
     });
-    QObject::connect(updatePool,&QPushButton::clicked,[cancel, updateHLayout,funcStackLayout](){
+    QObject::connect(updatePool, &KPushButton::clicked, this, [=](){
         updateHLayout->addWidget(cancel);
         cancel->show();
         funcStackLayout->setCurrentIndex(3);
+        managerModel->setCheckable(true);
     }); 
-    QObject::connect(setDelay,&QPushButton::clicked,[=](){
-        if(!managerModel->hasSelected())return;
-        this->showBusyState(true);
-        setControlEnable(false);
-        LineInputDialog input(tr("Set Delay"), tr("Delay(s)"), "", "DialogSize/PoolManagerDelay", false, this);
-        if(QDialog::Accepted == input.exec())
-        {
-            bool ok = false;
-            int delay = input.text.toInt(&ok);
-            if(!ok)
-            {
-                showMessage(tr("Invalid Delay"), NM_ERROR | NM_HIDE);
-            }
-            else
-            {
-                managerModel->setDelay(delay);
-            }
-        }
-        this->showBusyState(false);
-        setControlEnable(true);
-        stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
+    QObject::connect(setDelay, &KPushButton::clicked, this, [=](){
+        delayHLayout->addWidget(cancel);
+        cancel->show();
+        funcStackLayout->setCurrentIndex(4);
+        managerModel->setCheckable(true);
     });
 
     QGridLayout *managerGLayout=new QGridLayout(this);
+    auto margins = managerGLayout->contentsMargins();
+    margins.setTop(0);
+    managerGLayout->setContentsMargins(margins);
     managerGLayout->addLayout(funcStackLayout,0,0);
     managerGLayout->addWidget(poolView,1,0);
     managerGLayout->addWidget(stateLabel,2,0);
     managerGLayout->setRowStretch(1,1);
     managerGLayout->setColumnStretch(0,1);
-    managerGLayout->setContentsMargins(0, 0, 0, 0);
 
     QHeaderView *poolHeader = poolView->header();
     poolHeader->setFont(this->font());
-    poolHeader->resizeSection(0, 260*logicalDpiX()/96); //Pool
-    poolHeader->resizeSection(1, 150*logicalDpiX()/96); //Source
-    poolHeader->resizeSection(2, 50*logicalDpiX()/96); //Delay
-    poolHeader->resizeSection(3, 120*logicalDpiX()/96); //Count
+    poolHeader->resizeSection(0, 260); //Pool
+    poolHeader->resizeSection(1, 150); //Source
+    poolHeader->resizeSection(2, 50); //Delay
+    poolHeader->resizeSection(3, 120); //Count
 
-    setSizeSettingKey("DialogSize/PoolManager",QSize(620*logicalDpiX()/96,420*logicalDpiY()/96));
+    setSizeSettingKey("DialogSize/PoolManager",QSize(620, 420));
     QVariant headerState(GlobalObjects::appSetting->value("HeaderViewState/PoolManagerView"));
     if(!headerState.isNull())
         poolView->header()->restoreState(headerState.toByteArray());

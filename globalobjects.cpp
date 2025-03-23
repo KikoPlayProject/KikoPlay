@@ -17,6 +17,7 @@
 #include "Common/notifier.h"
 #include "Common/eventbus.h"
 #include "Common/logger.h"
+#include "Common/keyactionmodel.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -42,13 +43,11 @@ AppManager *GlobalObjects::appManager=nullptr;
 AutoDownloadManager *GlobalObjects::autoDownloadManager=nullptr;
 QMainWindow *GlobalObjects::mainWindow=nullptr;
 QFont* GlobalObjects::iconfont;
-QString GlobalObjects::dataPath;
-qint64 GlobalObjects::startupTime = 0;
-QVector<QPair<QString, qint64>> GlobalObjects::stepTime;
 
-namespace  {
-    const char *mt_db_names[]={"Comment_M", "Bangumi_M","Download_M"};
-    const char *wt_db_names[]={"Comment_W", "Bangumi_W","Download_W"};
+namespace
+{
+    static const char *mt_db_names[]={"Comment_M", "Bangumi_M","Download_M"};
+    static const char *wt_db_names[]={"Comment_W", "Bangumi_W","Download_W"};
 }
 
 constexpr const char *GlobalObjects::normalFont;
@@ -56,20 +55,10 @@ constexpr const char *GlobalObjects::kikoVersion;
 
 void GlobalObjects::init(QElapsedTimer *elapsedTimer)
 {
-	dataPath = QCoreApplication::applicationDirPath() + "/data/";
-
-#ifdef CONFIG_UNIX_DATA
-	const QFileInfo fileinfoConfig(QDir::homePath() + "/.config");
-	/* Test Linux/MacOS style environment */
-	if (fileinfoConfig.exists() || fileinfoConfig.isDir() || fileinfoConfig.isWritable()) {
-		dataPath = QDir::homePath() + "/.config/kikoplay/data/";
-	}
-#endif
-    QDir dir;
-    if (!dir.exists(dataPath)) dir.mkpath(dataPath);
+    context()->init();
 
     registerCustomSettingType();
-    appSetting=new QSettings(dataPath+"settings.ini",QSettings::IniFormat);
+    appSetting=new QSettings(context()->dataPath + "settings.ini", QSettings::IniFormat);
 
     Logger::logger();
 
@@ -83,7 +72,7 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
     QMetaObject::invokeMethod(&workObj, [](){
         initDatabase(wt_db_names);
     }, Qt::QueuedConnection);
-    tick(elapsedTimer, "db");
+    GlobalObjects::context()->tick(elapsedTimer, "db");
 
     auto locNames = GlobalObjects::appSetting->value("KikoPlay/Language", "").toStringList();
     if (locNames.join("").isEmpty())
@@ -98,6 +87,7 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
         if (translator.load(loc, "", "", ":/res/lang"))
         {
             qApp->installTranslator(&translator);
+            GlobalObjects::context()->lang = locName;
             break;
         }
     }
@@ -106,7 +96,7 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
 
     PlayContext::context();
     mpvplayer = new MPVPlayer();
-    tick(elapsedTimer, "player");
+    GlobalObjects::context()->tick(elapsedTimer, "player");
 
     danmuPool = new DanmuPool();
     danmuRender = new DanmuRender();
@@ -115,7 +105,7 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
     playlist = new PlayList();
     QObject::connect(playlist, &PlayList::currentMatchChanged, danmuPool, &DanmuPool::setPoolID);
     blocker = new Blocker();
-    tick(elapsedTimer, "list");
+    GlobalObjects::context()->tick(elapsedTimer, "list");
 
     scriptManager = new ScriptManager();
     danmuProvider = new DanmuProvider();
@@ -123,24 +113,30 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
     QMetaObject::invokeMethod(&workObj, [](){
         LabelModel::instance()->loadLabels();
     }, Qt::QueuedConnection);
-    tick(elapsedTimer, "script");
+    GlobalObjects::context()->tick(elapsedTimer, "script");
 
     downloadModel = new DownloadModel();
     autoDownloadManager = new AutoDownloadManager();
     danmuManager = new DanmuManager();
-    tick(elapsedTimer, "dm");
+    GlobalObjects::context()->tick(elapsedTimer, "dm");
 
     lanServer = new LANServer();
-    tick(elapsedTimer, "lan");
+    GlobalObjects::context()->tick(elapsedTimer, "lan");
 
     appManager = new AppManager();
-    tick(elapsedTimer, "app");
+    GlobalObjects::context()->tick(elapsedTimer, "app");
 
     iconfont = new QFont();
+    QFontDatabase::addApplicationFont(":/res/ElaAwesome.ttf");
     int fontId = QFontDatabase::addApplicationFont(":/res/iconfont.ttf");
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
     iconfont->setFamily(fontFamilies.at(0));
-    QApplication::setFont(QFont("Microsoft Yahei UI", 10));
+
+    QFont font = qApp->font();
+    font.setPixelSize(13);
+    font.setFamily("Microsoft YaHei");
+    font.setHintingPreference(QFont::PreferNoHinting);
+    qApp->setFont(font);
 }
 
 void GlobalObjects::clear()
@@ -163,29 +159,10 @@ void GlobalObjects::clear()
     appSetting->deleteLater();
 }
 
-QSqlDatabase GlobalObjects::getDB(int db, bool *hasError)
+GlobalContext *GlobalObjects::context()
 {
-    const QString threadName = QThread::currentThread()->objectName();
-    if (hasError) *hasError = false;
-    if (threadName == QStringLiteral("workThread"))
-    {
-        return QSqlDatabase::database(wt_db_names[db]);
-    }
-    else if (threadName == "mainThread")
-    {
-        return QSqlDatabase::database(mt_db_names[db]);
-    }
-    if (hasError) *hasError = true;
-    return QSqlDatabase::database(mt_db_names[db]);
-}
-
-qint64 GlobalObjects::tick(QElapsedTimer *timer, const QString &step)
-{
-    if (!timer) return 0;
-    qint64 elapsed = timer->restart();
-    startupTime += elapsed;
-    stepTime.append(QPair<QString, qint64>(step, elapsed));
-    return elapsed;
+    static GlobalContext context;
+    return &context;
 }
 
 void GlobalObjects::initDatabase(const char *db_names[])
@@ -200,8 +177,8 @@ void GlobalObjects::initDatabase(const char *db_names[])
 
 void GlobalObjects::setDatabase(const char *name, const char *file)
 {
-    QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE",name);
-    QString dbFile(dataPath+file+".db");
+    QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE", name);
+    QString dbFile(context()->dataPath + file + ".db");
     bool dbFileExist = QFile::exists(dbFile);
     database.setDatabaseName(dbFile);
     database.open();
@@ -233,5 +210,67 @@ void GlobalObjects::registerCustomSettingType()
 
     qRegisterMetaType<QVector<QStringList>>("QVector<QStringList>");
     qRegisterMetaTypeStreamOperators<QVector<QStringList>>("QVector<QStringList>");
+
+    qRegisterMetaType<QVector<QSharedPointer<KeyActionItem>>>("QVector<QSharedPointer<KeyActionItem>>");
+    qRegisterMetaTypeStreamOperators<QVector<QSharedPointer<KeyActionItem>>>("QVector<QSharedPointer<KeyActionItem>>");
 }
 
+
+void GlobalContext::init()
+{
+    dataPath = QCoreApplication::applicationDirPath() + "/data/";
+
+#ifdef CONFIG_UNIX_DATA
+    const QFileInfo fileinfoConfig(QDir::homePath() + "/.config");
+    /* Test Linux/MacOS style environment */
+    if (fileinfoConfig.exists() || fileinfoConfig.isDir() || fileinfoConfig.isWritable()) {
+        dataPath = QDir::homePath() + "/.config/kikoplay/data/";
+    }
+#endif
+
+    QDir dir;
+    if (!dir.exists(dataPath))
+    {
+        dir.mkpath(dataPath);
+    }
+}
+
+qint64 GlobalContext::tick(QElapsedTimer *timer, const QString &step)
+{
+    if (!timer) return 0;
+    qint64 elapsed = timer->restart();
+    startupTime += elapsed;
+    stepTime.append(QPair<QString, qint64>(step, elapsed));
+    return elapsed;
+}
+
+QSqlDatabase GlobalContext::getDB(DBType db, bool *hasError)
+{
+    const QString threadName = QThread::currentThread()->objectName();
+    if (hasError) *hasError = false;
+    if (threadName == QStringLiteral("workThread"))
+    {
+        return QSqlDatabase::database(wt_db_names[int(db)]);
+    }
+    else if (threadName == "mainThread")
+    {
+        return QSqlDatabase::database(mt_db_names[int(db)]);
+    }
+    if (hasError) *hasError = true;
+    return QSqlDatabase::database(mt_db_names[int(db)]);
+}
+
+QIcon GlobalContext::getFontIcon(QChar iconChar, QColor fontColor)
+{
+    QPixmap pix(64, 64);
+    pix.fill(Qt::transparent);
+    QPainter painter;
+    painter.begin(&pix);
+    painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
+    painter.setPen(fontColor);
+    GlobalObjects::iconfont->setPixelSize(64);
+    painter.setFont(*GlobalObjects::iconfont);
+    painter.drawText(pix.rect(), Qt::AlignCenter, iconChar);
+    painter.end();
+    return QIcon(pix);
+}

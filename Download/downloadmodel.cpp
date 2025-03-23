@@ -15,7 +15,7 @@ DownloadModel::DownloadModel(QObject *parent) : QAbstractItemModel(parent),curre
 {
     downloadWorker=new DownloadWorker();
     downloadWorker->moveToThread(GlobalObjects::workThread);
-    TrackerSubscriber::subscriber()->setAutoCheck(GlobalObjects::appSetting->value("Download/TrackerSubscriberAutoCheck", true).toBool());
+    TrackerSubscriber::subscriber();
 }
 
 DownloadModel::~DownloadModel()
@@ -414,7 +414,7 @@ void DownloadModel::saveItemStatus(const DownloadTask *task)
 QString DownloadModel::findFileUri(const QString &fileName)
 {
     QFileInfo fi(fileName);
-    QSqlQuery query(GlobalObjects::getDB(GlobalObjects::Download_DB));
+    QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Download));
     query.exec(QString("select Dir,URI from task where Title='%1'").arg(fi.fileName()));
     int dirNo=query.record().indexOf("Dir"),uriNo=query.record().indexOf("URI");
     QString uri;
@@ -509,6 +509,8 @@ QVariant DownloadModel::data(const QModelIndex &index, int role) const
         return downloadItem->totalLength;
     case DataRole::CompletedLengthRole:
         return downloadItem->completedLength;
+    case DataRole::DownloadTaskRole:
+        return QVariant::fromValue((void *)downloadItem);
     }
     return QVariant();
 }
@@ -544,7 +546,7 @@ void DownloadModel::fetchMore(const QModelIndex &)
 
 void DownloadWorker::loadTasks(QVector<DownloadTask *> &items, int offset, int limit)
 {
-    QSqlQuery query(QSqlDatabase::database("Download_W"));
+    QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Download));
     query.exec(QString("select * from task order by CTime desc limit %1 offset %2").arg(limit).arg(offset));
     int idNo=query.record().indexOf("TaskID"),
         titleNo=query.record().indexOf("Title"),
@@ -579,7 +581,7 @@ void DownloadWorker::loadTasks(QVector<DownloadTask *> &items, int offset, int l
 
 void DownloadWorker::addTask(DownloadTask *task)
 {
-    QSqlDatabase db=QSqlDatabase::database("Download_W");
+    QSqlDatabase db = GlobalObjects::context()->getDB(GlobalContext::DBType::Download);
     QSqlQuery query(db);
     db.transaction();
     query.prepare("insert into task(TaskID,Dir,CTime,URI,SFIndexes) values(?,?,?,?,?)");
@@ -601,7 +603,7 @@ void DownloadWorker::addTask(DownloadTask *task)
 
 void DownloadWorker::deleteTask(DownloadTask *task, bool deleteFile)
 {
-    QSqlQuery query(QSqlDatabase::database("Download_W"));
+    QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Download));
     query.prepare("delete from task where TaskID=?");
     query.bindValue(0,task->taskID);
     query.exec();
@@ -637,7 +639,7 @@ void DownloadWorker::deleteTask(DownloadTask *task, bool deleteFile)
 
 void DownloadWorker::updateTaskInfo(const DownloadTask *task)
 {
-    QSqlQuery query(QSqlDatabase::database("Download_W"));
+    QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Download));
     query.prepare("update task set Title=?,FTime=?,TLength=?,CLength=?,SFIndexes=? where TaskID=?");
     query.bindValue(0,task->title);
     query.bindValue(1,task->finishTime);
@@ -658,10 +660,10 @@ bool TaskFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &s
     case 0: //all
         return true;
     case 1: //active
-        return task->status==DownloadTask::Downloading || task->status==DownloadTask::Seeding ||
+        return task->status==DownloadTask::Downloading || task->status==DownloadTask::Error ||
                 task->status==DownloadTask::Waiting || task->status==DownloadTask::Paused;
     case 2: //completed
-        return task->status==DownloadTask::Complete || task->status==DownloadTask::Error;
+        return task->status==DownloadTask::Complete || task->status==DownloadTask::Seeding;
     default:
         return true;
     }

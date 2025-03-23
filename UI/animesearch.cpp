@@ -6,9 +6,10 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QComboBox>
-#include <QCheckBox>
+#include "UI/ela/ElaComboBox.h"
+#include "UI/ela/ElaLineEdit.h"
+#include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
-#include "MediaLibrary/animeworker.h"
 #include "MediaLibrary/animeprovider.h"
 #include "Common/notifier.h"
 #include "widgets/scriptsearchoptionpanel.h"
@@ -17,7 +18,7 @@
 
 AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("Bangumi Search"),parent,true,true,false)
 {
-    scriptCombo=new QComboBox(this);
+    scriptCombo = new ElaComboBox(this);
     scriptOptionPanel = new ScriptSearchOptionPanel(this);
     QObject::connect(scriptCombo, &QComboBox::currentTextChanged, this, [=](const QString &){
         QString curId = scriptCombo->currentData().toString();
@@ -25,7 +26,7 @@ AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("B
         if(scriptOptionPanel->hasOptions()) scriptOptionPanel->show();
         else scriptOptionPanel->hide();
     });
-    for(const auto &p : GlobalObjects::animeProvider->getSearchProviders())
+    for (const auto &p : GlobalObjects::animeProvider->getSearchProviders())
     {
         scriptCombo->addItem(p.first, p.second);
     }
@@ -38,18 +39,17 @@ AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("B
 		}
 	}
 
-    searchWordEdit=new QLineEdit(anime?anime->name():"",this);
-    searchButton=new QPushButton(tr("Search"),this);
-    QObject::connect(searchButton,&QPushButton::clicked,this,&AnimeSearch::search);
+    searchWordEdit = new ElaLineEdit(anime?anime->name():"",this);
+    searchButton = new KPushButton(tr("Search"), this);
+    QObject::connect(searchButton, &QPushButton::clicked, this, &AnimeSearch::search);
 
-    bangumiList=new QTreeWidget(this);
+    bangumiList = new QTreeWidget(this);
     bangumiList->setRootIsDecorated(false);
     bangumiList->setFont(font());
     bangumiList->setHeaderLabels(QStringList()<<tr("Title")<<tr("Extra"));
     bangumiList->setAlternatingRowColors(true);
     QHeaderView *bgmHeader = bangumiList->header();
-    bgmHeader->resizeSection(0, 180*logicalDpiX()/96);
-    bgmHeader->resizeSection(1, 170*logicalDpiX()/96);
+    bgmHeader->resizeSection(0, 200);
     bgmHeader->setFont(font());
 
     QObject::connect(bangumiList, &QTreeWidget::itemDoubleClicked,[=](QTreeWidgetItem *item, int ){
@@ -58,8 +58,7 @@ AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("B
         CFramelessDialog::onAccept();
     });
 
-    QGridLayout *bgmGLayout=new QGridLayout(this);
-    bgmGLayout->setContentsMargins(0, 0, 0, 0);
+    QGridLayout *bgmGLayout = new QGridLayout(this);
     bgmGLayout->addWidget(scriptCombo, 0, 0);
     bgmGLayout->addWidget(searchWordEdit, 0, 1);
     bgmGLayout->addWidget(searchButton, 0, 2);
@@ -68,25 +67,25 @@ AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("B
     bgmGLayout->setRowStretch(3,1);
     bgmGLayout->setColumnStretch(1,1);
 
-    setSizeSettingKey("DialogSize/AnimeSearch", QSize(460*logicalDpiX()/96, 320*logicalDpiY()/96));
+    setSizeSettingKey("DialogSize/AnimeSearch", QSize(460, 320));
 }
 
 void AnimeSearch::search()
 {
     QString keyword=searchWordEdit->text().trimmed();
-    if(keyword.isEmpty())return;
-    if(scriptCombo->currentData().isNull()) return;
+    if (keyword.isEmpty())return;
+    if (scriptCombo->currentData().isNull()) return;
     searchButton->setEnabled(false);
     searchWordEdit->setEnabled(false);
     showBusyState(true);
     QList<AnimeLite> animes;
     QMap<QString, QString> searchOptions;
-    if(scriptOptionPanel->hasOptions() && scriptOptionPanel->changed())
+    if (scriptOptionPanel->hasOptions() && scriptOptionPanel->changed())
     {
         searchOptions = scriptOptionPanel->getOptionVals();
     }
     ScriptState state = GlobalObjects::animeProvider->animeSearch(scriptCombo->currentData().toString(), keyword, searchOptions, animes);
-    if(state)
+    if (state)
     {
         bangumiList->clear();
         for(auto &anime : animes)
@@ -106,7 +105,7 @@ void AnimeSearch::search()
 
 void AnimeSearch::onAccept()
 {
-    if(bangumiList->selectedItems().count()==0)
+    if (bangumiList->selectedItems().count()==0)
     {
         showMessage(tr("You need to choose one"), NM_ERROR | NM_HIDE);
         return;

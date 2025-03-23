@@ -1,6 +1,7 @@
 #include "appslider.h"
 #include <QSlider>
 #include "Extension/App/kapp.h"
+#include "UI/ela/ElaSlider.h"
 
 
 namespace Extension
@@ -47,7 +48,7 @@ void AppSlider::bindEvent(AppEvent event, const QString &luaFunc)
 
 AppSlider::AppSlider(AppWidget *parent) : AppWidget{parent}
 {
-    widget = new QSlider(Qt::Horizontal, parent? parent->getWidget() : nullptr);
+    widget = new ElaSlider(Qt::Horizontal, parent? parent->getWidget() : nullptr);
 }
 
 bool AppSlider::setWidgetOption(AppWidgetOption option, const QVariant &val)

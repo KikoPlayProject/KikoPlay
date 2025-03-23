@@ -2,6 +2,8 @@
 #include <QRegExp>
 #include <QComboBox>
 #include <QLineEdit>
+#include "UI/ela/ElaComboBox.h"
+#include "UI/widgets/klineedit.h"
 #include "globalobjects.h"
 #include "Play/Danmu/danmupool.h"
 #include "UI/widgets/elidelineedit.h"
@@ -15,7 +17,7 @@ QWidget *ComboBoxDelegate::createEditor(QWidget *parent, const QStyleOptionViewI
     case Blocker::Columns::FIELD:
     case Blocker::Columns::RELATION:
     {
-        QComboBox *combo=new QComboBox(parent);
+        QComboBox *combo=new ElaComboBox(parent);
         combo->setFrame(false);
         combo->addItems(col==Blocker::Columns::FIELD?GlobalObjects::blocker->fields:GlobalObjects::blocker->relations);
         return combo;
@@ -23,6 +25,10 @@ QWidget *ComboBoxDelegate::createEditor(QWidget *parent, const QStyleOptionViewI
     case Blocker::Columns::CONTENT:
     {
         return new ElideLineEdit(parent);
+    }
+    case Blocker::Columns::ID:
+    {
+        return new KLineEdit(parent);
     }
     default:
     {
@@ -73,7 +79,7 @@ void ComboBoxDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, 
 
 Blocker::Blocker(QObject *parent):QAbstractItemModel(parent),maxId(1)
 {
-    blockFileName=GlobalObjects::dataPath+"block.xml";
+    blockFileName=GlobalObjects::context()->dataPath + "block.xml";
     QFile blockFile(blockFileName);
     bool ret=blockFile.open(QIODevice::ReadOnly|QIODevice::Text);
     if(!ret) return;

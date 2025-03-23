@@ -34,9 +34,12 @@ void AnimeModel::init()
         AnimeWorker::instance()->fetchAnimes(animes.get(), 0, limitCount);
         ThreadTask task(this->thread());
         task.RunOnce([animes, this](){
-            beginInsertRows(QModelIndex(), 0, animes->count()-1);
-            this->animes.append(*animes);
-            endInsertRows();
+            if (!animes->empty())
+            {
+                beginInsertRows(QModelIndex(), 0, animes->count() - 1);
+                this->animes.append(*animes);
+                endInsertRows();
+            }
             currentOffset+=animes->count();
             hasMoreAnimes = animes->count() >= limitCount;
             showStatisMessage();

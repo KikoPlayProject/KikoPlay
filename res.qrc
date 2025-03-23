@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/FontIcon"/>
     <qresource prefix="/">
-        <file>res/iconfont.ttf</file>
         <file>res/images/sliderThumb.png</file>
         <file>res/images/info.png</file>
         <file>res/images/ok.png</file>
@@ -13,8 +12,6 @@
         <file>res/images/kikoplay-5.png</file>
         <file>res/style.qss</file>
         <file>res/lang/zh_Hans.qm</file>
-        <file>res/images/cover.png</file>
-        <file>res/images/completed.png</file>
         <file>res/images/downloading.png</file>
         <file>res/images/error.png</file>
         <file>res/images/paused.png</file>
@@ -30,35 +27,10 @@
         <file>res/images/checking.png</file>
         <file>res/images/free.png</file>
         <file>res/images/stop.png</file>
-        <file>res/style_bg.qss</file>
         <file>res/images/focus-off.svg</file>
         <file>res/images/focus-on.svg</file>
-        <file>res/images/checkbox-check.svg</file>
-        <file>res/images/checkbox-hover.svg</file>
-        <file>res/images/checkbox-uncheck.svg</file>
-        <file>res/images/checkbox-uncheck-light.svg</file>
-        <file>res/images/bgm-collection.svg</file>
-        <file>res/images/border.svg</file>
-        <file>res/images/branch-closed.svg</file>
-        <file>res/images/branch-open.svg</file>
-        <file>res/images/branch-closed-2.svg</file>
-        <file>res/images/branch-open-2.svg</file>
-        <file>res/images/check-hover.svg</file>
-        <file>res/images/check-normal.svg</file>
-        <file>res/images/down.svg</file>
-        <file>res/images/down-hover.svg</file>
-        <file>res/images/down-light.svg</file>
-        <file>res/images/down-arrow.svg</file>
-        <file>res/images/down-arrow-hover.svg</file>
-        <file>res/images/up-arrow.svg</file>
-        <file>res/images/up-arrow-hover.svg</file>
         <file>res/images/playing.svg</file>
-        <file>res/style_bg_default.qss</file>
-        <file>res/images/folder.svg</file>
         <file>res/mediainfo</file>
-        <file>res/images/down-light-hover.svg</file>
-        <file>res/images/down-arrow-dark-hover.svg</file>
-        <file>res/images/up-arrow-dark-hover.svg</file>
         <file>res/images/label-check.svg</file>
         <file>res/images/label-uncheck.svg</file>
         <file>res/images/label-partially.svg</file>
@@ -68,16 +40,29 @@
         <file>res/images/mark_pink.svg</file>
         <file>res/images/mark_red.svg</file>
         <file>res/images/mark_yellow.svg</file>
-        <file>res/images/down-darkmode.svg</file>
-        <file>res/images/down-darkmode-hover.svg</file>
-        <file>res/images/checkbox-darkmode-uncheck.svg</file>
-        <file>res/images/down-arrow-darkmode-hover.svg</file>
-        <file>res/images/up-arrow-darkmode-hover.svg</file>
         <file>res/scriptPlayground</file>
         <file>res/mpvOptions</file>
         <file>res/images/tab-close.svg</file>
         <file>res/images/tab-close-hover.svg</file>
         <file>res/images/app.png</file>
         <file>res/images/webdav.svg</file>
+        <file>res/ElaAwesome.ttf</file>
+        <file>res/iconfont.ttf</file>
+        <file>res/images/playlist-branch-closed.svg</file>
+        <file>res/images/playlist-branch-open.svg</file>
+        <file>res/images/playlist-bgm.svg</file>
+        <file>res/images/playlist-folder.svg</file>
+        <file>res/images/playlist-web-folder.svg</file>
+        <file>res/images/playlist-playing.svg</file>
+        <file>res/images/null-cover.png</file>
+        <file>res/images/completed.svg</file>
+        <file>res/images/paused.svg</file>
+        <file>res/images/waiting.svg</file>
+        <file>res/images/downloading.svg</file>
+        <file>res/images/seeding.svg</file>
+        <file>res/images/error.svg</file>
+        <file>res/images/kikoplay.svg</file>
+        <file>res/images/null-cover-recent.png</file>
+        <file>res/images/empty-bg.svg</file>
     </qresource>
 </RCC>

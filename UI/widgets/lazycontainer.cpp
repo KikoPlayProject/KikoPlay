@@ -7,6 +7,20 @@ LazyContainer::LazyContainer(QWidget *parent, QLayout *l, InitFunc initFunc) : Q
 
 }
 
+void LazyContainer::init()
+{
+    if (!inited)
+    {
+        inited = true;
+        QWidget *content = contentInitFunc();
+        if (contentLayout)
+        {
+            contentLayout->replaceWidget(this, content);
+        }
+        this->deleteLater();
+    }
+}
+
 void LazyContainer::showEvent(QShowEvent *event)
 {
     if (!inited)

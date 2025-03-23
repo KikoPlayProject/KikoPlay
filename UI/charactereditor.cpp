@@ -4,6 +4,7 @@
 #include <QGridLayout>
 #include "MediaLibrary/animeinfo.h"
 #include "Common/notifier.h"
+#include "UI/ela/ElaLineEdit.h"
 
 
 CharacterEditor::CharacterEditor(Anime *anime, const Character *crt,  QWidget *parent) :
@@ -13,9 +14,9 @@ CharacterEditor::CharacterEditor(Anime *anime, const Character *crt,  QWidget *p
     QLabel *nameTip = new QLabel(tr("Character Name"), this);
     QLabel *linkTip = new QLabel(tr("Link"), this);
     QLabel *actorTip = new QLabel(tr("Actor"), this);
-    QLineEdit *nameEdit = new QLineEdit(this);
-    QLineEdit *linkEdit = new QLineEdit(this);
-    QLineEdit *actorEdit = new QLineEdit(this);
+    QLineEdit *nameEdit = new ElaLineEdit(this);
+    QLineEdit *linkEdit = new ElaLineEdit(this);
+    QLineEdit *actorEdit = new ElaLineEdit(this);
 
     QObject::connect(nameEdit, &QLineEdit::textChanged, this, [=](const QString &text){
         name = text;
@@ -27,7 +28,7 @@ CharacterEditor::CharacterEditor(Anime *anime, const Character *crt,  QWidget *p
         actor = text;
     });
 
-    if(crt)
+    if (crt)
     {
         nameEdit->setText(crt->name);
         linkEdit->setText(crt->link);
@@ -35,7 +36,6 @@ CharacterEditor::CharacterEditor(Anime *anime, const Character *crt,  QWidget *p
     }
 
     QGridLayout *shortcutGLayout=new QGridLayout(this);
-    shortcutGLayout->setContentsMargins(0, 0, 0, 0);
     shortcutGLayout->addWidget(nameTip,0,0);
     shortcutGLayout->addWidget(nameEdit,0,1);
     shortcutGLayout->addWidget(linkTip,1,0);
@@ -43,7 +43,7 @@ CharacterEditor::CharacterEditor(Anime *anime, const Character *crt,  QWidget *p
     shortcutGLayout->addWidget(actorTip,2,0);
     shortcutGLayout->addWidget(actorEdit,2,1);
     shortcutGLayout->setColumnStretch(1,1);
-    setSizeSettingKey("DialogSize/CharacterEdit", QSize(400*logicalDpiX()/96, 120*logicalDpiY()/96));
+    setSizeSettingKey("DialogSize/CharacterEdit", QSize(400, 120));
 }
 
 void CharacterEditor::onAccept()

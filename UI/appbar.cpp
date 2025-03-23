@@ -13,10 +13,11 @@
 
 AppBar::AppBar(QWidget *parent) : QScrollArea(parent)
 {
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     setObjectName(QStringLiteral("AppBar"));
     QWidget *container = new QWidget(this);
-    container->setMinimumHeight(20*logicalDpiY()/96);
-    container->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
+    container->setMinimumHeight(36);
+    container->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
 
     QHBoxLayout *hLayout = new QHBoxLayout(container);
     hLayout->setContentsMargins(0, 0, 0, 0);
@@ -39,6 +40,7 @@ AppBar::AppBar(QWidget *parent) : QScrollArea(parent)
             this->isAdding = false;
         }
     });
+    hide();
 }
 
 void AppBar::addApp(Extension::KApp *app)
@@ -57,7 +59,8 @@ void AppBar::addApp(Extension::KApp *app)
     appBtn->show();
     this->isAdding = true;
     this->updateGeometry();
-    ensureWidgetVisible(*iter);
+    ensureWidgetVisible(appBtn);
+    show();
 }
 
 void AppBar::removeApp(Extension::KApp *app)
@@ -70,6 +73,7 @@ void AppBar::removeApp(Extension::KApp *app)
     appList.erase(iter);
     appBtn->deleteLater();
     this->updateGeometry();
+    if (appList.empty()) hide();
 }
 
 void AppBar::flashApp(Extension::KApp *app)
@@ -90,7 +94,7 @@ void AppBar::wheelEvent(QWheelEvent *event)
 
 QSize AppBar::sizeHint() const
 {
-    return this->widget()->sizeHint();
+    return this->widget()->layout()->sizeHint();
 }
 
 AppBarBtn::AppBarBtn(Extension::KApp *kApp, QWidget *parent) : QPushButton(parent), app(kApp), eff(nullptr), flashTimes(0)

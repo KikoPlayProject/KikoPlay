@@ -12,6 +12,7 @@ class QPushButton;
 class QComboBox;
 class ScriptSearchOptionPanel;
 class QSortFilterProxyModel;
+class QActionGroup;
 class SearchListModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -50,10 +51,11 @@ private:
     QLabel *totalPageTip;
     QLineEdit *searchEdit,*pageEdit;
     QPushButton *prevPage, *nextPage;
-    QComboBox *scriptCombo;
     SearchListModel *searchListModel;
     QSortFilterProxyModel *searchProxyModel;
     ScriptSearchOptionPanel *scriptOptionPanel;
+    QWidget *pageTurningContainer{nullptr};
+    QActionGroup *scriptCheckGroup{nullptr};
     int totalPage,currentPage;
     bool isSearching;
     QString currentKeyword,currentScriptId;
@@ -62,7 +64,8 @@ private:
 signals:
     void addTask(const QStringList &urls);
 protected:
-    virtual void resizeEvent(QResizeEvent *event);
+    virtual void resizeEvent(QResizeEvent *event) override;
+    virtual bool eventFilter(QObject *watched, QEvent *event) override;
 };
 
 #endif // RESSEARCHWINDOW_H

@@ -23,6 +23,10 @@ struct EpInfo
     EpInfo():type(EpType::UNKNOWN),index(0.0),finishTime(0),lastPlayTime(0) {}
     EpInfo(EpType epType, double epIndex, const QString &epName=""):type(epType),index(epIndex),name(epName),finishTime(0),lastPlayTime(0) {}
 
+    bool isValid() const
+    {
+        return type != EpType::UNKNOWN;
+    }
     bool operator <(const EpInfo &ep) const
     {
         if(type!=ep.type) return type<ep.type;
@@ -125,6 +129,7 @@ struct AnimeImage
     qint64 timeId;
     QString info;
     QPixmap thumb;
+    void setRoundedThumb(const QImage &src);
 };
 class Anime
 {

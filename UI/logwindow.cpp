@@ -3,21 +3,26 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QComboBox>
-#include <QStackedLayout>
+#include <QStackedWidget>
 #include <QLineEdit>
+#include "UI/ela/ElaComboBox.h"
+#include "UI/ela/ElaLineEdit.h"
+#include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 #include "Common/logger.h"
 #include "Play/Video/mpvplayer.h"
+#include "widgets/kplaintextedit.h"
+
 LogWindow::LogWindow(QWidget *parent) : CFramelessDialog(tr("Log"),parent,false,true,false)
 {
-    logTypeCombo = new QComboBox(this);
+    logTypeCombo = new ElaComboBox(this);
     logTypeCombo->addItems(Logger::logger()->LogTypeNames);
 
     QVector<QPlainTextEdit *> logEdits((int)Logger::LogType::UNKNOWN);
     QFont logFont("Consolas", 10);
     for(int i = 0; i < Logger::LogType::UNKNOWN; ++i)
     {
-        logEdits[i] = new QPlainTextEdit(this);
+        logEdits[i] = new KPlainTextEdit(this);
         logEdits[i]->setReadOnly(true);
         logEdits[i]->setFont(logFont);
         logEdits[i]->setMaximumBlockCount(Logger::logger()->bufferSize);
@@ -37,17 +42,17 @@ LogWindow::LogWindow(QWidget *parent) : CFramelessDialog(tr("Log"),parent,false,
         }
     });
 
-    QStackedLayout *logSLayout = new QStackedLayout;
+    QStackedWidget *logSLayout = new QStackedWidget(this);
     for(auto logView : logEdits)
     {
         logSLayout->addWidget(logView);
     }
     logSLayout->setContentsMargins(0, 0, 0, 0);
-    QObject::connect(logTypeCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged, logSLayout, &QStackedLayout::setCurrentIndex);
+    QObject::connect(logTypeCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged, logSLayout, &QStackedWidget::setCurrentIndex);
     logTypeCombo->setCurrentIndex(0);
 
     mpvPropViewer = new MPVPropertyViewer(this);
-    QPushButton *viewProperty = new QPushButton("MPV Property Viewer", this);
+    QPushButton *viewProperty = new KPushButton("MPV Property Viewer", this);
     viewProperty->setVisible(false);
     QObject::connect(logTypeCombo,(void (QComboBox:: *)(int))&QComboBox::currentIndexChanged, this, [=](int idx){
         viewProperty->setVisible(idx == static_cast<int>(Logger::LogType::MPV));
@@ -56,43 +61,41 @@ LogWindow::LogWindow(QWidget *parent) : CFramelessDialog(tr("Log"),parent,false,
         mpvPropViewer->show();
     });
 
-    QPushButton *cleanLog=new QPushButton(tr("Clean"),this);
+    QPushButton *cleanLog = new KPushButton(tr("Clear"),this);
     cleanLog->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
     QObject::connect(cleanLog,&QPushButton::clicked,this,[=](){
         logEdits[logSLayout->currentIndex()]->clear();
     });
 
     QGridLayout *logGLayout = new QGridLayout(this);
-    logGLayout->setContentsMargins(0, 0, 0, 0);
     logGLayout->addWidget(logTypeCombo, 0, 0);
     logGLayout->addWidget(viewProperty, 0, 2);
     logGLayout->addWidget(cleanLog, 0, 3);
-    logGLayout->addLayout(logSLayout, 1, 0, 1, 4);
+    logGLayout->addWidget(logSLayout, 1, 0, 1, 4);
     logGLayout->setRowStretch(1, 1);
     logGLayout->setColumnStretch(1, 1);
-    setSizeSettingKey("DialogSize/LogWindow",QSize(400*logicalDpiX()/96,300*logicalDpiY()/96));
+    setSizeSettingKey("DialogSize/LogWindow",QSize(400, 300));
 }
 
 void LogWindow::show(Logger::LogType lt)
 {
-    logTypeCombo->setCurrentIndex(lt);
+    //logTypeCombo->setCurrentIndex(lt);
     CFramelessDialog::show();
 }
 
 MPVPropertyViewer::MPVPropertyViewer(QWidget *parent) : CFramelessDialog("MPV Property Viewer",parent,false,true,false)
 {
-    QLineEdit *propertyEdit = new QLineEdit(this);
-    QPlainTextEdit *propertyContent = new QPlainTextEdit(this);
+    QLineEdit *propertyEdit = new ElaLineEdit(this);
+    QPlainTextEdit *propertyContent = new KPlainTextEdit(this);
     propertyContent->setReadOnly(true);
     propertyContent->setFont(QFont("Consolas", 10));
 
     QGridLayout *viewGLayout = new QGridLayout(this);
-    viewGLayout->setContentsMargins(0, 0, 0, 0);
     viewGLayout->addWidget(propertyEdit, 0, 0);
     viewGLayout->addWidget(propertyContent, 1, 0);
     viewGLayout->setRowStretch(1, 1);
     viewGLayout->setColumnStretch(0, 1);
-    setSizeSettingKey("DialogSize/MPVPropertyViewer",QSize(300*logicalDpiX()/96,300*logicalDpiY()/96));
+    setSizeSettingKey("DialogSize/MPVPropertyViewer",QSize(300, 300));
 
     QObject::connect(propertyEdit, &QLineEdit::editingFinished, this, [=](){
         const QString property = propertyEdit->text().trimmed();
@@ -117,3 +120,4 @@ MPVPropertyViewer::MPVPropertyViewer(QWidget *parent) : CFramelessDialog("MPV Pr
         }
     });
 }
+

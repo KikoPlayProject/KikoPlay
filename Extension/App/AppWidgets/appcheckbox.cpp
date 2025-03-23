@@ -1,6 +1,7 @@
 #include "appcheckbox.h"
 #include <QCheckBox>
 #include "Extension/App/kapp.h"
+#include "UI/ela/ElaCheckBox.h"
 
 namespace Extension
 {
@@ -55,7 +56,7 @@ void AppCheckBox::bindEvent(AppEvent event, const QString &luaFunc)
 AppCheckBox::AppCheckBox(AppWidget *parent)
     : AppWidget{parent}
 {
-    widget = new QCheckBox(parent? parent->getWidget() : nullptr);
+    widget = new ElaCheckBox(parent? parent->getWidget() : nullptr);
 }
 
 bool AppCheckBox::setWidgetOption(AppWidgetOption option, const QVariant &val)

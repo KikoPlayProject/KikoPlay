@@ -6,6 +6,7 @@
 class BgmList;
 class QPushButton;
 class QComboBox;
+class QActionGroup;
 class BgmTreeView : public QTreeView
 {
     Q_OBJECT
@@ -39,11 +40,14 @@ class BgmListWindow : public QWidget
 public:
     explicit BgmListWindow(QWidget *parent = nullptr);
 private:
-    BgmTreeView *bgmListView;
-    QComboBox *seasonIdCombo, *bgmListScriptCombo;
-    BgmList *bgmList;
+    BgmTreeView *bgmListView{nullptr};
+    QComboBox *seasonIdCombo{nullptr};
+    BgmList *bgmList{nullptr};
     QList<QPushButton *> weekDayBtnList;
     QStringList btnTitles={tr("Sun"),tr("Mon"),tr("Tue"),tr("Wed"),tr("Thu"),tr("Fri"),tr("Sat"),tr("All")};
+    QVector<QAction *> scriptActions;
+    QActionGroup *scriptCheckGroup{nullptr};
+    QMenu *scriptMenu{nullptr};
 
     int weekDay;
 signals:

@@ -57,13 +57,13 @@ void CaptureListModel::setAnimeName(const QString &name)
 
 const QString CaptureListModel::getSnippetFile(int row)
 {
-    if(row<0 || row>=captureList.count()) return "";
+    if (row<0 || row>=captureList.count()) return "";
     const AnimeImage &img = captureList.at(row);
-    if(img.type != AnimeImage::SNIPPET) return "";
-    QString snippetPath(GlobalObjects::appSetting->value("Play/SnippetPath", GlobalObjects::dataPath + "/snippet").toString());
+    if (img.type != AnimeImage::SNIPPET) return "";
+    QString snippetPath(GlobalObjects::appSetting->value("Play/SnippetPath", GlobalObjects::context()->dataPath + "/snippet").toString());
     QDir dir(snippetPath, QString("%1.*").arg(img.timeId));
-    QFileInfoList list = dir.entryInfoList();
-    if(list.size()==0) return "";
+    const QFileInfoList list = dir.entryInfoList();
+    if (list.empty()) return "";
     return list.first().absoluteFilePath();
 }
 
@@ -95,8 +95,8 @@ void CaptureListModel::fetchMore(const QModelIndex &)
     QList<AnimeImage> moreCaptures;
     hasMoreCaptures=false;
     emit fetching(true);
-    AnimeWorker::instance()->fetchCaptures(animeName,moreCaptures,currentOffset,limitCount);
-    if(moreCaptures.count()>0)
+    AnimeWorker::instance()->fetchCaptures(animeName, moreCaptures, currentOffset, limitCount);
+    if (moreCaptures.count() > 0)
     {
         hasMoreCaptures=(moreCaptures.count()==limitCount);
         beginInsertRows(QModelIndex(),captureList.count(),captureList.count()+moreCaptures.count()-1);

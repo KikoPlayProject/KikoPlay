@@ -1,10 +1,11 @@
 #ifndef SCRIPTPLAYGROUND_H
 #define SCRIPTPLAYGROUND_H
+#include "UI/widgets/kplaintextedit.h"
 #include "framelessdialog.h"
 #include <QPlainTextEdit>
 #include "Extension/Script/playgroundscript.h"
 
-class CodeEditor : public QPlainTextEdit
+class CodeEditor : public KPlainTextEdit
 {
     Q_OBJECT
     Q_PROPERTY(QColor hoverColor READ getHoverColor WRITE setHoverColor)

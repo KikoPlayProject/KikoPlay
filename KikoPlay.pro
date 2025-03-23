@@ -43,6 +43,8 @@ SOURCES += \
     Common/eventbus.cpp \
     Common/flowlayout.cpp \
     Common/htmlparsersax.cpp \
+    Common/keyaction.cpp \
+    Common/keyactionmodel.cpp \
     Common/kstats.cpp \
     Common/kupdater.cpp \
     Common/logger.cpp \
@@ -118,8 +120,83 @@ SOURCES += \
     Play/Playlist/webdav/qwebdav.cpp \
     Play/Playlist/webdav/qwebdavdirparser.cpp \
     Play/Playlist/webdav/qwebdavitem.cpp \
+    UI/animeepisodeeditor.cpp \
+    UI/dialogs/blockeditor.cpp \
+    UI/dialogs/danmuview.cpp \
+    UI/dialogs/mpvconfediror.cpp \
+    UI/dialogs/trackersubscribedialog.cpp \
+    UI/ela/DeveloperComponents/ElaBaseListView.cpp \
+    UI/ela/DeveloperComponents/ElaCalendarDelegate.cpp \
+    UI/ela/DeveloperComponents/ElaCalendarModel.cpp \
+    UI/ela/DeveloperComponents/ElaCalendarPickerContainer.cpp \
+    UI/ela/DeveloperComponents/ElaCalendarTitleDelegate.cpp \
+    UI/ela/DeveloperComponents/ElaCalendarTitleModel.cpp \
+    UI/ela/DeveloperComponents/ElaCheckBoxStyle.cpp \
+    UI/ela/DeveloperComponents/ElaComboBoxStyle.cpp \
+    UI/ela/DeveloperComponents/ElaComboBoxView.cpp \
+    UI/ela/DeveloperComponents/ElaCustomWidget.cpp \
+    UI/ela/DeveloperComponents/ElaLineEditStyle.cpp \
+    UI/ela/DeveloperComponents/ElaMenuStyle.cpp \
+    UI/ela/DeveloperComponents/ElaPivotModel.cpp \
+    UI/ela/DeveloperComponents/ElaPivotStyle.cpp \
+    UI/ela/DeveloperComponents/ElaPivotView.cpp \
+    UI/ela/DeveloperComponents/ElaRadioButtonStyle.cpp \
+    UI/ela/DeveloperComponents/ElaScrollBarStyle.cpp \
+    UI/ela/DeveloperComponents/ElaSliderStyle.cpp \
+    UI/ela/DeveloperComponents/ElaSpinBoxStyle.cpp \
+    UI/ela/DeveloperComponents/ElaToolButtonStyle.cpp \
+    UI/ela/ElaAppBar.cpp \
+    UI/ela/ElaApplication.cpp \
+    UI/ela/ElaCalendar.cpp \
+    UI/ela/ElaCalendarPicker.cpp \
+    UI/ela/ElaCheckBox.cpp \
+    UI/ela/ElaComboBox.cpp \
+    UI/ela/ElaEventBus.cpp \
+    UI/ela/ElaIcon.cpp \
+    UI/ela/ElaIconButton.cpp \
+    UI/ela/ElaLineEdit.cpp \
+    UI/ela/ElaMenu.cpp \
+    UI/ela/ElaPivot.cpp \
+    UI/ela/ElaRadioButton.cpp \
+    UI/ela/ElaScrollArea.cpp \
+    UI/ela/ElaScrollBar.cpp \
+    UI/ela/ElaSlider.cpp \
+    UI/ela/ElaSpinBox.cpp \
+    UI/ela/ElaTheme.cpp \
+    UI/ela/ElaToggleSwitch.cpp \
+    UI/ela/ElaToolButton.cpp \
+    UI/ela/private/ElaAppBarPrivate.cpp \
+    UI/ela/private/ElaApplicationPrivate.cpp \
+    UI/ela/private/ElaCalendarPickerPrivate.cpp \
+    UI/ela/private/ElaCalendarPrivate.cpp \
+    UI/ela/private/ElaComboBoxPrivate.cpp \
+    UI/ela/private/ElaEventBusPrivate.cpp \
+    UI/ela/private/ElaExponentialBlurPrivate.cpp \
+    UI/ela/private/ElaIconButtonPrivate.cpp \
+    UI/ela/private/ElaLineEditPrivate.cpp \
+    UI/ela/private/ElaMenuPrivate.cpp \
+    UI/ela/private/ElaPivotPrivate.cpp \
+    UI/ela/private/ElaRadioButtonPrivate.cpp \
+    UI/ela/private/ElaScrollAreaPrivate.cpp \
+    UI/ela/private/ElaScrollBarPrivate.cpp \
+    UI/ela/private/ElaSpinBoxPrivate.cpp \
+    UI/ela/private/ElaThemePrivate.cpp \
+    UI/ela/private/ElaToggleSwitchPrivate.cpp \
+    UI/ela/private/ElaToolButtonPrivate.cpp \
     UI/settings/apppage.cpp \
+    UI/settings/danmupage.cpp \
+    UI/settings/generalpage.cpp \
+    UI/settings/keyactionpage.cpp \
+    UI/settings/playerpage.cpp \
+    UI/settings/playlistpage.cpp \
+    UI/settings/subtitlepage.cpp \
+    UI/widgets/elidedlabel.cpp \
+    UI/widgets/floatscrollbar.cpp \
+    UI/widgets/klineedit.cpp \
+    UI/widgets/kplaintextedit.cpp \
+    UI/widgets/kpushbutton.cpp \
     UI/widgets/lazycontainer.cpp \
+    UI/widgets/optionmenu.cpp \
     UI/widgets/windowtip.cpp \
     globalobjects.cpp \
     LANServer/apihandler.cpp \
@@ -195,13 +272,11 @@ SOURCES += \
     UI/appmenu.cpp \
     UI/autodownloadwindow.cpp \
     UI/bgmlistwindow.cpp \
-    UI/blockeditor.cpp \
     UI/capture.cpp \
     UI/captureview.cpp \
     UI/charactereditor.cpp \
     UI/checkupdate.cpp \
     UI/danmulaunch.cpp \
-    UI/danmuview.cpp \
     UI/dlnadiscover.cpp \
     UI/downloadwindow.cpp \
     UI/framelessdialog.cpp \
@@ -225,11 +300,8 @@ SOURCES += \
     UI/settings.cpp \
     UI/settings/downloadpage.cpp \
     UI/settings/lanserverpage.cpp \
-    UI/settings/mpvpage.cpp \
-    UI/settings/mpvshortcutpage.cpp \
     UI/settings/scriptpage.cpp \
     UI/settings/settingpage.cpp \
-    UI/settings/stylepage.cpp \
     UI/snippetcapture.cpp \
     UI/stylemanager.cpp \
     UI/timelineedit.cpp \
@@ -254,6 +326,8 @@ HEADERS += \
     Common/eventbus.h \
     Common/flowlayout.h \
     Common/htmlparsersax.h \
+    Common/keyaction.h \
+    Common/keyactionmodel.h \
     Common/kstats.h \
     Common/kupdater.h \
     Common/logger.h \
@@ -334,8 +408,87 @@ HEADERS += \
     Play/Playlist/webdav/qwebdav.h \
     Play/Playlist/webdav/qwebdavdirparser.h \
     Play/Playlist/webdav/qwebdavitem.h \
+    UI/animeepisodeeditor.h \
+    UI/dialogs/blockeditor.h \
+    UI/dialogs/danmuview.h \
+    UI/dialogs/mpvconfediror.h \
+    UI/dialogs/trackersubscribedialog.h \
+    UI/ela/Def.h \
+    UI/ela/DeveloperComponents/ElaBaseListView.h \
+    UI/ela/DeveloperComponents/ElaCalendarDelegate.h \
+    UI/ela/DeveloperComponents/ElaCalendarModel.h \
+    UI/ela/DeveloperComponents/ElaCalendarPickerContainer.h \
+    UI/ela/DeveloperComponents/ElaCalendarTitleDelegate.h \
+    UI/ela/DeveloperComponents/ElaCalendarTitleModel.h \
+    UI/ela/DeveloperComponents/ElaCheckBoxStyle.h \
+    UI/ela/DeveloperComponents/ElaComboBoxStyle.h \
+    UI/ela/DeveloperComponents/ElaComboBoxView.h \
+    UI/ela/DeveloperComponents/ElaCustomWidget.h \
+    UI/ela/DeveloperComponents/ElaLineEditStyle.h \
+    UI/ela/DeveloperComponents/ElaMenuStyle.h \
+    UI/ela/DeveloperComponents/ElaPivotModel.h \
+    UI/ela/DeveloperComponents/ElaPivotStyle.h \
+    UI/ela/DeveloperComponents/ElaPivotView.h \
+    UI/ela/DeveloperComponents/ElaRadioButtonStyle.h \
+    UI/ela/DeveloperComponents/ElaScrollBarStyle.h \
+    UI/ela/DeveloperComponents/ElaSliderStyle.h \
+    UI/ela/DeveloperComponents/ElaSpinBoxStyle.h \
+    UI/ela/DeveloperComponents/ElaToolButtonStyle.h \
+    UI/ela/ElaAppBar.h \
+    UI/ela/ElaApplication.h \
+    UI/ela/ElaCalendar.h \
+    UI/ela/ElaCalendarPicker.h \
+    UI/ela/ElaCheckBox.h \
+    UI/ela/ElaComboBox.h \
+    UI/ela/ElaEventBus.h \
+    UI/ela/ElaIcon.h \
+    UI/ela/ElaIconButton.h \
+    UI/ela/ElaLineEdit.h \
+    UI/ela/ElaMenu.h \
+    UI/ela/ElaPivot.h \
+    UI/ela/ElaRadioButton.h \
+    UI/ela/ElaScrollArea.h \
+    UI/ela/ElaScrollBar.h \
+    UI/ela/ElaSlider.h \
+    UI/ela/ElaSpinBox.h \
+    UI/ela/ElaTheme.h \
+    UI/ela/ElaToggleSwitch.h \
+    UI/ela/ElaToolButton.h \
+    UI/ela/ElaWinShadowHelper.h \
+    UI/ela/private/ElaAppBarPrivate.h \
+    UI/ela/private/ElaApplicationPrivate.h \
+    UI/ela/private/ElaCalendarPickerPrivate.h \
+    UI/ela/private/ElaCalendarPrivate.h \
+    UI/ela/private/ElaComboBoxPrivate.h \
+    UI/ela/private/ElaEventBusPrivate.h \
+    UI/ela/private/ElaExponentialBlurPrivate.h \
+    UI/ela/private/ElaIconButtonPrivate.h \
+    UI/ela/private/ElaLineEditPrivate.h \
+    UI/ela/private/ElaMenuPrivate.h \
+    UI/ela/private/ElaPivotPrivate.h \
+    UI/ela/private/ElaRadioButtonPrivate.h \
+    UI/ela/private/ElaScrollAreaPrivate.h \
+    UI/ela/private/ElaScrollBarPrivate.h \
+    UI/ela/private/ElaSpinBoxPrivate.h \
+    UI/ela/private/ElaThemePrivate.h \
+    UI/ela/private/ElaToggleSwitchPrivate.h \
+    UI/ela/private/ElaToolButtonPrivate.h \
+    UI/ela/singleton.h \
+    UI/ela/stdafx.h \
     UI/settings/apppage.h \
+    UI/settings/danmupage.h \
+    UI/settings/generalpage.h \
+    UI/settings/keyactionpage.h \
+    UI/settings/playerpage.h \
+    UI/settings/playlistpage.h \
+    UI/settings/subtitlepage.h \
+    UI/widgets/elidedlabel.h \
+    UI/widgets/floatscrollbar.h \
+    UI/widgets/klineedit.h \
+    UI/widgets/kplaintextedit.h \
+    UI/widgets/kpushbutton.h \
     UI/widgets/lazycontainer.h \
+    UI/widgets/optionmenu.h \
     UI/widgets/windowtip.h \
     globalobjects.h \
     LANServer/apihandler.h \
@@ -412,13 +565,11 @@ HEADERS += \
     UI/appmenu.h \
     UI/autodownloadwindow.h \
     UI/bgmlistwindow.h \
-    UI/blockeditor.h \
     UI/capture.h \
     UI/captureview.h \
     UI/charactereditor.h \
     UI/checkupdate.h \
     UI/danmulaunch.h \
-    UI/danmuview.h \
     UI/dlnadiscover.h \
     UI/downloadwindow.h \
     UI/framelessdialog.h \
@@ -442,11 +593,8 @@ HEADERS += \
     UI/settings.h \
     UI/settings/downloadpage.h \
     UI/settings/lanserverpage.h \
-    UI/settings/mpvpage.h \
-    UI/settings/mpvshortcutpage.h \
     UI/settings/scriptpage.h \
     UI/settings/settingpage.h \
-    UI/settings/stylepage.h \
     UI/snippetcapture.h \
     UI/stylemanager.h \
     UI/timelineedit.h \

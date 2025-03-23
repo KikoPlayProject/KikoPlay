@@ -78,7 +78,7 @@ void Logger::timerEvent(QTimerEvent *event)
 
 Logger::Logger(QObject *parent) : QObject(parent)
 {
-    logFolder = QString("%1/log/").arg(GlobalObjects::dataPath);
+    logFolder = QString("%1/log/").arg(GlobalObjects::context()->dataPath);
 
     qInstallMessageHandler(msgHandler);
     logThread=QSharedPointer<QThread>::create();

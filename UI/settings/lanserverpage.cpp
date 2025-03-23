@@ -9,50 +9,73 @@
 #include <QNetworkInterface>
 #include <QIntValidator>
 #include <QFont>
+#include "UI/ela/ElaLineEdit.h"
+#include "UI/ela/ElaToggleSwitch.h"
 #include "globalobjects.h"
 #include "LANServer/lanserver.h"
 
-LANServerPage::LANServerPage(QWidget *parent) : SettingPage(parent), syncTimeChanged(false),
-    serverStateChanged(false), portChanged(false), dlnaStateChanged(false)
+#define SETTING_KEY_SERVER_AUTOSTART "Server/AutoStart"
+#define SETTING_KEY_SERVER_SYNC_PLAYTIME "Server/SyncPlayTime"
+#define SETTING_KEY_SERVER_PORT "Server/Port"
+#define SETTING_KEY_SERVER_AUTO_DLNA "Server/DLNAAutoStart"
+
+LANServerPage::LANServerPage(QWidget *parent) : SettingPage(parent)
 {
-    startServer=new QCheckBox(tr("Start Server"),this);
-    startServer->setChecked(GlobalObjects::lanServer->isStart());
+    SettingItemArea *serviceArea = new SettingItemArea(tr("Service"), this);
 
-    syncUpdateTime=new QCheckBox(tr("Synchronous playback time"),this);
-    syncUpdateTime->setChecked(GlobalObjects::appSetting->value("Server/SyncPlayTime",true).toBool());
+    ElaToggleSwitch *serviceSwitch = new ElaToggleSwitch(this);
+    serviceSwitch->setIsToggled(GlobalObjects::lanServer->isStart());
+    serviceArea->addItem(tr("Start Server"), serviceSwitch);
 
-    QLabel *lbPort=new QLabel(tr("Port:"),this);
-    portEdit=new QLineEdit(this);
-    QIntValidator *portValidator=new QIntValidator(this);
+    ElaLineEdit *portEdit = new ElaLineEdit(this);
+    QIntValidator *portValidator = new QIntValidator(this);
     portValidator->setRange(1, 65535);
     portEdit->setValidator(portValidator);
-    portEdit->setText(QString::number(GlobalObjects::appSetting->value("Server/Port",8000).toUInt()));
+    portEdit->setText(QString::number(GlobalObjects::appSetting->value(SETTING_KEY_SERVER_PORT, 8000).toUInt()));
     portEdit->setEnabled(!GlobalObjects::lanServer->isStart());
+    serviceArea->addItem(tr("Port"), portEdit);
 
-    startDLNA = new QCheckBox(tr("Start DLNA Media Server"), this);
-    startDLNA->setChecked(GlobalObjects::appSetting->value("Server/DLNAAutoStart",false).toBool());
-    startDLNA->setEnabled(startServer->isChecked());
+    ElaToggleSwitch *syncUpdateTimeSwitch = new ElaToggleSwitch(this);
+    syncUpdateTimeSwitch->setIsToggled(GlobalObjects::appSetting->value(SETTING_KEY_SERVER_SYNC_PLAYTIME, true).toBool());
+    serviceArea->addItem(tr("Synchronous Playback Time"), syncUpdateTimeSwitch);
 
-    QPlainTextEdit *addressTip=new QPlainTextEdit(this);
-    addressTip->setReadOnly(true);
-    addressTip->appendPlainText(tr("KikoPlay Server Address:"));
-    addressTip->setFont(QFont(GlobalObjects::normalFont, 14));
-    for(QHostAddress address : QNetworkInterface::allAddresses())
+    ElaToggleSwitch *startDLNASwitch = new ElaToggleSwitch(this);
+    startDLNASwitch->setIsToggled(GlobalObjects::appSetting->value(SETTING_KEY_SERVER_AUTO_DLNA, true).toBool());
+    startDLNASwitch->setEnabled(serviceSwitch->getIsToggled());
+    serviceArea->addItem(tr("Start DLNA Media Server"), startDLNASwitch);
+
+    QLabel *addressTip = new QLabel(this);
+    addressTip->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    addressTip->setObjectName(QStringLiteral("ServerAddressTip"));
+    QStringList tips;
+    tips << QString("<h2>%1</h2>").arg(tr("KikoPlay Server Address"));
+    for (QHostAddress &address : QNetworkInterface::allAddresses())
     {
-       if(address.protocol() == QAbstractSocket::IPv4Protocol)
-            addressTip->appendPlainText(address.toString());
-    }
-
-    QObject::connect(startServer,&QCheckBox::clicked,[this](bool checked){
-        serverStateChanged = true;
-        if(checked)
+        if (address.protocol() == QAbstractSocket::IPv4Protocol)
         {
-            quint16 port=qBound<quint16>(1,portEdit->text().toUInt(), 65535);
+            tips << QString("<p style='color: rgb(220,220,220); font-size: 16px;'>%1</p>").arg(address.toString());
+        }
+    }
+    addressTip->setText(tips.join('\n'));
+    addressTip->setVisible(serviceSwitch->getIsToggled());
+
+    QVBoxLayout *itemVLayout = new QVBoxLayout(this);
+    itemVLayout->setSpacing(8);
+    itemVLayout->addWidget(serviceArea);
+    itemVLayout->addWidget(addressTip);
+    itemVLayout->addStretch(1);
+
+
+    QObject::connect(serviceSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked){
+        if (checked)
+        {
+            quint16 port = qBound<quint16>(1, portEdit->text().toUInt(), 65535);
             portEdit->setText(QString::number(port));
-            startServer->setChecked(GlobalObjects::lanServer->startServer(port));
-            portEdit->setEnabled(!startServer->isChecked());
-            startDLNA->setEnabled(true);
-            if(startServer->isChecked() && startDLNA->isChecked())
+            serviceSwitch->setIsToggled(GlobalObjects::lanServer->startServer(port));
+            portEdit->setEnabled(!serviceSwitch->getIsToggled());
+            startDLNASwitch->setEnabled(true);
+            addressTip->show();
+            if (serviceSwitch->getIsToggled() && startDLNASwitch->getIsToggled())
             {
                 GlobalObjects::lanServer->startDLNA();
             }
@@ -62,61 +85,34 @@ LANServerPage::LANServerPage(QWidget *parent) : SettingPage(parent), syncTimeCha
             GlobalObjects::lanServer->stopServer();
             GlobalObjects::lanServer->stopDLNA();
             portEdit->setEnabled(true);
-            startDLNA->setEnabled(false);
+            addressTip->hide();
+            startDLNASwitch->setEnabled(false);
         }
-    });
-    QObject::connect(syncUpdateTime,&QCheckBox::stateChanged,[this](bool ){
-       syncTimeChanged = true;
-    });
-    QObject::connect(portEdit, &QLineEdit::textChanged, this, [this](){
-        portChanged = true;
-    });
-    QObject::connect(startDLNA,&QCheckBox::stateChanged,[this](bool checked){
-       dlnaStateChanged = true;
-       if(checked)
-       {
-           if(startServer->isChecked())
-           {
-               GlobalObjects::lanServer->startDLNA();
-           }
-       }
-       else
-       {
-           GlobalObjects::lanServer->stopDLNA();
-       }
+        GlobalObjects::appSetting->setValue(SETTING_KEY_SERVER_AUTOSTART, checked);
     });
 
-    QGridLayout *pGLayout=new QGridLayout(this);
-    pGLayout->setContentsMargins(0, 0, 0, 0);
-    pGLayout->addWidget(startServer, 0, 0);
-    pGLayout->addWidget(syncUpdateTime, 0, 1);
-    pGLayout->addWidget(lbPort, 1, 0);
-    pGLayout->addWidget(portEdit,1, 1);
-    pGLayout->addWidget(startDLNA, 2, 0, 1, 2);
-    pGLayout->addWidget(addressTip, 3, 0, 1, 2);
-    pGLayout->setRowStretch(3, 1);
-    pGLayout->setColumnStretch(1, 1);
-}
+    QObject::connect(syncUpdateTimeSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked){
+        GlobalObjects::appSetting->setValue(SETTING_KEY_SERVER_SYNC_PLAYTIME, checked);
+    });
 
-void LANServerPage::onAccept()
-{
-    if(serverStateChanged) GlobalObjects::appSetting->setValue("Server/AutoStart",startServer->isChecked());
-    if(syncTimeChanged) GlobalObjects::appSetting->setValue("Server/SyncPlayTime",syncUpdateTime->isChecked());
-    if(portChanged) GlobalObjects::appSetting->setValue("Server/Port",portEdit->text().toUInt());
-    if(dlnaStateChanged) GlobalObjects::appSetting->setValue("Server/DLNAAutoStart",startDLNA->isChecked());
-}
+    QObject::connect(startDLNASwitch, &ElaToggleSwitch::toggled, this, [=](bool checked){
+        if (checked)
+        {
+            if (serviceSwitch->getIsToggled())
+            {
+                GlobalObjects::lanServer->startDLNA();
+            }
+        }
+        else
+        {
+            GlobalObjects::lanServer->stopDLNA();
+        }
+        GlobalObjects::appSetting->setValue(SETTING_KEY_SERVER_AUTO_DLNA, checked);
+    });
 
-void LANServerPage::onClose()
-{
-    if(serverStateChanged)
-    {
-        GlobalObjects::appSetting->setValue("Server/AutoStart",startServer->isChecked());
-        if(syncTimeChanged) GlobalObjects::appSetting->setValue("Server/SyncPlayTime",syncUpdateTime->isChecked());
-        if(portChanged) GlobalObjects::appSetting->setValue("Server/Port",portEdit->text().toUInt());
-    }
-    if(dlnaStateChanged)
-    {
-        GlobalObjects::appSetting->setValue("Server/DLNAAutoStart",startDLNA->isChecked());
-    }
+    QObject::connect(portEdit, &QLineEdit::textChanged, this, [=](const QString &port){
+        GlobalObjects::appSetting->setValue(SETTING_KEY_SERVER_PORT, port.toUInt());
+    });
+
 }
 

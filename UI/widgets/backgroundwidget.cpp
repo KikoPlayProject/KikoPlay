@@ -9,20 +9,19 @@ QT_BEGIN_NAMESPACE
   extern Q_WIDGETS_EXPORT void qt_blurImage(QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
 QT_END_NAMESPACE
 
-BackgroundWidget::BackgroundWidget(QWidget *parent):BackgroundWidget(QColor(0,0,0,100), parent)
+#define SETTING_KEY_BG_DARKNESS "MainWindow/BackgroundDarkness"
+
+BackgroundMainWindow::BackgroundMainWindow(QWidget *parent) : QMainWindow(parent)
 {
     blurAnime = new QPropertyAnimation(this, "blurRadius", this);
     blurAnime->setEasingCurve(QEasingCurve::OutExpo);
+    opColor = QColor(0, 0, 0, 100);
+    opColor.setAlpha(GlobalObjects::appSetting->value(SETTING_KEY_BG_DARKNESS, 100).toInt());
 }
 
-BackgroundWidget::BackgroundWidget(const QColor &opactiyColor, QWidget *parent) : QWidget(parent), opColor(opactiyColor), backBlurRadius(0)
+void BackgroundMainWindow::setBlurRadius(qreal radius)
 {
-    opColor.setAlpha(GlobalObjects::appSetting->value("MainWindow/BackgroundDarkness", 100).toInt());
-}
-
-void BackgroundWidget::setBlurRadius(qreal radius)
-{
-    if(backBlurRadius != radius)
+    if (backBlurRadius != radius)
     {
         backBlurRadius = radius;
         setBgCache();
@@ -30,44 +29,39 @@ void BackgroundWidget::setBlurRadius(qreal radius)
     }
 }
 
-void BackgroundWidget::setBackground(const QImage &image)
+void BackgroundMainWindow::setBackground(const QImage &image)
 {
     setImg(image);
 }
 
-void BackgroundWidget::setBackground(const QPixmap &pixmap)
+void BackgroundMainWindow::setBackground(const QPixmap &pixmap)
 {
     setImg(pixmap.toImage());
 }
 
-void BackgroundWidget::setBgDarkness(int val)
+void BackgroundMainWindow::setBgDarkness(int val)
 {
     opColor.setAlpha(val);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_BG_DARKNESS, val);
     update();
 }
 
-int BackgroundWidget::bgDarkness() const
+int BackgroundMainWindow::bgDarkness() const
 {
     return opColor.alpha();
 }
 
-
-void BackgroundWidget::setBlur(bool on, qreal blurRadius)
+void BackgroundMainWindow::setBlur(bool on, qreal blurRadius)
 {
-    if(on)
-    {
-        setBlurRadius(blurRadius);
-    }
-    else
-    {
-        setBlurRadius(0);
-    }
+
+    setBlurRadius(on ? blurRadius : 0);
+    setBlurRadius(0);
     update();
 }
 
-void BackgroundWidget::setBlurAnimation(qreal s, qreal e, int duration)
+void BackgroundMainWindow::setBlurAnimation(qreal s, qreal e, int duration)
 {
-    if(blurAnime->state()==QPropertyAnimation::Running)
+    if (blurAnime->state()==QPropertyAnimation::Running)
     {
         blurAnime->stop();
     }
@@ -77,10 +71,10 @@ void BackgroundWidget::setBlurAnimation(qreal s, qreal e, int duration)
     blurAnime->start();
 }
 
-void BackgroundWidget::setImg(const QImage &nImg)
+void BackgroundMainWindow::setImg(const QImage &nImg)
 {
     img = nImg;
-    if(!img.isNull())
+    if (!img.isNull())
     {
         bgCacheSrc = img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
         setBgCache();
@@ -88,10 +82,10 @@ void BackgroundWidget::setImg(const QImage &nImg)
     update();
 }
 
-void BackgroundWidget::setBgCache()
+void BackgroundMainWindow::setBgCache()
 {
-    if(bgCacheSrc.isNull()) return;
-    if(backBlurRadius <= 1)
+    if (bgCacheSrc.isNull()) return;
+    if (backBlurRadius <= 1)
     {
         bgCache = QPixmap::fromImage(bgCacheSrc);
         return;
@@ -104,22 +98,26 @@ void BackgroundWidget::setBgCache()
     qt_blurImage(&painter, imgTmp, backBlurRadius*2.5, false, false);
 }
 
-
-void BackgroundWidget::paintEvent(QPaintEvent *)
+void BackgroundMainWindow::paintEvent(QPaintEvent *event)
 {
-    if(!img.isNull())
+    if (!img.isNull())
     {
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
         painter.drawPixmap(0, 0, bgCache);
         painter.fillRect(rect(), opColor);
     }
-}
- void BackgroundWidget::resizeEvent(QResizeEvent *)
-{
-    if(!img.isNull())
+    else
     {
-        bgCacheSrc = (img.scaled(width(),height(),Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+        QMainWindow::paintEvent(event);
+    }
+}
+
+void BackgroundMainWindow::resizeEvent(QResizeEvent *event)
+{
+    if (!img.isNull())
+    {
+        bgCacheSrc = (img.scaled(width(), height(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
         setBgCache();
     }
 }

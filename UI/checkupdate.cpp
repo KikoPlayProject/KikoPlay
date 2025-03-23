@@ -11,7 +11,6 @@ CheckUpdate::CheckUpdate(QWidget *parent) : CFramelessDialog(tr("Check For Updat
     QLabel *versionDescLabel = new QLabel(this);
 
     QGridLayout *versionGLayout=new QGridLayout(this);
-    versionGLayout->setContentsMargins(0, 0, 0, 0);
     versionGLayout->setRowStretch(2, 1);
     versionGLayout->setColumnStretch(2, 1);
     versionGLayout->addWidget(curVersionLabel, 0, 1, 1, 2);
@@ -23,7 +22,6 @@ CheckUpdate::CheckUpdate(QWidget *parent) : CFramelessDialog(tr("Check For Updat
     versionDescLabel->setOpenExternalLinks(true);
     versionDescLabel->setTextInteractionFlags(Qt::TextInteractionFlag::TextSelectableByMouse);
     versionDescLabel->hide();
-    versionDescLabel->setObjectName(QStringLiteral("BorderLabel"));
 
     showBusyState(true);
     QObject::connect(KUpdater::instance(), &KUpdater::checkDone, this, [=](){

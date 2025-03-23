@@ -26,9 +26,13 @@
 #include "Download/peermodel.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Video/mpvplayer.h"
+#include "UI/ela/ElaMenu.h"
+#include "UI/widgets/floatscrollbar.h"
+#include "UI/widgets/klineedit.h"
+#include "UI/widgets/kplaintextedit.h"
+#include "UI/widgets/lazycontainer.h"
 #include "adduritask.h"
 #include "settings.h"
-#include "stylemanager.h"
 #include "selecttorrentfile.h"
 #include "globalobjects.h"
 #include "bgmlistwindow.h"
@@ -41,6 +45,7 @@
 DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nullptr)
 {
     setObjectName(QStringLiteral("DownLoadWindow"));
+    setAttribute(Qt::WA_StyledBackground, true);
     dialogTip = new DialogTip(this);
     dialogTip->raise();
     dialogTip->hide();
@@ -48,374 +53,72 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 
     initActions();
 
-    contentSplitter = new QSplitter(this);
-    contentSplitter->setObjectName(QStringLiteral("DownloadSpliter"));
-    QWidget *containerWidget = new QWidget(contentSplitter);
-    containerWidget->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Ignored);
-    containerWidget->setMinimumWidth(100*logicalDpiX()/96);
-
-    QWidget *downloadContainer=new QWidget(this);
-
-    FontIconButton *addUriTask=new FontIconButton(QChar(0xe604), tr("Add URI"), 12, 10, 2*logicalDpiX()/96, downloadContainer);
-    addUriTask->setObjectName(QStringLiteral("DownloadToolButton"));
-    QObject::connect(addUriTask,&FontIconButton::clicked,[this](){
-        addUrlTask();
-    });
-
-    FontIconButton *addTorrentTask=new FontIconButton(QChar(0xe605),tr("Add Torrent"),12, 10, 2*logicalDpiX()/96,downloadContainer);
-    addTorrentTask->setObjectName(QStringLiteral("DownloadToolButton"));
-    QObject::connect(addTorrentTask,&FontIconButton::clicked,[this](){
-        QString file = QFileDialog::getOpenFileName(this,tr("Select Torrent File"),"","Torrent(*.torrent) ");
-        if(!file.isEmpty())
-        {
-            try
-            {
-                TorrentDecoder decoder(file);
-                SelectTorrentFile selectTorrentFile(decoder.root,this);
-                QCoreApplication::processEvents();
-                if(QDialog::Accepted==selectTorrentFile.exec())
-                {
-                    QString errInfo(GlobalObjects::downloadModel->addTorrentTask(decoder.rawContent,decoder.infoHash,
-                                                                 selectTorrentFile.dir,selectTorrentFile.selectIndexes,QString()));
-                    if(!errInfo.isEmpty())
-                        QMessageBox::information(this,tr("Error"),tr("An error occurred while adding Torrent : \n %1 ").arg(errInfo));
-                }
-                delete decoder.root;
-            }
-            catch(TorrentError &err)
-            {
-                QMessageBox::information(this,tr("Error"),err.errorInfo);
-            }
-        }
-    });
-
-    FontIconButton *settings=new FontIconButton(QChar(0xe615),tr("Settings"), 12, 10, 2*logicalDpiX()/96, downloadContainer);
-    settings->setObjectName(QStringLiteral("DownloadToolButton"));
-    QObject::connect(settings,&FontIconButton::clicked,[this](){
-        Settings settings(Settings::PAGE_DOWN, this);
-        const SettingPage *downPage = settings.getPage(Settings::PAGE_DOWN);
-        if(QDialog::Accepted==settings.exec())
-        {
-            QJsonObject globalOptions,taskOptions;
-            const auto &changedValues = downPage->getChangedValues();
-            if(changedValues.contains("downSpeed"))
-            {
-                globalOptions.insert("max-overall-download-limit",QString::number(changedValues["downSpeed"].toInt())+"K");
-            }
-            if(changedValues.contains("upSpeed"))
-            {
-                globalOptions.insert("max-overall-upload-limit",QString::number(changedValues["upSpeed"].toInt())+"K");
-            }
-            if(changedValues.contains("concurrent"))
-            {
-                globalOptions.insert("max-concurrent-downloads",QString::number(changedValues["concurrent"].toInt()));
-            }
-            if(changedValues.contains("seedTime"))
-            {
-                taskOptions.insert("seed-time",QString::number(changedValues["seedTime"].toInt()));
-            }
-            if(changedValues.contains("btTracker"))
-            {
-                taskOptions.insert("bt-tracker",changedValues["btTracker"].toStringList().join(','));
-            }
-            if(globalOptions.count()>0)
-            {
-                rpc->changeGlobalOption(globalOptions);
-            }
-            if(taskOptions.count()>0)
-            {
-                auto &items=GlobalObjects::downloadModel->getItems();
-                for(auto iter=items.cbegin();iter!=items.cend();++iter)
-                {
-                    if(iter.value()->status!=DownloadTask::Complete)
-                        rpc->changeOption(iter.key(),taskOptions);
-                }
-            }
-        }
-    });
-
-    QLineEdit *searchEdit=new QLineEdit(downloadContainer);
-    searchEdit->setPlaceholderText(tr("Search Task"));
-    searchEdit->setMinimumWidth(180*logicalDpiX()/96);
-    searchEdit->setClearButtonEnabled(true);
-
-    QHBoxLayout *toolBarHLayout=new QHBoxLayout();
-    toolBarHLayout->setContentsMargins(0,0,0,0);
-    toolBarHLayout->addWidget(addUriTask);
-    toolBarHLayout->addWidget(addTorrentTask);
-    toolBarHLayout->addWidget(settings);
-    toolBarHLayout->addStretch(1);
-    toolBarHLayout->addWidget(searchEdit);
-
-    downloadView=new QTreeView(downloadContainer);
-    downloadView->setObjectName(QStringLiteral("DownloadView"));
-    downloadView->setFont(QFont(GlobalObjects::normalFont,10));
-    downloadView->setRootIsDecorated(false);
-    downloadView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    downloadView->setAlternatingRowColors(true);
-
-    rpc=new Aria2JsonRPC(this);
+    rpc = new Aria2JsonRPC(this);
     GlobalObjects::downloadModel->setRPC(rpc);
-    QTimer::singleShot(1000,[this](){
+    QTimer::singleShot(1000, [this](){
         QJsonObject globalOptions;
         globalOptions.insert("max-overall-download-limit",QString::number(GlobalObjects::appSetting->value("Download/MaxDownloadLimit",0).toInt())+"K");
         globalOptions.insert("max-overall-upload-limit",QString::number(GlobalObjects::appSetting->value("Download/MaxUploadLimit",0).toInt())+"K");
         globalOptions.insert("max-concurrent-downloads",QString::number(GlobalObjects::appSetting->value("Download/ConcurrentDownloads",5).toInt()));
         rpc->changeGlobalOption(globalOptions);
     });
-    downloadView->setItemDelegate(new DownloadItemDelegate(this));
-    downloadView->setContextMenuPolicy(Qt::ActionsContextMenu);
-    TaskFilterProxyModel *proxyModel=new TaskFilterProxyModel(this);
-    proxyModel->setSourceModel(GlobalObjects::downloadModel);
-    downloadView->setModel(proxyModel);
-    downloadView->setSortingEnabled(true);
-    proxyModel->setTaskStatus(1);
-    proxyModel->setFilterKeyColumn(static_cast<int>(DownloadModel::Columns::TITLE));
 
-    downloadView->addAction(act_addToPlayList);
-    QAction *act_separator0=new QAction(this);
-    act_separator0->setSeparator(true);
-    downloadView->addAction(act_separator0);
-    downloadView->addAction(act_Pause);
-    downloadView->addAction(act_Start);
-    downloadView->addAction(act_Remove);
-    QAction *act_separator1=new QAction(this);
-    act_separator1->setSeparator(true);
-    downloadView->addAction(act_separator1);
-    downloadView->addAction(act_CopyURI);
-    downloadView->addAction(act_SaveTorrent);
-    downloadView->addAction(act_BrowseFile);
-    QAction *act_separator2=new QAction(this);
-    act_separator2->setSeparator(true);
-    downloadView->addAction(act_separator2);
-    downloadView->addAction(act_PauseAll);
-    downloadView->addAction(act_StartAll);
-    downloadView->header()->resizeSection(static_cast<int>(DownloadModel::Columns::TITLE), 350 * logicalDpiX() / 96);
-    //downloadView->header()->setStretchLastSection(false);
+    QWidget *containerWidget = new QWidget(this);
+    containerWidget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
+    containerWidget->setMinimumWidth(200);
 
-    downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::UPSPEED));
-    QAction *actShowUpSpeed=new QAction(tr("UpSpeed"),this);
-    actShowUpSpeed->setCheckable(true);
-    QObject::connect(actShowUpSpeed,&QAction::toggled,[this](bool checked){
-        if(checked) downloadView->showColumn(static_cast<int>(DownloadModel::Columns::UPSPEED));
-        else downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::UPSPEED));
-        GlobalObjects::appSetting->setValue("Download/ShowUpSpeed", checked);
-    });
-    actShowUpSpeed->setChecked(GlobalObjects::appSetting->value("Download/ShowUpSpeed", false).toBool());
-
-    downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::CONNECTION));
-    QAction *actShowConnections=new QAction(tr("Connections"),this);
-    actShowConnections->setCheckable(true);
-    QObject::connect(actShowConnections,&QAction::toggled,[this](bool checked){
-        if(checked) downloadView->showColumn(static_cast<int>(DownloadModel::Columns::CONNECTION));
-        else downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::CONNECTION));
-        GlobalObjects::appSetting->setValue("Download/ShowConnections", checked);
-    });
-    actShowConnections->setChecked(GlobalObjects::appSetting->value("Download/ShowConnections", false).toBool());
-
-    downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::SEEDER));
-    QAction *actShowSeeders=new QAction(tr("Seeders"),this);
-    actShowSeeders->setCheckable(true);
-    QObject::connect(actShowSeeders,&QAction::toggled,[this](bool checked){
-        if(checked) downloadView->showColumn(static_cast<int>(DownloadModel::Columns::SEEDER));
-        else downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::SEEDER));
-        GlobalObjects::appSetting->setValue("Download/ShowSeeders", checked);
-    });
-    actShowSeeders->setChecked(GlobalObjects::appSetting->value("Download/ShowSeeders", false).toBool());
-
-    downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::DIR));
-    QAction *actShowDir=new QAction(tr("Dir"),this);
-    actShowDir->setCheckable(true);
-    QObject::connect(actShowDir,&QAction::toggled,[this](bool checked){
-        if(checked) downloadView->showColumn(static_cast<int>(DownloadModel::Columns::DIR));
-        else downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::DIR));
-        GlobalObjects::appSetting->setValue("Download/ShowDir", checked);
-    });
-    actShowDir->setChecked(GlobalObjects::appSetting->value("Download/ShowDir", false).toBool());
-
-    downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::CREATETIME));
-    QAction *actShowCreateTime=new QAction(tr("Create Time"),this);
-    actShowCreateTime->setCheckable(true);
-    QObject::connect(actShowCreateTime,&QAction::toggled,[this](bool checked){
-        if(checked) downloadView->showColumn(static_cast<int>(DownloadModel::Columns::CREATETIME));
-        else downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::CREATETIME));
-        GlobalObjects::appSetting->setValue("Download/ShowCreateTime", checked);
-    });
-    actShowCreateTime->setChecked(GlobalObjects::appSetting->value("Download/ShowCreateTime", false).toBool());
-
-    downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::FINISHTIME));
-    QAction *actShowFinishTime=new QAction(tr("Finish Time"),this);
-    actShowFinishTime->setCheckable(true);
-    QObject::connect(actShowFinishTime,&QAction::toggled,[this](bool checked){
-        if(checked) downloadView->showColumn(static_cast<int>(DownloadModel::Columns::FINISHTIME));
-        else downloadView->hideColumn(static_cast<int>(DownloadModel::Columns::FINISHTIME));
-        GlobalObjects::appSetting->setValue("Download/ShowFinishTime", checked);
-    });
-    actShowFinishTime->setChecked(GlobalObjects::appSetting->value("Download/ShowFinishTime", false).toBool());
-
-    downloadView->header()->setContextMenuPolicy(Qt::ActionsContextMenu);
-    downloadView->header()->addAction(actShowUpSpeed);
-    downloadView->header()->addAction(actShowConnections);
-    downloadView->header()->addAction(actShowSeeders);
-    downloadView->header()->addAction(actShowDir);
-    downloadView->header()->addAction(actShowCreateTime);
-    downloadView->header()->addAction(actShowFinishTime);
-
-    QObject::connect(downloadView, &QTreeView::doubleClicked,[this,proxyModel](const QModelIndex &index){
-        DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(proxyModel->mapToSource(index));
-        if(task->status==DownloadTask::Complete || task->status==DownloadTask::Paused || task->status==DownloadTask::Error)
-            act_Start->trigger();
-        else
-            act_Pause->trigger();
-    });
-    QObject::connect(downloadView->selectionModel(), &QItemSelectionModel::selectionChanged,this,&DownloadWindow::downloadSelectionChanged);
-    QObject::connect(searchEdit,&QLineEdit::textChanged,[proxyModel](const QString &keyword){
-        proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-        proxyModel->setFilterRegExp(keyword);
-    });
-
-    QStringList pageButtonTexts = {
-        tr("General"),
-        tr("File"),
-        tr("Block"),
-        tr("Connection"),
-        tr("Log")
-    };
-    QFontMetrics fm = QToolButton().fontMetrics();
-    int btnHeight = fm.height() + 10*logicalDpiY()/96;
-    int btnWidth = 0;
-    for(const QString &t : pageButtonTexts)
-    {
-        btnWidth = qMax(btnWidth, fm.horizontalAdvance(t));
-    }
-    btnWidth += 30*logicalDpiX()/96;
-
-    QHBoxLayout *pageBarHLayout=new QHBoxLayout();
-    pageBarHLayout->setSpacing(0);
-    pageBarHLayout->setContentsMargins(0,0,0,2*logicalDpiY()/96);
-    QButtonGroup *pageButtonGroup=new QButtonGroup(downloadContainer);
-    for(int i = 0; i < pageButtonTexts.size(); ++i)
-    {
-        QToolButton *btn = new QToolButton(downloadContainer);
-        btn->setText(pageButtonTexts[i]);
-        btn->setCheckable(true);
-        btn->setToolButtonStyle(Qt::ToolButtonTextOnly);
-        btn->setObjectName(QStringLiteral("DownloadInfoPage"));
-        btn->setFixedSize(QSize(btnWidth, btnHeight));
-        pageBarHLayout->addWidget(btn);
-        pageButtonGroup->addButton(btn, i);
-    }
-    pageBarHLayout->addStretch(1);
-
-    QWidget *detailInfoContent=new QWidget(downloadContainer);
-    detailInfoContent->setContentsMargins(0,0,0,0);
-    QStackedLayout *detailInfoSLayout=new QStackedLayout(detailInfoContent);
-    detailInfoSLayout->addWidget(setupGeneralInfoPage(detailInfoContent));
-    detailInfoSLayout->addWidget(setupFileInfoPage(detailInfoContent));
-    detailInfoSLayout->addWidget(setupBlockPage(detailInfoContent));
-    detailInfoSLayout->addWidget(setupConnectionPage(detailInfoContent));
-    detailInfoSLayout->addWidget(setupGlobalLogPage(detailInfoContent));
-
-    QObject::connect(pageButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[detailInfoSLayout](int id, bool checked){
-        if(checked)detailInfoSLayout->setCurrentIndex(id);
-    });
-    pageButtonGroup->button(0)->setChecked(true);
-
-    QWidget *bottomContent=new QWidget(downloadContainer);
-    QVBoxLayout *bvLayout=new QVBoxLayout(bottomContent);
-    bvLayout->setContentsMargins(0,0,0,0);
-    bvLayout->addLayout(pageBarHLayout);
-    bvLayout->addWidget(detailInfoContent);
-    QSplitter *viewBottomSplitter=new QSplitter(Qt::Vertical,this);
-    viewBottomSplitter->setObjectName(QStringLiteral("NormalSplitter"));
-    viewBottomSplitter->addWidget(downloadView);
-    viewBottomSplitter->addWidget(bottomContent);
-    viewBottomSplitter->setStretchFactor(0,4);
-    viewBottomSplitter->setStretchFactor(1,1);
-    viewBottomSplitter->setCollapsible(0,false);
-    viewBottomSplitter->setCollapsible(1,true);
-
-
-    QGridLayout *downContainerGLayout=new QGridLayout(downloadContainer);
-    downContainerGLayout->addLayout(toolBarHLayout,0,1);
-    downContainerGLayout->addWidget(viewBottomSplitter,1,1);
-    downContainerGLayout->setRowStretch(1,1);
-
-    BgmListWindow *bgmListWindow=new BgmListWindow(containerWidget);
-
-    ResSearchWindow *resSearchWindow=new ResSearchWindow(containerWidget);
-    QObject::connect(bgmListWindow,&BgmListWindow::searchBgm,this,[this,resSearchWindow](const QString &item){
-        taskTypeButtonGroup->button(4)->setChecked(true);
-        resSearchWindow->search(item, true);
-    });
-    QObject::connect(resSearchWindow,&ResSearchWindow::addTask,this,[this](const QStringList &urls){
-        addUrlTask(urls);
-    });
-    AutoDownloadWindow *autoDownloadWindow = new AutoDownloadWindow(containerWidget);
-    autoDownloadWindow->setObjectName(QStringLiteral("AutoDownloadWindow"));
-    QObject::connect(autoDownloadWindow,&AutoDownloadWindow::addTask,this,[this](const QStringList &uris, bool directly, const QString &path){
-        if(directly)
-        {
-            for(const QString &uri:uris)
-            {
-                QString errInfo(GlobalObjects::downloadModel->addUriTask(uri,path,true));
-                if(!errInfo.isEmpty())
-                    Logger::logger()->log(Logger::LogType::Aria2, QString("[AddTask]%1: %2").arg(uri, errInfo));
-            }
-        }
-        else
-        {
-            addUrlTask(uris, path);
-        }
-    });
-
-    QObject::connect(StyleManager::getStyleManager(), &StyleManager::styleModelChanged, this, [=](StyleManager::StyleMode mode){
-        bool setScrollStyle = (mode==StyleManager::BG_COLOR || mode==StyleManager::DEFAULT_BG ||
-                               StyleManager::getStyleManager()->getCondVariable("DarkMode"));
-        downloadView->setProperty("cScrollStyle", setScrollStyle);
-        detailInfoContent->setProperty("cScrollStyle", setScrollStyle);
-        bgmListWindow->setProperty("cScrollStyle", setScrollStyle);
-    });
-
-    QObject::connect(StyleManager::getStyleManager(), &StyleManager::condVariableChanged, this, [=](const QString &name, bool val){
-        if(StyleManager::getStyleManager()->currentMode()==StyleManager::NO_BG)
-        {
-            bool setScrollStyle = (name == "DarkMode" && val);
-            downloadView->setProperty("cScrollStyle", setScrollStyle);
-            detailInfoContent->setProperty("cScrollStyle", setScrollStyle);
-            bgmListWindow->setProperty("cScrollStyle", setScrollStyle);
-        }
-    });
-
+    QWidget *downloadContainer = initDownloadPage();
     rightPanelSLayout=new QStackedLayout(containerWidget);
     rightPanelSLayout->addWidget(downloadContainer);
-    rightPanelSLayout->addWidget(bgmListWindow);
-    rightPanelSLayout->addWidget(resSearchWindow);
-    rightPanelSLayout->addWidget(autoDownloadWindow);
+    //rightPanelSLayout->addWidget(new AutoDownloadWindow(containerWidget));
 
-    contentSplitter->setHandleWidth(1);
-    contentSplitter->addWidget(setupLeftPanel(contentSplitter));
-    contentSplitter->addWidget(containerWidget);
-    contentSplitter->setCollapsible(1, false);
+    rightPanelSLayout->addWidget(new LazyContainer(this, rightPanelSLayout, [=](){
+        AutoDownloadWindow *autoDownloadWindow = new AutoDownloadWindow(containerWidget);
+        //autoDownloadWindow->setObjectName(QStringLiteral("AutoDownloadWindow"));
+        QObject::connect(autoDownloadWindow, &AutoDownloadWindow::addTask, this, [=](const QStringList &uris, bool directly, const QString &path){
+            if (directly)
+            {
+                for (const QString &uri : uris)
+                {
+                    QString errInfo(GlobalObjects::downloadModel->addUriTask(uri,path,true));
+                    if (!errInfo.isEmpty())
+                    {
+                        Logger::logger()->log(Logger::LogType::Aria2, QString("[AddTask]%1: %2").arg(uri, errInfo));
+                    }
+                }
+            }
+            else
+            {
+                addUrlTask(uris, path);
+            }
+        });
+        return autoDownloadWindow;
+    }));
+    rightPanelSLayout->addWidget(new LazyContainer(this, rightPanelSLayout, [=](){
+        BgmListWindow *bgmListWindow=new BgmListWindow(containerWidget);
+        QObject::connect(bgmListWindow,&BgmListWindow::searchBgm,this,[this](const QString &item){
+            taskTypeButtonGroup->button(5)->setChecked(true);
+            rightPanelSLayout->setCurrentIndex(3);
+            resSearchWindow->search(item, true);
+        });
+        return bgmListWindow;
+    }));
+    rightPanelSLayout->addWidget(new LazyContainer(this, rightPanelSLayout, [=](){
+        resSearchWindow = new ResSearchWindow(containerWidget);
+        QObject::connect(resSearchWindow, &ResSearchWindow::addTask, this, [=](const QStringList &urls){
+            addUrlTask(urls);
+        });
+        return resSearchWindow;
+    }));
 
-    QHBoxLayout *contentHLayout=new QHBoxLayout(this);
-    contentHLayout->addWidget(contentSplitter);
-    contentHLayout->setContentsMargins(0,0,0,0);
 
-    QByteArray splitterState = GlobalObjects::appSetting->value("Download/SplitterState").toByteArray();
-    if(!splitterState.isNull())
-    {
-        contentSplitter->restoreState(splitterState);
-    }
+    QHBoxLayout *contentHLayout = new QHBoxLayout(this);
+    contentHLayout->addWidget(initLeftPanel(this));
+    contentHLayout->addWidget(containerWidget);
+    contentHLayout->setContentsMargins(0,0,8,8);
 
-    QObject::connect(contentSplitter, &QSplitter::splitterMoved, this, [contentHLayout, this](){
-        int leftSize = contentSplitter->sizes()[0];
-        if(leftSize == 0) contentHLayout->setContentsMargins(5*logicalDpiX()/96,0,0,0);
-        else contentHLayout->setContentsMargins(0,0,0,0);
-    });
-
-    refreshTimer=new QTimer();
-    QObject::connect(refreshTimer,&QTimer::timeout,[this](){
+    refreshTimer = new QTimer();
+    QObject::connect(refreshTimer, &QTimer::timeout, this, [=](){
         auto &items=GlobalObjects::downloadModel->getItems();
         qint64 totalLength = 0, completedLength = 0;
 #ifdef QT_DEBUG
@@ -444,31 +147,31 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
             rpc->getPeers(currentTask->gid);
         }
     });
-    QObject::connect(rpc,&Aria2JsonRPC::refreshStatus,[this](const QJsonObject &statusObj){
+    QObject::connect(rpc, &Aria2JsonRPC::refreshStatus, this, [=](const QJsonObject &statusObj){
         QString gid(statusObj.value("gid").toString());
         GlobalObjects::downloadModel->updateItemStatus(statusObj);
-        if(currentTask && currentTask->gid==gid)
+        if (currentTask && currentTask->gid == gid)
         {
             selectedTFModel->updateFileProgress(statusObj.value("files").toArray());
             blockView->setBlock(currentTask->numPieces, currentTask->bitfield);
             blockView->setToolTip(tr("Blocks: %1 Size: %2").arg(currentTask->numPieces).arg(formatSize(false, currentTask->pieceLength)));
         }
     });
-    QObject::connect(rpc,&Aria2JsonRPC::refreshGlobalStatus,[this](int downSpeed,int upSpeed,int numActive){
+    QObject::connect(rpc, &Aria2JsonRPC::refreshGlobalStatus, this, [=](int downSpeed,int upSpeed,int numActive){
         downSpeedLabel->setText(formatSize(true,downSpeed));
         upSpeedLabel->setText(formatSize(true,upSpeed));
     });
-    QObject::connect(rpc,&Aria2JsonRPC::refreshPeerStatus,[this](const QJsonArray &peerArray){
+    QObject::connect(rpc, &Aria2JsonRPC::refreshPeerStatus, this, [=](const QJsonArray &peerArray){
        if(currentTask && !this->isHidden())
        {           
            peerModel->setPeers(peerArray, currentTask->numPieces);
        }
     });
-    QObject::connect(GlobalObjects::downloadModel,&DownloadModel::magnetDone,[this](const QString &path, const QString &magnet, bool directlyDownload){
+    QObject::connect(GlobalObjects::downloadModel, &DownloadModel::magnetDone, this, [=](const QString &path, const QString &magnet, bool directlyDownload){
         try
         {
             TorrentDecoder decoder(path);
-            if(directlyDownload)
+            if (directlyDownload)
             {
                 TorrentFileModel model(decoder.root);
                 model.checkAll(true);
@@ -498,7 +201,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
             showMessage(err.errorInfo, NM_ERROR | NM_HIDE);
         }
     });
-    QObject::connect(GlobalObjects::downloadModel,&DownloadModel::removeTask,[this](const QString &gid){
+    QObject::connect(GlobalObjects::downloadModel, &DownloadModel::removeTask, this, [=](const QString &gid){
         if(currentTask && currentTask->gid==gid)
         {
             setDetailInfo(nullptr);
@@ -511,63 +214,50 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
 void DownloadWindow::beforeClose()
 {
     act_Pause->trigger();
-    GlobalObjects::appSetting->setValue("Download/SplitterState", contentSplitter->saveState());
     rpc->exit();
 }
 
-QWidget *DownloadWindow::setupLeftPanel(QWidget *parent)
+QWidget *DownloadWindow::initLeftPanel(QWidget *parent)
 {
-    QWidget *leftPanel=new QWidget(parent);
-    leftPanel->setObjectName(QStringLiteral("DownloadLeftPanel"));
-    leftPanel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
-    const int panelWidth=200*logicalDpiX()/96;
-    leftPanel->resize(panelWidth, leftPanel->height());
+    QWidget *leftPanel = new QWidget(parent);
 
-    const int iconSpace = 8*logicalDpiX()/96;
-    const QSizePolicy btnSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    FontIconButton *downloadingTask=new FontIconButton(QChar(0xe653),tr("Downloading"),12,12,iconSpace,leftPanel);
-    downloadingTask->setObjectName(QStringLiteral("TaskTypeToolButton"));
-    downloadingTask->setSizePolicy(btnSizePolicy);
-    downloadingTask->setCheckable(true);
-    downloadingTask->setAutoHideText(true);
-    downloadingTask->setChecked(true);
-
-    FontIconButton *completedTask=new FontIconButton(QChar(0xe69a),tr("Completed"), 12,12,iconSpace,leftPanel);
-    completedTask->setObjectName(QStringLiteral("TaskTypeToolButton"));
-    completedTask->setSizePolicy(btnSizePolicy);
-    completedTask->setCheckable(true);
-
-    FontIconButton *allTask=new FontIconButton(QChar(0xe603),tr("All"), 12,12,iconSpace,leftPanel);
-    allTask->setObjectName(QStringLiteral("TaskTypeToolButton"));
-    allTask->setSizePolicy(btnSizePolicy);
-    allTask->setCheckable(true);
-
-    FontIconButton *bgmList=new FontIconButton(QChar(0xe63a),tr("BgmList"), 12,12,iconSpace,leftPanel);
-    bgmList->setObjectName(QStringLiteral("TaskTypeToolButton"));
-    bgmList->setSizePolicy(btnSizePolicy);
-    bgmList->setCheckable(true);
-
-    FontIconButton *resSearch=new FontIconButton(QChar(0xe609),tr("ResSearch"), 12,12,iconSpace,leftPanel);
-    resSearch->setObjectName(QStringLiteral("TaskTypeToolButton"));
-    resSearch->setSizePolicy(btnSizePolicy);
-    resSearch->setCheckable(true);
-
-    FontIconButton *autoDownload=new FontIconButton(QChar(0xe610),tr("AutoDownload"),12,12,iconSpace,leftPanel);
-    autoDownload->setObjectName(QStringLiteral("TaskTypeToolButton"));
-    autoDownload->setSizePolicy(btnSizePolicy);
-    autoDownload->setCheckable(true);
-
-    taskTypeButtonGroup=new QButtonGroup(parent);
-    taskTypeButtonGroup->addButton(downloadingTask,1);
-    taskTypeButtonGroup->addButton(completedTask,2);
-    taskTypeButtonGroup->addButton(allTask,0);
-    taskTypeButtonGroup->addButton(bgmList,3);
-    taskTypeButtonGroup->addButton(resSearch,4);
-    taskTypeButtonGroup->addButton(autoDownload,5);
-    QObject::connect(taskTypeButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[this](int id, bool checked){
-        if(checked)
+    FontIconButton *unfinishedTasks{nullptr}, *finishedTasks{nullptr}, *autoRules{nullptr}, *bgmList{nullptr}, *resSearch{nullptr};
+    FontIconButton **btnPtrs[] = {
+        &unfinishedTasks, &finishedTasks, &autoRules, &bgmList, &resSearch
+    };
+    QVector<QPair<QChar, QString>> btnTexts {
+        { QChar(0xe653), tr("Downloading")},
+        { QChar(0xe69a), tr("Completed")},
+        { QChar(0xe6e2), tr("Automatic Rules")},
+        { QChar(0xe63a), tr("Daily Broadcast")},
+        { QChar(0xea8a), tr("Resource Search")},
+    };
+    for (int i = 0; i < btnTexts.size(); ++i)
+    {
+        *btnPtrs[i] = new FontIconButton(btnTexts[i].first, "", 14, 14, 10, leftPanel);
+        FontIconButton *btn = *btnPtrs[i];
+        btn->setToolTip(btnTexts[i].second);
+        btn->setObjectName(QStringLiteral("TaskTypeToolButton"));
+        btn->setCheckable(true);
+        btn->setContentsMargins(8, 4, 4, 4);
+        btn->setMinimumWidth(46);
+        if (i == 0)
         {
-            if(id<3)
+            btn->setAutoHideText(true);
+            btn->setChecked(true);
+        }
+    }
+
+    taskTypeButtonGroup = new QButtonGroup(parent);
+    taskTypeButtonGroup->addButton(unfinishedTasks, 1);
+    taskTypeButtonGroup->addButton(finishedTasks, 2);
+    taskTypeButtonGroup->addButton(autoRules, 3);
+    taskTypeButtonGroup->addButton(bgmList, 4);
+    taskTypeButtonGroup->addButton(resSearch, 5);
+    QObject::connect(taskTypeButtonGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, this, [=](int id, bool checked){
+        if (checked)
+        {
+            if (id < 3)
             {
                 rightPanelSLayout->setCurrentIndex(0);
                 TaskFilterProxyModel *model = static_cast<TaskFilterProxyModel *>(downloadView->model());
@@ -576,73 +266,259 @@ QWidget *DownloadWindow::setupLeftPanel(QWidget *parent)
             }
             else
             {
-                rightPanelSLayout->setCurrentIndex(id-2);
+                rightPanelSLayout->setCurrentIndex(id - 2);
             }
         }
     });
 
-
-
-    QObject::connect(downloadingTask, &FontIconButton::textHidden, this, [this, completedTask,
-                     allTask, bgmList, resSearch,autoDownload,leftPanel](bool hide){
-        if(hide)
-        {
-            completedTask->hideText(true);
-            allTask->hideText(true);
-            bgmList->hideText(true);
-            resSearch->hideText(true);
-            autoDownload->hideText(true);
-            leftPanel->setMinimumWidth(completedTask->sizeHint().width());
-        }
-        else
-        {
-            completedTask->hideText(false);
-            allTask->hideText(false);
-            bgmList->hideText(false);
-            resSearch->hideText(false);
-            autoDownload->hideText(false);
-        }
-    });
-
     QVBoxLayout *leftVLayout=new QVBoxLayout(leftPanel);
-    leftVLayout->setContentsMargins(0,0,0,0);
-    leftVLayout->setSpacing(0);
-    leftVLayout->addWidget(downloadingTask);
-    leftVLayout->addWidget(completedTask);
-    leftVLayout->addWidget(allTask);
+    leftVLayout->setContentsMargins(16, 16, 12, 4);
+    leftVLayout->setSpacing(4);
+
+    leftVLayout->addSpacing(8);
+    leftVLayout->addWidget(unfinishedTasks);
+    leftVLayout->addWidget(finishedTasks);
+    leftVLayout->addWidget(autoRules);
+    leftVLayout->addSpacing(32);
+
     leftVLayout->addWidget(bgmList);
     leftVLayout->addWidget(resSearch);
-    leftVLayout->addWidget(autoDownload);
     leftVLayout->addStretch(1);
 
     return leftPanel;
 }
 
-QWidget *DownloadWindow::setupGeneralInfoPage(QWidget *parent)
+QWidget *DownloadWindow::initDownloadPage()
 {
-    QWidget *content=new QWidget(parent);
-    QGridLayout *gInfoGLayout=new QGridLayout(content);
-    taskTitleLabel=new QLabel(content);
-    taskTitleLabel->setFont(QFont(GlobalObjects::normalFont,12));
-    taskTitleLabel->setObjectName(QStringLiteral("TaskTitleLabel"));
-    taskTitleLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
-    taskTimeLabel=new QLabel(content);
-    taskTimeLabel->setObjectName(QStringLiteral("TaskTimeLabel"));
+    QWidget *downloadContainer = new QWidget(this);
+    downloadContainer->setMinimumWidth(220);
+
+    FontIconButton *addUriTask = new FontIconButton(QChar(0xe604), tr("Add URI"), 12, 10, 2, downloadContainer);
+    addUriTask->setObjectName(QStringLiteral("FontIconToolButton"));
+    addUriTask->setContentsMargins(4, 2, 4, 2);
+    QObject::connect(addUriTask, &FontIconButton::clicked, this, [=](){ this->addUrlTask(); });
+
+    FontIconButton *addTorrentTask = new FontIconButton(QChar(0xe605), tr("Add Torrent") ,12, 10, 2,downloadContainer);
+    addTorrentTask->setObjectName(QStringLiteral("FontIconToolButton"));
+    addTorrentTask->setContentsMargins(4, 2, 4, 2);
+    QObject::connect(addTorrentTask,&FontIconButton::clicked, this, &DownloadWindow::addTorrentTask);
+
+    FontIconButton *settings = new FontIconButton(QChar(0xe615),tr("Settings"), 12, 10, 2, downloadContainer);
+    settings->setObjectName(QStringLiteral("FontIconToolButton"));
+    settings->setContentsMargins(4, 2, 4, 2);
+    QObject::connect(settings, &FontIconButton::clicked, this, &DownloadWindow::showSettings);
+
+    FontIconButton *sortBtn = new FontIconButton(QChar(0xe633), "", 14, 10, 2, downloadContainer);
+    sortBtn->setObjectName(QStringLiteral("FontIconToolButton"));
+    sortBtn->setContentsMargins(2, 2, 2, 2);
+
+    KLineEdit *searchEdit = new KLineEdit(downloadContainer);
+    searchEdit->setFont(QFont(GlobalObjects::normalFont, 12));
+    searchEdit->setObjectName(QStringLiteral("DownloadSearchEdit"));
+    searchEdit->setPlaceholderText(tr("Search Task"));
+    searchEdit->setMinimumWidth(180);
+    searchEdit->setClearButtonEnabled(true);
+    QMargins textMargins = searchEdit->textMargins();
+    textMargins.setLeft(6);
+    searchEdit->setTextMargins(textMargins);
+
+    QHBoxLayout *toolBarHLayout = new QHBoxLayout();
+    toolBarHLayout->setContentsMargins(0,0,0,0);
+    toolBarHLayout->addWidget(addUriTask);
+    toolBarHLayout->addWidget(addTorrentTask);
+    toolBarHLayout->addWidget(settings);
+    toolBarHLayout->addStretch(1);
+    toolBarHLayout->addWidget(sortBtn);
+    toolBarHLayout->addWidget(searchEdit);
+
+    downloadView = new QListView(downloadContainer);
+    downloadView->setObjectName(QStringLiteral("DownloadView"));
+    downloadView->setFont(QFont(GlobalObjects::normalFont, 10));
+    downloadView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    downloadView->setMinimumWidth(220);
+    downloadView->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    new FloatScrollBar(downloadView->verticalScrollBar(), downloadView);
+
+    downloadView->setItemDelegate(new DownloadItemDelegate(this));
+    downloadView->setContextMenuPolicy(Qt::CustomContextMenu);
+    TaskFilterProxyModel *proxyModel=new TaskFilterProxyModel(this);
+    proxyModel->setSourceModel(GlobalObjects::downloadModel);
+    downloadView->setModel(proxyModel);
+    proxyModel->setTaskStatus(1);
+    proxyModel->setFilterKeyColumn(static_cast<int>(DownloadModel::Columns::TITLE));
+
+    QMenu *sortMenu = new ElaMenu(sortBtn);
+
+    QActionGroup *ascDesc = new QActionGroup(sortMenu);
+    QAction *actAsc = ascDesc->addAction(tr("Ascending"));
+    QAction *actDesc = ascDesc->addAction(tr("Descending"));
+    actAsc->setCheckable(true);
+    actDesc->setCheckable(true);
+    actDesc->setChecked(true);
+
+    QActionGroup *orderTypes = new QActionGroup(sortMenu);
+    QAction *actOrderCreateTime = orderTypes->addAction(tr("Create Time"));
+    actOrderCreateTime->setData(static_cast<int>(DownloadModel::Columns::CREATETIME));
+    actOrderCreateTime->setCheckable(true);
+    QAction *actOrderTitle = orderTypes->addAction(tr("Title"));
+    actOrderTitle->setData(static_cast<int>(DownloadModel::Columns::TITLE));
+    actOrderTitle->setCheckable(true);
+    QAction *actOrderSize = orderTypes->addAction(tr("Size"));
+    actOrderSize->setData(static_cast<int>(DownloadModel::Columns::SIZE));
+    actOrderSize->setCheckable(true);
+    actOrderCreateTime->setChecked(true);
+
+    QObject::connect(ascDesc, &QActionGroup::triggered, downloadView, [=](QAction *act){
+        QAction *typeAction = orderTypes->checkedAction();
+        if (typeAction && typeAction->data().isValid())
+        {
+            proxyModel->sort(typeAction->data().toInt(), act == actAsc ? Qt::SortOrder::AscendingOrder : Qt::SortOrder::DescendingOrder);
+        }
+    });
+    bool orderAsc = GlobalObjects::appSetting->value("Download/SortOrderAscending", false).toBool();
+    (orderAsc ? actAsc : actDesc)->trigger();
+
+    QObject::connect(orderTypes, &QActionGroup::triggered, downloadView, [=](QAction *act){
+        proxyModel->sort(act->data().toInt(), ascDesc->checkedAction() == actAsc ? Qt::SortOrder::AscendingOrder : Qt::SortOrder::DescendingOrder);
+    });
+    int orderType = GlobalObjects::appSetting->value("Download/SortOrderType", (int)DownloadModel::Columns::CREATETIME).toInt();
+    if (orderType == (int)DownloadModel::Columns::TITLE)
+    {
+        actOrderTitle->trigger();
+    }
+    else if (orderType == (int)DownloadModel::Columns::SIZE)
+    {
+        actOrderSize->trigger();
+    }
+
+    sortMenu->addAction(actAsc);
+    sortMenu->addAction(actDesc);
+    sortMenu->addSeparator();
+    sortMenu->addAction(actOrderCreateTime);
+    sortMenu->addAction(actOrderTitle);
+    sortMenu->addAction(actOrderSize);
+    sortBtn->setMenu(sortMenu);
+
+
+    QMenu *downloadMenu = new ElaMenu(downloadView);
+    downloadMenu->addAction(act_addToPlayList);
+
+    downloadMenu->addSeparator();
+    downloadMenu->addAction(act_Pause);
+    downloadMenu->addAction(act_Start);
+    downloadMenu->addAction(act_Remove);
+
+    downloadMenu->addSeparator();
+    downloadMenu->addAction(act_CopyURI);
+    downloadMenu->addAction(act_SaveTorrent);
+    downloadMenu->addAction(act_BrowseFile);
+
+    downloadMenu->addSeparator();
+    downloadMenu->addAction(act_PauseAll);
+    downloadMenu->addAction(act_StartAll);
+
+    QObject::connect(downloadView, &QListView::customContextMenuRequested, downloadView, [=](){
+        downloadMenu->exec(QCursor::pos());
+    });
+
+    QObject::connect(downloadView, &QListView::doubleClicked, this, [=](const QModelIndex &index){
+        DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(proxyModel->mapToSource(index));
+        if (task->status == DownloadTask::Complete || task->status == DownloadTask::Paused || task->status == DownloadTask::Error)
+        {
+            act_Start->trigger();
+        }
+        else
+        {
+            act_Pause->trigger();
+        }
+    });
+    QObject::connect(downloadView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &DownloadWindow::downloadSelectionChanged);
+    QObject::connect(searchEdit, &QLineEdit::textChanged, downloadView, [=](const QString &keyword){
+        proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+        proxyModel->setFilterRegExp(keyword);
+    });
+
+    QWidget *detailInfoContent = new QWidget(downloadContainer);
+    detailInfoContent->setContentsMargins(0, 0, 0, 0);
+    QStackedLayout *detailInfoSLayout = new QStackedLayout(detailInfoContent);
+    detailInfoSLayout->addWidget(setupGeneralInfoPage(detailInfoContent));
+    detailInfoSLayout->addWidget(setupFileInfoPage(detailInfoContent));
+    detailInfoSLayout->addWidget(setupBlockPage(detailInfoContent));
+    detailInfoSLayout->addWidget(setupConnectionPage(detailInfoContent));
+    detailInfoSLayout->addWidget(setupGlobalLogPage(detailInfoContent));
+    detailInfoContent->hide();
+
+    QSplitter *viewBottomSplitter = new QSplitter(Qt::Vertical, downloadContainer);
+    viewBottomSplitter->setObjectName(QStringLiteral("NormalSplitter"));
+    viewBottomSplitter->addWidget(downloadView);
+    viewBottomSplitter->addWidget(detailInfoContent);
+    viewBottomSplitter->setStretchFactor(0, 8);
+    viewBottomSplitter->setStretchFactor(1, 3);
+    viewBottomSplitter->setCollapsible(0, false);
+    viewBottomSplitter->setCollapsible(1, false);
+
+    QStringList pageButtonTexts = {
+        tr("General"),
+        tr("File"),
+        tr("Block"),
+        tr("Connection"),
+        tr("Log"),
+    };
+    QFontMetrics fm = QToolButton().fontMetrics();
+    int btnWidth = 0;
+    for(const QString &t : pageButtonTexts)
+    {
+        btnWidth = qMax(btnWidth, fm.horizontalAdvance(t));
+    }
+    btnWidth += 30;
+
+
+    QHBoxLayout *pageBarHLayout = new QHBoxLayout();
+    pageBarHLayout->setSpacing(2);
+    pageBarHLayout->setContentsMargins(0, 4, 0, 0);
+    QVector<QToolButton *> pageBtns;
+    for (int i = 0; i < pageButtonTexts.size(); ++i)
+    {
+        QToolButton *btn = new QToolButton(downloadContainer);
+        btn->setText(pageButtonTexts[i]);
+        btn->setCheckable(true);
+        btn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        btn->setObjectName(QStringLiteral("DownloadInfoPageButton"));
+        btn->setFixedWidth(btnWidth);
+        pageBarHLayout->addWidget(btn);
+        pageBtns << btn;
+    }
+
+    auto btnCheckFunc = [=](int index, bool check){
+        for (int i = 0; i < pageBtns.size(); ++i)
+        {
+            pageBtns[i]->setChecked(i == index ? check : false);
+        }
+        detailInfoSLayout->setCurrentIndex(index);
+        detailInfoContent->setVisible(check);
+    };
+
+    for (int i = 0; i < pageBtns.size(); ++i)
+    {
+        QObject::connect(pageBtns[i], &QPushButton::clicked, this, [=](bool check){
+            btnCheckFunc(i, check);
+        });
+    }
 
     GlobalObjects::iconfont->setPointSize(12);
-    downSpeedIconLabel=new QLabel(parent);
+    downSpeedIconLabel = new QLabel("--", downloadContainer);
     downSpeedIconLabel->setObjectName(QStringLiteral("DownSpeedIcon"));
     downSpeedIconLabel->setFont(*GlobalObjects::iconfont);
     downSpeedIconLabel->setText(QChar(0xe910));
-    downSpeedIconLabel->setMaximumWidth(downSpeedIconLabel->height()+4*logicalDpiX()/96);
-    upSpeedIconLabel=new QLabel(parent);
+    downSpeedIconLabel->setMaximumWidth(downSpeedIconLabel->height() + 4);
+    upSpeedIconLabel = new QLabel("--", downloadContainer);
     upSpeedIconLabel->setObjectName(QStringLiteral("UpSpeedIcon"));
     upSpeedIconLabel->setFont(*GlobalObjects::iconfont);
     upSpeedIconLabel->setText(QChar(0xe941));
-    upSpeedIconLabel->setMaximumWidth(upSpeedIconLabel->height()+4*logicalDpiX()/96);
-    downSpeedLabel=new QLabel(parent);
+    upSpeedIconLabel->setMaximumWidth(upSpeedIconLabel->height() + 4);
+    downSpeedLabel = new QLabel(downloadContainer);
     downSpeedLabel->setObjectName(QStringLiteral("DownSpeedLabel"));
-    upSpeedLabel=new QLabel(parent);
+    upSpeedLabel = new QLabel(downloadContainer);
     upSpeedLabel->setObjectName(QStringLiteral("UpSpeedLabel"));
 
     QGridLayout *speedGLayout = new QGridLayout;
@@ -651,20 +527,40 @@ QWidget *DownloadWindow::setupGeneralInfoPage(QWidget *parent)
     speedGLayout->addWidget(upSpeedIconLabel, 0, 2);
     speedGLayout->addWidget(upSpeedLabel, 0, 3);
     speedGLayout->setContentsMargins(0, 0, 0, 0);
-    speedGLayout->setSpacing(4*logicalDpiX()/96);
+    speedGLayout->setSpacing(4);
     speedGLayout->setColumnStretch(1, 1);
     speedGLayout->setColumnStretch(3, 1);
     speedGLayout->setRowStretch(1, 1);
+    speedGLayout->setColumnMinimumWidth(1, 64);
+    speedGLayout->setColumnMinimumWidth(3, 64);
 
-    QHBoxLayout *speedHLayout = new QHBoxLayout;
-    speedHLayout->setContentsMargins(0, 0, 0, 0);
-    speedHLayout->setSpacing(0);
-    speedHLayout->addLayout(speedGLayout);
-    speedHLayout->addStretch(1);
+    pageBarHLayout->addStretch(1);
+    pageBarHLayout->addLayout(speedGLayout);
+
+    QGridLayout *downContainerGLayout = new QGridLayout(downloadContainer);
+    downContainerGLayout->setVerticalSpacing(4);
+    downContainerGLayout->addLayout(toolBarHLayout, 0, 1);
+    downContainerGLayout->addWidget(viewBottomSplitter, 1, 1);
+    downContainerGLayout->addLayout(pageBarHLayout,2, 1);
+    downContainerGLayout->setRowStretch(1, 1);
+
+    return downloadContainer;
+}
+
+QWidget *DownloadWindow::setupGeneralInfoPage(QWidget *parent)
+{
+    QWidget *content = new QWidget(parent);
+    QGridLayout *gInfoGLayout=new QGridLayout(content);
+    taskTitleLabel=new QLabel(content);
+    taskTitleLabel->setFont(QFont(GlobalObjects::normalFont,12));
+    taskTitleLabel->setObjectName(QStringLiteral("TaskTitleLabel"));
+    taskTitleLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
+    taskTimeLabel=new QLabel(content);
+    taskTimeLabel->setObjectName(QStringLiteral("TaskTimeLabel"));
+    taskTimeLabel->setOpenExternalLinks(true);
 
     gInfoGLayout->addWidget(taskTitleLabel,0,0);
     gInfoGLayout->addWidget(taskTimeLabel,1,0);
-    gInfoGLayout->addLayout(speedHLayout,2,0);
     gInfoGLayout->setRowStretch(3,1);
     gInfoGLayout->setColumnStretch(0,1);
     return content;
@@ -672,20 +568,22 @@ QWidget *DownloadWindow::setupGeneralInfoPage(QWidget *parent)
 
 QWidget *DownloadWindow::setupFileInfoPage(QWidget *parent)
 {
-    selectedTFModel=new CTorrentFileModel(this);
-    fileInfoView=new TorrentTreeView(parent);
+    selectedTFModel = new CTorrentFileModel(this);
+    fileInfoView = new TorrentTreeView(parent);
     fileInfoView->setAlternatingRowColors(true);
     fileInfoView->setModel(selectedTFModel);
-    fileInfoView->setObjectName(QStringLiteral("TaskFileInfoView"));
-    //fileInfoView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
-    fileInfoView->header()->resizeSection(0,300*logicalDpiX()/96);
-    fileInfoView->setFont(QFont(GlobalObjects::normalFont,10));
+    new FloatScrollBar(fileInfoView->verticalScrollBar(), fileInfoView);
+    new FloatScrollBar(fileInfoView->horizontalScrollBar(), fileInfoView);
+    // fileInfoView->setObjectName(QStringLiteral("TaskInfoTreeView"));
+    // fileInfoView->header()->setObjectName(QStringLiteral("TaskInfoTreeViewHeader"));
+    fileInfoView->header()->resizeSection(0, 300);
+    fileInfoView->setFont(QFont(GlobalObjects::normalFont, 10));
     QObject::connect(fileInfoView, &TorrentTreeView::ignoreColorChanged, selectedTFModel, &CTorrentFileModel::setIgnoreColor);
     QObject::connect(fileInfoView, &TorrentTreeView::normColorChanged, selectedTFModel, &CTorrentFileModel::setNormColor);
 
-    QObject::connect(fileInfoView,&QTreeView::doubleClicked,[this](const QModelIndex &index){
+    QObject::connect(fileInfoView, &QTreeView::doubleClicked, fileInfoView, [=](const QModelIndex &index){
         TorrentFile *item = static_cast<TorrentFile*>(index.internalPointer());
-        if(currentTask && item->index>0 && item->completedSize==item->size)
+        if (currentTask && item->index > 0 && item->completedSize == item->size)
         {
             QString dir(currentTask->dir);
             TorrentFile *root(item),*curItem(item->parent);
@@ -711,10 +609,10 @@ QWidget *DownloadWindow::setupFileInfoPage(QWidget *parent)
             }
         }
     });
-    QObject::connect(selectedTFModel,&CTorrentFileModel::checkedIndexChanged,[this](){
-        if(!currentTask) return;
+    QObject::connect(selectedTFModel, &CTorrentFileModel::checkedIndexChanged, selectedTFModel, [this](){
+        if (!currentTask) return;
         QString selIndexes(selectedTFModel->getCheckedIndex());
-        if(selIndexes!=currentTask->selectedIndexes)
+        if (selIndexes != currentTask->selectedIndexes)
         {
             QJsonObject options;
             options.insert("select-file", selIndexes);
@@ -731,6 +629,7 @@ QWidget *DownloadWindow::setupBlockPage(QWidget *parent)
     QScrollArea *contentScrollArea=new QScrollArea(parent);
     blockView = new BlockWidget(parent);
     blockView->setObjectName(QStringLiteral("TaskBlockView"));
+    new FloatScrollBar(contentScrollArea->verticalScrollBar(), contentScrollArea, false);
     contentScrollArea->setWidget(blockView);
     contentScrollArea->setWidgetResizable(true);
     contentScrollArea->setAlignment(Qt::AlignCenter);
@@ -743,10 +642,13 @@ QWidget *DownloadWindow::setupConnectionPage(QWidget *parent)
     PeerTreeView *peerView = new PeerTreeView(parent);
     peerView->setModel(peerModel);
     peerView->setRootIsDecorated(false);
-    peerView->setObjectName(QStringLiteral("TaskPeerView"));
-    peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::PROGRESS), 280*logicalDpiX()/96);
-    peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::CLIENT), 180*logicalDpiX()/96);
-     peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::IP), 160*logicalDpiX()/96);
+    new FloatScrollBar(peerView->verticalScrollBar(), peerView);
+    new FloatScrollBar(peerView->horizontalScrollBar(), peerView);
+    // peerView->setObjectName(QStringLiteral("TaskInfoTreeView"));
+    // peerView->header()->setObjectName(QStringLiteral("TaskInfoTreeViewHeader"));
+    peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::PROGRESS), 280);
+    peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::CLIENT), 180);
+    peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::IP), 160);
     peerView->setFont(QFont(GlobalObjects::normalFont,10));
     PeerDelegate *peerDelegate = new PeerDelegate(this);
     QObject::connect(peerView, &PeerTreeView::barColorChanged, [=](const QColor &c){peerDelegate->barColor=c;});
@@ -758,11 +660,12 @@ QWidget *DownloadWindow::setupConnectionPage(QWidget *parent)
 
 QWidget *DownloadWindow::setupGlobalLogPage(QWidget *parent)
 {
-    QPlainTextEdit *logView=new QPlainTextEdit(parent);
+    QPlainTextEdit *logView = new KPlainTextEdit(parent);
+    new FloatScrollBar(logView->verticalScrollBar(), logView);
     logView->setReadOnly(true);
     logView->setCenterOnScroll(true);
     logView->setMaximumBlockCount(50);
-    logView->setObjectName(QStringLiteral("TaskLogView"));
+    // logView->setObjectName(QStringLiteral("TaskLogView"));
     QObject::connect(Logger::logger(),&Logger::logAppend, this, [=](Logger::LogType type, const QString &log){
         if(type == Logger::Aria2)
         {
@@ -780,43 +683,35 @@ void DownloadWindow::initActions()
     act_Pause=new QAction(tr("Pause"),this);
     QObject::connect(act_Pause,&QAction::triggered,[this](){
         TaskFilterProxyModel *model = static_cast<TaskFilterProxyModel *>(downloadView->model());
-        QModelIndexList selectedRows= downloadView->selectionModel()->selectedRows();
-        if (selectedRows.size() == 0)return;
-        QList<DownloadTask*> taskList;
-        for(const QModelIndex &proxyIndex:selectedRows)
+        QItemSelection selection = model->mapSelectionToSource(downloadView->selectionModel()->selection());
+        if (selection.size() == 0) return;
+
+        for(const QModelIndex &index: selection.indexes())
         {
-            taskList.append(GlobalObjects::downloadModel->getDownloadTask(model->mapToSource(proxyIndex)));
-        }
-        for(DownloadTask *task:taskList)
-        {
-            if(task->gid.isEmpty())
-                continue;
-            if(task->status==DownloadTask::Paused || task->status==DownloadTask::Complete)
-                continue;
-            rpc->switchPauseStatus(task->gid,true);
+            DownloadTask* task = GlobalObjects::downloadModel->getDownloadTask(index);
+            if (task->gid.isEmpty()) continue;
+            if (task->status == DownloadTask::Paused || task->status == DownloadTask::Complete) continue;
+            rpc->switchPauseStatus(task->gid, true);
         }
     });
-    act_Start=new QAction(tr("Start"),this);
+    act_Start=new QAction(tr("Start"), this);
     QObject::connect(act_Start,&QAction::triggered,[this](){
         TaskFilterProxyModel *model = static_cast<TaskFilterProxyModel *>(downloadView->model());
-        QModelIndexList selectedRows= downloadView->selectionModel()->selectedRows();
-        if (selectedRows.size() == 0)return;
-        QList<DownloadTask*> taskList;
-        for(const QModelIndex &proxyIndex:selectedRows)
+        QItemSelection selection = model->mapSelectionToSource(downloadView->selectionModel()->selection());
+        if (selection.size() == 0) return;
+
+        for (const QModelIndex& index : selection.indexes())
         {
-            taskList.append(GlobalObjects::downloadModel->getDownloadTask(model->mapToSource(proxyIndex)));
-        }
-        for(DownloadTask *task:taskList)
-        {
-            if(task->gid.isEmpty())
+            DownloadTask* task = GlobalObjects::downloadModel->getDownloadTask(index);
+            if (task->gid.isEmpty())
             {
-                QFileInfo fi(task->dir,task->title+".aria2");
-                if(!fi.exists())
+                QFileInfo fi(task->dir, task->title + ".aria2");
+                if (!fi.exists())
                 {
-                    QMessageBox::StandardButton btn = QMessageBox::information(this,tr("Resume"),tr("Control file(*.aria2) does not exist, download the file all over again ?\n%1").arg(task->title),
-                                             QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel,QMessageBox::No);
-                    if(btn==QMessageBox::Cancel)return;
-                    GlobalObjects::downloadModel->restartDownloadTask(task,btn==QMessageBox::Yes);
+                    QMessageBox::StandardButton btn = QMessageBox::information(this, tr("Resume"), tr("Control file(*.aria2) does not exist, download the file all over again ?\n%1").arg(task->title),
+                        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::No);
+                    if (btn == QMessageBox::Cancel) return;
+                    GlobalObjects::downloadModel->restartDownloadTask(task, btn == QMessageBox::Yes);
                 }
 				else
 				{
@@ -827,28 +722,27 @@ void DownloadWindow::initActions()
             {
                 continue;
             }
-            rpc->switchPauseStatus(task->gid,false);
+            rpc->switchPauseStatus(task->gid, false);
         }
     });
     act_Remove=new QAction(tr("Remove"),this);
     QObject::connect(act_Remove,&QAction::triggered,[this](){
         TaskFilterProxyModel *model = static_cast<TaskFilterProxyModel *>(downloadView->model());
-        QModelIndexList selectedRows= downloadView->selectionModel()->selectedRows();
-        if (selectedRows.empty())return;
-        QMessageBox::StandardButton btn = QMessageBox::information(this,tr("Remove"),tr("Delete the Downloaded %1 Files?").arg(selectedRows.size()),
+        QItemSelection selection = model->mapSelectionToSource(downloadView->selectionModel()->selection());
+        if (selection.size() == 0) return;
+
+        QMessageBox::StandardButton btn = QMessageBox::information(this,tr("Remove"),tr("Delete the Downloaded %1 Files?").arg(selection.size()),
                                  QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel,QMessageBox::No);
         if(btn==QMessageBox::Cancel)return;
-        QModelIndexList sourceIndexes;
-        for(const QModelIndex &proxyIndex:selectedRows)
+        QModelIndexList sourceIndexes = selection.indexes();
+        for (const QModelIndex& index : sourceIndexes)
         {
-            QModelIndex index(model->mapToSource(proxyIndex));
-            sourceIndexes.append(index);
-            if(currentTask==GlobalObjects::downloadModel->getDownloadTask(index))
+            if (currentTask == GlobalObjects::downloadModel->getDownloadTask(index))
             {
                 setDetailInfo(nullptr);
             }
         }
-        GlobalObjects::downloadModel->removeItem(sourceIndexes,btn==QMessageBox::Yes);
+        GlobalObjects::downloadModel->removeItem(sourceIndexes, btn==QMessageBox::Yes);
     });
     act_PauseAll=new QAction(tr("Pause All"),this);
     QObject::connect(act_PauseAll,&QAction::triggered,[this](){
@@ -873,9 +767,10 @@ void DownloadWindow::initActions()
     act_BrowseFile=new QAction(tr("Browse File"),this);
     QObject::connect(act_BrowseFile,&QAction::triggered,[this](){
         TaskFilterProxyModel *model = static_cast<TaskFilterProxyModel *>(downloadView->model());
-        QModelIndexList selectedRows= downloadView->selectionModel()->selectedRows();
-        if (selectedRows.size() == 0)return;
-        DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(model->mapToSource(selectedRows.last()));
+        QItemSelection selection = model->mapSelectionToSource(downloadView->selectionModel()->selection());
+        if (selection.size() == 0) return;
+
+        DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(selection.indexes().last());
         QFileInfo info(task->dir,task->title);
         if(!info.exists())return;
 #ifdef Q_OS_WIN
@@ -887,28 +782,29 @@ void DownloadWindow::initActions()
     act_addToPlayList=new QAction(tr("Add To PlayList"),this);
     QObject::connect(act_addToPlayList,&QAction::triggered,[this](){
         TaskFilterProxyModel *model = static_cast<TaskFilterProxyModel *>(downloadView->model());
-        QModelIndexList selectedRows= downloadView->selectionModel()->selectedRows();
-        if (selectedRows.size() == 0)return;
-        for(const QModelIndex &proxyIndex:selectedRows)
+        QItemSelection selection = model->mapSelectionToSource(downloadView->selectionModel()->selection());
+        if (selection.size() == 0) return;
+
+        for (const QModelIndex& index : selection.indexes())
         {
-            DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(model->mapToSource(proxyIndex));
-            QFileInfo info(task->dir,task->title);
-            if(!info.exists())continue;
-            if(info.isDir())
-                GlobalObjects::playlist->addFolder(info.absoluteFilePath(),QModelIndex());
+            DownloadTask* task = GlobalObjects::downloadModel->getDownloadTask(index);
+            QFileInfo info(task->dir, task->title);
+            if (!info.exists())continue;
+            if (info.isDir())
+                GlobalObjects::playlist->addFolder(info.absoluteFilePath(), QModelIndex());
             else
-                GlobalObjects::playlist->addItems(QStringList()<<info.absoluteFilePath(),QModelIndex());
+                GlobalObjects::playlist->addItems(QStringList() << info.absoluteFilePath(), QModelIndex());
         }
     });
     QObject::connect(GlobalObjects::downloadModel,&DownloadModel::taskFinish,this,[this](DownloadTask *task){
-        if(GlobalObjects::appSetting->value("Download/AutoAddToList",false).toBool())
+        if (GlobalObjects::appSetting->value("Download/AutoAddToList", false).toBool())
         {
-            QFileInfo info(task->dir,task->title);
-            if(!info.exists()) return;
-            if(info.isDir())
-                GlobalObjects::playlist->addFolder(info.absoluteFilePath(),QModelIndex());
+            QFileInfo info(task->dir, task->title);
+            if (!info.exists()) return;
+            if (info.isDir())
+                GlobalObjects::playlist->addFolder(info.absoluteFilePath(), QModelIndex());
             else
-                GlobalObjects::playlist->addItems(QStringList()<<info.absoluteFilePath(),QModelIndex());
+                GlobalObjects::playlist->addItems(QStringList() << info.absoluteFilePath(), QModelIndex());
         }
         if (this->isHidden())
         {
@@ -923,26 +819,26 @@ void DownloadWindow::initActions()
     act_CopyURI=new QAction(tr("Copy URI"),this);
     QObject::connect(act_CopyURI,&QAction::triggered,[this](){
         TaskFilterProxyModel *model = static_cast<TaskFilterProxyModel *>(downloadView->model());
-        QModelIndexList selectedRows= downloadView->selectionModel()->selectedRows();
-        if (selectedRows.size() == 0)return;
-        DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(model->mapToSource(selectedRows.last()));
+        QItemSelection selection = model->mapSelectionToSource(downloadView->selectionModel()->selection());
+        if (selection.size() == 0) return;
+        DownloadTask* task = GlobalObjects::downloadModel->getDownloadTask(selection.indexes().last());
         QClipboard *cb = QApplication::clipboard();
         cb->setText(task->uri);
     });
     act_SaveTorrent=new QAction(tr("Save Torrent"),this);
     QObject::connect(act_SaveTorrent,&QAction::triggered,[this](){
         TaskFilterProxyModel *model = static_cast<TaskFilterProxyModel *>(downloadView->model());
-        QModelIndexList selectedRows= downloadView->selectionModel()->selectedRows();
-        if (selectedRows.size() == 0)return;
-        DownloadTask *task=GlobalObjects::downloadModel->getDownloadTask(model->mapToSource(selectedRows.last()));
-        if(task->torrentContentState==-1) GlobalObjects::downloadModel->tryLoadTorrentContent(task);
-        if(task->torrentContent.isEmpty()) return;
-        QString fileName = QFileDialog::getSaveFileName(this, tr("Save Torrent"),task->title,"Torrent File (*.torrent)");
-        if(!fileName.isEmpty())
+        QItemSelection selection = model->mapSelectionToSource(downloadView->selectionModel()->selection());
+        if (selection.size() == 0) return;
+        DownloadTask* task = GlobalObjects::downloadModel->getDownloadTask(selection.indexes().last());
+        if (task->torrentContentState == -1) GlobalObjects::downloadModel->tryLoadTorrentContent(task);
+        if (task->torrentContent.isEmpty()) return;
+        QString fileName = QFileDialog::getSaveFileName(this, tr("Save Torrent"), task->title, "Torrent File (*.torrent)");
+        if (!fileName.isEmpty())
         {
             QFile torrnentFile(fileName);
-            bool ret=torrnentFile.open(QIODevice::WriteOnly);
-            if(!ret) return;
+            bool ret = torrnentFile.open(QIODevice::WriteOnly);
+            if (!ret) return;
             torrnentFile.write(task->torrentContent);
         }
     });
@@ -964,14 +860,19 @@ void DownloadWindow::downloadSelectionChanged()
 
 void DownloadWindow::setDetailInfo(DownloadTask *task)
 {
-    if(task)
+    if (task)
     {
         act_CopyURI->setEnabled(!task->uri.isEmpty());
         currentTask=task;
         taskTitleLabel->setText(task->title);
-        taskTimeLabel->setText(tr("Create Time: %1 \t Finish Time: %2")
-                               .arg(QDateTime::fromSecsSinceEpoch(task->createTime).toString("yyyy-MM-dd hh:mm:ss"))
-                               .arg(task->finishTime<task->createTime?"----":QDateTime::fromSecsSinceEpoch(task->finishTime).toString("yyyy-MM-dd hh:mm:ss")));
+        QStringList taskInfo;
+        const QString itemTpl = "<p><font style='color: #d0d0d0;'>%1</font>%2</p>";
+        taskInfo.append(itemTpl.arg(tr("Create Time: ")).arg(QDateTime::fromSecsSinceEpoch(task->createTime).toString("yyyy-MM-dd hh:mm:ss")));
+        taskInfo.append(itemTpl.arg(tr("Finish Time: ")).arg(task->finishTime < task->createTime ? "----" : QDateTime::fromSecsSinceEpoch(task->finishTime).toString("yyyy-MM-dd hh:mm:ss")));
+        const QString locTpl = "<a style='color: rgb(96, 208, 252);' href=\"file:///%1\">%2</a>";
+        taskInfo.append(itemTpl.arg(tr("Save Location: ")).arg(locTpl.arg(task->dir, task->dir)));
+        taskTimeLabel->setText(taskInfo.join("\n"));
+        taskTimeLabel->adjustSize();
         blockView->setBlock(task->numPieces, task->bitfield);
         blockView->setToolTip(tr("Blocks: %1 Size: %2").arg(task->numPieces).arg(formatSize(false, task->pieceLength)));
         if(task->torrentContentState==-1) GlobalObjects::downloadModel->tryLoadTorrentContent(task);
@@ -1015,7 +916,7 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
         currentTask=nullptr;
         peerModel->clear();
         taskTitleLabel->setText(tr("<No Item has been Selected>"));
-        taskTimeLabel->setText(tr("Create Time: ---- \t Finish Time: ----"));
+        taskTimeLabel->clear();
         blockView->setBlock(0, "0");
         blockView->setToolTip("");
         selectedTFModel->setContent(nullptr);
@@ -1039,6 +940,80 @@ void DownloadWindow::addUrlTask(const QStringList &urls, const QString &path)
             }
         }
     }
+}
+
+void DownloadWindow::addTorrentTask()
+{
+    QString file = QFileDialog::getOpenFileName(this, tr("Select Torrent File"),"","Torrent(*.torrent) ");
+    if (!file.isEmpty())
+    {
+        try
+        {
+            TorrentDecoder decoder(file);
+            SelectTorrentFile selectTorrentFile(decoder.root,this);
+            QCoreApplication::processEvents();
+            if (QDialog::Accepted == selectTorrentFile.exec())
+            {
+                QString errInfo(GlobalObjects::downloadModel->addTorrentTask(decoder.rawContent, decoder.infoHash,
+                                selectTorrentFile.dir, selectTorrentFile.selectIndexes, QString()));
+                if (!errInfo.isEmpty())
+                {
+                    QMessageBox::information(this,tr("Error"),tr("An error occurred while adding Torrent : \n %1 ").arg(errInfo));
+                }
+            }
+            delete decoder.root;
+        }
+        catch(TorrentError &err)
+        {
+            QMessageBox::information(this,tr("Error"),err.errorInfo);
+        }
+    }
+}
+
+void DownloadWindow::showSettings()
+{
+    Settings settings(Settings::PAGE_DOWN, this);
+    const SettingPage *downPage = settings.getPage(Settings::PAGE_DOWN);
+    settings.exec();
+
+    QJsonObject globalOptions,taskOptions;
+    const auto &changedValues = downPage->getChangedValues();
+    if (changedValues.contains("downSpeed"))
+    {
+        globalOptions.insert("max-overall-download-limit", QString::number(changedValues["downSpeed"].toInt()) + "K");
+    }
+    if (changedValues.contains("upSpeed"))
+    {
+        globalOptions.insert("max-overall-upload-limit", QString::number(changedValues["upSpeed"].toInt()) + "K");
+    }
+    if (changedValues.contains("concurrent"))
+    {
+        globalOptions.insert("max-concurrent-downloads", QString::number(changedValues["concurrent"].toInt()));
+    }
+    if (changedValues.contains("seedTime"))
+    {
+        taskOptions.insert("seed-time", QString::number(changedValues["seedTime"].toInt()));
+    }
+    if (changedValues.contains("btTracker"))
+    {
+        taskOptions.insert("bt-tracker", changedValues["btTracker"].toStringList().join(','));
+    }
+    if (globalOptions.count() > 0)
+    {
+        rpc->changeGlobalOption(globalOptions);
+    }
+    if (taskOptions.count() > 0)
+    {
+        auto &items = GlobalObjects::downloadModel->getItems();
+        for (auto iter=items.cbegin(); iter!=items.cend(); ++iter)
+        {
+            if (iter.value()->status != DownloadTask::Complete)
+            {
+                rpc->changeOption(iter.key(), taskOptions);
+            }
+        }
+    }
+
 }
 
 void DownloadWindow::showEvent(QShowEvent *)

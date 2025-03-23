@@ -1,6 +1,7 @@
 #include "appradio.h"
 #include <QRadioButton>
 #include "Extension/App/kapp.h"
+#include "UI/ela/ElaRadioButton.h"
 
 namespace Extension
 {
@@ -54,7 +55,7 @@ void AppRadio::bindEvent(AppEvent event, const QString &luaFunc)
 
 AppRadio::AppRadio(AppWidget *parent) : AppWidget{parent}
 {
-    widget = new QRadioButton(parent? parent->getWidget() : nullptr);
+    widget = new ElaRadioButton(parent? parent->getWidget() : nullptr);
 }
 
 bool AppRadio::setWidgetOption(AppWidgetOption option, const QVariant &val)

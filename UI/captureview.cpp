@@ -2,6 +2,7 @@
 #include "MediaLibrary/capturelistmodel.h"
 #include "Play/Video/simpleplayer.h"
 #include "Play/Video/mpvplayer.h"
+#include "UI/ela/ElaMenu.h"
 #include "globalobjects.h"
 #include <QGraphicsPixmapItem>
 #include <QStackedLayout>
@@ -17,13 +18,13 @@
 CaptureView::CaptureView(CaptureListModel *model, int curRow, QWidget *parent) : CFramelessDialog("",parent,false,true,false), captureModel(model), singleImageMode(false)
 {
     this->curRow=curRow;
-    view=new ImageView(this);
+    view = new ImageView(this);
     smPlayer = new SimplePlayer();
     smPlayer->setWindowFlags(Qt::FramelessWindowHint);
     QWindow *native_wnd  = QWindow::fromWinId(smPlayer->winId());
     QWidget *playerWindowWidget=QWidget::createWindowContainer(native_wnd);
     playerWindowWidget->setParent(this);
-    playerWindowWidget->setMinimumSize(400*logicalDpiX()/96, 225*logicalDpiY()/96);
+    playerWindowWidget->setMinimumSize(400, 225);
     smPlayer->show();
 
     QObject::connect(smPlayer, &SimplePlayer::stateChanged, this, [=](SimplePlayer::PlayState state){
@@ -35,7 +36,6 @@ CaptureView::CaptureView(CaptureListModel *model, int curRow, QWidget *parent) :
     });
 
     QStackedLayout *viewSLayout=new QStackedLayout(this);
-    viewSLayout->setContentsMargins(0,0,0,0);
     viewSLayout->addWidget(view);
     viewSLayout->addWidget(playerWindowWidget);
 
@@ -48,7 +48,7 @@ CaptureView::CaptureView(CaptureListModel *model, int curRow, QWidget *parent) :
     });
 
     QAction* actCopy = new QAction(tr("Copy"),this);
-    QObject::connect(actCopy, &QAction::triggered,[this](bool)
+    QObject::connect(actCopy, &QAction::triggered, this, [this](bool)
     {
         if(curItem && curItem->type == AnimeImage::CAPTURE)
         {
@@ -56,7 +56,7 @@ CaptureView::CaptureView(CaptureListModel *model, int curRow, QWidget *parent) :
         }
     });
     QAction* actSave = new QAction(tr("Save"),this);
-    QObject::connect(actSave, &QAction::triggered,[this](bool)
+    QObject::connect(actSave, &QAction::triggered, this, [this](bool)
     {
         if(curItem->type == AnimeImage::CAPTURE)
         {
@@ -86,7 +86,7 @@ CaptureView::CaptureView(CaptureListModel *model, int curRow, QWidget *parent) :
         }
     });
     QAction* actRemove = new QAction(tr("Remove"),this);
-    QObject::connect(actRemove, &QAction::triggered,[this](bool)
+    QObject::connect(actRemove, &QAction::triggered, this, [this](bool)
     {
         int nRow=this->curRow+1;
         const AnimeImage *nItem=captureModel->getCaptureItem(nRow);
@@ -111,14 +111,26 @@ CaptureView::CaptureView(CaptureListModel *model, int curRow, QWidget *parent) :
             setCapture();
         }
     });
-    view->setContextMenuPolicy(Qt::ActionsContextMenu);
-    view->addAction(actCopy);
-    view->addAction(actSave);
-    view->addAction(actRemove);
-    smPlayer->setContextMenuPolicy(Qt::ActionsContextMenu);
-    smPlayer->addAction(actSave);
-    smPlayer->addAction(actRemove);
-    setSizeSettingKey("DialogSize/CaptureView",QSize(600*logicalDpiX()/96,340*logicalDpiY()/96));
+    {
+        view->setContextMenuPolicy(Qt::CustomContextMenu);
+        ElaMenu *actionMenu = new ElaMenu(view);
+        QObject::connect(view, &ImageView::customContextMenuRequested, this, [=](){
+            actionMenu->exec(QCursor::pos());
+        });
+        actionMenu->addAction(actCopy);
+        actionMenu->addAction(actSave);
+        actionMenu->addAction(actRemove);
+    }
+    {
+        smPlayer->setContextMenuPolicy(Qt::CustomContextMenu);
+        ElaMenu *actionMenu = new ElaMenu(smPlayer);
+        QObject::connect(smPlayer, &ImageView::customContextMenuRequested, this, [=](){
+            actionMenu->exec(QCursor::pos());
+        });
+        actionMenu->addAction(actSave);
+        actionMenu->addAction(actRemove);
+    }
+    setSizeSettingKey("DialogSize/CaptureView", QSize(600, 340));
 }
 
 CaptureView::CaptureView(const QPixmap &pixmap, QWidget *parent) : CFramelessDialog(tr("View Image"),parent,true,true,false),
@@ -127,9 +139,8 @@ CaptureView::CaptureView(const QPixmap &pixmap, QWidget *parent) : CFramelessDia
     view = new ImageView(this);
     view->setPixmap(pixmap);
     QStackedLayout *viewSLayout=new QStackedLayout(this);
-    viewSLayout->setContentsMargins(0,0,0,0);
     viewSLayout->addWidget(view);
-    setSizeSettingKey("DialogSize/CaptureImageView",QSize(300*logicalDpiX()/96,240*logicalDpiY()/96));
+    setSizeSettingKey("DialogSize/CaptureImageView",QSize(300, 240));
 }
 
 CaptureView::~CaptureView()
@@ -203,6 +214,7 @@ ImageView::ImageView(QWidget *parent):QGraphicsView(parent),isScale(false),initR
     pixmapItem=new QGraphicsPixmapItem;
     pixmapItem->setTransformationMode(Qt::SmoothTransformation);
     scene->addItem(pixmapItem);
+    setBackgroundBrush(QColor(60, 60, 60));
 }
 
 void ImageView::setPixmap(const QPixmap &pixmap)

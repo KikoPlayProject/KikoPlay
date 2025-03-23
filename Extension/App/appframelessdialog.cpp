@@ -32,7 +32,7 @@ AppFramelessDialog::AppFramelessDialog(const QString &titleStr, QWidget *parent)
     titleBar = new QWidget(backWidget);
 
     title=new QLabel(titleStr, titleBar);
-    title->setFont(QFont(GlobalObjects::normalFont, 10));
+    title->setFont(QFont(GlobalObjects::normalFont, 13));
     title->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
     title->setOpenExternalLinks(true);
 
@@ -76,7 +76,7 @@ AppFramelessDialog::AppFramelessDialog(const QString &titleStr, QWidget *parent)
     busyLabel->hide();
 
     QHBoxLayout *titleHBLayout=new QHBoxLayout(titleBar);
-    titleHBLayout->setContentsMargins(8*logicalDpiX()/96, 8*logicalDpiY()/96, 8*logicalDpiX()/96, 8*logicalDpiY()/96);
+    titleHBLayout->setContentsMargins(12, 8, 8, 8);
     titleHBLayout->addWidget(title, 0, Qt::AlignVCenter);
     titleHBLayout->addWidget(busyLabel);
     titleHBLayout->addSpacing(btnH * 0.2);

@@ -2,6 +2,7 @@
 #include <QComboBox>
 #include "Extension/Common/ext_common.h"
 #include "Extension/App/kapp.h"
+#include "UI/ela/ElaComboBox.h"
 
 namespace Extension
 {
@@ -116,7 +117,7 @@ int AppCombo::clear(lua_State *L)
 
 AppCombo::AppCombo(AppWidget *parent) : AppWidget{parent}
 {
-    widget = new QComboBox(parent? parent->getWidget() : nullptr);
+    widget = new ElaComboBox(parent? parent->getWidget() : nullptr);
 }
 
 void AppCombo::bindEvent(AppEvent event, const QString &luaFunc)

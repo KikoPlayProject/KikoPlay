@@ -1,8 +1,9 @@
 #include "selectepisode.h"
+#include "UI/ela/ElaCheckBox.h"
+#include "UI/widgets/kpushbutton.h"
 #include <QGridLayout>
 #include <QPushButton>
 #include <QLabel>
-#include <QCheckBox>
 #include <QAction>
 #include <QHeaderView>
 SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent)
@@ -30,7 +31,7 @@ SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent)
             item->setFlags(item->flags()&~(Qt::ItemIsEditable));
     });
 
-	QCheckBox *selectAllCheck = new QCheckBox(tr("Select All"), this);
+    QCheckBox *selectAllCheck = new ElaCheckBox(tr("Select All"), this);
     QObject::connect(selectAllCheck, &QCheckBox::stateChanged, [this](int state) {
 		int count = episodeWidget->topLevelItemCount();
 		for (int i = count - 1; i >= 0; i--)
@@ -38,7 +39,7 @@ SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent)
             episodeWidget->topLevelItem(i)->setCheckState(0, Qt::CheckState(state));
 		}
 	});
-    QPushButton *setDelayButton=new QPushButton(tr("Auto Set Delay"),this);
+    QPushButton *setDelayButton = new KPushButton(tr("Auto Set Delay"),this);
     QObject::connect(setDelayButton,&QPushButton::clicked,[this](){
         int timeSum=0;
         int i=0;
@@ -49,7 +50,7 @@ SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent)
             episodeWidget->topLevelItem(i++)->setData(2,0,QString::number(item.delay/1000));
         }
     });
-    QPushButton *resetDelay=new QPushButton(tr("Reset Delay"),this);
+    QPushButton *resetDelay = new KPushButton(tr("Reset Delay"),this);
     QObject::connect(resetDelay,&QPushButton::clicked,[this](){
         int i=0;
         for(auto &item:episodeResult)

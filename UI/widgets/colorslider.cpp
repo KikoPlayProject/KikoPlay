@@ -11,13 +11,20 @@ void ColorSlider::setEnabled(bool on)
 void ColorSlider::paintEvent(QPaintEvent *)
 {
     QStylePainter painter(this);
+    painter.setRenderHints(QPainter::SmoothPixmapTransform | QPainter::Antialiasing | QPainter::TextAntialiasing);
     QStyleOptionSlider opt;
     initStyleOption(&opt);
     QRect grooveRect(style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove,this));
     fillGradient.setStart(0, 0);
     fillGradient.setFinalStop(grooveRect.width(), 0);
-    painter.fillRect(grooveRect, QBrush(fillGradient));
-    if(!isEnabled()) painter.fillRect(grooveRect, QColor(255,255,255,200));
+    painter.setBrush(QBrush(fillGradient));
+    painter.setPen(Qt::NoPen);
+    painter.drawRoundedRect(grooveRect, 4, 4);
+    if(!isEnabled())
+    {
+        painter.setBrush(QColor(255, 255, 255, 200));
+        painter.drawRoundedRect(grooveRect, 4, 4);
+    }
     opt.subControls = QStyle::SC_SliderHandle | QStyle::SC_SliderGroove;
     if (pressedControl)
     {

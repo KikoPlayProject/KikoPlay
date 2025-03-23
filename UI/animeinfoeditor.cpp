@@ -8,141 +8,178 @@
 #include <QGridLayout>
 #include <QSplitter>
 #include <QAction>
+#include <QScrollArea>
+#include <QStyledItemDelegate>
+#include "Common/flowlayout.h"
 #include "Common/notifier.h"
 #include "MediaLibrary/animeinfo.h"
 #include "MediaLibrary/animeworker.h"
+#include "UI/ela/ElaCalendarPicker.h"
+#include "UI/ela/ElaMenu.h"
+#include "UI/ela/ElaSpinBox.h"
+#include "UI/inputdialog.h"
+#include "UI/widgets/floatscrollbar.h"
+#include "UI/widgets/fonticonbutton.h"
+#include "UI/widgets/klineedit.h"
+#include "UI/widgets/kplaintextedit.h"
+
+namespace
+{
+
+class StaffItemDelegate: public QStyledItemDelegate
+{
+public:
+    explicit StaffItemDelegate(QObject* parent = nullptr) : QStyledItemDelegate(parent) { }
+
+    QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override
+    {
+        return new KLineEdit(parent);
+    }
+    inline void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &/*index*/) const override
+    {
+        editor->setGeometry(option.rect);
+    }
+};
+
+}
 
 AnimeInfoEditor::AnimeInfoEditor(Anime *anime, QWidget *parent) :
     CFramelessDialog(tr("Edit Anime Info - %1").arg(anime->name()), parent, true, true, false),
     airDateChanged(false), epsChanged(false), staffChanged(false), descChanged(false), curAnime(anime)
 {
-    QWidget *leftContainer = new QWidget(this);
-    QLabel *airTimeLabel = new QLabel(tr("Air Date"), leftContainer);
-    dateEdit = new QDateEdit(leftContainer);
-    dateEdit->setDisplayFormat("yyyy-MM-dd");
-    dateEdit->setDate(QDate::fromString(anime->airDate(), "yyyy-MM-dd"));
-    QObject::connect(dateEdit, &QDateTimeEdit::dateChanged, this, [=](){
+    QLabel *airTimeLabel = new QLabel(tr("Air Date"), this);
+    dateEdit = new ElaCalendarPicker(this);
+    dateEdit->setSelectedDate(QDate::fromString(anime->airDate(), "yyyy-MM-dd"));
+    QLabel *epsLabel = new QLabel(tr("Episodes"), this);
+    epsSpin = new ElaSpinBox(this);
+    epsSpin->setRange(0, INT_MAX);
+    epsSpin->setValue(anime->epCount());
+
+    QHBoxLayout *hLayout = new QHBoxLayout;
+    hLayout->setContentsMargins(0, 0, 0, 0);
+    hLayout->addWidget(airTimeLabel);
+    hLayout->addWidget(dateEdit);
+    hLayout->addSpacing(20);
+    hLayout->addWidget(epsLabel);
+    hLayout->addWidget(epsSpin);
+    hLayout->addStretch(1);
+
+    QLabel *aliasLabel = new QLabel(tr("Alias"), this);
+    FontIconButton *addAliasBtn = new FontIconButton(QChar(0xe667), "", 12, 10, 0, this);
+    addAliasBtn->setObjectName(QStringLiteral("FontIconToolButton"));
+    QHBoxLayout *hAliasLayout = new QHBoxLayout;
+    hAliasLayout->setContentsMargins(0, 0, 0, 0);
+    hAliasLayout->addWidget(aliasLabel);
+    hAliasLayout->addWidget(addAliasBtn);
+    hAliasLayout->addStretch(1);
+    AliasPanel *aliasPanel = new AliasPanel(anime->name(), this);
+
+    QLabel *staffLabel = new QLabel(tr("Staff Info"), this);
+    QTreeView *staffView = new QTreeView(this);
+    staffView->setContextMenuPolicy(Qt::CustomContextMenu);
+    staffView->setEditTriggers(QAbstractItemView::DoubleClicked);
+    staffView->setRootIsDecorated(false);
+    staffView->setItemDelegate(new StaffItemDelegate(staffView));
+    staffView->setAlternatingRowColors(true);
+    staffModel = new StaffModel(anime, this);
+    staffView->setModel(staffModel);
+
+    QLabel *descLabel = new QLabel(tr("Description"), this);
+    descEdit = new KTextEdit(this);
+    descEdit->setPlainText(anime->description());
+
+    QWidget *pageContainer = new QWidget(this);
+    QVBoxLayout *pageVLayout = new QVBoxLayout(pageContainer);
+    pageVLayout->setContentsMargins(0, 0, 0, 0);
+    pageVLayout->addLayout(hLayout);
+    pageVLayout->addLayout(hAliasLayout);
+    pageVLayout->addWidget(aliasPanel);
+    pageVLayout->addWidget(descLabel);
+    pageVLayout->addWidget(descEdit, 1);
+    pageVLayout->addWidget(staffLabel);
+    pageVLayout->addWidget(staffView, 1);
+    // pageVLayout->addStretch(1);
+
+    QScrollArea *pageScrollArea = new QScrollArea(this);
+    pageScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    pageScrollArea->setWidget(pageContainer);
+    pageScrollArea->setWidgetResizable(true);
+    new FloatScrollBar(pageScrollArea->verticalScrollBar(), pageScrollArea);
+
+    QHBoxLayout *pHLayout = new QHBoxLayout(this);
+    pHLayout->addWidget(pageScrollArea);
+
+
+    QObject::connect(dateEdit, &ElaCalendarPicker::selectedDateChanged, this, [=](){
         airDateChanged = true;
     });
 
-    QLabel *epsLabel = new QLabel(tr("Episodes"), leftContainer);
-    epsEdit = new QLineEdit(QString::number(anime->epCount()), leftContainer);
-    QIntValidator *epValidator=new QIntValidator(leftContainer);
-    epValidator->setBottom(0);
-    epsEdit->setValidator(epValidator);
-    QObject::connect(epsEdit, &QLineEdit::textChanged, this, [=](){
+    QObject::connect(epsSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [=](){
         epsChanged = true;
     });
 
-    QLabel *staffLabel = new QLabel(tr("Staff Info"), leftContainer);
-    QTreeView *staffView = new QTreeView(leftContainer);
-    staffView->setContextMenuPolicy(Qt::ActionsContextMenu);
-    staffView->setEditTriggers(QAbstractItemView::DoubleClicked);
-    staffView->setRootIsDecorated(false);
-    staffView->setAlternatingRowColors(true);
-    staffModel = new StaffModel(anime, this);
     QObject::connect(staffModel, &StaffModel::staffChanged, this, [=](){
         staffChanged = true;
     });
 
-    staffView->setModel(staffModel);
-    QAction *actAddStaff = new QAction(tr("Add Staff"), staffView);
+    QObject::connect(descEdit, &QTextEdit::textChanged, this, [=](){
+        descChanged = true;
+    });
+
+    QObject::connect(addAliasBtn, &FontIconButton::clicked, this, [=](){
+        LineInputDialog input(tr("Add Alias"), tr("Alias"), "", "DialogSize/AddAlias", false, this);
+        if (QDialog::Accepted == input.exec())
+        {
+            const QString nAlias = input.text.trimmed();
+            if (nAlias == anime->name())
+            {
+                showMessage(tr("The alias cannot be the same as the anime name"), NotifyMessageFlag::NM_ERROR);
+                return;
+            }
+            if (AnimeWorker::instance()->hasAnime(nAlias))
+            {
+                showMessage(tr("The alias already exists"), NotifyMessageFlag::NM_ERROR);
+                return;
+            }
+            if (AnimeWorker::instance()->addAlias(anime->name(), nAlias))
+            {
+                aliasPanel->addAlias(nAlias);
+            }
+            else
+            {
+                showMessage(tr("Failed to add the alias"), NotifyMessageFlag::NM_ERROR);
+            }
+        }
+    });
+
+    ElaMenu *actionMenu = new ElaMenu(staffView);
+    QObject::connect(staffView, &QLabel::customContextMenuRequested, this, [=](){
+        actionMenu->exec(QCursor::pos());
+    });
+    QAction *actAddStaff = actionMenu->addAction(tr("Add Staff"));
     QObject::connect(actAddStaff, &QAction::triggered, this, [=](){
         auto index = staffModel->addStaff();
         staffView->scrollTo(index);
         staffView->edit(index);
     });
-    QAction *actRemoveStaff = new QAction(tr("Remove Staff"), staffView);
+    QAction *actRemoveStaff = actionMenu->addAction(tr("Remove Staff"));
     QObject::connect(actRemoveStaff, &QAction::triggered, this, [=](){
         auto selection = staffView->selectionModel()->selectedRows();
         if(selection.size()==0) return;
         staffModel->removeStaff(selection.first());
     });
-    staffView->addAction(actAddStaff);
-    staffView->addAction(actRemoveStaff);
 
-
-    QLabel *aliasLabel = new QLabel(tr("Alias"), leftContainer);
-    QListView *aliasView = new QListView(leftContainer);
-    AliasModel *aliasModel = new AliasModel(anime->name(), this);
-    QObject::connect(aliasModel, &AliasModel::addFailed, this, [=](){
-        showMessage(tr("Add Alias Failed: The alias is illegal"), NM_HIDE | NM_ERROR);
-    });
-    aliasView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    aliasView->setContextMenuPolicy(Qt::ActionsContextMenu);
-    aliasView->setSelectionMode(QAbstractItemView::SingleSelection);
-    aliasView->setModel(aliasModel);
-    QAction *actAddAlias = new QAction(tr("Add Alias"), aliasView);
-    QObject::connect(actAddAlias, &QAction::triggered, this, [=](){
-        auto index = aliasModel->addAlias();
-        aliasView->scrollTo(index);
-        aliasView->edit(index);
-    });
-    QAction *actRemoveAlias = new QAction(tr("Remove Alias"), aliasView);
-    QObject::connect(actRemoveAlias, &QAction::triggered, this, [=](){
-        auto selection = aliasView->selectionModel()->selectedRows();
-        if(selection.size()==0) return;
-        aliasModel->removeAlias(selection.first());
-    });
-    aliasView->addAction(actAddAlias);
-    aliasView->addAction(actRemoveAlias);
-
-
-    QGridLayout *leftGLayout = new QGridLayout(leftContainer);
-    leftGLayout->setContentsMargins(0, 0, 0, 0);
-    leftGLayout->addWidget(airTimeLabel, 0, 0);
-    leftGLayout->addWidget(dateEdit, 0, 1);
-    leftGLayout->addWidget(epsLabel, 1, 0);
-    leftGLayout->addWidget(epsEdit, 1, 1);
-    leftGLayout->addWidget(staffLabel, 2, 0);
-    leftGLayout->addWidget(staffView, 3, 0, 1, 2);
-    leftGLayout->addWidget(aliasLabel, 4, 0);
-    leftGLayout->addWidget(aliasView, 5, 0, 1, 2);
-    leftGLayout->setColumnStretch(1, 1);
-    leftGLayout->setRowStretch(3, 2);
-    leftGLayout->setRowStretch(5, 1);
-
-
-    QWidget *rightContainer = new QWidget(this);
-    QLabel *descLabel = new QLabel(tr("Description"), rightContainer);
-    descEdit = new QTextEdit(rightContainer);
-    descEdit->setPlainText(anime->description());
-    QObject::connect(descEdit, &QTextEdit::textChanged, this, [=](){
-        descChanged = true;
-    });
-
-    QGridLayout *rightGLayout = new QGridLayout(rightContainer);
-    rightGLayout->setContentsMargins(0, 0, 0, 0);
-    rightGLayout->addWidget(descLabel, 0, 0);
-    rightGLayout->addWidget(descEdit, 1, 0);
-    rightGLayout->setRowStretch(1, 1);
-
-
-    QSplitter *contentSplitter = new QSplitter(this);
-    contentSplitter->setObjectName(QStringLiteral("NormalSplitter"));
-    contentSplitter->addWidget(leftContainer);
-    contentSplitter->addWidget(rightContainer);
-    contentSplitter->setStretchFactor(0,4);
-    contentSplitter->setStretchFactor(1,5);
-    contentSplitter->setCollapsible(0, false);
-    contentSplitter->setCollapsible(1, false);
-
-    QHBoxLayout *editorHLayout = new QHBoxLayout(this);
-    editorHLayout->setContentsMargins(0, 4*logicalDpiY()/96, 0, 0);
-    editorHLayout->addWidget(contentSplitter);
-
-    setSizeSettingKey("DialogSize/AnimeInfoEdit", QSize(500*logicalDpiX()/96, 400*logicalDpiY()/96));
+    setSizeSettingKey("DialogSize/AnimeInfoEdit", QSize(400, 500));
 }
 
 const QString AnimeInfoEditor::airDate() const
 {
-    return dateEdit->date().toString("yyyy-MM-dd");
+    return dateEdit->getSelectedDate().toString("yyyy-MM-dd");
 }
 
 int AnimeInfoEditor::epCount() const
 {
-    QString epText = epsEdit->text().trimmed();
-    return epText.isEmpty()? curAnime->epCount() : epText.toInt();
+    return epsSpin->value();
 }
 
 const QVector<QPair<QString, QString> > &AnimeInfoEditor::staffs() const
@@ -306,4 +343,44 @@ bool StaffModel::setData(const QModelIndex &index, const QVariant &value, int)
     }
     emit staffChanged();
     return true;
+}
+
+AliasPanel::AliasPanel(const QString &animeName, QWidget *parent) : QWidget(parent), anime(animeName)
+{
+    setLayout(new FlowLayout(this));
+    layout()->setContentsMargins(0, 0, 0, 0);
+    for (const QString &alias : AnimeWorker::instance()->getAlias(animeName))
+    {
+        addAlias(alias);
+    }
+    setVisible(!aliasList.isEmpty());
+}
+
+void AliasPanel::addAlias(const QString &alias)
+{
+    const int curIndex = aliasList.size();
+    aliasList.append(alias);
+    QLabel *aliasItem = new QLabel(alias, this);
+    aliasItem->setObjectName(QStringLiteral("AliasItem"));
+    this->layout()->addWidget(aliasItem);
+    setVisible(true);
+    aliasItem->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    ElaMenu *actionMenu = new ElaMenu(aliasItem);
+    QObject::connect(aliasItem, &QLabel::customContextMenuRequested, this, [=](){
+        actionMenu->exec(QCursor::pos());
+    });
+
+    QAction *actRemoveAlias = actionMenu->addAction(tr("Remove Alias"));
+    QObject::connect(actRemoveAlias, &QAction::triggered, this, [=](){
+        AnimeWorker::instance()->removeAlias(anime, alias, true);
+        aliasItem->deleteLater();
+        aliasList.removeAt(curIndex);
+        if (aliasList.isEmpty()) setVisible(false);
+    });
+}
+
+QSize AliasPanel::sizeHint() const
+{
+    return layout()->sizeHint();
 }

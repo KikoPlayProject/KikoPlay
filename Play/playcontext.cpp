@@ -50,4 +50,5 @@ void PlayContext::clear()
     duration = 0;
     playtime = 0;
     seekable = false;
+    stopFrame = QImage();
 }

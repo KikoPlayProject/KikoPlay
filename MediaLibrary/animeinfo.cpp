@@ -2,6 +2,9 @@
 #include "animeworker.h"
 #include "animeitemdelegate.h"
 #include "Common/lrucache.h"
+#include "qpainter.h"
+#include "qpainterpath.h"
+#include "globalobjects.h"
 #include <QImageReader>
 
 namespace
@@ -12,15 +15,29 @@ LRUCache<Anime *, QSharedPointer<QPixmap>> coverCache{"PreviewCover", 128, true}
 const QPixmap &Anime::cover(bool onlyCache)
 {
     static QPixmap emptyCover;
-    if(_coverData.isEmpty()) return emptyCover;
+    if (_coverData.isEmpty()) return emptyCover;
     QSharedPointer<QPixmap> cover = coverCache.get(this);
-    if(cover) return *cover;
-    if(onlyCache) return emptyCover;
+    if (cover) return *cover;
+    if (onlyCache) return emptyCover;
     QBuffer bufferImage(&_coverData);
     bufferImage.open(QIODevice::ReadOnly);
     QImageReader reader(&bufferImage);
     reader.setScaledSize(QSize(AnimeItemDelegate::CoverWidth, AnimeItemDelegate::CoverHeight));
-    cover = QSharedPointer<QPixmap>::create(QPixmap::fromImageReader(&reader));
+    const float pxR = GlobalObjects::context()->devicePixelRatioF;
+    reader.setScaledSize(QSize(AnimeItemDelegate::CoverWidth*pxR, AnimeItemDelegate::CoverHeight*pxR));
+
+    QPixmap dest(AnimeItemDelegate::CoverWidth*pxR, AnimeItemDelegate::CoverHeight*pxR);
+    dest.setDevicePixelRatio(pxR);
+    dest.fill(Qt::transparent);
+    QPainter painter(&dest);
+    painter.setRenderHints(QPainter::Antialiasing, true);
+    painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
+    QPainterPath path;
+    path.addRoundedRect(0, 0, AnimeItemDelegate::CoverWidth, AnimeItemDelegate::CoverHeight, 8, 8);
+    painter.setClipPath(path);
+    painter.drawPixmap(QRect(0, 0, AnimeItemDelegate::CoverWidth, AnimeItemDelegate::CoverHeight), QPixmap::fromImageReader(&reader));
+
+    cover = QSharedPointer<QPixmap>::create(dest);
     coverCache.put(this, cover);
     return *cover;
 }
@@ -387,4 +404,20 @@ void Character::scale(QPixmap &img)
     const int maxSize = 600;
     int w = qMin(qMin(img.width(), img.height()), maxSize);
     img = img.scaled(w, w, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+}
+
+void AnimeImage::setRoundedThumb(const QImage &src)
+{
+    QPixmap dest(thumbW * GlobalObjects::context()->devicePixelRatioF, thumbH * GlobalObjects::context()->devicePixelRatioF);
+    dest.setDevicePixelRatio(GlobalObjects::context()->devicePixelRatioF);
+    dest.fill(Qt::transparent);
+    QPainter painter(&dest);
+    painter.setRenderHints(QPainter::Antialiasing, true);
+    painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
+    QPainterPath path;
+    path.addRoundedRect(0, 0, thumbW, thumbH, 8, 8);
+    painter.setClipPath(path);
+    painter.drawImage(QRect(0, 0, thumbW, thumbH), src);
+
+    thumb = dest;
 }

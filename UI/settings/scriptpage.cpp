@@ -11,6 +11,10 @@
 #include "Common/threadtask.h"
 #include "Extension/Script/scriptmodel.h"
 #include "Extension/Script/scriptsettingmodel.h"
+#include "UI/ela/ElaComboBox.h"
+#include "UI/ela/ElaMenu.h"
+#include "UI/widgets/floatscrollbar.h"
+#include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
 {
@@ -23,10 +27,10 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
     scriptView->setSelectionMode(QAbstractItemView::SingleSelection);
     scriptView->setModel(proxyModel);
     scriptView->setAlternatingRowColors(true);
-    //scriptView->setColumnWidth(1, 60*logicalDpiX()/96);
-    //scriptView->setColumnWidth(2, 60*logicalDpiX()/96);
+    new FloatScrollBar(scriptView->verticalScrollBar(), scriptView);
 
-    QComboBox *typeCombo = new QComboBox(this);
+
+    QComboBox *typeCombo = new ElaComboBox(this);
     typeCombo->addItems(model->scriptTypes);
     typeCombo->addItem(tr("All"));
     typeCombo->setCurrentIndex(model->scriptTypes.size());
@@ -76,7 +80,7 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
         }
     });
 
-    QMenu *scriptViewContextMenu=new QMenu(scriptView);
+    QMenu *scriptViewContextMenu = new ElaMenu(scriptView);
     scriptViewContextMenu->addAction(actSetting);
     scriptViewContextMenu->addAction(actRemove);
     QAction *menuSep = new QAction(this);
@@ -141,8 +145,8 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
         }
     });
 
-    QPushButton *refresh=new QPushButton(tr("Refresh"),this);
-    QObject::connect(refresh,&QPushButton::clicked,this,[=](){
+    QPushButton *refresh = new KPushButton(tr("Refresh"), this);
+    QObject::connect(refresh, &QPushButton::clicked, this, [=](){
         emit showBusyState(true);
         actRemove->setEnabled(false);
         actSetting->setEnabled(false);
@@ -151,7 +155,7 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
         ThreadTask task(GlobalObjects::workThread);
         int type = typeCombo->currentIndex();
         task.Run([type](){
-            if(type<ScriptType::UNKNOWN_STYPE)
+            if (type<ScriptType::UNKNOWN_STYPE)
             {
                 GlobalObjects::scriptManager->refreshScripts(ScriptType(type));
             }
@@ -179,23 +183,13 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
     scriptGLayout->addWidget(scriptView,1,0,1,4);
     scriptGLayout->setRowStretch(1,1);
     scriptGLayout->setColumnStretch(2,1);
-    scriptGLayout->setContentsMargins(0, 0, 0, 0);
-}
-
-void ScriptPage::onAccept()
-{
-
-}
-
-void ScriptPage::onClose()
-{
-
 }
 
 ScriptSettingDialog::ScriptSettingDialog(QSharedPointer<ScriptBase> script, QWidget *parent) : CFramelessDialog(tr("Script Settings"), parent, true)
 {
     ScriptSettingModel *model = new ScriptSettingModel(script, this);
     SettingDelegate *delegate = new SettingDelegate(this);
+
 
     QTreeView *scriptView=new QTreeView(this);
     scriptView->setObjectName(QStringLiteral("ScriptSettingView"));
@@ -205,15 +199,16 @@ ScriptSettingDialog::ScriptSettingDialog(QSharedPointer<ScriptBase> script, QWid
     scriptView->setModel(model);
     scriptView->setAlternatingRowColors(true);
     scriptView->expandAll();
+    new FloatScrollBar(scriptView->verticalScrollBar(), scriptView);
     QObject::connect(model, &ScriptSettingModel::itemChanged, this, [=](const QString &, int index, const QString &value){
        changedItems[index] = value;
     });
 
     QGridLayout *scriptGLayout=new QGridLayout(this);
-    scriptGLayout->setContentsMargins(0, 0, 0, 0);
     scriptGLayout->addWidget(scriptView,0,0);
     scriptGLayout->setRowStretch(0,1);
     scriptGLayout->setColumnStretch(0,1);
+
 
     QVariant headerState(GlobalObjects::appSetting->value("HeaderViewState/ScriptSettingView"));
     if(!headerState.isNull())
@@ -223,6 +218,6 @@ ScriptSettingDialog::ScriptSettingDialog(QSharedPointer<ScriptBase> script, QWid
         GlobalObjects::appSetting->setValue("HeaderViewState/ScriptSettingView", scriptView->header()->saveState());
     });
 
-    setSizeSettingKey("DialogSize/ScriptSetting", QSize(300*logicalDpiX()/96,200*logicalDpiY()/96));
+    setSizeSettingKey("DialogSize/ScriptSetting", QSize(300, 200));
 }
 

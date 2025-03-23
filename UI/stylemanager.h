@@ -7,39 +7,36 @@ class StyleManager : public QObject
 {
     Q_OBJECT
 public:
-    enum StyleMode
-    {
-        NO_BG,
-        DEFAULT_BG,
-        BG_COLOR,
-        UNKNOWN
-    };
     static StyleManager *getStyleManager();
-    void setQSS(StyleMode mode, const QColor &color=QColor());
-    QString setQSS(const QString &qss, const QVariantMap *extraVal = nullptr);
+    void initStyle(bool hasBackground);
+    void setThemeColor(const QColor &color);
+
+
+    QString setQSS(const QString &qss, const QVariantMap *extraVal = nullptr) const;
     void setCondVariable(const QString &name, bool val, bool refresh=true);
     bool getCondVariable(const QString &name) const {return condHash.value(name, false);}
-    StyleMode currentMode() const {return mode;}
+    bool enableThemeColor() const { return useThemeColor; }
+    QColor curThemeColor() const { return themeColor; }
 signals:
-    void styleModelChanged(StyleMode newMode);
     void condVariableChanged(const QString &name, bool val);
 private:
     StyleManager();
     StyleManager(const StyleManager &)=delete;
 
-    QString normalQSS, bgQSS, defaultBgQSS;
+    QString qss;
     QString loadQSS(const QString &fn);
 
+    bool useThemeColor;
     QColor themeColor;
-    StyleMode mode;
     QHash<QString, QString> colorHash;
-    QHash<QString, bool> condHash;
+    QMap<QString, bool> condHash;
 
     void setColorHash();
     QColor getColorPalette(const QColor &color, int index);
     inline QString toString(const QColor &color);
 
     void pushEvent();
+    void updateAppFont();
 
 };
 

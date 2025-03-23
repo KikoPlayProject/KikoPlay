@@ -1,5 +1,6 @@
 #ifndef PLAYLISTITEM_H
 #define PLAYLISTITEM_H
+#include <QImage>
 #include <QObject>
 
 class PlayList;
@@ -56,6 +57,7 @@ struct PlayListItem
     PlayState playTimeState;
     Marker marker;
     int playTime;
+    int duration;
     short level;
     bool isBgmCollection;
 
@@ -68,6 +70,16 @@ struct PlayListItem
     QString pathHash;
     ItemTrackInfo *trackInfo;
     WebDAVInfo *webDAVInfo;
+};
+
+struct RecentlyPlayedItem
+{
+    QString path;
+    QString title;
+    PlayListItem::PlayState playTimeState;
+    int duration;
+    int playtime;
+    QImage stopFrame;
 };
 
 #endif // PLAYLISTITEM_H

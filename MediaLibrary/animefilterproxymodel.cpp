@@ -40,13 +40,14 @@ void AnimeFilterProxyModel::setAscending(bool on)
 
 void AnimeFilterProxyModel::refreshAnimeCount(int cur, int total)
 {
-    if(cur<total)
+    int filterCount = rowCount();
+    if (filterCount < cur)
     {
-        emit animeMessage(tr("Current: %1/%2 Loaded: %2/%3").arg(rowCount()).arg(cur).arg(total), true);
+        emit animeMessage(tr("%1/%2 items").arg(rowCount()).arg(total), cur < total);
     }
     else
     {
-        emit animeMessage(tr("Current: %1/%2").arg(rowCount()).arg(cur), false);
+        emit animeMessage(tr("%1 items").arg(total), false);
     }
 }
 

@@ -7,6 +7,10 @@
 #include <QComboBox>
 #include <QButtonGroup>
 #include <QSet>
+#include "UI/ela/ElaComboBox.h"
+#include "UI/ela/ElaCheckBox.h"
+#include "UI/ela/ElaLineEdit.h"
+#include "UI/ela/ElaRadioButton.h"
 
 ScriptSearchOptionPanel::ScriptSearchOptionPanel(QWidget *parent) : QWidget(parent), optionChanged(false), allWidth(0), overlayOptions(nullptr)
 {
@@ -84,7 +88,7 @@ void ScriptSearchOptionPanel::makeTextItem(ScriptSearchOptionPanel::OptionItem &
     QLabel *tip = new QLabel(item.searchSettingItem->title, container);
     tip->setToolTip(item.searchSettingItem->description);
     tip->setOpenExternalLinks(true);
-    QLineEdit *edit = new QLineEdit(item.searchSettingItem->value, container);
+    QLineEdit *edit = new ElaLineEdit(item.searchSettingItem->value, container);
     if(overlayOptions && overlayOptions->contains(item.searchSettingItem->key))
     {
         edit->setText((*overlayOptions)[item.searchSettingItem->key]);
@@ -108,7 +112,7 @@ void ScriptSearchOptionPanel::makeComboItem(ScriptSearchOptionPanel::OptionItem 
     QLabel *tip = new QLabel(item.searchSettingItem->title, container);
     tip->setToolTip(item.searchSettingItem->description);
     tip->setOpenExternalLinks(true);
-    QComboBox *combo = new QComboBox(container);
+    QComboBox *combo = new ElaComboBox(container);
     combo->setEditable(false);
     QStringList choices = item.searchSettingItem->choices.split(',', Qt::SkipEmptyParts);
     combo->addItems(choices);
@@ -149,7 +153,8 @@ void ScriptSearchOptionPanel::makeRadioItem(ScriptSearchOptionPanel::OptionItem 
     item.val = selectItem;
     for(const QString &s : choices)
     {
-        QRadioButton *rbtn = new QRadioButton(s, container);
+        QRadioButton *rbtn = new ElaRadioButton(s, container);
+        rbtn->setFixedHeight(35);
         btnGroup->addButton(rbtn);
         hLayout->addWidget(rbtn);
         if(s == selectItem) rbtn->setChecked(true);
@@ -165,7 +170,8 @@ void ScriptSearchOptionPanel::makeRadioItem(ScriptSearchOptionPanel::OptionItem 
 
 void ScriptSearchOptionPanel::makeCheckItem(ScriptSearchOptionPanel::OptionItem &item)
 {
-    QCheckBox *check = new QCheckBox(item.searchSettingItem->title, this);
+    QCheckBox *check = new ElaCheckBox(item.searchSettingItem->title, this);
+    check->setFixedHeight(35);
     layout()->addWidget(check);
     item.widget.reset(check);
     check->setChecked(item.searchSettingItem->value != "0");
@@ -205,7 +211,8 @@ void ScriptSearchOptionPanel::makeCheckListItem(ScriptSearchOptionPanel::OptionI
     btnGroup->setExclusive(false);
     for(const QString &s : choices)
     {
-        QCheckBox *check = new QCheckBox(s, container);
+        QCheckBox *check = new ElaCheckBox(s, container);
+        check->setFixedHeight(35);
         btnGroup->addButton(check);
         hLayout->addWidget(check);
         if(checkedSet.contains(s)) check->setChecked(true);
@@ -222,8 +229,9 @@ void ScriptSearchOptionPanel::makeCheckListItem(ScriptSearchOptionPanel::OptionI
 }
 
 void ScriptSearchOptionPanel::makeLabelItem(ScriptSearchOptionPanel::OptionItem &item)
-{
+{    
     QLabel *label = new QLabel(item.searchSettingItem->title, this);
+    label->setFixedHeight(35);
     layout()->addWidget(label);
     item.widget.reset(label);
     item.val = item.searchSettingItem->value;

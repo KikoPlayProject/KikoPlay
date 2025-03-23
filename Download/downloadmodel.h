@@ -32,7 +32,8 @@ public:
         TotalLengthRole,
         CompletedLengthRole,
         DownSpeedRole,
-        UpSpeedRole
+        UpSpeedRole,
+        DownloadTaskRole,
     };
     enum class Columns
     {
@@ -47,13 +48,13 @@ private:
     QMap<QString ,DownloadTask *> gidMap;
     const QStringList headers={tr("Status"),tr("Title"),tr("Progress"),tr("Size"),tr("DownSpeed"),tr("Time Left"), tr("UpSpeed"), tr("Connections"), tr("Seeders"), tr("Dir"), tr("Create Time"), tr("Finish Time")};
     const QStringList status={tr("Downloading"),tr("Seeding"),tr("Waiting"),tr("Paused"),tr("Complete"),tr("Error")};
-    QIcon statusIcons[6]={QIcon(":/res/images/downloading.png"),
-                                    QIcon(":/res/images/seeding.png"),
-                                    QIcon(":/res/images/waiting.png"),
-                                    QIcon(":/res/images/paused.png"),
-                                    QIcon(":/res/images/completed.png"),
-                                    QIcon(":/res/images/error.png")};
-    const int limitCount=100;
+    QIcon statusIcons[6]={QIcon(":/res/images/downloading.svg"),
+                                    QIcon(":/res/images/seeding.svg"),
+                                    QIcon(":/res/images/waiting.svg"),
+                                    QIcon(":/res/images/paused.svg"),
+                                    QIcon(":/res/images/completed.svg"),
+                                    QIcon(":/res/images/error.svg")};
+    const int limitCount = 50;
     int currentOffset;
     bool hasMoreTasks;
     Aria2JsonRPC *rpc;

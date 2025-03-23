@@ -22,6 +22,7 @@ void LiveDanmuItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
     int marginY = option.fontMetrics.height() / 4, marginX = option.fontMetrics.height() / 4;
     QSizeF textRect = textLayout(layout, index, option.rect.width() - 2 * marginX);
     painter->save();
+    painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
     static QBrush bgBrush(QColor(0, 0, 0, 90));
     painter->setBrush(bgBrush);
     painter->setPen(QPen(Qt::NoPen));
@@ -77,7 +78,6 @@ QSizeF LiveDanmuItemDelegate::textLayout(QTextLayout &layout, const QModelIndex 
     layout.setFormats(formats);
     double height = 0.0,  widthUsed = 0.0;
     layout.beginLayout();
-    int i = 0;
     while (true) {
         QTextLine line = layout.createLine();
         if (!line.isValid())
@@ -86,7 +86,6 @@ QSizeF LiveDanmuItemDelegate::textLayout(QTextLayout &layout, const QModelIndex 
         line.setPosition(QPointF(0, height));
         height += line.height();
         widthUsed = qMax(widthUsed, line.naturalTextWidth());
-        ++i;
     }
     layout.endLayout();
     return QSizeF(widthUsed, height);

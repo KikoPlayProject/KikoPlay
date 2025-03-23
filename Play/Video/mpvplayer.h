@@ -51,7 +51,7 @@ public:
     const QStringList videoFileFormats{"*.mp4","*.mkv","*.avi","*.flv","*.wmv","*.webm","*.vob","*.mts","*.ts","*.m2ts","*.mov","*.rm","*.rmvb","*.asf","*.m4v","*.mpg","*.mp2","*.mpeg","*.mpe","*.mpv","*.m2v","*.m4v","*.3gp","*.f4v"};
     const QStringList audioFormats{"*.mp3","*.wav","*.wma","*.ogg","*.flac","*.aac","*.ape","*.ac3","*.m4a","*.mka"};
     const QStringList subtitleFormats{"*.sub","*.srt","*.ass","*.ssa","*.smi","*.rt","*.txt","*.mks","*.vtt","*.sup"};
-    const QStringList speedLevel{"0.5","0.75","1","1.25","1.5","2","2.5","3", "3.5", "4"};
+    const QStringList speedLevel{"0.5","0.75","1","1.25","1.5","2"};
     const QStringList videoAspect{tr("Auto"),"4:3","16:9","2.35:1"};
     const double videoAspectVal[4] = { -1,4.0 / 3,16.0 / 9,2.35 / 1 };
 
@@ -73,8 +73,6 @@ public:
     inline bool isWebSource() const { return mpv::qt::get_property(mpv,"demuxer-via-network").toBool(); }
     QString getMPVProperty(const QString &property, int &errCode);
     QVariant getMPVPropertyVariant(const QString &property, int &errCode);
-    const QHash<QString, QPair<QList<QStringList>, QString>> &getShortcuts() const{return mpvShortcuts;}
-    inline bool enableDirectKey() const {return directKeyMode;}
     int getCurrentTrack(TrackType type) const;
     int getExternalTrackCount(TrackType type) const;
     int getVideoAspectIndex() const { return videoAspectIndex; }
@@ -85,6 +83,11 @@ public:
     int getGamma() const { return gamma; }
     int getHue() const { return hue; }
     int getSharpen() const { return sharpen; }
+    int getClickBehavior() const { return clickBehavior; }
+    int getDbClickBehavior() const { return dbClickBehaivior; }
+    bool getShowPreview() const { return isShowPreview; }
+    bool getShowRecent() const { return isShowRecent; }
+    bool getUseSample2DArray() const { return useSample2DArray; }
 
     VideoSizeInfo getVideoSizeInfo();
     QString expandMediaInfo(const QString &text);
@@ -97,11 +100,6 @@ public:
     bool setOptionGroup(const QString &key);
     const QStringList &allOptionGroups() const {return optionGroupKeys;}
     const QString &currentOptionGroup() const {return curOptionGroup;}
-
-    void modifyShortcut(const QString &key, const QString &newKey, const QString &command);
-    int runShortcut(const QString &key, int keyEventType=0);  //0:press 1:down 2:up
-    void setDirectKeyMode(bool on);
-    void setDirectModeKeyMapping(const QString &key, const QString *val = nullptr);
 
     int runCommand(const QVariant& params) { return setMPVCommand(params); }
 signals:
@@ -125,6 +123,9 @@ signals:
     void seekableChanged(bool value);
     void bufferingStateChanged(int value);
     void optionGroupChanged();
+    void showRecentChanged(bool on);
+    void toggleFullScreen();
+    void toggleMiniMode();
 
     void initContext();
     void refreshPreview(int time, QPixmap *pixmap);
@@ -152,6 +153,11 @@ public slots:
     void setGamma(int val);
     void setHue(int val);
     void setSharpen(int val);
+    void setClickBehavior(int val);
+    void setDbClickBehavior(int val);
+    void setShowPreview(bool on);
+    void setShowRecent(bool on);
+    void setUseSample2DArray(bool on);
 
 protected:
     void initializeGL() override;
@@ -190,14 +196,14 @@ private:
     QTimer refreshTimer;
     qint64 refreshTimestamp;
     QElapsedTimer elapsedTimer;
+    int clickBehavior{0}, dbClickBehaivior{0};
+    bool isShowPreview;
+    bool isShowRecent;
+    bool useSample2DArray;
 
     QString curOptionGroup;
     QStringList optionGroupKeys;
     QHash<QString, QMap<QString, QString>> optionsGroupMap;
-
-    bool directKeyMode;
-    QHash<QString, QPair<QList<QStringList>, QString>> mpvShortcuts;
-    QHash<QString, QString> directModeKeyMapping;
 
     int currentDuration;
     QVector<TrackInfo> audioTracks, subTracks;

@@ -1,22 +1,29 @@
 #include "downloadpage.h"
 #include <QPlainTextEdit>
-#include <QLineEdit>
 #include <QTextEdit>
 #include <QLabel>
 #include <QSettings>
 #include <QGridLayout>
-#include <QCheckBox>
-#include <QIntValidator>
 #include <QSyntaxHighlighter>
-#include <QPushButton>
-#include <QTreeView>
-#include <QAction>
-#include <QHeaderView>
-#include <QApplication>
-#include <QClipboard>
-#include "Download/trackersubscriber.h"
-#include "../inputdialog.h"
+#include <climits>
+#include "UI/ela/ElaSpinBox.h"
+#include "UI/ela/ElaToggleSwitch.h"
+#include "UI/dialogs/trackersubscribedialog.h"
+#include "UI/widgets/kplaintextedit.h"
+#include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
+
+
+#define SETTING_KEY_DOWNLOAD_MAX_SPEED "Download/MaxDownloadLimit"
+#define SETTING_KEY_UPLOAD_MAX_SPEED "Download/MaxUploadLimit"
+#define SETTING_KEY_SEED_TIME "Download/SeedTime"
+#define SETTING_KEY_MAX_CONCURRENT "Download/ConcurrentDownloads"
+#define SETTING_KEY_AUTO_ADD_TO_PLAYLIST "Download/AutoAddToList"
+#define SETTING_KEY_SKIP_MANGET_FILE_SELECT "Download/SkipMagnetFileSelect"
+#define SETTING_KEY_KILL_EXIST_ARIA2 "Download/KillExistAria2"
+#define SETTING_KEY_TRACKERS "Download/Trackers"
+#define SETTING_KEY_ARIA2_ARGS "Download/Aria2Args"
+
 namespace
 {
     class OptionHighLighter : public QSyntaxHighlighter
@@ -66,245 +73,160 @@ namespace
 
 DownloadPage::DownloadPage(QWidget *parent) : SettingPage(parent)
 {
-    QIntValidator *intValidator=new QIntValidator(this);
-    intValidator->setBottom(0);
+    SettingItemArea *limitArea = new SettingItemArea(tr("Limit"), this);
 
-    QLabel *maxDownSpeedLabel=new QLabel(tr("Max Download Limit(KB): "),this);
-    maxDownSpeedLimit=new QLineEdit(this);
-    maxDownSpeedLimit->setValidator(intValidator);
-    maxDownSpeedLimit->setText(QString::number(GlobalObjects::appSetting->value("Download/MaxDownloadLimit",0).toInt()));
-    QObject::connect(maxDownSpeedLimit,&QLineEdit::textChanged,[this](){
-       downSpeedChange=true;
+    ElaSpinBox *maxDownSpeedSpin = new ElaSpinBox(this);
+    maxDownSpeedSpin->setRange(0, INT_MAX);
+    maxDownSpeedSpin->setValue(GlobalObjects::appSetting->value(SETTING_KEY_DOWNLOAD_MAX_SPEED, 0).toInt());
+    limitArea->addItem(tr("Max Download Speed(KB)"), maxDownSpeedSpin);
+
+    ElaSpinBox *maxUpSpeedSpin = new ElaSpinBox(this);
+    maxUpSpeedSpin->setRange(0, INT_MAX);
+    maxUpSpeedSpin->setValue(GlobalObjects::appSetting->value(SETTING_KEY_UPLOAD_MAX_SPEED, 0).toInt());
+    limitArea->addItem(tr("Max Upload Speed(KB)"), maxUpSpeedSpin);
+
+    ElaSpinBox *seedTimeSpin = new ElaSpinBox(this);
+    seedTimeSpin->setRange(0, INT_MAX);
+    seedTimeSpin->setValue(GlobalObjects::appSetting->value(SETTING_KEY_SEED_TIME, 5).toInt());
+    limitArea->addItem(tr("Seed Time(min)"), seedTimeSpin);
+
+    ElaSpinBox *maxConcurrentSpin = new ElaSpinBox(this);
+    maxConcurrentSpin->setMinimum(0);
+    maxConcurrentSpin->setValue(GlobalObjects::appSetting->value(SETTING_KEY_MAX_CONCURRENT, 5).toInt());
+    limitArea->addItem(tr("Max Concurrent Downloads"), maxConcurrentSpin);
+
+
+    SettingItemArea *behaviorArea = new SettingItemArea(tr("Behavior"), this);
+
+    ElaToggleSwitch *autoAddtoPlaylistSwitch = new ElaToggleSwitch(this);
+    autoAddtoPlaylistSwitch->setIsToggled(GlobalObjects::appSetting->value(SETTING_KEY_AUTO_ADD_TO_PLAYLIST, true).toBool());
+    behaviorArea->addItem(tr("Auto-Add to Playlist on Download Completion"), autoAddtoPlaylistSwitch);
+
+    ElaToggleSwitch *skipMagnetFileSelectSwitch = new ElaToggleSwitch(this);
+    skipMagnetFileSelectSwitch->setIsToggled(GlobalObjects::appSetting->value(SETTING_KEY_SKIP_MANGET_FILE_SELECT, false).toBool());
+    behaviorArea->addItem(tr("Skip Magnet File Selection"), skipMagnetFileSelectSwitch);
+
+
+    SettingItemArea *aria2Area = new SettingItemArea(tr("Aria2"), this);
+
+    ElaToggleSwitch *killExistAria2Switch = new ElaToggleSwitch(this);
+    killExistAria2Switch->setIsToggled(GlobalObjects::appSetting->value(SETTING_KEY_KILL_EXIST_ARIA2, true).toBool());
+    aria2Area->addItem(tr("Kill existing aria2 processes at startup"), killExistAria2Switch);
+
+    KPushButton *trackerBtn = new KPushButton(tr("Edit"), this);
+    aria2Area->addItem(tr("Extra BT Trackers"), trackerBtn);
+
+    KPushButton *trackerSubscribeBtn = new KPushButton(tr("Edit"), this);
+    aria2Area->addItem(tr("Tracker Subscribe"), trackerSubscribeBtn);
+
+    KPushButton *aria2ArgBtn = new KPushButton(tr("Edit"), this);
+    aria2Area->addItem(tr("Aria2 Startup Args"), aria2ArgBtn);
+
+    QVBoxLayout *itemVLayout = new QVBoxLayout(this);
+    itemVLayout->setSpacing(8);
+    itemVLayout->addWidget(limitArea);
+    itemVLayout->addWidget(behaviorArea);
+    itemVLayout->addWidget(aria2Area);
+    itemVLayout->addStretch(1);
+
+
+    QObject::connect(maxDownSpeedSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [=](int val){
+        changedValues["downSpeed"] = val;
+        GlobalObjects::appSetting->setValue(SETTING_KEY_DOWNLOAD_MAX_SPEED, val);
     });
 
-    QLabel *maxUpSpeedLabel=new QLabel(tr("Max Uploas Limit(KB): "),this);
-    maxUpSpeedLimit=new QLineEdit(this);
-    maxUpSpeedLimit->setValidator(intValidator);
-    maxUpSpeedLimit->setText(QString::number(GlobalObjects::appSetting->value("Download/MaxUploadLimit",0).toInt()));
-    QObject::connect(maxUpSpeedLimit,&QLineEdit::textChanged,[this](){
-       upSpeedChange=true;
+    QObject::connect(maxUpSpeedSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [=](int val){
+        changedValues["upSpeed"] = val;
+        GlobalObjects::appSetting->setValue(SETTING_KEY_UPLOAD_MAX_SPEED, val);
     });
 
-    QLabel *seedTimeLabel=new QLabel(tr("Seed Time(min): "),this);
-    seedTime=new QLineEdit(this);
-    seedTime->setValidator(intValidator);
-    seedTime->setText(QString::number(GlobalObjects::appSetting->value("Download/SeedTime",5).toInt()));
-    QObject::connect(seedTime,&QLineEdit::textChanged,[this](){
-       seedTimeChange=true;
+    QObject::connect(seedTimeSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [=](int val){
+        changedValues["seedTime"] = val;
+        GlobalObjects::appSetting->setValue(SETTING_KEY_SEED_TIME, val);
     });
 
-    QLabel *maxConcurrentLabel=new QLabel(tr("Max Concurrent Downloads: "),this);
-    maxConcurrent=new QLineEdit(this);
-    maxConcurrent->setValidator(intValidator);
-    maxConcurrent->setText(QString::number(GlobalObjects::appSetting->value("Download/ConcurrentDownloads",5).toInt()));
-    QObject::connect(maxConcurrent,&QLineEdit::textChanged,[this](){
-       concurrentChange=true;
+    QObject::connect(maxConcurrentSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [=](int val){
+        changedValues["concurrent"] = val;
+        GlobalObjects::appSetting->setValue(SETTING_KEY_MAX_CONCURRENT, val);
     });
 
-    autoAddtoPlaylist=new QCheckBox(tr("Automatically add to playlist after download"),this);
-    autoAddtoPlaylist->setChecked(GlobalObjects::appSetting->value("Download/AutoAddToList",false).toBool());
-    QObject::connect(autoAddtoPlaylist,&QCheckBox::stateChanged,[](int state){
-        GlobalObjects::appSetting->setValue("Download/AutoAddToList",state==Qt::Checked);
+    QObject::connect(autoAddtoPlaylistSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked){
+        GlobalObjects::appSetting->setValue(SETTING_KEY_AUTO_ADD_TO_PLAYLIST, checked);
     });
 
-    skipMagnetFileSelect = new QCheckBox(tr("Skip Magnet File Selection"),this);
-    skipMagnetFileSelect->setChecked(GlobalObjects::appSetting->value("Download/SkipMagnetFileSelect",false).toBool());
-    QObject::connect(skipMagnetFileSelect,&QCheckBox::stateChanged,[](int state){
-        GlobalObjects::appSetting->setValue("Download/SkipMagnetFileSelect", state==Qt::Checked);
+    QObject::connect(skipMagnetFileSelectSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked){
+        GlobalObjects::appSetting->setValue(SETTING_KEY_SKIP_MANGET_FILE_SELECT, checked);
     });
 
-    QLabel *btTrackerLabel=new QLabel(tr("Extra BT Trackers: "),this);
-    btTrackers=new QPlainTextEdit(this);
-    btTrackers->appendPlainText(GlobalObjects::appSetting->value("Download/Trackers",QStringList()).toStringList().join('\n'));
-    QObject::connect(btTrackers,&QPlainTextEdit::textChanged,[this](){
-       btTrackerChange=true;
+    QObject::connect(killExistAria2Switch, &ElaToggleSwitch::toggled, this, [=](bool checked){
+        GlobalObjects::appSetting->setValue(SETTING_KEY_KILL_EXIST_ARIA2, checked);
     });
-    QPushButton *trackerSubscribe = new QPushButton(tr("Tracker Subscribe"), this);
-    QObject::connect(trackerSubscribe, &QPushButton::clicked, this, [=](){
+
+    QObject::connect(trackerBtn, &KPushButton::clicked, this, [=](){
+        TrackerEditDialog dialog(this);
+        if (QDialog::Accepted == dialog.exec())
+        {
+            if (dialog.manualTrackerListChanged)
+            {
+                changedValues["btTracker"] = GlobalObjects::appSetting->value(SETTING_KEY_TRACKERS, QStringList()).toStringList();
+            }
+        }
+    });
+
+    QObject::connect(trackerSubscribeBtn, &KPushButton::clicked, this, [=](){
         TrackerSubscribeDialog dialog(this);
         dialog.exec();
     });
 
-    QLabel *startupArgsLabel=new QLabel(tr("Aria2 Startup Args: "), this);
-    args = new QTextEdit(this);
-    args->setFont(QFont("Consolas",10));
-    new OptionHighLighter(args->document());
-    args->setPlainText(GlobalObjects::appSetting->value("Download/Aria2Args","").toString());
-    QObject::connect(args,&QTextEdit::textChanged,[this](){
-       argChange=true;
+    QObject::connect(aria2ArgBtn, &KPushButton::clicked, this, [=](){
+        Aria2OptionEditDialog dialog(this);
+        dialog.exec();
     });
-    QCheckBox *killExistAria2 = new QCheckBox(tr("Kill existing aria2 processes at startup"), this);
-    killExistAria2->setChecked(GlobalObjects::appSetting->value("Download/KillExistAria2", true).toBool());
-    QObject::connect(killExistAria2, &QCheckBox::stateChanged, [](int state){
-        GlobalObjects::appSetting->setValue("Download/KillExistAria2", state==Qt::Checked);
-    });
-
-    QGridLayout *settingGLayout=new QGridLayout(this);
-    settingGLayout->setContentsMargins(0, 0, 0, 0);
-    settingGLayout->addWidget(maxDownSpeedLabel,0,0);
-    settingGLayout->addWidget(maxDownSpeedLimit,0,1,1,2);
-    settingGLayout->addWidget(maxUpSpeedLabel,1,0);
-    settingGLayout->addWidget(maxUpSpeedLimit,1,1,1,2);
-    settingGLayout->addWidget(seedTimeLabel,2,0);
-    settingGLayout->addWidget(seedTime,2,1,1,2);
-    settingGLayout->addWidget(maxConcurrentLabel,3,0);
-    settingGLayout->addWidget(maxConcurrent,3,1,1,2);
-
-    QHBoxLayout *checkHLayout = new QHBoxLayout;
-    checkHLayout->setContentsMargins(0, 0, 0, 0);
-    checkHLayout->addWidget(autoAddtoPlaylist);
-    checkHLayout->addWidget(skipMagnetFileSelect);
-    checkHLayout->addStretch(1);
-    settingGLayout->addLayout(checkHLayout, 4, 0, 1, 3);
-
-    //settingGLayout->addWidget(autoAddtoPlaylist,4,0,1,3);
-    settingGLayout->addWidget(btTrackerLabel,5,0);
-    settingGLayout->addWidget(trackerSubscribe, 5, 2);
-    settingGLayout->addWidget(btTrackers,6,0,1,3);
-    settingGLayout->addWidget(startupArgsLabel,7,0);
-    settingGLayout->addWidget(killExistAria2, 7, 1, 1, 2, Qt::AlignRight);
-    settingGLayout->addWidget(args,8,0,1,3);
-    settingGLayout->setRowStretch(6,1);
-    settingGLayout->setRowStretch(8,1);
-    settingGLayout->setColumnStretch(1,1);
-
 }
 
-void DownloadPage::onAccept()
+
+TrackerEditDialog::TrackerEditDialog(QWidget *parent) : CFramelessDialog(tr("Extra Tracker"), parent, true)
 {
-    if(downSpeedChange)
-    {
-        int mdSpeed = maxDownSpeedLimit->text().toInt();
-        changedValues["downSpeed"] = mdSpeed;
-        GlobalObjects::appSetting->setValue("Download/MaxDownloadLimit", mdSpeed);
-    }
-    if(upSpeedChange)
-    {
-        int muSpeed = maxUpSpeedLimit->text().toInt();
-        changedValues["upSpeed"] = muSpeed;
-        GlobalObjects::appSetting->setValue("Download/MaxUploadLimit", muSpeed);
-    }
-    if(seedTimeChange)
-    {
-        int sTime = seedTime->text().toInt();
-        changedValues["seedTime"] = sTime;
-        GlobalObjects::appSetting->setValue("Download/SeedTime", sTime);
-    }
-    if(concurrentChange)
-    {
-        int mConcurrent = maxConcurrent->text().toInt();
-        changedValues["concurrent"] = mConcurrent;
-        GlobalObjects::appSetting->setValue("Download/ConcurrentDownloads", mConcurrent);
-    }
-    if(btTrackerChange)
-    {
-        QStringList trackers = btTrackers->toPlainText().split('\n', Qt::SkipEmptyParts);
-        changedValues["btTracker"] = trackers;
-        GlobalObjects::appSetting->setValue("Download/Trackers", trackers);
-    }
-    if(argChange)
-    {
-        GlobalObjects::appSetting->setValue("Download/Aria2Args",args->toPlainText());
-    }
+    btTrackers = new KPlainTextEdit(this);
+    btTrackers->appendPlainText(GlobalObjects::appSetting->value(SETTING_KEY_TRACKERS, QStringList()).toStringList().join('\n'));
+    QObject::connect(btTrackers, &QPlainTextEdit::textChanged, this, [this](){
+        manualTrackerListChanged = true;
+    });
+
+    QVBoxLayout *vLayout = new QVBoxLayout(this);
+    vLayout->addWidget(btTrackers);
+    setSizeSettingKey("DialogSize/TrackerEditDialog", QSize(400, 300));
 }
 
-void DownloadPage::onClose()
+void TrackerEditDialog::onAccept()
 {
-
+    if (btTrackers && manualTrackerListChanged)
+    {
+        const QStringList trackers = btTrackers->toPlainText().split('\n', Qt::SkipEmptyParts);
+        GlobalObjects::appSetting->setValue(SETTING_KEY_TRACKERS, trackers);
+    }
+    CFramelessDialog::onAccept();
 }
 
-TrackerSubscribeDialog::TrackerSubscribeDialog(QWidget *parent) :
-     CFramelessDialog(tr("Tracker Subscribe"), parent)
+Aria2OptionEditDialog::Aria2OptionEditDialog(QWidget *parent) : CFramelessDialog(tr("Aria2 Startup Args"), parent, true)
 {
-    QPushButton *addTrackerSource = new QPushButton(tr("Add"), this);
-    QPushButton *checkAll = new QPushButton(tr("Check All"), this);
-    QCheckBox *autoCheck = new QCheckBox(tr("Auto Check"), this);
-    QTreeView *trackerSrcView = new QTreeView(this);
-    trackerSrcView->setRootIsDecorated(false);
-    trackerSrcView->setAlternatingRowColors(true);
-    QGridLayout *tsGLayout = new QGridLayout(this);
-    QPlainTextEdit *trackerText = new QPlainTextEdit(this);
-    trackerText->setReadOnly(true);
-    tsGLayout->addWidget(addTrackerSource, 0, 0);
-    tsGLayout->addWidget(autoCheck, 0, 2);
-    tsGLayout->addWidget(checkAll, 0, 3);
-    tsGLayout->addWidget(trackerSrcView, 1, 0, 1, 4);
-    tsGLayout->addWidget(trackerText, 2, 0, 1, 4);
-    tsGLayout->setRowStretch(1, 1);
-    tsGLayout->setRowStretch(2, 1);
-    tsGLayout->setColumnStretch(1, 1);
-    tsGLayout->setContentsMargins(0, 0, 0, 0);
-
-    QObject::connect(addTrackerSource, &QPushButton::clicked, this, [=](){
-        LineInputDialog input(tr("Subscirbe"), tr("URL"), "", "DialogSize/AddTrackerSubscribe", false, this);
-        if(QDialog::Accepted == input.exec())
-        {
-            TrackerSubscriber::subscriber()->add(input.text);
-        }
-    });
-    QObject::connect(checkAll, &QPushButton::clicked, this, [=](){
-        TrackerSubscriber::subscriber()->check(-1);
-    });
-    QObject::connect(autoCheck,&QCheckBox::stateChanged,[](int state){
-        TrackerSubscriber::subscriber()->setAutoCheck(state == Qt::CheckState::Checked);
-    });
-    autoCheck->setChecked(GlobalObjects::appSetting->value("Download/TrackerSubscriberAutoCheck", true).toBool());
-
-    trackerSrcView->setModel(TrackerSubscriber::subscriber());
-    trackerSrcView->setContextMenuPolicy(Qt::ActionsContextMenu);
-    trackerSrcView->setSelectionMode(QAbstractItemView::SingleSelection);
-    QAction *actCopyURL = new QAction(tr("Copy URL"), trackerSrcView);
-    QObject::connect(actCopyURL, &QAction::triggered, this, [=](){
-        auto selection = trackerSrcView->selectionModel()->selectedRows();
-        if(selection.size()==0) return;
-        const QString url(selection.first().siblingAtColumn(static_cast<int>(TrackerSubscriber::Columns::URL)).data().toString());
-        QClipboard *cb = QApplication::clipboard();
-        cb->setText(url);
-    });
-    QAction *actRemoveSubscirbe = new QAction(tr("Remove Subscribe"), trackerSrcView);
-    QObject::connect(actRemoveSubscirbe, &QAction::triggered, this, [=](){
-        auto selection = trackerSrcView->selectionModel()->selectedRows();
-        if(selection.size()==0) return;
-        TrackerSubscriber::subscriber()->remove(selection.first().row());
-    });
-    QAction *actCheck = new QAction(tr("Check"), trackerSrcView);
-    QObject::connect(actCheck, &QAction::triggered, this, [=](){
-        auto selection = trackerSrcView->selectionModel()->selectedRows();
-        if(selection.size()==0) return;
-        TrackerSubscriber::subscriber()->check(selection.first().row());
-    });
-    trackerSrcView->addAction(actCheck);
-    trackerSrcView->addAction(actCopyURL);
-    trackerSrcView->addAction(actRemoveSubscirbe);
-    QObject::connect(trackerSrcView->selectionModel(), &QItemSelectionModel::selectionChanged,this, [=](){
-        auto selection = trackerSrcView->selectionModel()->selectedRows();
-        if(selection.size()==0)
-        {
-            trackerText->clear();
-        }
-        else
-        {
-            QStringList trackers = TrackerSubscriber::subscriber()->getTrackers(selection.first().row());
-            trackerText->setPlainText(trackers.join('\n'));
-        }
-
-    });
-    QObject::connect(TrackerSubscriber::subscriber(), &TrackerSubscriber::checkStateChanged, this, [=](bool checking){
-        addTrackerSource->setEnabled(!checking);
-        checkAll->setEnabled(!checking);
-        autoCheck->setEnabled(!checking);
-        trackerSrcView->setEnabled(!checking);
-    });
-    QObject::connect(TrackerSubscriber::subscriber(), &TrackerSubscriber::trackerListChanged, this, [=](int index){
-        auto selection = trackerSrcView->selectionModel()->selectedRows();
-        if(selection.size()==0 || selection.first().row()!=index) return;
-        QStringList trackers = TrackerSubscriber::subscriber()->getTrackers(selection.first().row());
-        trackerText->setPlainText(trackers.join('\n'));
+    argEdit = new QTextEdit(this);
+    argEdit->setFont(QFont("Consolas", 12));
+    new OptionHighLighter(argEdit->document());
+    argEdit->setPlainText(GlobalObjects::appSetting->value(SETTING_KEY_ARIA2_ARGS, "").toString());
+    QObject::connect(argEdit, &QTextEdit::textChanged, this, [this](){
+        argChanged = true;
     });
 
-    addOnCloseCallback([=](){
-         GlobalObjects::appSetting->setValue("Download/TrackerSubscriberAutoCheck", autoCheck->isChecked());
-    });
-    setSizeSettingKey("DialogSize/TrackerSubscribe", QSize(400*logicalDpiX()/96,300*logicalDpiY()/96));
-    trackerSrcView->header()->resizeSection(0, width()/2);
+    QVBoxLayout *vLayout = new QVBoxLayout(this);
+    vLayout->addWidget(argEdit);
+    setSizeSettingKey("DialogSize/Aria2OptionEditDialog", QSize(400, 300));
+}
+
+void Aria2OptionEditDialog::onAccept()
+{
+    if (argEdit && argChanged)
+    {
+        GlobalObjects::appSetting->setValue(SETTING_KEY_ARIA2_ARGS, argEdit->toPlainText());
+    }
 }

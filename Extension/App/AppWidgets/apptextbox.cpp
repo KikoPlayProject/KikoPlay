@@ -1,6 +1,7 @@
 #include "apptextbox.h"
 #include <QPlainTextEdit>
 #include "Extension/App/kapp.h"
+#include "UI/widgets/kplaintextedit.h"
 
 namespace Extension
 {
@@ -84,7 +85,7 @@ void AppTextBox::bindEvent(AppEvent event, const QString &luaFunc)
 AppTextBox::AppTextBox(AppWidget *parent)
     : AppWidget{parent}
 {
-    widget = new QPlainTextEdit(parent? parent->getWidget() : nullptr);
+    widget = new KPlainTextEdit(parent? parent->getWidget() : nullptr, false);
 }
 
 bool AppTextBox::setWidgetOption(AppWidgetOption option, const QVariant &val)

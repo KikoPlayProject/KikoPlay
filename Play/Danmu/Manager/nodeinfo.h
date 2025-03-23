@@ -49,10 +49,12 @@ struct DanmuPoolSourceNode : public DanmuPoolNode
         delay=src.delay;
         scriptData=src.scriptData;
         danmuCount = src.count;
+        hasTimeline = !src.timelineInfo.isEmpty();
 
     }
     bool isSameSource(const DanmuSource &src) const { return idInfo==src.scriptId && scriptData==src.scriptData; }
     int srcId, delay;
+    bool hasTimeline{false};
     QString scriptData;
 };
 #endif // NODEINFO_H

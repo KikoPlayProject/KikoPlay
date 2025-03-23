@@ -1,8 +1,13 @@
 #include "matcheditor.h"
-#include "Play/Playlist/playlist.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "MediaLibrary/animeprovider.h"
+#include "Play/Playlist/playlistitem.h"
+#include "UI/ela/ElaComboBox.h"
+#include "UI/ela/ElaLineEdit.h"
+#include "UI/ela/ElaMenu.h"
+#include "UI/ela/ElaPivot.h"
+#include "UI/widgets/kpushbutton.h"
 #include "widgets/scriptsearchoptionpanel.h"
 #include "Extension/Script/scriptmanager.h"
 #include <QVBoxLayout>
@@ -349,35 +354,11 @@ namespace
     };
 }
 MatchEditor::MatchEditor(const PlayListItem *item, QList<const PlayListItem *> *batchItems,  QWidget *parent) :
-    CFramelessDialog(tr("Edit Match"),parent,true), curItem(item)
+    CFramelessDialog(tr("Episode Matching"),parent,true), curItem(item)
 {
     comparer.setNumericMode(true);
 	this->batchItems = batchItems;
-    QVBoxLayout *matchVLayout=new QVBoxLayout(this);
-    matchVLayout->setContentsMargins(0,0,0,0);
-    matchVLayout->setSpacing(0);
-
     setFont(QFont(GlobalObjects::normalFont,12));
-
-    searchPage=new QToolButton(this);
-    searchPage->setText(tr("Search"));
-    searchPage->setCheckable(true);
-    searchPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    searchPage->setObjectName(QStringLiteral("DialogPageButton"));
-    searchPage->setChecked(true);
-
-    customPage=new QToolButton(this);
-    customPage->setText(tr("Custom"));
-    customPage->setCheckable(true);
-    customPage->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    customPage->setObjectName(QStringLiteral("DialogPageButton"));
-
-    QFontMetrics fm(fontMetrics());
-    int btnH = fm.height() + 10 * logicalDpiY()/96;
-    int btnW = qMax(fm.horizontalAdvance(customPage->text()), fm.horizontalAdvance(searchPage->text()));
-    QSize pageButtonSize(btnW*2, btnH);
-    searchPage->setFixedSize(pageButtonSize);
-    customPage->setFixedSize(pageButtonSize);
 
     QString animeTitle;
     EpInfo ep;
@@ -388,70 +369,72 @@ MatchEditor::MatchEditor(const PlayListItem *item, QList<const PlayListItem *> *
         animeTitle = pool->animeTitle();
     }
 
-    QHBoxLayout *pageButtonHLayout=new QHBoxLayout();
-    pageButtonHLayout->setContentsMargins(0,0,0,0);
-    pageButtonHLayout->setSpacing(0);
-    pageButtonHLayout->addWidget(searchPage);
-    pageButtonHLayout->addWidget(customPage);
-    pageButtonHLayout->addStretch(1);
-    matchVLayout->addLayout(pageButtonHLayout);
+    ElaPivot *tab = new ElaPivot(this);
+    tab->appendPivot(tr("Search"));
+    tab->appendPivot(tr("Custom"));
+    tab->setCurrentIndex(0);
 
     QStackedLayout *contentStackLayout=new QStackedLayout();
     contentStackLayout->setContentsMargins(0,0,0,0);
     contentStackLayout->addWidget(setupSearchPage(animeTitle));
     contentStackLayout->addWidget(setupCustomPage(animeTitle, ep));
-    matchVLayout->addLayout(contentStackLayout);
 
-    QButtonGroup *btnGroup=new QButtonGroup(this);
-    btnGroup->addButton(searchPage,0);
-    btnGroup->addButton(customPage,1);
-    QObject::connect(btnGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[=](int id, bool checked){
-        if(checked)
-        {
-            contentStackLayout->setCurrentIndex(id);
-        }
+    QObject::connect(tab, &ElaPivot::pCurrentIndexChanged, this, [=](){
+        pageIndex = tab->getCurrentIndex();
+        contentStackLayout->setCurrentIndex(pageIndex);
     });
 
-    QLabel *matchInfoLabel=new QLabel(ep.type==EpType::UNKNOWN?tr("No Match Info"):ep.toString(), this);
-    matchInfoLabel->setFont(QFont(GlobalObjects::normalFont,10,QFont::Bold));
-    matchInfoLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
+    QLabel *matchInfoLabel = new QLabel(ep.type==EpType::UNKNOWN ? tr("No Match Info") : ep.toString(), this);
+    matchInfoLabel->setFont(QFont(GlobalObjects::normalFont, 10, QFont::Bold));
+    matchInfoLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
+
+    QVBoxLayout *matchVLayout=new QVBoxLayout(this);
+    auto margins = matchVLayout->contentsMargins();
+    margins.setTop(0);
+    matchVLayout->setContentsMargins(margins);
+
+    matchVLayout->addWidget(tab);
+    matchVLayout->addLayout(contentStackLayout);
     matchVLayout->addWidget(matchInfoLabel);
 
-    setSizeSettingKey("DialogSize/MatchEditor",QSize(400*logicalDpiX()/96,400*logicalDpiY()/96));
+    setSizeSettingKey("DialogSize/MatchEditor",QSize(600, 600));
     hitWords.clear();
 }
 
 
 QWidget *MatchEditor::setupCustomPage(const QString &srcAnime, const EpInfo &ep)
 {
-    QWidget *customPage=new QWidget(this);
+    QWidget *customPage = new QWidget(this);
     QFont normalFont(GlobalObjects::normalFont,10);
     customPage->setFont(normalFont);
 
-    QLabel *animeTip=new QLabel(tr("Anime Title"),customPage);
-    animeEdit=new QLineEdit(srcAnime, customPage);
+    QLabel *animeTip = new QLabel(tr("Anime Title"),customPage);
+    animeEdit = new ElaLineEdit(srcAnime, customPage);
 
-    QLabel *epTypeTip=new QLabel(tr("Episode Type"),customPage);
-    epTypeCombo=new QComboBox(customPage);
+    QLabel *epTypeTip = new QLabel(tr("Episode Type"),customPage);
+    epTypeCombo = new ElaComboBox(customPage);
     epTypeCombo->addItems(QStringList(std::begin(EpTypeName), std::end(EpTypeName)));
 
-    QLabel *epIndexTip=new QLabel(tr("Episode Index"),customPage);
-    epIndexEdit=new QLineEdit(customPage);
+    QLabel *epIndexTip = new QLabel(tr("Episode Index"),customPage);
+    epIndexEdit = new ElaLineEdit(customPage);
     epIndexEdit->setValidator(new QRegExpValidator(QRegExp("\\d+\\.?(\\d+)?"),epIndexEdit));
 
-    QLabel *epTitleTip=new QLabel(tr("Episode Title"),customPage);
-    epEdit=new QLineEdit(customPage);
+    QLabel *epTitleTip = new QLabel(tr("Episode Title"),customPage);
+    epEdit = new ElaLineEdit(customPage);
 
-    if(ep.type!=EpType::UNKNOWN)
+    if (ep.type != EpType::UNKNOWN)
     {
-        epTypeCombo->setCurrentIndex(ep.type-1);
+        epTypeCombo->setCurrentIndex(ep.type - 1);
         epIndexEdit->setText(QString::number(ep.index));
         epEdit->setText(ep.name);
-    } else {
+    }
+    else
+    {
         epEdit->setText(curItem->title);
     }
 
     QGridLayout *customGLayout=new QGridLayout(customPage);
+    customGLayout->setContentsMargins(0, 0, 0, 0);
     customGLayout->addWidget(animeTip, 0, 0, 1, 2);
     customGLayout->addWidget(animeEdit, 1, 0, 1, 2);
     customGLayout->addWidget(epTypeTip, 2, 0);
@@ -475,12 +458,14 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
     pageContainer->setFont(normalFont);
 
     QWidget *searchSubPage = new QWidget(pageContainer);
-    QComboBox *scriptCombo = new QComboBox(searchSubPage);
-    QLineEdit *keywordEdit = new QLineEdit(srcAnime, searchSubPage);
-    QPushButton *searchBtn = new QPushButton(tr("Search"), searchSubPage);
+    QComboBox *scriptCombo = new ElaComboBox(searchSubPage);
+    QLineEdit *keywordEdit = new ElaLineEdit(srcAnime, searchSubPage);
+    QPushButton *searchBtn = new KPushButton(tr("Search"), searchSubPage);
     ScriptSearchOptionPanel *scriptOptionPanel = new ScriptSearchOptionPanel(this);
     QTreeView *animeView = new QTreeView(searchSubPage);
+
     QGridLayout *searchSubGLayout = new QGridLayout(searchSubPage);
+    searchSubGLayout->setContentsMargins(0, 0, 0, 0);
     searchSubGLayout->addWidget(scriptCombo, 0, 0);
     searchSubGLayout->addWidget(keywordEdit, 0, 1);
     searchSubGLayout->addWidget(searchBtn, 0, 2);
@@ -495,7 +480,7 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
         if(scriptOptionPanel->hasOptions()) scriptOptionPanel->show();
         else scriptOptionPanel->hide();
     });
-    for(const auto &s : GlobalObjects::animeProvider->getSearchProviders())
+    for (const auto &s : GlobalObjects::animeProvider->getSearchProviders())
     {
         scriptCombo->addItem(s.first, s.second);
     }
@@ -505,10 +490,16 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
     animeView->setRootIsDecorated(false);
     animeView->setSelectionMode(QAbstractItemView::SingleSelection);
     animeView->setModel(animeModel);
-    animeView->setContextMenuPolicy(Qt::ActionsContextMenu);
-    animeView->header()->resizeSection(0, 200*logicalDpiX()/96);
+    animeView->setContextMenuPolicy(Qt::CustomContextMenu);
+    animeView->header()->resizeSection(0, 200);
 
-    QAction *copy=new QAction(tr("Copy"), this);
+    ElaMenu *actionMenu = new ElaMenu(animeView);
+    QObject::connect(animeView, &QTreeView::customContextMenuRequested, this, [=](){
+        if (!animeView->selectionModel()->hasSelection()) return;
+        actionMenu->exec(QCursor::pos());
+    });
+
+    QAction *copy = actionMenu->addAction(tr("Copy"));
     QObject::connect(copy, &QAction::triggered, this, [=](){
         auto selectedRows= animeView->selectionModel()->selectedRows((int)AnimeModel::Columns::ANIME);
         if(selectedRows.count()==0) return;
@@ -517,7 +508,7 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
     });
     animeView->addAction(copy);
 
-    if(!scriptCombo->currentData().isNull())
+    if (!scriptCombo->currentData().isNull())
     {
         QString id(QString("%1/%2").arg(scriptCombo->currentData().toString(), srcAnime));
         if(animeCache.contains(id))
@@ -578,7 +569,7 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
     });
 
     QWidget *matchSubPage = new QWidget(pageContainer);
-    QPushButton *backBtn = new QPushButton(tr("Back"), matchSubPage);
+    QPushButton *backBtn = new KPushButton(tr("Back"), matchSubPage);
     QLabel *animeLabel = new QLabel(matchSubPage);
     QTreeView *matchView = new QTreeView(matchSubPage);
     epModel = new EpModel(this, this);
@@ -587,6 +578,7 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
     matchView->setItemDelegate(epDelegate);
 
     QGridLayout *matchSubGLayout = new QGridLayout(matchSubPage);
+    matchSubGLayout->setContentsMargins(0, 0, 0, 0);
     matchSubGLayout->addWidget(animeLabel, 0, 0);
     matchSubGLayout->addWidget(backBtn, 0, 1);
     matchSubGLayout->addWidget(matchView, 1, 0, 1, 2);
@@ -654,10 +646,19 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
         cb->setText(selectedRows.first().data().toString());
     });
 
-    matchView->setContextMenuPolicy(Qt::ContextMenuPolicy::ActionsContextMenu);
-    matchView->addAction(actSelectAll);
-    matchView->addAction(actAutoSetEp);
-    matchView->addAction(copyEp);
+    {
+        matchView->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+        ElaMenu *actionMenu = new ElaMenu(matchView);
+        QObject::connect(matchView, &QTreeView::customContextMenuRequested, this, [=](){
+            bool hasSelection = animeView->selectionModel()->hasSelection();
+            copyEp->setEnabled(hasSelection);
+            actAutoSetEp->setEnabled(hasSelection);
+            actionMenu->exec(QCursor::pos());
+        });
+        actionMenu->addAction(actSelectAll);
+        actionMenu->addAction(actAutoSetEp);
+        actionMenu->addAction(copyEp);
+    }
 
     QVariant headerState(GlobalObjects::appSetting->value("HeaderViewState/MatchEditAnimeView"));
     if(!headerState.isNull())
@@ -676,22 +677,22 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime)
 
 void MatchEditor::onAccept()
 {
-    if(searchPage->isChecked())
+    if (pageIndex == 0)
     {
-        if(this->anime.isEmpty())
+        if (this->anime.isEmpty())
         {
             showMessage(tr("Anime should not be empty"),NM_ERROR | NM_HIDE);
             return;
         }
     }
-    else if(customPage->isChecked())
+    else if (pageIndex == 1)
     {  
         QString animeTitle=animeEdit->text().trimmed();
         QString epTitle=epEdit->text().trimmed();
         QString epIndex = epIndexEdit->text().trimmed();
-        if(animeTitle.isEmpty()|| epIndex.isEmpty())
+        if (animeTitle.isEmpty()|| epIndex.isEmpty())
         {
-            showMessage(tr("Anime Title and Episode Index should not be empty"),NM_ERROR | NM_HIDE);
+            showMessage(tr("Anime Title and Episode Index should not be empty"), NM_ERROR | NM_HIDE);
             return;
         }
         anime = animeTitle;
@@ -700,8 +701,10 @@ void MatchEditor::onAccept()
         singleEp.name = epTitle;
         singleEp.localFile = curItem->path;
     }
-    if(!lastSearchCacheId.isEmpty())
+    if (!lastSearchCacheId.isEmpty())
+    {
         animeCache.put(lastSearchCacheId,  static_cast<AnimeModel *>(animeModel)->animeBases());
+    }
 
     CFramelessDialog::onAccept();
 }

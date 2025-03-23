@@ -1,5 +1,7 @@
 #include "timelineedit.h"
-#include "globalobjects.h"
+#include "UI/ela/ElaLineEdit.h"
+#include "UI/ela/ElaMenu.h"
+#include "UI/widgets/kpushbutton.h"
 #include <QTreeView>
 #include <QLabel>
 #include <QSplitter>
@@ -34,25 +36,25 @@ TimelineEdit::TimelineEdit(const DanmuSource *source, const QVector<SimpleDanmuI
     timelineView->setFont(font());
     timelineView->setAlternatingRowColors(true);
     timelineView->setModel(timelineModel);
-    timelineView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    timelineView->setContextMenuPolicy(Qt::CustomContextMenu);
     timelineView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
 
-    QLineEdit *startEdit=new QLineEdit(this);
+    QLineEdit *startEdit = new ElaLineEdit(this);
     startEdit->setClearButtonEnabled(true);
     startEdit->setPlaceholderText(tr("Start Time(mm:ss)"));
     QRegExpValidator *startValidator=new QRegExpValidator(QRegExp("\\d+:?(\\d+)?"),this);
     startEdit->setValidator(startValidator);
     if(curTime!=-1) startEdit->setText(formatTime(curTime*1000));
 
-    QLineEdit *durationEdit=new QLineEdit(this);
+    QLineEdit *durationEdit = new ElaLineEdit(this);
     durationEdit->setClearButtonEnabled(true);
     durationEdit->setPlaceholderText(tr("Duration(s)"));
     QIntValidator *durationValidator=new QIntValidator(this);
     durationEdit->setValidator(durationValidator);
 
-    QPushButton *addTimeSpace=new QPushButton(tr("Add"),this);
+    QPushButton *addTimeSpace = new KPushButton(tr("Add"), this);
     addTimeSpace->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
-    QObject::connect(addTimeSpace,&QPushButton::clicked,this,[startEdit,durationEdit,this,simpleDanmuPool,timelineBar](){
+    QObject::connect(addTimeSpace, &QPushButton::clicked, this, [=](){
         int duration=durationEdit->text().toInt()*1000;
         if(duration==0) return;
         QStringList startList=startEdit->text().split(':');
@@ -77,13 +79,13 @@ TimelineEdit::TimelineEdit(const DanmuSource *source, const QVector<SimpleDanmuI
     containerVLayout->addWidget(timelineView);
     containerVLayout->addLayout(editHLayout);
 
-    QTreeView *simpleDPView=new QTreeView(this);
+    QTreeView *simpleDPView = new QTreeView(this);
     simpleDPView->setRootIsDecorated(false);
     simpleDPView->setFont(font());
     simpleDPView->setAlternatingRowColors(true);
     simpleDPView->setModel(simpleDanmuPool);
     simpleDPView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
-    simpleDPView->header()->setStretchLastSection(false);
+    // simpleDPView->header()->setStretchLastSection(false);
 
     QLabel *tipLabel=new QLabel(tr("Double Click: Begin/End Insert Space  Right Click: Cancel"),this);
     tipLabel->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
@@ -128,8 +130,9 @@ TimelineEdit::TimelineEdit(const DanmuSource *source, const QVector<SimpleDanmuI
         simpleDanmuPool->refreshTimeline(timelineInfo);
         timelineBar->updateInfo();
     });
-    QAction *deleteAction=new QAction(tr("Delete"),this);
-    timelineView->addAction(deleteAction);
+
+    ElaMenu *actionMenu = new ElaMenu(timelineView);
+    QAction *deleteAction = actionMenu->addAction(tr("Delete"));
     QObject::connect(deleteAction,&QAction::triggered,[timelineView,simpleDanmuPool,timelineBar,this](){
         QItemSelection selection=timelineView->selectionModel()->selection();
         if(selection.size()==0)return;
@@ -138,12 +141,17 @@ TimelineEdit::TimelineEdit(const DanmuSource *source, const QVector<SimpleDanmuI
         timelineBar->updateInfo();
     });
 
+    QObject::connect(timelineView, &QTreeView::customContextMenuRequested, this, [=](){
+        if (!timelineView->selectionModel()->hasSelection()) return;
+        actionMenu->exec(QCursor::pos());
+    });
+
     QVBoxLayout *dialogVLayout=new QVBoxLayout(this);
     //dialogVLayout->addSpacing(10*logicalDpiY()/96);
     dialogVLayout->addWidget(timelineBar);
     dialogVLayout->addWidget(viewSplitter);
     dialogVLayout->addWidget(tipLabel);
-    resize(800*logicalDpiX()/96,420*logicalDpiY()/96);
+    resize(800, 420);
     viewSplitter->setSizes(QList<int>()<<timelineBar->width()/2<<timelineBar->width()/2);
 }
 
@@ -199,8 +207,15 @@ void TimeLineBar::paintEvent(QPaintEvent *event)
 {
     QRect bRect(event->rect());
     QPainter painter(this);
+    painter.setRenderHints(QPainter::Antialiasing, true);
+    painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
+    painter.setRenderHints(QPainter::TextAntialiasing, true);
+    QPainterPath path;
+    path.addRoundedRect(bRect, 8, 8);
+    painter.setClipPath(path);
+
     painter.fillRect(bRect,QColor(0,0,0,150));
-    if(duration==0)return;
+    if (duration == 0) return;
     bRect.adjust(1, 0, -1, 0);
     float hRatio=(float)bRect.height()/statisInfo.maxCountOfMinute;
     //float margin=8*logicalDpiX()/96;
@@ -208,32 +223,55 @@ void TimeLineBar::paintEvent(QPaintEvent *event)
     float bHeight=bRect.height();
 
     static QColor barColor(51,168,255,200);
-    for(auto iter=statisInfo.countOfSecond.cbegin();iter!=statisInfo.countOfSecond.cend();++iter)
+    if (wRatio >= 1)
     {
-        float l((*iter).first*wRatio);
-        float h(floor((*iter).second*hRatio));
-        painter.fillRect(l,bHeight-h,wRatio<1.f?1.f:wRatio,h,barColor);
+        for (auto iter=statisInfo.countOfSecond.cbegin(); iter!=statisInfo.countOfSecond.cend(); ++iter)
+        {
+            float l((*iter).first*wRatio);
+            float h(floor((*iter).second*hRatio));
+            painter.fillRect(l, bHeight-h, wRatio < 1.f ? 1.f : wRatio, h, barColor);
+        }
+    }
+    else
+    {
+        static QVector<int> bins;
+        bins.resize(bRect.width());
+        for (int i=0; i < bins.size(); ++i) bins[i]=0;
+        float percent = 1.0/duration;
+        for(const auto &p : statisInfo.countOfSecond)
+        {
+            int pos = qMin(int(percent*p.first*bins.size()), bins.size()-1);
+            bins[pos] = qMax(bins[pos], p.second);
+        }
+        for(int i = 0; i<bins.size(); ++i)
+        {
+            if (bins[i] > 0)
+            {
+                float h(floor(bins[i] * hRatio));
+                painter.fillRect(i, bHeight - h, 1, h, barColor);
+            }
+        }
     }
 
     static QColor pSpaceColor(255,255,255,200);
     auto timelineInfo=timelineModel->getTimeLine();
-    for(auto &spaceItem:*timelineInfo)
+    for (auto &spaceItem:*timelineInfo)
     {
         float l(spaceItem.first/1000*wRatio);
-        painter.fillRect(l,0,1,bHeight,pSpaceColor);
+        painter.fillRect(l, 0, 1, bHeight,pSpaceColor);
     }
 
-    if(currentState!=-1)
+    if (currentState != -1)
     {
         QColor lineColor(255,255,0);
-        painter.fillRect(mouseTimeStartPos/1000*wRatio,0,1,bHeight,lineColor);
-        if(currentState==1)
+        painter.fillRect(mouseTimeStartPos/1000*wRatio, 0, 1, bHeight, lineColor);
+        if (currentState == 1)
         {
-            painter.fillRect(mouseTimeEndPos/1000*wRatio,0,1,bHeight,lineColor);
+            painter.fillRect(mouseTimeEndPos/1000*wRatio, 0, 1, bHeight, lineColor);
         }
     }
     painter.setPen(QColor(255,255,255));
-    painter.drawText(bRect,Qt::AlignLeft|Qt::AlignTop,tr("Total:%1 Max:%2").arg(QString::number(simpleDanmuList->count())).arg(statisInfo.maxCountOfMinute));
+    painter.drawText(bRect.adjusted(8, 1, 0, 0), Qt::AlignLeft|Qt::AlignTop, tr("Total:%1 Max:%2").arg(QString::number(simpleDanmuList->count())).arg(statisInfo.maxCountOfMinute));
 }
 
 void TimeLineBar::mousePressEvent(QMouseEvent *event)

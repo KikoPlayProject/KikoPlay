@@ -1,6 +1,7 @@
 #ifndef ANIMEITEMDELEGATE_H
 #define ANIMEITEMDELEGATE_H
 #include <QStyledItemDelegate>
+#include <QPen>
 class AnimeItemDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
@@ -8,6 +9,7 @@ public:
     explicit AnimeItemDelegate(QObject *parent = nullptr);
     static int CoverWidth, CoverHeight, TitleHeight;
     void setBlockCoverFetch(bool on) { blockCoverFetch = on; }
+    void setBorderColor(const QColor &color);
 
     // QAbstractItemDelegate interface
 public:
@@ -17,9 +19,11 @@ public:
 signals:
     void ItemClicked(const QModelIndex &index);
 private:
-    QScopedPointer<QWidget> contentWidget;
-    mutable QPixmap pixmap;
     bool blockCoverFetch;
+    QFont titleFont;
+    QColor titleColor{220, 220, 220};
+    QPixmap nullCoverPixmap;
+    QPen borderPen;
 };
 
 #endif // ANIMEITEMDELEGATE_H

@@ -15,6 +15,10 @@
 #include <QWinTaskbarProgress>
 #include <QWinTaskbarButton>
 #endif
+#include "player.h"
+#include "list.h"
+#include "librarywindow.h"
+#include "downloadwindow.h"
 #include "about.h"
 #include "poolmanager.h"
 #include "checkupdate.h"
@@ -30,108 +34,36 @@
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/playcontext.h"
+#include "Play/Danmu/danmupool.h"
 #include "Common/kupdater.h"
+#include "Common/keyactionmodel.h"
 #include "widgets/lazycontainer.h"
 #include "appmenu.h"
 #include "appbar.h"
+#include "ela/ElaToolButton.h"
+#include "ela/ElaMenu.h"
 
+#define SETTING_KEY_MAIN_BACKGROUND "MainWindow/Background"
+
+
+Q_TAKEOVER_NATIVEEVENT_CPP(MainWindow, elaAppBar);
 MainWindow::MainWindow(QWidget *parent)
-    : CFramelessWindow(parent),hasBackground(false),hasCoverBg(false),curPage(0),listWindowWidth(0),
+    : BackgroundMainWindow(parent),hasBackground(false),hasCoverBg(false),curPage(0),listWindowWidth(0),
       isMini(false),hideToTrayType(HideToTrayType::NONE)
 {
     setObjectName(QStringLiteral("MainWindow"));
     Notifier::getNotifier()->addNotify(Notifier::MAIN_DIALOG_NOTIFY, this);
     Notifier::getNotifier()->addNotify(Notifier::GLOBAL_NOTIFY, this);
-    windowTip = new WindowTip(this);
-    setupUI();
-    // setWindowIcon(QIcon(":/res/kikoplay.ico"));
-    QRect defaultGeo(0,0,800*logicalDpiX()/96,480*logicalDpiX()/96), defaultMiniGeo(0,0,200*logicalDpiX()/96, 200*logicalDpiY()/96);
-    defaultGeo.moveCenter(QApplication::desktop()->geometry().center());
-	defaultMiniGeo.moveCenter(QApplication::desktop()->geometry().center());
-    setGeometry(GlobalObjects::appSetting->value("MainWindow/Geometry",defaultGeo).toRect());
-    setMinimumSize(120*logicalDpiX()/96, 100*logicalDpiY()/96);
-    miniGeo = GlobalObjects::appSetting->value("MainWindow/miniGeometry", defaultMiniGeo).toRect();
-    originalGeo=geometry();
-    listWindowWidth = GlobalObjects::appSetting->value("MainWindow/ListWindowWidth", 0).toInt();
-    if(listWindowWidth == 0)
+
+    initUI();
+    initTray();
+    initSignals();
+    restoreSize();
+
+    if (GlobalObjects::appSetting->value("MainWindow/ShowTip",true).toBool())
     {
-        listWindowWidth = 200*logicalDpiX()/96;
-    }
-    hideToTrayType = static_cast<HideToTrayType>(GlobalObjects::appSetting->value("MainWindow/hideToTrayType", 0).toInt());
-    trayIcon = new QSystemTrayIcon(windowIcon(), this);
-    trayIcon->setToolTip("KikoPlay");
-    QObject::connect(trayIcon, &QSystemTrayIcon::activated, this, [=](QSystemTrayIcon::ActivationReason reason){
-        if(QSystemTrayIcon::Trigger == reason)
-        {
-            show();
-			if (isMinimized()) showNormal();
-            raise();
-            trayIcon->hide();
-        }
-    });
-    QMenu *trayMenu = new QMenu(this);
-    QAction *actTrayExit=new QAction(tr("Exit"), trayMenu);
-    QObject::connect(actTrayExit,&QAction::triggered, this, &MainWindow::close);
-    trayMenu->addAction(actTrayExit);
-    trayIcon->setContextMenu(trayMenu);
-    QVariant splitterState(GlobalObjects::appSetting->value("MainWindow/SplitterState"));
-    if(!splitterState.isNull())
-        playSplitter->restoreState(splitterState.toByteArray());
-    if(!GlobalObjects::appSetting->value("MainWindow/ListVisibility",true).toBool())
-        listWindow->hide();
-    listShowState=!listWindow->isHidden();
-    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::stateChanged,[this](MPVPlayer::PlayState state){
-#ifdef Q_OS_WIN
-        if(state==MPVPlayer::Play && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
-        {
-            winTaskbarProgress->show();
-            winTaskbarProgress->resume();
-        }
-        else if(state==MPVPlayer::Pause && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
-        {
-            winTaskbarProgress->show();
-            winTaskbarProgress->pause();
-        }
-        else if(state==MPVPlayer::Stop)
-        {
-            winTaskbarProgress->hide();
-        }
-#endif
-        if(state==MPVPlayer::Stop)
-        {
-            auto geo=originalGeo;
-			if (isFullScreen())
-			{
-				widgetTitlebar->show();
-                playerWindow->toggleFullScreenState(false);
-				showNormal();
-			}
-            if(isMaximized())
-            {
-                showNormal();
-            }
-			if (listShowState)listWindow->show();
-			else listWindow->hide();
-            playerWindow->toggleListCollapseState(listShowState);
-            setGeometry(geo);
-        }
-#ifdef Q_OS_WIN
-        setScreenSave(!(state==MPVPlayer::Play && GlobalObjects::playlist->getCurrentItem()!=nullptr));
-#endif
-    });
-#ifdef Q_OS_WIN
-	QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::positionChanged, this, [this](int val) {
-        if(GlobalObjects::playlist->getCurrentItem()!=nullptr)
-            winTaskbarProgress->setValue(val);
-	});
-    QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::durationChanged,this, [this](int duration){
-        winTaskbarProgress->setRange(0, duration);
-    });
-#endif
-    if(GlobalObjects::appSetting->value("MainWindow/ShowTip",true).toBool())
-    {
-        GlobalObjects::appSetting->setValue("MainWindow/ShowTip",false);
-        QTimer::singleShot(0,[this](){
+        GlobalObjects::appSetting->setValue("MainWindow/ShowTip", false);
+        QTimer::singleShot(0, [this](){
             Tip tip(buttonIcon);
             QRect geo(0,0,400,400);
             geo.moveCenter(this->geometry().center());
@@ -142,322 +74,118 @@ MainWindow::MainWindow(QWidget *parent)
     }
 }
 
-void MainWindow::setBackground(const QString &path, const QColor &color)
-{
-    bool forceRefeshQSS = color.isValid() && color != themeColor;
-    themeColor = color;
-    setBackground(path, forceRefeshQSS);
-}
-
-void MainWindow::setBgDarkness(int val)
-{
-    bgWidget->setBgDarkness(val);
-    curDarkness = val;
-}
-
-void MainWindow::setThemeColor(const QColor &color)
-{
-    themeColor = color;
-    if(themeColor.isValid() && hasBackground)
-        StyleManager::getStyleManager()->setQSS(StyleManager::BG_COLOR, themeColor);
-    else if(hasBackground)
-        StyleManager::getStyleManager()->setQSS(StyleManager::DEFAULT_BG);
-    else
-        StyleManager::getStyleManager()->setQSS(StyleManager::NO_BG);
-}
-
 void MainWindow::setHideToTrayType(HideToTrayType type)
 {
     hideToTrayType = type;
 }
 
-void MainWindow::setupUI()
+void MainWindow::initUI()
 {
+    windowTip = new WindowTip(this);
 
-    QWidget *centralWidget = new QWidget(this);
-    bgWidget = new BackgroundWidget(centralWidget);
-    curDarkness = bgWidget->bgDarkness();
-    QWidget *centralContainer = new QWidget(centralWidget);
-    QStackedLayout *centralSLayout = new QStackedLayout(centralWidget);
-    centralSLayout->setStackingMode(QStackedLayout::StackAll);
-    centralSLayout->addWidget(centralContainer);
-    centralSLayout->addWidget(bgWidget);
+    elaAppBar = new ElaAppBar(this);
+    elaAppBar->setWindowControlFlag(ElaAppBarType::TitleHint, false);
+    elaAppBar->setWindowControlFlag(ElaAppBarType::AppButtonHint);
+    elaAppBar->setIcon(QIcon(":/res/images/kikoplay.svg"));
 
-    QVBoxLayout *verticalLayout = new QVBoxLayout(centralContainer);
-    verticalLayout->setContentsMargins(0, 0, 0, 0);
-    verticalLayout->setSpacing(0);
-//------title bar
-    widgetTitlebar = new DropableWidget(centralContainer);
-    widgetTitlebar->setAcceptDrops(true);
-    widgetTitlebar->setObjectName(QStringLiteral("widgetTitlebar"));
-    QFont normalFont(GlobalObjects::normalFont,12);
-
-    buttonIcon = new QToolButton(widgetTitlebar);
-    buttonIcon->setFont(normalFont);
-#ifdef Q_OS_WIN
-    buttonIcon->setText(" KikoPlay ");
-#endif
-#ifdef Q_OS_MACOS
-    buttonIcon->setProperty("hideMenuIndicator", true);
-#endif
-    buttonIcon->setObjectName(QStringLiteral("LogoButton"));
-    buttonIcon->setIcon(QIcon(":/res/images/kikoplay-3.png"));
-    buttonIcon->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    buttonIcon->setPopupMode(QToolButton::InstantPopup);
-
-    QAction *act_poolManager=new QAction(tr("Danmu Pool Manager"), this);
-    QObject::connect(act_poolManager,&QAction::triggered,[this](){
-        PoolManager poolManage(buttonIcon);
-        poolManage.exec();
-
-    });
-    buttonIcon->addAction(act_poolManager);
-
-    QAction *act_Settingse=new QAction(tr("Settings"), this);
-    QObject::connect(act_Settingse,&QAction::triggered,[this](){
-        Settings settings(Settings::PAGE_UI, buttonIcon);
-        settings.exec();
-    });
-    buttonIcon->addAction(act_Settingse);
-
-    scriptPlayground = nullptr;
-    QAction *act_ScriptPlayground=new QAction(tr("Script Playground"), this);
-    QObject::connect(act_ScriptPlayground,&QAction::triggered,[this](){
-        if(!scriptPlayground)
-        {
-            scriptPlayground = new ScriptPlayground(this);
-        }
-        scriptPlayground->show();
-    });
-    buttonIcon->addAction(act_ScriptPlayground);
-
-    logWindow = nullptr;
-    QAction *act_ShowLogCenter=new QAction(tr("Log Center"), this);
-    QObject::connect(act_ShowLogCenter,&QAction::triggered,[this](){
-        if(!logWindow)
-        {
-            logWindow=new LogWindow(this);
-            QObject::connect(logWindow, &LogWindow::destroyed, [this](){
-               logWindow = nullptr;
-            });
-        }
-        logWindow->show();
-    });
-    buttonIcon->addAction(act_ShowLogCenter);
-
-    QAction *act_checkUpdate=new QAction(tr("Check For Updates"), this);
-    QObject::connect(act_checkUpdate,&QAction::triggered,[this](){
-        CheckUpdate checkUpdate(buttonIcon);
-        checkUpdate.exec();
-    });
-    buttonIcon->addAction(act_checkUpdate);
-    if (KUpdater::instance()->needCheck())
-    {
-        act_checkUpdate->setEnabled(false);
-        act_checkUpdate->setText(tr("Checking..."));
-        QObject::connect(KUpdater::instance(), &KUpdater::checkDone, this, [=](){
-            auto updater = KUpdater::instance();
-            if (updater->hasNewVersion())
-            {
-                act_checkUpdate->setText(tr("Check For Updates[New Version: %1]").arg(updater->version()));
-            }
-            else
-            {
-                act_checkUpdate->setText(tr("Check For Updates"));
-            }
-            act_checkUpdate->setEnabled(true);
-        });
-        KUpdater::instance()->check();
-    }
-
-    QAction *act_useTip=new QAction(tr("Usage Tip"), this);
-    QObject::connect(act_useTip,&QAction::triggered,[this](){
-        Tip tip(buttonIcon);
-        tip.resize(500*logicalDpiX()/96, 400*logicalDpiY()/96);
-        tip.exec();
-    });
-    buttonIcon->addAction(act_useTip);
-
-    QAction *act_feedback = new QAction(tr("Feedback"), this);
-    QObject::connect(act_feedback, &QAction::triggered, [](){
-        QDesktopServices::openUrl(QUrl("https://support.qq.com/product/655998"));
-    });
-    buttonIcon->addAction(act_feedback);
-
-    QAction *act_about=new QAction(tr("About"), this);
-    QObject::connect(act_about,&QAction::triggered,[this](){
-        About about(buttonIcon);
-        QRect geo(0,0,400,400);
-        geo.moveCenter(this->geometry().center());
-        about.move(geo.topLeft());
-        about.exec();
-    });
-    buttonIcon->addAction(act_about);
-    QAction *act_exit=new QAction(tr("Exit"),this);
-    QObject::connect(act_exit,&QAction::triggered, this, &MainWindow::close);
-    buttonIcon->addAction(act_exit);
-
+    QWidget *pageBtnContainer = new QWidget(this);
+    QFont normalFont(GlobalObjects::normalFont, 12);
     QStringList pageButtonTexts = {
         tr("Player"),
         tr("Library"),
-        tr("Download")
+        tr("Resource")
     };
     QToolButton **infoBtnPtrs[] = {
         &buttonPage_Play, &buttonPage_Library, &buttonPage_Downlaod
     };
-#ifdef Q_OS_WIN
-    #define pageBtnObjName "PageButton"
-#else
-    #define pageBtnObjName "PageButton_O"
-#endif
-    QButtonGroup *btnGroup=new QButtonGroup(this);
-    for(int i = 0; i < pageButtonTexts.size(); ++i)
+    QButtonGroup *btnGroup = new QButtonGroup(this);
+    for (int i = 0; i < pageButtonTexts.size(); ++i)
     {
-        *infoBtnPtrs[i] = new QToolButton(this);
+        *infoBtnPtrs[i] = new QToolButton(pageBtnContainer);
         QToolButton *tb = *infoBtnPtrs[i];
         tb->setFont(normalFont);
         tb->setText(pageButtonTexts[i]);
         tb->setCheckable(true);
         tb->setToolButtonStyle(Qt::ToolButtonTextOnly);
-        tb->setObjectName(QStringLiteral(pageBtnObjName));
+        tb->setObjectName(QStringLiteral("PageButton"));
         btnGroup->addButton(tb, i);
     }
+    QFontMetrics fm(buttonPage_Play->fontMetrics());
+    int btnWidth = 0;
+    for (int i = 0; i < pageButtonTexts.size(); ++i)
+    {
+        btnWidth = qMax(btnWidth, fm.horizontalAdvance((*infoBtnPtrs[i])->text()));
+    }
+    btnWidth += 50;
+    for (int i = 0; i < pageButtonTexts.size(); ++i)
+    {
+        (*infoBtnPtrs[i])->setFixedWidth(btnWidth);
+    }
     buttonPage_Play->setChecked(true);
-    QObject::connect(btnGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[this](int id, bool checked){
-        if(checked)
+    QObject::connect(btnGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, this, [this](int id, bool checked){
+        if (checked)
         {
+            GlobalObjects::context()->curMainPage = id;
             contentStackLayout->setCurrentIndex(id);
-            if(id == 1 && hasCoverBg)
+            if (id == 1 && hasCoverBg)
             {
-                if(!coverPixmap.isNull()) bgWidget->setBackground(coverPixmap);
-                bgWidget->setBgDarkness(curDarkness + 10);
-                bgWidget->setBlurAnimation(20., 60.);
+                if(!coverPixmap.isNull()) BackgroundMainWindow::setBackground(coverPixmap);
+                BackgroundMainWindow::setBgDarkness(bgDarkness() + 10);
+                BackgroundMainWindow::setBlurAnimation(20., 60.);
             }
-            else if(curPage == 1 && hasCoverBg)
+            else if (curPage == 1 && hasCoverBg)
             {
-                bgWidget->setBackground(bgImg);
-                bgWidget->setBgDarkness(curDarkness);
-                bgWidget->setBlurAnimation(60., 0.);
+                BackgroundMainWindow::setBackground(bgImg);
+                BackgroundMainWindow::setBgDarkness(bgDarkness());
+                BackgroundMainWindow::setBlurAnimation(60., 0.);
             }
             curPage = id;
-            if(downloadToolProgress->value() < 100)
+            if (downloadToolProgress->value() < 100)
             {
                 downloadToolProgress->setVisible(curPage != 2);
             }
         }
     });
-
-    downloadToolProgress = new QProgressBar(this);
+    downloadToolProgress = new QProgressBar(pageBtnContainer);
     downloadToolProgress->setObjectName(QStringLiteral("DownloadToolProgress"));
     downloadToolProgress->setRange(0, 100);
     downloadToolProgress->setTextVisible(false);
-    QVBoxLayout *toolProgressVLayout=new QVBoxLayout();
+    downloadToolProgress->setFixedSize(btnWidth - 4, 1);
+    QVBoxLayout *toolProgressVLayout = new QVBoxLayout();
     toolProgressVLayout->addStretch(1);
     toolProgressVLayout->addWidget(downloadToolProgress, 0, Qt::AlignHCenter);
     toolProgressVLayout->setContentsMargins(0, 0, 0, 0);
     buttonPage_Downlaod->setLayout(toolProgressVLayout);
 
+    QHBoxLayout *titleControlHLayout = new QHBoxLayout(pageBtnContainer);
+    titleControlHLayout->setContentsMargins(10, 0, 0, 0);
+    titleControlHLayout->addWidget(buttonPage_Play, 0, Qt::AlignVCenter);
+    titleControlHLayout->addWidget(buttonPage_Library, 0, Qt::AlignVCenter);
+    titleControlHLayout->addWidget(buttonPage_Downlaod, 0, Qt::AlignVCenter);
 
-    QVBoxLayout *pageVerticalLayout = new QVBoxLayout();
-    pageVerticalLayout->setContentsMargins(0,0,0,0);
-#ifdef Q_OS_WIN
-    pageVerticalLayout->addStretch(1);
-#endif
-    QHBoxLayout *pageHLayout = new QHBoxLayout();
-    pageHLayout->setContentsMargins(0,0,0,0);
-    pageHLayout->addWidget(buttonPage_Play);
-    pageHLayout->addWidget(buttonPage_Library);
-    pageHLayout->addWidget(buttonPage_Downlaod);
-    pageVerticalLayout->addLayout(pageHLayout);
+    appBar = new AppBar(pageBtnContainer);
+    elaAppBar->appButton()->setProperty("hideMenuIndicator", true);
+    elaAppBar->appButton()->setMenu(new AppMenu(elaAppBar->appButton(), this));
 
-
-    appBar = new AppBar(widgetTitlebar);
-
-    GlobalObjects::iconfont->setPointSize(10);
-    appButton=new QToolButton(widgetTitlebar);
-    appButton->setFont(*GlobalObjects::iconfont);
-    appButton->setText(QChar(0xe63d));
-    appButton->setObjectName(QStringLiteral("ControlButton"));
-    appButton->setProperty("hideMenuIndicator", true);
-    appButton->setMenu(new AppMenu(appButton, this));
-    appButton->setPopupMode(QToolButton::InstantPopup);
-
-    minButton=new QToolButton(widgetTitlebar);
-    minButton->setFont(*GlobalObjects::iconfont);
-    minButton->setText(QChar(0xe651));
-    minButton->setObjectName(QStringLiteral("ControlButton"));
-    QObject::connect(minButton,&QToolButton::clicked,this, [=](){
-        if(hideToTrayType == HideToTrayType::MINIMIZE)
+    elaAppBar->setCustomWidget(ElaAppBarType::LeftArea, pageBtnContainer);
+    elaAppBar->setCustomWidget(ElaAppBarType::RightArea, appBar);
+    elaAppBar->setIsDefaultClosed(false);
+    QObject::connect(elaAppBar, &ElaAppBar::closeButtonClicked, this, [=](){
+        if (hideToTrayType == HideToTrayType::CLOSE)
         {
             this->hide();
             trayIcon->show();
         }
         else
         {
-            showMinimized();
+            this->onClose();
         }
     });
 
-    maxButton=new QToolButton(widgetTitlebar);
-    maxButton->setFont(*GlobalObjects::iconfont);
-    maxButton->setText(QChar(0xe93c));
-    maxButton->setObjectName(QStringLiteral("ControlButton"));
-    QObject::connect(maxButton,&QToolButton::clicked,[this](){
-       if(this->isMaximized())
-       {
-           maxButton->setText(QChar(0xe93c));
-           this->showNormal();
-       }
-       else
-       {
-           maxButton->setText(QChar(0xe93d));
-           this->showMaximized();
-       }
-    });
-
-    closeButton=new QToolButton(widgetTitlebar);
-    closeButton->setFont(*GlobalObjects::iconfont);
-    closeButton->setText(QChar(0xe60b));
-    closeButton->setObjectName(QStringLiteral("closelButton"));
-    QObject::connect(closeButton,&QToolButton::clicked,[this](){
-        if(hideToTrayType == HideToTrayType::CLOSE)
-        {
-            this->hide();
-            trayIcon->show();
-        }
-        else
-        {
-            this->close();
-        }
-    });
-    QHBoxLayout *layout = new QHBoxLayout(widgetTitlebar);
-    layout->setSpacing(0);
-#ifdef Q_OS_WIN
-    layout->setContentsMargins(8*logicalDpiX()/96,0,2*logicalDpiY()/96,0);
-    layout->addWidget(buttonIcon);
-    layout->addSpacing(20*logicalDpiX()/96);
-    layout->addLayout(pageVerticalLayout);
-    layout->addStretch(1);
-    layout->addWidget(appBar);
-    layout->addSpacing(10*logicalDpiX()/96);
-    layout->addWidget(appButton);
-    layout->addWidget(minButton);
-    layout->addWidget(maxButton);
-    layout->addWidget(closeButton);
-#else
-    layout->setContentsMargins(0,0,4*logicalDpiX()/96,0);
-    layout->addLayout(pageVerticalLayout);
-    layout->addStretch(1);
-    layout->addWidget(appBar);
-    layout->addSpacing(10*logicalDpiX()/96);
-    layout->addWidget(appButton);
-    layout->addWidget(buttonIcon);
-    widgetTitlebar->setSizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Maximum);
-    minButton->hide();
-    maxButton->hide();
-    closeButton->hide();
-#endif
-    verticalLayout->addWidget(widgetTitlebar);
+    QWidget *centralWidget = new QWidget(this);
+    QVBoxLayout *verticalLayout = new QVBoxLayout(centralWidget);
+    verticalLayout->setContentsMargins(0, 0, 0, 0);
+    verticalLayout->setSpacing(0);
 
     contentStackLayout=new QStackedLayout();
     contentStackLayout->setContentsMargins(0,0,0,0);
@@ -467,33 +195,230 @@ void MainWindow::setupUI()
     listWindow->show();
 
     verticalLayout->addLayout(contentStackLayout);
-
-
     setCentralWidget(centralWidget);
-    setTitleBar(widgetTitlebar);
-	setFocusPolicy(Qt::StrongFocus);
 
-    QObject::connect(widgetTitlebar, &DropableWidget::fileDrop, [this](const QString &url){
-       QFileInfo fi(url);
-       const QStringList imageFormats{"jpg", "png"};
-       if(imageFormats.contains(fi.suffix().toLower())){
-           QStringList historyBgs = GlobalObjects::appSetting->value("MainWindow/HistoryBackgrounds").toStringList();
-           historyBgs.removeOne(url);
-           historyBgs.insert(0, url);
-           if(historyBgs.count()>10) historyBgs.removeLast();
-           GlobalObjects::appSetting->setValue("MainWindow/HistoryBackgrounds", historyBgs);
-           setBackground(url);
-       }
-       else {
-           setBackground("");
-       }
+    initIconAction();
+
+
+    setBackground(GlobalObjects::appSetting->value(SETTING_KEY_MAIN_BACKGROUND, "").toString(), false, true);
+    StyleManager::getStyleManager()->initStyle(hasBackground);
+
+}
+
+void MainWindow::initIconAction()
+{
+    ElaMenu* iconMenu = new ElaMenu(this);
+    ElaToolButton *iconBtn = elaAppBar->iconButton();
+    iconBtn->setMenu(iconMenu);
+
+    QAction *actPoolManager = iconMenu->addAction(tr("Danmu Pool Manager"));
+    QObject::connect(actPoolManager, &QAction::triggered, this, [this](){
+        PoolManager poolManage(this);
+        poolManage.exec();
     });
-    if(GlobalObjects::appSetting->value("MainWindow/CustomColor", false).toBool())
+
+    QAction *actSettings = iconMenu->addAction(tr("Settings"));
+    QObject::connect(actSettings, &QAction::triggered, this, [this](){
+        Settings settings(Settings::PAGE_GENERAL, this);
+        settings.exec();
+    });
+
+    QAction *actScriptPlayground = iconMenu->addAction(tr("Script Playground"));
+    QObject::connect(actScriptPlayground, &QAction::triggered, this, [this](){
+        if(!scriptPlayground)
+        {
+            scriptPlayground = new ScriptPlayground(this);
+        }
+        scriptPlayground->show();
+    });
+
+    QAction *actShowLogCenter = iconMenu->addAction(tr("Log Center"));
+    QObject::connect(actShowLogCenter, &QAction::triggered, this, [this](){
+        if (!logWindow)
+        {
+            logWindow = new LogWindow(this);
+            QObject::connect(logWindow, &LogWindow::destroyed, this, [this](){
+                logWindow = nullptr;
+            });
+        }
+        logWindow->show();
+    });
+
+    QAction *actCheckUpdate = iconMenu->addAction(tr("Check For Updates"));
+    QObject::connect(actCheckUpdate, &QAction::triggered, this, [this](){
+        CheckUpdate checkUpdate(this);
+        checkUpdate.exec();
+    });
+    if (KUpdater::instance()->needCheck())
     {
-        themeColor = GlobalObjects::appSetting->value("MainWindow/CustomColorHSV", QColor::fromHsv(180, 255, 100)).value<QColor>();
+        actCheckUpdate->setEnabled(false);
+        actCheckUpdate->setText(tr("Checking..."));
+        QObject::connect(KUpdater::instance(), &KUpdater::checkDone, this, [=](){
+            auto updater = KUpdater::instance();
+            if (updater->hasNewVersion())
+            {
+                actCheckUpdate->setText(tr("Check For Updates[New Version: %1]").arg(updater->version()));
+            }
+            else
+            {
+                actCheckUpdate->setText(tr("Check For Updates"));
+            }
+            actCheckUpdate->setEnabled(true);
+        });
+        KUpdater::instance()->check();
     }
-    StyleManager::getStyleManager()->setCondVariable("DarkMode", GlobalObjects::appSetting->value("MainWindow/DarkMode", false).toBool(), false);
-    setBackground(GlobalObjects::appSetting->value("MainWindow/Background", "").toString(), true, false);
+
+    QAction *actUseTip = iconMenu->addAction(tr("Usage Tip"));
+    QObject::connect(actUseTip, &QAction::triggered, this, [this](){
+        Tip tip(this);
+        tip.resize(500*logicalDpiX()/96, 400*logicalDpiY()/96);
+        tip.exec();
+    });
+
+
+    QAction *actFeedback = iconMenu->addAction(tr("Feedback"));
+    QObject::connect(actFeedback, &QAction::triggered, [](){
+        QDesktopServices::openUrl(QUrl("https://support.qq.com/product/655998"));
+    });
+
+
+    QAction *actAbout = iconMenu->addAction(tr("About"));
+    QObject::connect(actAbout,&QAction::triggered, this, [this](){
+        About about(this);
+        QRect geo(0,0,400,400);
+        geo.moveCenter(this->geometry().center());
+        about.move(geo.topLeft());
+        about.exec();
+    });
+
+    QAction *actExit = iconMenu->addAction(tr("Exit"));
+    QObject::connect(actExit, &QAction::triggered, this, [=](){ this->onClose(true); });
+
+}
+
+void MainWindow::initTray()
+{
+    hideToTrayType = static_cast<HideToTrayType>(GlobalObjects::appSetting->value("MainWindow/hideToTrayType", 0).toInt());
+    trayIcon = new QSystemTrayIcon(windowIcon(), this);
+    trayIcon->setToolTip("KikoPlay");
+    QObject::connect(trayIcon, &QSystemTrayIcon::activated, this, [=](QSystemTrayIcon::ActivationReason reason){
+        if (QSystemTrayIcon::Trigger == reason)
+        {
+            show();
+            if (isMinimized()) showNormal();
+            raise();
+            trayIcon->hide();
+        }
+    });
+    QMenu *trayMenu = new ElaMenu(this);
+    QAction *actTrayExit = new QAction(tr("Exit"), trayMenu);
+    QObject::connect(actTrayExit, &QAction::triggered, this, &MainWindow::close);
+    trayMenu->addAction(actTrayExit);
+    trayIcon->setContextMenu(trayMenu);
+}
+
+void MainWindow::initSignals()
+{
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::stateChanged, this, [=](MPVPlayer::PlayState state){
+#ifdef Q_OS_WIN
+        if (winTaskbarProgress && state == MPVPlayer::Play && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+        {
+            winTaskbarProgress->show();
+            winTaskbarProgress->resume();
+        }
+        else if (winTaskbarProgress && state == MPVPlayer::Pause && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+        {
+            winTaskbarProgress->show();
+            winTaskbarProgress->pause();
+        }
+        else if (winTaskbarProgress && state == MPVPlayer::Stop)
+        {
+            winTaskbarProgress->hide();
+        }
+#endif
+        if (state == MPVPlayer::Stop)
+        {
+            auto geo = originalGeo;
+            if (isMaximized())
+            {
+                showNormal();
+            }
+            listWindow->setVisible(listShowState);
+            playerWindow->toggleListCollapseState(listShowState? listWindow->currentList() : -1);
+            setGeometry(geo);
+        }
+#ifdef Q_OS_WIN
+        elaAppBar->setScreenSave(!(state == MPVPlayer::Play && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty()));
+#endif
+    });
+#ifdef Q_OS_WIN
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::positionChanged, this, [this](int val) {
+        if (winTaskbarProgress && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+        {
+            winTaskbarProgress->setValue(val);
+        }
+    });
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::durationChanged, this, [this](int duration){
+        if (winTaskbarProgress)
+        {
+            winTaskbarProgress->setRange(0, duration);
+        }
+    });
+#endif
+}
+
+void MainWindow::restoreSize()
+{
+    QRect defaultGeo(0, 0, 800, 480), defaultMiniGeo(0, 0, 200, 200);
+    defaultGeo.moveCenter(QApplication::desktop()->geometry().center());
+    defaultMiniGeo.moveCenter(QApplication::desktop()->geometry().center());
+    setGeometry(GlobalObjects::appSetting->value("MainWindow/Geometry",defaultGeo).toRect());
+    setMinimumSize(120, 100);
+    miniGeo = GlobalObjects::appSetting->value("MainWindow/miniGeometry", defaultMiniGeo).toRect();
+    originalGeo = geometry();
+    listWindowWidth = GlobalObjects::appSetting->value("MainWindow/ListWindowWidth", 0).toInt();
+    if (listWindowWidth == 0)
+    {
+        listWindowWidth = 200;
+    }
+    QVariant splitterState(GlobalObjects::appSetting->value("MainWindow/SplitterState"));
+    if (!splitterState.isNull())
+    {
+        playSplitter->restoreState(splitterState.toByteArray());
+    }
+    if (!GlobalObjects::appSetting->value("MainWindow/ListVisibility", true).toBool())
+    {
+        listWindow->hide();
+    }
+    listShowState = !listWindow->isHidden();
+}
+
+void MainWindow::onClose(bool forceExit)
+{
+    if (hideToTrayType == HideToTrayType::CLOSE && !forceExit)
+    {
+        this->hide();
+        trayIcon->show();
+        return;
+    }
+    GlobalObjects::appSetting->setValue("MainWindow/miniGeometry", miniGeo);
+    GlobalObjects::appSetting->setValue("MainWindow/hideToTrayType", static_cast<int>(hideToTrayType));
+    GlobalObjects::appSetting->setValue("MainWindow/ListWindowWidth", listWindowWidth);
+    if (GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
+    {
+        GlobalObjects::appSetting->beginGroup("MainWindow");
+        GlobalObjects::appSetting->setValue("Geometry",originalGeo);
+        GlobalObjects::appSetting->setValue("SplitterState",playSplitter->saveState());
+        GlobalObjects::appSetting->setValue("ListVisibility",!listWindow->isHidden());
+        GlobalObjects::appSetting->endGroup();
+    }
+    GlobalObjects::playlist->setCurrentPlayTime();
+    playerWindow->close();
+    playerWindow->deleteLater();
+    if (library) library->beforeClose();
+    if (download) download->beforeClose();
+    GlobalObjects::clear();
+    QCoreApplication::instance()->exit();
 }
 
 void MainWindow::switchToPlay(const QString &fileToPlay)
@@ -507,42 +432,34 @@ void MainWindow::switchToPlay(const QString &fileToPlay)
     }
 }
 
-void MainWindow::setBackground(const QString &imagePath, bool forceRefreshQSS, bool showAnimation)
+void MainWindow::setBackground(const QString &imagePath, bool showAnimation, bool isStartup)
 {
     bool refreshQSS = false;
-    if(!imagePath.isEmpty() && QFile::exists(imagePath))
+    if (!imagePath.isEmpty() && QFile::exists(imagePath))
     {
-        GlobalObjects::appSetting->setValue("MainWindow/Background", imagePath);
+        GlobalObjects::appSetting->setValue(SETTING_KEY_MAIN_BACKGROUND, imagePath);
         bgImg = QImage(imagePath);
-        if(!hasCoverBg || curPage != 1)
+        if (!hasCoverBg || curPage != 1)
         {
-            bgWidget->setBackground(bgImg);
-            if(showAnimation) bgWidget->setBlurAnimation(60., 0., 800);
+            BackgroundMainWindow::setBackground(bgImg);
+            if (showAnimation) BackgroundMainWindow::setBlurAnimation(60., 0., 800);
         }
         refreshQSS = !hasBackground;
         hasBackground = true;
     }
     else
     {
-        GlobalObjects::appSetting->setValue("MainWindow/Background", "");
+        GlobalObjects::appSetting->setValue(SETTING_KEY_MAIN_BACKGROUND, "");
         bgImg = QImage();
-        if(!hasCoverBg || curPage != 1)
+        if (!hasCoverBg || curPage != 1)
         {
-            bgWidget->setBackground(bgImg);
+            BackgroundMainWindow::setBackground(bgImg);
         }
         refreshQSS = hasBackground;
         hasBackground = false;
     }
-    if(refreshQSS || forceRefreshQSS)
-    {
-        if(themeColor.isValid() && hasBackground)
-            StyleManager::getStyleManager()->setQSS(StyleManager::BG_COLOR, themeColor);
-        else if(hasBackground)
-            StyleManager::getStyleManager()->setQSS(StyleManager::DEFAULT_BG);
-        else
-            StyleManager::getStyleManager()->setQSS(StyleManager::NO_BG);
-    }
-
+    if (isStartup) return;
+    StyleManager::getStyleManager()->setCondVariable("hasBackground", hasBackground, refreshQSS);
 }
 
 QWidget *MainWindow::setupPlayPage()
@@ -560,11 +477,10 @@ QWidget *MainWindow::setupPlayPage()
     playerWindow=new PlayerWindow();
     playerWindow->setMouseTracking(true);
 //#ifdef Q_OS_WIN
-    QWindow *native_wnd  = QWindow::fromWinId(playerWindow->winId());
-    QWidget *playerWindowWidget=QWidget::createWindowContainer(native_wnd);
+    QWindow *native_wnd = QWindow::fromWinId(playerWindow->winId());
+    QWidget *playerWindowWidget = QWidget::createWindowContainer(native_wnd);
     playerWindowWidget->setContentsMargins(1,0,1,1);
     playerWindowWidget->setMouseTracking(true);
-    playerWindowWidget->setParent(playSplitter);
     playerWindow->show();
 //#else
 //    QWidget *playerWindowWidget = playerWindow;
@@ -572,77 +488,90 @@ QWidget *MainWindow::setupPlayPage()
 //    playerWindow->show();
 //#endif
 
-    listWindow=new ListWindow(playSplitter);
-    QObject::connect(playerWindow,&PlayerWindow::toggleListVisibility,[this](){
-        if(listWindow->isHidden())
+    listWindow = new ListWindow(playSplitter);
+    QObject::connect(playerWindow, &PlayerWindow::toggleListVisibility, this, [=](int listType){
+        if (listWindow->isHidden())
         {
-            if(!isMaximized() && !isFullScreen())
+            if (!isMaximized() && !isFullScreen())
             {
                 resize(listWindowWidth+width(),height());
             }
+            listWindow->setCurrentList(listType);
             listWindow->show();
         }
         else
         {
-            listWindowWidth=listWindow->width();
-            listWindow->hide();
-            if(!isMaximized() && !isFullScreen())
-                resize(width()-listWindowWidth,height());
+            if (listWindow->currentList() == listType)
+            {
+                listWindowWidth = listWindow->width();
+                listWindow->hide();
+                if (!isMaximized() && !isFullScreen())
+                {
+                    resize(width()-listWindowWidth,height());
+                }
+            }
+            else
+            {
+                listWindow->setCurrentList(listType);
+            }
         }
-        if(GlobalObjects::playlist->getCurrentItem()==nullptr)
-            listShowState=!listWindow->isHidden();
+        if (GlobalObjects::playlist->getCurrentItem() == nullptr)
+        {
+            listShowState = !listWindow->isHidden();
+        }
     });
-    QObject::connect(playerWindow,&PlayerWindow::showFullScreen,[this,playVerticalLayout](bool on){
+    QObject::connect(playerWindow, &PlayerWindow::enterFullScreen, this, [=](bool on){
         static bool isMax, isShowPlaylist;
-        if(on)
+        if (on)
         {
             isShowPlaylist=!listWindow->isHidden();
             isMax=isMaximized();
-            widgetTitlebar->hide();
+            elaAppBar->hideAppBar(true, true);
             showFullScreen();
             listWindow->hide();
-            playerWindow->toggleListCollapseState(false);
+            playerWindow->toggleListCollapseState(-1);
             playVerticalLayout->setContentsMargins(0,0,0,0);
             playerWindow->activateWindow();
         }
         else
         {
-            widgetTitlebar->show();
+            elaAppBar->hideAppBar(false);
             isShowPlaylist?listWindow->show():listWindow->hide();
-            playerWindow->toggleListCollapseState(isShowPlaylist);
+            playerWindow->toggleListCollapseState(isShowPlaylist? listWindow->currentList() : -1);
             isMax?showMaximized():showNormal();
             playVerticalLayout->setContentsMargins(1,0,1,1);
             playerWindow->activateWindow();
         }
     });
-    QObject::connect(playerWindow, &PlayerWindow::setStayOnTop, this, &CFramelessWindow::setOnTop);
-    QObject::connect(playerWindow,&PlayerWindow::resizePlayer,[this](double w,double h,double aspectRatio){
+    QObject::connect(playerWindow, &PlayerWindow::setStayOnTop, elaAppBar, &ElaAppBar::setOnTop);
+    QObject::connect(playerWindow, &PlayerWindow::resizePlayer, this, [this](double w,double h,double aspectRatio){
         if (isMaximized() || isFullScreen())return;
-        QRect windowGeo(geometry()),desktopGeo(QApplication::desktop()->availableGeometry(windowGeo.center()));
-        double extraWidth=windowGeo.width()-playerWindow->width(),extraHeight=windowGeo.height()-playerWindow->height();
+        QRect windowGeo(geometry());
+        const QRect desktopGeo = QGuiApplication::screenAt(windowGeo.center())->availableGeometry();
+        double extraWidth = windowGeo.width() - playerWindow->width(), extraHeight = windowGeo.height()-playerWindow->height();
         double nw=extraWidth+w,nh=extraHeight+h;
-        if(nw > desktopGeo.width())
+        if (nw > desktopGeo.width())
         {
             nw = desktopGeo.width();
             w = nw - extraWidth;
             h = w / aspectRatio;
             nh = h + extraHeight;
         }
-        if(nw < minimumWidth())
+        if (nw < minimumWidth())
         {
             nw = minimumWidth();
             w = nw - extraWidth;
             h = w / aspectRatio;
             nh = h + extraHeight;
         }
-        if(nh > desktopGeo.height())
+        if (nh > desktopGeo.height())
         {
             nh = desktopGeo.height();
             h = nh - extraHeight;
             w = h * aspectRatio;
             nw = w + extraWidth;
         }
-        if(nh < minimumHeight())
+        if (nh < minimumHeight())
         {
             nh = minimumHeight();
             h = nh - extraHeight;
@@ -651,8 +580,10 @@ QWidget *MainWindow::setupPlayPage()
         }
         windowGeo.setHeight(nh);
         windowGeo.setWidth(nw);
-        if(desktopGeo.contains(windowGeo))
+        if (desktopGeo.contains(windowGeo))
+        {
             resize(nw,nh);
+        }
         else
         {
             windowGeo.moveCenter(desktopGeo.center());
@@ -672,11 +603,11 @@ QWidget *MainWindow::setupPlayPage()
             show();
 #endif
             geo = geometry();
+            elaAppBar->hideAppBar(true);
             isShowPlaylist=!listWindow->isHidden();
             isMax=isMaximized();
-            widgetTitlebar->hide();
             listWindow->hide();
-            playerWindow->toggleListCollapseState(false);
+            playerWindow->toggleListCollapseState(-1);
             setGeometry(miniGeo);
             playVerticalLayout->setContentsMargins(2,2,2,2);
             isMini = true;
@@ -688,9 +619,9 @@ QWidget *MainWindow::setupPlayPage()
             show();
 #endif
 			isMini = false;
-            widgetTitlebar->show();
+            elaAppBar->hideAppBar(false);
             isShowPlaylist?listWindow->show():listWindow->hide();
-            playerWindow->toggleListCollapseState(isShowPlaylist);
+            playerWindow->toggleListCollapseState(isShowPlaylist? listWindow->currentList() : -1);
             isMax?showMaximized():showNormal();
             setGeometry(geo);
             playVerticalLayout->setContentsMargins(1,0,1,1);
@@ -703,18 +634,6 @@ QWidget *MainWindow::setupPlayPage()
     QObject::connect(playerWindow, &PlayerWindow::moveWindow, this, [this](const QPoint &cpos){
         move(cpos-miniPressPos);
     });
-    QObject::connect(playerWindow, &PlayerWindow::refreshPool, this, [this](){
-        Notifier *notifier = Notifier::getNotifier();
-        if(listWindow->isHidden())
-        {
-            notifier->showMessage(Notifier::PLAYER_NOTIFY, tr("Updating..."));
-        }
-        int c = listWindow->updateCurrentPool();
-        if(listWindow->isHidden())
-        {
-            notifier->showMessage(Notifier::PLAYER_NOTIFY, tr("Add %1 Danmu").arg(c));
-        }
-    });
     QObject::connect(playerWindow, &PlayerWindow::showMPVLog, this, [this](){
         if(!logWindow)
         {
@@ -725,16 +644,27 @@ QWidget *MainWindow::setupPlayPage()
         }
         logWindow->show(Logger::LogType::MPV);
     });
+    QObject::connect(GlobalObjects::danmuPool, &DanmuPool::triggerUpdate, this, [this](){
+        Notifier *notifier = Notifier::getNotifier();
+        if(listWindow->isHidden())
+        {
+            notifier->showMessage(Notifier::PLAYER_NOTIFY, tr("Updating..."));
+        }
+        int c = listWindow->updateCurrentPool();
+        if(listWindow->isHidden())
+        {
+            notifier->showMessage(Notifier::PLAYER_NOTIFY, tr("Add %1 Danmu").arg(c));
+        }
+    });    
 
     playSplitter->addWidget(playerWindowWidget);
     playSplitter->addWidget(listWindow);
     playSplitter->setStretchFactor(0,1);
     playSplitter->setStretchFactor(1,0);
-    playSplitter->setCollapsible(0,false);
-    playSplitter->setCollapsible(1,false);
+    playSplitter->setCollapsible(0, false);
+    playSplitter->setCollapsible(1, false);
     listWindow->hide();
-    //playerWindowWidget->setMinimumSize(100*logicalDpiX()/96,100*logicalDpiY()/96);
-    //listWindow->setMinimumSize(200*logicalDpiX()/96,350*logicalDpiY()/96);
+
 
     return page_play;
 
@@ -742,24 +672,23 @@ QWidget *MainWindow::setupPlayPage()
 
 QWidget *MainWindow::setupLibraryPage()
 {
-    library=new LibraryWindow(this);
+    library = new LibraryWindow(this);
     library->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     QObject::connect(library,&LibraryWindow::playFile,this,&MainWindow::switchToPlay);
     QObject::connect(library,&LibraryWindow::switchBackground,this,[this](const QPixmap &pixmap, bool setPixmap){
-        if(!setPixmap)
+        if (!hasBackground) return;
+        if (!setPixmap)
         {
             hasCoverBg = false;
-            bgWidget->setBackground(bgImg);
-            bgWidget->setBgDarkness(curDarkness);
-            bgWidget->setBlurAnimation(60., 0.);
+            BackgroundMainWindow::setBackground(bgImg);
+            BackgroundMainWindow::setBlurAnimation(60., 0.);
         }
         else
         {
             hasCoverBg = true;
             coverPixmap = pixmap;
-            if(!pixmap.isNull()) bgWidget->setBackground(pixmap);
-            bgWidget->setBgDarkness(curDarkness + 10);
-            bgWidget->setBlurAnimation(20., 60.);
+            if(!pixmap.isNull()) BackgroundMainWindow::setBackground(pixmap);
+            BackgroundMainWindow::setBlurAnimation(10., 60.);
         }
     });
     return library;
@@ -821,7 +750,7 @@ QVariant MainWindow::showDialog(const QVariant &inputs)
 
 void MainWindow::showMessage(const QString &content, int, const QVariant &extra)
 {
-    windowTip->setTop(widgetTitlebar->isVisible()? widgetTitlebar->height() + 4 * logicalDpiY()/96 : 4 * logicalDpiY()/96);
+    windowTip->setTop(elaAppBar->isVisible()? elaAppBar->height() + 4 : 4);
     if (extra.isValid() && extra.userType() == QMetaType::type("TipParams"))
     {
         windowTip->addTip(extra.value<TipParams>());
@@ -868,11 +797,7 @@ void MainWindow::changeEvent(QEvent *event)
 {
     if (event->type() == QEvent::WindowStateChange)
     {
-        if(this->isMaximized())
-            maxButton->setText(QChar(0xe93d));
-        else
-            maxButton->setText(QChar(0xe93c));
-        if(this->isMinimized() && hideToTrayType == HideToTrayType::MINIMIZE)
+        if (this->isMinimized() && hideToTrayType == HideToTrayType::MINIMIZE)
         {
             this->hide();
             trayIcon->show();
@@ -882,89 +807,40 @@ void MainWindow::changeEvent(QEvent *event)
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    int key=event->key();
-    switch (key)
-    {
-    case Qt::Key_Enter:
-    case Qt::Key_Return:
-    case Qt::Key_Space:
-    case Qt::Key_Escape:
-        if(buttonPage_Play->isChecked())
-        {
-            QApplication::sendEvent(playerWindow,event);
-            playerWindow->activateWindow();
-        }
-        break;
-    case Qt::Key_F5:
-        if(buttonPage_Play->isChecked())
-        {
-            Notifier *notifier = Notifier::getNotifier();
-            if(listWindow->isHidden())
-            {
+    const QString pressKeyStr = QKeySequence(event->modifiers()|event->key()).toString();
+    KeyActionModel::instance()->runAction(pressKeyStr, KeyActionItem::KEY_PRESS, this);
+    QMainWindow::keyPressEvent(event);
+}
 
-                notifier->showMessage(Notifier::PLAYER_NOTIFY, tr("Updating..."));
-            }
-            int c = listWindow->updateCurrentPool();
-            if(listWindow->isHidden())
-            {
-                notifier->showMessage(Notifier::PLAYER_NOTIFY, tr("Add %1 Danmu").arg(c));
-            }
-        }
-        break;
-    default:
-        break;
-    }
-    CFramelessWindow::keyPressEvent(event);
+void MainWindow::keyReleaseEvent(QKeyEvent *event)
+{
+    const QString pressKeyStr = QKeySequence(event->modifiers()|event->key()).toString();
+    KeyActionModel::instance()->runAction(pressKeyStr, KeyActionItem::KEY_RELEASE, this);
 }
 
 void MainWindow::moveEvent(QMoveEvent *)
 {
-    if(GlobalObjects::mpvplayer->getCurrentFile().isEmpty() && !isFullScreen() && !isMini)
-        originalGeo=geometry();
-    if(isMini)
-        miniGeo=geometry();
+    if (GlobalObjects::mpvplayer->getCurrentFile().isEmpty() && !isFullScreen() && !isMini)
+    {
+        originalGeo = geometry();
+    }
+    if (isMini)
+    {
+        miniGeo = geometry();
+    }
 }
 
-void MainWindow::resizeEvent(QResizeEvent *)
+void MainWindow::resizeEvent(QResizeEvent *event)
 {
-    if(GlobalObjects::mpvplayer->getCurrentFile().isEmpty() && !isFullScreen() && !isMini)
-        originalGeo=geometry();
-    if(isMini)
-        miniGeo=geometry();
-#ifdef Q_OS_WIN
-    QFontMetrics ffm(buttonIcon->fontMetrics());
-    widgetTitlebar->setFixedHeight(ffm.height() * 1.8);
-    //widgetTitlebar->setFixedHeight(36*logicalDpiY()/96);
-#endif
-    QToolButton **infoBtnPtrs[] = {
-        &buttonPage_Play, &buttonPage_Library, &buttonPage_Downlaod
-    };
-    QFontMetrics fm(buttonPage_Play->fontMetrics());
-    int btnHeight = fm.height() + 10*logicalDpiY()/96;
-    int btnWidth = 0;
-    for(int i = 0; i < sizeof(infoBtnPtrs)/sizeof(QToolButton **); ++i)
+    if (GlobalObjects::mpvplayer->getCurrentFile().isEmpty() && !isFullScreen() && !isMini)
     {
-        QToolButton *tb = *infoBtnPtrs[i];
-        btnWidth = qMax(btnWidth, fm.horizontalAdvance(tb->text()));
+        originalGeo = geometry();
     }
-    btnWidth += 70*logicalDpiX()/96;
-    for(int i = 0; i < sizeof(infoBtnPtrs)/sizeof(QToolButton **); ++i)
+    if (isMini)
     {
-        QToolButton *tb = *infoBtnPtrs[i];
-        tb->setFixedSize(QSize(btnWidth, btnHeight));
+        miniGeo = geometry();
     }
-    downloadToolProgress->setFixedSize(btnWidth - 4*logicalDpiX()/96, 1*logicalDpiY()/96);
-#ifdef Q_OS_WIN
-    const int cBtnH = widgetTitlebar->height() - 4*logicalDpiY()/96;
-#else
-    const int cBtnH = btnHeight;
-#endif
-    const QSize controlButtonSize(cBtnH, cBtnH);
-    appButton->setMinimumSize(controlButtonSize);
-    maxButton->setMinimumSize(controlButtonSize);
-    minButton->setMinimumSize(controlButtonSize);
-    closeButton->setMinimumSize(controlButtonSize);
-    appBar->setMaximumSize(100*logicalDpiX()/96, btnHeight);
+    BackgroundMainWindow::resizeEvent(event);
 }
 
 void MainWindow::showEvent(QShowEvent *)
@@ -1126,29 +1002,3 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event) {
 }
 
 #endif /* Q_OS_WIN */
-
-void DropableWidget::dragEnterEvent(QDragEnterEvent *event)
-{
-    if(event->mimeData()->hasUrls())
-    {
-        event->acceptProposedAction();
-    }
-}
-
-void DropableWidget::dropEvent(QDropEvent *event)
-{
-    QList<QUrl> urls(event->mimeData()->urls());
-    if(urls.size()>0)
-    {
-        QUrl u = urls.first();
-        if(u.isLocalFile()) emit fileDrop(u.toLocalFile());
-    }
-}
-
-void DropableWidget::paintEvent(QPaintEvent *)
-{
-    QStyleOption o;
-    o.initFrom(this);
-    QPainter p(this);
-    style()->drawPrimitive(QStyle::PE_Widget, &o, &p, this);
-}

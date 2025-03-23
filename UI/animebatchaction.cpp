@@ -8,8 +8,10 @@
 #include <QSettings>
 #include <QMessageBox>
 #include "MediaLibrary/animelistmodel.h"
+#include "UI/ela/ElaLineEdit.h"
+#include "UI/ela/ElaMenu.h"
+#include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
-#include "Common/notifier.h"
 
 AnimeBatchAction::AnimeBatchAction(AnimeModel *animeModel, QWidget *parent) :
     CFramelessDialog(tr("Batch Operation"), parent, false, true, false)
@@ -17,7 +19,7 @@ AnimeBatchAction::AnimeBatchAction(AnimeModel *animeModel, QWidget *parent) :
     QTreeView *animeView=new QTreeView(this);
     animeView->setRootIsDecorated(false);
     animeView->setAlternatingRowColors(true);
-    animeView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    animeView->setContextMenuPolicy(Qt::CustomContextMenu);
     animeView->setSortingEnabled(true);
 
     AnimeListModel *animeListModel = new AnimeListModel(animeModel, this);
@@ -25,10 +27,11 @@ AnimeBatchAction::AnimeBatchAction(AnimeModel *animeModel, QWidget *parent) :
     proxyModel->setSourceModel(animeListModel);
     animeView->setModel(proxyModel);
 
-    QPushButton *updateInfo = new QPushButton(tr("Update Info"),this);
-    QPushButton *updateTags = new QPushButton(tr("Update Tag"),this);
-    QPushButton *removeAnime = new QPushButton(tr("Remove"),this);
-    QLineEdit *searchEdit = new QLineEdit(this);
+    QPushButton *updateInfo = new KPushButton(tr("Update Info"),this);
+    QPushButton *updateTags = new KPushButton(tr("Update Tag"),this);
+    QPushButton *removeAnime = new KPushButton(tr("Remove"),this);
+    QLineEdit *searchEdit = new ElaLineEdit(this);
+    searchEdit->setPlaceholderText(tr("Search"));
     searchEdit->setClearButtonEnabled(true);
 
     QGridLayout *animeBGLayout=new QGridLayout(this);
@@ -39,15 +42,17 @@ AnimeBatchAction::AnimeBatchAction(AnimeModel *animeModel, QWidget *parent) :
     animeBGLayout->addWidget(animeView,1,0,1,5);
     animeBGLayout->setRowStretch(1,1);
     animeBGLayout->setColumnStretch(3,1);
-    animeBGLayout->setContentsMargins(0, 0, 0, 0);
 
-    QAction *actSelectAll=new QAction(tr("Select All/Cancel"),this);
+    ElaMenu *actionMenu = new ElaMenu(animeView);
+    QObject::connect(animeView, &QTreeView::customContextMenuRequested, this, [=](){
+        actionMenu->exec(QCursor::pos());
+    });
+    QAction *actSelectAll = actionMenu->addAction(tr("Select All/Cancel"));
     QObject::connect(actSelectAll,&QAction::triggered, this, [=](){
        static bool checkAll = false;
        checkAll = !checkAll;
        animeListModel->setAllChecked(checkAll);
     });
-    animeView->addAction(actSelectAll);
 
     QObject::connect(animeListModel, &AnimeListModel::showMessage, this, &AnimeBatchAction::showMessage);
 

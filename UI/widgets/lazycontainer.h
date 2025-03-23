@@ -9,6 +9,7 @@ class LazyContainer : public QWidget
 public:
     using InitFunc = std::function<QWidget *()>;
     LazyContainer(QWidget *parent, QLayout *l, InitFunc initFunc);
+    void init();
 private:
     InitFunc contentInitFunc;
     bool inited = false;

@@ -1,12 +1,13 @@
 #include "apptextline.h"
 #include <QLineEdit>
 #include "Extension/App/kapp.h"
+#include "UI/ela/ElaLineEdit.h"
 
 namespace  Extension
 {
 const char *AppTextLine::AppWidgetName = "textline";
 const char *AppTextLine::MetaName = "meta.kiko.widget.textline";
-const char *AppTextLine::StyleClassName = "QLineEdit";
+const char *AppTextLine::StyleClassName = "ElaLineEdit";
 
 AppWidget *AppTextLine::create(AppWidget *parent, KApp *app)
 {
@@ -24,17 +25,17 @@ void AppTextLine::registEnv(lua_State *L)
 void AppTextLine::bindEvent(AppEvent event, const QString &luaFunc)
 {
     if (!widget) return;
-    QLineEdit *lineEdit = static_cast<QLineEdit *>(this->widget);
+    ElaLineEdit *lineEdit = static_cast<ElaLineEdit *>(this->widget);
     switch (event)
     {
     case AppEvent::EVENT_TEXT_CHANGED:
     {
-        QObject::connect(lineEdit, &QLineEdit::textChanged, this, &AppTextLine::onTextChanged);
+        QObject::connect(lineEdit, &ElaLineEdit::textChanged, this, &AppTextLine::onTextChanged);
         break;
     }
     case AppEvent::EVENT_RETURN_PRESSED:
     {
-        QObject::connect(lineEdit, &QLineEdit::returnPressed, this, &AppTextLine::onReturnPressed);
+        QObject::connect(lineEdit, &ElaLineEdit::returnPressed, this, &AppTextLine::onReturnPressed);
         break;
     }
     default:
@@ -46,12 +47,12 @@ void AppTextLine::bindEvent(AppEvent event, const QString &luaFunc)
 AppTextLine::AppTextLine(AppWidget *parent)
     : AppWidget{parent}
 {
-    widget = new QLineEdit(parent? parent->getWidget() : nullptr);
+    widget = new ElaLineEdit(parent? parent->getWidget() : nullptr);
 }
 
 bool AppTextLine::setWidgetOption(AppWidgetOption option, const QVariant &val)
 {
-    QLineEdit *lineEdit = static_cast<QLineEdit *>(this->widget);
+    ElaLineEdit *lineEdit = static_cast<ElaLineEdit *>(this->widget);
     switch (option)
     {
     case AppWidgetOption::OPTION_TEXT:
@@ -78,7 +79,7 @@ bool AppTextLine::setWidgetOption(AppWidgetOption option, const QVariant &val)
     {
         bool ok = false;
         int mode = qBound(0, val.toInt(&ok), 3);
-        if (ok) lineEdit->setEchoMode(QLineEdit::EchoMode(mode));
+        if (ok) lineEdit->setEchoMode(ElaLineEdit::EchoMode(mode));
         break;
     }
     case AppWidgetOption::OPTION_SHOW_CLEAR_BUTTON:
@@ -98,7 +99,7 @@ QVariant AppTextLine::getWidgetOption(AppWidgetOption option, bool *succ)
     {
         *succ = true;
     }
-    QLineEdit *lineEdit = static_cast<QLineEdit *>(this->widget);
+    ElaLineEdit *lineEdit = static_cast<ElaLineEdit *>(this->widget);
     switch (option)
     {
     case AppWidgetOption::OPTION_TEXT:

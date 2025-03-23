@@ -6,11 +6,13 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QLabel>
-#include <QCheckBox>
 #include <QGridLayout>
 #include <QFileDialog>
 #include <QProcess>
 #include <QSharedPointer>
+#include "UI/ela/ElaCheckBox.h"
+#include "UI/ela/ElaSpinBox.h"
+#include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 #include "Common/notifier.h"
 
@@ -41,14 +43,14 @@ SnippetCapture::SnippetCapture(QWidget *parent) : CFramelessDialog("",parent)
     QWidget *playerWindowWidget=QWidget::createWindowContainer(native_wnd);
     playerWindowWidget->setMouseTracking(true);
     playerWindowWidget->setParent(this);
-    playerWindowWidget->setMinimumSize(400*logicalDpiX()/96, 225*logicalDpiY()/96);
+    playerWindowWidget->setMinimumSize(400, 225);
     smPlayer->show();
 
-    QSpinBox *durationSpin = new QSpinBox(this);
-    QCheckBox *retainAudioCheck = new QCheckBox(tr("Retain Audio"), this);
-    QLabel *durationTip = new QLabel(tr("Snippet Length(1~15s)"), this);
-    saveFile = new QPushButton(tr("Save To File"), this);
-    addToLibrary=new QPushButton(tr("Add To Library"), this);
+    QSpinBox *durationSpin = new ElaSpinBox(this);
+    QCheckBox *retainAudioCheck = new ElaCheckBox(tr("Retain Audio"), this);
+    QLabel *durationTip = new QLabel(tr("Snippet Length(1~20s)"), this);
+    saveFile = new KPushButton(tr("Save To File"), this);
+    addToLibrary=new KPushButton(tr("Add To Library"), this);
 
     QGridLayout *sGLayout = new QGridLayout(this);
     sGLayout->addWidget(playerWindowWidget, 0,  0, 1, 6);
@@ -59,11 +61,10 @@ SnippetCapture::SnippetCapture(QWidget *parent) : CFramelessDialog("",parent)
     sGLayout->addWidget(addToLibrary, 1, 5);
     sGLayout->setColumnStretch(3, 1);
     sGLayout->setRowStretch(0, 1);
-    sGLayout->setContentsMargins(0, 0, 0, 0);
 
     double curTime = GlobalObjects::mpvplayer->getTime();
     setTitle(tr("Snippet Capture - %1").arg(duration2Str(curTime)));
-    durationSpin->setRange(1, 15);
+    durationSpin->setRange(1, 20);
     retainAudioCheck->setChecked(true);
     const PlayListItem *item=GlobalObjects::playlist->getCurrentItem();
     addToLibrary->setEnabled(item && !item->animeTitle.isEmpty());
@@ -112,7 +113,7 @@ SnippetCapture::SnippetCapture(QWidget *parent) : CFramelessDialog("",parent)
             QImage captureImage(tmpImg.fileName());
             qint64 timeId = QDateTime::currentDateTime().toMSecsSinceEpoch();
             QString suffix(QFileInfo(GlobalObjects::mpvplayer->getCurrentFile()).suffix());
-            QString snippetPath(GlobalObjects::appSetting->value("Play/SnippetPath", GlobalObjects::dataPath + "/snippet").toString());
+            QString snippetPath(GlobalObjects::appSetting->value("Play/SnippetPath", GlobalObjects::context()->dataPath + "/snippet").toString());
             QDir dir;
             if(!dir.exists(snippetPath)) dir.mkpath(snippetPath);
             QString fileName(QString("%1/%2.%3").arg(snippetPath, QString::number(timeId), suffix));

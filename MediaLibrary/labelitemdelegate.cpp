@@ -2,6 +2,9 @@
 #include <QPainterPath>
 #include <QMouseEvent>
 #include <QLineEdit>
+#include <QPushButton>
+#include <QWidgetAction>
+#include "UI/widgets/klineedit.h"
 #include "tagnode.h"
 #include "globalobjects.h"
 #include "labelitemdelegate.h"
@@ -17,34 +20,58 @@ LabelItemDelegate::LabelItemDelegate(QObject *parent) : QStyledItemDelegate(pare
 
 void LabelItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    QStyleOptionViewItem ViewOption(option);
+    QStyleOptionViewItem viewOption(option);
     QColor itemForegroundColor = index.data(Qt::ForegroundRole).value<QColor>();
     if (itemForegroundColor.isValid())
     {
         if (itemForegroundColor != option.palette.color(QPalette::WindowText))
-            ViewOption.palette.setColor(QPalette::HighlightedText, itemForegroundColor);
+            viewOption.palette.setColor(QPalette::HighlightedText, itemForegroundColor);
 
     }
-    QStyledItemDelegate::paint(painter, ViewOption, index);
-    const TagNode *tag = (const TagNode *)index.data(TagNodeRole).value<void *>();
-    if(tag->tagType == TagNode::TAG_ROOT_CATE)
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing);
+    QRect itemRect = viewOption.rect;
+    itemRect.setLeft(0);
+    painter->setBrush(QColor(255, 255, 255, 40));
+    painter->setPen(Qt::NoPen);
+    if (viewOption.state & QStyle::State_Selected)
     {
-        if(tag->subNodes && !tag->subNodes->empty() && tag->subNodes->first()->tagType == TagNode::TAG_CUSTOM)
+        painter->drawRoundedRect(itemRect, 2, 2);
+    }
+    else
+    {
+        if (viewOption.state & QStyle::State_MouseOver)
         {
+            painter->drawRoundedRect(itemRect, 2, 2);
+        }
+    }
+    painter->restore();
+    QStyledItemDelegate::paint(painter, viewOption, index);
+
+
+    const TagNode *tag = (const TagNode *)index.data(TagNodeRole).value<void *>();
+    if (!tag) return;
+    if (tag->tagType == TagNode::TAG_ROOT_CATE)
+    {
+        if (tag->subNodes && !tag->subNodes->empty() && tag->subNodes->first()->tagType == TagNode::TAG_CUSTOM)
+        {
+            painter->save();
             GlobalObjects::iconfont->setPointSize(12);
             painter->setFont(*GlobalObjects::iconfont);
-            tagSearchIconRect = painter->boundingRect(option.rect, QChar(0xe609));
+            painter->setPen(QPen(penColor));
+            tagSearchIconRect = painter->boundingRect(option.rect, QChar(0xea8a));
             tagSearchIconRect.moveCenter(option.rect.center());
             tagSearchIconRect.moveRight(option.rect.right() - 6);
-            painter->drawText(tagSearchIconRect, Qt::AlignCenter, QChar(0xe609));
+            painter->drawText(tagSearchIconRect, Qt::AlignCenter, QChar(0xea8a));
+            painter->restore();
         }
         return;
     }
-    if(tag->tagType == TagNode::TAG_CUSTOM && tag->subNodes) return;
+    if (tag->tagType == TagNode::TAG_CUSTOM && tag->subNodes) return;
 
     static QFont decorationFont(GlobalObjects::normalFont, 9);
+    painter->save();
     painter->setFont(decorationFont);
-    painter->setPen(QPen(penColor));
 
     QRect decoration = option.rect;
     decoration.setHeight(decoration.height()-10);
@@ -54,9 +81,15 @@ void LabelItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     decoration.moveCenter(option.rect.center());
     decoration.moveRight(option.rect.right()-6);
 
-    painter->fillRect(decoration, brushColor);
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(brushColor);
+    painter->drawRoundedRect(decoration, 2, 2);
+
     int count=index.data(CountRole).toInt();
+    painter->setPen(QPen(penColor));
+
     painter->drawText(decoration, Qt::AlignCenter, count>999?"999+":QString::number(count));
+    painter->restore();
 }
 
 bool LabelItemDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index)
@@ -85,9 +118,23 @@ QWidget *LabelItemDelegate::createEditor(QWidget *parent, const QStyleOptionView
     {
         if(tag->subNodes && !tag->subNodes->empty() && tag->subNodes->first()->tagType == TagNode::TAG_CUSTOM)
         {
-            QLineEdit *editor = new QLineEdit(parent);
+            QLineEdit *editor = new KLineEdit(parent);
+            editor->setObjectName(QStringLiteral("TagFilterLineEdit"));
+            QPushButton *clearBtn = new QPushButton(editor);
+            clearBtn->setObjectName(QStringLiteral("ListSearchButton"));
+            GlobalObjects::iconfont->setPointSize(12);
+            clearBtn->setFont(*GlobalObjects::iconfont);
+            clearBtn->setText(QChar(0xe60b));
+            clearBtn->setCursor(Qt::ArrowCursor);
+            clearBtn->setFocusPolicy(Qt::NoFocus);
+            QWidgetAction *clearAction = new QWidgetAction(editor);
+            clearAction->setDefaultWidget(clearBtn);
+            editor->addAction(clearAction, QLineEdit::TrailingPosition);
             QObject::connect(editor, &QLineEdit::textChanged, this, [=](const QString &text){
                 emit tagSearchTextChanged(text, index);
+            });
+            QObject::connect(clearBtn, &QPushButton::clicked, this, [=](){
+                emit tagSearchTextChanged("", index);
             });
             return editor;
         }

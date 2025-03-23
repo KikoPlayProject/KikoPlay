@@ -2,6 +2,7 @@
 #include <QComboBox>
 #include <QLineEdit>
 #include <QFont>
+#include "UI/ela/ElaComboBox.h"
 #include "UI/widgets/elidelineedit.h"
 #include "globalobjects.h"
 #define ItemChoiceRole Qt::UserRole+1
@@ -160,7 +161,7 @@ QWidget *SettingDelegate::createEditor(QWidget *parent, const QStyleOptionViewIt
         QString choices = index.data(ItemChoiceRole).toString();
         if(!choices.isEmpty())
         {
-            QComboBox *combo=new QComboBox(parent);
+            QComboBox *combo=new ElaComboBox(parent);
             combo->setFrame(false);
             combo->addItems(choices.split(',', Qt::SkipEmptyParts));
             return combo;

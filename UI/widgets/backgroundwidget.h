@@ -2,16 +2,17 @@
 #define BACKGROUNDWIDGET_H
 
 #include <QWidget>
+#include <QMainWindow>
 class QGraphicsBlurEffect;
 class QPropertyAnimation;
-class BackgroundWidget : public QWidget
+
+class BackgroundMainWindow : public QMainWindow
 {
     Q_OBJECT
     Q_PROPERTY(qreal blurRadius READ getBlurRadius WRITE setBlurRadius)
 
 public:
-    BackgroundWidget(QWidget *parent = nullptr);
-    BackgroundWidget(const QColor &opactiyColor, QWidget *parent = nullptr);
+    BackgroundMainWindow(QWidget *parent = nullptr);
 
     qreal getBlurRadius() const {return backBlurRadius;}
     void setBlurRadius(qreal radius);
@@ -33,7 +34,6 @@ private:
     void setImg(const QImage &nImg);
     void setBgCache();
 
-    // QWidget interface
 protected:
     virtual void paintEvent(QPaintEvent *event);
     virtual void resizeEvent(QResizeEvent *event);

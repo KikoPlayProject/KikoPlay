@@ -11,7 +11,7 @@
 #define DownloadRuleIdRole Qt::UserRole+1
 AutoDownloadManager::AutoDownloadManager(QObject *parent) : QAbstractItemModel(parent), ruleChanged(false)
 {
-    ruleFileName=GlobalObjects::dataPath+"downloadRules.xml";
+    ruleFileName=GlobalObjects::context()->dataPath + "downloadRules.xml";
     logModel = new LogModel(this);
     logModel->setObjectName(QStringLiteral("AutoDownloadLogModel"));
     urlModel = new URLModel(this);

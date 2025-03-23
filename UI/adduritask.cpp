@@ -2,25 +2,25 @@
 #include <QPlainTextEdit>
 #include <QHBoxLayout>
 #include <QDir>
+#include "UI/widgets/kplaintextedit.h"
 #include "widgets/dirselectwidget.h"
 #include "Common/notifier.h"
 AddUriTask::AddUriTask(QWidget *parent, const QStringList &uris, const QString &path) : CFramelessDialog(tr("Add URI"),parent,true,true,false)
 {
-    uriEdit=new QPlainTextEdit(this);
-    uriEdit->setObjectName(QStringLiteral("UriEdit"));
+    uriEdit = new KPlainTextEdit(this, false);
     uriEdit->setPlaceholderText(tr("One link per line, multiple links separated by line breaks"));
     uriEdit->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
-    if(uris.count()>0)
+    if (uris.count()>0)
     {
         uriEdit->setPlainText(uris.join('\n'));
     }
 
-    dirSelect=new DirSelectWidget(this);
-    if(!path.isEmpty())dirSelect->setDir(path);
+    dirSelect = new DirSelectWidget(this);
+    if (!path.isEmpty())dirSelect->setDir(path);
     QVBoxLayout *dialogVLayout=new QVBoxLayout(this);
     dialogVLayout->addWidget(uriEdit);
     dialogVLayout->addWidget(dirSelect);
-    resize(320*logicalDpiX()/96,360*logicalDpiY()/96);
+    resize(380, 420);
 }
 
 void AddUriTask::onAccept()

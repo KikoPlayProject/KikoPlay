@@ -23,6 +23,7 @@
 #define SETTING_KEY_DANMU_GLOW "Play/DanmuGlow"
 #define SETTING_KEY_DANMU_BOLD "Play/DanmuBold"
 #define SETTING_KEY_DANMU_RANDOM_SIZE "Play/RandomSize"
+#define SETTING_KEY_DANMU_RANDOM_COLOR "Play/RandomColor"
 #define SETTING_KEY_DANMU_FONT "Play/DanmuFont"
 #define SETTING_KEY_ENLARGE_MERGED "Play/EnlargeMerged"
 #define SETTING_KEY_MERGE_COUNT_POS "Play/MergeCountTip"
@@ -65,12 +66,13 @@ DanmuRender::DanmuRender(QObject *parent) : QObject(parent)
     dense = GlobalObjects::appSetting->value(SETTING_KEY_DENSE_LEVEL, 1).toInt();
     maxCount = GlobalObjects::appSetting->value(SETTING_KEY_MAX_COUNT, 100).toInt();
     danmuOpacity = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_ALPHA, 60).toInt() / 100.f;
-    fontSizeTable[0] = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_FONT_SIZE, 20).toInt();
+    fontSizeTable[0] = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_FONT_SIZE, 35).toInt();
     fontSizeTable[1] = fontSizeTable[0] / 1.5;
     fontSizeTable[2] = fontSizeTable[0] * 1.5;
     danmuStyle.fontSizeTable = fontSizeTable;
-    danmuStyle.fontFamily = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_FONT, "Microsoft Yahei").toString();
+    danmuStyle.fontFamily = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_FONT, "Microsoft YaHei").toString();
     danmuStyle.randomSize = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_RANDOM_SIZE, false).toBool();
+    danmuStyle.randomColor = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_RANDOM_COLOR, false).toBool();
     danmuStyle.strokeWidth = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_STROKE, 35).toInt() / 10.f;
     danmuStyle.bold = GlobalObjects::appSetting->value(SETTING_KEY_DANMU_BOLD, false).toBool();
     danmuStyle.enlargeMerged = GlobalObjects::appSetting->value(SETTING_KEY_ENLARGE_MERGED, true).toBool();;
@@ -83,6 +85,7 @@ DanmuRender::DanmuRender(QObject *parent) : QObject(parent)
     liveDanmuListModel = new LiveDanmuListModel(this);
     liveDanmuListModel->setFontFamily(danmuStyle.fontFamily);
     liveDanmuListModel->setAlpha(danmuOpacity);
+    liveDanmuListModel->setRandomColor(danmuStyle.randomColor);
 
     QObject::connect(GlobalObjects::mpvplayer,&MPVPlayer::resized,this,&DanmuRender::refreshDMRect);
 
@@ -302,6 +305,13 @@ void DanmuRender::setRandomSize(bool randomSize)
 {
     danmuStyle.randomSize = randomSize;
     GlobalObjects::appSetting->setValue(SETTING_KEY_DANMU_RANDOM_SIZE, randomSize);
+}
+
+void DanmuRender::setRandomColor(bool randomColor)
+{
+    danmuStyle.randomColor = randomColor;
+    liveDanmuListModel->setRandomColor(danmuStyle.randomColor);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_DANMU_RANDOM_COLOR, randomColor);
 }
 
 void DanmuRender::setMaxDanmuCount(int count)

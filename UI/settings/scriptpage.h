@@ -8,8 +8,6 @@ class ScriptPage : public SettingPage
     Q_OBJECT
 public:
     ScriptPage(QWidget *parent = nullptr);
-    virtual void onAccept() override;
-    virtual void onClose() override;
 };
 
 class ScriptSettingDialog : public CFramelessDialog

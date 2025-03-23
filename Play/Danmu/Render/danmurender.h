@@ -71,6 +71,8 @@ public:
     float getStrokeWidth() const { return danmuStyle.strokeWidth; }
     void setRandomSize(bool randomSize);
     bool isRandomSize() const { return danmuStyle.randomSize; }
+    void setRandomColor(bool randomColor);
+    bool isRandomColor() const { return danmuStyle.randomColor; }
     void setMaxDanmuCount(int count);
     int getMaxDanmuCount() const { return maxCount; }
     void setMergeCountPos(int pos);

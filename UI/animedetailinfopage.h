@@ -30,9 +30,12 @@ public:
     void refreshText();
     Character crt;
     static int maxCrtItemWidth, crtItemHeight;
+    constexpr static int minCrtItemWidth = 240;
+    constexpr static int minCrtItemHeight = 70;
 private:
     QLabel *iconLabel, *nameLabel, *infoLabel;
     constexpr static const int iconSize = 60;
+
 protected:
     virtual void mouseDoubleClickEvent(QMouseEvent *) override;
 signals:
@@ -42,6 +45,10 @@ signals:
     void cleanImage(CharacterWidget *crtItem);
     void modifyCharacter(CharacterWidget *crtItem);
     void removeCharacter(CharacterWidget *crtItem);
+
+    // QObject interface
+public:
+    bool eventFilter(QObject *watched, QEvent *event) override;
 };
 class CharacterPlaceholderWidget : public QWidget
 {
@@ -78,8 +85,11 @@ private:
     QMap<QString,QPushButton *> tagList;
     QMenu *tagContextMenu;
     QPushButton *currentTagButton;
-    bool allowCheck, adding;
-    QLineEdit *tagEdit;
+    bool allowCheck;
+
+    // QWidget interface
+public:
+    QSize sizeHint() const;
 };
 class AnimeDetailInfoPage : public QWidget
 {
@@ -91,26 +101,31 @@ public:
     virtual bool eventFilter(QObject *watched, QEvent *event) override;
 signals:
     void playFile(const QString &file);
+    void back();
 private:
     Anime *currentAnime;
-    QLabel *titleLabel, *coverLabel, *viewInfoLabel;
-    const char *editAnimeURL = "kikoplay://edit-anime";
-    QWidget *coverLabelShadow;
-    QTextEdit *descInfo;
-    QStringList epNames;
+    QLabel *titleLabel{nullptr}, *coverLabel{nullptr}, *viewInfoLabel{nullptr}, *staffInfoLabel{nullptr};
     EpisodesModel *epModel;
     EpItemDelegate *epDelegate;
     QListWidget *characterList;
     TagPanel *tagPanel;
     QStackedLayout *tagContainerSLayout;
     CaptureListModel *captureModel;
+    QStackedLayout *pageSLayout{nullptr};
+    bool curEpLoaded{false};
+    bool curCaptrueLoaded{false};
 
-    QWidget *setupDescriptionPage();
-    QWidget *setupEpisodesPage();
-    QWidget *setupCharacterPage();
-    QWidget *setupTagPage();
-    QWidget *setupCapturePage();
+    void initPageUI();
+    QWidget *initInfoPage();
+    QWidget *initEpisodePage();
+    QWidget *initCapturePage();
 
+    QWidget *initInfoPageCharcters();
+    QWidget *initInfoPageTags();
+    QWidget *initInfoPageStaffs();
+
+    void initCoverActions();
+    void updateCover();
     void refreshCurInfo();
     CharacterWidget *createCharacterWidget(const Character &crt);
     void setCharacters();

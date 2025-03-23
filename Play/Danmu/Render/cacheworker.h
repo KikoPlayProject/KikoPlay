@@ -9,10 +9,12 @@ struct DanmuStyle
     float strokeWidth;
     int mergeCountPos;
     bool randomSize;
+    bool randomColor;
     bool enlargeMerged;
     bool bold;
     bool glow;
     int glowRadius;
+    float devicePixelRatioF;
 };
 struct CacheMiddleInfo
 {
@@ -28,6 +30,7 @@ class CacheWorker : public QObject
     Q_OBJECT
 public:
     explicit CacheWorker(const DanmuStyle *style);
+    static QImage createPreviewImage(const DanmuStyle *style, const DanmuComment *comment);
 private:
     const int max_cache = 512;
     bool init = false;

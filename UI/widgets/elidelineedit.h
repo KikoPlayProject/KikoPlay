@@ -1,9 +1,9 @@
 #ifndef ELIDELINEEDIT_H
 #define ELIDELINEEDIT_H
 
-#include <QLineEdit>
+#include "UI/widgets/klineedit.h"
 
-class ElideLineEdit : public QLineEdit
+class ElideLineEdit : public KLineEdit
 {
     Q_OBJECT
 public:

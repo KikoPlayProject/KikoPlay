@@ -1,18 +1,18 @@
 #include "mediainfo.h"
 #include <QTextEdit>
 #include <QHBoxLayout>
+#include "UI/widgets/kplaintextedit.h"
 #include "globalobjects.h"
 #include "Play/Video/mpvplayer.h"
 MediaInfo::MediaInfo(QWidget *parent) : CFramelessDialog(tr("Media Info"),parent)
 {
-    QTextEdit *infoText=new QTextEdit(this);
+    QTextEdit *infoText = new KTextEdit(this);
     infoText->setReadOnly(true);
     infoText->setText(expandMediaInfo());
-    QHBoxLayout *infoHLayout=new QHBoxLayout(this);
-    infoHLayout->setContentsMargins(0,0,0,0);
+    QHBoxLayout *infoHLayout = new QHBoxLayout(this);
     infoText->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     infoHLayout->addWidget(infoText);
-    resize(520*logicalDpiX()/96,400*logicalDpiY()/96);
+    resize(520, 400);
 }
 
 QString MediaInfo::expandMediaInfo()

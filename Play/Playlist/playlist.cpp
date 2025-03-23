@@ -20,6 +20,11 @@
 #include "MediaLibrary/animeprovider.h"
 #include "Common/notifier.h"
 #include "Common/logger.h"
+#include "globalobjects.h"
+
+#define SETTING_KEY_AUTO_MATCH "List/AutoMatch"
+#define SETTING_KEY_MATCH_FILTER "List/MatchFilter"
+#define SETTING_KEY_ADD_EXTERNAL "List/AddExternalFile"
 
 namespace
 {
@@ -47,6 +52,9 @@ PlayList::PlayList(QObject *parent) : QAbstractItemModel(parent), d_ptr(new Play
     d->loadRecentlist();
     d->loadPlaylist();
     qRegisterMetaType<QList<PlayListItem *> >("QList<PlayListItem *>");
+    d->autoMatch = GlobalObjects::appSetting->value(SETTING_KEY_AUTO_MATCH, true).toBool();
+    d->autoAddExternal = GlobalObjects::appSetting->value(SETTING_KEY_ADD_EXTERNAL, true).toBool();
+
     matchWorker = new MatchWorker();
     matchWorker->moveToThread(GlobalObjects::workThread);
     QObject::connect(GlobalObjects::workThread, &QThread::finished, matchWorker, &QObject::deleteLater);
@@ -208,7 +216,7 @@ bool PlayList::canPaste() const
     return d->itemsClipboard.count()>0;
 }
 
-const QList<QPair<QString, QString> > &PlayList::recent()
+const QVector<RecentlyPlayedItem> &PlayList::recent()
 {
     Q_D(PlayList);
     return d->recentList;
@@ -217,12 +225,16 @@ const QList<QPair<QString, QString> > &PlayList::recent()
 void PlayList::removeRecentItem(const QString &path)
 {
     Q_D(PlayList);
-    for(auto iter= d->recentList.begin();iter!=d->recentList.end();)
+    for (auto iter = d->recentList.begin(); iter!=d->recentList.end(); )
     {
-        if((*iter).first==path)
+        if ((*iter).path == path)
+        {
             iter=d->recentList.erase(iter);
+        }
         else
+        {
             iter++;
+        }
     }
     emit recentItemsUpdated();
 }
@@ -245,7 +257,24 @@ bool PlayList::hasPath(const QString &path) const
     return d->fileItems.value(path, nullptr);
 }
 
-int PlayList::addItems(QStringList &items, QModelIndex parent)
+bool PlayList::isAutoMatch() const
+{
+    Q_D(const PlayList);
+    return d->autoMatch;
+}
+
+QString PlayList::matchFilters() const
+{
+    return GlobalObjects::appSetting->value(SETTING_KEY_MATCH_FILTER).toString();
+}
+
+bool PlayList::isAddExternal() const
+{
+    Q_D(const PlayList);
+    return d->autoAddExternal;
+}
+
+int PlayList::addItems(const QStringList &items, QModelIndex parent)
 {
     Q_D(PlayList);
 	QStringList tmpItems;
@@ -904,54 +933,74 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
         QStringList tipContent;
         if(item->children)
         {
-            tipContent<<item->title;
-            if(item->isBgmCollection)
+            tipContent << item->title;
+            if (item->isBgmCollection)
             {
-                tipContent<< tr("Bangumi Collection");
+                tipContent << tr("Bangumi Collection");
             }
-            else if(!item->path.isEmpty())
+            else if (!item->path.isEmpty())
             {
                 if (item->isWebDAVCollection())
                 {
-                    tipContent<< tr("WebDAV Collection");
+                    tipContent << tr("WebDAV Collection");
                 }
                 else
                 {
-                    tipContent<< tr("Folder Collection");
+                    tipContent << tr("Folder Collection");
                 }
-                tipContent<< item->path;
+                tipContent << item->path;
             }
             if (item->addTime > 0)
             {
                 QString addTime(QDateTime::fromSecsSinceEpoch(item->addTime).toString("yyyy-MM-dd hh:mm:ss"));
-                tipContent<< tr("Add Time: %1").arg(addTime);
+                tipContent << tr("Add Time: %1").arg(addTime);
             }
         }
         else
         {
-            if(!item->animeTitle.isEmpty())
-                tipContent<<QString("%1-%2").arg(item->animeTitle, item->title);
+            if (!item->animeTitle.isEmpty())
+            {
+                tipContent << QString("%1-%2").arg(item->animeTitle, item->title);
+            }
             else
-                tipContent<<QString("%1").arg(item->title);
-            if(item->type == PlayListItem::ItemType::WEB_URL)
+            {
+                tipContent << QString("%1").arg(item->title);
+            }
+            if (item->type == PlayListItem::ItemType::WEB_URL)
+            {
                 tipContent << tr("Web Item");
-            tipContent<<item->path;
+            }
+            tipContent << item->path;
             if (item->addTime > 0)
             {
                 QString addTime(QDateTime::fromSecsSinceEpoch(item->addTime).toString("yyyy-MM-dd hh:mm:ss"));
-                tipContent<< tr("Add Time: %1").arg(addTime);
+                tipContent << tr("Add Time: %1").arg(addTime);
             }
-            if(item->type == PlayListItem::ItemType::LOCAL_FILE)
+            if (item->type == PlayListItem::ItemType::LOCAL_FILE)
             {
-                if(item->playTimeState==PlayListItem::UNPLAY)
-                    tipContent<<tr("Unplayed");
-                else if(item->playTimeState==PlayListItem::FINISH)
-                    tipContent<<tr("Finished");
+                if (item->playTimeState == PlayListItem::UNPLAY)
+                {
+                    tipContent << tr("Unplayed");
+                }
+                else if (item->playTimeState == PlayListItem::FINISH)
+                {
+                    tipContent << tr("Finished");
+                }
                 else
                 {
-                    int cmin=item->playTime/60;
-                    int cls=item->playTime-cmin*60;
-                    tipContent<<(tr("PlayTo: %1:%2").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')));
+                    int cmin = item->playTime/60;
+                    int cls = item->playTime-cmin*60;
+                    if (item->duration > 0)
+                    {
+                        const int d_min = item->duration / 60;
+                        const int d_sec = item->duration - d_min * 60;
+                        tipContent << (tr("PlayTo: %1:%2/%3:%4").arg(cmin, 2, 10,QChar('0')).arg(cls, 2, 10, QChar('0')).
+                                       arg(d_min, 2, 10, QChar('0')).arg(d_sec, 2, 10, QChar('0')));
+                    }
+                    else
+                    {
+                        tipContent << (tr("PlayTo: %1:%2").arg(cmin, 2, 10,QChar('0')).arg(cls, 2, 10, QChar('0')));
+                    }
                 }
             }
         }
@@ -960,20 +1009,20 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
     case Qt::ForegroundRole:
     {
         static QBrush curBrush(QColor(255,255,0));
-        if(item==d->currentItem) return curBrush;
-        static QBrush brs[]={QBrush(QColor(220,220,220)),QBrush(QColor(160,200,200)),QBrush(QColor(140,140,140))};
+        if (item == d->currentItem) return curBrush;
+        static QBrush brs[]={QBrush(QColor(200,200,200)),QBrush(QColor(160,200,200)),QBrush(QColor(140,140,140))};
         return brs[item->playTimeState];
     }
     case Qt::DecorationRole:
     {
-        static QIcon currentItemIcon(":/res/images/playing.svg");
+        static QIcon currentItemIcon(":/res/images/playlist-playing.svg");
         static bool init = false;
         if (!init)
         {
-            currentItemIcon.addFile(":/res/images/playing.svg", QSize(), QIcon::Selected);
+            currentItemIcon.addFile(":/res/images/playlist-playing.svg", QSize(), QIcon::Selected);
             init = true;
         }
-        return item==d->currentItem?currentItemIcon:QVariant();
+        return item == d->currentItem?currentItemIcon:QVariant();
     }
     case ItemRole::BgmCollectionRole:
         return (item->isBgmCollection && item->children);
@@ -1236,7 +1285,15 @@ void PlayList::checkCurrentItem(PlayListItem *itemDeleted)
 void PlayList::setAutoMatch(bool on)
 {
     Q_D(PlayList);
-    d->autoMatch=on;
+    d->autoMatch = on;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_AUTO_MATCH, on);
+}
+
+void PlayList::setAddExternal(bool on)
+{
+    Q_D(PlayList);
+    d->autoAddExternal = on;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_ADD_EXTERNAL, on);
 }
 
 void PlayList::matchItems(const QModelIndexList &matchIndexes)
@@ -1353,8 +1410,9 @@ void PlayList::removeMatch(const QModelIndexList &matchIndexes)
     }
 }
 
-void PlayList::refreshMatchFilters()
+void PlayList::setMatchFilters(const QString &filters)
 {
+    GlobalObjects::appSetting->setValue(SETTING_KEY_MATCH_FILTER, filters);
     QMetaObject::invokeMethod(matchWorker, [this](){
         matchWorker->updateFilterRules();
     },Qt::QueuedConnection);
@@ -1401,38 +1459,42 @@ void PlayList::updateItemsDanmu(const QModelIndexList &itemIndexes)
 void PlayList::setCurrentPlayTime()
 {
     Q_D(PlayList);
-    PlayListItem *currentItem=d->currentItem;
+    PlayListItem *currentItem = d->currentItem;
     if (!currentItem) return;
     if (!PlayContext::context()->seekable) return;
     PlayListItem::PlayState lastState = currentItem->playTimeState;
     const int ignoreLength = 15;
     const int playTime = PlayContext::context()->playtime;
     currentItem->playTime = playTime;
-    const int duration = PlayContext::context()->duration; // GlobalObjects::mpvplayer->getDuration();
-    if(playTime>duration-ignoreLength)
+    const int duration = PlayContext::context()->duration;
+    currentItem->duration = duration;
+    if (playTime > duration - ignoreLength)
     {
-        currentItem->playTimeState=PlayListItem::FINISH;//finished
+        currentItem->playTimeState=PlayListItem::FINISH;  //finished
     }
-    else if(playTime<ignoreLength)//unplayed
+    else if (playTime < ignoreLength)  //unplayed
     {
-        if(currentItem->playTimeState!=PlayListItem::FINISH)
-            currentItem->playTimeState=PlayListItem::UNPLAY;
+        if (currentItem->playTimeState != PlayListItem::FINISH)
+        {
+            currentItem->playTimeState = PlayListItem::UNPLAY;
+        }
     }
     else
     {
-        currentItem->playTimeState=PlayListItem::UNFINISH;//playing
+        currentItem->playTimeState = PlayListItem::UNFINISH;  //playing
     }
-    if(!currentItem->animeTitle.isEmpty() && currentItem->playTimeState==PlayListItem::FINISH)
+    if (!currentItem->animeTitle.isEmpty() && currentItem->playTimeState == PlayListItem::FINISH)
     {
-        if((d->saveFinishTimeOnce && lastState!=PlayListItem::FINISH) || !d->saveFinishTimeOnce)
+        if ((d->saveFinishTimeOnce && lastState != PlayListItem::FINISH) || !d->saveFinishTimeOnce)
         {
             AnimeWorker::instance()->updateEpTime(currentItem->animeTitle, currentItem->path, true);
             d->pushEpFinishEvent(currentItem);
         }
     }
-    d->playListChanged=true;
-    d->needRefresh=true;
+    d->playListChanged = true;
+    d->needRefresh = true;
     d->incModifyCounter();
+    d->updateRecentItemInfo(currentItem, GlobalObjects::mpvplayer->grabFramebuffer());
 }
 
 void PlayList::addCurrentSub(const QString &subFile)
@@ -1822,7 +1884,7 @@ void MatchWorker::match(const QVector<PlayListItem *> &items, const QString &ani
 
 void MatchWorker::updateFilterRules()
 {
-    const QStringList filterStrs = GlobalObjects::appSetting->value("List/MatchFilter").toString().trimmed().split("\n", Qt::SkipEmptyParts);
+    const QStringList filterStrs = GlobalObjects::appSetting->value(SETTING_KEY_MATCH_FILTER).toString().trimmed().split("\n", Qt::SkipEmptyParts);
     filterRules.clear();
     for (const QString &str : filterStrs)
     {

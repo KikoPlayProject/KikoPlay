@@ -4,6 +4,7 @@
 #include "Common/logger.h"
 #include "globalobjects.h"
 
+#define SETTING_KEY_TRACKER_AUTOCHECK "Download/TrackerSubscriberAutoCheck"
 
 TrackerSubscriber::TrackerSubscriber(QObject *parent) : QAbstractItemModel(parent), lastCheckTime(0)
 {
@@ -12,13 +13,15 @@ TrackerSubscriber::TrackerSubscriber(QObject *parent) : QAbstractItemModel(paren
         Logger::logger()->log(Logger::APP, QString("Tracker Subsciber start checking..."));
         check(-1);
     });
-    if(QDateTime::currentSecsSinceEpoch() - lastCheckTime > checkInterval/1000)
+    if (QDateTime::currentSecsSinceEpoch() - lastCheckTime > checkInterval/1000)
     {
         QTimer::singleShot(1000, this, [this](){
             Logger::logger()->log(Logger::APP, QString("Tracker Subsciber start checking..."));
             check(-1);
         });
     }
+    bool autoCheck = GlobalObjects::appSetting->value(SETTING_KEY_TRACKER_AUTOCHECK, false).toBool();
+    if (autoCheck) checkTimer.start(checkInterval);
 }
 
 TrackerSubscriber *TrackerSubscriber::subscriber()
@@ -116,6 +119,12 @@ void TrackerSubscriber::check(int index)
 void TrackerSubscriber::setAutoCheck(bool on)
 {
     on? checkTimer.start(checkInterval) : checkTimer.stop();
+    GlobalObjects::appSetting->setValue(SETTING_KEY_TRACKER_AUTOCHECK, on);
+}
+
+bool TrackerSubscriber::isAutoCheck() const
+{
+    return GlobalObjects::appSetting->value(SETTING_KEY_TRACKER_AUTOCHECK, false).toBool();
 }
 
 QStringList TrackerSubscriber::allTrackers() const
@@ -172,7 +181,7 @@ QVariant TrackerSubscriber::data(const QModelIndex &index, int role) const
 void TrackerSubscriber::loadTrackerListSource()
 {
     if(isChecking) return;
-    QString filename = GlobalObjects::dataPath + "tracker.xml";
+    QString filename = GlobalObjects::context()->dataPath + "tracker.xml";
     QFile trackerFile(filename);
     bool ret=trackerFile.open(QIODevice::ReadOnly|QIODevice::Text);
     if(!ret) return;
@@ -208,7 +217,7 @@ void TrackerSubscriber::loadTrackerListSource()
 void TrackerSubscriber::saveTrackerListSource()
 {
     if(isChecking) return;
-    QString filename = GlobalObjects::dataPath + "tracker.xml";
+    QString filename = GlobalObjects::context()->dataPath + "tracker.xml";
     QFile trackerFile(filename);
     bool ret=trackerFile.open(QIODevice::WriteOnly|QIODevice::Text);
     if(!ret) return;
