@@ -64,8 +64,7 @@ macOS使用Homebrew包管理器：https://github.com/KikoPlayProject/Homebrew-Ki
 
 ## 反馈
 
-如果有问题，欢迎创建issue或者联系我:
-dx_8820832#yeah.net（#→@），或者加QQ群874761809反馈
+如果有问题，欢迎创建issue，或者加QQ群874761809反馈
 
 ## 一起来让KikoPlay更好！
 

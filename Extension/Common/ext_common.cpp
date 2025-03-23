@@ -1,5 +1,7 @@
 #include "ext_common.h"
 #include "Extension/App/AppWidgets/appwidget.h"
+#include "Extension/Modules/lua_appimage.h"
+#include <QImage>
 
 namespace Extension
 {
@@ -80,6 +82,12 @@ void pushValue(lua_State *L, const QVariant &val)
                 }
                 break;
             }
+        }
+        else if (val.type() == QMetaType::QImage)
+        {
+            QImage* img = new QImage(val.value<QImage>());
+            Extension::AppImage::pushImg(L, img);
+            break;
         }
         lua_pushnil(L);
         break;
