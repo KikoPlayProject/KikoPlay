@@ -5,7 +5,7 @@
 #include <QOpenGLPaintDevice>
 #include <QCoreApplication>
 #include <QApplication>
-#include <QDesktopWidget>
+//#include <QDesktopWidget>
 #include <QDebug>
 #include <QMap>
 #include <clocale>
@@ -15,6 +15,9 @@
 #include "globalobjects.h"
 #ifdef QT_DEBUG
 #include "Common/counter.h"
+#endif
+#ifdef Q_OS_WIN
+#include <Windows.h>
 #endif
 
 #define SETTING_KEY_DANMUHIDE "Play/HideDanmu"
@@ -528,7 +531,7 @@ void MPVPlayer::clearExternalSub()
 
 void MPVPlayer::setSpeed(double speed)
 {
-    speed = std::max(speed, 0.0);
+    speed = qMax(speed, 0.0);
     playSpeed = speed;
     setMPVProperty("speed",speed);
     GlobalObjects::appSetting->setValue(SETTING_KEY_PLAY_SPEED, playSpeed);

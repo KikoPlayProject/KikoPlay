@@ -6,6 +6,7 @@
 #include <QPainterPath>
 #include <QPropertyAnimation>
 #include <QVBoxLayout>
+#include <QStyleFactory>
 
 #include "DeveloperComponents/ElaMenuStyle.h"
 #include "private/ElaMenuPrivate.h"

@@ -18,6 +18,7 @@
 #include "Common/eventbus.h"
 #include "Common/logger.h"
 #include "Common/keyactionmodel.h"
+#include "Common/browser.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -72,6 +73,9 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
     QMetaObject::invokeMethod(&workObj, [](){
         initDatabase(wt_db_names);
     }, Qt::QueuedConnection);
+
+    BrowserManager::instance();
+
     GlobalObjects::context()->tick(elapsedTimer, "db");
 
     auto locNames = GlobalObjects::appSetting->value("KikoPlay/Language", "").toStringList();
@@ -203,16 +207,16 @@ void GlobalObjects::registerCustomSettingType()
 {
     using ShortCutInfo = QPair<QString, QPair<QString,QString>>;
     qRegisterMetaType<QList<ShortCutInfo>>("QList<ShortCutInfo>");
-    qRegisterMetaTypeStreamOperators<QList<ShortCutInfo>>("QList<ShortCutInfo>");
+    //qRegisterMetaTypeStreamOperators<QList<ShortCutInfo>>("QList<ShortCutInfo>");
 
     qRegisterMetaType<QVector<QPair<QString, QString>>>("QVector<QPair<QString, QString>>");
-    qRegisterMetaTypeStreamOperators<QVector<QPair<QString, QString>>>("QVector<QPair<QString, QString>>");
+    //qRegisterMetaTypeStreamOperators<QVector<QPair<QString, QString>>>("QVector<QPair<QString, QString>>");
 
     qRegisterMetaType<QVector<QStringList>>("QVector<QStringList>");
-    qRegisterMetaTypeStreamOperators<QVector<QStringList>>("QVector<QStringList>");
+    //qRegisterMetaTypeStreamOperators<QVector<QStringList>>("QVector<QStringList>");
 
-    qRegisterMetaType<QVector<QSharedPointer<KeyActionItem>>>("QVector<QSharedPointer<KeyActionItem>>");
-    qRegisterMetaTypeStreamOperators<QVector<QSharedPointer<KeyActionItem>>>("QVector<QSharedPointer<KeyActionItem>>");
+    qRegisterMetaType<QList<QSharedPointer<KeyActionItem>>>("QList<QSharedPointer<KeyActionItem>>");
+    //qRegisterMetaTypeStreamOperators<QVector<QSharedPointer<KeyActionItem>>>("QVector<QSharedPointer<KeyActionItem>>");
 }
 
 

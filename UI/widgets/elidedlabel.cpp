@@ -54,6 +54,11 @@
 #include <QSizePolicy>
 #include <QTextLayout>
 
+ElidedLabel::ElidedLabel(QWidget *parent) : ElidedLabel("", parent)
+{
+
+}
+
 ElidedLabel::ElidedLabel(const QString &text, QWidget *parent)
     : QFrame(parent), elided(false), content(text)
 {

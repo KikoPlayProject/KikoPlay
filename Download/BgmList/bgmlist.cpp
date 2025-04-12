@@ -288,12 +288,12 @@ bool BgmList::loadLocal(BgmSeason &season)
     {
         if(reader.isStartElement())
         {
-            QStringRef name=reader.name();
-            if(name=="local")
+            QStringView name=reader.name();
+            if (name == QLatin1StringView("local"))
             {
                 localStart=true;
             }
-            else if(localStart && name=="focus")
+            else if(localStart && name == QLatin1StringView("focus"))
             {
                 QStringList focusList(reader.readElementText().split(";;",Qt::SkipEmptyParts));
                 for(const QString &title:focusList)
@@ -301,11 +301,11 @@ bool BgmList::loadLocal(BgmSeason &season)
                     season.focusSet<<title;
                 }
             }
-            else if(name=="list")
+            else if(name == QLatin1StringView("list"))
             {
                 listStart=true;
             }
-            else if(listStart && name=="item")
+            else if(listStart && name == QLatin1StringView("item"))
             {
                 BgmItem item;
                 item.title= reader.attributes().value("title").toString();
@@ -338,9 +338,9 @@ bool BgmList::loadLocal(BgmSeason &season)
         }
         else if(reader.isEndElement())
         {
-            QStringRef name=reader.name();
-            if(name=="local") localStart=false;
-            else if(name=="list") listStart=false;
+            QStringView name = reader.name();
+            if (name == QLatin1StringView("local")) localStart=false;
+            else if(name == QLatin1StringView("list")) listStart=false;
         }
         reader.readNext();
     }

@@ -161,33 +161,33 @@ bool UPnPCtrlPoint::getDescription(UPnPDevice &device)
     {
         if(reader.isStartElement())
         {
-            QStringRef name=reader.name();
-            if(name=="friendlyName"){
+            QStringView name=reader.name();
+            if (name == QLatin1StringView("friendlyName")) {
                 device.getFriendlyName() = reader.readElementText().trimmed().toUtf8();
-            } else if(name == "modelDescription") {
+            } else if(name == QLatin1StringView("modelDescription")) {
                 device.getModelDescription() = reader.readElementText().trimmed().toUtf8();
-            } else if(name == "service") {
+            } else if(name == QLatin1StringView("service")) {
                 serviceStart = true;
                 serviceKey = QString::number(serviceIndex++);
 				services[serviceKey] = QSharedPointer<UPnPService>::create();
             }
             if(serviceStart)
             {
-                if(name == "serviceType") {
+                if(name == QLatin1StringView("serviceType")) {
                     services[serviceKey]->serviceType = reader.readElementText().trimmed();
-                } else if(name == "serviceId") {
+                } else if(name == QLatin1StringView("serviceId")) {
                     services[serviceKey]->serviceId = reader.readElementText().trimmed();
-                } else if(name == "SCPDURL") {
+                } else if(name == QLatin1StringView("SCPDURL")) {
                     services[serviceKey]->SCPDURL = reader.readElementText().trimmed();
                     if(!services[serviceKey]->SCPDURL.startsWith('/')){
                         services[serviceKey]->SCPDURL.push_front('/');
                     }
-                } else if(name == "controlURL") {
+                } else if(name == QLatin1StringView("controlURL")) {
                     services[serviceKey]->controlURL = reader.readElementText().trimmed();
                     if(!services[serviceKey]->controlURL.startsWith('/')){
                         services[serviceKey]->controlURL.push_front('/');
                     }
-                } else if(name == "eventSubURL") {
+                } else if(name == QLatin1StringView("eventSubURL")) {
                     services[serviceKey]->eventSubURL = reader.readElementText().trimmed();
                     if(!services[serviceKey]->eventSubURL.startsWith('/')){
                         services[serviceKey]->eventSubURL.push_front('/');
@@ -195,9 +195,9 @@ bool UPnPCtrlPoint::getDescription(UPnPDevice &device)
                 }
             }
         }
-        if(reader.isEndElement())
+        if (reader.isEndElement())
         {
-            if(reader.name() == "service")
+            if (reader.name() == QLatin1StringView("service"))
             {
                 serviceStart = false;
             }

@@ -60,7 +60,7 @@ private:
     QMap<QString,int> poolDanmuCacheInfo;
     QSharedPointer<LRUCache<QString, Pool *>> poolCache;
     QMap<QString,Pool *> pools;
-    QMutex poolsLock{QMutex::Recursive};
+    QRecursiveMutex poolsLock;
     QReadWriteLock poolStateLock;
     QSet<QString> busyPoolSet;
     bool countInited;

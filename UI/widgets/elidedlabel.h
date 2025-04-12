@@ -63,6 +63,7 @@ class ElidedLabel : public QFrame
     Q_PROPERTY(QColor fontColor READ fontColor WRITE setFontColor)
 
 public:
+    explicit ElidedLabel(QWidget *parent = nullptr);
     explicit ElidedLabel(const QString &text, QWidget *parent = nullptr);
 
     void setText(const QString &text);

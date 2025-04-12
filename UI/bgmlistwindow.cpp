@@ -6,6 +6,7 @@
 #include <QGridLayout>
 #include <QButtonGroup>
 #include <QAction>
+#include <QActionGroup>
 #include <QTreeView>
 #include <QHeaderView>
 #include <QMenu>
@@ -87,7 +88,7 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
        bgmListProxyModel->setNewBgmFilter(checked);
     });
 
-    QObject::connect(filterButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[bgmListProxyModel](int id, bool checked){
+    QObject::connect(filterButtonGroup,&QButtonGroup::idToggled,[bgmListProxyModel](int id, bool checked){
         if (checked) bgmListProxyModel->setWeekFilter(id);
     });
     filterButtonGroup->button(weekDay)->setChecked(true);

@@ -4,9 +4,9 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql network concurrent websockets xml
+QT       += core gui sql network concurrent websockets xml webenginewidgets openglwidgets opengl
 linux:QT += dbus
-win32:QT += winextras
+#win32:QT += winextras
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -39,9 +39,9 @@ CONFIG(debug, debug|release) {
 }
 
 SOURCES += \
+    Common/browser.cpp \
     Common/counter.cpp \
     Common/eventbus.cpp \
-    Common/flowlayout.cpp \
     Common/htmlparsersax.cpp \
     Common/keyaction.cpp \
     Common/keyactionmodel.cpp \
@@ -90,6 +90,7 @@ SOURCES += \
     Extension/Modules/lua_appnet.cpp \
     Extension/Modules/lua_appui.cpp \
     Extension/Modules/lua_apputil.cpp \
+    Extension/Modules/lua_browser.cpp \
     Extension/Modules/lua_clipboardinterface.cpp \
     Extension/Modules/lua_danmuinterface.cpp \
     Extension/Modules/lua_dir.cpp \
@@ -124,6 +125,7 @@ SOURCES += \
     UI/dialogs/blockeditor.cpp \
     UI/dialogs/danmuview.cpp \
     UI/dialogs/mpvconfediror.cpp \
+    UI/dialogs/timelineedit.cpp \
     UI/dialogs/trackersubscribedialog.cpp \
     UI/ela/DeveloperComponents/ElaBaseListView.cpp \
     UI/ela/DeveloperComponents/ElaCalendarDelegate.cpp \
@@ -190,6 +192,14 @@ SOURCES += \
     UI/settings/playerpage.cpp \
     UI/settings/playlistpage.cpp \
     UI/settings/subtitlepage.cpp \
+    UI/widgets/component/flowlayout.cpp \
+    UI/widgets/component/ktreeviewitemdelegate.cpp \
+    UI/widgets/component/taskbarbtn/qwinevent.cpp \
+    UI/widgets/component/taskbarbtn/qwineventfilter.cpp \
+    UI/widgets/component/taskbarbtn/qwinfunctions.cpp \
+    UI/widgets/component/taskbarbtn/qwintaskbarbutton.cpp \
+    UI/widgets/component/taskbarbtn/qwintaskbarprogress.cpp \
+    UI/widgets/component/taskbarbtn/windowsguidsdefs.cpp \
     UI/widgets/elidedlabel.cpp \
     UI/widgets/floatscrollbar.cpp \
     UI/widgets/klineedit.cpp \
@@ -304,7 +314,6 @@ SOURCES += \
     UI/settings/settingpage.cpp \
     UI/snippetcapture.cpp \
     UI/stylemanager.cpp \
-    UI/timelineedit.cpp \
     UI/tip.cpp \
     UI/widgets/backgroundfadewidget.cpp \
     UI/widgets/backgroundwidget.cpp \
@@ -322,9 +331,9 @@ SOURCES += \
     UI/widgets/smoothscrollbar.cpp
 
 HEADERS += \
+    Common/browser.h \
     Common/counter.h \
     Common/eventbus.h \
-    Common/flowlayout.h \
     Common/htmlparsersax.h \
     Common/keyaction.h \
     Common/keyactionmodel.h \
@@ -378,6 +387,7 @@ HEADERS += \
     Extension/Modules/lua_appnet.h \
     Extension/Modules/lua_appui.h \
     Extension/Modules/lua_apputil.h \
+    Extension/Modules/lua_browser.h \
     Extension/Modules/lua_clipboardinterface.h \
     Extension/Modules/lua_danmuinterface.h \
     Extension/Modules/lua_dir.h \
@@ -412,6 +422,7 @@ HEADERS += \
     UI/dialogs/blockeditor.h \
     UI/dialogs/danmuview.h \
     UI/dialogs/mpvconfediror.h \
+    UI/dialogs/timelineedit.h \
     UI/dialogs/trackersubscribedialog.h \
     UI/ela/Def.h \
     UI/ela/DeveloperComponents/ElaBaseListView.h \
@@ -482,6 +493,18 @@ HEADERS += \
     UI/settings/playerpage.h \
     UI/settings/playlistpage.h \
     UI/settings/subtitlepage.h \
+    UI/widgets/component/flowlayout.h \
+    UI/widgets/component/ktreeviewitemdelegate.h \
+    UI/widgets/component/taskbarbtn/qwinevent.h \
+    UI/widgets/component/taskbarbtn/qwineventfilter_p.h \
+    UI/widgets/component/taskbarbtn/qwinfunctions.h \
+    UI/widgets/component/taskbarbtn/qwinfunctions_p.h \
+    UI/widgets/component/taskbarbtn/qwintaskbarbutton.h \
+    UI/widgets/component/taskbarbtn/qwintaskbarbutton_p.h \
+    UI/widgets/component/taskbarbtn/qwintaskbarprogress.h \
+    UI/widgets/component/taskbarbtn/windowsguidsdefs_p.h \
+    UI/widgets/component/taskbarbtn/winpropkey_p.h \
+    UI/widgets/component/taskbarbtn/winshobjidl_p.h \
     UI/widgets/elidedlabel.h \
     UI/widgets/floatscrollbar.h \
     UI/widgets/klineedit.h \
@@ -597,7 +620,6 @@ HEADERS += \
     UI/settings/settingpage.h \
     UI/snippetcapture.h \
     UI/stylemanager.h \
-    UI/timelineedit.h \
     UI/tip.h \
     UI/widgets/backgroundfadewidget.h \
     UI/widgets/backgroundwidget.h \

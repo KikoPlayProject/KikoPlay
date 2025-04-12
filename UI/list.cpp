@@ -69,6 +69,7 @@ namespace
             painter->save();
             painter->setRenderHint(QPainter::Antialiasing);
             QRect itemRect = viewOption.rect;
+            itemRect.setLeft(0);
             if (viewOption.state & QStyle::State_Selected)
             {
                 if (viewOption.state & QStyle::State_MouseOver)
@@ -187,6 +188,31 @@ namespace
                     viewOption.palette.setColor(QPalette::HighlightedText, itemForegroundColor);
 
             }
+
+            painter->save();
+            painter->setRenderHint(QPainter::Antialiasing);
+            QRect itemRect = viewOption.rect;
+            itemRect.setLeft(0);
+            if (viewOption.state & QStyle::State_Selected)
+            {
+                if (viewOption.state & QStyle::State_MouseOver)
+                {
+                    painter->fillRect(itemRect, QColor(255, 255, 255, 40));
+                }
+                else
+                {
+                    painter->fillRect(itemRect, QColor(255, 255, 255, 40));
+                }
+            }
+            else
+            {
+                if (viewOption.state & QStyle::State_MouseOver)
+                {
+                    painter->fillRect(itemRect, QColor(255, 255, 255, 40));
+                }
+            }
+            painter->restore();
+
             if (index.column() == 1)
             {
                 const QString format = index.parent().isValid() ? "  %1 %2" : "%1 %2";
@@ -1018,9 +1044,9 @@ void ListWindow::initListUI()
     QObject::connect(filterEdit, &QLineEdit::textChanged, this, [=](const QString &text){
         if (currentProxyModel)
         {
-            QRegExp regExp(text, Qt::CaseInsensitive);
+            QRegularExpression regExp(text, QRegularExpression::CaseInsensitiveOption);
             currentProxyModel->setFilterRole(Qt::DisplayRole);
-            currentProxyModel->setFilterRegExp(regExp);
+            currentProxyModel->setFilterRegularExpression(regExp);
         }
     });
 

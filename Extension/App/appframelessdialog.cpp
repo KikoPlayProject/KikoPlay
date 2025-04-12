@@ -165,7 +165,7 @@ void AppFramelessDialog::addIgnoreWidget(QWidget* widget)
     m_whiteList.append(widget);
 }
 
-bool AppFramelessDialog::nativeEvent(const QByteArray &eventType, void *message, long *result)
+bool AppFramelessDialog::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)
 {
     MSG* msg = (MSG *)message;
     switch (msg->message)
@@ -298,7 +298,12 @@ QMargins AppFramelessDialog::contentsMargins() const
 }
 void AppFramelessDialog::getContentsMargins(int *left, int *top, int *right, int *bottom) const
 {
-    QDialog::getContentsMargins(left, top, right, bottom);
+    QMargins margin = QDialog::contentsMargins();
+    // QDialog::getContentsMargins(left, top, right, bottom);
+    *left = margin.left();
+    *right = margin.right();
+    *top = margin.top();
+    *bottom = margin.bottom();
     if (!(left && top && right && bottom)) return;
     if (isMaximized())
     {

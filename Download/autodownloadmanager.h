@@ -59,7 +59,7 @@ private:
     bool isChecking;
     void check();
     void fetchInfo(DownloadRule *rule);
-    bool satisfyRule(ResourceItem *item, DownloadRule *rule, const QList<QRegExp> &filterRegExps);
+    bool satisfyRule(ResourceItem *item, DownloadRule *rule, const QList<QRegularExpression> &filterRegExps);
 };
 class LogModel : public QAbstractItemModel
 {

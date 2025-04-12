@@ -19,9 +19,9 @@ struct KeyActionItem
     QSharedPointer<KeyAction> action;
 };
 Q_DECLARE_METATYPE(KeyActionItem)
-Q_DECLARE_METATYPE(QVector<QSharedPointer<KeyActionItem>>)
-QDataStream &operator<<(QDataStream &out, const QVector<QSharedPointer<KeyActionItem>> &l);
-QDataStream &operator>>(QDataStream &in, QVector<QSharedPointer<KeyActionItem>> &l);
+Q_DECLARE_METATYPE(QList<QSharedPointer<KeyActionItem>>)
+QDataStream &operator<<(QDataStream &out, const QList<QSharedPointer<KeyActionItem>> &l);
+QDataStream &operator>>(QDataStream &in, QList<QSharedPointer<KeyActionItem>> &l);
 
 class KeyActionModel : public QAbstractItemModel
 {
@@ -58,7 +58,7 @@ public:
 
 private:
     QHash<QString, QSharedPointer<KeyActionItem>> keyActionHash;
-    QVector<QSharedPointer<KeyActionItem>> keyActionList;
+    QList<QSharedPointer<KeyActionItem>> keyActionList;
 
     void initKeys();
     void updateSettings();

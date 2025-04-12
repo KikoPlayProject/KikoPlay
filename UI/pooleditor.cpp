@@ -19,7 +19,7 @@
 #include "globalobjects.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Video/mpvplayer.h"
-#include "timelineedit.h"
+#include "dialogs/timelineedit.h"
 #include "Common/notifier.h"
 #include "dialogs/danmuview.h"
 #include "UI/widgets/fonticonbutton.h"

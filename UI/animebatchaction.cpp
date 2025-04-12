@@ -81,7 +81,7 @@ AnimeBatchAction::AnimeBatchAction(AnimeModel *animeModel, QWidget *parent) :
 
     QObject::connect(searchEdit, &QLineEdit::textChanged, this, [=](const QString &text){
         proxyModel->setFilterKeyColumn(static_cast<int>(AnimeListModel::Columns::TITLE));
-        proxyModel->setFilterRegExp(text);
+        proxyModel->setFilterRegularExpression(text);
     });
 
     QVariant headerState(GlobalObjects::appSetting->value("HeaderViewState/AnimeBatchView"));

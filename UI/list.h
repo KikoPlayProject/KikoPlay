@@ -9,7 +9,6 @@
 #include <QStackedLayout>
 #include <QToolButton>
 #include <QLineEdit>
-#include <QRegExp>
 #include <QStyledItemDelegate>
 #include "Common/notifier.h"
 #include "framelessdialog.h"

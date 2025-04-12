@@ -171,7 +171,7 @@ void MediaInfo::evalCommand(QStringList &commandStack, QVector<TextBlock> &textS
         return;
     } else if(command.startsWith("if:")) {
         QString ifcond = command.mid(3);
-        int lhsPos = ifcond.indexOf(QRegExp("([<>=])|(>=)|(<=)"));
+        int lhsPos = ifcond.indexOf(QRegularExpression("([<>=])|(>=)|(<=)"));
         do
         {
             if(lhsPos <= 0) break;

@@ -14,6 +14,31 @@
 #include <QFileDialog>
 #include <QDateTimeEdit>
 
+void EpItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing);
+    QRect itemRect = option.rect;
+
+    if(index.column() == 0) itemRect.setLeft(0);
+    painter->setBrush(QColor(255, 255, 255, 40));
+    painter->setPen(Qt::NoPen);
+
+    if (option.state & QStyle::State_Selected)
+    {
+        painter->drawRect(itemRect);
+    }
+    else
+    {
+        if (option.state & QStyle::State_MouseOver)
+        {
+            painter->drawRect(itemRect);
+        }
+    }
+    painter->restore();
+    QStyledItemDelegate::paint(painter, option, index);
+}
+
 QWidget *EpItemDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     EpisodesModel::Columns col = EpisodesModel::Columns(index.column());

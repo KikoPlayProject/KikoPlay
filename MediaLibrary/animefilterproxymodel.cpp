@@ -10,7 +10,7 @@ AnimeFilterProxyModel::AnimeFilterProxyModel(AnimeModel *srcModel, QObject *pare
 void AnimeFilterProxyModel::setFilter(int type, const QString &str)
 {
     filterType=type;
-    setFilterRegExp(str);
+    setFilterRegularExpression(str);
     setFilterCaseSensitivity(Qt::CaseInsensitive);
     static_cast<AnimeModel *>(sourceModel())->showStatisMessage();
 }
@@ -117,14 +117,14 @@ bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &
      switch (filterType)
      {
      case 0://title
-         return anime->name().contains(filterRegExp());
+         return anime->name().contains(filterRegularExpression());
      case 1://summary
-         return anime->description().contains(filterRegExp());
+         return anime->description().contains(filterRegularExpression());
      case 2://staff
      {
          for(auto iter=anime->staffList().cbegin();iter!=anime->staffList().cend();++iter)
          {
-             if((*iter).second.contains(filterRegExp()))
+             if((*iter).second.contains(filterRegularExpression()))
                  return true;
          }
          return false;
@@ -133,7 +133,7 @@ bool AnimeFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &
      {
          for(auto iter=anime->crList().cbegin();iter!=anime->crList().cend();++iter)
          {
-             if((*iter).name.contains(filterRegExp()) || (*iter).actor.contains(filterRegExp()))
+             if((*iter).name.contains(filterRegularExpression()) || (*iter).actor.contains(filterRegularExpression()))
                  return true;
          }
          return false;

@@ -3,6 +3,7 @@
 #include "UI/ela/ElaMenu.h"
 #include "Download/trackersubscriber.h"
 #include "UI/inputdialog.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/kplaintextedit.h"
 #include "UI/widgets/kpushbutton.h"
 
@@ -24,6 +25,7 @@ TrackerSubscribeDialog::TrackerSubscribeDialog(QWidget *parent) : CFramelessDial
     QTreeView *trackerSrcView = new QTreeView(this);
     trackerSrcView->setRootIsDecorated(false);
     trackerSrcView->setAlternatingRowColors(true);
+    trackerSrcView->setItemDelegate(new KTreeviewItemDelegate(trackerSrcView));
     trackerSrcView->setModel(TrackerSubscriber::subscriber());
     trackerSrcView->setContextMenuPolicy(Qt::CustomContextMenu);
     trackerSrcView->setSelectionMode(QAbstractItemView::ExtendedSelection);

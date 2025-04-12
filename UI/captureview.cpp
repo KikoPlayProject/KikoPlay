@@ -251,7 +251,7 @@ void ImageView::wheelEvent(QWheelEvent *event)
     if(event->modifiers().testFlag(Qt::ControlModifier))
     {
         setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-        if(event->delta()>0)
+        if(event->angleDelta().y() > 0)
         {
             scale(1.1,1.1);
             isScale=true;
@@ -272,7 +272,7 @@ void ImageView::wheelEvent(QWheelEvent *event)
     }
     else if(!isScale)
     {
-        emit navigate(event->delta()<0);
+        emit navigate(event->angleDelta().y() < 0);
         event->accept();
     }
     else

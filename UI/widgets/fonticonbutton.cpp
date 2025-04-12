@@ -72,8 +72,8 @@ QSize FontIconButton::sizeHint() const
     QStyleOptionButton opt;
     initStyleOption(&opt);
     opt.rect.setSize(QSize(w, h));
-    sHint = style()->sizeFromContents(QStyle::CT_PushButton, &opt, QSize(w, h), this).
-                      expandedTo(QApplication::globalStrut());
+    sHint = style()->sizeFromContents(QStyle::CT_PushButton, &opt, QSize(w, h), this);//.
+                      //expandedTo(QApplication::globalStrut());
     return sHint;
 }
 

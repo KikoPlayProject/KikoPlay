@@ -62,9 +62,9 @@ bool AppGView::setWidgetOption(AppWidgetOption option, const QVariant &val)
             const int p = s.indexOf(":");
             if (p == -1) continue;
             bool ok = false;
-            const int rc = s.leftRef(p).toInt(&ok);
+            const int rc = QStringView(s).first(p).toInt(&ok);
             if (!ok || rc <= 0) continue;
-            const int stretch = s.midRef(p + 1).toInt(&ok);
+            const int stretch = QStringView(s).sliced(p + 1).toInt(&ok);
             if (!ok) continue;
             if (option == AppWidgetOption::OPTION_ROW_STRETCH)
             {

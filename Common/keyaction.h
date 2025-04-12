@@ -11,6 +11,7 @@ struct KeyAction
     enum ActionType
     {
         ACT_PLAYPAUSE,
+        ACT_STOP,
         ACT_SEEK_FORWARD,
         ACT_SEEK_BACKWARD,
         ACT_FRAME_FORWARD,
@@ -63,6 +64,13 @@ struct KeyAction
 struct KeyActionPlayPause : public KeyAction
 {
     KeyActionPlayPause() : KeyAction(KeyAction::ACT_PLAYPAUSE) {}
+    bool isValid(QObject *env) override { return env && env->inherits("PlayerWindow"); }
+    void trigger() override;
+};
+
+struct KeyActionStop : public KeyAction
+{
+    KeyActionStop() : KeyAction(KeyAction::ACT_STOP) {}
     bool isValid(QObject *env) override { return env && env->inherits("PlayerWindow"); }
     void trigger() override;
 };

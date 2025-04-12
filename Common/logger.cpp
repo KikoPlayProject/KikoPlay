@@ -3,6 +3,7 @@
 #include <QTimerEvent>
 #include <QDir>
 #include <cstdarg>
+#include <QRegularExpression>
 #include "globalobjects.h"
 
 QSharedPointer<Logger> Logger::defaultLogger = nullptr;
@@ -109,14 +110,16 @@ void Logger::refreshLogFile()
         folder.mkpath(logFolder);
     folder.setPath(logFolder);
 
-    QRegExp re("\\d{4}-\\d{2}-\\d{2}");
+    QRegularExpression re("\\d{4}-\\d{2}-\\d{2}");
     qint64 curTime = QDateTime::currentDateTime().toSecsSinceEpoch();
     for (QFileInfo fileInfo : folder.entryInfoList())
     {
         if (fileInfo.isFile() && fileInfo.suffix().toLower()=="log")
         {
-            if(re.indexIn(fileInfo.fileName())!=0) continue;
-            int logTime = QDateTime::fromString(re.cap(0), "yyyy-MM-dd").toSecsSinceEpoch();
+            auto match = re.match(fileInfo.fileName());
+            if (!match.hasMatch() || match.capturedStart(0) != 0) continue;
+            //if(re.indexIn(fileInfo.fileName())!=0) continue;
+            int logTime = QDateTime::fromString(match.captured(0), "yyyy-MM-dd").toSecsSinceEpoch();
             if(curTime - logTime > 3*24*3600)
             {
                 folder.remove(fileInfo.fileName());

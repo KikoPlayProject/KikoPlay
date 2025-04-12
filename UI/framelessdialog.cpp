@@ -105,7 +105,7 @@ void CFramelessDialog::setResizeable(bool resizeable)
     const MARGINS shadow = { 1, 1, 1, 1 };
     DwmExtendFrameIntoClientArea(HWND(winId()), &shadow);
 
-    setVisible(visible);
+    //setVisible(visible);
 }
 
 void CFramelessDialog::setResizeableAreaWidth(int width)
@@ -143,7 +143,7 @@ void CFramelessDialog::addIgnoreWidget(QWidget* widget)
     m_whiteList.append(widget);
 }
 
-bool CFramelessDialog::nativeEvent(const QByteArray &eventType, void *message, long *result)
+bool CFramelessDialog::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)
 {
     MSG* msg = (MSG *)message;
     switch (msg->message)
@@ -276,7 +276,12 @@ QMargins CFramelessDialog::contentsMargins() const
 }
 void CFramelessDialog::getContentsMargins(int *left, int *top, int *right, int *bottom) const
 {
-    QDialog::getContentsMargins(left,top,right,bottom);
+    QMargins margin = QDialog::contentsMargins();
+    // QDialog::getContentsMargins(left, top, right, bottom);
+    *left = margin.left();
+    *right = margin.right();
+    *top = margin.top();
+    *bottom = margin.bottom();
     if (!(left&&top&&right&&bottom)) return;
     if (isMaximized())
     {

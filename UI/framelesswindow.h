@@ -43,7 +43,7 @@ protected:
     void addIgnoreWidget(QWidget* widget);
     void setScreenSave(bool on);
 
-    bool nativeEvent(const QByteArray &eventType, void *message, long *result);
+    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result);
 private slots:
     void onTitleBarDestroyed();
 public:

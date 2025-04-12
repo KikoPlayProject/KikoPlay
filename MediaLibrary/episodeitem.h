@@ -13,6 +13,8 @@ class EpItemDelegate : public QStyledItemDelegate
 public:
     EpItemDelegate(QObject *parent = 0):QStyledItemDelegate(parent),curAnime(nullptr){}
 
+    virtual void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+
     void setAnime(Anime *anime) {curAnime = anime;}
 
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override;

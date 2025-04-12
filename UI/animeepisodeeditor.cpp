@@ -56,7 +56,7 @@ AnimeEpisodeEditor::AnimeEpisodeEditor(Anime *anime, const EpInfo &ep, QWidget *
 
     QLabel *epIndexTip = new QLabel(tr("Episode Index"), this);
     ElaLineEdit *epIndexEdit = new ElaLineEdit(this);
-    epIndexEdit->setValidator(new QRegExpValidator(QRegExp("\\d+\\.?(\\d+)?"), epIndexEdit));
+    epIndexEdit->setValidator(new QRegularExpressionValidator(QRegularExpression("\\d+\\.?(\\d+)?"), epIndexEdit));
     epIndexEdit->setFixedHeight(34);
 
     QLabel *epTitleTip=new QLabel(tr("Episode Title"), this);

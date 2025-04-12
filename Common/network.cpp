@@ -32,7 +32,7 @@ Network::Reply Network::httpGet(const QString &url, const QUrlQuery &query, cons
             request.setRawHeader(header[i].toUtf8(),header[i+1].toUtf8());
         }
     }
-    request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, redirect);
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, redirect);
     request.setMaximumRedirectsAllowed(maxRedirectTimes);
 
     QNetworkAccessManager *manager = getManager();
@@ -182,7 +182,7 @@ QList<Network::Reply> Network::httpGetBatch(const QStringList &urls, const QList
         if(!queries.isEmpty()) queryUrl.setQuery(queries.at(i));
         QNetworkRequest request;
         request.setUrl(queryUrl);
-        request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, redirect);
+        request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, redirect);
         request.setMaximumRedirectsAllowed(maxRedirectTimes);
 
         if(!headers.isEmpty())
@@ -378,7 +378,7 @@ Network::Reply Network::httpHead(const QString &url, const QUrlQuery &query, con
             request.setRawHeader(header[i].toUtf8(),header[i+1].toUtf8());
         }
     }
-    request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, redirect);
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, redirect);
     request.setMaximumRedirectsAllowed(maxRedirectTimes);
 
     QNetworkAccessManager *manager = getManager();

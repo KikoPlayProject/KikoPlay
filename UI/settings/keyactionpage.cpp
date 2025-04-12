@@ -15,6 +15,7 @@
 #include "UI/ela/ElaMenu.h"
 #include "UI/ela/ElaComboBox.h"
 #include "UI/ela/ElaSpinBox.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/floatscrollbar.h"
 #include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
@@ -23,6 +24,7 @@ KeyActionPage::KeyActionPage(QWidget *parent) : SettingPage(parent)
 {
     QTreeView *shortcutView = new QTreeView(this);
     shortcutView->setRootIsDecorated(false);
+    shortcutView->setItemDelegate(new KTreeviewItemDelegate(shortcutView));
     shortcutView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     shortcutView->setModel(KeyActionModel::instance());
     shortcutView->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
@@ -103,7 +105,7 @@ void KeyActionPage::laodInputConf(const QString &filename)
 
     int validCount = 0;
     QTextStream in(&file);
-    in.setCodec("UTF-8");
+    //in.setCodec("UTF-8");
     while (!in.atEnd())
     {
         QString line = in.readLine().trimmed();

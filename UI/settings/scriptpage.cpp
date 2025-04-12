@@ -13,6 +13,7 @@
 #include "Extension/Script/scriptsettingmodel.h"
 #include "UI/ela/ElaComboBox.h"
 #include "UI/ela/ElaMenu.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/floatscrollbar.h"
 #include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
@@ -27,6 +28,7 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
     scriptView->setSelectionMode(QAbstractItemView::SingleSelection);
     scriptView->setModel(proxyModel);
     scriptView->setAlternatingRowColors(true);
+    scriptView->setItemDelegate(new KTreeviewItemDelegate(scriptView));
     new FloatScrollBar(scriptView->verticalScrollBar(), scriptView);
 
 

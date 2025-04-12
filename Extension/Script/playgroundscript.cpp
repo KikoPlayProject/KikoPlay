@@ -1,4 +1,6 @@
 #include "playgroundscript.h"
+#include "Common/threadtask.h"
+#include "globalobjects.h"
 
 PlaygroundScript::PlaygroundScript() : ScriptBase()
 {
@@ -14,8 +16,11 @@ PlaygroundScript::PlaygroundScript() : ScriptBase()
 
 void PlaygroundScript::run(const QString &scriptContent)
 {
-    ScriptState state = loadScriptStr(scriptContent);
-    if(!state)
+    ThreadTask task(GlobalObjects::workThread);
+    ScriptState state = task.Run([&](){
+        return QVariant::fromValue(loadScriptStr(scriptContent));
+    }).value<ScriptState>();
+    if (!state)
     {
         printCallBack(state.info);
     }

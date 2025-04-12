@@ -10,7 +10,6 @@
 #include <QAction>
 #include <QScrollArea>
 #include <QStyledItemDelegate>
-#include "Common/flowlayout.h"
 #include "Common/notifier.h"
 #include "MediaLibrary/animeinfo.h"
 #include "MediaLibrary/animeworker.h"
@@ -18,22 +17,24 @@
 #include "UI/ela/ElaMenu.h"
 #include "UI/ela/ElaSpinBox.h"
 #include "UI/inputdialog.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
+#include "UI/widgets/elidelineedit.h"
 #include "UI/widgets/floatscrollbar.h"
 #include "UI/widgets/fonticonbutton.h"
-#include "UI/widgets/klineedit.h"
 #include "UI/widgets/kplaintextedit.h"
+#include "UI/widgets/component/flowlayout.h"
 
 namespace
 {
 
-class StaffItemDelegate: public QStyledItemDelegate
+class StaffItemDelegate: public KTreeviewItemDelegate
 {
 public:
-    explicit StaffItemDelegate(QObject* parent = nullptr) : QStyledItemDelegate(parent) { }
+    explicit StaffItemDelegate(QObject* parent = nullptr) : KTreeviewItemDelegate(parent) { }
 
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override
     {
-        return new KLineEdit(parent);
+        return new ElideLineEdit(parent);
     }
     inline void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &/*index*/) const override
     {

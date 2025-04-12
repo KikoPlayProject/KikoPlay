@@ -440,8 +440,10 @@ void TorrentFileModel::refreshChildrenCheckStatus(const QModelIndex &index)
         TorrentFile *parentItem = static_cast<TorrentFile *>(pIndex.internalPointer());
         for(int i=0;i<parentItem->children.count();++i)
         {
-            emit dataChanged(pIndex.child(i,0),pIndex.child(i,2));
-            pIndexes.append(pIndex.child(i,0));
+            // emit dataChanged(pIndex.child(i,0),pIndex.child(i,2));
+            emit dataChanged(this->index(i, 0, pIndex), this->index(i, 2, pIndex));
+            //pIndexes.append(pIndex.child(i,0));
+            pIndexes.append(this->index(i, 0, pIndex));
         }
     }
 }

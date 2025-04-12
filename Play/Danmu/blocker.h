@@ -1,14 +1,14 @@
 #ifndef BLOCKER_H
 #define BLOCKER_H
 #include <QAbstractItemModel>
-#include <QStyledItemDelegate>
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "common.h"
-class ComboBoxDelegate : public QStyledItemDelegate
+class ComboBoxDelegate : public KTreeviewItemDelegate
 {
     Q_OBJECT
 
 public:
-    ComboBoxDelegate(QObject *parent = nullptr):QStyledItemDelegate(parent){}
+    ComboBoxDelegate(QObject *parent = nullptr):KTreeviewItemDelegate(parent){}
 
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option,
                           const QModelIndex &index) const override;

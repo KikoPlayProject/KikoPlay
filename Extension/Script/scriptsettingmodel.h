@@ -2,14 +2,14 @@
 #define SCRIPTSETTINGMODEL_H
 #include <QAbstractItemModel>
 #include <QSharedPointer>
-#include <QStyledItemDelegate>
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "scriptbase.h"
-class SettingDelegate : public QStyledItemDelegate
+class SettingDelegate : public KTreeviewItemDelegate
 {
     Q_OBJECT
 
 public:
-    SettingDelegate(QObject *parent = nullptr):QStyledItemDelegate(parent){}
+    SettingDelegate(QObject *parent = nullptr):KTreeviewItemDelegate(parent){}
 
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 
@@ -19,12 +19,6 @@ public:
     inline void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &) const override
     {
         editor->setGeometry(option.rect);
-    }
-    QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override
-    {
-        QSize size = QStyledItemDelegate::sizeHint(option, index);
-        size.setHeight(size.height() + 12);
-        return size;
     }
 };
 

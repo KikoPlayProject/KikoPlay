@@ -3,7 +3,8 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QApplication>
-#include <QDesktopWidget>
+//#include <QDesktopWidget>
+#include <QScreen>
 #include <QPropertyAnimation>
 #include <QEvent>
 #include <QPainter>
@@ -178,8 +179,9 @@ TipWindowWidget::TipWindowWidget(const TipParams &param, QWidget *parent) : QWid
     tipVLayout->addWidget(messageLabel);
     tipVLayout->addStretch(1);
 
-    QDesktopWidget* desktop = QApplication::desktop();
-    QRect geometry = desktop->availableGeometry(parent);
+    //QDesktopWidget* desktop = QApplication::desktop();
+    //QRect geometry = desktop->availableGeometry(parent);
+    QRect geometry = QGuiApplication::primaryScreen()->availableGeometry();
     setFixedWidth(geometry.width() / 5);
 
     const int durationTimeMs = 120;

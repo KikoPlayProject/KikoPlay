@@ -1,5 +1,4 @@
 #include "scriptsearchoptionpanel.h"
-#include "Common/flowlayout.h"
 #include <QLineEdit>
 #include <QLabel>
 #include <QCheckBox>
@@ -11,6 +10,7 @@
 #include "UI/ela/ElaCheckBox.h"
 #include "UI/ela/ElaLineEdit.h"
 #include "UI/ela/ElaRadioButton.h"
+#include "UI/widgets/component/flowlayout.h"
 
 ScriptSearchOptionPanel::ScriptSearchOptionPanel(QWidget *parent) : QWidget(parent), optionChanged(false), allWidth(0), overlayOptions(nullptr)
 {
@@ -159,7 +159,7 @@ void ScriptSearchOptionPanel::makeRadioItem(ScriptSearchOptionPanel::OptionItem 
         hLayout->addWidget(rbtn);
         if(s == selectItem) rbtn->setChecked(true);
     }
-    QObject::connect(btnGroup, (void (QButtonGroup:: *)(QAbstractButton*, bool))&QButtonGroup::buttonToggled, [&item, this](QAbstractButton *btn, bool checked) {
+    QObject::connect(btnGroup, &QButtonGroup::buttonToggled, [&item, this](QAbstractButton *btn, bool checked) {
         if(checked)
         {
             item.val = btn->text();
@@ -217,7 +217,7 @@ void ScriptSearchOptionPanel::makeCheckListItem(ScriptSearchOptionPanel::OptionI
         hLayout->addWidget(check);
         if(checkedSet.contains(s)) check->setChecked(true);
     }
-    QObject::connect(btnGroup, (void (QButtonGroup:: *)(QAbstractButton*, bool))&QButtonGroup::buttonToggled, [btnGroup, &item, this](QAbstractButton *, bool ) {
+    QObject::connect(btnGroup, &QButtonGroup::buttonToggled, [btnGroup, &item, this](QAbstractButton *, bool ) {
         QStringList vals;
         for(QAbstractButton *btn : btnGroup->buttons())
         {

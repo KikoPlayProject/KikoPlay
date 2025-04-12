@@ -243,7 +243,7 @@ QString EventAnalyzer::textRank(const QStringList &dmList)
             s_pos = i;
         }
     }
-    return dmList.at(m_pos).length()<dmList.at(s_pos)?dmList.at(m_pos):dmList.at(s_pos);
+    return dmList.at(m_pos).length()<dmList.at(s_pos).length()?dmList.at(m_pos):dmList.at(s_pos);
 
 }
 

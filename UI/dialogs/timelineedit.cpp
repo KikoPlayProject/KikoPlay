@@ -1,6 +1,7 @@
 #include "timelineedit.h"
 #include "UI/ela/ElaLineEdit.h"
 #include "UI/ela/ElaMenu.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/kpushbutton.h"
 #include <QTreeView>
 #include <QLabel>
@@ -36,13 +37,14 @@ TimelineEdit::TimelineEdit(const DanmuSource *source, const QVector<SimpleDanmuI
     timelineView->setFont(font());
     timelineView->setAlternatingRowColors(true);
     timelineView->setModel(timelineModel);
+    timelineView->setItemDelegate(new KTreeviewItemDelegate(timelineView));
     timelineView->setContextMenuPolicy(Qt::CustomContextMenu);
     timelineView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
 
     QLineEdit *startEdit = new ElaLineEdit(this);
     startEdit->setClearButtonEnabled(true);
     startEdit->setPlaceholderText(tr("Start Time(mm:ss)"));
-    QRegExpValidator *startValidator=new QRegExpValidator(QRegExp("\\d+:?(\\d+)?"),this);
+    QRegularExpressionValidator *startValidator = new QRegularExpressionValidator(QRegularExpression("\\d+:?(\\d+)?"), this);
     startEdit->setValidator(startValidator);
     if(curTime!=-1) startEdit->setText(formatTime(curTime*1000));
 
@@ -83,6 +85,7 @@ TimelineEdit::TimelineEdit(const DanmuSource *source, const QVector<SimpleDanmuI
     simpleDPView->setRootIsDecorated(false);
     simpleDPView->setFont(font());
     simpleDPView->setAlternatingRowColors(true);
+    simpleDPView->setItemDelegate(new KTreeviewItemDelegate(simpleDPView));
     simpleDPView->setModel(simpleDanmuPool);
     simpleDPView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     // simpleDPView->header()->setStretchLastSection(false);
@@ -316,7 +319,7 @@ void TimeLineBar::mouseDoubleClickEvent(QMouseEvent *event)
     update();
 }
 
-void TimeLineBar::enterEvent(QEvent *)
+void TimeLineBar::enterEvent(QEnterEvent *)
 {
     if(currentState==-1)currentState=0;
 }

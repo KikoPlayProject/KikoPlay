@@ -29,6 +29,7 @@ void LuaUtil::setup()
         {"envinfo", envInfo},
         {"viewtable", viewTable},
         {"allscripts", allScripts},
+        {"sleep", sleep},
         {nullptr, nullptr}
     };
     registerFuncs("kiko", commonFuncs);
@@ -411,6 +412,17 @@ int LuaUtil::allScripts(lua_State *L)
     if (info.isNull()) lua_pushnil(L);
     else ScriptBase::pushValue(L, info);
     return 1;
+}
+
+int LuaUtil::sleep(lua_State *L)
+{
+    if (lua_gettop(L) < 1 || !lua_isinteger(L, 1))
+    {
+        return 0;
+    }
+    int ms = lua_tointeger(L, 1);
+    QThread::msleep(ms);
+    return 0;
 }
 
 }

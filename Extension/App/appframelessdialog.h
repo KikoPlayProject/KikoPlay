@@ -25,7 +25,7 @@ protected:
     void onClose();
     void onPin();
     void addIgnoreWidget(QWidget* widget);
-    bool nativeEvent(const QByteArray &eventType, void *message, long *result) override;
+    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result);
 public:
     void setContentsMargins(const QMargins &margins);
     void setContentsMargins(int left, int top, int right, int bottom);

@@ -28,11 +28,11 @@
 #include "MediaLibrary/animeitemdelegate.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/Playlist/playlist.h"
-#include "Common/flowlayout.h"
 #include "Common/network.h"
 #include "UI/animeepisodeeditor.h"
 #include "UI/ela/ElaMenu.h"
 #include "UI/inputdialog.h"
+#include "UI/widgets/component/flowlayout.h"
 #include "UI/widgets/fonticonbutton.h"
 #include "captureview.h"
 #include "gifcapture.h"
@@ -186,7 +186,7 @@ void AnimeDetailInfoPage::initPageUI()
     pageSLayout->addWidget(initInfoPage());
     pageSLayout->addWidget(initEpisodePage());
     pageSLayout->addWidget(initCapturePage());
-    QObject::connect(btnGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, [=](int id, bool checked) {
+    QObject::connect(btnGroup, &QButtonGroup::idToggled, [=](int id, bool checked) {
         if (checked)
         {
             pageSLayout->setCurrentIndex(id);

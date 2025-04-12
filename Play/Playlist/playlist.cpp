@@ -1890,13 +1890,15 @@ void MatchWorker::updateFilterRules()
     {
         QString content = str.trimmed();
         if (content.isEmpty()) continue;
-        filterRules.append(QRegExp(content, Qt::CaseInsensitive, QRegExp::Wildcard));
+        //filterRules.append(QRegExp(content, Qt::CaseInsensitive, QRegExp::Wildcard));
+        //filterRules.append(QRegularExpression(content, QRegularExpression::CaseInsensitiveOption));
+        filterRules.append(QRegularExpression::fromWildcard(content));
     }
 }
 
 bool MatchWorker::filterItem(PlayListItem *item)
 {
-    for (const QRegExp &rule : filterRules)
+    for (const auto &rule : filterRules)
     {
         if (item && item->path.contains(rule)) return true;
     }

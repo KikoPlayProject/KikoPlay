@@ -191,8 +191,8 @@ void TrackerSubscriber::loadTrackerListSource()
     {
         if(reader.isStartElement())
         {
-            QStringRef name=reader.name();
-            if(name == "TrackerSource")
+            QStringView name = reader.name();
+            if(name == QLatin1StringView("TrackerSource"))
             {
                 TrackerListSource src;
                 src.url = reader.attributes().value("url").toString();
@@ -200,12 +200,12 @@ void TrackerSubscriber::loadTrackerListSource()
                 src.isChecking = false;
                 trackerListSrcs.append(src);
             }
-            else if(name == "Tracker")
+            else if(name == QLatin1StringView("Tracker"))
             {
                 Q_ASSERT(!trackerListSrcs.isEmpty());
                 trackerListSrcs.back().trackerlist.append(reader.readElementText().trimmed());
             }
-            else if(name == "TrackerSubscriber")
+            else if(name == QLatin1StringView("TrackerSubscriber"))
             {
                 lastCheckTime = reader.attributes().value("lastCheck").toLongLong();
             }

@@ -1,5 +1,6 @@
 #include "selectepisode.h"
 #include "UI/ela/ElaCheckBox.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/kpushbutton.h"
 #include <QGridLayout>
 #include <QPushButton>
@@ -10,6 +11,7 @@ SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent)
     :CFramelessDialog(tr("Select Episode"),parent,true), episodeResult(epResults)
 {
     episodeWidget = new PressTreeWidget(this);
+    episodeWidget->setItemDelegate(new KTreeviewItemDelegate(episodeWidget));
     episodeWidget->setRootIsDecorated(false);
     episodeWidget->setFont(font());
     episodeWidget->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);

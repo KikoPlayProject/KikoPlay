@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QSettings>
 #include <QLabel>
+#include <QPainter>
 #include <QHeaderView>
 #include "Extension/App/appmanager.h"
 #include "globalobjects.h"
@@ -51,6 +52,28 @@ void AppPageItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
     QStyleOptionViewItem viewOption(option);
     initStyleOption(&viewOption,index);
     viewOption.decorationSize = QSize(rowHeight * 0.8, rowHeight * 0.8);
+
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing);
+    QRect itemRect = option.rect;
+
+    if(index.column() == 0) itemRect.setLeft(0);
+    painter->setBrush(QColor(255, 255, 255, 40));
+    painter->setPen(Qt::NoPen);
+
+    if (option.state & QStyle::State_Selected)
+    {
+        painter->drawRect(itemRect);
+    }
+    else
+    {
+        if (option.state & QStyle::State_MouseOver)
+        {
+            painter->drawRect(itemRect);
+        }
+    }
+    painter->restore();
+
     QStyle *style = option.widget? option.widget->style() : QApplication::style();
     style->drawControl(QStyle::CE_ItemViewItem, &viewOption, painter, option.widget);
 }

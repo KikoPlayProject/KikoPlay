@@ -101,7 +101,7 @@ struct BlockRule
     bool usePreFilter;
     QString name;
     QString content;
-    QScopedPointer<QRegExp> re;
+    QScopedPointer<QRegularExpression> re;
     bool blockTest(DanmuComment *comment, bool updateCount=true);
     BlockRule(const QString &ruleContent, Field field, Relation r);
     BlockRule() = default;

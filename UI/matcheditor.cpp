@@ -417,7 +417,7 @@ QWidget *MatchEditor::setupCustomPage(const QString &srcAnime, const EpInfo &ep)
 
     QLabel *epIndexTip = new QLabel(tr("Episode Index"),customPage);
     epIndexEdit = new ElaLineEdit(customPage);
-    epIndexEdit->setValidator(new QRegExpValidator(QRegExp("\\d+\\.?(\\d+)?"),epIndexEdit));
+    epIndexEdit->setValidator(new QRegularExpressionValidator(QRegularExpression("\\d+\\.?(\\d+)?"), epIndexEdit));
 
     QLabel *epTitleTip = new QLabel(tr("Episode Title"),customPage);
     epEdit = new ElaLineEdit(customPage);

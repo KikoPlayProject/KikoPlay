@@ -93,7 +93,6 @@ int main(int argc, char *argv[])
     qputenv("QT_SCALE_FACTOR", "1.5");
 #endif
 #endif
-
     QElapsedTimer timer;
     timer.start();
     QApplication a(argc, argv);

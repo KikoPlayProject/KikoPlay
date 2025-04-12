@@ -92,7 +92,7 @@ void ClickSlider::mouseMoveEvent(QMouseEvent *event)
     QSlider::mouseMoveEvent(event);
 }
 
-void ClickSlider::enterEvent(QEvent *e)
+void ClickSlider::enterEvent(QEnterEvent *e)
 {
     update();
     emit mouseEnter();

@@ -85,7 +85,7 @@ void DialogTip::showMessage(const QString &msg, int type)
         bgDarkWidget->hide();
     }
     infoText->setMaximumWidth(parentWidget()->width());
-    infoText->setText(msg);
+    infoText->setText(elideMessage(msg));
     infoText->adjustSize();
     adjustSize();
     if (moveAnime->state() == QAbstractAnimation::Running)
@@ -105,6 +105,19 @@ void DialogTip::showMessage(const QString &msg, int type)
         moveHide = false;
         moveAnime->start();
     }
+}
+
+QString DialogTip::elideMessage(const QString &msg)
+{
+    QFontMetrics fontMetrics = infoText->fontMetrics();
+    QStringList lines = msg.split('\n');
+    QStringList result;
+    int maxWidth = parentWidget()->width() - 4;
+    for (const QString &l : lines)
+    {
+        result.append(fontMetrics.elidedText(l, Qt::ElideRight, maxWidth));
+    }
+    return result.join('\n');
 }
 
 bool DialogTip::eventFilter(QObject *obj, QEvent *event)

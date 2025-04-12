@@ -85,6 +85,8 @@ KeyAction *KeyAction::createAction(ActionType actType)
     {
     case KeyAction::ACT_PLAYPAUSE:
         return new KeyActionPlayPause;
+    case KeyAction::ACT_STOP:
+        return new KeyActionStop;
     case KeyAction::ACT_SEEK_FORWARD:
         return new KeyActionSeekForward;
     case KeyAction::ACT_SEEK_BACKWARD:
@@ -126,6 +128,7 @@ QString KeyAction::getActionName(ActionType actType)
     if (actType == ActionType::ACT_NONE) return "";
     static QString actNames[ActionType::ACT_NONE] = {
         QObject::tr("Play/Pause"),
+        QObject::tr("Stop"),
         QObject::tr("Seek Forward"),
         QObject::tr("Seek Backward"),
         QObject::tr("Frame Step Forward"),
@@ -165,6 +168,11 @@ void KeyActionPlayPause::trigger()
     case MPVPlayer::Stop:
         break;
     }
+}
+
+void KeyActionStop::trigger()
+{
+    emit GlobalObjects::mpvplayer->triggerStop();
 }
 
 KeyActionSeekForward::KeyActionSeekForward(int seekStep) : KeyAction(KeyAction::ACT_SEEK_FORWARD)
@@ -412,4 +420,3 @@ void KeyActionMPVCommand::parseCommand()
         runCommands.append(commandParts);
     }
 }
-

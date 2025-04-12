@@ -36,7 +36,7 @@ private:
     static const QPixmap &nullCover();
 protected:
     virtual void mouseReleaseEvent(QMouseEvent *event);
-    virtual void enterEvent(QEvent *event);
+    virtual void enterEvent(QEnterEvent *event);
     virtual void leaveEvent(QEvent *event);
 };
 
@@ -124,7 +124,7 @@ private:
     QPoint pressPos;
 
     // actions
-    QAction *actPlayPause{nullptr}, *actPrev{nullptr}, *actNext{nullptr}, *actFullscreen{nullptr};
+    QAction *actPlayPause{nullptr}, *actStop{nullptr}, *actPrev{nullptr}, *actNext{nullptr}, *actFullscreen{nullptr};
     QAction *actScreenshotSrc{nullptr}, *actScreenshotAct{nullptr}, *actSnippet{nullptr}, *actGIF{nullptr};
     QAction *actMiniMode{nullptr};
     QAction *ctxText{nullptr}, *ctxCopy{nullptr}, *ctxBlockUser{nullptr}, *ctxBlockText{nullptr}, *ctxBlockColor{nullptr};

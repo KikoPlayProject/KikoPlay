@@ -142,13 +142,14 @@ void FileHandler::processFile(stefanfrings::HttpRequest &request, stefanfrings::
 
 bool FileHandler::getRange(const QString &range, qint64 fileSize, qint64 &from, qint64 &to)
 {
-    static QRegExp regExp("^(\\d*)-(\\d*)$");
+    static QRegularExpression regExp("^(\\d*)-(\\d*)$");
 
     from = 0, to = fileSize - 1;
-    if (regExp.indexIn(range.trimmed()) == -1) return false;
+    auto match = regExp.match(range.trimmed());
+    if (!match.hasMatch()) return false;
 
-    QString fromStr = regExp.cap(1);
-    QString toStr = regExp.cap(2);
+    QString fromStr = match.captured(1);
+    QString toStr = match.captured(2);
 
     if (fromStr.isEmpty() && toStr.isEmpty()) return false;
 

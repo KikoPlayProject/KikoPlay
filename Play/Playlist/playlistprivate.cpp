@@ -178,8 +178,8 @@ void PlayListPrivate::loadRecentlist()
     {
         if (reader.isStartElement())
         {
-            QStringRef name = reader.name();
-            if (name == "item")
+            QStringView name = reader.name();
+            if (name == QLatin1StringView("item"))
             {
                 QXmlStreamAttributes attrs = reader.attributes();
                 RecentlyPlayedItem item;

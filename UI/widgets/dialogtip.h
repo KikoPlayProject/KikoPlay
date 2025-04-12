@@ -21,6 +21,8 @@ private:
     bool moveHide;
     const int animeDuration = 500;
     const int showDuration = 2500;
+
+    QString elideMessage(const QString &msg);
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
     void paintEvent(QPaintEvent *event) override;

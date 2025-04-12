@@ -284,11 +284,12 @@ void Pool::exportPool(const QString &fileName, bool useTimeline, bool applyBlock
                               .arg(type[danmu->type]).arg(fontSize[danmu->fontSizeLevel]).arg(danmu->color)
                               .arg(danmu->date).arg(danmu->sender));
         QString danmuText;
-        for(const QChar &ch:danmu->text)
+        for(const QChar &c:danmu->text)
         {
+            int ch = c.unicode();
             if((ch>=0x0 && ch<=0x8) || (ch>=0xb && ch<=0xc) || (ch>=0xe && ch<=0x1f))
                 continue;
-            danmuText.append(ch);
+            danmuText.append(c);
 //            if(ch == 0x9 //\t
 //                    || ch == 0xA //\n
 //                    || ch == 0xD //\r

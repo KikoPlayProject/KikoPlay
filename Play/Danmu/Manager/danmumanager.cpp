@@ -115,12 +115,12 @@ void DanmuManager::exportPool(const QList<DanmuPoolNode *> &exportList, const QS
             if(node->type==DanmuPoolNode::AnimeNode && node->checkStatus!=Qt::Unchecked)
             {
                 QString animeTitle(node->title);
-                animeTitle.replace(QRegExp("[\\\\/:*?\"<>|]"),"");
+                animeTitle.replace(QRegularExpression("[\\\\/:*?\"<>|]"),"");
                 for(DanmuPoolNode *epNode:*node->children)
                 {
                     if(epNode->checkStatus==Qt::Unchecked)continue;
                     QString epTitle(epNode->title);
-                    epTitle.replace(QRegExp("[\\\\/:*?\"<>|]"),"");
+                    epTitle.replace(QRegularExpression("[\\\\/:*?\"<>|]"),"");
                     QFileInfo fi(dir,QString("%1-%2.xml").arg(animeTitle, epTitle));
                     emit workerStateMessage(tr("Exporting: %1").arg(fi.fileName()));
                     Pool *pool=getPool(epNode->idInfo);
@@ -151,7 +151,7 @@ void DanmuManager::exportKdFile(const QList<DanmuPoolNode *> &exportList, const 
             if(node->type==DanmuPoolNode::AnimeNode && node->checkStatus!=Qt::Unchecked)
             {
                 QString animeTitle(node->title);
-                animeTitle.replace(QRegExp("[\\\\/:*?\"<>|]"),"");
+                animeTitle.replace(QRegularExpression("[\\\\/:*?\"<>|]"),"");
                 QFileInfo fi(dir,QString("%1.kd").arg(animeTitle));
                 emit workerStateMessage(tr("Exporting: %1").arg(fi.fileName()));
                 QFile kdFile(fi.absoluteFilePath());

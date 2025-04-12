@@ -31,7 +31,7 @@ Aria2JsonRPC::Aria2JsonRPC(QObject *parent) : QObject(parent), listenPort(7800)
         if (opt.startsWith("--rpc-listen-port"))
         {
             const int sepIdx = opt.indexOf("=");
-            const QStringRef portStr = opt.midRef(sepIdx + 1).trimmed();
+            const QStringView portStr = QStringView(opt).sliced(sepIdx + 1).trimmed();
             bool ok = false;
             const int port = portStr.toInt(&ok);
             if (portStr.isEmpty() || !ok) continue;

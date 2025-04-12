@@ -27,6 +27,7 @@
 #include "Play/Playlist/playlist.h"
 #include "Play/Video/mpvplayer.h"
 #include "UI/ela/ElaMenu.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/floatscrollbar.h"
 #include "UI/widgets/klineedit.h"
 #include "UI/widgets/kplaintextedit.h"
@@ -254,7 +255,7 @@ QWidget *DownloadWindow::initLeftPanel(QWidget *parent)
     taskTypeButtonGroup->addButton(autoRules, 3);
     taskTypeButtonGroup->addButton(bgmList, 4);
     taskTypeButtonGroup->addButton(resSearch, 5);
-    QObject::connect(taskTypeButtonGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, this, [=](int id, bool checked){
+    QObject::connect(taskTypeButtonGroup, &QButtonGroup::idToggled, this, [=](int id, bool checked){
         if (checked)
         {
             if (id < 3)
@@ -435,7 +436,7 @@ QWidget *DownloadWindow::initDownloadPage()
     QObject::connect(downloadView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &DownloadWindow::downloadSelectionChanged);
     QObject::connect(searchEdit, &QLineEdit::textChanged, downloadView, [=](const QString &keyword){
         proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-        proxyModel->setFilterRegExp(keyword);
+        proxyModel->setFilterRegularExpression(keyword);
     });
 
     QWidget *detailInfoContent = new QWidget(downloadContainer);
@@ -572,10 +573,9 @@ QWidget *DownloadWindow::setupFileInfoPage(QWidget *parent)
     fileInfoView = new TorrentTreeView(parent);
     fileInfoView->setAlternatingRowColors(true);
     fileInfoView->setModel(selectedTFModel);
+    fileInfoView->setItemDelegate(new KTreeviewItemDelegate(fileInfoView));
     new FloatScrollBar(fileInfoView->verticalScrollBar(), fileInfoView);
     new FloatScrollBar(fileInfoView->horizontalScrollBar(), fileInfoView);
-    // fileInfoView->setObjectName(QStringLiteral("TaskInfoTreeView"));
-    // fileInfoView->header()->setObjectName(QStringLiteral("TaskInfoTreeViewHeader"));
     fileInfoView->header()->resizeSection(0, 300);
     fileInfoView->setFont(QFont(GlobalObjects::normalFont, 10));
     QObject::connect(fileInfoView, &TorrentTreeView::ignoreColorChanged, selectedTFModel, &CTorrentFileModel::setIgnoreColor);
@@ -642,10 +642,9 @@ QWidget *DownloadWindow::setupConnectionPage(QWidget *parent)
     PeerTreeView *peerView = new PeerTreeView(parent);
     peerView->setModel(peerModel);
     peerView->setRootIsDecorated(false);
+    peerView->setItemDelegate(new KTreeviewItemDelegate(peerView));
     new FloatScrollBar(peerView->verticalScrollBar(), peerView);
     new FloatScrollBar(peerView->horizontalScrollBar(), peerView);
-    // peerView->setObjectName(QStringLiteral("TaskInfoTreeView"));
-    // peerView->header()->setObjectName(QStringLiteral("TaskInfoTreeViewHeader"));
     peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::PROGRESS), 280);
     peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::CLIENT), 180);
     peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::IP), 160);

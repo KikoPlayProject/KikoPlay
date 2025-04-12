@@ -7,6 +7,9 @@
 #include <QTreeView>
 #include <QDateTime>
 #include <QSettings>
+#include <QPainter>
+#include <QStyledItemDelegate>
+#include "Common/threadtask.h"
 #include "UI/ela/ElaComboBox.h"
 #include "UI/ela/ElaLineEdit.h"
 #include "UI/ela/ElaSpinBox.h"
@@ -17,6 +20,54 @@
 #include "Extension/Script/scriptmanager.h"
 #include "Extension/Script/resourcescript.h"
 #include "Common/notifier.h"
+
+namespace
+{
+class BackgroundColorDelegate: public QStyledItemDelegate
+{
+public:
+    explicit BackgroundColorDelegate(QObject* parent = nullptr) : QStyledItemDelegate(parent)
+    { }
+
+    void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+    {
+        QStyleOptionViewItem viewOption(option);
+        initStyleOption(&viewOption, index);
+
+        QVariant bgRole = index.data(Qt::BackgroundRole);
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        QRect itemRect = viewOption.rect;
+        if(index.column() == 0) itemRect.setLeft(0);
+
+        painter->setPen(Qt::NoPen);
+        if (bgRole.isValid())
+        {
+            QColor itemBgColor = bgRole.value<QBrush>().color();
+            painter->setBrush(itemBgColor);
+            painter->drawRect(itemRect);
+        }
+        else
+        {
+            painter->setBrush(QColor(255, 255, 255, 40));
+            if (viewOption.state & QStyle::State_Selected)
+            {
+                painter->drawRect(itemRect);
+            }
+            else
+            {
+                if (viewOption.state & QStyle::State_MouseOver)
+                {
+                    painter->drawRect(itemRect);
+                }
+            }
+        }
+        painter->restore();
+        QStyledItemDelegate::paint(painter, viewOption, index);
+
+    }
+};
+}
 
 AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add Rule"),parent, true, true, false)
 {
@@ -84,8 +135,8 @@ AddRule::AddRule(DownloadRule *rule, QWidget *parent) : CFramelessDialog(tr("Add
     previewModel = new PreviewModel(this);
     preview->setRootIsDecorated(false);
     preview->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    preview->setAlternatingRowColors(true);
     preview->setModel(previewModel);
+    preview->setItemDelegate(new BackgroundColorDelegate(preview));
     QObject::connect(previewModel, &PreviewModel::showError, this, [this](const QString &err){
         showMessage(err, NM_ERROR | NM_HIDE);
     });
@@ -223,7 +274,10 @@ void AddRule::onAccept()
         if(curScript && curScript->type()==ScriptType::RESOURCE)
         {
             ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
-            ScriptState state = resScript->search(curRule->searchWord, 1, pageCount, resList, "auto-download", &curRule->searchOptions);
+            ThreadTask task(GlobalObjects::workThread);
+            ScriptState state = task.Run([&](){
+                return QVariant::fromValue(resScript->search(curRule->searchWord, 1, pageCount, resList, "auto-download", &curRule->searchOptions));
+            }).value<ScriptState>();
             if(state)
             {
                 for(int i=0; i<3 && i<resList.size(); ++i)
@@ -247,10 +301,13 @@ void AddRule::onClose()
 
 float PreviewModel::getSize(const QString &sizeStr)
 {
-    static QRegExp re("(\\d+(?:\\.\\d+)?)\\s*([KkMmGgTt])i?B|b");
-    if(re.indexIn(sizeStr)==-1) return 0.f;
-    if(re.matchedLength()!=sizeStr.length()) return 0.f;
-    QStringList captured=re.capturedTexts();
+    static QRegularExpression re("(\\d+(?:\\.\\d+)?)\\s*([KkMmGgTt])i?B|b");
+    auto match = re.match(sizeStr);
+    if (!match.hasMatch()) return 0.f;
+    if (match.capturedLength(0) != sizeStr.length()) return 0.f;
+    // if(re.indexIn(sizeStr)==-1) return 0.f;
+    // if(re.matchedLength()!=sizeStr.length()) return 0.f;
+    QStringList captured = match.capturedTexts();
     float size = captured[1].toFloat();
     char s = captured[2][0].toUpper().toLatin1();
     switch (s)
@@ -293,7 +350,10 @@ void PreviewModel::search(const QString &searchWord, const QString &scriptId, co
     if(curScript && curScript->type()==ScriptType::RESOURCE)
     {
         ResourceScript *resScript = static_cast<ResourceScript *>(curScript.data());
-        ScriptState state = resScript->search(searchWord, 1, pageCount, resList, "auto-download", options);
+        ThreadTask task(GlobalObjects::workThread);
+        ScriptState state = task.Run([&](){
+            return QVariant::fromValue(resScript->search(searchWord, 1, pageCount, resList, "auto-download", options));
+        }).value<ScriptState>();
         if(state)
         {
             for(const auto &item:resList)
@@ -313,9 +373,9 @@ void PreviewModel::search(const QString &searchWord, const QString &scriptId, co
 void PreviewModel::filter(const QString &filterWord, int minSize, int maxSize)
 {
     QStringList filters(filterWord.split(';'));
-    QList<QRegExp> filterRegExps;
+    QList<QRegularExpression> filterRegExps;
     for(const QString &s:filters)
-        filterRegExps<<QRegExp(s);
+        filterRegExps<<QRegularExpression(s);
     int i=0;
     for(auto &item:searchResults)
     {

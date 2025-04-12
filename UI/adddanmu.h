@@ -1,6 +1,7 @@
 #ifndef ADDDANMU_H
 #define ADDDANMU_H
 
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "framelessdialog.h"
 #include <QStyledItemDelegate>
 #include "Play/Danmu/common.h"
@@ -27,12 +28,12 @@ public:
     virtual QSize sizeHint() const;
 };
 
-class PoolComboDelegate : public QStyledItemDelegate
+class PoolComboDelegate : public KTreeviewItemDelegate
 {
     Q_OBJECT
 
 public:
-    PoolComboDelegate(const QStringList &pools, QObject *parent = nullptr):QStyledItemDelegate(parent),poolList(pools){}
+    PoolComboDelegate(const QStringList &pools, QObject *parent = nullptr):KTreeviewItemDelegate(parent),poolList(pools){}
 
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
     void setEditorData(QWidget *editor, const QModelIndex &index) const override;

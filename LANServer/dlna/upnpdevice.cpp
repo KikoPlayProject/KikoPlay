@@ -392,18 +392,18 @@ bool UPnPDevice::parseAction(UPnPService *service, const QByteArray &actionName,
     {
         if(reader.isStartElement())
         {
-            QStringRef name = reader.name();
+            QStringView name = reader.name();
             if(state == 0)
             {
-                if(name == "Envelope") state = 1;
+                if(name == QLatin1StringView("Envelope")) state = 1;
             }
             else if(state == 1)
             {
-                if(name == "Body") state = 2;
+                if(name == QLatin1StringView("Body")) state = 2;
             }
             else if(state == 2)
             {
-                if(name == actionName)
+                if(name == QLatin1StringView(actionName))
                 {
                     auto namespaces = reader.namespaceDeclarations();
                     if(!namespaces.isEmpty() && namespaces[0].namespaceUri() == service->serviceType)

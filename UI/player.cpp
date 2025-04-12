@@ -52,6 +52,10 @@
 #include "ela/ElaToggleSwitch.h"
 #include "ela/ElaTheme.h"
 
+#ifdef Q_OS_WIN
+#include <Windows.h>
+#endif
+
 #define SETTING_KEY_FORWARD_JUMP "Play/ForwardJump"
 #define SETTING_KEY_BACKWARD_JUMP "Play/BackwardJump"
 #define SETTING_KEY_CUSTOM_PLAYBACK_RATE "Play/CustomPlaybackRate"
@@ -402,6 +406,15 @@ void PlayerWindow::initActions()
             break;
         }
     });
+
+    actStop = new QAction(tr("Stop"), this);
+    QObject::connect(actStop, &QAction::triggered, this, [=](){
+        if (isFullscreen) actFullscreen->trigger();
+        QCoreApplication::processEvents();
+        GlobalObjects::playlist->cleanCurrentItem();
+        GlobalObjects::mpvplayer->setState(MPVPlayer::Stop);
+    });
+
     actFullscreen = new QAction(tr("Fullscreen"),this);
     QObject::connect(actFullscreen, &QAction::triggered, this, [=](){
         toggleFullScreenState(!isFullscreen);
@@ -1844,14 +1857,7 @@ void PlayerWindow::initSignals()
         }
     });
     QObject::connect(playPause,&QPushButton::clicked,actPlayPause,&QAction::trigger);
-
-    QObject::connect(stop, &QPushButton::clicked, this, [=](){
-        if (isFullscreen) actFullscreen->trigger();
-        QCoreApplication::processEvents();
-        //PlayContext::context()->stopFrame = GlobalObjects::mpvplayer->grabFramebuffer();
-        GlobalObjects::playlist->cleanCurrentItem();
-        GlobalObjects::mpvplayer->setState(MPVPlayer::Stop);
-    });
+    QObject::connect(stop, &QPushButton::clicked, actStop, &QAction::trigger);
     QObject::connect(progress, &ClickSlider::sliderClick, this, [](int pos){
         MPVPlayer::PlayState state=GlobalObjects::mpvplayer->getState();
         switch(state)
@@ -2025,6 +2031,7 @@ void PlayerWindow::initSignals()
     QObject::connect(fullscreen,&QPushButton::clicked,actFullscreen,&QAction::trigger);
     QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::toggleFullScreen, actFullscreen,&QAction::trigger);
     QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::toggleMiniMode, actMiniMode, &QAction::trigger);
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::triggerStop, actStop, &QAction::trigger);
 
     QObject::connect(GlobalObjects::danmuRender->liveDanmuModel(), &LiveDanmuListModel::danmuAppend, this, [this](){
         SmoothScrollBar *liveDanmuVScroll = static_cast<SmoothScrollBar*>(liveDanmuList->verticalScrollBar());
@@ -2176,6 +2183,9 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
     normalFont.setPointSize(12);
     launchDanmuEdit->setFont(normalFont);
     launchDanmuEdit->setObjectName(QStringLiteral("LaunchDanmuEdit"));
+    QPalette palette = launchDanmuEdit->palette();
+    palette.setColor(QPalette::PlaceholderText, QColor(0, 0, 0, 100));
+    launchDanmuEdit->setPalette(palette);
 
     QPushButton *launchOptionBtn = new QPushButton(launchDanmuEdit);
     launchOptionBtn->setObjectName(QStringLiteral("LaunchOptionButton"));
@@ -3207,7 +3217,7 @@ void RecentItem::mouseReleaseEvent(QMouseEvent *event)
     event->accept();
 }
 
-void RecentItem::enterEvent(QEvent *event)
+void RecentItem::enterEvent(QEnterEvent *event)
 {
     deleteItem->show();
     QWidget::enterEvent(event);

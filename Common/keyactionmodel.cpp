@@ -23,7 +23,7 @@ KeyActionModel::KeyActionModel(QObject *parent)
     }
     else
     {
-        keyActionList = GlobalObjects::appSetting->value(SETTING_KEY_KEY_ACTIONS).value<QVector<QSharedPointer<KeyActionItem>>>();
+        keyActionList = GlobalObjects::appSetting->value(SETTING_KEY_KEY_ACTIONS).value<QList<QSharedPointer<KeyActionItem>>>();
         for(auto &k : keyActionList)
         {
             keyActionHash.insert(k->key, k);
@@ -165,8 +165,8 @@ void KeyActionModel::initKeys()
     addKeyAction(QKeySequence(Qt::Key_Space).toString(), new KeyActionPlayPause);
     addKeyAction(QKeySequence(Qt::Key_Right).toString(), new KeyActionSeekForward);
     addKeyAction(QKeySequence(Qt::Key_Left).toString(), new KeyActionSeekBackward);
-    addKeyAction(QKeySequence(Qt::CTRL + Qt::Key_Right).toString(), new KeyActionFrameForward);
-    addKeyAction(QKeySequence(Qt::CTRL + Qt::Key_Left).toString(), new KeyActionFrameBackward);
+    addKeyAction(QKeySequence(Qt::CTRL | Qt::Key_Right).toString(), new KeyActionFrameForward);
+    addKeyAction(QKeySequence(Qt::CTRL | Qt::Key_Left).toString(), new KeyActionFrameBackward);
     addKeyAction(QKeySequence(Qt::Key_Up).toString(),  new KeyActionVolumeUp);
     addKeyAction(QKeySequence(Qt::Key_Down).toString(), new KeyActionVolumeDown);
     addKeyAction(QKeySequence(Qt::Key_PageDown).toString(), new KeyActionPlayNext);
@@ -184,9 +184,10 @@ void KeyActionModel::updateSettings()
     GlobalObjects::appSetting->setValue(SETTING_KEY_KEY_ACTIONS, QVariant::fromValue(keyActionList));
 }
 
-QDataStream &operator<<(QDataStream &out, const QVector<QSharedPointer<KeyActionItem>> &l)
+QDataStream &operator<<(QDataStream &out, const QList<QSharedPointer<KeyActionItem>> &l)
 {
-    out << l.size();
+    int s = l.size();
+    out << s;
     for (const auto &item : l)
     {
         out << item->key << item->triggerType << item->action->actType;
@@ -195,7 +196,7 @@ QDataStream &operator<<(QDataStream &out, const QVector<QSharedPointer<KeyAction
     return out;
 }
 
-QDataStream &operator>>(QDataStream &in, QVector<QSharedPointer<KeyActionItem>> &l)
+QDataStream &operator>>(QDataStream &in, QList<QSharedPointer<KeyActionItem>> &l)
 {
     int lSize = 0;
     in >> lSize;

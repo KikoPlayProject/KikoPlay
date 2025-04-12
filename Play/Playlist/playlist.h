@@ -21,7 +21,7 @@ public:
 signals:
     void matchDown(const QList<PlayListItem *> &matchedItems);
 private:
-    QVector<QRegExp> filterRules;
+    QVector<QRegularExpression> filterRules;
     bool filterItem(PlayListItem *item);
 };
 

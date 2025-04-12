@@ -15,6 +15,7 @@
 #include <QButtonGroup>
 #include <QMenu>
 #include <QAction>
+#include <QActionGroup>
 #include <QWidgetAction>
 #include <QSplitter>
 #include <QApplication>
@@ -512,7 +513,7 @@ void LibraryWindow::initLabelView()
     });
     QObject::connect(labelItemDelegate, &LabelItemDelegate::tagSearchTextChanged, [=](const QString &text, const QModelIndex &index){
         labelProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-        labelProxyModel->setFilterRegExp(text);
+        labelProxyModel->setFilterRegularExpression(text);
         if (text.isEmpty())
         {
             labelView->closePersistentEditor(index);

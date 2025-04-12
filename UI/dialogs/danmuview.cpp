@@ -10,34 +10,12 @@
 #include <QWidgetAction>
 #include <QStyledItemDelegate>
 #include "UI/ela/ElaMenu.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "globalobjects.h"
 #include "Play/Danmu/danmuviewmodel.h"
+#include "qapplication.h"
 
-namespace
-{
-class TextColorDelegate: public QStyledItemDelegate
-{
-public:
-    explicit TextColorDelegate(QObject* parent = nullptr) : QStyledItemDelegate(parent)
-    { }
 
-    void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
-    {
-        QStyleOptionViewItem viewOption(option);
-        initStyleOption(&viewOption, index);
-        QColor itemForegroundColor = index.data(Qt::ForegroundRole).value<QBrush>().color();
-        if (itemForegroundColor.isValid())
-        {
-            if (itemForegroundColor != option.palette.color(QPalette::WindowText))
-            {
-                viewOption.palette.setColor(QPalette::HighlightedText, itemForegroundColor);
-            }
-
-        }
-        QStyledItemDelegate::paint(painter, viewOption, index);
-    }
-};
-}
 DanmuView::DanmuView(const QVector<DanmuComment *> *danmuList, QWidget *parent, int sourceId):CFramelessDialog (tr("View Danmu"),parent)
 {
     initView();
@@ -50,7 +28,7 @@ DanmuView::DanmuView(const QVector<DanmuComment *> *danmuList, QWidget *parent, 
     tipLabel->setText(tr("Danmu Count: %1").arg(proxyModel->rowCount()));
     QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[proxyModel,this](int type, const QString &keyword){
         proxyModel->setFilterKeyColumn(type);
-        proxyModel->setFilterRegExp(keyword);
+        proxyModel->setFilterRegularExpression(keyword);
         tipLabel->setText(tr("Danmu Count: %1").arg(proxyModel->rowCount()));
     });
 }
@@ -68,7 +46,7 @@ DanmuView::DanmuView(const QVector<QSharedPointer<DanmuComment> > *danmuList, QW
     tipLabel->setText(tr("Danmu Count: %1").arg(proxyModel->rowCount()));
     QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[proxyModel,this](int type, const QString &keyword){
         proxyModel->setFilterKeyColumn(type);
-        proxyModel->setFilterRegExp(keyword);
+        proxyModel->setFilterRegularExpression(keyword);
         tipLabel->setText(tr("Danmu Count: %1").arg(proxyModel->rowCount()));
     });
 }
@@ -78,11 +56,26 @@ void DanmuView::initView()
     danmuView = new QTreeView(this);
     danmuView->setRootIsDecorated(false);
     danmuView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    //danmuView->setAlternatingRowColors(true);
-    danmuView->setItemDelegate(new TextColorDelegate(this));
+    danmuView->setItemDelegate(new KTreeviewItemDelegate(this));
     danmuView->setSortingEnabled(true);
     danmuView->header()->setSortIndicator(0, Qt::SortOrder::AscendingOrder);
     danmuView->setObjectName(QStringLiteral("DanmuView"));
+
+    QAction *copy = new QAction(tr("Copy"), this);
+    QObject::connect(copy, &QAction::triggered, this, [=](){
+        int column = danmuView->columnAt(danmuView->mapFromGlobal(QCursor::pos()).x());
+        auto selectedRows= danmuView->selectionModel()->selectedRows(column);
+        if(selectedRows.count()==0) return;
+        QClipboard *cb = QApplication::clipboard();
+        cb->setText(selectedRows.first().data(Qt::ToolTipRole).toString());
+    });
+    danmuView->addAction(copy);
+    danmuView->setContextMenuPolicy(Qt::CustomContextMenu);
+    ElaMenu *actionMenu = new ElaMenu(danmuView);
+    actionMenu->addAction(copy);
+    QObject::connect(danmuView, &QTreeView::customContextMenuRequested, this, [=](){
+        actionMenu->exec(QCursor::pos());
+    });
 
     tipLabel = new QLabel(this);
     filterEdit=new DanmuFilterBox(this);

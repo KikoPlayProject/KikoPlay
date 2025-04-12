@@ -11,13 +11,13 @@ public:
     virtual void moveLayout(float step) override;
     virtual void drawLayout() override;
     virtual QSharedPointer<DanmuComment> danmuAt(QPointF point) override;
-    inline virtual int danmuCount(){return bottomdanmu.count();}
+    inline virtual int danmuCount() override {return bottomdanmu.size();}
     virtual void cleanup() override;
     virtual ~BottomLayout();
-    virtual void removeBlocked();
+    virtual void removeBlocked() override;
 private:
     float life_time;
-    QLinkedList<DanmuObject *> bottomdanmu;    
+    std::list<DanmuObject *> bottomdanmu;
 };
 
 #endif // BOTTOMLAYOUT_H

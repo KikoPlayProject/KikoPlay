@@ -173,11 +173,13 @@ void AddDanmu::search()
             SearchItemWidget *itemWidget=new SearchItemWidget(item);
             QObject::connect(itemWidget, &SearchItemWidget::addSearchItem, itemWidget, [this](SearchItemWidget *item){
                 beginProcrss();
+                searchResultWidget->setEnabled(false);
                 QList<DanmuSource> results;
                 auto ret = GlobalObjects::danmuProvider->getEpInfo(&item->source, results);
                 if(ret) addSearchItem(results);
                 else showMessage(ret.info, NM_ERROR | NM_HIDE);
                 endProcess();
+                searchResultWidget->setEnabled(true);
             });
             QListWidgetItem *listItem=new QListWidgetItem(searchResultWidget);
             searchResultWidget->setItemWidget(listItem,itemWidget);

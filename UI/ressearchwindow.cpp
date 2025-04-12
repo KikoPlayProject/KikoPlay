@@ -1,4 +1,5 @@
 #include "ressearchwindow.h"
+#include "Common/threadtask.h"
 #include "Extension/Script/scriptmanager.h"
 #include <QPushButton>
 #include <QComboBox>
@@ -7,6 +8,7 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QAction>
+#include <QActionGroup>
 #include <QSortFilterProxyModel>
 #include <QGridLayout>
 #include <QApplication>
@@ -17,6 +19,7 @@
 #include <QMovie>
 #include "Common/notifier.h"
 #include "UI/ela/ElaMenu.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/floatscrollbar.h"
 #include "UI/widgets/fonticonbutton.h"
 #include "UI/widgets/klineedit.h"
@@ -125,7 +128,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     filterEdit->setTextMargins(textMargins);
 
     QObject::connect(filterEdit,&QLineEdit::textChanged, searchProxyModel, [=](const QString &text){
-        searchProxyModel->setFilterRegExp(text);
+        searchProxyModel->setFilterRegularExpression(text);
     });
 
     pageTurningContainer = new QWidget(this);
@@ -171,12 +174,11 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
 
 
     searchListView = new QTreeView(this);
-    // searchListView->setObjectName(QStringLiteral("TaskInfoTreeView"));
-    // searchListView->header()->setObjectName(QStringLiteral("TaskInfoTreeViewHeader"));
     new FloatScrollBar(searchListView->verticalScrollBar(), searchListView);
     new FloatScrollBar(searchListView->horizontalScrollBar(), searchListView);
     searchListView->setModel(searchProxyModel);
     searchListView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
+    searchListView->setItemDelegate(new KTreeviewItemDelegate(searchListView));
     searchListView->setRootIsDecorated(false);
     searchListView->setAlternatingRowColors(true);
     searchListView->setFont(QFont(GlobalObjects::normalFont,10));
@@ -271,7 +273,10 @@ void ResSearchWindow::search(const QString &keyword, bool setSearchEdit)
             resScript->setSearchOption(iter.key(), iter.value());
         }
     }
-    ScriptState state = resScript->search(keyword, 1, pageCount, results);
+    ThreadTask task(GlobalObjects::workThread);
+    ScriptState state = task.Run([&](){
+       return QVariant::fromValue(resScript->search(keyword, 1, pageCount, results));
+    }).value<ScriptState>();
     if (state)
     {
         currentPage = pageCount>0?1:0;
@@ -328,7 +333,10 @@ void ResSearchWindow::pageTurning(int page)
     QList<ResourceItem> results;
     setEnable(false);
     Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, tr("Searching..."), NM_PROCESS | NM_DARKNESS_BACK);
-    ScriptState state = resScript->search(currentKeyword, page, pageCount, results);
+    ThreadTask task(GlobalObjects::workThread);
+    ScriptState state = task.Run([&](){
+        return QVariant::fromValue(resScript->search(currentKeyword, page, pageCount, results));
+    }).value<ScriptState>();
     if (state)
     {
         searchListModel->setList(currentScriptId, results);
@@ -420,6 +428,10 @@ QStringList SearchListModel::getMagnetList(const QModelIndexList &indexes)
                     ScriptState state;
                     if (resultList[row].magnet.isEmpty())
                     {
+                        ThreadTask task(GlobalObjects::workThread);
+                        ScriptState state = task.Run([&](){
+                            return QVariant::fromValue(resScript->getDetail(resultList[row], resultList[row]));
+                        }).value<ScriptState>();
                         state = resScript->getDetail(resultList[row], resultList[row]);
                     }
                     if (state) list<<resultList[row].magnet;

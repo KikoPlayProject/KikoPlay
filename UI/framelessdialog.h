@@ -27,7 +27,7 @@ protected:
     virtual void onAccept();
     virtual void onClose();
     void addIgnoreWidget(QWidget* widget);
-    bool nativeEvent(const QByteArray &eventType, void *message, long *result);
+    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result);
 public:
     void setContentsMargins(const QMargins &margins);
     void setContentsMargins(int left, int top, int right, int bottom);

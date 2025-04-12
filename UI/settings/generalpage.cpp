@@ -328,7 +328,7 @@ void ColorPreview::mouseReleaseEvent(QMouseEvent *event)
     QWidget::mouseReleaseEvent(event);
 }
 
-void ColorPreview::enterEvent(QEvent *event)
+void ColorPreview::enterEvent(QEnterEvent *event)
 {
     isEnter = true;
     update();

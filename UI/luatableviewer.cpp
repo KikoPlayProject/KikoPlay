@@ -9,6 +9,7 @@
 #include <QSortFilterProxyModel>
 #include "Extension/Common/luatablemodel.h"
 #include "UI/ela/ElaMenu.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "globalobjects.h"
 
 LuaTableViewer::LuaTableViewer(LuaTableModel *model, QWidget *parent) :
@@ -17,6 +18,7 @@ LuaTableViewer::LuaTableViewer(LuaTableModel *model, QWidget *parent) :
     QTreeView *view = new QTreeView(this);
     view->setAlternatingRowColors(true);
     view->setAnimated(true);
+    view->setItemDelegate(new KTreeviewItemDelegate(view));
     QSortFilterProxyModel *proxyModel=new QSortFilterProxyModel(this);
     proxyModel->setSourceModel(model);
     view->setModel(proxyModel);

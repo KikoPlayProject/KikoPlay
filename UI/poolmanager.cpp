@@ -21,8 +21,9 @@
 #include "UI/ela/ElaLineEdit.h"
 #include "UI/ela/ElaMenu.h"
 #include "UI/ela/ElaSpinBox.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/kpushbutton.h"
-#include "timelineedit.h"
+#include "dialogs/timelineedit.h"
 #include "adddanmu.h"
 #include "addpool.h"
 #include "dialogs/danmuview.h"
@@ -37,6 +38,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     comparer.setNumericMode(true);
     setFont(QFont(GlobalObjects::normalFont, 10));
     QTreeView *poolView=new QTreeView(this);
+    poolView->setItemDelegate(new KTreeviewItemDelegate(poolView));
     poolView->setSelectionMode(QAbstractItemView::SingleSelection);
     poolView->setFont(this->font());
     poolView->setAnimated(true);
@@ -429,7 +431,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     searchEdit->setClearButtonEnabled(true);
     QObject::connect(searchEdit, &QLineEdit::textChanged, this, [proxyModel](const QString &keyword){
         proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-        proxyModel->setFilterRegExp(keyword);
+        proxyModel->setFilterRegularExpression(keyword);
     });
     QHBoxLayout *mainHLayout=new QHBoxLayout(mainPage);
     mainHLayout->setContentsMargins(0,0,0,0);

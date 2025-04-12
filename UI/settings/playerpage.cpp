@@ -1,6 +1,5 @@
 #include "playerpage.h"
 #include <QLabel>
-#include <QSyntaxHighlighter>
 #include <QLabel>
 #include <QPlainTextEdit>
 #include <QVBoxLayout>
@@ -14,51 +13,7 @@
 #include "Play/Video/mpvplayer.h"
 #include "UI/dialogs/mpvconfediror.h"
 
-namespace
-{
-    class OptionHighLighter : public QSyntaxHighlighter
-    {
-    public:
-        OptionHighLighter(QTextDocument *parent):QSyntaxHighlighter(parent)
-        {
-            optionNameFormat.setForeground(QColor(41,133,199));
-            optionContentFormat.setForeground(QColor(245,135,31));
-            commentFormat.setForeground(QColor(142,142,142));
-            optionRe.setPattern("\\s*([^#=\"]+)=?(.*)\n?");
-            commentRe.setPattern("\\s*#.*\n?");
-        }
-        // QSyntaxHighlighter interface
-    protected:
-        virtual void highlightBlock(const QString &text)
-        {
-            int index= commentRe.indexIn(text);
-            if(index!=-1)
-            {
-                setFormat(index, commentRe.matchedLength(), commentFormat);
-                return;
-            }
-            index = optionRe.indexIn(text);
-            if (index>-1)
-            {
-                QStringList opList = optionRe.capturedTexts();
-                int opNamePos = optionRe.pos(1), opContentPos = optionRe.pos(2);
-                if (opNamePos>-1)
-                {
-                    setFormat(opNamePos, opList.at(1).length(), optionNameFormat);
-                }
-                if (opContentPos>-1)
-                {
-                    setFormat(opContentPos + 1, opList.at(2).length() - 1, optionContentFormat);
-                }
-            }
-        }
-    private:
-        QTextCharFormat optionNameFormat;
-        QTextCharFormat optionContentFormat;
-        QTextCharFormat commentFormat;
-        QRegExp optionRe,commentRe;
-    };
-}
+
 PlayerPage::PlayerPage(QWidget *parent) : SettingPage(parent)
 {
     QVBoxLayout *itemVLayout = new QVBoxLayout(this);

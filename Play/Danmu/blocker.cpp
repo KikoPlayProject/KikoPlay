@@ -1,5 +1,4 @@
 #include "blocker.h"
-#include <QRegExp>
 #include <QComboBox>
 #include <QLineEdit>
 #include "UI/ela/ElaComboBox.h"
@@ -89,8 +88,8 @@ Blocker::Blocker(QObject *parent):QAbstractItemModel(parent),maxId(1)
     {
         if(reader.isStartElement())
         {
-            QStringRef name=reader.name();
-            if(name=="rule")
+            QStringView name=reader.name();
+            if (name == QLatin1StringView("rule"))
             {
                 BlockRule *rule=new BlockRule;
                 rule->id=reader.attributes().value("id").toInt();
@@ -98,9 +97,9 @@ Blocker::Blocker(QObject *parent):QAbstractItemModel(parent),maxId(1)
                 rule->name=reader.attributes().value("name").toString();
                 rule->blockField=BlockRule::Field(reader.attributes().value("field").toInt());
                 rule->relation=BlockRule::Relation(reader.attributes().value("relation").toInt());
-                rule->isRegExp=(reader.attributes().value("isRegExp")=="true");
-                rule->enable=(reader.attributes().value("enable")=="true");
-                rule->usePreFilter=(reader.attributes().value("preFilter")=="true");
+                rule->isRegExp=(reader.attributes().value("isRegExp") == QLatin1StringView("true"));
+                rule->enable=(reader.attributes().value("enable") == QLatin1StringView("true"));
+                rule->usePreFilter=(reader.attributes().value("preFilter") == QLatin1StringView("true"));
                 rule->content=reader.readElementText().trimmed();
                 rule->blockCount = 0;
                 blockList.append(rule);
@@ -332,7 +331,7 @@ int Blocker::importXmlRules(const QString &fileName)
     int count = 0;
     while(!reader.atEnd())
     {
-        if(reader.isStartElement() && reader.name()=="item")
+        if (reader.isStartElement() && reader.name() == QLatin1StringView("item"))
         {
             bool enable = (reader.attributes().value("enabled").toString().toLower() == "true");
             QString content = reader.readElementText();

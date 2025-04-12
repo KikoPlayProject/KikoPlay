@@ -87,13 +87,13 @@ AppWidget *AppWidget::parseFromXml(const QString &data, KApp *app, const QString
             AppWidget *currentWidget = nullptr;
             bool isInclude = false;
             const QXmlStreamAttributes attributes = reader.attributes();
-            if (reader.name() == "menu")
+            if (reader.name() == QLatin1StringView("menu"))
             {
                 QVector<QAction *> actions = parseMenu(reader, parent);
                 if (parent) parent->addActions(actions);
                 continue;
             }
-            else if (reader.name() == "include")
+            else if (reader.name() == QLatin1StringView("include"))
             {
                 const QString includeFile = reader.readElementText().trimmed();
                 QFileInfo info(app->path(), includeFile);
@@ -117,7 +117,7 @@ AppWidget *AppWidget::parseFromXml(const QString &data, KApp *app, const QString
             }
             for (auto &attr : attributes)
             {
-                if (attr.prefix() == "view-depend")
+                if (attr.prefix() == QLatin1StringView("view-depend"))
                 {
                     AppWidgetLayoutDependOption layouDependtOpt = getWidgetLayoutDependOptionType(attr.name().toString());
                     if (layouDependtOpt != AppWidgetLayoutDependOption::LAYOUT_DEPEND_UNKNOWN)
@@ -125,7 +125,7 @@ AppWidget *AppWidget::parseFromXml(const QString &data, KApp *app, const QString
                         layoutDependParams.insert(layouDependtOpt, attr.value().toString());
                     }
                 }
-                else if (attr.prefix() == "event")
+                else if (attr.prefix() == QLatin1StringView("event"))
                 {
                     AppEvent event = getWidgetEventType(attr.name().toString());
                     if (event != AppEvent::EVENT_UNKNOWN)
@@ -133,7 +133,7 @@ AppWidget *AppWidget::parseFromXml(const QString &data, KApp *app, const QString
                         currentWidget->bindEvent(event, attr.value().toString());
                     }
                 }
-                else if (attr.prefix() == "data")
+                else if (attr.prefix() == QLatin1StringView("data"))
                 {
                     currentWidget->setProperty(attr.name().toString().toUtf8().constData(), attr.value().toString());
                 }
@@ -188,7 +188,7 @@ QVector<QAction *> AppWidget::parseMenu(QXmlStreamReader &reader, AppWidget *par
     QVector<QAction *> actions;
     while (!reader.atEnd())
     {
-        if (reader.isStartElement() && reader.name() == "item")
+        if (reader.isStartElement() && reader.name() == QLatin1StringView("item"))
         {
             QString itemTitle, itemId, itemClickCb;
             bool isSep = false;
@@ -196,30 +196,30 @@ QVector<QAction *> AppWidget::parseMenu(QXmlStreamReader &reader, AppWidget *par
             const QXmlStreamAttributes attributes = reader.attributes();
             for (auto &attr : attributes)
             {
-                if (attr.prefix() == "event")
+                if (attr.prefix() == QLatin1StringView("event"))
                 {
-                    if (attr.name() == "click")
+                    if (attr.name() == QLatin1StringView("click"))
                     {
                         itemClickCb = attr.value().toString();
                     }
                 }
-                else if (attr.prefix() == "data")
+                else if (attr.prefix() == QLatin1StringView("data"))
                 {
                     itemData[attr.name().toString()] = attr.value().toString();
                 }
                 else
                 {
-                    if (attr.name() == "title")
+                    if (attr.name() == QLatin1StringView("title"))
                     {
                         itemTitle = attr.value().toString();
                     }
-                    else if (attr.name() == "id")
+                    else if (attr.name() == QLatin1StringView("id"))
                     {
                         itemId = attr.value().toString();
                     }
-                    else if (attr.name() == "is_sep")
+                    else if (attr.name() == QLatin1StringView("is_sep"))
                     {
-                        isSep = (attr.value() == "true");
+                        isSep = (attr.value() == QLatin1StringView("true"));
                     }
                 }
             }
@@ -241,7 +241,7 @@ QVector<QAction *> AppWidget::parseMenu(QXmlStreamReader &reader, AppWidget *par
         }
         else if (reader.isEndElement())
         {
-            if (reader.name() == "menu")
+            if (reader.name() == QLatin1StringView("menu"))
             {
                 reader.readNext();
                 break;
@@ -671,7 +671,7 @@ void AppWidget::setStyle(const QString &qss, const QVariantMap *extraVals)
             switch (selectorState)
             {
             case 0:
-                if (c.isSpace() || c == '.' || c == ",")
+                if (c.isSpace() || c == '.' || c == ',')
                 {
                     selectorState = 1;
                 }
@@ -730,7 +730,7 @@ void AppWidget::setStyle(const QString &qss, const QVariantMap *extraVals)
         else
         {
             newQss.append(c);
-            if (c == "}")
+            if (c == '}')
             {
                 inSelector = true;
             }

@@ -2,6 +2,7 @@
 #define MPVPLAYER_H
 
 #include <QOpenGLWidget>
+#include <QOpenGLShaderProgram>
 #include <QtCore>
 #include <QtGui>
 #include <mpv/client.h>
@@ -126,6 +127,7 @@ signals:
     void showRecentChanged(bool on);
     void toggleFullScreen();
     void toggleMiniMode();
+    void triggerStop();
 
     void initContext();
     void refreshPreview(int time, QPixmap *pixmap);

@@ -92,7 +92,7 @@ void DLNAMediaItem::toDidl(QXmlStreamWriter &writer, quint32 mask) const
     if(type == Container)
     {
         if(mask & MASK_SEARCHABLE) writer.writeAttribute("searchable", "0");
-        if(mask & MASK_CHILDCOUNT) writer.writeAttribute("childCount", QString(childSize));
+        if(mask & MASK_CHILDCOUNT) writer.writeAttribute("childCount", QString::number(childSize));
     }
     writer.writeTextElement("http://purl.org/dc/elements/1.1/", "title", title);
     if(mask & MASK_CREATOR) writer.writeTextElement("http://purl.org/dc/elements/1.1/", "creator", "Unknown");

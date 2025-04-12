@@ -416,7 +416,7 @@ QVariant DanmuManagerModel::data(const QModelIndex &index, int role) const
         {
             if (static_cast<DanmuPoolSourceNode *>(item)->hasTimeline)
             {
-                static QIcon timeLineTip = GlobalObjects::context()->getFontIcon(0xe6b5, QColor(220, 220, 220));
+                static QIcon timeLineTip = GlobalObjects::context()->getFontIcon(QChar(0xe6b5), QColor(220, 220, 220));
                 return timeLineTip;
             }
         }

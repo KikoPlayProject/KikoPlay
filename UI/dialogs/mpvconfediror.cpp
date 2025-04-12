@@ -28,17 +28,26 @@ public:
 protected:
     virtual void highlightBlock(const QString &text)
     {
-        int index= commentRe.indexIn(text);
-        if(index!=-1)
+        //int index= commentRe.indexIn(text);
+        auto match = commentRe.match(text);
+        if (match.hasMatch())
         {
-            setFormat(index, commentRe.matchedLength(), commentFormat);
+            setFormat(match.capturedStart(0), match.capturedLength(0), commentFormat);
             return;
         }
-        index = optionRe.indexIn(text);
-        if (index>-1)
+        //if(index!=-1)
+        //{
+        //    setFormat(index, commentRe.matchedLength(), commentFormat);
+        //    return;
+        //}
+        //index = optionRe.indexIn(text);
+        match = optionRe.match(text);
+        if (match.hasMatch())
+        //if (index>-1)
         {
-            QStringList opList = optionRe.capturedTexts();
-            int opNamePos = optionRe.pos(1), opContentPos = optionRe.pos(2);
+            QStringList opList = match.capturedTexts();
+            // int opNamePos = optionRe.pos(1), opContentPos = optionRe.pos(2);
+            int opNamePos = match.capturedStart(1), opContentPos = match.capturedStart(2);
             if (opNamePos>-1)
             {
                 setFormat(opNamePos, opList.at(1).length(), optionNameFormat);
@@ -53,7 +62,7 @@ private:
     QTextCharFormat optionNameFormat;
     QTextCharFormat optionContentFormat;
     QTextCharFormat commentFormat;
-    QRegExp optionRe,commentRe;
+    QRegularExpression optionRe,commentRe;
 };
 }
 MPVConfEdiror::MPVConfEdiror(QWidget *parent) : CFramelessDialog(tr("MPV Configuration"), parent, true)

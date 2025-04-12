@@ -17,10 +17,10 @@ void TopLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *draw
     dmobj->x=(rect.width()-drawInfo->width)/2;
     bool success=false;
     float maxSpace(0.f),dsY(0.f),cY(rect.top());
-    QLinkedList<DanmuObject *>::Iterator msPos = topdanmu.begin();
-    for(auto iter=topdanmu.begin();iter!=topdanmu.end();++iter)
+    auto msPos = topdanmu.begin();
+    for (auto iter = topdanmu.begin(); iter != topdanmu.end(); ++iter)
     {
-        if((*iter)->y-currentY-margin_y>=dm_height)
+        if ((*iter)->y - currentY - margin_y >= dm_height)
         {         
             dmobj->y=currentY;
             topdanmu.insert(iter,dmobj);
@@ -29,7 +29,7 @@ void TopLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *draw
         }
         //for dense layout-----
         float tmp((*iter)->y-cY);
-        if(tmp>maxSpace)
+        if (tmp > maxSpace)
         {
             maxSpace=tmp;
             dsY=cY+tmp/2;
@@ -48,7 +48,7 @@ void TopLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *draw
             if(currentY+dm_height<rect.bottom())
             {
                 dmobj->y=currentY;
-                topdanmu.append(dmobj);
+                topdanmu.push_back(dmobj);
                 break;
             }
             if((render->dense==1 && maxSpace>=dm_height) || render->dense==2)

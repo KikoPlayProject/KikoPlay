@@ -303,10 +303,10 @@ void AppNet::buildRequest(const QVariantMap &reqInfo, QNetworkRequest &req)
             req.setRawHeader(iter.key().toUtf8(), iter.value().toByteArray());
         }
     }
-    req.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+    //req.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
     if (reqInfo.contains("redirect"))
     {
-        req.setAttribute(QNetworkRequest::FollowRedirectsAttribute, reqInfo.value("redirect", true));
+        req.setAttribute(QNetworkRequest::RedirectPolicyAttribute, reqInfo.value("redirect", true));
         req.setMaximumRedirectsAllowed(reqInfo.value("max_redirect", 10).toInt());
     }
     if (reqInfo.contains("trans_timeout"))

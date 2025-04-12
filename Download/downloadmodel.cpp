@@ -654,7 +654,7 @@ bool TaskFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &s
 {
     QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
     DownloadTask *task=static_cast<DownloadModel *>(sourceModel())->getDownloadTask(index);
-    if(!task->title.contains(filterRegExp()))return false;
+    if(!task->title.contains(filterRegularExpression())) return false;
     switch (taskStatus)
     {
     case 0: //all

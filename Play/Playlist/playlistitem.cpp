@@ -65,7 +65,7 @@ PlayListItem *PlayListItem::parseCollection(QXmlStreamReader &reader, PlayListIt
     QXmlStreamAttributes attrs = reader.attributes();
     PlayListItem *collection = new PlayListItem(parent, false);
     collection->title = attrs.value(XML_FIELD_TITLE).toString();
-    collection->isBgmCollection = (attrs.value(XML_FIELD_BGM_COLLECTION) == "true");
+    collection->isBgmCollection = (attrs.value(XML_FIELD_BGM_COLLECTION) == QLatin1StringView("true"));
     collection->path = attrs.value(XML_FIELD_FOLDER_PATH).toString();
     if (attrs.hasAttribute(XML_FIELD_MARKER))
         collection->marker = PlayListItem::Marker(attrs.value(XML_FIELD_MARKER).toInt());

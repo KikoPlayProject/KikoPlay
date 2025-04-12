@@ -429,7 +429,8 @@ void LabelModel::addCustomTag()
 
 TagNode *LabelModel::insertNode(TagNode *parent, const QString &strPath, int count, TagNode::TagType type, char split)
 {
-    auto titles(strPath.splitRef(split, QString::SkipEmptyParts));
+    auto titles(QStringView(strPath).split(split, Qt::SkipEmptyParts));
+    //auto titles(strPath.splitRef(split, QString::SkipEmptyParts));
     if(titles.size()==0) return parent;
     TagNode *current = parent;
     QString curPath;
@@ -460,7 +461,8 @@ TagNode *LabelModel::insertNode(TagNode *parent, const QString &strPath, int cou
 
 TagNode *LabelModel::insertNodeIndex(TagNode *parent, const QString &strPath, int count, TagNode::TagType type, char split)
 {
-    auto titles(strPath.splitRef(split, Qt::SkipEmptyParts));
+    auto titles(QStringView(strPath).split(split, Qt::SkipEmptyParts));
+    //auto titles(strPath.splitRef(split, Qt::SkipEmptyParts));
     if(titles.size()==0) return parent;
     TagNode *current = parent;
     QModelIndex currentIndex;
@@ -503,7 +505,8 @@ TagNode *LabelModel::insertNodeIndex(TagNode *parent, const QString &strPath, in
 
 void LabelModel::removeNodeIndex(TagNode *parent, const QString &strPath, bool removeAll, char split)
 {
-    auto titles(strPath.splitRef(split, Qt::SkipEmptyParts));
+    auto titles(QStringView(strPath).split(split, Qt::SkipEmptyParts));
+    //auto titles(strPath.splitRef(split, Qt::SkipEmptyParts));
     if(titles.size()==0) return;
     TagNode *current = parent;
     QModelIndex currentIndex;
@@ -682,7 +685,7 @@ bool LabelProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source
     if (!node) return true;
     if(node->tagType==TagNode::TAG_CUSTOM)
     {
-        return node->tagTitle.contains(filterRegExp());
+        return node->tagTitle.contains(filterRegularExpression());
     }
     return true;
 }

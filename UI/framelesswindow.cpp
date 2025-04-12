@@ -102,7 +102,7 @@ void CFramelessWindow::setScreenSave(bool on)
     screen_save=on;
 }
 
-bool CFramelessWindow::nativeEvent(const QByteArray &eventType, void *message, long *result)
+bool CFramelessWindow::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)
 {
     MSG* msg = (MSG *)message;
     switch (msg->message)
@@ -280,7 +280,12 @@ QMargins CFramelessWindow::contentsMargins() const
 }
 void CFramelessWindow::getContentsMargins(int *left, int *top, int *right, int *bottom) const
 {
-    QMainWindow::getContentsMargins(left,top,right,bottom);
+    QMargins margin = QMainWindow::contentsMargins();
+    // QDialog::getContentsMargins(left, top, right, bottom);
+    *left = margin.left();
+    *right = margin.right();
+    *top = margin.top();
+    *bottom = margin.bottom();
     if (!(left&&top&&right&&bottom)) return;
     if (isMaximized())
     {

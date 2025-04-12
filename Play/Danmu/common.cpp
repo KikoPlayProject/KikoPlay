@@ -29,11 +29,16 @@ bool BlockRule::blockTest(DanmuComment *comment, bool updateCount)
     {
         if(isRegExp)
         {
-            if(re.isNull())re.reset(new QRegExp(content));
-            if(re->indexIn(*testStr)!=-1)
+            if (re.isNull()) re.reset(new QRegularExpression(content));
+            QRegularExpressionMatch match = re->match(*testStr);
+            if (match.hasMatch())
             {
-                testResult=re->matchedLength()==testStr->length()?true:false;
+                testResult = match.capturedLength(0) == testStr->length();
             }
+            //if(re->indexIn(*testStr)!=-1)
+            //{
+            //    testResult=re->matchedLength()==testStr->length()?true:false;
+            //}
         }
         else
         {
@@ -44,10 +49,11 @@ bool BlockRule::blockTest(DanmuComment *comment, bool updateCount)
         break;
     case Contain:
     {
-        if(isRegExp)
+        if (isRegExp)
         {
-            if(re.isNull())re.reset(new QRegExp(content));
-            testResult=(re->indexIn(*testStr)!=-1)?true:false;
+            if(re.isNull()) re.reset(new QRegularExpression(content));
+            //testResult=(re->indexIn(*testStr)!=-1)?true:false;
+            testResult = re->match(*testStr).hasMatch();
         }
         else
         {

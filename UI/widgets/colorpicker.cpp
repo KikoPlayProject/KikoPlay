@@ -86,7 +86,7 @@ ColorMenu::ColorMenu(const QList<QColor> &colorList, QWidget *parent) : QMenu(pa
     btnGroup = new QButtonGroup(this);
     QGridLayout *btnGLayout = new QGridLayout(this);
     btnGLayout->setSpacing(0);
-    btnGLayout->setMargin(5);
+    btnGLayout->setContentsMargins(5, 5, 5, 5);
     moreColor = new QPushButton(this);
     moreColor->setText(tr("More Colors"));
     QObject::connect(moreColor, &QPushButton::clicked, this, [=](){
@@ -94,7 +94,7 @@ ColorMenu::ColorMenu(const QList<QColor> &colorList, QWidget *parent) : QMenu(pa
         if(!c.isValid()) return;
         setColor(c);
     });
-    QObject::connect(btnGroup, (void (QButtonGroup:: *)(QAbstractButton *, bool))&QButtonGroup::buttonToggled, this, [=](QAbstractButton *btn, bool checked) {
+    QObject::connect(btnGroup, &QButtonGroup::buttonToggled, this, [=](QAbstractButton *btn, bool checked) {
         if (!checked) return;
         ColorButton *cb = static_cast<ColorButton *>(btn);
         emit colorChanged(cb->color());

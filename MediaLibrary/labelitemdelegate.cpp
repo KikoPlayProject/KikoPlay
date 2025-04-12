@@ -21,6 +21,7 @@ LabelItemDelegate::LabelItemDelegate(QObject *parent) : QStyledItemDelegate(pare
 void LabelItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     QStyleOptionViewItem viewOption(option);
+    initStyleOption(&viewOption, index);
     QColor itemForegroundColor = index.data(Qt::ForegroundRole).value<QColor>();
     if (itemForegroundColor.isValid())
     {

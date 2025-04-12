@@ -1,8 +1,10 @@
 #ifndef LRUCACHE_H
 #define LRUCACHE_H
 #include <QHash>
-#include <QMutex>
+#include <QRecursiveMutex>
 #include <QDateTime>
+#include <QTimer>
+#include <QTimerEvent>
 #include <QSharedPointer>
 template <typename K, typename V>
 class LRUCache
@@ -82,9 +84,9 @@ public:
 private:
     struct MutexLocker
     {
-        QMutex &m;
+        QRecursiveMutex &m;
         bool locked;
-        MutexLocker(QMutex &mutex, bool lock=true):m(mutex), locked(lock){if(lock) m.lock();}
+        MutexLocker(QRecursiveMutex &mutex, bool lock=true):m(mutex), locked(lock){if(lock) m.lock();}
         ~MutexLocker() { if(locked) m.unlock(); }
     private:
         MutexLocker(MutexLocker &);
@@ -92,7 +94,7 @@ private:
 
     const char *cacheName = "";
     size_t maxSize, dynamicMaxSize;
-    QMutex lock{QMutex::Recursive};
+    QRecursiveMutex lock;
     bool useLock;
     bool dynamicAdjust;
     qint64 cleanTimestamp;
@@ -155,6 +157,70 @@ private:
         t=cur;
         qInfo("Cache[%s] Clean, Cache Size: %d, Left: %d", cacheName, dynamicMaxSize, hash.size());
     }
+};
+
+template <typename T>
+class TimeLimitedCachePool
+{
+public:
+    using Deleter = std::function<void(T)>;
+
+    explicit TimeLimitedCachePool(int interval = 60*1000, Deleter deleter = nullptr) : _deleter(deleter)
+    {
+        _timer.start(interval);
+        QObject::connect(&_timer, &QTimer::timeout, &_timer, [this]() {
+            QMutexLocker locker(&_mutex);
+            checkExpiredObjects();
+        });
+    }
+
+    T get()
+    {
+        QMutexLocker locker(&_mutex);
+        if (!_cache.isEmpty()) {
+            T object = _cache.first().object;
+            _cache.removeFirst();
+            return object;
+        }
+        return T();
+    }
+
+    void put(const T &object, int timeout)
+    {
+        QMutexLocker locker(&_mutex);
+        CacheEntry entry;
+        entry.object = object;
+        entry.expirationTime = QDateTime::currentDateTime().addMSecs(timeout);
+        _cache.append(entry);
+    }
+
+private:
+    void checkExpiredObjects()
+    {
+        const QDateTime currentTime = QDateTime::currentDateTime();
+        auto it = _cache.begin();
+        while (it != _cache.end())
+        {
+            if (it->expirationTime < currentTime)
+            {
+                if (_deleter) _deleter(it->object);
+                it = _cache.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    struct CacheEntry
+    {
+        T object;
+        QDateTime expirationTime;
+    };
+
+    QList<CacheEntry> _cache;
+    QTimer _timer;
+    QMutex _mutex;
+    Deleter _deleter;
 };
 
 #endif // LRUCACHE_H

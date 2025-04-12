@@ -195,8 +195,8 @@ void AutoDownloadManager::loadRules()
     {
         if(reader.isStartElement())
         {
-            QStringRef name=reader.name();
-            if(name=="rule")
+            QStringView name = reader.name();
+            if (name.compare("rule") == 0)
             {
                 DownloadRule *rule = new DownloadRule;
                 rule->id=reader.attributes().value("id").toInt();
@@ -208,9 +208,9 @@ void AutoDownloadManager::loadRules()
                 rule->minSize=reader.attributes().value("minSize").toInt();
                 rule->maxSize=reader.attributes().value("maxSize").toInt();
                 rule->lastCheckTime=reader.attributes().value("lastCheckTime").toLongLong();
-                rule->state=(reader.attributes().value("enable")=="true"?0:2);
+                rule->state=(reader.attributes().value("enable").compare("true") == 0 ? 0 : 2);
                 rule->searchInterval=reader.attributes().value("searchInterval").toInt();
-                rule->download=(reader.attributes().value("download")=="true");
+                rule->download=(reader.attributes().value("download").compare("true") == 0);
                 QString searchOptions = reader.attributes().value("searchOptions").toString();
                 if(!searchOptions.isEmpty())
                 {
@@ -224,11 +224,11 @@ void AutoDownloadManager::loadRules()
                 ruleIdHash.insert(rule->id, rule);
                 downloadRules.append(QSharedPointer<DownloadRule>(rule));
             }
-            else if(name=="lastCheckPosition" && curRule)
+            else if(name.compare("lastCheckPosition") == 0 && curRule)
             {
                 curRule->lastCheckPosition<<reader.readElementText();
             }
-            else if(name=="discoveredURLs" && curRule)
+            else if(name.compare("discoveredURLs") == 0 && curRule)
             {
                 QString title(reader.attributes().value("title").toString());
                 QString url(reader.attributes().value("url").toString());
@@ -237,7 +237,7 @@ void AutoDownloadManager::loadRules()
         }
         else if(reader.isEndElement())
         {
-            if(reader.name()=="rule") curRule=nullptr;
+            if (reader.name().compare("rule") == 0) curRule=nullptr;
         }
         reader.readNext();
     }
@@ -397,9 +397,9 @@ void DownloadRuleChecker::fetchInfo(DownloadRule *rule)
     const int maxPageCount = 3;
     QStringList newCheckPosition;
     QStringList filters(rule->filterWord.split(';'));
-    QList<QRegExp> filterRegExps;
+    QList<QRegularExpression> filterRegExps;
     for(const QString &s:filters)
-        filterRegExps<<QRegExp(s);
+        filterRegExps << QRegularExpression(s);
     do
     {
         bool positionFinded=false;
@@ -453,17 +453,21 @@ void DownloadRuleChecker::fetchInfo(DownloadRule *rule)
     }
 }
 
-bool DownloadRuleChecker::satisfyRule(ResourceItem *item, DownloadRule *rule, const QList<QRegExp> &filterRegExps)
+bool DownloadRuleChecker::satisfyRule(ResourceItem *item, DownloadRule *rule, const QList<QRegularExpression> &filterRegExps)
 {
-    static QRegExp re("(\\d+(?:\\.\\d+)?)\\s*([KkMmGgTt])i?B|b");
-    for(auto &r:filterRegExps)
+    static QRegularExpression re("(\\d+(?:\\.\\d+)?)\\s*([KkMmGgTt])i?B|b");
+    for (auto &r : filterRegExps)
     {
         if(!item->title.contains(r)) return false;
     }
-    if(rule->minSize==0 && rule->maxSize==0) return true;
-    if(re.indexIn(item->size)==-1) return false;
-    if(re.matchedLength()!=item->size.length()) return false;
-    QStringList captured=re.capturedTexts();
+    if (rule->minSize==0 && rule->maxSize==0) return true;
+    auto match = re.match(item->size);
+    if (!match.hasMatch()) return false;
+    if (match.capturedLength(0) != item->size.length()) return false;
+    //if(re.indexIn(item->size)==-1) return false;
+    //if(re.matchedLength()!=item->size.length()) return false;
+    //QStringList captured=re.capturedTexts();
+    QStringList captured = match.capturedTexts();
     float size = captured[1].toFloat();
     char s = captured[2][0].toUpper().toLatin1();
     switch (s)

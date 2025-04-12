@@ -19,7 +19,7 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
     dmobj->x=rect.width();
     bool success=false;
     float maxChaseSpace(rect.width()/2),maxSpace(0.f),dsY1(0.f),dsY2(0.f),cY(rect.top());
-    QLinkedList<DanmuObject *>::Iterator msPos1,msPos2= lastcol.begin();
+    std::list<DanmuObject *>::iterator msPos1 = lastcol.end(), msPos2 = lastcol.begin();
     for(auto iter=lastcol.begin();iter!=lastcol.end();++iter)
     {
         float cur_height=(*iter)->drawInfo->height;
@@ -33,7 +33,7 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
         if(!isCollided((*iter),dmobj))
         {
             dmobj->y=currentY;
-            rolldanmu.append(*iter);
+            rolldanmu.push_back(*iter);
             *iter=dmobj;
             success=true;
             break;
@@ -68,15 +68,15 @@ void RollLayout::addDanmu(QSharedPointer<DanmuComment> danmu, DanmuDrawInfo *dra
             if(currentY+dm_height<rect.bottom())
             {
                 dmobj->y=currentY;
-                lastcol.append(dmobj);
+                lastcol.push_back(dmobj);
                 break;
             }
             if(render->dense>0)
             {
-                if(msPos1.i)
+                if (msPos1 != lastcol.end())
                 {
                     dmobj->y=dsY1;
-                    rolldanmu.append(*msPos1);
+                    rolldanmu.push_back(*msPos1);
                     *msPos1=dmobj;
                     break;
                 }
@@ -182,7 +182,7 @@ void RollLayout::removeBlocked()
     }
 }
 
-void RollLayout::moveLayoutList(QLinkedList<DanmuObject *> &list, float step)
+void RollLayout::moveLayoutList(std::list<DanmuObject *> &list, float step)
 {
     for(auto iter=list.begin();iter!=list.end();)
     {
@@ -201,7 +201,7 @@ void RollLayout::moveLayoutList(QLinkedList<DanmuObject *> &list, float step)
     }
 }
 
-QSharedPointer<DanmuComment> RollLayout::danmuAtList(QPointF point, QLinkedList<DanmuObject *> &list)
+QSharedPointer<DanmuComment> RollLayout::danmuAtList(QPointF point, std::list<DanmuObject *> &list)
 {
     for(auto iter=list.cbegin();iter!=list.cend();++iter)
     {

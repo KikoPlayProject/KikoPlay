@@ -16,6 +16,7 @@
 #include "UI/ela/ElaLineEdit.h"
 #include "UI/ela/ElaMenu.h"
 #include "UI/ela/ElaPivot.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 #include "Common/lrucache.h"
@@ -222,6 +223,7 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
 
     QTreeView *animeView=new QTreeView(animePage);
     animeView->setRootIsDecorated(false);
+    animeView->setItemDelegate(new KTreeviewItemDelegate(animeView));
     animeView->setModel(animeModel);
     animeView->setSelectionMode(QAbstractItemView::SingleSelection);
     animeView->setContextMenuPolicy(Qt::ActionsContextMenu);
@@ -295,6 +297,7 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
     QPushButton *backBtn = new KPushButton(tr("Back"), epPage);
     QLabel *animeLabel = new QLabel(epPage);
     epView = new QTreeView(epPage);
+    epView->setItemDelegate(new KTreeviewItemDelegate(epView));
     epView->setRootIsDecorated(false);
     epView->setSelectionMode(QAbstractItemView::SingleSelection);
     epView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -381,7 +384,7 @@ QWidget *AddPool::setupCustomPage(const QString &srcAnime, const EpInfo &ep)
 
     QLabel *epIndexTip = new QLabel(tr("Episode Index"),customPage);
     epIndexEdit = new ElaLineEdit(customPage);
-    epIndexEdit->setValidator(new QRegExpValidator(QRegExp("\\d+\\.?(\\d+)?"),epIndexEdit));
+    epIndexEdit->setValidator(new QRegularExpressionValidator(QRegularExpression("\\d+\\.?(\\d+)?"),epIndexEdit));
 
     QLabel *epTitleTip = new QLabel(tr("Episode Title"),customPage);
     epEdit = new ElaLineEdit(ep.name, customPage);

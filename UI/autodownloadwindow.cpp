@@ -1,5 +1,6 @@
 #include "autodownloadwindow.h"
 #include "UI/ela/ElaMenu.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/floatscrollbar.h"
 #include "widgets/fonticonbutton.h"
 #include "globalobjects.h"
@@ -40,6 +41,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     ruleView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ruleView->setAlternatingRowColors(true);
     ruleView->setFont(QFont(GlobalObjects::normalFont,10));
+    ruleView->setItemDelegate(new KTreeviewItemDelegate(ruleView));
     ruleView->setModel(GlobalObjects::autoDownloadManager);
     new FloatScrollBar(ruleView->verticalScrollBar(), ruleView);
     ruleView->header()->resizeSection(1, 200);
@@ -54,6 +56,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     logView->setRootIsDecorated(false);
     logView->setSelectionMode(QAbstractItemView::SingleSelection);
     logView->setAlternatingRowColors(true);
+    logView->setItemDelegate(new KTreeviewItemDelegate(logView));
     logView->setFont(QFont(GlobalObjects::normalFont, 10));
     new FloatScrollBar(logView->verticalScrollBar(), logView);
     LogFilterProxyModel *logProxyModel=new LogFilterProxyModel(this);
@@ -66,6 +69,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
 
     urlView = new QTreeView(this);
     urlView->setRootIsDecorated(false);
+    urlView->setItemDelegate(new KTreeviewItemDelegate(urlView));
     urlView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     urlView->setAlternatingRowColors(true);
     new FloatScrollBar(urlView->verticalScrollBar(), urlView);
@@ -108,7 +112,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     QStackedLayout *logSLayout=new QStackedLayout(logContent);
     logSLayout->addWidget(logView);
     logSLayout->addWidget(urlView);
-    QObject::connect(pageButtonGroup,(void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled,[logSLayout](int id, bool checked){
+    QObject::connect(pageButtonGroup,&QButtonGroup::idToggled,[logSLayout](int id, bool checked){
         if(checked)logSLayout->setCurrentIndex(id);
     });
 

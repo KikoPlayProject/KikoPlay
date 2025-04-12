@@ -5,15 +5,16 @@
 #include <QMenu>
 #include <QLabel>
 #include <QApplication>
-#include <QDesktopWidget>
 #include <QButtonGroup>
 #include <QHoverEvent>
 #include <QMouseEvent>
 #include <QSystemTrayIcon>
 #include <QProgressBar>
 #ifdef Q_OS_WIN
-#include <QWinTaskbarProgress>
-#include <QWinTaskbarButton>
+//#include <QWinTaskbarProgress>
+//#include <QWinTaskbarButton>
+#include "widgets/component/taskbarbtn/qwintaskbarbutton.h"
+#include "widgets/component/taskbarbtn/qwintaskbarprogress.h"
 #endif
 #include "player.h"
 #include "list.h"
@@ -122,7 +123,7 @@ void MainWindow::initUI()
         (*infoBtnPtrs[i])->setFixedWidth(btnWidth);
     }
     buttonPage_Play->setChecked(true);
-    QObject::connect(btnGroup, (void (QButtonGroup:: *)(int, bool))&QButtonGroup::buttonToggled, this, [this](int id, bool checked){
+    QObject::connect(btnGroup, &QButtonGroup::idToggled, this, [this](int id, bool checked){
         if (checked)
         {
             GlobalObjects::context()->curMainPage = id;
@@ -130,13 +131,11 @@ void MainWindow::initUI()
             if (id == 1 && hasCoverBg)
             {
                 if(!coverPixmap.isNull()) BackgroundMainWindow::setBackground(coverPixmap);
-                BackgroundMainWindow::setBgDarkness(bgDarkness() + 10);
                 BackgroundMainWindow::setBlurAnimation(20., 60.);
             }
             else if (curPage == 1 && hasCoverBg)
             {
                 BackgroundMainWindow::setBackground(bgImg);
-                BackgroundMainWindow::setBgDarkness(bgDarkness());
                 BackgroundMainWindow::setBlurAnimation(60., 0.);
             }
             curPage = id;
@@ -370,8 +369,10 @@ void MainWindow::initSignals()
 void MainWindow::restoreSize()
 {
     QRect defaultGeo(0, 0, 800, 480), defaultMiniGeo(0, 0, 200, 200);
-    defaultGeo.moveCenter(QApplication::desktop()->geometry().center());
-    defaultMiniGeo.moveCenter(QApplication::desktop()->geometry().center());
+    //defaultGeo.moveCenter(QApplication::desktop()->geometry().center());
+    //defaultMiniGeo.moveCenter(QApplication::desktop()->geometry().center());
+    defaultGeo.moveCenter(QGuiApplication::primaryScreen()->geometry().center());
+    defaultMiniGeo.moveCenter(QGuiApplication::primaryScreen()->geometry().center());
     setGeometry(GlobalObjects::appSetting->value("MainWindow/Geometry",defaultGeo).toRect());
     setMinimumSize(120, 100);
     miniGeo = GlobalObjects::appSetting->value("MainWindow/miniGeometry", defaultMiniGeo).toRect();
@@ -451,12 +452,10 @@ void MainWindow::setBackground(const QString &imagePath, bool showAnimation, boo
     {
         GlobalObjects::appSetting->setValue(SETTING_KEY_MAIN_BACKGROUND, "");
         bgImg = QImage();
-        if (!hasCoverBg || curPage != 1)
-        {
-            BackgroundMainWindow::setBackground(bgImg);
-        }
+        BackgroundMainWindow::setBackground(bgImg);
         refreshQSS = hasBackground;
         hasBackground = false;
+        hasCoverBg = false;
     }
     if (isStartup) return;
     StyleManager::getStyleManager()->setCondVariable("hasBackground", hasBackground, refreshQSS);

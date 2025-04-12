@@ -34,7 +34,7 @@ protected:
     virtual void mousePressEvent(QMouseEvent *event) override;
     virtual void mouseReleaseEvent(QMouseEvent *event) override;
     virtual void mouseMoveEvent(QMouseEvent *event) override;
-    virtual void enterEvent(QEvent *e) override;
+    virtual void enterEvent(QEnterEvent *e) override;
     virtual void leaveEvent(QEvent *e) override;
 };
 

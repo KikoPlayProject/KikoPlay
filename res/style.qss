@@ -393,16 +393,9 @@ QTreeView::item {
     padding-bottom: 6px;
     color: rgb(240,240,240);
 }
-QTreeView::item:hover,
-QTreeView::item:selected {
-    background-color: rgba(255, 255, 255, 30);
-}
 QTreeView::branch {
     background-color: transparent;
     margin: 4px;
-}
-QTreeView::branch:hover, QTreeView::branch:selected {
-    background-color: transparent;
 }
 QTreeView::branch:open:has-children {
     image: url(:/res/images/playlist-branch-open.svg);
@@ -429,12 +422,6 @@ QTreeView#playlist {
 QTreeView#playlist::item {
     padding-top: 0px;
     padding-bottom: 0px;
-}
-QTreeView#playlist::item:hover, QTreeView#playlist::branch:hover {
-    background-color: rgba(255, 255, 255, 40);
-}
-QTreeView#playlist::item:selected,QTreeView#playlist::branch:selected{
-    background-color: rgba(255, 255, 255, 40);
 }
 QTreeView#playlist::branch {
     background-color: transparent;
@@ -470,13 +457,6 @@ QTreeView#danmulist::branch {
     background-color: transparent;
     margin: 0px;
 }
-QTreeView#danmulist::item:hover, QTreeView#danmulist::branch:hover {
-    background-color: rgba(255, 255, 255, 40);
-}
-QTreeView#danmulist::item:selected, QTreeView#danmulist::branch:selected{
-    background-color: rgba(255, 255, 255, 40);
-}
-
 QTreeView#LabelView {
     border: 0px solid rgb(50, 50, 50);
     background-color: rgba(57, 58, 60, 0);
@@ -564,6 +544,14 @@ QTreeView#BgmListView::indicator:unchecked {
 QTreeView#DanmuView::item {
     color: none;
 }
+TorrentTreeView {
+    qproperty-normColor: rgb(240,240,240);
+    qproperty-ignoreColor: rgb(160,160,160);
+}
+TorrentTreeView::item {
+    color: none;
+}
+
 
 
 /* ------------------- QHeaderView ------------------- */
@@ -838,8 +826,6 @@ SearchWidget QLineEdit {
 
 
 /* ------------------- QComboBox ------------------- */
-
-
 
 
 /* ------------------- QPushButton ------------------- */
