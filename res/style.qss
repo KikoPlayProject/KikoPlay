@@ -551,6 +551,15 @@ TorrentTreeView {
 TorrentTreeView::item {
     color: none;
 }
+PeerTreeView {
+    qproperty-borderColor: rgb(200, 200, 200);
+    qproperty-backgroundColor: rgba(255, 255, 255, 120);
+    @if{useThemeColor}
+        qproperty-barColor: rgba(@ThemeColor, 140);
+    @else
+        qproperty-barColor: rgba(51, 168, 255, 200);
+    @endif
+}
 
 
 
@@ -572,6 +581,7 @@ QHeaderView::section {
     @else
         background-color: rgb(100,100,100);
         border: 1px solid #6c6c6c;
+        border-right: 0px solid #6c6c6c;
     @endif
     color: white;
     font-size: 15px;
@@ -579,11 +589,19 @@ QHeaderView::section {
     padding-top: 2px;
     padding-bottom: 2px;
 }
+QHeaderView::section:vertical {
+    @if{hasBackground}
+        border-bottom: 0px solid rgba(@ThemeColorL2, 60);
+    @else
+        border-bottom: 0px solid #6c6c6c;
+    @endif
+}
 QDialog QHeaderView {
     background-color: rgb(100,100,100);
 }
 QDialog QHeaderView::section {
     border: 1px solid #6c6c6c;
+    border-right: 0px solid #6c6c6c;
 }
 QHeaderView::section:first {
     border-top-left-radius: 8px;
@@ -592,6 +610,19 @@ QHeaderView::section:last {
     border-top-right-radius: 8px;
     @if{hasBackground}
         border-right: 1px solid rgba(@ThemeColorL2, 60);
+    @else
+        border-right: 1px solid #6c6c6c;
+    @endif
+}
+QHeaderView::section:vertical:first {
+    border-top-left-radius: 0px;
+}
+QHeaderView::section:vertical:last {
+    border-top-right-radius: 0px;
+    @if{hasBackground}
+        border-bottom: 1px solid rgba(@ThemeColorL2, 60);
+    @else
+        border-bottom: 1px solid #6c6c6c;
     @endif
 }
 QHeaderView#BgmListHeader {
@@ -1195,6 +1226,9 @@ KPushButton:disabled {
     color: rgb(167, 167, 167);
     background-color: rgb(42, 42, 42);
 }
+KPushButton#TranslatorSetting {
+    font-size: 18px;
+}
 
 
 /* ------------------- QScrollBar Setting ------------------- */
@@ -1339,7 +1373,60 @@ QListView#AnimeListView {
         qproperty-itemBorderColor: rgb(28, 160, 228);
     @endif
 }
+QListView#sublist {
+    @if{hasBackground}
+        border-top: 1px solid rgb(150, 150, 150);
+        border-bottom: 1px solid rgb(150, 150, 150);
+    @else
+        border-top: 1px solid rgb(90, 90, 90);
+        border-bottom: 1px solid rgb(90, 90, 90);
+    @endif
+    border-left: none;
+    border-right: none;
+    border-radius: 0px;
+}
+QListView#TranslatorConfView {
+    color: rgb(240,240,240);
+    border-radius: 8px;
+    show-decoration-selected: 1;
+    outline:0px;
+}
+QListView#TranslatorConfView::item {
+    padding: 8px;
+    margin-top: 2px;
+    color:rgb(220, 220, 220);
+    border-radius: 8px;
+}
+QListView#TranslatorConfView::item:hover {
+    background: rgba(255, 255, 255, 40);
+}
+QListView#TranslatorConfView::item:selected {
+    background: rgba(255, 255, 255, 40);
+    @if{useThemeColor}
+        color: rgb(@ThemeColor);
+    @else
+        color: rgb(240,240,240);
+    @endif
+}
 
+
+
+/* ------------------- QTableView ------------------- */
+QTableView {
+    padding: 2px;
+    background-color: rgba(255, 255, 255, 40);
+    color: rgb(240, 240, 240);
+    border-style: none;
+    border-radius: 8px;
+    show-decoration-selected: 1;
+    outline:0px;
+    gridline-color: rgb(110, 110, 110);
+    selection-color: white;
+    selection-background-color: rgb(63, 74, 91);
+}
+QTableView QTableCornerButton::section {
+    background-color: rgba(100, 100, 100, 0);
+ }
 
 
 /* ------------------- QProgressBar ------------------- */

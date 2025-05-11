@@ -15,6 +15,7 @@
 #include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 #include "Common/notifier.h"
+#include "Common/logger.h"
 
 GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *parent) : CFramelessDialog(tr("GIF Capture"),parent)
 {
@@ -194,11 +195,12 @@ bool GIFCapture::ffmpegCut(const QString &input, const QString &output, int w, i
        eventLoop.quit();
     });
     QObject::connect(&ffmpegProcess, &QProcess::readyReadStandardOutput, this, [&](){
-       qInfo()<<ffmpegProcess.readAllStandardOutput();
+        QString content(ffmpegProcess.readAllStandardOutput());
+        Logger::logger()->log(Logger::APP, content);
     });
     QObject::connect(&ffmpegProcess, &QProcess::readyReadStandardError, this, [&]() {
         QString content(ffmpegProcess.readAllStandardError());
-        qInfo() << content.replace("\\n", "\n");
+        Logger::logger()->log(Logger::APP, content);
     });
     showBusyState(true);
     saveFile->setEnabled(false);

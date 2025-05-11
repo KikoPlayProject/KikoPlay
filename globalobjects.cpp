@@ -5,6 +5,7 @@
 #include "Play/Video/mpvplayer.h"
 #include "Play/Danmu/blocker.h"
 #include "Play/Danmu/danmuprovider.h"
+#include "Play/Subtitle/subtitletranslator.h"
 #include "Play/playcontext.h"
 #include "MediaLibrary/animeprovider.h"
 #include "MediaLibrary/labelmodel.h"
@@ -217,6 +218,8 @@ void GlobalObjects::registerCustomSettingType()
 
     qRegisterMetaType<QList<QSharedPointer<KeyActionItem>>>("QList<QSharedPointer<KeyActionItem>>");
     //qRegisterMetaTypeStreamOperators<QVector<QSharedPointer<KeyActionItem>>>("QVector<QSharedPointer<KeyActionItem>>");
+
+    qRegisterMetaType<QList<TranslatorConfig>>("QList<TranslatorConfig>");
 }
 
 
@@ -236,6 +239,12 @@ void GlobalContext::init()
     if (!dir.exists(dataPath))
     {
         dir.mkpath(dataPath);
+    }
+
+    tmpPath = dataPath + "tmp/";
+    if (!dir.exists(tmpPath))
+    {
+        dir.mkpath(tmpPath);
     }
 }
 

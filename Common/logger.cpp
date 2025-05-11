@@ -156,7 +156,7 @@ void Logger::writeLogFile(Logger::LogType type)
     auto &curLogBuffer = logBuffer[(int)type];
     for(int i = flushPos[(int)type]; i < curLogBuffer.size(); ++i)
     {
-        logFiles[(int)type]->write(qPrintable(curLogBuffer[i]));
+        logFiles[(int)type]->write(curLogBuffer[i].toUtf8().constData());
         logFiles[(int)type]->write("\n");
     }
     logFiles[(int)type]->flush();

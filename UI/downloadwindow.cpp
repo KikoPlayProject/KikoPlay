@@ -642,7 +642,6 @@ QWidget *DownloadWindow::setupConnectionPage(QWidget *parent)
     PeerTreeView *peerView = new PeerTreeView(parent);
     peerView->setModel(peerModel);
     peerView->setRootIsDecorated(false);
-    peerView->setItemDelegate(new KTreeviewItemDelegate(peerView));
     new FloatScrollBar(peerView->verticalScrollBar(), peerView);
     new FloatScrollBar(peerView->horizontalScrollBar(), peerView);
     peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::PROGRESS), 280);

@@ -10,6 +10,7 @@
 #include <QMessageBox>
 #include <QStyle>
 
+#include "Play/Subtitle/subitemdelegate.h"
 #include "UI/ela/ElaCheckBox.h"
 #include "UI/ela/ElaLineEdit.h"
 #include "UI/ela/ElaMenu.h"
@@ -24,6 +25,7 @@
 #include "dialogs/blockeditor.h"
 #include "inputdialog.h"
 #include "dlnadiscover.h"
+#include "qlistview.h"
 #include "widgets/loadingicon.h"
 #include "Play/Danmu/Provider/localprovider.h"
 #include "MediaLibrary/animeprovider.h"
@@ -33,8 +35,10 @@
 #include "Play/Danmu/blocker.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
+#include "Play/Subtitle/subtitlemodel.h"
 #include "Download/downloadmodel.h"
 #include "widgets/lazycontainer.h"
+#include "dialogs/subrecognizedialog.h"
 
 namespace
 {
@@ -910,6 +914,108 @@ void ListWindow::initActions()
     QObject::connect(GlobalObjects::danmuPool, &DanmuPool::triggerAdd, act_addOnlineDanmu, &QAction::trigger);
     QObject::connect(GlobalObjects::danmuPool, &DanmuPool::triggerEditPool, act_editPool, &QAction::trigger);
     QObject::connect(GlobalObjects::danmuPool, &DanmuPool::triggerEditBlockRules, act_editBlock, &QAction::trigger);
+
+    act_addSub = new QAction(tr("Add Subtitle"), this);
+    QObject::connect(act_addSub, &QAction::triggered, this, [=](){
+        bool restorePlayState = false;
+        if (GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
+        {
+            restorePlayState = true;
+            GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
+        }
+        QString dialogPath;
+        if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+        {
+            dialogPath = QFileInfo(GlobalObjects::mpvplayer->getCurrentFile()).absolutePath();
+        }
+        QString file(QFileDialog::getOpenFileName(this, tr("Select Sub File"), dialogPath ,tr("Subtitle (%0);;All Files(*)").arg(GlobalObjects::mpvplayer->subtitleFormats.join(" "))));
+        if (!file.isEmpty())
+        {
+            GlobalObjects::mpvplayer->addSubtitle(file);
+        }
+        if (restorePlayState) GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
+    });
+
+    act_saveSub = new QAction(tr("Save Subtitle"), this);
+    QObject::connect(act_saveSub, &QAction::triggered, this, [=](){
+        bool restorePlayState = false;
+        if (GlobalObjects::mpvplayer->getState() == MPVPlayer::Play)
+        {
+            restorePlayState = true;
+            GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
+        }
+        if (subModel->curSub().format == SubFileFormat::F_ASS)
+        {
+            QString fileName = QFileDialog::getSaveFileName(this, tr("Save Subtitle"),"", tr("ASS Sub (*.ass);;SRT Sub (*.srt)"));
+            if (!fileName.isEmpty())
+            {
+                if (fileName.endsWith(".ass"))
+                {
+                    QFile subFile(fileName);
+                    if (subFile.open(QIODevice::WriteOnly|QIODevice::Text))
+                    {
+                        subFile.write(subModel->curSub().rawData.toUtf8());
+                    }
+                }
+                else
+                {
+                    subModel->saveCurSRTSub(fileName);
+                }
+            }
+        }
+        else
+        {
+            QString fileName = QFileDialog::getSaveFileName(this, tr("Save Subtitle"),"", tr("SRT Sub (*.srt)"));
+            if (!fileName.isEmpty())
+            {
+                subModel->saveCurSRTSub(fileName);
+            }
+        }
+        if (restorePlayState) GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
+    });
+
+    act_copySubTime = new QAction(tr("Copy Subtitle Time"), this);
+    QObject::connect(act_copySubTime, &QAction::triggered, this, [=](){
+        QItemSelection selection = sublistProxyModel->mapSelectionToSource(sublistView->selectionModel()->selection());
+        if (selection.empty()) return;
+        QModelIndex index = selection.indexes().first();
+        QString timeStart = index.siblingAtColumn((int)SubtitleModel::Columns::START).data(Qt::DisplayRole).toString();
+        QString timeEnd = index.siblingAtColumn((int)SubtitleModel::Columns::START).data(Qt::DisplayRole).toString();
+        QString subTime = QString("%1 -> %2").arg(timeStart, timeEnd);
+        QClipboard *cb = QApplication::clipboard();
+        cb->setText(subTime);
+    });
+
+    act_copySubText = new QAction(tr("Copy Subtitle Text"), this);
+    QObject::connect(act_copySubText, &QAction::triggered, this, [=](){
+        QItemSelection selection = sublistProxyModel->mapSelectionToSource(sublistView->selectionModel()->selection());
+        if (selection.empty()) return;
+        QModelIndex index = selection.indexes().first();
+        QString subText = index.data(Qt::DisplayRole).toString();
+        QClipboard *cb = QApplication::clipboard();
+        cb->setText(subText);
+    });
+
+    act_subRecognize = new QAction(tr("Subtitle Recognition"), this);
+    QObject::connect(act_subRecognize, &QAction::triggered, this, [=](){
+        const QString curFile = PlayContext::context()->path;
+        if (curFile.isEmpty() || !QFileInfo::exists(curFile)) return;
+        SubRecognizeDialog dialog(curFile, this);
+        dialog.exec();
+    });
+
+    act_subTranslation = new QAction(tr("Subtitle Translation"), this);
+    QObject::connect(act_subTranslation, &QAction::triggered, this, [=](){
+        const QString curFile = PlayContext::context()->path;
+        if (curFile.isEmpty() || !QFileInfo::exists(curFile)) return;
+        if (!subModel->hasSub())
+        {
+            showMessage(tr("Current Video has no subtitle"), NM_HIDE);
+            return;
+        }
+        SubRecognizeEditDialog dialog(subModel->curSub(), curFile, true, this);
+        dialog.exec();
+    });
 }
 
 QModelIndex ListWindow::getPSParentIndex()
@@ -1408,6 +1514,7 @@ QWidget *ListWindow::initDanmulistPage()
     danmulistProxyModel->setFilterKeyColumn(1);
     danmulistView->setModel(danmulistProxyModel);
     danmulistView->hideColumn(0);
+    currentProxyModel = danmulistProxyModel;
     QObject::connect(danmulistView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ListWindow::updateDanmuActions);
     QObject::connect(GlobalObjects::danmuPool, &DanmuPool::modelReset, this, &ListWindow::updateDanmuActions);
 
@@ -1482,6 +1589,110 @@ QWidget *ListWindow::initDanmulistPage()
 QWidget *ListWindow::initSublistPage()
 {
     QWidget *sublistPage = new QWidget(this);
+    QVBoxLayout *sublistPageVLayout = new QVBoxLayout(sublistPage);
+    sublistPageVLayout->setContentsMargins(0, 0, 0, 0);
+    sublistPageVLayout->setSpacing(0);
+
+    QFont normalFont(GlobalObjects::normalFont,11);
+
+    sublistView = new QListView(sublistPage);
+    sublistView->setObjectName(QStringLiteral("sublist"));
+    sublistView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
+    sublistView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    sublistView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    sublistView->setFont(normalFont);
+    sublistView->setResizeMode(QListView::Adjust);
+    sublistView->setUniformItemSizes(false);
+    sublistView->setViewMode(QListView::ListMode);
+    sublistView->setWordWrap(true);
+    sublistView->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+    new FloatScrollBar(sublistView->verticalScrollBar(), sublistView);
+
+    sublistPageVLayout->addWidget(sublistView);
+
+    subModel = new SubtitleModel(this);
+    sublistProxyModel = new QSortFilterProxyModel(this);
+    sublistProxyModel->setSourceModel(subModel);
+    sublistView->setModel(sublistProxyModel);
+    currentProxyModel = sublistProxyModel;
+
+    SubItemDelegate *delegate = new SubItemDelegate(sublistView);
+    QObject::connect(subModel, &SubtitleModel::modelReset, delegate, &SubItemDelegate::reset);
+    sublistView->setItemDelegate(delegate);
+
+    QMenu *sublistContextMenu = new ElaMenu(sublistView);
+
+    sublistView->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(sublistView, &QListView::customContextMenuRequested, sublistView, [=](){
+        sublistContextMenu->exec(QCursor::pos());
+    });
+    sublistContextMenu->addAction(act_copySubText);
+    sublistContextMenu->addAction(act_copySubTime);
+
+    QObject::connect(sublistView, &QListView::doubleClicked, this, [this](const QModelIndex &index) {
+        QModelIndex itemIndex = sublistProxyModel->mapToSource(index);
+        SubItem item = subModel->getSub(itemIndex.row());
+        MPVPlayer::PlayState state=GlobalObjects::mpvplayer->getState();
+        if (state == MPVPlayer::PlayState::Play || state == MPVPlayer::PlayState::Pause)
+        {
+            GlobalObjects::mpvplayer->seek(item.startTime);
+        }
+    });
+
+    constexpr const int tbBtnCount = 5;
+    QPair<QChar, QString> tbButtonTexts[tbBtnCount] = {
+        {QChar(0xe602), tr("Position")},
+        {QChar(0xe667), tr("Add")},
+        {QChar(0xe643), tr("Save")},
+        {QChar(0xe681), tr("Subtitle Recognition")},
+        {QChar(0xefd1), tr("Subtitle Translation")},
+    };
+    QList<QAction *> tbActions[tbBtnCount] = {
+        {},
+        {act_addSub},
+        {act_saveSub},
+        {act_subRecognize},
+        {act_subTranslation},
+    };
+
+    QVector<QToolButton *> btns(tbBtnCount);
+    GlobalObjects::iconfont->setPointSize(14);
+    QHBoxLayout *subEditHLayout = new QHBoxLayout();
+    subEditHLayout->setContentsMargins(4, 8, 4, 8);
+    for (int i = 0; i < tbBtnCount; ++i)
+    {
+        QToolButton *tb = new QToolButton(sublistPage);
+        btns[i] = tb;
+        tb->setFont(*GlobalObjects::iconfont);
+        tb->setText(tbButtonTexts[i].first);
+        tb->setToolTip(tbButtonTexts[i].second);
+        tb->setObjectName(QStringLiteral("ListEditButton"));
+        tb->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        tb->setPopupMode(QToolButton::InstantPopup);
+        if (!tbActions[i].empty())
+        {
+            if (tbActions[i].size() == 1)
+            {
+                QObject::connect(tb, &QToolButton::clicked, tbActions[i][0], &QAction::trigger);
+            }
+            else
+            {
+                QMenu *popupMenu = new ElaMenu(tb);
+                popupMenu->addActions(tbActions[i]);
+                tb->setMenu(popupMenu);
+            }
+        }
+        subEditHLayout->addWidget(tb);
+
+    }
+    subEditHLayout->addStretch(1);
+    sublistPageVLayout->addLayout(subEditHLayout);
+
+    constexpr const int Index_LocatePosition = 0;
+    QObject::connect(btns[Index_LocatePosition], &QToolButton::clicked, this, [this]() {
+        int timeMS = PlayContext::context()->playtime * 1000;
+        sublistView->scrollTo(sublistProxyModel->mapFromSource(subModel->getTimeIndex(timeMS)), QAbstractItemView::PositionAtTop);
+    });
 
     return sublistPage;
 }
@@ -1592,11 +1803,15 @@ void ListWindow::dropEvent(QDropEvent *event)
 void ListWindow::setCurrentList(int listType)
 {
     filterEdit->clear();
-    const QVector<QSortFilterProxyModel *> models{playlistProxyModel, danmulistProxyModel, nullptr};
+    const QVector<QSortFilterProxyModel *> models{playlistProxyModel, danmulistProxyModel, sublistProxyModel, nullptr};
     currentProxyModel = nullptr;
     if (listType < models.size())
     {
         currentProxyModel = models[listType];
+    }
+    if (subModel)
+    {
+        subModel->setBlocked(listType != 2);
     }
     contentStackLayout->setCurrentIndex(listType);
 }
@@ -1644,7 +1859,8 @@ void ListWindow::showMessage(const QString &msg, int flag, const QVariant &)
 {
     infoTip->show();
     infoTip->raise();
-    QTreeView *refView = danmulistView && danmulistView->isVisible() ? danmulistView : playlistView;
+    QWidget *views[] = { playlistView, danmulistView, sublistView };
+    QWidget *refView = views[currentList()];
     infoTip->setGeometry(0, titleContainer->height() + refView->height() - infoTipHeight, width(), infoTipHeight);
     static_cast<InfoTip *>(infoTip)->showMessage(msg,flag);
 }

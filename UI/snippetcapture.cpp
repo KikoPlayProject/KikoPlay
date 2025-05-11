@@ -15,6 +15,7 @@
 #include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 #include "Common/notifier.h"
+#include "Common/logger.h"
 
 namespace
 {
@@ -168,12 +169,13 @@ bool SnippetCapture::ffmpegCut(double start, const QString &input, int duration,
        eventLoop.quit();
     });
     QObject::connect(&ffmpegProcess, &QProcess::readyReadStandardOutput, this, [&](){
-       qInfo()<<ffmpegProcess.readAllStandardOutput();
+        QString content(ffmpegProcess.readAllStandardOutput());
+        Logger::logger()->log(Logger::APP, content);
     });
     QObject::connect(&ffmpegProcess, &QProcess::readyReadStandardError, this, [&]() {
         QString content(ffmpegProcess.readAllStandardError());
-        qInfo() << content.replace("\\n", "\n");
-	});
+        Logger::logger()->log(Logger::APP, content);
+    });
     showBusyState(true);
     bool addEnable = addToLibrary->isEnabled();
     if(addEnable) addToLibrary->setEnabled(false);

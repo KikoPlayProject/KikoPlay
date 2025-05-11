@@ -28,7 +28,7 @@ DanmuView::DanmuView(const QVector<DanmuComment *> *danmuList, QWidget *parent, 
     tipLabel->setText(tr("Danmu Count: %1").arg(proxyModel->rowCount()));
     QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[proxyModel,this](int type, const QString &keyword){
         proxyModel->setFilterKeyColumn(type);
-        proxyModel->setFilterRegularExpression(keyword);
+        proxyModel->setFilterFixedString(keyword);
         tipLabel->setText(tr("Danmu Count: %1").arg(proxyModel->rowCount()));
     });
 }
@@ -46,7 +46,7 @@ DanmuView::DanmuView(const QVector<QSharedPointer<DanmuComment> > *danmuList, QW
     tipLabel->setText(tr("Danmu Count: %1").arg(proxyModel->rowCount()));
     QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[proxyModel,this](int type, const QString &keyword){
         proxyModel->setFilterKeyColumn(type);
-        proxyModel->setFilterRegularExpression(keyword);
+        proxyModel->setFilterFixedString(keyword);
         tipLabel->setText(tr("Danmu Count: %1").arg(proxyModel->rowCount()));
     });
 }

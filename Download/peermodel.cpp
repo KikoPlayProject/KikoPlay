@@ -166,6 +166,7 @@ QVariant PeerModel::headerData(int section, Qt::Orientation orientation, int rol
 
 void PeerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
+    KTreeviewItemDelegate::paint(painter, option, index);
     painter->save();
     QStyleOptionViewItem viewOption(option);
     initStyleOption(&viewOption, index);

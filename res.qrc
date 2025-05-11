@@ -64,5 +64,6 @@
         <file>res/images/kikoplay.svg</file>
         <file>res/images/null-cover-recent.png</file>
         <file>res/images/empty-bg.svg</file>
+        <file>res/translators.json</file>
     </qresource>
 </RCC>

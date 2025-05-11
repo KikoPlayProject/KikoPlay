@@ -1201,21 +1201,25 @@ void MPVPlayer::loadTracks(const QVariantList &allTracks)
         {
             QString title(trackMap["title"].toString());
             audioTracks.append({
-                                   title.isEmpty()? trackMap["id"].toString():title,
-                                   trackMap["id"].toInt(),
-                                   !externalFile.isEmpty(),
-                                   externalFile
-                               });
+                title.isEmpty()? trackMap["id"].toString():title,
+                trackMap["id"].toInt(),
+                !externalFile.isEmpty(),
+                externalFile,
+                trackMap["codec"].toString(),
+                trackMap["ff-index"].toInt(),
+            });
         }
         else if (type == "sub")
         {
             QString title(trackMap["title"].toString());
             subTracks.append({
-                                   title.isEmpty()? trackMap["id"].toString():title,
-                                   trackMap["id"].toInt(),
-                                   !externalFile.isEmpty(),
-                                   externalFile
-                               });
+                title.isEmpty()? trackMap["id"].toString():title,
+                trackMap["id"].toInt(),
+                !externalFile.isEmpty(),
+                externalFile,
+                trackMap["codec"].toString(),
+                trackMap["ff-index"].toInt(),
+            });
         }
     }
 }

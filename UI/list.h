@@ -18,6 +18,8 @@ struct DanmuComment;
 class FloatScrollBar;
 class QLineEdit;
 class QSortFilterProxyModel;
+class SubtitleModel;
+class QListView;
 
 class ListWindow : public QWidget, public NotifyInterface
 {
@@ -36,6 +38,7 @@ private:
     QSortFilterProxyModel *currentProxyModel{nullptr};
     QSortFilterProxyModel *playlistProxyModel{nullptr};
     QSortFilterProxyModel *danmulistProxyModel{nullptr};
+    QSortFilterProxyModel *sublistProxyModel{nullptr};
 
     QWidget *titleContainer{nullptr};
     QWidget *infoTip{nullptr};
@@ -63,6 +66,9 @@ private:
             *act_blockText,*act_blockColor,*act_blockSender,
             *act_jumpToTime, *act_deleteDanmu;
 
+    QListView *sublistView{nullptr};
+    SubtitleModel *subModel{nullptr};
+    QAction *act_addSub, *act_saveSub, *act_copySubTime, *act_copySubText, *act_subRecognize, *act_subTranslation;
     QWidget *initSublistPage();
 
 

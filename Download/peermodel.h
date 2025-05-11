@@ -1,7 +1,7 @@
 #ifndef PEERMODEL_H
 #define PEERMODEL_H
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include <QAbstractItemModel>
-#include <QStyledItemDelegate>
 
 class PeerModel : public QAbstractItemModel
 {
@@ -38,11 +38,11 @@ public:
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 };
-class PeerDelegate : public QStyledItemDelegate
+class PeerDelegate : public KTreeviewItemDelegate
 {
     Q_OBJECT
 public:
-    PeerDelegate(QObject *parent = nullptr) : QStyledItemDelegate(parent) {}
+    PeerDelegate(QObject *parent = nullptr) : KTreeviewItemDelegate(parent) {}
     virtual void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
     QColor barColor = QColor(51,168,255,200), borderColor = QColor(200, 200, 200), backgroundcolor = QColor(255,255,255,120);
 };

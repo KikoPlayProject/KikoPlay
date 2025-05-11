@@ -96,21 +96,12 @@ protected:
     {
         for(const HighlightingRule &rule : highlightingRules)
         {
-            //const QRegularExpression &expression = rule.pattern;
             QRegularExpressionMatchIterator i = rule.pattern.globalMatch(text);
             while (i.hasNext()) {
                 QRegularExpressionMatch match = i.next();
                 setFormat(match.capturedStart(0), match.capturedLength(0), rule.format);
 
             }
-            /*
-            int index = expression.indexIn(text);
-            while (index >= 0)
-            {
-                int length = expression.matchedLength();
-                setFormat(index, length, rule.format);
-                index = expression.indexIn(text, index + length);
-            }*/
         }
         checkStringRule(text, '"');
         checkStringRule(text, '\'');
@@ -127,7 +118,6 @@ protected:
         {
             auto match = commentEndExpression.match(text, offset);
             int endIndex = match.hasMatch() ? match.capturedStart(0) : -1;
-            //int endIndex = commentEndExpression.indexIn(text, startIndex);
             int commentLength;
             if (endIndex == -1)
             {
@@ -142,32 +132,7 @@ protected:
             setFormat(offset, commentLength, multiLineCommentFormat);
             match = commentStartExpression.match(text, offset + commentLength);
             offset = match.hasMatch() ? match.capturedStart(0) : -1;
-            //startIndex = commentStartExpression.indexIn(text, startIndex + commentLength);
         }
-        /*
-
-        int startIndex = 0;
-        if (previousBlockState() != 1)
-            startIndex = commentStartExpression.indexIn(text);
-
-
-        while (startIndex >= 0)
-        {
-            int endIndex = commentEndExpression.indexIn(text, startIndex);
-            int commentLength;
-            if (endIndex == -1)
-            {
-                setCurrentBlockState(1);
-                commentLength = text.length() - startIndex;
-            }
-            else
-            {
-                commentLength = endIndex - startIndex
-                        + commentEndExpression.matchedLength();
-            }
-            setFormat(startIndex, commentLength, multiLineCommentFormat);
-            startIndex = commentStartExpression.indexIn(text, startIndex + commentLength);
-        }*/
     }
 
 private:

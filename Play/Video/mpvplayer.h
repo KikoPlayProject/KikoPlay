@@ -47,6 +47,8 @@ public:
         int id;
         bool isExternal;
         QString externalFile;
+        QString codec;
+        int ffIndex;
     };
 
     const QStringList videoFileFormats{"*.mp4","*.mkv","*.avi","*.flv","*.wmv","*.webm","*.vob","*.mts","*.ts","*.m2ts","*.mov","*.rm","*.rmvb","*.asf","*.m4v","*.mpg","*.mp2","*.mpeg","*.mpe","*.mpv","*.m2v","*.m4v","*.3gp","*.f4v"};

@@ -32,6 +32,7 @@ struct GlobalContext
     QString lang{"en-US"};
 
     QString dataPath;
+    QString tmpPath;
 
     float devicePixelRatioF{1.0f};
 

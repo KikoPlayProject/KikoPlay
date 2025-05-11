@@ -50,6 +50,7 @@ SOURCES += \
     Common/logger.cpp \
     Common/network.cpp \
     Common/notifier.cpp \
+    Common/taskpool.cpp \
     Download/aria2jsonrpc.cpp \
     Download/autodownloadmanager.cpp \
     Download/BgmList/bgmlist.cpp \
@@ -121,10 +122,19 @@ SOURCES += \
     Play/Playlist/webdav/qwebdav.cpp \
     Play/Playlist/webdav/qwebdavdirparser.cpp \
     Play/Playlist/webdav/qwebdavitem.cpp \
+    Play/Subtitle/subitem.cpp \
+    Play/Subtitle/subitemdelegate.cpp \
+    Play/Subtitle/subtitleeditmodel.cpp \
+    Play/Subtitle/subtitleloader.cpp \
+    Play/Subtitle/subtitlemodel.cpp \
+    Play/Subtitle/subtitlerecognizer.cpp \
+    Play/Subtitle/subtitletranslator.cpp \
+    Play/Subtitle/vad.cpp \
     UI/animeepisodeeditor.cpp \
     UI/dialogs/blockeditor.cpp \
     UI/dialogs/danmuview.cpp \
     UI/dialogs/mpvconfediror.cpp \
+    UI/dialogs/subrecognizedialog.cpp \
     UI/dialogs/timelineedit.cpp \
     UI/dialogs/trackersubscribedialog.cpp \
     UI/ela/DeveloperComponents/ElaBaseListView.cpp \
@@ -343,6 +353,7 @@ HEADERS += \
     Common/lrucache.h \
     Common/network.h \
     Common/notifier.h \
+    Common/taskpool.h \
     Common/threadtask.h \
     Common/zconf.h \
     Common/zlib.h \
@@ -418,10 +429,20 @@ HEADERS += \
     Play/Playlist/webdav/qwebdav.h \
     Play/Playlist/webdav/qwebdavdirparser.h \
     Play/Playlist/webdav/qwebdavitem.h \
+    Play/Subtitle/subitem.h \
+    Play/Subtitle/subitemdelegate.h \
+    Play/Subtitle/subtitleeditmodel.h \
+    Play/Subtitle/subtitleloader.h \
+    Play/Subtitle/subtitlemodel.h \
+    Play/Subtitle/subtitlerecognizer.h \
+    Play/Subtitle/subtitletranslator.h \
+    Play/Subtitle/vad.h \
+    Play/Subtitle/wav.h \
     UI/animeepisodeeditor.h \
     UI/dialogs/blockeditor.h \
     UI/dialogs/danmuview.h \
     UI/dialogs/mpvconfediror.h \
+    UI/dialogs/subrecognizedialog.h \
     UI/dialogs/timelineedit.h \
     UI/dialogs/trackersubscribedialog.h \
     UI/ela/Def.h \
@@ -638,6 +659,7 @@ HEADERS += \
 
 INCLUDEPATH += \
     Play/Video \
+    Play/Subtitle/onnxruntime \
 
 RESOURCES += \
     res.qrc
@@ -657,6 +679,7 @@ win32 {
         LIBS += -L$$PWD/lib/x64/ -llibmpv.dll
         LIBS += -L$$PWD/lib/x64/ -lzlibstat
         LIBS += -L$$PWD/lib/x64/ -llua53
+        LIBS += -L$$PWD/lib/x64/ -lonnxruntime
     }
 }
 
