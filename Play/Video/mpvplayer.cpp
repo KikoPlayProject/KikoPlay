@@ -34,6 +34,16 @@
 #define SETTING_KEY_SHOW_PREVIEW "Play/ShowPreview"
 #define SETTING_KEY_SHOW_RECENT "Play/ShowRecent"
 #define SETTING_KEY_USE_SAMPLE2DARRAY "Play/Sampler2DArray"
+#define SETTING_KEY_SUB_AUTO "Play/SubAuto"
+#define SETTING_KEY_SUB_FONT "Play/SubFont"
+#define SETTING_KEY_SUB_FONT_SIZE "Play/SubFontSize"
+#define SETTING_KEY_SUB_BOLD "Play/SubBold"
+#define SETTING_KEY_SUB_COLOR "Play/SubColor"
+#define SETTING_KEY_SUB_OUTLINE_COLOR "Play/SubOutlineColor"
+#define SETTING_KEY_SUB_BACK_COLOR "Play/SubBackColor"
+#define SETTING_KEY_SUB_OUTLINE_SIZE "Play/SubOutlineSize"
+#define SETTING_KEY_SUB_BORDER_STYLE "Play/SubBorderStyle"
+
 
 namespace
 {
@@ -621,6 +631,69 @@ void MPVPlayer::setUseSample2DArray(bool on)
     GlobalObjects::appSetting->setValue(SETTING_KEY_USE_SAMPLE2DARRAY, on);
 }
 
+void MPVPlayer::setSubAuto(const QString val)
+{
+    subAuto = val;
+    setMPVProperty("sub-auto", subAuto);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_SUB_AUTO, val);
+}
+
+void MPVPlayer::setSubFont(const QString val)
+{
+    subFont = val;
+    setMPVProperty("sub-font", subFont);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_SUB_FONT, val);
+}
+
+void MPVPlayer::setSubFontSize(int val)
+{
+    subFontSize = val;
+    setMPVProperty("sub-font-size", subFontSize);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_SUB_FONT_SIZE, val);
+}
+
+void MPVPlayer::setSubBold(bool on)
+{
+    subBold = on;
+    setMPVProperty("sub-bold", subBold ? "yes" : "no");
+    GlobalObjects::appSetting->setValue(SETTING_KEY_SUB_BOLD, subBold);
+}
+
+void MPVPlayer::setSubColor(QColor color)
+{
+    subColor = color.rgba();
+    setMPVProperty("sub-color", color.name(QColor::HexArgb));
+    GlobalObjects::appSetting->setValue(SETTING_KEY_SUB_COLOR, subColor);
+}
+
+void MPVPlayer::setSubOutlineColor(QColor color)
+{
+    subOutlineColor = color.rgba();
+    setMPVProperty("sub-outline-color", color.name(QColor::HexArgb));
+    GlobalObjects::appSetting->setValue(SETTING_KEY_SUB_OUTLINE_COLOR, subOutlineColor);
+}
+
+void MPVPlayer::setSubBackColor(QColor color)
+{
+    subBackColor = color.rgba();
+    setMPVProperty("sub-back-color", color.name(QColor::HexArgb));
+    GlobalObjects::appSetting->setValue(SETTING_KEY_SUB_BACK_COLOR, subBackColor);
+}
+
+void MPVPlayer::setSubOutlineSize(double size)
+{
+    subOutlineSize = size;
+    setMPVProperty("sub-outline-size", subOutlineSize);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_SUB_OUTLINE_SIZE, subOutlineSize);
+}
+
+void MPVPlayer::setSubBorderStyle(const QString val)
+{
+    subBorderStyle = val;
+    setMPVProperty("sub-border-style", subBorderStyle);
+    GlobalObjects::appSetting->setValue(SETTING_KEY_SUB_BORDER_STYLE, val);
+}
+
 void MPVPlayer::initializeGL()
 {
     QOpenGLFunctions *glFuns=context()->functions();
@@ -1117,6 +1190,33 @@ void MPVPlayer::loadSettings()
     dbClickBehaivior = GlobalObjects::appSetting->value(SETTING_KEY_DB_CLICK_BEHAVIOR, 0).toInt();
     isShowPreview = GlobalObjects::appSetting->value(SETTING_KEY_SHOW_PREVIEW, true).toBool();
     isShowRecent = GlobalObjects::appSetting->value(SETTING_KEY_SHOW_RECENT, true).toBool();
+
+    subAuto = GlobalObjects::appSetting->value(SETTING_KEY_SUB_AUTO, "exact").toString();
+    setMPVProperty("sub-auto", subAuto);
+
+    subFont = GlobalObjects::appSetting->value(SETTING_KEY_SUB_FONT, "sans-serif").toString();
+    setMPVProperty("sub-font", subFont);
+
+    subFontSize = GlobalObjects::appSetting->value(SETTING_KEY_SUB_FONT_SIZE, 38).toInt();
+    setMPVProperty("sub-font-size", subFontSize);
+
+    subBold = GlobalObjects::appSetting->value(SETTING_KEY_SUB_BOLD, false).toBool();
+    setMPVProperty("sub-bold", subBold ? "yes" : "no");
+
+    subColor = GlobalObjects::appSetting->value(SETTING_KEY_SUB_COLOR, 0xFFFFFFFF).toUInt();
+    setMPVProperty("sub-color", QColor(QRgba64::fromArgb32(subColor)).name(QColor::HexArgb));
+
+    subOutlineColor = GlobalObjects::appSetting->value(SETTING_KEY_SUB_OUTLINE_COLOR, 0xFF000000).toUInt();
+    setMPVProperty("sub-outline-color", QColor(QRgba64::fromArgb32(subOutlineColor)).name(QColor::HexArgb));
+
+    subBackColor = GlobalObjects::appSetting->value(SETTING_KEY_SUB_BACK_COLOR, 0xAF000000).toUInt();
+    setMPVProperty("sub-back-color", QColor(QRgba64::fromArgb32(subBackColor)).name(QColor::HexArgb));
+
+    subOutlineSize = GlobalObjects::appSetting->value(SETTING_KEY_SUB_OUTLINE_SIZE, 1.65).toDouble();
+    setMPVProperty("sub-outline-size", subOutlineSize);
+
+    subBorderStyle = GlobalObjects::appSetting->value(SETTING_KEY_SUB_BORDER_STYLE, "outline-and-shadow").toString();
+    setMPVProperty("sub-border-style", subBorderStyle);
 }
 
 void MPVPlayer::loadPredefineOptions(QStringList &optionGroupKeys, QVector<QStringList> &optionsGroupList)

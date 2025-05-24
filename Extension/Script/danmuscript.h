@@ -13,6 +13,7 @@ public:
     bool supportSearch() const {return canSearch;}
     bool supportLaunch() const {return canLaunch;}
     const QStringList &sampleURLs() const {return sampleSupporedURLs;}
+    QColor labelColor() const;
 public:
     ScriptState search(const QString &keyword, QList<DanmuSource> &results);
     ScriptState getEpInfo(const DanmuSource *source, QList<DanmuSource> &results);
@@ -31,6 +32,7 @@ private:
     const char *luaLaunchFunc = "launch";
     const char *urlReTable = "supportedURLsRe";
     const char *sampleUrlTable = "sampleSupporedURLs";
+    const char *labelColorName = "label_color";
 
     bool canSearch, canLaunch;
     QStringList supportedURLsRe, sampleSupporedURLs;

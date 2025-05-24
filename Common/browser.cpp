@@ -8,6 +8,7 @@
 #include <QWebEngineCookieStore>
 #include "Common/lrucache.h"
 #include "globalobjects.h"
+#include "qcoreapplication.h"
 
 namespace
 {
@@ -16,8 +17,21 @@ static TimeLimitedCachePool<QWebEngineView *> browserCache{30*1000, [](QWebEngin
 
 BrowserManager *BrowserManager::instance()
 {
-    static BrowserManager manager;
-    return &manager;
+    static QScopedPointer<BrowserManager> manager;
+    if (!manager)
+    {
+        if (QThread::currentThread() == QCoreApplication::instance()->thread())
+        {
+            manager.reset(new BrowserManager);
+        }
+        else
+        {
+            QMetaObject::invokeMethod(QCoreApplication::instance(), [&](){
+                manager.reset(new BrowserManager);
+            }, Qt::BlockingQueuedConnection);
+        }
+    }
+    return manager.get();
 }
 
 QWebEngineView *BrowserManager::get()

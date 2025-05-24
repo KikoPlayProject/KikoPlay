@@ -635,7 +635,7 @@ void AppList::parseItems(lua_State *L, QVector<QListWidgetItem *> &items, AppLis
     };
     const QVariant itemParam = getValue(L, true, modifer, 2);
     QVariantList rawItems;
-    if (itemParam.canConvert(QMetaType::QVariantList))
+    if (itemParam.typeId() == QMetaType::QVariantList)
     {
         rawItems = itemParam.toList();
     }

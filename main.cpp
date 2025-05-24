@@ -32,17 +32,32 @@ LONG AppCrashHandler(EXCEPTION_POINTERS *pException)
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 #endif
-void decodeParam()
+
+void decodeParam(const QStringList &args, bool passMode = false)
 {
-    QStringList args = QCoreApplication::arguments();
-    if(args.count() <= 1) return;
-    args.pop_front();
-    QStringList urlList = args;
+    if (args.empty()) return;
+    QCommandLineParser parser;
+    QCommandLineOption titleOption("title", "Playlist Item titles", "title");
+    parser.addOption(titleOption);
+    parser.process(args);
+
+    const QStringList urlList = parser.positionalArguments();
+    QStringList itemTitles = parser.values(titleOption);
+
+    Logger::logger()->log(Logger::APP, "args: " + args.join(" "));
     if (!urlList.empty())
     {
         if (GlobalObjects::playlist->isAddExternal())
         {
-            GlobalObjects::playlist->addURL(urlList,QModelIndex());
+            QHash<QString, QString> titleMapping;
+            if (!itemTitles.empty())
+            {
+                for (int i  = 0; i < urlList.size() && i < itemTitles.size(); ++i)
+                {
+                    titleMapping[urlList[i]] = itemTitles[i];
+                }
+            }
+            GlobalObjects::playlist->addURL(urlList, QModelIndex(), false, &titleMapping);
             const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(urlList.last());
             if (curItem)
             {
@@ -61,19 +76,14 @@ bool isRunning()
     socket.connectToServer("KikoPlaySingleServer");
     if (socket.waitForConnected())
     {
-        QStringList args=QCoreApplication::arguments();
-        if (args.count() > 1)
+        QStringList args = QCoreApplication::arguments();
+        if (!args.empty())
         {
-            args.pop_front();
-            QStringList urlList = args;
-            if (!urlList.empty())
-            {
-                QByteArray data;
-                QDataStream s(&data,QIODevice::WriteOnly);
-                s << urlList;
-                socket.write(data);
-                socket.waitForBytesWritten();
-            }
+            QByteArray data;
+            QDataStream s(&data, QIODevice::WriteOnly);
+            s << args;
+            socket.write(data);
+            socket.waitForBytesWritten();
         }
         return true;
     }
@@ -89,7 +99,6 @@ int main(int argc, char *argv[])
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
 #else
-    //根据实际屏幕缩放比例更改
     qputenv("QT_SCALE_FACTOR", "1.5");
 #endif
 #endif
@@ -102,6 +111,7 @@ int main(int argc, char *argv[])
     SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)AppCrashHandler);
 #endif
     if(isRunning()) return 0;
+    GlobalObjects::context()->tick(&timer, "app");
     GlobalObjects::init(&timer);
 
     MainWindow w;
@@ -115,22 +125,7 @@ int main(int argc, char *argv[])
         QStringList args;
         QDataStream s(data);
         s >> args;
-        if (args.count() > 0)
-        {
-            if (GlobalObjects::playlist->isAddExternal())
-            {
-                GlobalObjects::playlist->addURL(args, QModelIndex());
-                const PlayListItem *curItem = GlobalObjects::playlist->setCurrentItem(args.last());
-                if (curItem)
-                {
-                    PlayContext::context()->playItem(curItem);
-                }
-            }
-            else
-            {
-                PlayContext::context()->playURL(args.last());
-            }
-        }
+        decodeParam(args, true);
         w.raise();
         w.activateWindow();
         w.setWindowState((w.windowState() & ~Qt::WindowMinimized) | Qt::WindowActive);
@@ -148,7 +143,7 @@ int main(int argc, char *argv[])
     w.activateWindow();
     w.show();
     GlobalObjects::context()->tick(&timer, "ui");
-	decodeParam();
+    decodeParam(QCoreApplication::arguments());
     QTimer::singleShot(100, [](){
         GlobalObjects::appManager->autoStart();
     });

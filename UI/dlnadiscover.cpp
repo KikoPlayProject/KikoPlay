@@ -11,6 +11,7 @@
 #include "LANServer/dlna/upnpctrlpoint.h"
 #include "LANServer/dlna/dlnamediacontroller.h"
 #include "Play/Playlist/playlistitem.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 
@@ -20,6 +21,7 @@ DLNADiscover::DLNADiscover(const PlayListItem *item, QWidget *parent) : CFramele
     deviceView = new QTreeView(this);
     deviceView->setRootIsDecorated(false);
     deviceView->setAlternatingRowColors(true);
+    deviceView->setItemDelegate(new KTreeviewItemDelegate(this));
 
     QGridLayout *discoverGLayout = new QGridLayout(this);
     discoverGLayout->addWidget(refreshDevice, 0, 0);

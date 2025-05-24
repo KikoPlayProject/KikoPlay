@@ -3,6 +3,8 @@
 #include <QAbstractItemModel>
 #include <QSortFilterProxyModel>
 #include "scriptmanager.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
+
 
 class ScriptModel  : public QAbstractItemModel
 {
@@ -16,6 +18,7 @@ public:
         ID,
         NAME,
         VERSION,
+        OPERATE,
         DESC,
         NONE
     };
@@ -35,10 +38,13 @@ private:
         QString version;
         QString desc;
         QString path;
+        bool hasSetting;
+        bool hasMenu;
     };
     QList<ScriptInfo> scriptList;
     void refresh();
 };
+
 class ScriptProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
@@ -48,5 +54,31 @@ public:
     void setType(int type);
 public:
     virtual bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
+};
+
+class ScriptItemDelegate : public KTreeviewItemDelegate
+{
+    Q_OBJECT
+
+public:
+    ScriptItemDelegate(QObject *parent = nullptr):KTreeviewItemDelegate(parent){}
+
+    // QAbstractItemDelegate interface
+public:
+    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+    QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const;
+    bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index);
+
+signals:
+    void settingClicked(const QModelIndex &index);
+    void menuClicked(const QModelIndex &index);
+
+private:
+    const int iconSize = 22;
+    const int space = 4;
+    mutable QPoint mousePos;
+
+    QPoint getIconStartPos(const QStyleOptionViewItem &option, const QModelIndex &index) const;
+    QRect getIconRect(int type, const QStyleOptionViewItem &option, const QModelIndex &index) const;
 };
 #endif // SCRIPTMODEL_H

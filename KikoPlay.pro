@@ -41,6 +41,7 @@ CONFIG(debug, debug|release) {
 SOURCES += \
     Common/browser.cpp \
     Common/counter.cpp \
+    Common/dbmanager.cpp \
     Common/eventbus.cpp \
     Common/htmlparsersax.cpp \
     Common/keyaction.cpp \
@@ -117,7 +118,6 @@ SOURCES += \
     Extension/Script/scriptbase.cpp \
     Extension/Script/scriptmanager.cpp \
     Extension/Script/scriptmodel.cpp \
-    Extension/Script/scriptsettingmodel.cpp \
     Download/util.cpp \
     Play/Playlist/webdav/qwebdav.cpp \
     Play/Playlist/webdav/qwebdavdirparser.cpp \
@@ -131,9 +131,11 @@ SOURCES += \
     Play/Subtitle/subtitletranslator.cpp \
     Play/Subtitle/vad.cpp \
     UI/animeepisodeeditor.cpp \
+    UI/dialogs/adddanmu.cpp \
     UI/dialogs/blockeditor.cpp \
     UI/dialogs/danmuview.cpp \
     UI/dialogs/mpvconfediror.cpp \
+    UI/dialogs/selectepisodedialog.cpp \
     UI/dialogs/subrecognizedialog.cpp \
     UI/dialogs/timelineedit.cpp \
     UI/dialogs/trackersubscribedialog.cpp \
@@ -201,7 +203,7 @@ SOURCES += \
     UI/settings/keyactionpage.cpp \
     UI/settings/playerpage.cpp \
     UI/settings/playlistpage.cpp \
-    UI/settings/subtitlepage.cpp \
+    UI/widgets/colorpreview.cpp \
     UI/widgets/component/flowlayout.cpp \
     UI/widgets/component/ktreeviewitemdelegate.cpp \
     UI/widgets/component/taskbarbtn/qwinevent.cpp \
@@ -210,6 +212,7 @@ SOURCES += \
     UI/widgets/component/taskbarbtn/qwintaskbarbutton.cpp \
     UI/widgets/component/taskbarbtn/qwintaskbarprogress.cpp \
     UI/widgets/component/taskbarbtn/windowsguidsdefs.cpp \
+    UI/widgets/danmusourcetip.cpp \
     UI/widgets/elidedlabel.cpp \
     UI/widgets/floatscrollbar.cpp \
     UI/widgets/klineedit.cpp \
@@ -280,7 +283,6 @@ SOURCES += \
     Play/Video/simpleplayer.cpp \
     Play/playcontext.cpp \
     UI/about.cpp \
-    UI/adddanmu.cpp \
     UI/addpool.cpp \
     UI/addrule.cpp \
     UI/adduritask.cpp \
@@ -315,7 +317,6 @@ SOURCES += \
     UI/poolmanager.cpp \
     UI/ressearchwindow.cpp \
     UI/scriptplayground.cpp \
-    UI/selectepisode.cpp \
     UI/selecttorrentfile.cpp \
     UI/settings.cpp \
     UI/settings/downloadpage.cpp \
@@ -343,6 +344,7 @@ SOURCES += \
 HEADERS += \
     Common/browser.h \
     Common/counter.h \
+    Common/dbmanager.h \
     Common/eventbus.h \
     Common/htmlparsersax.h \
     Common/keyaction.h \
@@ -424,7 +426,6 @@ HEADERS += \
     Extension/Script/scriptbase.h \
     Extension/Script/scriptmanager.h \
     Extension/Script/scriptmodel.h \
-    Extension/Script/scriptsettingmodel.h \
     Download/util.h \
     Play/Playlist/webdav/qwebdav.h \
     Play/Playlist/webdav/qwebdavdirparser.h \
@@ -439,9 +440,11 @@ HEADERS += \
     Play/Subtitle/vad.h \
     Play/Subtitle/wav.h \
     UI/animeepisodeeditor.h \
+    UI/dialogs/adddanmu.h \
     UI/dialogs/blockeditor.h \
     UI/dialogs/danmuview.h \
     UI/dialogs/mpvconfediror.h \
+    UI/dialogs/selectepisodedialog.h \
     UI/dialogs/subrecognizedialog.h \
     UI/dialogs/timelineedit.h \
     UI/dialogs/trackersubscribedialog.h \
@@ -513,7 +516,7 @@ HEADERS += \
     UI/settings/keyactionpage.h \
     UI/settings/playerpage.h \
     UI/settings/playlistpage.h \
-    UI/settings/subtitlepage.h \
+    UI/widgets/colorpreview.h \
     UI/widgets/component/flowlayout.h \
     UI/widgets/component/ktreeviewitemdelegate.h \
     UI/widgets/component/taskbarbtn/qwinevent.h \
@@ -526,6 +529,7 @@ HEADERS += \
     UI/widgets/component/taskbarbtn/windowsguidsdefs_p.h \
     UI/widgets/component/taskbarbtn/winpropkey_p.h \
     UI/widgets/component/taskbarbtn/winshobjidl_p.h \
+    UI/widgets/danmusourcetip.h \
     UI/widgets/elidedlabel.h \
     UI/widgets/floatscrollbar.h \
     UI/widgets/klineedit.h \
@@ -597,7 +601,6 @@ HEADERS += \
     Play/Video/simpleplayer.h \
     Play/playcontext.h \
     UI/about.h \
-    UI/adddanmu.h \
     UI/addpool.h \
     UI/addrule.h \
     UI/adduritask.h \
@@ -632,7 +635,6 @@ HEADERS += \
     UI/poolmanager.h \
     UI/ressearchwindow.h \
     UI/scriptplayground.h \
-    UI/selectepisode.h \
     UI/selecttorrentfile.h \
     UI/settings.h \
     UI/settings/downloadpage.h \

@@ -12,6 +12,7 @@
 #include "Extension/Common/ext_common.h"
 #include "Common/logger.h"
 #include "Extension/App/kapp.h"
+#include "UI/ela/ElaMenu.h"
 #include "UI/stylemanager.h"
 
 namespace Extension
@@ -969,8 +970,14 @@ QVariant AppWidget::getWidgetOption(AppWidgetOption option, bool *succ)
 void AppWidget::addActions(const QVector<QAction *> &actions)
 {
     if (!widget) return;
-    widget->addActions(actions.toList());
-    widget->setContextMenuPolicy(Qt::ActionsContextMenu);
+    widget->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    ElaMenu *menu = new ElaMenu(widget);
+    menu->addActions(actions);
+
+    QObject::connect(widget, &QWidget::customContextMenuRequested, widget, [=](const QPoint &pos){
+        menu->exec(QCursor::pos());
+    });
 }
 
 AppButtonGroupRes *AppButtonGroupRes::getButtonRes(KApp *app)

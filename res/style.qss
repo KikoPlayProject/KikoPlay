@@ -287,6 +287,10 @@ QLabel#AliasItem {
 QLabel#AliasItem:hover{
     background-color:rgb(37, 83, 128);
 }
+QLabel#SettingDescLabel {
+    color: rgb(180, 180, 180);
+    font-size: 11px;
+}
 
 
 /* ------------------- QSlider ------------------- */
@@ -566,7 +570,11 @@ PeerTreeView {
 /* ------------------- QHeaderView ------------------- */
 QHeaderView {
     @if{hasBackground}
-        background-color: rgba(@ThemeColorL2, 40);
+        @if{useThemeColor}
+            background-color: rgba(@ThemeColorL2, 40);
+        @else
+            background-color: rgb(100,100,100);
+        @endif
     @else
         background-color: rgb(100,100,100);
     @endif
@@ -576,8 +584,13 @@ QHeaderView {
 QHeaderView::section {
     @if{hasBackground}
         background-color: transparent;
-        border: 1px solid rgba(@ThemeColorL2, 60);
-        border-right: 0px solid rgba(@ThemeColorL2, 60);
+        @if{useThemeColor}
+            border: 1px solid rgba(@ThemeColorL2, 60);
+            border-right: 0px solid rgba(@ThemeColorL2, 60);
+        @else
+            border: 1px solid #6c6c6c;
+            border-right: 0px solid #6c6c6c;
+        @endif
     @else
         background-color: rgb(100,100,100);
         border: 1px solid #6c6c6c;
@@ -591,7 +604,11 @@ QHeaderView::section {
 }
 QHeaderView::section:vertical {
     @if{hasBackground}
-        border-bottom: 0px solid rgba(@ThemeColorL2, 60);
+        @if{useThemeColor}
+            border-bottom: 0px solid rgba(@ThemeColorL2, 60);
+        @else
+            border-bottom: 0px solid #6c6c6c;
+        @endif
     @else
         border-bottom: 0px solid #6c6c6c;
     @endif
@@ -609,7 +626,11 @@ QHeaderView::section:first {
 QHeaderView::section:last {
     border-top-right-radius: 8px;
     @if{hasBackground}
-        border-right: 1px solid rgba(@ThemeColorL2, 60);
+        @if{useThemeColor}
+            border-right: 1px solid rgba(@ThemeColorL2, 60);
+        @else
+            border-right: 1px solid #6c6c6c;
+        @endif
     @else
         border-right: 1px solid #6c6c6c;
     @endif
@@ -620,7 +641,11 @@ QHeaderView::section:vertical:first {
 QHeaderView::section:vertical:last {
     border-top-right-radius: 0px;
     @if{hasBackground}
-        border-bottom: 1px solid rgba(@ThemeColorL2, 60);
+        @if{useThemeColor}
+            border-bottom: 1px solid rgba(@ThemeColorL2, 60);
+        @else
+            border-bottom: 1px solid #6c6c6c;
+        @endif
     @else
         border-bottom: 1px solid #6c6c6c;
     @endif
@@ -1229,6 +1254,9 @@ KPushButton:disabled {
 KPushButton#TranslatorSetting {
     font-size: 18px;
 }
+KPushButton#AutoSetPoolBtn {
+    font-size: 18px;
+}
 
 
 /* ------------------- QScrollBar Setting ------------------- */
@@ -1325,7 +1353,7 @@ QListWidget#SettingPageList::item:selected {
         color:#4892F4;
     @endif
 }
-QListWidget#DanmuSearchResList {
+QListWidget#DanmuSearchResList, QListWidget#SelectedDanmuView {
     background-color: rgba(255, 255, 255, 40);
 }
 QListView#captureView {

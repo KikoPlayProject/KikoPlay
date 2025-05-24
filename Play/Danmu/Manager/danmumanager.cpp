@@ -10,6 +10,7 @@
 #include "Common/threadtask.h"
 #include "Common/network.h"
 #include "Common/logger.h"
+#include "Common/dbmanager.h"
 #include "../common.h"
 #include "../blocker.h"
 #include "../danmuprovider.h"
@@ -55,7 +56,7 @@ void DanmuManager::loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList)
         ThreadTask task(GlobalObjects::workThread);
         task.Run([this](){
             //get danmu count
-            QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Comment));
+            QSqlQuery query(DBManager::instance()->getDB(DBManager::Comment));
             for (int i = 0; i < DanmuTableCount; ++i)
             {
                 query.exec(QString("select PoolID,Source,count(PoolID) as DanmuCount from danmu_%1 group by PoolID,Source").arg(i));
@@ -271,7 +272,7 @@ int DanmuManager::importKdFile(const QString &fileName, QWidget *parent)
 
 QStringList DanmuManager::getMatchedFile16Md5(const QString &pid)
 {
-    QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Comment));
+    QSqlQuery query(DBManager::instance()->getDB(DBManager::Comment));
     query.exec(QString("select MD5 from match where PoolID='%1'").arg(pid));
     QStringList md5s;
     while (query.next())
@@ -288,7 +289,7 @@ QString DanmuManager::updateMatch(const QString &fileName, const MatchResult &ne
 
 void DanmuManager::removeMatch(const QString &fileName)
 {
-    QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Comment));
+    QSqlQuery query(DBManager::instance()->getDB(DBManager::Comment));
     query.exec(QString("delete from match where MD5='%1'").arg(getFileHash(fileName)));
 }
 
@@ -337,7 +338,7 @@ void DanmuManager::localMatch(const QString &path, MatchResult &result)
     do
     {
         if(hashStr.isEmpty()) break;
-        QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Comment));
+        QSqlQuery query(DBManager::instance()->getDB(DBManager::Comment));
         query.exec(QString("select poolID from match where MD5='%1'").arg(hashStr));
         if(!query.first()) break;
         QString poolID=query.value(0).toString();
@@ -364,7 +365,7 @@ QString DanmuManager::createPool(const QString &animeTitle, EpType epType, doubl
     }
     if(!pool)
     {
-        QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Comment));
+        QSqlQuery query(DBManager::instance()->getDB(DBManager::Comment));
         query.prepare("insert into pool(PoolID,Anime,EpType,EpIndex,EpName) values(?,?,?,?,?)");
         query.bindValue(0,poolId);
         query.bindValue(1,animeTitle);
@@ -379,7 +380,7 @@ QString DanmuManager::createPool(const QString &animeTitle, EpType epType, doubl
     {
         if(!epName.isEmpty() && pool->ep != epName)
         {
-            QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Comment));
+            QSqlQuery query(DBManager::instance()->getDB(DBManager::Comment));
             query.prepare("update pool set EpName=? where PoolID=?");
             query.bindValue(0,epName);
             query.bindValue(1,poolId);
@@ -405,7 +406,7 @@ QString DanmuManager::renamePool(const QString &pid, const QString &nAnimeTitle,
     {
         if(nEpTitle != pool->ep)
         {
-            QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Comment));
+            QSqlQuery query(DBManager::instance()->getDB(DBManager::Comment));
             query.prepare("update pool set EpName=? where PoolID=?");
             query.bindValue(0,nEpTitle);
             query.bindValue(1,pid);
@@ -419,7 +420,7 @@ QString DanmuManager::renamePool(const QString &pid, const QString &nAnimeTitle,
     PoolStateLock lock;
     if(!lock.tryLock(pid)) return QString();
     int oldId=DanmuPoolNode::idHash(pool->pid),newId=DanmuPoolNode::idHash(npid);
-    QSqlDatabase db(GlobalObjects::context()->getDB(GlobalContext::DBType::Comment));
+    QSqlDatabase db(DBManager::instance()->getDB(DBManager::Comment));
     db.transaction();
 
     QSqlQuery query(db);
@@ -464,7 +465,7 @@ QString DanmuManager::getPoolId(const QString &animeTitle, EpType epType, double
 
 void DanmuManager::setMatch(const QString &fileHash, const QString &poolId)
 {
-    QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Comment));
+    QSqlQuery query(DBManager::instance()->getDB(DBManager::Comment));
     query.exec(QString("select * from match where MD5='%1'").arg(fileHash));
     if(query.first())
     {
@@ -480,7 +481,7 @@ void DanmuManager::deletePool(const QList<DanmuPoolNode *> &deleteList)
 {
     ThreadTask task(GlobalObjects::workThread);
     task.Run([&deleteList,this](){
-        QSqlDatabase db = GlobalObjects::context()->getDB(GlobalContext::DBType::Comment);
+        QSqlDatabase db = DBManager::instance()->getDB(DBManager::Comment);
         QSqlQuery query(db);
         db.transaction();
         for(const DanmuPoolNode *node:deleteList)
@@ -545,7 +546,7 @@ void DanmuManager::deleteSource(const QString &pid, int srcId)
 {
     ThreadTask task(GlobalObjects::workThread);
     task.RunOnce([pid,srcId](){
-        QSqlDatabase db = GlobalObjects::context()->getDB(GlobalContext::DBType::Comment);
+        QSqlDatabase db = DBManager::instance()->getDB(DBManager::Comment);
         QSqlQuery query(db);
         db.transaction();
         query.exec(QString("delete from source where PoolID='%1' and ID=%2").arg(pid).arg(srcId));
@@ -559,7 +560,7 @@ void DanmuManager::deleteDanmu(const QString &pid, const QSharedPointer<DanmuCom
 {
     ThreadTask task(GlobalObjects::workThread);
     task.RunOnce([pid,danmu](){
-        QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Comment));
+        QSqlQuery query(DBManager::instance()->getDB(DBManager::Comment));
         int tableId=DanmuPoolNode::idHash(pid);
         query.prepare(QString("delete from danmu_%1 where PoolID=? and Date=? and User=? and Text=? and Source=?").arg(tableId));
         query.bindValue(0,pid);
@@ -628,7 +629,7 @@ void DanmuManager::updateSourceDelay(const QString &pid, const DanmuSource *sour
     ThreadTask task(GlobalObjects::workThread);
     int delay=sourceInfo->delay,id=sourceInfo->id;
     task.RunOnce([delay,id,pid](){
-        QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Comment));
+        QSqlQuery query(DBManager::instance()->getDB(DBManager::Comment));
         query.prepare("update source set Delay= ? where PoolID=? and ID=?");
         query.bindValue(0,delay);
         query.bindValue(1,pid);
@@ -666,7 +667,7 @@ QVector<DanmuComment *> DanmuManager::updateSource(const DanmuSource *sourceInfo
 
 void DanmuManager::loadAllPool()
 {
-    QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Comment));
+    QSqlQuery query(DBManager::instance()->getDB(DBManager::Comment));
     //get all danmu pools
     query.exec("select * from pool");
     int idNo = query.record().indexOf("PoolID"),
@@ -731,7 +732,7 @@ void DanmuManager::updateSourceTimeline(const QString &pid, const DanmuSource *s
     QString timeline(sourceInfo->timelineStr());
     int id = sourceInfo->id;
     task.RunOnce([=](){
-        QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Comment));
+        QSqlQuery query(DBManager::instance()->getDB(DBManager::Comment));
         query.prepare("update source set TimeLine= ? where PoolID=? and ID=?");
         query.bindValue(0,timeline);
         query.bindValue(1,pid);
@@ -745,7 +746,7 @@ void DanmuManager::loadPool(Pool *pool)
 {
     ThreadTask task(GlobalObjects::workThread);
     task.Run([pool](){
-        QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Comment));
+        QSqlQuery query(DBManager::instance()->getDB(DBManager::Comment));
         auto &sources=pool->sourcesTable;
         for(auto &src:sources)
             src.count=0;
@@ -811,7 +812,7 @@ void DanmuManager::saveSource(const QString &pid, const DanmuSource *source, con
     DanmuSource src;
     if(source!=nullptr) src=*source;
     task.RunOnce([pid,src,source,danmuList](){
-        QSqlDatabase db = GlobalObjects::context()->getDB(GlobalContext::DBType::Comment);
+        QSqlDatabase db = DBManager::instance()->getDB(DBManager::Comment);
         QSqlQuery query(db);
         db.transaction();
         if(source)

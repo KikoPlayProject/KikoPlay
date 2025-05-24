@@ -4,6 +4,7 @@
 #include <QPainter>
 #include "peerid.h"
 #include "util.h"
+#include "UI/stylemanager.h"
 #define PiecesNumRole Qt::UserRole+1
 
 constexpr const int PeerModel::ProgressCluster;
@@ -164,46 +165,41 @@ QVariant PeerModel::headerData(int section, Qt::Orientation orientation, int rol
     return QVariant();
 }
 
-void PeerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+void PeerDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     KTreeviewItemDelegate::paint(painter, option, index);
     painter->save();
-    QStyleOptionViewItem viewOption(option);
-    initStyleOption(&viewOption, index);
-    if (option.state.testFlag(QStyle::State_HasFocus))
-        viewOption.state = viewOption.state ^ QStyle::State_HasFocus;
-
-    QStyledItemDelegate::paint(painter, viewOption, index);
-    if(index.column()==static_cast<int>(PeerModel::Columns::PROGRESS))
+    if (index.column() == static_cast<int>(PeerModel::Columns::PROGRESS))
     {
         const int clusters = qMin(index.model()->data(index, PiecesNumRole).toInt(), PeerModel::ProgressCluster);
-        const PeerModel::PeerInfo *peer = (const PeerModel::PeerInfo *)index.data().value<void *>();
-        QRect bRect = viewOption.rect;
+        const PeerModel::PeerInfo* peer = (const PeerModel::PeerInfo*)index.data().value<void*>();
+        QRect bRect = option.rect;
         bRect.adjust(1, 1, -1, -1);
         painter->setPen(borderColor);
         painter->setBrush(QBrush(backgroundcolor));
         painter->drawRect(bRect);
         float wRatio = (bRect.width() - painter->pen().widthF()) / clusters;
         float h = bRect.height() - painter->pen().widthF();
-        float x = bRect.x()+painter->pen().widthF();
-        float y = bRect.y()+painter->pen().widthF();
+        float x = bRect.x() + painter->pen().widthF();
+        float y = bRect.y() + painter->pen().widthF();
         float cx = x, cw = 0;
-        for(int i=0;i<clusters;++i)
+        QColor curBarColor = StyleManager::getStyleManager()->enableThemeColor() ? StyleManager::getStyleManager()->curThemeColor() : barColor;
+        for (int i = 0; i < clusters; ++i)
         {
-            if(peer->progress[i/8] & (1<<(7-i%8)))
+            if (peer->progress[i / 8] & (1 << (7 - i % 8)))
             {
                 cw += wRatio;
             }
             else
             {
-                if(cw > 0) painter->fillRect(QRectF(cx, y, cw, h), barColor);
-                cx = qMax(x+(i+1)*wRatio, cx+cw);
+                if (cw > 0) painter->fillRect(QRectF(cx, y, cw, h), curBarColor);
+                cx = qMax(x + (i + 1) * wRatio, cx + cw);
                 cw = 0;
             }
         }
-        if(cw > 0) painter->fillRect(QRectF(cx, y, cw, h), barColor);
+        if (cw > 0) painter->fillRect(QRectF(cx, y, cw, h), curBarColor);
         painter->setPen(Qt::black);
-        painter->drawText(bRect, Qt::AlignCenter, QString("%1%").arg(peer->progressPercent,0,'g',3));
+        painter->drawText(bRect, Qt::AlignCenter, QString("%1%").arg(peer->progressPercent, 0, 'g', 3));
     }
     painter->restore();
 }

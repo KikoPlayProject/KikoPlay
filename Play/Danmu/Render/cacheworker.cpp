@@ -285,25 +285,25 @@ void CacheWorker::createTexture(QVector<CacheMiddleInfo> &midInfo)
         return c1.drawInfo->height > c2.drawInfo->height;
     });
     int textureWidth = 0;
-    for(auto &m : midInfo)
+    for (auto& m : midInfo)
     {
         textureWidth = qMax(textureWidth, m.drawInfo->width);
     }
     textureWidth = textureWidth>2048?2048:powerOf2GE(textureWidth);
     using DanmuLevel = QPair<int, int>;  // h, x
-    while(cachePos < midInfo.size())
+    while (cachePos < midInfo.size())
     {
         QVector<DanmuLevel> levels{{midInfo[cachePos].drawInfo->height, 0}};
         levels.reserve(32);
         int endPos = cachePos;
-        for(; endPos < midInfo.size(); ++endPos)
+        for (; endPos < midInfo.size(); ++endPos)
         {
-            auto &mInfo = midInfo[endPos];
+            auto& mInfo = midInfo[endPos];
             bool insert = false;
             int y = 0;
-            for(auto &level : levels)
+            for (auto& level : levels)
             {
-                if(level.first >= mInfo.drawInfo->height && textureWidth - level.second > mInfo.drawInfo->width)
+                if (level.first >= mInfo.drawInfo->height && textureWidth - level.second > mInfo.drawInfo->width)
                 {
                     mInfo.texX = level.second;
                     mInfo.texY = y;
@@ -313,43 +313,43 @@ void CacheWorker::createTexture(QVector<CacheMiddleInfo> &midInfo)
                 }
                 y += level.first;
             }
-            if(!insert)
+            if (!insert)
             {
-                if(y + mInfo.drawInfo->height > 1024)
+                if (y + mInfo.drawInfo->height > 2048) break;
+                if (y + mInfo.drawInfo->height > 1024)
                 {
-                    if(mInfo.drawInfo->height*(midInfo.size()-endPos) < 512) break;
+                    if (mInfo.drawInfo->height * (midInfo.size() - endPos) < 512) break;
                 }
-                else if(y + mInfo.drawInfo->height > 2048) break;
                 mInfo.texX = 0;
                 mInfo.texY = y;
-                levels.append({mInfo.drawInfo->height, mInfo.drawInfo->width});
+                levels.append({ mInfo.drawInfo->height, mInfo.drawInfo->width });
             }
         }
         assert(endPos != cachePos);
         int textureHeight = 0;
-        for(const auto &l : levels) textureHeight += l.first;
-        textureHeight = textureHeight>2048?2048:powerOf2GE(textureHeight);
+        for (const auto& l : levels) textureHeight += l.first;
+        textureHeight = textureHeight > 2048 ? 2048 : powerOf2GE(textureHeight);
 #ifdef QT_DEBUG
         qDebug() << "texture: start: " << cachePos << ", end: " << endPos << ", total: " << midInfo.size();
         qDebug() << "texture: size: " << textureWidth << ", " << textureHeight;
         Counter::instance()->countValue("texture.num_dm", midInfo.size());
         Counter::instance()->countValue("texture.width", textureWidth);
         Counter::instance()->countValue("texture.height", textureHeight);
-        for(int i = cachePos; i < endPos; ++i)
+        for (int i = cachePos; i < endPos; ++i)
         {
-            auto &mInfo = midInfo[i];
+            auto& mInfo = midInfo[i];
             assert(mInfo.texX < textureWidth && mInfo.texY < textureHeight);
         }
         static bool ft = true;
-        if(ft)
+        if (ft)
         {
             QImage test(textureWidth, textureHeight, QImage::Format_ARGB32);
             QPainter painter(&test);
             painter.setRenderHint(QPainter::Antialiasing);
             ft = false;
-            for(int i = cachePos; i < endPos; ++i)
+            for (int i = cachePos; i < endPos; ++i)
             {
-                auto &mInfo = midInfo[i];
+                auto& mInfo = midInfo[i];
                 painter.drawImage(mInfo.texX, mInfo.texY, *mInfo.img);
             }
             test.save("texture_test.jpg");
@@ -360,7 +360,7 @@ void CacheWorker::createTexture(QVector<CacheMiddleInfo> &midInfo)
 #endif
         danmuTextureContext->makeCurrent(surface);
         QOpenGLFunctions *glFuns=danmuTextureContext->functions();
-        if(!init)
+        if (!init)
         {
             glFuns->initializeOpenGLFunctions();
             init = true;
@@ -372,18 +372,18 @@ void CacheWorker::createTexture(QVector<CacheMiddleInfo> &midInfo)
         glFuns->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
         textureRef.insert(texture, endPos - cachePos);
 
-        for(int i = cachePos; i < endPos; ++i)
+        for (int i = cachePos; i < endPos; ++i)
         {
-            auto &mInfo = midInfo[i];
-            mInfo.drawInfo->texture=texture;
-            glFuns->glTexSubImage2D(GL_TEXTURE_2D,0,mInfo.texX,mInfo.texY,mInfo.drawInfo->width
-                                    ,mInfo.drawInfo->height,GL_RGBA,GL_UNSIGNED_BYTE,mInfo.img->bits());
-            mInfo.drawInfo->l=((GLfloat)mInfo.texX)/textureWidth;
-            mInfo.drawInfo->r=((GLfloat)mInfo.texX+mInfo.drawInfo->width)/textureWidth;
-            if(mInfo.drawInfo->r>1)mInfo.drawInfo->r=1;
-            mInfo.drawInfo->t=((GLfloat)mInfo.texY)/textureHeight;
-            mInfo.drawInfo->b=((GLfloat)mInfo.texY+mInfo.drawInfo->height)/textureHeight;
-            if(mInfo.drawInfo->b>1)mInfo.drawInfo->b=1;
+            auto& mInfo = midInfo[i];
+            mInfo.drawInfo->texture = texture;
+            glFuns->glTexSubImage2D(GL_TEXTURE_2D, 0, mInfo.texX, mInfo.texY, mInfo.drawInfo->width
+                , mInfo.drawInfo->height, GL_RGBA, GL_UNSIGNED_BYTE, mInfo.img->bits());
+            mInfo.drawInfo->l = ((GLfloat)mInfo.texX) / textureWidth;
+            mInfo.drawInfo->r = ((GLfloat)mInfo.texX + mInfo.drawInfo->width) / textureWidth;
+            if (mInfo.drawInfo->r > 1)mInfo.drawInfo->r = 1;
+            mInfo.drawInfo->t = ((GLfloat)mInfo.texY) / textureHeight;
+            mInfo.drawInfo->b = ((GLfloat)mInfo.texY + mInfo.drawInfo->height) / textureHeight;
+            if (mInfo.drawInfo->b > 1)mInfo.drawInfo->b = 1;
             delete mInfo.img;
         }
         glFuns->glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
@@ -410,20 +410,20 @@ void CacheWorker::beginCache(QVector<DrawTask> *danmus)
     QStringList hashList;
     QSet<QString> tmpHash;
     QVector<CacheMiddleInfo> mInfoList;
-    for(auto &dm:*danmus)
+    for (auto& dm : *danmus)
     {
         QString hash_str(QCryptographicHash::hash(QString("%1%2%3%4")
-                         .arg(dm.comment->text
-                              ,QString::number(dm.comment->color)
-                              ,QString::number(danmuStyle->fontSizeTable[dm.comment->fontSizeLevel])
-                         ,dm.comment->mergedList?QString::number(dm.comment->mergedList->count()):"0").toUtf8()
-                         ,QCryptographicHash::Md5).toHex());
-        hashList<<hash_str;
-        if(!danmuCache.contains(hash_str) && !tmpHash.contains(hash_str))
+            .arg(dm.comment->text
+                , QString::number(dm.comment->color)
+                , QString::number(danmuStyle->fontSizeTable[dm.comment->fontSizeLevel])
+                , dm.comment->mergedList ? QString::number(dm.comment->mergedList->count()) : "0").toUtf8()
+            , QCryptographicHash::Md5).toHex());
+        hashList << hash_str;
+        if (!danmuCache.contains(hash_str) && !tmpHash.contains(hash_str))
         {
             CacheMiddleInfo mInfo;
-            mInfo.hash=hash_str;
-            mInfo.comment=dm.comment.data();
+            mInfo.hash = hash_str;
+            mInfo.comment = dm.comment.data();
             mInfoList.append(mInfo);
             tmpHash.insert(hash_str);
         }
@@ -451,20 +451,20 @@ void CacheWorker::beginCache(QVector<DrawTask> *danmus)
 		}
 	}
     int i=0;
-    for(auto &dm:*danmus)
+    for (auto& dm : *danmus)
     {
-         DanmuDrawInfo *drawInfo(danmuCache.value(hashList[i++],nullptr));
-         Q_ASSERT(drawInfo);
-         if(dm.isCurrent)
-         {
-             drawInfo->useCount++;
-             drawInfo->cacheFlag = false;
-         }
-         else
-         {
-             drawInfo->cacheFlag = true;
-         }
-         dm.drawInfo=drawInfo;
+        DanmuDrawInfo* drawInfo(danmuCache.value(hashList[i++], nullptr));
+        Q_ASSERT(drawInfo);
+        if (dm.isCurrent)
+        {
+            drawInfo->useCount++;
+            drawInfo->cacheFlag = false;
+        }
+        else
+        {
+            drawInfo->cacheFlag = true;
+        }
+        dm.drawInfo = drawInfo;
     }
 #ifdef QT_DEBUG
     qDebug()<<"cache end, time: "<<timer.elapsed()<<"ms";

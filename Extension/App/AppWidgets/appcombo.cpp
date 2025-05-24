@@ -245,7 +245,7 @@ void AppCombo::parseItems(lua_State *L, QVector<QPair<QString, QVariant> > &item
     };
     const QVariant itemParam = getValue(L, true, modifer, 2);
     QVariantList rawItems;
-    if (itemParam.canConvert(QMetaType::QVariantList))
+    if (itemParam.typeId() == QMetaType::QVariantList)
     {
         rawItems = itemParam.toList();
     }

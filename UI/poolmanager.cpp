@@ -24,7 +24,7 @@
 #include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/kpushbutton.h"
 #include "dialogs/timelineedit.h"
-#include "adddanmu.h"
+#include "dialogs/adddanmu.h"
 #include "addpool.h"
 #include "dialogs/danmuview.h"
 #include "inputdialog.h"
@@ -93,6 +93,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         PlayListItem item;
         item.title=poolNode->title;
         item.animeTitle=poolNode->parent->title;
+        item.poolID = poolNode->idInfo;
         QMap<QString,DanmuPoolNode *> poolNodeMap;
         QStringList poolTitles;
         for(auto node:*poolNode->parent->children)
@@ -104,38 +105,36 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
             return comparer.compare(s1, s2)>=0?false:true;
         });
         AddDanmu addDanmuDialog(&item, this,false,poolTitles);
-        if(QDialog::Accepted==addDanmuDialog.exec())
+        if (QDialog::Accepted == addDanmuDialog.exec())
         {
             poolView->setEnabled(false);
             this->showBusyState(true);
-            int i = 0;
-            for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
+            auto &infoList = addDanmuDialog.danmuInfoList;
+            for (SearchDanmuInfo &info : infoList)
             {
-                DanmuPoolNode *curNode=poolNodeMap.value(addDanmuDialog.danmuToPoolList.at(i++));
+                DanmuPoolNode *curNode = poolNodeMap.value(info.pool);
                 Q_ASSERT(curNode);
-                Pool *pool=GlobalObjects::danmuManager->getPool(curNode->idInfo);
+                Pool *pool = GlobalObjects::danmuManager->getPool(curNode->idInfo);
                 Q_ASSERT(pool);
-                DanmuSource &sourceInfo=(*iter).first;
-                QVector<DanmuComment *> &danmuList=(*iter).second;
-                int srcId=pool->addSource(sourceInfo,danmuList,true);
-				sourceInfo.id = srcId;
-                if(srcId<0)
+                int srcId = pool->addSource(info.src, info.danmus, true);
+                info.src.id = srcId;
+                if (srcId < 0)
                 {
-                    showMessage(tr("Add %1 Failed").arg(sourceInfo.title), NM_ERROR | NM_HIDE);
-                    qDeleteAll(danmuList);
+                    showMessage(tr("Add %1 Failed").arg(info.src.title), NM_ERROR | NM_HIDE);
+                    qDeleteAll(info.danmus);
                     continue;
                 }
                 DanmuPoolSourceNode *sourceNode(nullptr);
-                for(auto n:*curNode->children)
+                for (auto n : *curNode->children)
                 {
-                    DanmuPoolSourceNode *srcNode=static_cast<DanmuPoolSourceNode *>(n);
-                    if(srcNode->idInfo==sourceInfo.scriptId && srcNode->scriptData==sourceInfo.scriptData)
+                    DanmuPoolSourceNode *srcNode = static_cast<DanmuPoolSourceNode *>(n);
+                    if (srcNode->idInfo == info.src.scriptId && srcNode->scriptData == info.src.scriptData)
                     {
                         sourceNode=srcNode;
                         break;
                     }
                 }
-                managerModel->addSrcNode(curNode,sourceNode?nullptr:new DanmuPoolSourceNode(sourceInfo));
+                managerModel->addSrcNode(curNode, sourceNode ? nullptr : new DanmuPoolSourceNode(info.src));
             }
             stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
             poolView->setEnabled(true);

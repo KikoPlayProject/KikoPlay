@@ -20,7 +20,7 @@
 #include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 #include "pooleditor.h"
-#include "adddanmu.h"
+#include "dialogs/adddanmu.h"
 #include "matcheditor.h"
 #include "dialogs/blockeditor.h"
 #include "inputdialog.h"
@@ -394,28 +394,26 @@ void ListWindow::initActions()
             return comparer.compare(s1, s2)>=0?false:true;
         });
         AddDanmu addDanmuDialog(item, this,true,poolTitles);
-        if(QDialog::Accepted==addDanmuDialog.exec())
+        if (QDialog::Accepted == addDanmuDialog.exec())
         {
-            int i = 0;
-            for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
+            auto &infoList = addDanmuDialog.danmuInfoList;
+            for (SearchDanmuInfo &info : infoList)
             {
-                Pool *pool=GlobalObjects::danmuManager->getPool(poolIdMap.value(addDanmuDialog.danmuToPoolList.at(i++)));
-                DanmuSource &sourceInfo=(*iter).first;
-                QVector<DanmuComment *> &danmuList=(*iter).second;
-                if(pool)
+                Pool *pool = GlobalObjects::danmuManager->getPool(poolIdMap.value(info.pool));
+                if (pool)
                 {
-                    showMessage(tr("Adding: %1").arg(pool->epTitle()),NotifyMessageFlag::NM_PROCESS);
-                    if(pool->addSource(sourceInfo,danmuList,true)==-1)
+                    showMessage(tr("Adding: %1").arg(pool->epTitle()), NotifyMessageFlag::NM_PROCESS);
+                    if (pool->addSource(info.src, info.danmus, true) == -1)
                     {
-                        qDeleteAll(danmuList);
+                        qDeleteAll(info.danmus);
                     }
                 }
                 else
                 {
-                    qDeleteAll(danmuList);
+                    qDeleteAll(info.danmus);
                 }
             }
-            showMessage(tr("Done adding"), NotifyMessageFlag::NM_HIDE);
+            showMessage(tr("Done"), NotifyMessageFlag::NM_HIDE);
         }
 
     });
@@ -783,20 +781,19 @@ void ListWindow::initActions()
             GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
         }
         AddDanmu addDanmuDialog(currentItem, this);
-        if(QDialog::Accepted==addDanmuDialog.exec())
+        if (QDialog::Accepted == addDanmuDialog.exec())
         {
-            Pool *pool=GlobalObjects::danmuPool->getPool();
-            for(auto iter=addDanmuDialog.selectedDanmuList.begin();iter!=addDanmuDialog.selectedDanmuList.end();++iter)
+            auto &infoList = addDanmuDialog.danmuInfoList;
+            Pool *pool = GlobalObjects::danmuPool->getPool();
+            for (SearchDanmuInfo &info : infoList)
             {
-                DanmuSource &sourceInfo=(*iter).first;
-                QVector<DanmuComment *> &danmuList=(*iter).second;
-                if(pool->addSource(sourceInfo,danmuList,iter==addDanmuDialog.selectedDanmuList.end()-1)<0)
+                if (pool->addSource(info.src, info.danmus, true) == -1)
                 {
-                    qDeleteAll(danmuList);
+                    qDeleteAll(info.danmus);
                 }
             }
         }
-        if(restorePlayState)GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
+        if (restorePlayState) GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
     act_addLocalDanmu=new QAction(tr("Add Local Danmu"),this);
     QObject::connect(act_addLocalDanmu, &QAction::triggered, this, [this](){
@@ -814,6 +811,7 @@ void ListWindow::initActions()
                 QVector<DanmuComment *> tmplist;
                 LocalProvider::LoadXmlDanmuFile(file,tmplist);
                 DanmuSource sourceInfo;
+                sourceInfo.scriptData = file;
                 sourceInfo.title=file.mid(file.lastIndexOf('/')+1);
                 sourceInfo.show=true;
                 sourceInfo.count=tmplist.count();
@@ -1777,16 +1775,17 @@ void ListWindow::dropEvent(QDropEvent *event)
     }
     else if (currentList() == 1)
     {
-        for(QUrl &url:urls)
+        for (QUrl &url : urls)
         {
-            if(url.isLocalFile())
+            if (url.isLocalFile())
             {
                 QFileInfo fi(url.toLocalFile());
-                if(fi.isFile() && "xml"==fi.suffix())
+                if (fi.isFile() && "xml" == fi.suffix())
                 {
                     QVector<DanmuComment *> tmplist;
                     LocalProvider::LoadXmlDanmuFile(fi.filePath(),tmplist);
                     DanmuSource sourceInfo;
+                    sourceInfo.scriptData = fi.filePath();
                     sourceInfo.title=fi.fileName();
                     sourceInfo.count=tmplist.count();
                     if(GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true)==-1)
@@ -1794,6 +1793,20 @@ void ListWindow::dropEvent(QDropEvent *event)
                         qDeleteAll(tmplist);
                         showMessage(tr("Add Failed: Pool is busy"), NotifyMessageFlag::NM_HIDE);
                     }
+                }
+            }
+        }
+    }
+    else if (currentList() == 2)
+    {
+        for (QUrl &url : urls)
+        {
+            if (url.isLocalFile())
+            {
+                QFileInfo fi(url.toLocalFile());
+                if (fi.isFile() && GlobalObjects::mpvplayer->subtitleFormats.contains("*." + fi.suffix().toLower()))
+                {
+                    GlobalObjects::mpvplayer->addSubtitle(fi.filePath());
                 }
             }
         }

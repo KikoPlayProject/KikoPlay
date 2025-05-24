@@ -88,9 +88,9 @@ signals:
     void recentItemInfoUpdated(int index);
     void matchStatusChanged(bool on);
 public slots :
-    int addItems(const QStringList &items, QModelIndex parent);
+    int addItems(const QStringList &items, QModelIndex parent, const QHash<QString, QString> *titleMapping = nullptr);
     int addFolder(QString folderStr, QModelIndex parent, const QString &name = "");
-    int addURL(const QStringList &urls, QModelIndex parent, bool decodeTitle = false);
+    int addURL(const QStringList &urls, QModelIndex parent, bool decodeTitle = false, const QHash<QString, QString> *titleMapping = nullptr);
     QModelIndex addCollection(QModelIndex parent, const QString &title);
     QModelIndex getCollection(QModelIndex parent, const QStringList &path);
     int refreshFolder(const QModelIndex &index);

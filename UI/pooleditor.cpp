@@ -10,7 +10,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QStackedLayout>
-#include "Extension/Script/scriptmanager.h"
+#include "widgets/danmusourcetip.h"
 #include "UI/ela/ElaCheckBox.h"
 #include "UI/ela/ElaMenu.h"
 #include "UI/ela/ElaSpinBox.h"
@@ -407,54 +407,4 @@ bool PoolItem::eventFilter(QObject *watched, QEvent *event)
         return true;
     }
     return QWidget::eventFilter(watched, event);
-}
-
-DanmuSourceTip::DanmuSourceTip(const DanmuSource *sourceInfo, QWidget *parent) : QWidget(parent)
-{
-    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    setSource(sourceInfo);
-}
-
-void DanmuSourceTip::setSource(const DanmuSource *sourceInfo)
-{
-    this->src = sourceInfo;
-    QStringList fields;
-    QString scriptTitle = src->scriptId;
-    auto curScript = GlobalObjects::scriptManager->getScript(src->scriptId);
-    if (curScript) scriptTitle = curScript->name();
-    fields.append(scriptTitle);
-    if (src->duration > 0)
-    {
-        fields.append(src->durationStr());
-    }
-
-    this->text = fields.join('|');
-
-    static const QHash<QString, QColor> scriptBgColor = {
-        {"Kikyou.d.Bilibili", QColor(220, 71, 138)},
-    };
-
-    this->bgColor = scriptBgColor.value(src->scriptId, QColor(43, 106, 176));
-    update();
-}
-
-void DanmuSourceTip::paintEvent(QPaintEvent *event)
-{
-    QPainter p(this);
-    p.setRenderHints(QPainter::Antialiasing, true);
-    p.setRenderHints(QPainter::TextAntialiasing, true);
-
-    QPainterPath path;
-    path.addRoundedRect(0, 0, width(), height(), 4, 4);
-    p.setClipPath(path);
-    p.fillRect(rect(), this->bgColor);
-
-    p.setPen(Qt::white);
-    p.drawText(rect(), Qt::AlignCenter, this->text);
-}
-
-QSize DanmuSourceTip::sizeHint() const
-{
-    QFontMetrics fm(this->font());
-    return fm.size(0, this->text) + QSize(8, 4);
 }

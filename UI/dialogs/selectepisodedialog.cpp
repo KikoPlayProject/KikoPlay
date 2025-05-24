@@ -1,4 +1,4 @@
-#include "selectepisode.h"
+#include "selectepisodedialog.h"
 #include "UI/ela/ElaCheckBox.h"
 #include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/kpushbutton.h"

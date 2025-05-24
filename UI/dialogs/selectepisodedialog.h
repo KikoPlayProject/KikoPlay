@@ -1,7 +1,7 @@
 #ifndef SELECTEPISODE_H
 #define SELECTEPISODE_H
 
-#include "framelessdialog.h"
+#include "UI/framelessdialog.h"
 #include "Play/Danmu/common.h"
 #include <QTreeWidget>
 class PressTreeWidget : public QTreeWidget

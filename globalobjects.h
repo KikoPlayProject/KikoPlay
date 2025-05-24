@@ -1,7 +1,6 @@
 #ifndef GLOBALOBJECTS_H
 #define GLOBALOBJECTS_H
 #include <QString>
-#include <QSqlDatabase>
 #include <QVector>
 #include <QIcon>
 class MPVPlayer;
@@ -42,14 +41,6 @@ struct GlobalContext
     QVector<QPair<QString, qint64>> stepTime;
     qint64 tick(QElapsedTimer *timer, const QString &step);
 
-    enum class DBType
-    {
-        Comment,
-        Bangumi,
-        Download,
-    };
-    QSqlDatabase getDB(DBType db, bool *hasError = nullptr);
-
     QIcon getFontIcon(QChar iconChar, QColor fontColor);
 };
 
@@ -81,9 +72,7 @@ public:
     static constexpr const char *normalFont = "Microsoft Yahei UI";
     static constexpr const char *kikoVersion = "2.0.0";
 
-private:
-    static void initDatabase(const char *db_names[]);
-    static void setDatabase(const char *name, const char *file);
+
     static void registerCustomSettingType();
 };
 #endif // GLOBALOBJECTS_H

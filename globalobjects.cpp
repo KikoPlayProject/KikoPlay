@@ -19,7 +19,7 @@
 #include "Common/eventbus.h"
 #include "Common/logger.h"
 #include "Common/keyactionmodel.h"
-#include "Common/browser.h"
+#include "Common/dbmanager.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -46,12 +46,6 @@ AutoDownloadManager *GlobalObjects::autoDownloadManager=nullptr;
 QMainWindow *GlobalObjects::mainWindow=nullptr;
 QFont* GlobalObjects::iconfont;
 
-namespace
-{
-    static const char *mt_db_names[]={"Comment_M", "Bangumi_M","Download_M"};
-    static const char *wt_db_names[]={"Comment_W", "Bangumi_W","Download_W"};
-}
-
 constexpr const char *GlobalObjects::normalFont;
 constexpr const char *GlobalObjects::kikoVersion;
 
@@ -61,22 +55,15 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
 
     registerCustomSettingType();
     appSetting=new QSettings(context()->dataPath + "settings.ini", QSettings::IniFormat);
-
     Logger::logger();
 
-    initDatabase(mt_db_names);
     QThread::currentThread()->setObjectName(QStringLiteral("mainThread"));
     workThread = new QThread();
     workThread->setObjectName(QStringLiteral("workThread"));
     workThread->start(QThread::NormalPriority);
-    QObject workObj;
-    workObj.moveToThread(workThread);
-    QMetaObject::invokeMethod(&workObj, [](){
-        initDatabase(wt_db_names);
-    }, Qt::QueuedConnection);
+    GlobalObjects::context()->tick(elapsedTimer, "init");
 
-    BrowserManager::instance();
-
+    DBManager::instance();
     GlobalObjects::context()->tick(elapsedTimer, "db");
 
     auto locNames = GlobalObjects::appSetting->value("KikoPlay/Language", "").toStringList();
@@ -115,6 +102,8 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
     scriptManager = new ScriptManager();
     danmuProvider = new DanmuProvider();
     animeProvider = new AnimeProvider();
+    QObject workObj;
+    workObj.moveToThread(workThread);
     QMetaObject::invokeMethod(&workObj, [](){
         LabelModel::instance()->loadLabels();
     }, Qt::QueuedConnection);
@@ -129,7 +118,7 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
     GlobalObjects::context()->tick(elapsedTimer, "lan");
 
     appManager = new AppManager();
-    GlobalObjects::context()->tick(elapsedTimer, "app");
+    GlobalObjects::context()->tick(elapsedTimer, "ext");
 
     iconfont = new QFont();
     QFontDatabase::addApplicationFont(":/res/ElaAwesome.ttf");
@@ -170,54 +159,13 @@ GlobalContext *GlobalObjects::context()
     return &context;
 }
 
-void GlobalObjects::initDatabase(const char *db_names[])
-{
-    const int db_count=3;
-    const char *db_files[]={"comment","bangumi","download"};
-    for(int i=0;i<db_count;++i)
-    {
-        setDatabase(db_names[i],db_files[i]);
-    }
-}
-
-void GlobalObjects::setDatabase(const char *name, const char *file)
-{
-    QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE", name);
-    QString dbFile(context()->dataPath + file + ".db");
-    bool dbFileExist = QFile::exists(dbFile);
-    database.setDatabaseName(dbFile);
-    database.open();
-    QSqlQuery query(database);
-    query.exec("PRAGMA foreign_keys = ON;");
-    if(!dbFileExist)
-    {
-        QFile sqlFile(QString(":/res/db/%1.sql").arg(file));
-        sqlFile.open(QFile::ReadOnly);
-        if(sqlFile.isOpen())
-        {
-            QStringList sqls=QString(sqlFile.readAll()).split(';', Qt::SkipEmptyParts);
-            for(const QString &sql:sqls)
-            {
-                query.exec(sql);
-            }
-        }
-    }
-}
-
 void GlobalObjects::registerCustomSettingType()
 {
-    using ShortCutInfo = QPair<QString, QPair<QString,QString>>;
-    qRegisterMetaType<QList<ShortCutInfo>>("QList<ShortCutInfo>");
-    //qRegisterMetaTypeStreamOperators<QList<ShortCutInfo>>("QList<ShortCutInfo>");
-
     qRegisterMetaType<QVector<QPair<QString, QString>>>("QVector<QPair<QString, QString>>");
-    //qRegisterMetaTypeStreamOperators<QVector<QPair<QString, QString>>>("QVector<QPair<QString, QString>>");
 
     qRegisterMetaType<QVector<QStringList>>("QVector<QStringList>");
-    //qRegisterMetaTypeStreamOperators<QVector<QStringList>>("QVector<QStringList>");
 
     qRegisterMetaType<QList<QSharedPointer<KeyActionItem>>>("QList<QSharedPointer<KeyActionItem>>");
-    //qRegisterMetaTypeStreamOperators<QVector<QSharedPointer<KeyActionItem>>>("QVector<QSharedPointer<KeyActionItem>>");
 
     qRegisterMetaType<QList<TranslatorConfig>>("QList<TranslatorConfig>");
 }
@@ -255,22 +203,6 @@ qint64 GlobalContext::tick(QElapsedTimer *timer, const QString &step)
     startupTime += elapsed;
     stepTime.append(QPair<QString, qint64>(step, elapsed));
     return elapsed;
-}
-
-QSqlDatabase GlobalContext::getDB(DBType db, bool *hasError)
-{
-    const QString threadName = QThread::currentThread()->objectName();
-    if (hasError) *hasError = false;
-    if (threadName == QStringLiteral("workThread"))
-    {
-        return QSqlDatabase::database(wt_db_names[int(db)]);
-    }
-    else if (threadName == "mainThread")
-    {
-        return QSqlDatabase::database(mt_db_names[int(db)]);
-    }
-    if (hasError) *hasError = true;
-    return QSqlDatabase::database(mt_db_names[int(db)]);
 }
 
 QIcon GlobalContext::getFontIcon(QChar iconChar, QColor fontColor)

@@ -91,6 +91,15 @@ public:
     bool getShowPreview() const { return isShowPreview; }
     bool getShowRecent() const { return isShowRecent; }
     bool getUseSample2DArray() const { return useSample2DArray; }
+    QString getSubAuto() const { return subAuto; }
+    QString getSubFont() const { return subFont; }
+    int getSubFontSize() const { return subFontSize; }
+    bool getSubBold() const { return subBold; }
+    unsigned int getSubColor() const { return subColor; }
+    unsigned int getSubOutlineColor() const { return subOutlineColor; }
+    unsigned int getSubBackColor() const { return subBackColor; }
+    double getSubOutlineSize() const { return subOutlineSize; }
+    QString getSubBorderStyle() const { return subBorderStyle; }
 
     VideoSizeInfo getVideoSizeInfo();
     QString expandMediaInfo(const QString &text);
@@ -162,6 +171,15 @@ public slots:
     void setShowPreview(bool on);
     void setShowRecent(bool on);
     void setUseSample2DArray(bool on);
+    void setSubAuto(const QString val);
+    void setSubFont(const QString val);
+    void setSubFontSize(int val);
+    void setSubBold(bool on);
+    void setSubColor(QColor color);
+    void setSubOutlineColor(QColor color);
+    void setSubBackColor(QColor color);
+    void setSubOutlineSize(double size);
+    void setSubBorderStyle(const QString val);
 
 protected:
     void initializeGL() override;
@@ -204,6 +222,16 @@ private:
     bool isShowPreview;
     bool isShowRecent;
     bool useSample2DArray;
+
+    QString subAuto;
+    QString subFont;
+    int subFontSize;
+    bool subBold;
+    unsigned int subColor;
+    unsigned int subOutlineColor;
+    unsigned int subBackColor;
+    double subOutlineSize;
+    QString subBorderStyle;
 
     QString curOptionGroup;
     QStringList optionGroupKeys;

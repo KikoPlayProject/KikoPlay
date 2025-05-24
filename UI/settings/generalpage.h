@@ -30,27 +30,6 @@ private:
     void updateSetting();
 };
 
-class ColorPreview : public QWidget
-{
-    Q_OBJECT
-public:
-    explicit ColorPreview(QWidget *parent = nullptr);
-    void setColor(const QColor &c);
-    void setPixmap(const QPixmap &p);
-signals:
-    void click();
-protected:
-    void paintEvent(QPaintEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
-    void enterEvent(QEnterEvent *event) override;
-    void leaveEvent(QEvent *event) override;
-private:
-    bool useColor{true};
-    QColor color;
-    QPixmap pixmap;
-    bool isEnter{false};
-};
-
 class BgColorPicker : public QWidget
 {
     Q_OBJECT

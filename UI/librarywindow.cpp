@@ -311,7 +311,7 @@ void LibraryWindow::initAnimeView()
         Anime *anime = animeModel->getAnime(selection.indexes().first());
         if (anime)
         {
-            if(detailPage->curAnime()==anime) detailPage->setAnime(nullptr);
+            if (detailPage && detailPage->curAnime() == anime) detailPage->setAnime(nullptr);
             LabelModel::instance()->removeTag(anime->name(), anime->airDate(), anime->scriptId());
             animeModel->deleteAnime(selection.indexes().first());
         }

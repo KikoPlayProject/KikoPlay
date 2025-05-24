@@ -2,7 +2,7 @@
 #include <QGridLayout>
 #include <QPushButton>
 #include <QLineEdit>
-#include <QTreeWidget>
+#include <QTreeView>
 #include <QHeaderView>
 #include <QLabel>
 #include <QComboBox>
@@ -13,6 +13,7 @@
 #include "MediaLibrary/animeprovider.h"
 #include "Common/notifier.h"
 #include "widgets/scriptsearchoptionpanel.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "Extension/Script/scriptmanager.h"
 #define AnimeRole Qt::UserRole+1
 
@@ -43,18 +44,19 @@ AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("B
     searchButton = new KPushButton(tr("Search"), this);
     QObject::connect(searchButton, &QPushButton::clicked, this, &AnimeSearch::search);
 
-    bangumiList = new QTreeWidget(this);
+    bangumiList = new QTreeView(this);
     bangumiList->setRootIsDecorated(false);
     bangumiList->setFont(font());
-    bangumiList->setHeaderLabels(QStringList()<<tr("Title")<<tr("Extra"));
-    bangumiList->setAlternatingRowColors(true);
+    bangumiList->setItemDelegate(new KTreeviewItemDelegate(this));
+    bangumiList->setSelectionMode(QAbstractItemView::SingleSelection);
     QHeaderView *bgmHeader = bangumiList->header();
-    bgmHeader->resizeSection(0, 200);
+    bgmHeader->resizeSection(0, 300);
     bgmHeader->setFont(font());
+    model = new BgmListModel(this);
+    bangumiList->setModel(model);
 
-    QObject::connect(bangumiList, &QTreeWidget::itemDoubleClicked,[=](QTreeWidgetItem *item, int ){
-        if(!item) return;
-        curSelectedAnime = item->data(0, AnimeRole).value<AnimeLite>();
+    QObject::connect(bangumiList, &QTreeView::doubleClicked,[=](const QModelIndex &index){
+        curSelectedAnime = index.data(AnimeRole).value<AnimeLite>();
         CFramelessDialog::onAccept();
     });
 
@@ -87,14 +89,7 @@ void AnimeSearch::search()
     ScriptState state = GlobalObjects::animeProvider->animeSearch(scriptCombo->currentData().toString(), keyword, searchOptions, animes);
     if (state)
     {
-        bangumiList->clear();
-        for(auto &anime : animes)
-        {
-            QTreeWidgetItem *item = new QTreeWidgetItem(bangumiList, {anime.name, anime.extras});
-            item->setToolTip(0, anime.name);
-            item->setToolTip(1, anime.extras);
-            item->setData(0, AnimeRole, QVariant::fromValue(anime));
-        }
+        model->setAnimes(animes);
     } else {
         showMessage(state.info, NM_ERROR | NM_HIDE);
     }
@@ -105,14 +100,64 @@ void AnimeSearch::search()
 
 void AnimeSearch::onAccept()
 {
-    if (bangumiList->selectedItems().count()==0)
+    if (!bangumiList->selectionModel()->hasSelection())
     {
         showMessage(tr("You need to choose one"), NM_ERROR | NM_HIDE);
         return;
     }
     else
     {
-        curSelectedAnime = bangumiList->selectedItems().last()->data(0, AnimeRole).value<AnimeLite>();
+        curSelectedAnime = bangumiList->selectionModel()->selectedRows().last().data(AnimeRole).value<AnimeLite>();
     }
     CFramelessDialog::onAccept();
+}
+
+void BgmListModel::setAnimes(const QList<AnimeLite> &animes)
+{
+    beginResetModel();
+    _animes = animes;
+    endResetModel();
+}
+
+QVariant BgmListModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid()) return QVariant();
+    const AnimeLite &anime = _animes[index.row()];
+    Columns col = static_cast<Columns>(index.column());
+    switch (role)
+    {
+    case Qt::DisplayRole:
+    case Qt::ToolTipRole:
+    {
+        switch (col)
+        {
+        case Columns::TITLE:
+        {
+            return anime.name;
+        }
+        case Columns::EXTRA:
+        {
+            return anime.extras;
+        }
+        default:
+            break;
+        }
+        break;
+    }
+    case AnimeRole:
+        return QVariant::fromValue(anime);
+    default:
+        return QVariant();
+    }
+    return QVariant();
+}
+
+QVariant BgmListModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    static const QStringList headers{ tr("Title"), tr("Extra"), };
+    if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
+    {
+        if (section < headers.size()) return headers.at(section);
+    }
+    return QVariant();
 }

@@ -97,7 +97,7 @@ SettingItemArea *DanmuPage::initStyleArea()
     styleArea->addItem(previewLabel, Qt::AlignCenter);
 
     ElaComboBox *fontCombo = new ElaComboBox(this);
-    const QStringList fontFamilies = QFontDatabase().families();
+    const QStringList fontFamilies = QFontDatabase::families();
     fontCombo->addItems(fontFamilies);
     fontCombo->setCurrentIndex(fontFamilies.indexOf(GlobalObjects::danmuRender->getFontFamily()));
     styleArea->addItem(tr("Font"), fontCombo);

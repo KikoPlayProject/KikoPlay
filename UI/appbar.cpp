@@ -1,6 +1,7 @@
 #include "appbar.h"
 #include "Extension/App/appmanager.h"
 #include "Extension/App/kapp.h"
+#include "UI/ela/ElaMenu.h"
 #include "globalobjects.h"
 #include <QHBoxLayout>
 #include <QAction>
@@ -104,12 +105,16 @@ AppBarBtn::AppBarBtn(Extension::KApp *kApp, QWidget *parent) : QPushButton(paren
     QObject::connect(this, &AppBarBtn::clicked, this, [this](){
         this->app->show();
     });
-    setContextMenuPolicy(Qt::ActionsContextMenu);
-    QAction *terminateApp = new QAction(tr("Terminate"), this);
+    ElaMenu *appMenu = new ElaMenu(this);
+    QAction *terminateApp = appMenu->addAction(tr("Terminate"));
     QObject::connect(terminateApp, &QAction::triggered, this, [=](){
         this->app->stop();
     });
-    addAction(terminateApp);
+
+    setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(this, &AppBarBtn::customContextMenuRequested, this, [=](const QPoint &pos){
+        appMenu->popup(mapToGlobal(pos));
+    });
 }
 
 void AppBarBtn::flash()

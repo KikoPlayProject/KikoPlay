@@ -7,7 +7,7 @@
 #include "Common/network.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
-#include "Common/logger.h"
+#include "Common/dbmanager.h"
 
 DownloadWorker *DownloadModel::downloadWorker=nullptr;
 DownloadModel::DownloadModel(QObject *parent) : QAbstractItemModel(parent),currentOffset(0),
@@ -414,7 +414,7 @@ void DownloadModel::saveItemStatus(const DownloadTask *task)
 QString DownloadModel::findFileUri(const QString &fileName)
 {
     QFileInfo fi(fileName);
-    QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Download));
+    QSqlQuery query(DBManager::instance()->getDB(DBManager::Download));
     query.exec(QString("select Dir,URI from task where Title='%1'").arg(fi.fileName()));
     int dirNo=query.record().indexOf("Dir"),uriNo=query.record().indexOf("URI");
     QString uri;
@@ -546,7 +546,7 @@ void DownloadModel::fetchMore(const QModelIndex &)
 
 void DownloadWorker::loadTasks(QVector<DownloadTask *> &items, int offset, int limit)
 {
-    QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Download));
+    QSqlQuery query(DBManager::instance()->getDB(DBManager::Download));
     query.exec(QString("select * from task order by CTime desc limit %1 offset %2").arg(limit).arg(offset));
     int idNo=query.record().indexOf("TaskID"),
         titleNo=query.record().indexOf("Title"),
@@ -581,7 +581,7 @@ void DownloadWorker::loadTasks(QVector<DownloadTask *> &items, int offset, int l
 
 void DownloadWorker::addTask(DownloadTask *task)
 {
-    QSqlDatabase db = GlobalObjects::context()->getDB(GlobalContext::DBType::Download);
+    QSqlDatabase db = DBManager::instance()->getDB(DBManager::Download);
     QSqlQuery query(db);
     db.transaction();
     query.prepare("insert into task(TaskID,Dir,CTime,URI,SFIndexes) values(?,?,?,?,?)");
@@ -603,7 +603,7 @@ void DownloadWorker::addTask(DownloadTask *task)
 
 void DownloadWorker::deleteTask(DownloadTask *task, bool deleteFile)
 {
-    QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Download));
+    QSqlQuery query(DBManager::instance()->getDB(DBManager::Download));
     query.prepare("delete from task where TaskID=?");
     query.bindValue(0,task->taskID);
     query.exec();
@@ -639,7 +639,7 @@ void DownloadWorker::deleteTask(DownloadTask *task, bool deleteFile)
 
 void DownloadWorker::updateTaskInfo(const DownloadTask *task)
 {
-    QSqlQuery query(GlobalObjects::context()->getDB(GlobalContext::DBType::Download));
+    QSqlQuery query(DBManager::instance()->getDB(DBManager::Download));
     query.prepare("update task set Title=?,FTime=?,TLength=?,CLength=?,SFIndexes=? where TaskID=?");
     query.bindValue(0,task->title);
     query.bindValue(1,task->finishTime);

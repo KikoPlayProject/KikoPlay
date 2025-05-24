@@ -274,7 +274,7 @@ bool PlayList::isAddExternal() const
     return d->autoAddExternal;
 }
 
-int PlayList::addItems(const QStringList &items, QModelIndex parent)
+int PlayList::addItems(const QStringList &items, QModelIndex parent, const QHash<QString, QString> *titleMapping)
 {
     Q_D(PlayList);
 	QStringList tmpItems;
@@ -307,6 +307,7 @@ int PlayList::addItems(const QStringList &items, QModelIndex parent)
 		QString title = item.mid(pathPos,suffixPos-pathPos);
         PlayListItem *newItem = new PlayListItem(parentItem, true, insertPosition++);
         newItem->title = title;
+        if (titleMapping && titleMapping->contains(item)) newItem->title = titleMapping->value(item);
 		newItem->path = item;
         newItem->pathHash = QCryptographicHash::hash(item.toUtf8(),QCryptographicHash::Md5).toHex();
         newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
@@ -393,11 +394,11 @@ int PlayList::addFolder(QString folderStr, QModelIndex parent, const QString &na
     return itemCount;
 }
 
-int PlayList::addURL(const QStringList &urls, QModelIndex parent, bool decodeTitle)
+int PlayList::addURL(const QStringList &urls, QModelIndex parent, bool decodeTitle, const QHash<QString, QString> *titleMapping)
 {
     Q_D(PlayList);
     QStringList localItems, webItems;
-    for(const QString &url : urls)
+    for (const QString &url : urls)
     {
         const QString urlTrimmed = url.trimmed();
         if(urlTrimmed.isEmpty()) continue;
@@ -412,14 +413,14 @@ int PlayList::addURL(const QStringList &urls, QModelIndex parent, bool decodeTit
         }
     }
     int insertCount = 0;
-    if(!localItems.empty())
+    if (!localItems.empty())
     {
-        insertCount = addItems(localItems, parent);
+        insertCount = addItems(localItems, parent, titleMapping);
     }
-    if(webItems.empty()) return insertCount;
+    if (webItems.empty()) return insertCount;
     int insertPosition{0};
     PlayListItem *parentItem = parent.isValid() ? static_cast<PlayListItem*>(parent.internalPointer()) : d->root;
-    if(parentItem->children)
+    if (parentItem->children)
     {
         insertPosition = parentItem->children->size();
     }
@@ -435,6 +436,7 @@ int PlayList::addURL(const QStringList &urls, QModelIndex parent, bool decodeTit
         PlayListItem *newItem = new PlayListItem(parentItem, true, insertPosition++);
         if (decodeTitle) newItem->title = QUrl(url).fileName();
         if (newItem->title.isEmpty()) newItem->title = url;
+        if (titleMapping && titleMapping->contains(url)) newItem->title = titleMapping->value(url);
         newItem->path = url;
         newItem->type = PlayListItem::ItemType::WEB_URL;
         newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();

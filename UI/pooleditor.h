@@ -8,25 +8,6 @@
 class QVBoxLayout;
 class QSpacerItem;
 class QStackedLayout;
-class DanmuSourceTip : public QWidget
-{
-public:
-    explicit DanmuSourceTip(const DanmuSource *sourceInfo, QWidget *parent = nullptr);
-    void setSource(const DanmuSource *sourceInfo);
-
-    // QWidget interface
-protected:
-    void paintEvent(QPaintEvent *event);
-
-    // QWidget interface
-public:
-    QSize sizeHint() const;
-
-private:
-    const DanmuSource *src;
-    QString text;
-    QColor bgColor;
-};
 
 class PoolItem : public QWidget
 {

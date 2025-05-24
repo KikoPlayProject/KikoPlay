@@ -11,8 +11,6 @@
 #include <QSystemTrayIcon>
 #include <QProgressBar>
 #ifdef Q_OS_WIN
-//#include <QWinTaskbarProgress>
-//#include <QWinTaskbarButton>
 #include "widgets/component/taskbarbtn/qwintaskbarbutton.h"
 #include "widgets/component/taskbarbtn/qwintaskbarprogress.h"
 #endif
@@ -270,7 +268,7 @@ void MainWindow::initIconAction()
     QAction *actUseTip = iconMenu->addAction(tr("Usage Tip"));
     QObject::connect(actUseTip, &QAction::triggered, this, [this](){
         Tip tip(this);
-        tip.resize(500*logicalDpiX()/96, 400*logicalDpiY()/96);
+        tip.resize(520, 400);
         tip.exec();
     });
 
@@ -685,8 +683,8 @@ QWidget *MainWindow::setupLibraryPage()
         else
         {
             hasCoverBg = true;
-            coverPixmap = pixmap;
-            if(!pixmap.isNull()) BackgroundMainWindow::setBackground(pixmap);
+            coverPixmap = pixmap.scaled(pixmap.size() * 1.2).copy(pixmap.width() * 0.1, pixmap.height() * 0.1, pixmap.width(), pixmap.height());
+            if(!pixmap.isNull()) BackgroundMainWindow::setBackground(coverPixmap);
             BackgroundMainWindow::setBlurAnimation(10., 60.);
         }
     });

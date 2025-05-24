@@ -7,29 +7,53 @@
 #include <QComboBox>
 #include <QAction>
 #include <QMenu>
+#include <QScrollArea>
 #include <QHeaderView>
+#include <QMouseEvent>
 #include "Common/threadtask.h"
 #include "Extension/Script/scriptmodel.h"
-#include "Extension/Script/scriptsettingmodel.h"
 #include "UI/ela/ElaComboBox.h"
+#include "UI/ela/ElaLineEdit.h"
 #include "UI/ela/ElaMenu.h"
-#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/floatscrollbar.h"
 #include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
+
+namespace
+{
+    class ScriptView : public QTreeView
+    {
+    public:
+        ScriptView(QWidget* parent = nullptr) : QTreeView(parent)  { }
+    protected:
+        void mouseMoveEvent(QMouseEvent* event) override
+        {
+            QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
+            QModelIndex index = indexAt(mouseEvent->pos());
+            if (index.isValid() && index.column() == (int)ScriptModel::Columns::OPERATE)
+            {
+                update(index);
+            }
+            QTreeView::mouseMoveEvent(event);
+        }
+    };
+}
 ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
 {
     ScriptModel *model = new ScriptModel(this);
     ScriptProxyModel *proxyModel = new ScriptProxyModel(this);
     proxyModel->setSourceModel(model);
+    ScriptItemDelegate *delegate = new ScriptItemDelegate(this);
 
-    QTreeView *scriptView=new QTreeView(this);
+    QTreeView *scriptView=new ScriptView(this);
     scriptView->setRootIsDecorated(false);
     scriptView->setSelectionMode(QAbstractItemView::SingleSelection);
     scriptView->setModel(proxyModel);
     scriptView->setAlternatingRowColors(true);
-    scriptView->setItemDelegate(new KTreeviewItemDelegate(scriptView));
+    scriptView->setItemDelegate(delegate);
     new FloatScrollBar(scriptView->verticalScrollBar(), scriptView);
+    scriptView->hideColumn((int)ScriptModel::Columns::ID);
+    scriptView->setMouseTracking(true);
 
 
     QComboBox *typeCombo = new ElaComboBox(this);
@@ -41,14 +65,11 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
         else proxyModel->setType(index);
     });
 
-    QAction *actSetting = new QAction(tr("Script Settings"), this);
-    QObject::connect(actSetting, &QAction::triggered, this, [=](){
-        auto selection = scriptView->selectionModel()->selectedRows((int)ScriptModel::Columns::ID);
-        if (selection.size() == 0)return;
-        auto index = proxyModel->mapToSource(selection.last());
-        auto s = GlobalObjects::scriptManager->getScript(index.data().toString());
+    QObject::connect(delegate, &ScriptItemDelegate::settingClicked, this, [=](const QModelIndex &index){
+        auto sindex = proxyModel->mapToSource(index).siblingAtColumn((int)ScriptModel::Columns::ID);
+        auto s = GlobalObjects::scriptManager->getScript(sindex.data().toString());
         ScriptSettingDialog dialog(s, this);
-        if(QDialog::Accepted==dialog.exec())
+        if (QDialog::Accepted==dialog.exec())
         {
             for(auto iter = dialog.changedItems.begin(); iter!=dialog.changedItems.end();++iter)
             {
@@ -83,67 +104,38 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
     });
 
     QMenu *scriptViewContextMenu = new ElaMenu(scriptView);
-    scriptViewContextMenu->addAction(actSetting);
     scriptViewContextMenu->addAction(actRemove);
-    QAction *menuSep = new QAction(this);
-    menuSep->setSeparator(true);
-    static QVector<QAction *> scriptActions;
-    QObject::connect(scriptView, &QTreeView::customContextMenuRequested,[=](){
-        auto selection = scriptView->selectionModel()->selectedRows((int)ScriptModel::Columns::ID);
-        for(QAction *act : scriptActions)
-            scriptViewContextMenu->removeAction(act);
-        scriptViewContextMenu->removeAction(menuSep);
-        qDeleteAll(scriptActions);
-        scriptActions.clear();
-        if(selection.size()>0)
+    QObject::connect(scriptView, &QTreeView::customContextMenuRequested, this, [=](){
+        if (scriptView->selectionModel()->hasSelection())
         {
-            auto index = proxyModel->mapToSource(selection.last());
-            auto script = GlobalObjects::scriptManager->getScript(index.data().toString());
-            if(script)
-            {
-                const auto &menuItems = script->getScriptMenuItems();
-                if(menuItems.size()>0)
-                {
-                    scriptViewContextMenu->addAction(menuSep);
-                    for(auto &p : menuItems)
-                    {
-                        QAction *scriptAct = new QAction(p.first);
-                        scriptAct->setData(p.second);
-                        scriptViewContextMenu->addAction(scriptAct);
-                        scriptActions.append(scriptAct);
-                    }
-                }
-            }
-
-        }
-        scriptViewContextMenu->exec(QCursor::pos());
-    });
-    QObject::connect(scriptViewContextMenu, &QMenu::triggered, this, [=](QAction *act){
-        if(!act->data().isNull())
-        {
-            auto selection = scriptView->selectionModel()->selectedRows((int)ScriptModel::Columns::ID);
-            if (selection.size() == 0)return;
-            auto index = proxyModel->mapToSource(selection.last());
-            auto s = GlobalObjects::scriptManager->getScript(index.data().toString());
-            s->scriptMenuClick(act->data().toString());
+            scriptViewContextMenu->exec(QCursor::pos());
         }
     });
-
     scriptView->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
 
-    QObject::connect(scriptView->selectionModel(), &QItemSelectionModel::selectionChanged,this, [=](){
-        auto selection = scriptView->selectionModel()->selectedRows((int)ScriptModel::Columns::ID);
-        if (selection.size() == 0)
+    QObject::connect(delegate, &ScriptItemDelegate::menuClicked, this, [=](const QModelIndex &index){
+        auto sindex = proxyModel->mapToSource(index).siblingAtColumn((int)ScriptModel::Columns::ID);
+        auto script = GlobalObjects::scriptManager->getScript(sindex.data().toString());
+        if (script)
         {
-            actRemove->setEnabled(false);
-            actSetting->setEnabled(false);
-        }
-        else
-        {
-            actRemove->setEnabled(true);
-            auto index = proxyModel->mapToSource(selection.last());
-            auto s = GlobalObjects::scriptManager->getScript(index.data().toString());
-            actSetting->setEnabled(s->settings().size()>0);
+            const auto &menuItems = script->getScriptMenuItems();
+            if (!menuItems.empty())
+            {
+                QMenu *scriptMenu = new ElaMenu(scriptView);
+                scriptMenu->setAttribute(Qt::WA_DeleteOnClose);
+                for(auto &p : menuItems)
+                {
+                    QAction *scriptAct = scriptMenu->addAction(p.first);
+                    scriptAct->setData(p.second);
+                }
+                QObject::connect(scriptMenu, &QMenu::triggered, this, [=](QAction *act){
+                    if (!act->data().isNull())
+                    {
+                        script->scriptMenuClick(act->data().toString());
+                    }
+                });
+                scriptMenu->exec(QCursor::pos());
+            }
         }
     });
 
@@ -151,7 +143,6 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
     QObject::connect(refresh, &QPushButton::clicked, this, [=](){
         emit showBusyState(true);
         actRemove->setEnabled(false);
-        actSetting->setEnabled(false);
         scriptView->setEnabled(false);
         typeCombo->setEnabled(false);
         ThreadTask task(GlobalObjects::workThread);
@@ -170,7 +161,6 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
         });
         emit showBusyState(false);
         actRemove->setEnabled(true);
-        actSetting->setEnabled(true);
         scriptView->setEnabled(true);
         typeCombo->setEnabled(true);
     });
@@ -189,37 +179,84 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
 
 ScriptSettingDialog::ScriptSettingDialog(QSharedPointer<ScriptBase> script, QWidget *parent) : CFramelessDialog(tr("Script Settings"), parent, true)
 {
-    ScriptSettingModel *model = new ScriptSettingModel(script, this);
-    SettingDelegate *delegate = new SettingDelegate(this);
+    const QVector<ScriptBase::ScriptSettingItem> &settings = script->settings();
+    QList<QPair<QString, QList<QPair<const ScriptBase::ScriptSettingItem *, int>>>> groupItems;
+    QMap<QString, int> groupIndexMap;
+    QList<QPair<const ScriptBase::ScriptSettingItem *, int>> nonGroupItems;
+    int itemIndex = 0;
+    for (const ScriptBase::ScriptSettingItem &item : settings)
+    {
+        if(!item.group.isEmpty())
+        {
+            int groupIndex = groupIndexMap.value(item.group, -1);
+            if (groupIndex < 0)
+            {
+                groupIndexMap[item.group] = groupItems.size();
+                groupItems.push_back({item.group, {}});
+                groupIndex = groupIndexMap[item.group];
+            }
+            groupItems[groupIndex].second.append({&item, itemIndex++});
+        }
+        else
+        {
+            nonGroupItems.append({&item, itemIndex++});
+        }
+    }
 
+    auto addSettingArea = [this](const QString &title, const QList<QPair<const ScriptBase::ScriptSettingItem *, int>> &items){
+        SettingItemArea *itemArea = new SettingItemArea(title, this);
+        for (auto &p : items)
+        {
+            QWidget *editor{nullptr};
+            int setttingIndex = p.second;
+            if (p.first->choices.isEmpty())
+            {
+                ElaLineEdit *lineEditor = new ElaLineEdit(p.first->value, itemArea);
+                QObject::connect(lineEditor, &QLineEdit::textEdited, this, [=](const QString &text){
+                    changedItems[setttingIndex] = text;
+                });
+                editor = lineEditor;
+            }
+            else
+            {
+                ElaComboBox *combo = new ElaComboBox(itemArea);
+                QStringList items = p.first->choices.split(',', Qt::SkipEmptyParts);
+                combo->addItems(items);
+                combo->setCurrentIndex(items.indexOf(p.first->value));
+                QObject::connect(combo, &QComboBox::currentTextChanged, this, [=](const QString &text){
+                    changedItems[setttingIndex] = text;
+                });
+                editor = combo;
+            }
+            itemArea->addItem(p.first->title, editor);
+            if (!p.first->description.isEmpty())
+            {
+                QLabel *descLabel = new QLabel(p.first->description, itemArea);
+                descLabel->setObjectName(QStringLiteral("SettingDescLabel"));
+                itemArea->addItem(descLabel, Qt::AlignLeft);
+            }
+        }
+        return itemArea;
+    };
 
-    QTreeView *scriptView=new QTreeView(this);
-    scriptView->setObjectName(QStringLiteral("ScriptSettingView"));
-    scriptView->setRootIsDecorated(false);
-    scriptView->setItemDelegate(delegate);
-    scriptView->setSelectionMode(QAbstractItemView::SingleSelection);
-    scriptView->setModel(model);
-    scriptView->setAlternatingRowColors(true);
-    scriptView->expandAll();
-    new FloatScrollBar(scriptView->verticalScrollBar(), scriptView);
-    QObject::connect(model, &ScriptSettingModel::itemChanged, this, [=](const QString &, int index, const QString &value){
-       changedItems[index] = value;
-    });
+    QWidget *container = new QWidget(this);
+    QVBoxLayout *itemVLayout = new QVBoxLayout(container);
+    itemVLayout->setSpacing(8);
+    if (!nonGroupItems.empty()) itemVLayout->addWidget(addSettingArea(tr("Default"), nonGroupItems));
+    for (auto &p : groupItems)
+    {
+        itemVLayout->addWidget(addSettingArea(p.first, p.second));
+    }
+    itemVLayout->addStretch(1);
 
-    QGridLayout *scriptGLayout=new QGridLayout(this);
-    scriptGLayout->addWidget(scriptView,0,0);
-    scriptGLayout->setRowStretch(0,1);
-    scriptGLayout->setColumnStretch(0,1);
+    QScrollArea *pageScrollArea = new QScrollArea(this);
+    pageScrollArea->setWidget(container);
+    pageScrollArea->setWidgetResizable(true);
+    new FloatScrollBar(pageScrollArea->verticalScrollBar(), pageScrollArea);
+    QHBoxLayout *sHLayout = new QHBoxLayout(this);
+    sHLayout->setContentsMargins(0, 0, 0, 0);
+    sHLayout->addWidget(pageScrollArea);
 
-
-    QVariant headerState(GlobalObjects::appSetting->value("HeaderViewState/ScriptSettingView"));
-    if(!headerState.isNull())
-        scriptView->header()->restoreState(headerState.toByteArray());
-
-    addOnCloseCallback([scriptView](){
-        GlobalObjects::appSetting->setValue("HeaderViewState/ScriptSettingView", scriptView->header()->saveState());
-    });
-
-    setSizeSettingKey("DialogSize/ScriptSetting", QSize(300, 200));
+    setSizeSettingKey(QString("DialogSize/ScriptSetting_%1").arg(script->id()), QSize(400, 400));
 }
 

@@ -13,5 +13,6 @@ public:
 private:
     SettingItemArea *initBehaviorArea();
     SettingItemArea *initMpvArea();
+    SettingItemArea *initSubArea();
 };
 #endif // PLAYERPAGE_H

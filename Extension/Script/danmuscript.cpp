@@ -28,6 +28,21 @@ ScriptState DanmuScript::loadScript(const QString &scriptPath)
     return ScriptState(ScriptState::S_NORM);
 }
 
+QColor DanmuScript::labelColor() const
+{
+    QColor defaultColor{43, 106, 176};
+    if (scriptMeta.contains(labelColorName))
+    {
+        bool ok = false;
+        int val = scriptMeta[labelColorName].toInt(&ok, 16);
+        if (ok)
+        {
+            defaultColor = QColor((val >> 16) & 0xff, (val >> 8) & 0xff, val & 0xff);
+        }
+    }
+    return defaultColor;
+}
+
 ScriptState DanmuScript::search(const QString &keyword, QList<DanmuSource> &results)
 {
     if(!canSearch) return ScriptState(ScriptState::S_ERROR, "Search not supported");

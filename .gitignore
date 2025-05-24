@@ -5,6 +5,7 @@ KikoPlay.pro.user
 .qmake.stash
 GeneratedFiles/
 KikoPlay.VC.VC.opendb
+KikoPlay.qtvscr
 KikoPlay.VC.db
 KikoPlay.sln
 KikoPlay.vcxproj
@@ -23,6 +24,7 @@ qrc_res.cpp
 moc_*.cpp
 moc_predefs.h
 texture_test.jpg
+vc140.pdb
 
 # cmake build dir
 build

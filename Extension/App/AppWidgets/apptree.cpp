@@ -10,6 +10,7 @@
 #include "Extension/Common/ext_common.h"
 #include "Extension/App/kapp.h"
 #include "Extension/Modules/lua_appimage.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #define TreeItemDataRole Qt::UserRole + 1
 
 namespace Extension
@@ -253,6 +254,7 @@ AppTree::AppTree(AppWidget *parent) : AppWidget{parent}, dataRef(-1)
     QTreeWidget *tree = new QTreeWidget(parent? parent->getWidget() : nullptr);
     tree->setProperty("__appwidget", QVariant::fromValue((AppWidget *)this));
     tree->setAnimated(true);
+    tree->setItemDelegate(new KTreeviewItemDelegate(tree));
     this->widget = tree;
 }
 
@@ -557,7 +559,7 @@ void AppTree::parseItems(lua_State *L, QList<QTreeWidgetItem *> &items, AppTree 
     if (rawItems.empty()) return;
     for (auto &item : rawItems)
     {
-        if (item.canConvert(QMetaType::QVariantList))
+        if (item.typeId() == QMetaType::QVariantList)
         {
             const QVariantList itemCols = item.toList();
             int colIndex = 0;
