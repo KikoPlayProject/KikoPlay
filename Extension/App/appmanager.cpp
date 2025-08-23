@@ -14,10 +14,7 @@ AppManager::AppManager(QObject *parent)
 
 AppManager::~AppManager()
 {
-    for (auto app : appList)
-    {
-        app->close();
-    }
+    closeAll();
 }
 
 void AppManager::refresh(bool inWorkerThread)
@@ -81,6 +78,14 @@ void AppManager::autoStart()
                 emit appLaunched(app.get());
             }
         }
+    }
+}
+
+void AppManager::closeAll()
+{
+    for (auto app : appList)
+    {
+        app->close();
     }
 }
 

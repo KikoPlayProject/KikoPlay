@@ -14,7 +14,6 @@ ScriptState DanmuScript::loadScript(const QString &scriptPath)
     QString errInfo = ScriptBase::loadScript(scriptPath);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
     canSearch = checkType("search", LUA_TFUNCTION);
-    canLaunch = checkType("launch", LUA_TFUNCTION);
     QVariant res = get(urlReTable);
     if(res.canConvert(QVariant::StringList))
     {
@@ -110,44 +109,6 @@ ScriptState DanmuScript::getDanmu(const DanmuSource *item, DanmuSource **nItem, 
         comment->sender = dobj.value("sender").toString();
         danmuList.append(comment);
     }
-    return ScriptState(ScriptState::S_NORM);
-}
-
-ScriptState DanmuScript::hasSourceToLaunch(const QList<DanmuSource> &sources, bool &result)
-{
-    if(!canLaunch)
-    {
-        result = false;
-        return ScriptState(ScriptState::S_NORM);
-    }
-    MutexLocker locker(scriptLock);
-    if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
-    QVariantList params;
-    for(auto &src: sources)
-        params.append(src.toMap());
-    QString errInfo;
-    QVariantList param;
-    param.append(QVariant(params));
-    QVariantList rets = call(luaLaunchCheckFunc, param, 1, errInfo);
-    if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
-    if(rets[0].type()!=QVariant::Bool) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
-    result = rets[0].toBool();
-    return ScriptState(ScriptState::S_NORM);
-}
-
-ScriptState DanmuScript::launch(const QList<DanmuSource> &sources, const DanmuComment *comment)
-{
-    if(!comment) return ScriptState(ScriptState::S_NORM);
-    if(!canLaunch) return ScriptState(ScriptState::S_ERROR, "Not Support: Launch");
-    MutexLocker locker(scriptLock);
-    if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
-    QVariantList srcs;
-    for(auto &src: sources)
-        srcs.append(src.toMap());
-    QString errInfo;
-    QVariantList rets = call(luaLaunchFunc, {srcs, comment->toMap()}, 1, errInfo);
-    if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
-    if(rets[0].type()==QVariant::String) return ScriptState(ScriptState::S_ERROR, rets[0].toString());
     return ScriptState(ScriptState::S_NORM);
 }
 

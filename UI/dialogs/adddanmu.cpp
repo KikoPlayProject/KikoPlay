@@ -25,7 +25,6 @@
 #include "UI/ela/ElaLineEdit.h"
 #include "UI/ela/ElaPivot.h"
 #include "UI/widgets/elidedlabel.h"
-#include "UI/widgets/fonticonbutton.h"
 #include "UI/widgets/kplaintextedit.h"
 #include "UI/widgets/kpushbutton.h"
 #include "selectepisodedialog.h"
@@ -601,30 +600,20 @@ DanmuItemWidget::DanmuItemWidget(QList<SearchDanmuInfo> &danmuList, int index, c
     ElidedLabel *titleLabel = new ElidedLabel(info.src.title, this);
     titleLabel->setFont(QFont(GlobalObjects::normalFont, 14));
     titleLabel->setFontColor(QColor(240, 240, 240));
-    DanmuSourceTip *srcTip = new DanmuSourceTip(&info.src, this);
+    titleLabel->setToolTip(info.src.title);
+    DanmuSourceTip *srcTip = new DanmuSourceTip(&info.src, true, this);
     QHBoxLayout *titleHLayout = new QHBoxLayout;
     titleHLayout->setContentsMargins(0, 0, 0, 0);
     titleHLayout->setSpacing(4);
     titleHLayout->addWidget(srcTip);
     titleHLayout->addWidget(titleLabel);
-
-    QLabel *countLabel = new QLabel(tr("%1 danmu(s)").arg(info.danmus.count()), this);
-    FontIconButton *viewBtn = new FontIconButton(QChar(0xea8a), "", 13, 10, 0, this);
-    viewBtn->setObjectName(QStringLiteral("FontIconToolButton"));
-    viewBtn->setContentsMargins(0, 0, 0, 0);
-    QHBoxLayout *countHLayout = new QHBoxLayout;
-    countHLayout->setContentsMargins(0, 0, 0, 0);
-    countHLayout->setSpacing(4);
-    countHLayout->addWidget(countLabel);
-    countHLayout->addWidget(viewBtn);
-    countHLayout->addStretch(1);
-    QObject::connect(viewBtn, &FontIconButton::clicked, this, [=](){
+    QObject::connect(srcTip, &DanmuSourceTip::clicked, this, [=](){
         DanmuView view(&_danmuList[index].danmus, this);
         view.exec();
     });
 
     poolCombo = new ElaComboBox(this);
-    poolCombo->setFixedWidth(120);
+    poolCombo->setMaximumWidth(260);
     QPushButton *autoSetPoolBtn = new KPushButton(this);
     autoSetPoolBtn->setToolTip(tr("Set PoolId in Sequence"));
     autoSetPoolBtn->setObjectName(QStringLiteral("AutoSetPoolBtn"));
@@ -662,10 +651,9 @@ DanmuItemWidget::DanmuItemWidget(QList<SearchDanmuInfo> &danmuList, int index, c
     });
 
     QGridLayout *itemGLayout=new QGridLayout(this);
-    itemGLayout->addWidget(srcCheck, 0, 0, 2, 1);
+    itemGLayout->addWidget(srcCheck, 0, 0);
     itemGLayout->addItem(titleHLayout, 0, 1);
-    itemGLayout->addItem(countHLayout, 1, 1);
-    itemGLayout->addItem(poolHLayout, 0, 2, 2, 1);
+    itemGLayout->addItem(poolHLayout, 0, 2);
     itemGLayout->setColumnStretch(1,1);
 }
 

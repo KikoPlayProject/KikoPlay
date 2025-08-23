@@ -11,7 +11,7 @@ public:
 private:
     QSharedPointer<SimplePlayer> smPlayer;
     QPushButton *saveFile;
-    bool ffmpegCut(const QString &input, const QString &output, int w, int h, int r = -1, double start = 0, int duration = -1);
+    bool ffmpegCut(const QString &input, const QString &output, int w, int h, int r = -1, double start = 0, double duration = -1);
 };
 
 #endif // GIFCAPTURE_H

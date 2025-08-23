@@ -20,6 +20,7 @@ class QLineEdit;
 class QSortFilterProxyModel;
 class SubtitleModel;
 class QListView;
+class Pool;
 
 class ListWindow : public QWidget, public NotifyInterface
 {
@@ -70,7 +71,6 @@ private:
     SubtitleModel *subModel{nullptr};
     QAction *act_addSub, *act_saveSub, *act_copySubTime, *act_copySubText, *act_subRecognize, *act_subTranslation;
     QWidget *initSublistPage();
-
 
 protected:
     virtual void resizeEvent(QResizeEvent *event);

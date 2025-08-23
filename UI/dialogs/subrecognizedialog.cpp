@@ -37,7 +37,7 @@
 
 SubRecognizeDialog::SubRecognizeDialog(const QString &videoFile, QWidget *parent) : CFramelessDialog(tr("Subtitle Recognition"), parent)
 {
-    QLabel *modelTip = new QLabel(QString("%1&nbsp;<a style='color: rgb(96, 208, 252);' href = \"\">%2</a>").arg(tr("Model"), tr("More")), this);
+    QLabel *modelTip = new QLabel(QString("%1&nbsp;<a style='color: rgb(96, 208, 252);' href = \"https://github.com/KikoPlayProject/KikoPlayApp/blob/master/app/ai_sub/models.md\">%2</a>").arg(tr("Model"), tr("More")), this);
     modelTip->setOpenExternalLinks(true);
     ElaComboBox *modelCombo = new ElaComboBox(this);
 
@@ -272,7 +272,7 @@ void SubRecognizeEditDialog::init(const SubFile &_subFile, const QString &videoF
 
     subGLayout->setColumnStretch(1, 1);
     subGLayout->setRowStretch(1, 1);
-    setSizeSettingKey("DialogSize/SubRecognizeEditDialog", QSize(600, 600));
+    setSizeSettingKey("DialogSize/SubRecognizeEditDialog", QSize(800, 600));
 
     translatorConfigCombo->setModel(TranslatorConfigManager::instance());
     int defaultTranslator = GlobalObjects::appSetting->value(SETTING_KEY_SUB_TRANSLATOR_DEFAULT, -1).toInt();
@@ -416,7 +416,7 @@ void SubRecognizeEditDialog::init(const SubFile &_subFile, const QString &videoF
     });
 
     auto saveSub = [=](const QString &path){
-        int saveMode = subTypeCombo->currentIndex();
+        int saveMode = subTypeCombo->isVisible() ? subTypeCombo->currentIndex() : 2;
         if (saveMode == 0)
         {
             return model->getTranslatedSubFile(false, true).saveSRT(path);
@@ -517,7 +517,7 @@ TranslatorConfigEditDialog::TranslatorConfigEditDialog(QWidget *parent) : CFrame
     tGLayout->addWidget(promptEdit, 10, 1, 2, 2);
     tGLayout->setRowStretch(10, 1);
     tGLayout->setColumnStretch(2, 1);
-    setSizeSettingKey("DialogSize/TranslatorConfigEditDialog", QSize(400, 600));
+    setSizeSettingKey("DialogSize/TranslatorConfigEditDialog", QSize(600, 600));
 
     QObject::connect(addConfBtn, &QPushButton::clicked, this, [=](){
         LineInputDialog input(tr("Translator Config"), tr("Name"), "", "DialogSize/AddTranslatorConfig", false, this);

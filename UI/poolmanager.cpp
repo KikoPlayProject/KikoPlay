@@ -110,6 +110,9 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
             poolView->setEnabled(false);
             this->showBusyState(true);
             auto &infoList = addDanmuDialog.danmuInfoList;
+#ifdef KSERVICE
+            QList<QPair<Pool *, DanmuSource>> poolSrcs;
+#endif
             for (SearchDanmuInfo &info : infoList)
             {
                 DanmuPoolNode *curNode = poolNodeMap.value(info.pool);
@@ -124,6 +127,12 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                     qDeleteAll(info.danmus);
                     continue;
                 }
+#ifdef KSERVICE
+                if (!info.src.scriptId.isEmpty())
+                {
+                    poolSrcs.append({ pool, info.src });
+                }
+#endif
                 DanmuPoolSourceNode *sourceNode(nullptr);
                 for (auto n : *curNode->children)
                 {
@@ -136,6 +145,9 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
                 }
                 managerModel->addSrcNode(curNode, sourceNode ? nullptr : new DanmuPoolSourceNode(info.src));
             }
+#ifdef KSERVICE
+            if (!poolSrcs.empty()) GlobalObjects::danmuManager->sendDanmuAddedEvent(poolSrcs);
+#endif
             stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
             poolView->setEnabled(true);
             this->showBusyState(false);
@@ -350,7 +362,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     deleteHLayout->addWidget(deleteTipLabel);
     deleteHLayout->addStretch(1);
     deleteHLayout->addWidget(deleteConfirm);
-    QObject::connect(deleteConfirm,&KPushButton::clicked,[this,stateLabel,poolView,managerModel,deleteConfirm,cancel](){
+    QObject::connect(deleteConfirm, &KPushButton::clicked, this, [=](){
         if(!managerModel->hasSelected())return;
         this->showBusyState(true);
         deleteConfirm->setText(tr("Deleting..."));

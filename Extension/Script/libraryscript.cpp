@@ -1,4 +1,6 @@
 #include "libraryscript.h"
+#include "Common/network.h"
+#include <QImageReader>
 
 LibraryScript::LibraryScript() : ScriptBase()
 {
@@ -95,26 +97,38 @@ ScriptState LibraryScript::getDetail(const AnimeLite &base, Anime *anime)
     MutexLocker locker(scriptLock);
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo;
-    QVariantList rets = call(detailFunc, {base.toMap()}, 1, errInfo);
-    if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
-    if(rets[0].type()!=QVariant::Map) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
-    // {name=xx, <desc=xx>, airdate=xx(yyyy-mm-dd), data=xx, <epcount=xx(int)>, <coverurl=xx>, <url=xx>,
-    //  <staff=xx("xx:xx;yy:yy;...")>, <crt=[{name=xx,<actor=xx>,<link=xx>, <imgurl=xx>},...]>>}
+    QVariantList rets = call(detailFunc, {base.toMap()}, 1, errInfo, false);
+    if (!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
+    if (rets[0].metaType().id() != QMetaType::QVariantMap) return ScriptState(ScriptState::S_ERROR, "Wrong Return Value Type");
+    // {name=xx, <desc=xx>, airdate=xx(yyyy-mm-dd), data=xx, <epcount=xx(int)>, <coverurl=xx>, <cover=xx> <url=xx>,
+    //  <staff=xx("xx:xx;yy:yy;...")>, <crt=[{name=xx,<actor=xx>,<link=xx>, <imgurl=xx>, <image=xx>},...]>>}
     auto aobj = rets[0].toMap();
-    QString name = aobj.value("name").toString(),
-            scriptData=aobj.value("data").toString(),
-            airdate=aobj.value("airdate").toString();
-    if(name.isEmpty() || airdate.isEmpty()) return ScriptState(ScriptState::S_ERROR, "Wrong anime info");
+    QString name = aobj.value("name").toByteArray(),
+            scriptData=aobj.value("data").toByteArray(),
+            airdate=aobj.value("airdate").toByteArray();
+    if (name.isEmpty() || airdate.isEmpty()) return ScriptState(ScriptState::S_ERROR, "Wrong anime info");
     anime->_name = name;
-    anime->_desc = aobj.value("desc").toString();
-    anime->_url = aobj.value("url").toString();
+    anime->_desc = aobj.value("desc").toByteArray();
+    anime->_url = aobj.value("url").toByteArray();
     anime->_scriptId = id();
     anime->_scriptData = scriptData;
     anime->_airDate = airdate;
     anime->_epCount = aobj.value("epcount", 0).toInt();
-    anime->_coverURL = aobj.value("coverurl").toString();
+    anime->_coverURL = aobj.value("coverurl").toByteArray();
+    if (aobj.contains("cover"))
+    {
+        anime->_coverData = aobj.value("cover").toByteArray();
+    }
+    else if (!anime->_coverURL.isEmpty())
+    {
+        Network::Reply reply(Network::httpGet(anime->coverURL(), QUrlQuery()));
+        if (!reply.hasError)
+        {
+            anime->_coverData = reply.content;
+        }
+    }
     anime->staff.clear();
-    if(aobj.contains("staff"))
+    if (aobj.contains("staff"))
     {
         QString staffstr = aobj.value("staff").toString();
         auto strs = staffstr.split(';', Qt::SkipEmptyParts);
@@ -125,12 +139,27 @@ ScriptState LibraryScript::getDetail(const AnimeLite &base, Anime *anime)
         }
     }
     anime->characters.clear();
-    if(aobj.contains("crt") && aobj.value("crt").type() == QVariant::List)
+    if (aobj.contains("crt") && aobj.value("crt").metaType().id() == QMetaType::QVariantList)
     {
         auto crts = aobj.value("crt").toList();
-        for(auto &c : crts)
+        auto crtImgLoad = [](QByteArray &data, Character *crt){
+            QBuffer bufferImage(&data);
+            bufferImage.open(QIODevice::ReadOnly);
+            QImageReader reader(&bufferImage);
+            QSize s = reader.size();
+            int w = qMin(s.width(), s.height());
+            reader.setScaledClipRect(QRect(0, 0, w, w));
+            crt->image = QPixmap::fromImageReader(&reader);
+            Character::scale(crt->image);
+        };
+
+        QStringList urls;
+        QList<QUrlQuery> querys;
+        QList<int> crtIndexes;
+
+        for (auto &c : crts)
         {
-            if(c.type()!=QVariant::Map) continue;
+            if(c.metaType().id() != QMetaType::QVariantMap) continue;
             auto cobj = c.toMap();
             QString cname = cobj.value("name").toString();
             if(cname.isEmpty()) continue;
@@ -139,7 +168,28 @@ ScriptState LibraryScript::getDetail(const AnimeLite &base, Anime *anime)
             crt.actor = cobj.value("actor").toString();
             crt.link = cobj.value("link").toString();
             crt.imgURL = cobj.value("imgurl").toString();
+            if (cobj.contains("image"))
+            {
+                QByteArray imgData = cobj.value("image").toByteArray();
+                crtImgLoad(imgData, &crt);
+            }
+            else if (!crt.imgURL.isEmpty())
+            {
+                urls.append(crt.imgURL);
+                querys.append(QUrlQuery());
+                crtIndexes.append(anime->characters.size());
+            }
             anime->characters.append(crt);
+        }
+
+        if (!urls.empty())
+        {
+            QList<Network::Reply> results{Network::httpGetBatch(urls,querys)};
+            for (int i = 0; i < crtIndexes.size(); ++i)
+            {
+                if (results[i].hasError) continue;
+                crtImgLoad(results[i].content, &(anime->characters[crtIndexes[i]]));
+            }
         }
     }
     return ScriptState(ScriptState::S_NORM);
@@ -223,7 +273,7 @@ ScriptState LibraryScript::match(const QString &path, MatchResult &result)
         if(animeName.isEmpty() || animeId.isEmpty() || epName.isEmpty() || epIndex<0) break;
         result.success = true;
         result.name = animeName;
-        result.scriptId = aobj.contains("scriptId")?aobj.value("scriptId").toString():id();;
+        result.scriptId = aobj.contains("scriptId")?aobj.value("scriptId").toString():id();
         result.scriptData = animeId;
         EpInfo &epinfo = result.ep;
         epinfo.localFile = path;

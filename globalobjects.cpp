@@ -61,6 +61,7 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
     workThread = new QThread();
     workThread->setObjectName(QStringLiteral("workThread"));
     workThread->start(QThread::NormalPriority);
+    Logger::logger()->log(Logger::APP, QString::asprintf("worker thread: %p", workThread));
     GlobalObjects::context()->tick(elapsedTimer, "init");
 
     DBManager::instance();
@@ -75,7 +76,8 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
     for (const auto &locName:locNames)
     {
         auto loc = QLocale(locName);
-        if (loc.uiLanguages().first().startsWith("en-")) break;
+        QStringList uiLangs{ loc.uiLanguages() };
+        if (!uiLangs.empty() && uiLangs[0].startsWith("en-")) break;
         if (translator.load(loc, "", "", ":/res/lang"))
         {
             qApp->installTranslator(&translator);

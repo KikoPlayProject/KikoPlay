@@ -20,18 +20,21 @@ public:
 
 public:
     ScriptManager(QObject *parent=nullptr);
+    virtual ~ScriptManager();
 
     void refreshScripts(ScriptType type);
     void deleteScript(const QString &id);
     const QList<QSharedPointer<ScriptBase>> &scripts(ScriptType type)  {return scriptLists[type]; }
     QSharedPointer<ScriptBase> getScript(const QString &id) {return id2scriptHash.value(id);}
 
+    QThread *scriptThread;
+
 signals:
     void scriptChanged(ScriptType type);
 private:
     QList<QSharedPointer<ScriptBase>> scriptLists[ScriptType::UNKNOWN_STYPE];
     QHash<QString, QSharedPointer<ScriptBase>> id2scriptHash;
-    const char *subDirs[ScriptType::UNKNOWN_STYPE] = {"/danmu/", "/library/", "/resource/", "/bgm_calendar/"};
+    const char *subDirs[ScriptType::UNKNOWN_STYPE] = {"/danmu/", "/match/", "/library/", "/resource/", "/bgm_calendar/"};
     QString getScriptPath();
 };
 

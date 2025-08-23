@@ -8,6 +8,7 @@
 #include <QElapsedTimer>
 #include "Extension/Common/ext_common.h"
 #include "Extension/Modules/lua_apputil.h"
+#include "Extension/Modules/lua_browser.h"
 #include "Extension/Modules/lua_regex.h"
 #include "Extension/Modules/lua_appnet.h"
 #include "Extension/Modules/lua_appui.h"
@@ -31,6 +32,7 @@
 #include "Common/threadtask.h"
 #include "Common/logger.h"
 #include "Common/kstats.h"
+#include "Common/eventbus.h"
 #include "globalobjects.h"
 
 namespace Extension
@@ -109,6 +111,7 @@ bool KApp::start(LaunchScene scene)
     Timer(L).setup();
     XmlReader(L).setup();
     HtmlParser(L).setup();
+    Browser(L).setup();
     AppEventBusEvent(L).setup();
     AppWidget::registEnv(L);
 
@@ -145,7 +148,19 @@ bool KApp::start(LaunchScene scene)
 #endif
     }, Qt::QueuedConnection);
     loaded = true;
+#ifdef KSERVICE
+    if (EventBus::getEventBus()->hasListener(EventBus::EVENT_KAPP_LOADED))
+    {
+        QVariantMap param = {
+            { "id", id() },
+            { "ver", version() },
+            { "tc", timer.elapsed() },
+        };
+        EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_KAPP_LOADED, param});
+    }
+#else
     KStats::instance()->statsUseApp(id(), version(), timer.elapsed());
+#endif
     return true;
 }
 
@@ -545,6 +560,12 @@ void KApp::setEnvInfo()
     lua_pushstring(L, "kikoplay"); // table key
     lua_pushstring(L,  GlobalObjects::kikoVersion); // tabel key value
     lua_rawset(L, -3); //table
+
+#ifdef KSERVICE
+    lua_pushstring(L, "kservice"); // table key
+    lua_pushboolean(L, 1);  // tabel key value
+    lua_rawset(L, -3); //table
+#endif
 
     lua_pushstring(L, "data_path"); // table key
     const QString dataPath = this->dataPath();

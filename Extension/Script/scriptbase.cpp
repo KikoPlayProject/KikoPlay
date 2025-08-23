@@ -151,7 +151,15 @@ ScriptState ScriptBase::loadScript(const QString &path)
     return errInfo;
 }
 
-QVariantList ScriptBase::call(const char *fname, const QVariantList &params, int nRet, QString &errInfo)
+void ScriptBase::stop()
+{
+    if (L)
+    {
+        lua_sethook(L, exitHook, LUA_MASKCOUNT, 1);
+    }
+}
+
+QVariantList ScriptBase::call(const char *fname, const QVariantList &params, int nRet, QString &errInfo, bool retUseString)
 {
     if(!L)
     {
@@ -179,7 +187,7 @@ QVariantList ScriptBase::call(const char *fname, const QVariantList &params, int
     QVariantList rets;
     for(int i=0; i<nRet; ++i)
     {
-        rets.append(getValue(L));
+        rets.append(getValue(L, retUseString));
         lua_pop(L, 1);
     }
     std::reverse(rets.begin(), rets.end());
@@ -248,6 +256,14 @@ ScriptBase *ScriptBase::getScript(lua_State *L)
     ScriptBase *script = (ScriptBase *)lua_topointer(L, -1);
     lua_pop(L, 1);
     return script;
+}
+
+void ScriptBase::exitHook(lua_State *L, lua_Debug *ar)
+{
+    lua_sethook(L, exitHook, 0, 1);
+    ScriptBase *script = ScriptBase::getScript(L);
+    Logger::logger()->log(Logger::Script, QString("stop: %1").arg(script? script->id() : "[unknown]"));
+    luaL_error(L, "script stop");
 }
 
 QString ScriptBase::loadMeta(const QString &scriptPath)

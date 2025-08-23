@@ -29,6 +29,18 @@ void ColorPreview::setUseColorDialog(bool on)
     useColorDialog = on;
 }
 
+void ColorPreview::setCheckable(bool on)
+{
+    checkable = on;
+}
+
+void ColorPreview::setChecked(bool on)
+{
+    if (!checkable) return;
+    isChecked = on;
+    update();
+}
+
 void ColorPreview::paintEvent(QPaintEvent *event)
 {
     QPainter p(this);
@@ -57,7 +69,7 @@ void ColorPreview::paintEvent(QPaintEvent *event)
         srcRect.moveCenter(pixmap.rect().center());
         p.drawPixmap(rect(), pixmap, srcRect);
     }
-    if (isEnter && isEnabled())
+    if ((isEnter && isEnabled()) || (checkable && isChecked))
     {
         QPen pen;
         pen.setWidth(4);
@@ -88,7 +100,12 @@ void ColorPreview::mouseReleaseEvent(QMouseEvent *event)
                 emit colorChanged(color);
             }
         }
-        emit click();
+        if (checkable && !isChecked)
+        {
+            isChecked = !isChecked;
+            update();
+        }
+        emit click(isChecked);
     }
     QWidget::mouseReleaseEvent(event);
 }

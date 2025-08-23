@@ -24,6 +24,9 @@
 #include "dialogs/danmuview.h"
 #include "UI/widgets/fonticonbutton.h"
 
+#define SETTING_KEY_EXPORT_DIALOG_PATH "FileDialogPath/PoolEditorExport"
+
+
 namespace
 {
     QVector<QPair<int,int> > timelineClipBoard;
@@ -83,6 +86,7 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"), pare
 
     QLabel *exportTip = new QLabel(tr("Select items to be exported"), this);
     QPushButton *exportPoolButton = new KPushButton(tr("Export"), this);
+    QPushButton *exportIndividuallyBtn = new KPushButton(tr("Export Individually"), this);
     QPushButton *cancelButton = new KPushButton(tr("Cancel"), this);
     QWidget *exportPage = new QWidget(this);
     QHBoxLayout *eHLayout = new QHBoxLayout(exportPage);
@@ -91,6 +95,7 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"), pare
     eHLayout->addStretch(1);
     eHLayout->addWidget(cancelButton);
     eHLayout->addWidget(exportPoolButton);
+    eHLayout->addWidget(exportIndividuallyBtn);
 
     pageBtnSLayout = new QStackedLayout;
     pageBtnSLayout->setContentsMargins(0, 0, 0, 0);
@@ -169,6 +174,32 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"), pare
         }
     });
 
+    QObject::connect(exportIndividuallyBtn, &QPushButton::clicked, this, [=](){
+        QList<const DanmuSource *> exportSrcs;
+        for (auto item : poolItems)
+        {
+            if (item->getSelectStatus())
+            {
+                exportSrcs << item->getSource();
+            }
+        }
+        if (exportSrcs.isEmpty()) return;
+
+        const QString lastDir = GlobalObjects::appSetting->value(SETTING_KEY_EXPORT_DIALOG_PATH).toString();
+        QString directory = QFileDialog::getExistingDirectory(this, tr("Select folder"), lastDir, QFileDialog::DontResolveSymlinks | QFileDialog::ShowDirsOnly);
+        if (directory.isEmpty()) return;
+        GlobalObjects::appSetting->setValue(SETTING_KEY_EXPORT_DIALOG_PATH, directory);
+
+        for (auto src : exportSrcs)
+        {
+            QString fileTitle(src->title);
+            fileTitle.replace(QRegularExpression("[\\\\/:*?\"<>|]"),"");
+            QFileInfo fi(directory, QString("%1.xml").arg(fileTitle));
+            GlobalObjects::danmuPool->getPool()->exportPool(fi.absoluteFilePath(), true, true, {src->id});
+        }
+        this->showMessage(tr("Export Done"));
+    });
+
     refreshItems();
 }
 
@@ -201,7 +232,7 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent) : QWidget(par
     setAttribute(Qt::WA_StyledBackground, true);
     setObjectName(QStringLiteral("PoolItem"));
 
-    DanmuSourceTip *srcTip = new DanmuSourceTip(sourceInfo, this);
+    DanmuSourceTip *srcTip = new DanmuSourceTip(sourceInfo, false, this);
 
     ElidedLabel *name = new ElidedLabel(sourceInfo->title, this);
     name->setFont(QFont(GlobalObjects::normalFont,16));
@@ -289,6 +320,7 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent) : QWidget(par
         DanmuView view(&GlobalObjects::danmuPool->getPool()->comments(),editor, sourceInfo->id);
         view.exec();
     });
+    QObject::connect(srcTip, &DanmuSourceTip::clicked, viewDanmu, &QAction::trigger);
     QAction *copyTimeline=new QAction(tr("Copy TimeLine Info"), this);
     QObject::connect(copyTimeline,&QAction::triggered,this,[sourceInfo](){
         if(sourceInfo->timelineInfo.empty()) return;

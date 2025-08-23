@@ -5,6 +5,9 @@
 #include "Manager/danmumanager.h"
 #include "Manager/pool.h"
 #include "globalobjects.h"
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#endif
 
 DanmuProvider::DanmuProvider(QObject *parent) : QObject(parent)
 {
@@ -79,6 +82,13 @@ ScriptState DanmuProvider::getURLInfo(const QString &url, QList<DanmuSource> &re
 
 ScriptState DanmuProvider::downloadDanmu(const DanmuSource *item, QVector<DanmuComment *> &danmuList, DanmuSource **nItem)
 {
+#ifdef KSERVICE
+    if (item->isKikoSource())
+    {
+        KService::instance()->getDanmu(*item);
+        return ScriptState(ScriptState::S_NORM);
+    }
+#endif
     auto script = GlobalObjects::scriptManager->getScript(item->scriptId).staticCast<DanmuScript>();
     if(!script) return "Script invalid";
     ThreadTask task(GlobalObjects::workThread);
@@ -88,51 +98,5 @@ ScriptState DanmuProvider::downloadDanmu(const DanmuSource *item, QVector<DanmuC
         if(nItem) *nItem = retItem;
         return QVariant::fromValue(state);
     }).value<ScriptState>();
-}
-
-void DanmuProvider::checkSourceToLaunch(const QString &poolId)
-{
-    ThreadTask task(GlobalObjects::workThread);
-    task.RunOnce([=](){
-        QStringList supportedScripts;
-        Pool *pool = GlobalObjects::danmuManager->getPool(poolId, false);
-        if(!pool)
-        {
-            emit sourceCheckDown(poolId, supportedScripts);
-            return;
-        }
-        QList<DanmuSource> sources;
-        for(auto &src : pool->sources())
-            sources.append(src);
-        if(sources.size()==0)
-        {
-            emit sourceCheckDown(poolId, supportedScripts);
-            return;
-        }
-        for(auto &script : GlobalObjects::scriptManager->scripts(ScriptType::DANMU))
-        {
-            DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
-            bool ret = false;
-            dmScript->hasSourceToLaunch(sources, ret);
-            if(ret) supportedScripts.append(dmScript->id());
-        }
-        emit sourceCheckDown(poolId, supportedScripts);
-    });
-}
-
-void DanmuProvider::launch(const QStringList &ids, const QString &poolId, const QList<DanmuSource> &sources, DanmuComment *comment)
-{
-    ThreadTask task(GlobalObjects::workThread);
-    task.RunOnce([=](){
-        QStringList status;
-        for(auto &id : ids)
-        {
-            auto script =  GlobalObjects::scriptManager->getScript(id);
-            DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
-            ScriptState state = dmScript->launch(sources, comment);
-            status.append(state.info);
-        }
-        emit danmuLaunchStatus(poolId, ids, status, comment);
-    });
 }
 

@@ -1221,7 +1221,7 @@ void MPVPlayer::loadSettings()
 
 void MPVPlayer::loadPredefineOptions(QStringList &optionGroupKeys, QVector<QStringList> &optionsGroupList)
 {
-    QFile predefineOptionFile("predefineMPVOptions");
+    QFile predefineOptionFile("player_conf/predefineMPVOptions");
     if (!predefineOptionFile.open(QFile::ReadOnly)) return;
 
     QSet<QString> groupKeys(optionGroupKeys.begin(), optionGroupKeys.end());

@@ -22,7 +22,7 @@ struct TipParams
     QString message;
     int timeout = 4000;
     bool showClose = false;
-    QColor bgColor = QColor(0x16, 0x9f, 0xe6);
+    QColor bgColor = QColor(43, 106, 176);
 };
 Q_DECLARE_METATYPE(TipParams)
 

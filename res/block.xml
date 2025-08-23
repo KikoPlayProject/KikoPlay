@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rules>
+    <rule id="1" name="单个非中文字符" field="0" relation="0" isRegExp="true" enable="true" preFilter="false">^[^\x{4e00}-\x{9fa5}]$</rule>
+    <rule id="2" name="无意义符号" field="0" relation="0" isRegExp="true" enable="true" preFilter="false">^[\.。,，\/\?？!！~～@\^、+=\-_ ]+$</rule>
+    <rule id="3" name="无意义统计" field="0" relation="0" isRegExp="true" enable="true" preFilter="false">(^|[ !！?？~ …。，\.\,\-、]+)[一两兩二三四五六七八九十0-9]+[万Ww千Kk百0]*(弹幕|播放|了)</rule>
+</rules>

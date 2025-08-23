@@ -14,6 +14,9 @@
 #include "MediaLibrary/animeworker.h"
 #include "Play/Video/mpvplayer.h"
 #include "Play/playcontext.h"
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#endif
 
 namespace
 {
@@ -220,22 +223,9 @@ void APIHandler::apiDanmuFull(stefanfrings::HttpRequest &request, stefanfrings::
         {
             resposeObj=pool->exportFullJson();
             resposeObj.insert("update", false);
-            if(pool->sources().size()>0)
-            {
-                QJsonArray supportedScripts;
-                QList<DanmuSource> sources;
-                for(auto &src : pool->sources())
-                    sources.append(src);
-                for(auto &script : GlobalObjects::scriptManager->scripts(ScriptType::DANMU))
-                {
-                    DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
-                    bool ret = false;
-                    dmScript->hasSourceToLaunch(sources, ret);
-                    if(ret) supportedScripts.append(dmScript->id());
-                }
-                if(supportedScripts.size()>0)
-                    resposeObj.insert("launchScripts", supportedScripts);
-            }
+#ifdef KSERVICE
+            resposeObj.insert("launchScripts", QJsonArray{KService::kSrc});
+#endif
         }
     }
     QByteArray data = QJsonDocument(resposeObj).toJson();
@@ -456,8 +446,11 @@ void APIHandler::apiLaunch(stefanfrings::HttpRequest &request, stefanfrings::Htt
         QVariantMap data = document.object().toVariantMap();
         Pool *pool=GlobalObjects::danmuManager->getPool(data.value("danmuPool").toString());
         QString text = data.value("text").toString();
+        QString mediaId = data.value("mediaId").toString();
+        QString mediaPath = GlobalObjects::playlist->getPathByHash(mediaId);
+        QFileInfo fi(mediaPath);
 
-        if(pool && !text.isEmpty())
+        if(pool && !text.isEmpty() && fi.exists())
         {
 
             int time = data.value("time").toInt();  //ms
@@ -495,24 +488,9 @@ void APIHandler::apiLaunch(stefanfrings::HttpRequest &request, stefanfrings::Htt
             QString commentInfo(QString("[%1:%2]%3").arg(cmin,2,10,QChar('0')).arg(cls,2,10,QChar('0')).arg(text));
             QString poolInfo(QString("%1 %2").arg(pool->animeTitle(), pool->toEp().toString()));
             Logger::logger()->log(Logger::LANServer, QString("[%1]Launch, [%2] %3").arg(request.getPeerAddress().toString(), poolInfo, commentInfo));
-            QStringList scriptIds = data.value("launchScripts").toStringList();
-            if(time >= 0 && !scriptIds.isEmpty() && !pool->sources().isEmpty())
-            {
-                QList<DanmuSource> sources;
-                for(auto &src : pool->sources())
-                    sources.append(src);
-
-                QStringList results;
-                for(auto &id : scriptIds)
-                {
-                    auto script =  GlobalObjects::scriptManager->getScript(id);
-                    DanmuScript *dmScript = static_cast<DanmuScript *>(script.data());
-                    ScriptState state = dmScript->launch(sources, comment.get());
-                    results.append(QString("[%1]: %2").arg(id, state?tr("Success"):tr("Faild, %1").arg(state.info)));
-                }
-                QString msg(QString("%1\n%2\n%3").arg(poolInfo, commentInfo, results.join('\n')));
-                Logger::logger()->log(Logger::Script, msg);
-            }
+#ifdef KSERVICE
+            KService::instance()->launch(comment, pool->id(), mediaPath);
+#endif
         }
     }
 }

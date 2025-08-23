@@ -10,6 +10,7 @@
 #include <QProcess>
 #include <QSharedPointer>
 #include "UI/ela/ElaCheckBox.h"
+#include "UI/ela/ElaDoubleSpinBox.h"
 #include "UI/ela/ElaLineEdit.h"
 #include "UI/ela/ElaSpinBox.h"
 #include "UI/widgets/kpushbutton.h"
@@ -28,7 +29,7 @@ GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *par
     playerWindowWidget->setMinimumSize(400, 225);
     smPlayer->show();
 
-    QSpinBox *durationSpin = new ElaSpinBox(this);
+    QDoubleSpinBox *durationSpin = new ElaDoubleSpinBox(this);
     durationSpin->setRange(1, 20);
     QLabel *durationTip = new QLabel(tr("Snippet Length(1~20s)"), this);
     if(!showDuration)
@@ -84,7 +85,7 @@ GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *par
            smPlayer->seek(curTime);
         });
         QObject::connect(smPlayer.data(), &SimplePlayer::positionChanged, this, [=](double val){
-           int duration = durationSpin->value();
+           double duration = durationSpin->value();
            if(val >= curTime + duration)
            {
                smPlayer->seek(curTime);
@@ -142,7 +143,7 @@ GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *par
             showMessage(tr("Frame Width or Height Should not be 0"), NM_ERROR | NM_HIDE);
             return;
         }
-        int duration = showDuration?durationSpin->value():-1;
+        double duration = showDuration?durationSpin->value():-1;
         QString saveFileName = QFileDialog::getSaveFileName(this, tr("Save GIF"), "", "GIF Images (*.gif)");
         if(saveFileName.isEmpty()) return;
         if(ffmpegCut(inputFile, saveFileName, w, h, rate, curTime, duration))
@@ -158,7 +159,7 @@ GIFCapture::GIFCapture(const QString &fileName, bool showDuration,  QWidget *par
     setSizeSettingKey("DialogSize/GIFCapture",QSize(500, 280));
 }
 
-bool GIFCapture::ffmpegCut(const QString &input, const QString &output, int w, int h, int r, double start, int duration)
+bool GIFCapture::ffmpegCut(const QString &input, const QString &output, int w, int h, int r, double start, double duration)
 {
     QString ffmpegPath = GlobalObjects::appSetting->value("Play/FFmpeg", "ffmpeg").toString();
     QStringList arguments;

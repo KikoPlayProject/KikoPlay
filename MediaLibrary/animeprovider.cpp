@@ -1,10 +1,15 @@
 #include "animeprovider.h"
 #include "Common/threadtask.h"
 #include "Common/network.h"
+#include "Common/logger.h"
 #include "Extension/Script/scriptmanager.h"
 #include "Extension/Script/libraryscript.h"
+#include "Extension/Script/matchscript.h"
 #include "globalobjects.h"
 #include <QImageReader>
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#endif
 
 namespace
 {
@@ -14,12 +19,16 @@ namespace
 AnimeProvider::AnimeProvider(QObject *parent) : QObject(parent)
 {
     QObject::connect(GlobalObjects::scriptManager, &ScriptManager::scriptChanged, this, [=](ScriptType type){
-        if(type==ScriptType::LIBRARY)
+        if (type == ScriptType::LIBRARY)
         {
-            setMacthProviders();
-            if(!matchProviderIds.contains(defaultMatchScriptId))
+            emit infoProviderChanged();
+        }
+        else if (type == ScriptType::MATCH)
+        {
+            setMatchProviders();
+            if (!matchProviderIds.contains(defaultMatchScriptId))
             {
-                if(matchProviders.size()>0)
+                if (!matchProviders.empty())
                 {
                     setDefaultMatchScript(matchProviders.first().second);
                 }
@@ -30,10 +39,9 @@ AnimeProvider::AnimeProvider(QObject *parent) : QObject(parent)
                     emit defaultMacthProviderChanged("", "");
                 }
             }
-            emit matchProviderChanged();
         }
     });
-    setMacthProviders();
+    setMatchProviders();
     defaultMatchScriptId = GlobalObjects::appSetting->value(setting_MatchScriptId).toString();
     if(defaultMatchScript().isEmpty() && !matchProviderIds.isEmpty())
     {
@@ -55,7 +63,7 @@ QList<QPair<QString, QString> > AnimeProvider::getSearchProviders()
 void AnimeProvider::setDefaultMatchScript(const QString &scriptId)
 {
     if(!matchProviderIds.contains(scriptId)) return;
-    auto script = GlobalObjects::scriptManager->getScript(scriptId).staticCast<LibraryScript>();
+    auto script = GlobalObjects::scriptManager->getScript(scriptId).staticCast<MatchScript>();
     if(!script) return;
     defaultMatchScriptId = scriptId;
     GlobalObjects::appSetting->setValue(setting_MatchScriptId, scriptId);
@@ -66,7 +74,7 @@ ScriptState AnimeProvider::animeSearch(const QString &scriptId, const QString &k
 {
     auto script = GlobalObjects::scriptManager->getScript(scriptId).staticCast<LibraryScript>();
     if(!script) return "Script invalid";
-    ThreadTask task(GlobalObjects::workThread);
+    ThreadTask task(GlobalObjects::scriptManager->scriptThread);
     return task.Run([&](){
         for(auto iter = options.cbegin(); iter != options.cend(); ++iter)
         {
@@ -80,63 +88,9 @@ ScriptState AnimeProvider::getDetail(const AnimeLite &base, Anime *anime)
 {
     auto script = GlobalObjects::scriptManager->getScript(base.scriptId).staticCast<LibraryScript>();
     if(!script) return "Script invalid";
-    ThreadTask task(GlobalObjects::workThread);
+    ThreadTask task(GlobalObjects::scriptManager->scriptThread);
     return task.Run([&](){
         ScriptState state = script->getDetail(base, anime);
-        if(state)
-        {
-            if(QUrl(anime->coverURL()).isLocalFile())
-            {
-                QFile coverFile(anime->coverURL());
-                if(coverFile.open(QIODevice::ReadOnly))
-                {
-                    anime->setCover(coverFile.readAll(), false, "");
-                }
-            }
-            else
-            {
-                Network::Reply reply(Network::httpGet(anime->coverURL(), QUrlQuery()));
-                if(!reply.hasError)
-                {
-                    anime->setCover(reply.content, false);
-                }
-            }
-            QStringList urls;
-            QList<QUrlQuery> querys;
-            QList<Character *> crts;
-            for(auto &crt : anime->characters)
-            {
-                if(QUrl(crt.imgURL).isLocalFile())
-                {
-                    QFile crtImageFile(crt.imgURL);
-                    if(crtImageFile.open(QIODevice::ReadOnly))
-                        crt.image.loadFromData(crtImageFile.readAll());
-                    crt.imgURL = "";
-                }
-                else
-                {
-                    urls.append(crt.imgURL);
-                    querys.append(QUrlQuery());
-                    crts.append(&crt);
-                }
-            }
-
-            QList<Network::Reply> results(Network::httpGetBatch(urls,querys));
-            for(int i = 0; i<crts.size(); ++i)
-            {
-                if(!results[i].hasError)
-                {
-                    QBuffer bufferImage(&results[i].content);
-                    bufferImage.open(QIODevice::ReadOnly);
-                    QImageReader reader(&bufferImage);
-                    QSize s = reader.size();
-                    int w = qMin(s.width(), s.height());
-                    reader.setScaledClipRect(QRect(0, 0, w, w));
-                    crts[i]->image = QPixmap::fromImageReader(&reader);
-                    Character::scale(crts[i]->image);
-                }
-            }
-        }
         return QVariant::fromValue(state);
     }).value<ScriptState>();
 }
@@ -145,7 +99,7 @@ ScriptState AnimeProvider::getEp(Anime *anime, QVector<EpInfo> &results)
 {
     auto script = GlobalObjects::scriptManager->getScript(anime->scriptId()).staticCast<LibraryScript>();
     if(!script) return "Script invalid";
-    ThreadTask task(GlobalObjects::workThread);
+    ThreadTask task(GlobalObjects::scriptManager->scriptThread);
     return task.Run([&](){
         return QVariant::fromValue(script->getEp(anime, results));
     }).value<ScriptState>();
@@ -155,7 +109,7 @@ ScriptState AnimeProvider::getTags(Anime *anime, QStringList &results)
 {
     auto script = GlobalObjects::scriptManager->getScript(anime->scriptId()).staticCast<LibraryScript>();
     if(!script) return "Script invalid";
-    ThreadTask task(GlobalObjects::workThread);
+    ThreadTask task(GlobalObjects::scriptManager->scriptThread);
     return task.Run([&](){
         return QVariant::fromValue(script->getTags(anime, results));
     }).value<ScriptState>();
@@ -163,9 +117,15 @@ ScriptState AnimeProvider::getTags(Anime *anime, QStringList &results)
 
 ScriptState AnimeProvider::match(const QString &scriptId, const QString &path, MatchResult &result)
 {
-    auto script = GlobalObjects::scriptManager->getScript(scriptId).staticCast<LibraryScript>();
+#ifdef KSERVICE
+    if (KService::instance()->enableKServiceMatch())
+    {
+        return kMatch(scriptId, path, result);
+    }
+#endif
+    auto script = GlobalObjects::scriptManager->getScript(scriptId).staticCast<MatchScript>();
     if(!script) return "Script invalid";
-    ThreadTask task(GlobalObjects::workThread);
+    ThreadTask task(GlobalObjects::scriptManager->scriptThread);
     return task.Run([&](){
         return QVariant::fromValue(script->match(path, result));
     }).value<ScriptState>();
@@ -175,23 +135,91 @@ ScriptState AnimeProvider::menuClick(const QString &mid, Anime *anime)
 {
     auto script = GlobalObjects::scriptManager->getScript(anime->scriptId()).staticCast<LibraryScript>();
     if(!script) return "Script invalid";
-    ThreadTask task(GlobalObjects::workThread);
+    ThreadTask task(GlobalObjects::scriptManager->scriptThread);
     return task.Run([&](){
         return QVariant::fromValue(script->menuClick(mid, anime));
-    }).value<ScriptState>();
+               }).value<ScriptState>();
 }
 
-void AnimeProvider::setMacthProviders()
+void AnimeProvider::setMatchProviders()
 {
     matchProviderIds.clear();
     matchProviders.clear();
-    for(auto &script : GlobalObjects::scriptManager->scripts(ScriptType::LIBRARY))
+    for (auto &script : GlobalObjects::scriptManager->scripts(ScriptType::MATCH))
     {
-        LibraryScript *libScript = static_cast<LibraryScript *>(script.data());
-        if(libScript->supportMatch())
-        {
-            matchProviders.append({libScript->name(), libScript->id()});
-            matchProviderIds.insert(libScript->id());
-        }
+        MatchScript *matchScript = static_cast<MatchScript *>(script.data());
+        matchProviders.append({matchScript->name(), matchScript->id()});
+        matchProviderIds.insert(matchScript->id());
     }
 }
+
+#ifdef KSERVICE
+ScriptState AnimeProvider::kMatch(const QString &scriptId, const QString &path, MatchResult &result)
+{
+    QEventLoop eventLoop;
+    QSharedPointer<MatchStatusObj> statusFlag{new MatchStatusObj, &MatchStatusObj::deleteLater};
+    auto script = GlobalObjects::scriptManager->getScript(scriptId).staticCast<MatchScript>();
+    if (script) statusFlag->scriptValid = true;
+    QObject::connect(statusFlag.get(), &MatchStatusObj::quit, &eventLoop, &QEventLoop::quit);
+
+    auto conn = QObject::connect(KService::instance(), &KService::recognized, this, [=](int status, const QString &errMsg, const QString &filePath, MatchResult match){
+        if (filePath != path) return;
+        if (status != 1)
+        {
+            if (!statusFlag->scriptValid) statusFlag->quitEventLoop();
+            return;
+        }
+        if (!statusFlag->downFlag)
+        {
+            statusFlag->downFlag = true;
+            statusFlag->kServiceSuccess = true;
+            statusFlag->kServiceMatch = match;
+            statusFlag->quitEventLoop();
+        }
+    });
+    KService::instance()->fileRecognize(path);
+
+    Network::ReqAbortFlagObj *abortFlag = nullptr;
+    ScriptState scriptRsp;
+    QObject obj;
+    if (script)
+    {
+        obj.moveToThread(GlobalObjects::scriptManager->scriptThread);
+        QMetaObject::invokeMethod(&obj, [=, &abortFlag, &scriptRsp](){
+            abortFlag = Network::getAbortFlag();
+            MatchResult scriptMatchResult;
+            ScriptState rsp = script->match(path, scriptMatchResult);
+            QThread::msleep(400);  // wait KService 400ms
+            if (scriptRsp && !statusFlag->downFlag)
+            {
+                statusFlag->downFlag = true;
+                statusFlag->scriptSuccess = true;
+                statusFlag->scriptMatch = scriptMatchResult;
+                scriptRsp = rsp;
+            }
+            statusFlag->quitEventLoop();
+        }, Qt::QueuedConnection);
+    }
+    eventLoop.exec();
+    QObject::disconnect(conn);
+
+    if (statusFlag->downFlag)
+    {
+        if (statusFlag->kServiceSuccess)
+        {
+            script->stop();
+            if (abortFlag) emit abortFlag->abort();
+            Logger::logger()->log(Logger::APP, QString("KService Match Success: %1: %2 %3").arg(path, result.name, result.ep.toString()));
+            result = statusFlag->kServiceMatch;
+            return ScriptState(ScriptState::S_NORM);
+        }
+        else if (statusFlag->scriptSuccess)
+        {
+            result = statusFlag->scriptMatch;
+            return ScriptState(ScriptState::S_NORM);
+        }
+    }
+    result.success = false;
+    return scriptRsp;
+}
+#endif

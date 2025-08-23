@@ -23,6 +23,7 @@ DEFINES += QT_MESSAGELOGCONTEXT
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += ZLIB_WINAPI
+DEFINES += KSERVICE
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
@@ -36,6 +37,17 @@ CONFIG(debug, debug|release) {
 #    QMAKE_CXX_FLAGS_MT_DBG += /Od /D_DEBUG
 } else {
     TARGET = $${TARGET}
+}
+
+contains(DEFINES, KSERVICE) {
+    SOURCES += \
+        Service/pb/service.pb.cc
+
+    HEADERS += \
+        Service/pb/service.pb.h
+
+    INCLUDEPATH += \
+        Service/pb
 }
 
 SOURCES += \
@@ -113,12 +125,14 @@ SOURCES += \
     Extension/Script/bgmcalendarscript.cpp \
     Extension/Script/danmuscript.cpp \
     Extension/Script/libraryscript.cpp \
+    Extension/Script/matchscript.cpp \
     Extension/Script/playgroundscript.cpp \
     Extension/Script/resourcescript.cpp \
     Extension/Script/scriptbase.cpp \
     Extension/Script/scriptmanager.cpp \
     Extension/Script/scriptmodel.cpp \
     Download/util.cpp \
+    MediaLibrary/animescrapingtask.cpp \
     Play/Playlist/webdav/qwebdav.cpp \
     Play/Playlist/webdav/qwebdavdirparser.cpp \
     Play/Playlist/webdav/qwebdavitem.cpp \
@@ -130,6 +144,10 @@ SOURCES += \
     Play/Subtitle/subtitlerecognizer.cpp \
     Play/Subtitle/subtitletranslator.cpp \
     Play/Subtitle/vad.cpp \
+    Play/Video/mpvmediainfo.cpp \
+    Service/klogin.cpp \
+    Service/kregister.cpp \
+    Service/kservice.cpp \
     UI/animeepisodeeditor.cpp \
     UI/dialogs/adddanmu.cpp \
     UI/dialogs/blockeditor.cpp \
@@ -165,6 +183,7 @@ SOURCES += \
     UI/ela/ElaCalendarPicker.cpp \
     UI/ela/ElaCheckBox.cpp \
     UI/ela/ElaComboBox.cpp \
+    UI/ela/ElaDoubleSpinBox.cpp \
     UI/ela/ElaEventBus.cpp \
     UI/ela/ElaIcon.cpp \
     UI/ela/ElaIconButton.cpp \
@@ -184,6 +203,7 @@ SOURCES += \
     UI/ela/private/ElaCalendarPickerPrivate.cpp \
     UI/ela/private/ElaCalendarPrivate.cpp \
     UI/ela/private/ElaComboBoxPrivate.cpp \
+    UI/ela/private/ElaDoubleSpinBoxPrivate.cpp \
     UI/ela/private/ElaEventBusPrivate.cpp \
     UI/ela/private/ElaExponentialBlurPrivate.cpp \
     UI/ela/private/ElaIconButtonPrivate.cpp \
@@ -298,7 +318,6 @@ SOURCES += \
     UI/captureview.cpp \
     UI/charactereditor.cpp \
     UI/checkupdate.cpp \
-    UI/danmulaunch.cpp \
     UI/dlnadiscover.cpp \
     UI/downloadwindow.cpp \
     UI/framelessdialog.cpp \
@@ -421,12 +440,14 @@ HEADERS += \
     Extension/Script/bgmcalendarscript.h \
     Extension/Script/danmuscript.h \
     Extension/Script/libraryscript.h \
+    Extension/Script/matchscript.h \
     Extension/Script/playgroundscript.h \
     Extension/Script/resourcescript.h \
     Extension/Script/scriptbase.h \
     Extension/Script/scriptmanager.h \
     Extension/Script/scriptmodel.h \
     Download/util.h \
+    MediaLibrary/animescrapingtask.h \
     Play/Playlist/webdav/qwebdav.h \
     Play/Playlist/webdav/qwebdavdirparser.h \
     Play/Playlist/webdav/qwebdavitem.h \
@@ -439,6 +460,10 @@ HEADERS += \
     Play/Subtitle/subtitletranslator.h \
     Play/Subtitle/vad.h \
     Play/Subtitle/wav.h \
+    Play/Video/mpvmediainfo.h \
+    Service/klogin.h \
+    Service/kregister.h \
+    Service/kservice.h \
     UI/animeepisodeeditor.h \
     UI/dialogs/adddanmu.h \
     UI/dialogs/blockeditor.h \
@@ -475,6 +500,7 @@ HEADERS += \
     UI/ela/ElaCalendarPicker.h \
     UI/ela/ElaCheckBox.h \
     UI/ela/ElaComboBox.h \
+    UI/ela/ElaDoubleSpinBox.h \
     UI/ela/ElaEventBus.h \
     UI/ela/ElaIcon.h \
     UI/ela/ElaIconButton.h \
@@ -495,6 +521,7 @@ HEADERS += \
     UI/ela/private/ElaCalendarPickerPrivate.h \
     UI/ela/private/ElaCalendarPrivate.h \
     UI/ela/private/ElaComboBoxPrivate.h \
+    UI/ela/private/ElaDoubleSpinBoxPrivate.h \
     UI/ela/private/ElaEventBusPrivate.h \
     UI/ela/private/ElaExponentialBlurPrivate.h \
     UI/ela/private/ElaIconButtonPrivate.h \
@@ -616,7 +643,6 @@ HEADERS += \
     UI/captureview.h \
     UI/charactereditor.h \
     UI/checkupdate.h \
-    UI/danmulaunch.h \
     UI/dlnadiscover.h \
     UI/downloadwindow.h \
     UI/framelessdialog.h \
@@ -682,6 +708,13 @@ win32 {
         LIBS += -L$$PWD/lib/x64/ -lzlibstat
         LIBS += -L$$PWD/lib/x64/ -llua53
         LIBS += -L$$PWD/lib/x64/ -lonnxruntime
+    }
+    contains(DEFINES, KSERVICE) {
+        debug {
+            LIBS += -L$$PWD/lib/x64/ -llibprotobuf-lited
+        } else {
+            LIBS += -L$$PWD/lib/x64/ -llibprotobuf-lite
+        }
     }
 }
 

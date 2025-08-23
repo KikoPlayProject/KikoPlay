@@ -26,6 +26,7 @@ void AnimeListModel::updateCheckedInfo()
         if(checkStatus[i] != Qt::CheckState::Checked) continue;
         Anime *currentAnime = animeModel->animes[i];
         ++currentCount;
+        if (!currentAnime || currentAnime->refreshing()) continue;
         if(currentAnime->scriptId().isEmpty()) continue;
         QSharedPointer<ScriptBase> script = GlobalObjects::scriptManager->getScript(currentAnime->scriptId());
         if(!script) continue;
@@ -60,6 +61,7 @@ void AnimeListModel::updateCheckedTag()
         if(checkStatus[i] != Qt::CheckState::Checked) continue;
         Anime *currentAnime = animeModel->animes[i];
         ++currentCount;
+        if (!currentAnime || currentAnime->refreshing()) continue;
         if(currentAnime->scriptId().isEmpty()) continue;
         QSharedPointer<ScriptBase> script = GlobalObjects::scriptManager->getScript(currentAnime->scriptId());
         if(!script) continue;

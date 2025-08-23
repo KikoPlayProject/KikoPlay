@@ -7,6 +7,7 @@
 namespace
 {
     static QThreadStorage<QSharedPointer<QNetworkAccessManager>> managers;
+    static QThreadStorage<QSharedPointer<Network::ReqAbortFlagObj>> abortFlagObjs;
 }
 
 QNetworkAccessManager *Network::getManager()
@@ -44,6 +45,7 @@ Network::Reply Network::httpGet(const QString &url, const QUrlQuery &query, cons
     QNetworkReply *reply = manager->get(request);
 
     QEventLoop eventLoop;
+    QObject::connect(getAbortFlag(), &ReqAbortFlagObj::abort, &eventLoop, &QEventLoop::quit);
     QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
     QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
     timer.start();
@@ -99,6 +101,7 @@ Network::Reply Network::httpPost(const QString &url, const QByteArray &data, con
     QNetworkReply *reply = manager->post(request, data);
 
     QEventLoop eventLoop;
+    QObject::connect(getAbortFlag(), &ReqAbortFlagObj::abort, &eventLoop, &QEventLoop::quit);
     QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
     QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
     timer.start();
@@ -197,6 +200,7 @@ QList<Network::Reply> Network::httpGetBatch(const QStringList &urls, const QList
         timer->setInterval(timeout*2);
         timer->setSingleShot(true);
         QObject::connect(timer, &QTimer::timeout,reply,&QNetworkReply::abort);
+        QObject::connect(getAbortFlag(), &ReqAbortFlagObj::abort, reply,&QNetworkReply::abort);
         timer->start();
         QObject::connect(reply, &QNetworkReply::finished, reply, [i,&results,&finishCount,&eventLoop,reply,timer]()
         {
@@ -390,6 +394,7 @@ Network::Reply Network::httpHead(const QString &url, const QUrlQuery &query, con
     QNetworkReply *reply = manager->head(request);
 
     QEventLoop eventLoop;
+    QObject::connect(getAbortFlag(), &ReqAbortFlagObj::abort, &eventLoop, &QEventLoop::quit);
     QObject::connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
     QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
     timer.start();
@@ -419,4 +424,18 @@ Network::Reply Network::httpHead(const QString &url, const QUrlQuery &query, con
     }
     reply->deleteLater();
     return replyObj;
+}
+
+Network::ReqAbortFlagObj *Network::getAbortFlag()
+{
+    if(!abortFlagObjs.hasLocalData())
+    {
+        abortFlagObjs.setLocalData(QSharedPointer<ReqAbortFlagObj>::create());
+    }
+    return abortFlagObjs.localData().get();
+}
+
+void Network::ReqAbortFlagObj::abortRequest()
+{
+    emit abort();
 }

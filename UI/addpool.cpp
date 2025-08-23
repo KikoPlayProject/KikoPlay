@@ -33,10 +33,10 @@ namespace
     LRUCache<QString, QList<AnimeLite>> animeCache{"PoolAnime", 64};
     QString lastSearchCacheId;
 
-    class AnimeModel : public QAbstractItemModel
+    class AnimeListModel : public QAbstractItemModel
     {
     public:
-        AnimeModel(QObject *parent = nullptr) : QAbstractItemModel(parent) {}
+        AnimeListModel(QObject *parent = nullptr) : QAbstractItemModel(parent) {}
         void reset(const QList<AnimeLite> &nList)
         {
             beginResetModel();
@@ -211,13 +211,13 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
     QLineEdit *keywordEdit = new ElaLineEdit(srcAnime, animePage);
     QPushButton *searchButton = new KPushButton(tr("Search"), animePage);
 
-    animeModel = new AnimeModel(this);
+    animeModel = new AnimeListModel(this);
     if(!scriptCombo->currentData().isNull())
     {
         QString id(QString("%1/%2").arg(scriptCombo->currentData().toString(), srcAnime));
         if(animeCache.contains(id))
         {
-            static_cast<AnimeModel *>(animeModel)->reset(animeCache.get(id));
+            static_cast<AnimeListModel *>(animeModel)->reset(animeCache.get(id));
         }
     }
 
@@ -240,7 +240,7 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
 
     QAction *copy=new QAction(tr("Copy"), this);
     QObject::connect(copy, &QAction::triggered, this, [=](){
-        auto selectedRows= animeView->selectionModel()->selectedRows((int)AnimeModel::Columns::ANIME);
+        auto selectedRows= animeView->selectionModel()->selectedRows((int)AnimeListModel::Columns::ANIME);
         if(selectedRows.count()==0) return;
         QClipboard *cb = QApplication::clipboard();
         cb->setText(selectedRows.first().data().toString());
@@ -257,7 +257,7 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
             if(animeCache.contains(cacheId))
             {
                 lastSearchCacheId = cacheId;
-                static_cast<AnimeModel *>(animeModel)->reset(animeCache.get(cacheId));
+                static_cast<AnimeListModel *>(animeModel)->reset(animeCache.get(cacheId));
                 hitWords<<keyword;
                 return;
             }
@@ -282,10 +282,10 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
         if(state)
         {
             if(!lastSearchCacheId.isEmpty())
-                animeCache.put(lastSearchCacheId,  static_cast<AnimeModel *>(animeModel)->animeBases());
+                animeCache.put(lastSearchCacheId,  static_cast<AnimeListModel *>(animeModel)->animeBases());
             lastSearchCacheId = cacheId;
             hitWords.remove(keyword);
-            static_cast<AnimeModel *>(animeModel)->reset(results);
+            static_cast<AnimeListModel *>(animeModel)->reset(results);
             animeCache.put(cacheId, results);
         }
         showBusyState(false);
@@ -337,7 +337,7 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
     });
 
     QObject::connect(animeView, &QAbstractItemView::clicked, this, [=](const QModelIndex &index){
-        auto animeLite = static_cast<AnimeModel *>(animeModel)->data(index, AnimeRole).value<AnimeLite>();
+        auto animeLite = static_cast<AnimeListModel *>(animeModel)->data(index, AnimeRole).value<AnimeLite>();
         if(animeLite.epList)
         {
             static_cast<EpModel *>(epModel)->reset(animeLite);
@@ -355,8 +355,8 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
             showBusyState(false);
             if(state)
             {
-                static_cast<AnimeModel *>(animeModel)->fillEpInfo(index, results);
-                auto anime = static_cast<AnimeModel *>(animeModel)->data(index, AnimeRole).value<AnimeLite>();
+                static_cast<AnimeListModel *>(animeModel)->fillEpInfo(index, results);
+                auto anime = static_cast<AnimeListModel *>(animeModel)->data(index, AnimeRole).value<AnimeLite>();
                 static_cast<EpModel *>(epModel)->reset(anime);
                 animeLabel->setText(anime.name);
                 searchSLayout->setCurrentIndex(1);
@@ -449,7 +449,7 @@ void AddPool::onAccept()
     }
     if (!lastSearchCacheId.isEmpty())
     {
-        animeCache.put(lastSearchCacheId,  static_cast<AnimeModel *>(animeModel)->animeBases());
+        animeCache.put(lastSearchCacheId,  static_cast<AnimeListModel *>(animeModel)->animeBases());
     }
     CFramelessDialog::onAccept();
 }
@@ -457,6 +457,6 @@ void AddPool::onAccept()
 void AddPool::onClose()
 {
     if(!lastSearchCacheId.isEmpty())
-        animeCache.put(lastSearchCacheId,  static_cast<AnimeModel *>(animeModel)->animeBases());
+        animeCache.put(lastSearchCacheId,  static_cast<AnimeListModel *>(animeModel)->animeBases());
     CFramelessDialog::onClose();
 }

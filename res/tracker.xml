@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TrackerSubscriber lastCheck="0">
+    <TrackerSource url="https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all.txt" lastCheck="0" />
+    <TrackerSource url="https://cf.trackerslist.com/best.txt" lastCheck="0" />
+</TrackerSubscriber>

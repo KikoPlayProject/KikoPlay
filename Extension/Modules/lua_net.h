@@ -16,6 +16,7 @@ public:
     static int httpGetBatch(lua_State *L);
 private:
     static void pushNetworkReply(lua_State *L, const Network::Reply &reply);
+    static void setRequestOptions(const QVariantMap &options, QStringList &headers);
     static int json2table(lua_State *L);
     static int table2json(lua_State *L);
 

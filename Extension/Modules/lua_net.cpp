@@ -49,11 +49,25 @@ void Net::pushNetworkReply(lua_State *L, const Network::Reply &reply)
     lua_rawset(L, -3); //table
 }
 
+void Net::setRequestOptions(const QVariantMap &options, QStringList &headers)
+{
+    if (options.value("set_dandan_header", false).toBool() && options.contains("dandan_path"))
+    {
+        const QString &ddPath = options.value("dandan_path", "").toString();
+        qint64 ts = QDateTime::currentSecsSinceEpoch();
+        QString secret = QString("%1%2%3%4").arg(Network::kDanDanAppId).arg(ts).arg(ddPath).arg(Network::kDanDanAppSecret);
+        QByteArray hash = QCryptographicHash::hash(secret.toUtf8(), QCryptographicHash::Sha256);
+        headers << "X-AppId" << Network::kDanDanAppId;
+        headers << "X-Timestamp" << QString::number(ts);
+        headers << "X-Signature" << hash.toBase64();
+    }
+}
+
 int Net::httpGet(lua_State *L)
 {
     do
     {
-        int params = lua_gettop(L);  //url <query> <header> <redirect>
+        int params = lua_gettop(L);  //url <query> <header> <options>
         if(params==0 || params>4) break;
         if(lua_type(L, 1)!=LUA_TSTRING) break;
         const char *curl = luaL_checkstring(L,1);
@@ -84,9 +98,11 @@ int Net::httpGet(lua_State *L)
                 headers<<iter.key()<<iter.value().toString();
             }
         }
-        if(params > 3)
+        if (params > 3)
         {
-            redirect = lua_toboolean(L, 4);
+            QVariantMap options = getValue(L, false).toMap();
+            redirect = options.value("redirect", true).toBool();
+            setRequestOptions(options, headers);
         }
         Network::Reply &&reply = Network::httpGet(curl,query,headers,redirect);
         if(!reply.hasError)
@@ -101,7 +117,7 @@ int Net::httpGet(lua_State *L)
         }
         return 2;
     }while(false);
-    lua_pushstring(L, "httpget: param error, expect: url(string), <query(table)>, <header(table)>, <redirect=true>");
+    lua_pushstring(L, "httpget: param error, expect: url(string), <query(table)>, <header(table)>, <options(table)>");
     lua_pushnil(L);
     return 2;
 }
@@ -110,7 +126,7 @@ int Net::httpHead(lua_State *L)
 {
     do
     {
-        int params = lua_gettop(L);  //url <query> <header> <redirect>
+        int params = lua_gettop(L);  //url <query> <header> <options>
         if(params==0 || params>4) break;
         if(lua_type(L, 1)!=LUA_TSTRING) break;
         const char *curl = luaL_checkstring(L,1);
@@ -143,7 +159,9 @@ int Net::httpHead(lua_State *L)
         }
         if(params > 3)
         {
-            redirect = lua_toboolean(L, 4);
+            QVariantMap options = getValue(L, false).toMap();
+            redirect = options.value("redirect", true).toBool();
+            setRequestOptions(options, headers);
         }
         Network::Reply &&reply = Network::httpHead(curl,query,headers,redirect);
         if(!reply.hasError)
@@ -158,7 +176,7 @@ int Net::httpHead(lua_State *L)
         }
         return 2;
     }while(false);
-    lua_pushstring(L, "httphead: param error, expect: url(string), <query(table)>, <header(table)>, <redirect=true>");
+    lua_pushstring(L, "httphead: param error, expect: url(string), <query(table)>, <header(table)>, <options(table)>");
     lua_pushnil(L);
     return 2;
 }
@@ -167,8 +185,8 @@ int Net::httpPost(lua_State *L)
 {
     do
     {
-        int params = lua_gettop(L);  //url <data> <header> <query>
-        if(params<2 || params>4) break;
+        int params = lua_gettop(L);  //url <data> <header> <query> <options>
+        if(params<2 || params>5) break;
         if(lua_type(L, 1)!=LUA_TSTRING) break;
         if(lua_type(L, 2)!=LUA_TSTRING) break;
         const char *curl = luaL_checkstring(L,1);
@@ -201,6 +219,11 @@ int Net::httpPost(lua_State *L)
                 query.addQueryItem(iter.key(), iter.value().toString());
             }
         }
+        if (params > 4)  // has options
+        {
+            QVariantMap options = getValue(L, false).toMap();
+            setRequestOptions(options, headers);
+        }
         Network::Reply &&reply = Network::httpPost(curl, cdata, headers, query);
         if(!reply.hasError)
         {
@@ -214,7 +237,7 @@ int Net::httpPost(lua_State *L)
         }
         return 2;
     }while(false);
-    lua_pushstring(L, "httppost: param error, expect: url(string), <data(string)>, <header(table)>, <query(table)>");
+    lua_pushstring(L, "httppost: param error, expect: url(string), <data(string)>, <header(table)>, <query(table)>, <options(table)>");
     lua_pushnil(L);
     return 2;
 }
@@ -223,7 +246,7 @@ int Net::httpGetBatch(lua_State *L)
 {
     do
     {
-        int params = lua_gettop(L);  //urls([u1,u2,...]) <querys([{xx=xx,...},{xx=xx,...},...])> <headers([{xx=xx,..},{xx=xx,..},...])>, <redirect=true>
+        int params = lua_gettop(L);  //urls([u1,u2,...]) <querys([{xx=xx,...},{xx=xx,...},...])> <headers([{xx=xx,..},{xx=xx,..},...])>, <options>
         if(params==0 || params>3) break;
         if(lua_type(L, 1)!=LUA_TTABLE) break;
         lua_pushvalue(L, 1);
@@ -274,7 +297,14 @@ int Net::httpGetBatch(lua_State *L)
         }
         if(params > 3)
         {
-            redirect = lua_toboolean(L, 4);
+            QVariantMap options = getValue(L, false).toMap();
+            redirect = options.value("redirect", true).toBool();
+            QStringList optHeaders;
+            setRequestOptions(options, optHeaders);
+            for (auto &h : headers)
+            {
+                h.append(optHeaders);
+            }
         }
         QList<Network::Reply> &&content = Network::httpGetBatch(urls, querys, headers, redirect); //[[hasError, content], [], ...]
         lua_pushnil(L);
@@ -286,7 +316,7 @@ int Net::httpGetBatch(lua_State *L)
         }
         return 2;
     }while(false);
-    lua_pushstring(L, "httpgetbatch: param error, expect: urls(string array), <querys(table array)>, <headers(table array)>, <redirect=true>");
+    lua_pushstring(L, "httpgetbatch: param error, expect: urls(string array), <querys(table array)>, <headers(table array)>, <options>");
     lua_pushnil(L);
     return 2;
 }

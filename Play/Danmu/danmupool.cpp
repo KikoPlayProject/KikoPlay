@@ -323,6 +323,13 @@ void DanmuPool::setConnect(Pool *pool)
         endResetModel();
         currentPosition = std::lower_bound(finalPool.begin(), finalPool.end(), currentTime, DanmuComparer) - finalPool.begin();
     });
+    if (curPool->needRefresh())
+    {
+        curPool->setRefreshFlag(false);
+        QMetaObject::invokeMethod(this, [=](){
+            pool->update();
+        });
+    }
 }
 
 void DanmuPool::setStatisInfo()

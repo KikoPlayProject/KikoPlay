@@ -59,13 +59,24 @@ void AnimeItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     coverRect.adjust(6, 6, -6, -6);
     QPixmap coverPixmap(anime->cover(blockCoverFetch));
     painter->drawPixmap(coverRect, coverPixmap.isNull() ? nullCoverPixmap : coverPixmap);
-    if (viewOption.state.testFlag(QStyle::State_MouseOver))
+    if (anime->refreshing())
     {
         painter->save();
-        painter->setPen(borderPen);
-        painter->setBrush(Qt::NoBrush);
-        painter->drawRoundedRect(coverRect, 8, 8);
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(QColor(0, 0, 0, 150));
+        painter->drawRoundedRect(coverRect, 6, 6);
         painter->restore();
+    }
+    else
+    {
+        if (viewOption.state.testFlag(QStyle::State_MouseOver))
+        {
+            painter->save();
+            painter->setPen(borderPen);
+            painter->setBrush(Qt::NoBrush);
+            painter->drawRoundedRect(coverRect, 8, 8);
+            painter->restore();
+        }
     }
 
     QRect titleRect(option.rect.x(), option.rect.y() + AnimeItemDelegate::CoverHeight, AnimeItemDelegate::CoverWidth, AnimeItemDelegate::TitleHeight);
@@ -99,7 +110,13 @@ bool AnimeItemDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, co
     {
         if (pEvent->button() == Qt::LeftButton && !(pEvent->modifiers()&Qt::ControlModifier)
                 && !(pEvent->modifiers()&Qt::ShiftModifier))
-            emit ItemClicked(index);
+        {
+            Anime *anime = (Anime *)index.data(AnimeRole).value<void *>();
+            if (!anime->refreshing())
+            {
+                emit ItemClicked(index);
+            }
+        }
         break;
     }
     default:

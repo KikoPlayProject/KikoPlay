@@ -18,6 +18,7 @@ public:
     inline const QString &epTitle() const {return ep;}
     EpInfo toEp() const { EpInfo ep; ep.name = this->ep; ep.type = epType; ep.index = epIndex; return ep; }
     QVariantMap toMap() const;
+    bool needRefresh() const { return _refreshFlag; }
 public:
     int update(int sourceId=-1, QVector<QSharedPointer<DanmuComment> > *incList=nullptr);
     int addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool reset=false, bool save = true);
@@ -54,6 +55,7 @@ public:
     bool addPoolCode(const QString &code, bool hasAddition=false);
     bool addPoolCode(const QJsonArray &infoArray);
     static QJsonArray getPoolCodeInfo(const QString &code);
+    void setRefreshFlag(bool flag) { _refreshFlag = flag; }
 private:
     QString pid;
     QString anime,ep;
@@ -62,6 +64,7 @@ private:
 
     bool used;
     bool isLoaded;
+    std::atomic_bool _refreshFlag;
     QVector<QSharedPointer<DanmuComment> > commentList;
     QMap<int,DanmuSource> sourcesTable;
 

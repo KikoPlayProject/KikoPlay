@@ -55,7 +55,6 @@ void BackgroundMainWindow::setBlur(bool on, qreal blurRadius)
 {
 
     setBlurRadius(on ? blurRadius : 0);
-    setBlurRadius(0);
     update();
 }
 

@@ -11,6 +11,7 @@
 #include <QProcess>
 #include <QSharedPointer>
 #include "UI/ela/ElaCheckBox.h"
+#include "UI/ela/ElaDoubleSpinBox.h"
 #include "UI/ela/ElaSpinBox.h"
 #include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
@@ -47,7 +48,7 @@ SnippetCapture::SnippetCapture(QWidget *parent) : CFramelessDialog("",parent)
     playerWindowWidget->setMinimumSize(400, 225);
     smPlayer->show();
 
-    QSpinBox *durationSpin = new ElaSpinBox(this);
+    QDoubleSpinBox *durationSpin = new ElaDoubleSpinBox(this);
     QCheckBox *retainAudioCheck = new ElaCheckBox(tr("Retain Audio"), this);
     QLabel *durationTip = new QLabel(tr("Snippet Length(1~20s)"), this);
     saveFile = new KPushButton(tr("Save To File"), this);
@@ -77,7 +78,7 @@ SnippetCapture::SnippetCapture(QWidget *parent) : CFramelessDialog("",parent)
        smPlayer->setMute(state!=Qt::Checked);
     });
     QObject::connect(smPlayer.data(), &SimplePlayer::positionChanged, this, [=](double val){
-       int duration = durationSpin->value();
+       double duration = durationSpin->value();
        if(val >= curTime + duration)
        {
            smPlayer->seek(curTime);
@@ -136,7 +137,7 @@ SnippetCapture::SnippetCapture(QWidget *parent) : CFramelessDialog("",parent)
 }
 
 
-bool SnippetCapture::ffmpegCut(double start, const QString &input, int duration, bool retainAudio, const QString &out)
+bool SnippetCapture::ffmpegCut(double start, const QString &input, double duration, bool retainAudio, const QString &out)
 {
     QString ffmpegPath = GlobalObjects::appSetting->value("Play/FFmpeg", "ffmpeg").toString();
     QStringList arguments;

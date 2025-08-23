@@ -67,8 +67,6 @@ public:
     void showMessage(const QString &msg, const QString &type, int timeout = -1);
 
 private:
-    DanmuLaunch *launchWindow;
-
     //----------------------------------------
     QWidget *playerContent{nullptr};  // logo, recent list
     QObject *playInfo;                // message tip
@@ -95,7 +93,7 @@ private:
     QLabel *timeLabel{nullptr};
     QLineEdit *launchDanmuEdit{nullptr};
     ElidedLabel *titleLabel{nullptr};
-    QPushButton *playPause, *prev, *next, *stop, *mute, *setting, *danmu, *fullscreen, *launch;
+    QPushButton *playPause, *prev, *next, *stop, *mute, *setting, *danmu, *fullscreen, *launchOptionBtn;
     QMenu *contexMenu{nullptr};
 
     // option menus
@@ -103,6 +101,7 @@ private:
     QWidget *playSettingPage{nullptr};
     QWidget *volumeSettingPage{nullptr};
     QWidget *playInfoPage{nullptr};
+    QWidget *launchOptionPage{nullptr};
 
     // settings
     int resizePercent{-1};
@@ -129,6 +128,11 @@ private:
     QAction *actMiniMode{nullptr};
     QAction *ctxText{nullptr}, *ctxCopy{nullptr}, *ctxBlockUser{nullptr}, *ctxBlockText{nullptr}, *ctxBlockColor{nullptr};
 
+    // launch options
+    QColor launchColor{Qt::white};
+    DanmuComment::DanmuType launchType{DanmuComment::DanmuType::Rolling};
+    DanmuComment::FontSizeLevel launchSize{DanmuComment::FontSizeLevel::Normal};
+    int launchFocusTimeS{-1};
 
 private:
     QWidget *initPlayerLayer(QWidget *parent);
@@ -158,6 +162,8 @@ private:
     void setDanmuOptionItems(OptionMenuPanel *rootPanel);
 
     void initVolumeSetting();
+
+    void initLaunchOptionSetting();
 
     QPoint getPopupMenuPos(QWidget *ref, QWidget *popup, int topSpace = 2);
     void updateTopStatus(int option);

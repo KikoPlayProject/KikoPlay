@@ -986,7 +986,7 @@ QPushButton#DialogHideButton:pressed {
     background-color: rgb(93, 97, 100);
     color: rgb(255,255,255);
 }
-QPushButton#LinkFlatButton {
+QPushButton#LinkFlatButton, QPushButton#MenuCheckButton {
     border-style:none;
     border-radius:4px;
     padding-top: 2px;
@@ -1002,13 +1002,21 @@ QPushButton#LinkFlatButton:checked {
     color: rgb(250, 250, 250);
     background: rgba(255, 255, 255, 25);
 }
+QPushButton#MenuCheckButton:hover,
+QPushButton#MenuCheckButton:pressed,
+QPushButton#MenuCheckButton:checked {
+    color: rgb(250, 250, 250);
+    background: rgba(255, 255, 255, 50);
+}
 
 QPushButton#TagButton {
-    border:1px solid #797979;
+    border:1px solid #a0a0a0;
     background:transparent;
     color:rgb(220,220,220);
-    border-radius: 2px;
-    padding: 2px;
+    border-radius: 14px;
+    padding: 4px;
+    margin-top: 2px;
+    margin-bottom: 2px;
 }
 QPushButton#TagButton:hover {
     @if{useThemeColor}
@@ -1021,7 +1029,7 @@ QPushButton#TagButton:checked {
     @if{useThemeColor}
         background-color: rgb(@ThemeColorD1);
     @else
-        background-color:rgb(69, 149, 239);
+        background-color:rgb(37, 83, 128);
     @endif
     color:#ffffff;
 }
@@ -1068,6 +1076,7 @@ QPushButton#TaskTypeToolButton {
     margin-top:0px;
     color: rgb(250,250,250);
     background:transparent;
+    show-decoration-selected: 0;
     qproperty-normColor: rgb(250,250,250);
     @if{useThemeColor}
         qproperty-hoverColor: rgb(@ThemeColorL1);
@@ -1093,6 +1102,7 @@ QPushButton#PageTurningToolButton{
     padding: 8px;
     background: transparent;
     margin-top: 0px;
+    show-decoration-selected: 0;
     qproperty-normColor: rgb(220, 220, 220);
     @if{useThemeColor}
         qproperty-hoverColor: rgb(@ThemeColorL1);
@@ -1108,6 +1118,7 @@ QPushButton#FontIconCloseToolButton {
     padding:8px;
     background:transparent;
     margin-top:0px;
+    show-decoration-selected: 0;
     qproperty-normColor: rgb(220, 220, 220);
     qproperty-selectColor: rgb(72,146,244);
     qproperty-hoverColor: rgb(250,54,5);
@@ -1183,11 +1194,11 @@ AppBarBtn:hover,AppBarBtn:pressed,AppBarBtn:checked {
 }
 QPushButton#AppRefreshBtn {
     border-style:none;
+    border-radius:4px;
+    padding: 4px;
     background:none;
 }
 QPushButton#AppRefreshBtn {
-    border-style:none;
-    background:none;
     color:#c8c8c8;
 }
 QPushButton#AppRefreshBtn:hover,
@@ -1328,9 +1339,19 @@ QListView {
     border-style:none;
     background: transparent;
 }
-QListView#AnimeDetailCharacterList{
+QListWidget#AnimeDetailCharacterList{
     background-color: rgba(255,255,255,50);
     padding: 8px;
+}
+QListWidget#AnimeDetailCharacterList::item {
+    margin-left: 2px;
+}
+
+QListWidget#AnimeDetailCharacterList::item:hover {
+    border-radius: 8px;
+}
+QListWidget#AnimeDetailCharacterList::item:selected {
+    border-radius: 8px;
 }
 QListWidget#SettingPageList {
     background-color: transparent;
@@ -1353,7 +1374,7 @@ QListWidget#SettingPageList::item:selected {
         color:#4892F4;
     @endif
 }
-QListWidget#DanmuSearchResList, QListWidget#SelectedDanmuView {
+QListWidget#DanmuSearchResList, QListWidget#SelectedDanmuView, QListWidget#MatchEpListView, QListWidget#SourceOrderView {
     background-color: rgba(255, 255, 255, 40);
 }
 QListView#captureView {
@@ -1382,6 +1403,7 @@ QListView#AppView {
 }
 QListView#AppView::item:hover, QListView#AppView::item:selected {
     background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
 }
 QListView#DownloadView{
     @if{hasBackground}

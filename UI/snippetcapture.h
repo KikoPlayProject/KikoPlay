@@ -11,7 +11,7 @@ public:
 private:
     QSharedPointer<SimplePlayer> smPlayer;
     QPushButton *saveFile, *addToLibrary;
-    bool ffmpegCut(double start, const QString &input, int duration, bool retainAudio, const QString &out);
+    bool ffmpegCut(double start, const QString &input, double duration, bool retainAudio, const QString &out);
 };
 
 #endif // SNIPPETCAPTURE_H

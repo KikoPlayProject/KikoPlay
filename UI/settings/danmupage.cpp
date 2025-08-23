@@ -246,7 +246,10 @@ SettingItemArea *DanmuPage::initOtherArea()
 
     ElaToggleSwitch *disableSample2DArraySwitch = new ElaToggleSwitch(this);
     disableSample2DArraySwitch->setIsToggled(!GlobalObjects::mpvplayer->getUseSample2DArray());
-    otherArea->addItem(tr("Disable Sample2DArray(Restart required)"), disableSample2DArraySwitch, tr("If danmu display is abnormal on some AMD graphics cards, try enabling"));
+    otherArea->addItem(tr("Disable Sample2DArray(Restart required)"), disableSample2DArraySwitch);
+    QLabel *descLabel = new QLabel(tr("If danmu display is abnormal on some AMD graphics cards, try enabling"), otherArea);
+    descLabel->setObjectName(QStringLiteral("SettingDescLabel"));
+    otherArea->addItem(descLabel, Qt::AlignLeft);
 
     KPushButton *blockEditBtn = new KPushButton(tr("Edit"), this);
     otherArea->addItem(tr("Block Rules"), blockEditBtn);

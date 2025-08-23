@@ -6,6 +6,9 @@
 #include <QFileDialog>
 #include <QComboBox>
 #include <QAction>
+#include "Play/Danmu/Manager/pool.h"
+#include "Play/Danmu/danmupool.h"
+#include "UI/dialogs/danmuview.h"
 #include "UI/ela/ElaComboBox.h"
 #include "UI/ela/ElaMenu.h"
 #include "UI/widgets/kpushbutton.h"
@@ -33,6 +36,20 @@ BlockEditor::BlockEditor(QWidget *parent) : CFramelessDialog(tr("Block Rules"), 
     QObject::connect(blockView, &QTreeView::customContextMenuRequested, this, [=](){
         if (!blockView->selectionModel()->hasSelection()) return;
         actionMenu->exec(QCursor::pos());
+    });
+
+    QAction *actViewBlocked = actionMenu->addAction(tr("View the blocked comments"));
+    QObject::connect(actViewBlocked, &QAction::triggered, this, [=](){
+        QModelIndexList selectedRows = blockView->selectionModel()->selectedRows();
+        if (selectedRows.empty()) return;
+        QModelIndex srcIndex = proxyModel->mapToSource(selectedRows.last()).siblingAtColumn((int)Blocker::Columns::ID);
+        int ruleId = GlobalObjects::blocker->data(srcIndex, Blocker::BlockRuleIdRole).toInt();
+        QList<QSharedPointer<DanmuComment>> blockedComments;
+        auto &allComments = GlobalObjects::danmuPool->getPool()->comments();
+        std::copy_if(allComments.begin(), allComments.end(), std::back_inserter(blockedComments),
+                     [=](const QSharedPointer<DanmuComment> &c) { return c->blockBy == ruleId; });
+        DanmuView view(&blockedComments, this);
+        view.exec();
     });
 
     QAction *actRemove = actionMenu->addAction(tr("Remove Rule(s)"));

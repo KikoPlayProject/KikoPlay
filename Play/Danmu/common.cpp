@@ -1,6 +1,9 @@
 #include "common.h"
 #include "globalobjects.h"
 #include "Render/danmurender.h"
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#endif
 #define MAX_POOL_COUNT 100
 DanmuObject *DanmuObject::head=nullptr;
 int DanmuObject::poolCount=0;
@@ -166,6 +169,14 @@ QString DanmuSource::timelineStr() const
     }
     ts.flush();
     return timelineStr;
+}
+
+bool DanmuSource::isKikoSource() const
+{
+#ifdef KSERVICE
+    return scriptId == KService::kSrc;
+#endif
+    return false;
 }
 
 QDataStream &operator<<(QDataStream &stream, const DanmuSource &src)

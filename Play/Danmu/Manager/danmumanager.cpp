@@ -11,6 +11,7 @@
 #include "Common/network.h"
 #include "Common/logger.h"
 #include "Common/dbmanager.h"
+#include "Common/eventbus.h"
 #include "../common.h"
 #include "../blocker.h"
 #include "../danmuprovider.h"
@@ -26,7 +27,19 @@ DanmuManager::DanmuManager(QObject *parent) : QObject(parent),countInited(false)
 
 DanmuManager::~DanmuManager()
 {
-    for(auto pool:pools) pool->deleteLater();
+    QSet<QString> refreshPools;
+    for (auto pool : pools)
+    {
+        if (pool->needRefresh()) refreshPools.insert(pool->id());
+        pool->deleteLater();
+    }
+
+    QFile cacheFile(GlobalObjects::context()->dataPath + "refreshPools");
+    if (cacheFile.open(QIODevice::WriteOnly))
+    {
+        QDataStream fs(&cacheFile);
+        fs << refreshPools;
+    }
 }
 
 Pool *DanmuManager::getPool(const QString &pid, bool loadDanmu)
@@ -284,7 +297,7 @@ QStringList DanmuManager::getMatchedFile16Md5(const QString &pid)
 
 QString DanmuManager::updateMatch(const QString &fileName, const MatchResult &newMatchInfo)
 {
-    return createPool(newMatchInfo.name, newMatchInfo.ep.type, newMatchInfo.ep.index, newMatchInfo.ep.name, getFileHash(fileName));
+    return createPool(fileName, newMatchInfo);
 }
 
 void DanmuManager::removeMatch(const QString &fileName)
@@ -301,6 +314,28 @@ QString DanmuManager::getFileHash(const QString &fileName)
     if(!ret) return QString();
     QByteArray file16MB = mediaFile.read(16*1024*1024);
     return QCryptographicHash::hash(file16MB,QCryptographicHash::Md5).toHex();
+}
+
+void DanmuManager::sendDanmuAddedEvent(const QList<QPair<Pool *, DanmuSource> > &poolSrcs)
+{
+    if (poolSrcs.empty() || !EventBus::getEventBus()->hasListener(EventBus::EVENT_DANMU_SRC_ADDED)) return;
+    QVariantList sourceList;
+    for (auto &p : poolSrcs)
+    {
+        QVariantMap poolSrcInfo = {
+            { "name",          p.first->animeTitle() },
+            { "epType",        int(p.first->epType) },
+            { "epIndex",       p.first->epIndex },
+            { "epName",        p.first->epTitle() },
+            { "id",            p.first->id() },
+            { "scriptId",      p.second.scriptId },
+            { "scriptData",    p.second.scriptData },
+            { "srcTitle",      p.second.title },
+            { "duration",      p.second.duration },
+        };
+        sourceList.append(poolSrcInfo);
+    }
+    EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_DANMU_SRC_ADDED, sourceList});
 }
 
 void DanmuManager::localSearch(const QString &keyword, QList<AnimeLite> &results)
@@ -395,7 +430,26 @@ QString DanmuManager::createPool(const QString &animeTitle, EpType epType, doubl
 
 QString DanmuManager::createPool(const QString &path, const MatchResult &match)
 {
-    return createPool(match.name, match.ep.type, match.ep.index, match.ep.name, getFileHash(path));
+    const QString poolId = createPool(match.name, match.ep.type, match.ep.index, match.ep.name, getFileHash(path));
+    if (match.kServiceMatch && !match.danmuSources.empty())
+    {
+        Pool *pool = getPool(poolId, false);
+        if (pool)
+        {
+            QList<DanmuComment *> emptyList;
+            for (auto &mSrc : match.danmuSources)
+            {
+                DanmuSource src;
+                src.title = mSrc.name;
+                src.scriptId = mSrc.scriptId;
+                src.scriptData = mSrc.scriptData;
+                src.duration = mSrc.durationSeconds;
+                pool->addSource(src, emptyList, true);
+            }
+            pool->setRefreshFlag(true);
+        }
+    }
+    return poolId;
 }
 
 QString DanmuManager::renamePool(const QString &pid, const QString &nAnimeTitle, EpType nType, double nIndex,  const QString &nEpTitle)
@@ -671,17 +725,29 @@ void DanmuManager::loadAllPool()
     //get all danmu pools
     query.exec("select * from pool");
     int idNo = query.record().indexOf("PoolID"),
-        animeNo=query.record().indexOf("Anime"),
-        epTypeNo=query.record().indexOf("EpType"),
-        epIndexNo=query.record().indexOf("EpIndex"),
-        epNameNo=query.record().indexOf("EpName");
+        animeNo = query.record().indexOf("Anime"),
+        epTypeNo = query.record().indexOf("EpType"),
+        epIndexNo = query.record().indexOf("EpIndex"),
+        epNameNo = query.record().indexOf("EpName");
+
+    QSet<QString> refreshPools;
+    QFile cacheFile(GlobalObjects::context()->dataPath + "refreshPools");
+    if (cacheFile.open(QIODevice::ReadOnly))
+    {
+        QDataStream fs(&cacheFile);
+        fs >> refreshPools;
+    }
+
     while (query.next())
     {
         QString poolId(query.value(idNo).toString());
-        pools.insert(poolId,  new Pool(poolId,query.value(animeNo).toString(),
+        Pool* pool = new Pool(poolId,
+                              query.value(animeNo).toString(),
                               query.value(epNameNo).toString(),
                               EpType(query.value(epTypeNo).toInt()),
-                              query.value(epIndexNo).toDouble()));
+                              query.value(epIndexNo).toDouble());
+        pool->setRefreshFlag(refreshPools.contains(poolId));
+        pools.insert(poolId, pool);
     }
     //get source info
     query.exec("select * from source");
@@ -691,23 +757,23 @@ void DanmuManager::loadAllPool()
         s_descNo = query.record().indexOf("Desc"),
         s_scriptIdNo = query.record().indexOf("ScriptId"),
         s_scriptDataNo = query.record().indexOf("ScriptData"),
-        s_delayNo=query.record().indexOf("Delay"),
-        s_durationNo=query.record().indexOf("Duration"),
-        s_timelineNo=query.record().indexOf("TimeLine");
+        s_delayNo = query.record().indexOf("Delay"),
+        s_durationNo = query.record().indexOf("Duration"),
+        s_timelineNo = query.record().indexOf("TimeLine");
     while (query.next())
     {
-        Pool *pool = pools.value(query.value(s_pidNo).toString(),nullptr);
+        Pool* pool = pools.value(query.value(s_pidNo).toString(), nullptr);
         Q_ASSERT(pool);
         DanmuSource srcInfo;
-        srcInfo.id=query.value(s_idNo).toInt();
+        srcInfo.id = query.value(s_idNo).toInt();
         srcInfo.title = query.value(s_titleNo).toString();
         srcInfo.desc = query.value(s_descNo).toString();
         srcInfo.scriptId = query.value(s_scriptIdNo).toString();
         srcInfo.scriptData = query.value(s_scriptDataNo).toString();
-        srcInfo.delay=query.value(s_delayNo).toInt();
-        srcInfo.duration=query.value(s_durationNo).toInt();
-        srcInfo.count=0;
-        srcInfo.show=true;
+        srcInfo.delay = query.value(s_delayNo).toInt();
+        srcInfo.duration = query.value(s_durationNo).toInt();
+        srcInfo.count = 0;
+        srcInfo.show = true;
         srcInfo.setTimeline(query.value(s_timelineNo).toString());
         pool->sourcesTable.insert(srcInfo.id, srcInfo);
     }

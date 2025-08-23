@@ -45,6 +45,7 @@ struct DanmuPoolSourceNode : public DanmuPoolNode
     {
         title=src.title;
         idInfo=src.scriptId;
+        if (src.isKikoSource()) idInfo = "Kiko";
         srcId=src.id;
         delay=src.delay;
         scriptData=src.scriptData;

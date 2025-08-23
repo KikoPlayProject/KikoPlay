@@ -13,10 +13,25 @@ AnimeModel::AnimeModel(QObject *parent):QAbstractItemModel(parent),
     limitCount = qMax(limitCount, 8);
     QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeAdded, this, &AnimeModel::addAnime);
     QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeRemoved, this, &AnimeModel::removeAnime);
-    QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeUpdated, this, [](Anime *anime){
+    QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeUpdated, this, [=](Anime *anime){
         if (EventBus::getEventBus()->hasListener(EventBus::EVENT_LIBRARY_ANIME_UPDATED))
         {
             EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_LIBRARY_ANIME_UPDATED, anime->toMap(true)});
+        }
+        int row = animes.indexOf(anime);
+        if (row >= 0 && row < animes.size())
+        {
+            QModelIndex index = this->index(row, 0, QModelIndex());
+            emit dataChanged(index, index, {Qt::DisplayRole});
+        }
+    });
+    QObject::connect(AnimeWorker::instance(), &AnimeWorker::animeRefreshStateChanged, this, [=](Anime *anime, bool refresh){
+        anime->_refreshFlag = refresh;
+        int row = animes.indexOf(anime);
+        if (row >= 0 && row < animes.size())
+        {
+            QModelIndex index = this->index(row, 0, QModelIndex());
+            emit dataChanged(index, index, {Qt::DisplayRole});
         }
     });
 }
@@ -66,8 +81,9 @@ void AnimeModel::setActive(bool isActive)
 
 void AnimeModel::deleteAnime(const QModelIndex &index)
 {
-    if(!index.isValid())return;
+    if (!index.isValid())return;
     Anime *anime=animes.at(index.row());
+    if (anime->refreshing()) return;
     beginRemoveRows(QModelIndex(), index.row(), index.row());
     animes.removeAt(index.row());
     endRemoveRows();

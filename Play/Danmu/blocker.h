@@ -40,6 +40,9 @@ public:
         PREFILTER,
         CONTENT
     };
+    static constexpr int BlockNameRole{Qt::UserRole+1};
+    static constexpr int BlockRuleIdRole{Qt::UserRole+2};
+
     const QStringList fields={tr("Text"),tr("Color"),tr("User")};
     const QStringList relations={tr("Contain"),tr("Equal"),tr("NotEqual")};
     const QStringList headers={tr("Id-Title"),tr("Blocked"),tr("Enable"),tr("Field"),tr("Relation"),tr("RegExp"),tr("PreFilter"),tr("Content")};

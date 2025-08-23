@@ -1196,6 +1196,13 @@ TagPanel::TagPanel(QWidget *parent, bool allowDelete, bool checkAble, bool allow
     addAction(actAddTag);
     actAddTag->setEnabled(allowAdd);
 
+    addTagBtn = new FontIconButton(QChar(0xe667), tr("Add Tag"), 12, 12, 2, this);
+    addTagBtn->setContentsMargins(4, -1, 4, -1);
+    addTagBtn->setObjectName(QStringLiteral("FontIconToolButton"));
+    QObject::connect(addTagBtn, &QPushButton::clicked, actAddTag, &QAction::trigger);
+    layout()->addWidget(addTagBtn);
+    addTagBtn->setVisible(allowAdd);
+
     QObject::connect(this, &TagPanel::customContextMenuRequested, this, [=](const QPoint &pos){
         ElaMenu* menu = new ElaMenu(this);
         menu->setAttribute(Qt::WA_DeleteOnClose);
@@ -1226,6 +1233,7 @@ TagPanel::TagPanel(QWidget *parent, bool allowDelete, bool checkAble, bool allow
 
 void TagPanel::addTag(const QStringList &tags)
 {
+    layout()->removeWidget(addTagBtn);
     for (const QString &tag : tags)
     {
         if (tagList.contains(tag)) continue;
@@ -1234,6 +1242,7 @@ void TagPanel::addTag(const QStringList &tags)
         tagButton->setCheckable(allowCheck);
         tagButton->setFont(QFont(GlobalObjects::normalFont, 12));
         tagButton->setContextMenuPolicy(Qt::CustomContextMenu);
+        tagButton->setMinimumWidth(40);
         QObject::connect(tagButton, &QPushButton::customContextMenuRequested, this, [=](const QPoint &pos){
             currentTagButton = tagButton;
             tagContextMenu->exec(tagButton->mapToGlobal(pos));
@@ -1241,6 +1250,7 @@ void TagPanel::addTag(const QStringList &tags)
         layout()->addWidget(tagButton);
         tagList.insert(tag,tagButton);
     }
+    layout()->addWidget(addTagBtn);
     updateGeometry();
 }
 

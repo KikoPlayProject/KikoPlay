@@ -74,6 +74,12 @@ GeneralPage::GeneralPage(QWidget *parent) : SettingPage(parent)
     bgOpacitySlider->setGradient(darknessGradient);
     appearanceArea->addItem(tr("Background Image Opacity"), bgOpacitySlider);
 
+    ColorSlider *bgBlurSlider = new ColorSlider(this);
+    bgBlurSlider->setMinimumWidth(240);
+    bgBlurSlider->setRange(0, 100);
+    bgBlurSlider->setValue(static_cast<MainWindow *>(GlobalObjects::mainWindow)->getDefaultBlur());
+    appearanceArea->addItem(tr("Default Blur Radius"), bgBlurSlider);
+
 
     ElaToggleSwitch *themeColorSwitch = new ElaToggleSwitch(this);
     themeColorSwitch->setIsToggled(StyleManager::getStyleManager()->enableThemeColor());
@@ -90,7 +96,7 @@ GeneralPage::GeneralPage(QWidget *parent) : SettingPage(parent)
     itemVLayout->addWidget(appearanceArea);
     itemVLayout->addStretch(1);
 
-    QTimer::singleShot(0, [=](){
+    QTimer::singleShot(0, this, [=](){
         showBusyState(true);
         bgSelector->init();
         showBusyState(false);
@@ -117,6 +123,11 @@ GeneralPage::GeneralPage(QWidget *parent) : SettingPage(parent)
     QObject::connect(bgOpacitySlider, &QSlider::valueChanged, this, [](int val){
         MainWindow *mW = static_cast<MainWindow *>(GlobalObjects::mainWindow);
         mW->setBgDarkness(val);
+    });
+
+    QObject::connect(bgBlurSlider, &QSlider::valueChanged, this, [](int val){
+        MainWindow *mW = static_cast<MainWindow *>(GlobalObjects::mainWindow);
+        mW->setDefaultBlur(val);
     });
 }
 

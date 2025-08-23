@@ -28,8 +28,8 @@ struct DanmuComment
     DanmuType type;
     FontSizeLevel fontSizeLevel;
     qint64 date;
-    int time;
-    int originTime;
+    int time;  // ms
+    int originTime;  // ms
     int blockBy;
     int source;
 
@@ -137,6 +137,7 @@ struct DanmuSource
     QVector<QPair<int,int>> timelineInfo;
     void setTimeline(const QString &timelineStr);
     QString timelineStr() const;
+    bool isKikoSource() const;
 
     QVariantMap toMap() const
     {

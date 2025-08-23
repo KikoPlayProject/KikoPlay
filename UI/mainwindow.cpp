@@ -1,4 +1,6 @@
 #include "mainwindow.h"
+#include "Common/eventbus.h"
+#include "Extension/App/appmanager.h"
 #include "globalobjects.h"
 #include <QFontDatabase>
 #include <QSplitter>
@@ -42,7 +44,12 @@
 #include "ela/ElaToolButton.h"
 #include "ela/ElaMenu.h"
 
+#ifdef KSERVICE
+#include "Service/klogin.h"
+#endif
+
 #define SETTING_KEY_MAIN_BACKGROUND "MainWindow/Background"
+#define SETTING_KEY_MAIN_DEFAULT_BLUR "MainWindow/DefaultBlurRadius"
 
 
 Q_TAKEOVER_NATIVEEVENT_CPP(MainWindow, elaAppBar);
@@ -62,9 +69,9 @@ MainWindow::MainWindow(QWidget *parent)
     if (GlobalObjects::appSetting->value("MainWindow/ShowTip",true).toBool())
     {
         GlobalObjects::appSetting->setValue("MainWindow/ShowTip", false);
-        QTimer::singleShot(0, [this](){
-            Tip tip(buttonIcon);
-            QRect geo(0,0,400,400);
+        QTimer::singleShot(0, this, [this](){
+            Tip tip(this);
+            QRect geo(0,0,520,600);
             geo.moveCenter(this->geometry().center());
             tip.move(geo.topLeft());
             tip.exec();
@@ -76,6 +83,13 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::setHideToTrayType(HideToTrayType type)
 {
     hideToTrayType = type;
+}
+
+void MainWindow::setDefaultBlur(double val)
+{
+    defaultBlurRadius = val;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_MAIN_DEFAULT_BLUR, defaultBlurRadius);
+    setBlurRadius(defaultBlurRadius);
 }
 
 void MainWindow::initUI()
@@ -129,12 +143,12 @@ void MainWindow::initUI()
             if (id == 1 && hasCoverBg)
             {
                 if(!coverPixmap.isNull()) BackgroundMainWindow::setBackground(coverPixmap);
-                BackgroundMainWindow::setBlurAnimation(20., 60.);
+                BackgroundMainWindow::setBlurAnimation(defaultBlurRadius + 10, 60.);
             }
             else if (curPage == 1 && hasCoverBg)
             {
                 BackgroundMainWindow::setBackground(bgImg);
-                BackgroundMainWindow::setBlurAnimation(60., 0.);
+                BackgroundMainWindow::setBlurAnimation(60., defaultBlurRadius);
             }
             curPage = id;
             if (downloadToolProgress->value() < 100)
@@ -196,7 +210,7 @@ void MainWindow::initUI()
 
     initIconAction();
 
-
+    defaultBlurRadius = GlobalObjects::appSetting->value(SETTING_KEY_MAIN_DEFAULT_BLUR, 0.0).toDouble();
     setBackground(GlobalObjects::appSetting->value(SETTING_KEY_MAIN_BACKGROUND, "").toString(), false, true);
     StyleManager::getStyleManager()->initStyle(hasBackground);
 
@@ -268,14 +282,8 @@ void MainWindow::initIconAction()
     QAction *actUseTip = iconMenu->addAction(tr("Usage Tip"));
     QObject::connect(actUseTip, &QAction::triggered, this, [this](){
         Tip tip(this);
-        tip.resize(520, 400);
+        tip.resize(520, 600);
         tip.exec();
-    });
-
-
-    QAction *actFeedback = iconMenu->addAction(tr("Feedback"));
-    QObject::connect(actFeedback, &QAction::triggered, [](){
-        QDesktopServices::openUrl(QUrl("https://support.qq.com/product/655998"));
     });
 
 
@@ -362,11 +370,17 @@ void MainWindow::initSignals()
         }
     });
 #endif
+#ifdef KSERVICE
+    new EventListener(EventBus::getEventBus(), EventBus::EVENT_REQUIRE_LOGIN, [=](const EventParam *){
+        KLogin login(this);
+        login.exec();
+    }, this);
+#endif
 }
 
 void MainWindow::restoreSize()
 {
-    QRect defaultGeo(0, 0, 800, 480), defaultMiniGeo(0, 0, 200, 200);
+    QRect defaultGeo(0, 0, 980, 580), defaultMiniGeo(0, 0, 200, 200);
     //defaultGeo.moveCenter(QApplication::desktop()->geometry().center());
     //defaultMiniGeo.moveCenter(QApplication::desktop()->geometry().center());
     defaultGeo.moveCenter(QGuiApplication::primaryScreen()->geometry().center());
@@ -412,6 +426,7 @@ void MainWindow::onClose(bool forceExit)
         GlobalObjects::appSetting->endGroup();
     }
     GlobalObjects::playlist->setCurrentPlayTime();
+    GlobalObjects::appManager->closeAll();
     playerWindow->close();
     playerWindow->deleteLater();
     if (library) library->beforeClose();
@@ -441,7 +456,8 @@ void MainWindow::setBackground(const QString &imagePath, bool showAnimation, boo
         if (!hasCoverBg || curPage != 1)
         {
             BackgroundMainWindow::setBackground(bgImg);
-            if (showAnimation) BackgroundMainWindow::setBlurAnimation(60., 0., 800);
+            if (showAnimation) BackgroundMainWindow::setBlurAnimation(60., defaultBlurRadius, 800);
+            else BackgroundMainWindow::setBlurRadius(defaultBlurRadius);
         }
         refreshQSS = !hasBackground;
         hasBackground = true;
@@ -678,14 +694,14 @@ QWidget *MainWindow::setupLibraryPage()
         {
             hasCoverBg = false;
             BackgroundMainWindow::setBackground(bgImg);
-            BackgroundMainWindow::setBlurAnimation(60., 0.);
+            BackgroundMainWindow::setBlurAnimation(60., defaultBlurRadius);
         }
         else
         {
             hasCoverBg = true;
             coverPixmap = pixmap.scaled(pixmap.size() * 1.2).copy(pixmap.width() * 0.1, pixmap.height() * 0.1, pixmap.width(), pixmap.height());
             if(!pixmap.isNull()) BackgroundMainWindow::setBackground(coverPixmap);
-            BackgroundMainWindow::setBlurAnimation(10., 60.);
+            BackgroundMainWindow::setBlurAnimation(10 + defaultBlurRadius, 60.);
         }
     });
     return library;
@@ -781,6 +797,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
         GlobalObjects::appSetting->endGroup();
     }
     GlobalObjects::playlist->setCurrentPlayTime();
+    GlobalObjects::appManager->closeAll();
     QWidget::closeEvent(event);
     playerWindow->close();
 	playerWindow->deleteLater();

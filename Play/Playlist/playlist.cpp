@@ -57,6 +57,7 @@ PlayList::PlayList(QObject *parent) : QAbstractItemModel(parent), d_ptr(new Play
 
     matchWorker = new MatchWorker();
     matchWorker->moveToThread(GlobalObjects::workThread);
+    qRegisterMetaType<MatchResult>("MatchResult");
     QObject::connect(GlobalObjects::workThread, &QThread::finished, matchWorker, &QObject::deleteLater);
     QObject::connect(matchWorker, &MatchWorker::matchDown, this, [this](const QList<PlayListItem *> &matchedItems){
         Q_D(PlayList);
@@ -1354,7 +1355,7 @@ void PlayList::matchIndex(QModelIndex &index, const MatchResult &match)
     d->savePlaylist();
 }
 
-void PlayList::matchItems(const QList<const PlayListItem *> &items, const QString &title,  const QList<EpInfo> &eps)
+void PlayList::matchItems(const QList<const PlayListItem *> &items, const AnimeLite &anime, const QList<EpInfo> &eps)
 {
     QVector<PlayListItem *> ncItems;
     for(auto i : items)
@@ -1363,7 +1364,7 @@ void PlayList::matchItems(const QList<const PlayListItem *> &items, const QStrin
     }
     emit matchStatusChanged(true);
     QMetaObject::invokeMethod(matchWorker, [=](){
-        matchWorker->match(ncItems, title, eps);
+        matchWorker->match(ncItems, anime, eps);
     },Qt::QueuedConnection);
 }
 
@@ -1854,7 +1855,7 @@ void MatchWorker::match(const QVector<PlayListItem *> &items)
     notifier->showMessage(Notifier::LIST_NOTIFY, tr("Match Done"),NotifyMessageFlag::NM_HIDE);
 }
 
-void MatchWorker::match(const QVector<PlayListItem *> &items, const QString &animeTitle, const QList<EpInfo> &eps)
+void MatchWorker::match(const QVector<PlayListItem *> &items, const AnimeLite &anime, const QList<EpInfo> &eps)
 {
     Q_ASSERT(items.size()==eps.size());
     QList<PlayListItem *> matchedItems;
@@ -1869,12 +1870,14 @@ void MatchWorker::match(const QVector<PlayListItem *> &items, const QString &ani
 
         MatchResult match;
         match.success = true;
-        match.name = animeTitle;
+        match.name = anime.name;
+        match.scriptId = anime.scriptId;
+        match.scriptData = anime.scriptData;
         match.ep = eps[i];
 
-        items[i]->animeTitle=animeTitle;
-        items[i]->title=eps[i].toString();
-        items[i]->poolID=GlobalObjects::danmuManager->updateMatch(items[i]->path, match);
+        items[i]->animeTitle = anime.name;
+        items[i]->title = eps[i].toString();
+        items[i]->poolID = GlobalObjects::danmuManager->updateMatch(items[i]->path, match);
 
         matchedItems<<items[i];
         AnimeWorker::instance()->addAnime(match);
@@ -1893,8 +1896,7 @@ void MatchWorker::updateFilterRules()
         QString content = str.trimmed();
         if (content.isEmpty()) continue;
         //filterRules.append(QRegExp(content, Qt::CaseInsensitive, QRegExp::Wildcard));
-        //filterRules.append(QRegularExpression(content, QRegularExpression::CaseInsensitiveOption));
-        filterRules.append(QRegularExpression::fromWildcard(content));
+        filterRules.append(QRegularExpression(content, QRegularExpression::CaseInsensitiveOption));
     }
 }
 

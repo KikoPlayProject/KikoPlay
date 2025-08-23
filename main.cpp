@@ -9,7 +9,12 @@
 #include "Play/playcontext.h"
 #include "Extension/App/appmanager.h"
 #include "Common/logger.h"
+
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#else
 #include "Common/kstats.h"
+#endif
 
 #ifdef Q_OS_WIN
 #include <Windows.h>
@@ -155,6 +160,11 @@ int main(int argc, char *argv[])
         stepTimes.append(QString("%1:\t%2").arg(p.first, -10).arg(p.second));
     }
     Logger::logger()->log(Logger::APP, stepTimes.join('\n'));
+    Logger::logger()->log(Logger::APP, QString::asprintf("main thread: %p", QCoreApplication::instance()->thread()));
+#ifdef KSERVICE
+    KService::instance();
+#else
     KStats::instance();
+#endif
     return a.exec();
 }

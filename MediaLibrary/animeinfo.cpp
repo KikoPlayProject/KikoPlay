@@ -56,7 +56,7 @@ const QPixmap &Anime::rawCover()
     return *cover;
 }
 
-Anime::Anime() : _addTime(0), _epCount(0), crtImagesLoaded(false), epLoaded(false)
+Anime::Anime() : _addTime(0), _epCount(0), crtImagesLoaded(false), epLoaded(false), _refreshFlag(false)
 {
 
 }

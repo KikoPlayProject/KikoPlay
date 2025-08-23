@@ -18,7 +18,7 @@ public:
     void clear();
 public:
     QString path;
-    int duration;
+    int duration;  //s
     int playtime;
     bool seekable;
     QImage stopFrame;

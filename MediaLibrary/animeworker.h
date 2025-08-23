@@ -70,6 +70,22 @@ public:
 
 private:
     QMap<QString,Anime *> animesMap;
+    QReadWriteLock animeMapLock;
+    Anime *getAnimeInMap(const QString &name)
+    {
+        QReadLocker l(&animeMapLock);
+        return animesMap.value(name, nullptr);
+    }
+    void insertAnimeInMap(Anime *anime)
+    {
+        QWriteLocker l(&animeMapLock);
+        animesMap.insert(anime->_name, anime);
+    }
+    void removeAnimeInMap(const QString &name)
+    {
+        QWriteLocker l(&animeMapLock);
+        animesMap.remove(name);
+    }
 
     QMultiMap<QString, QString> animeAlias;
     QMap<QString, QString> aliasAnime;
@@ -86,6 +102,7 @@ signals:
     void animeAdded(Anime *anime);
     void animeUpdated(Anime *anime);
     void animeRemoved(Anime *anime);
+    void animeRefreshStateChanged(Anime *anime, bool refresh);
 
     void epRemoved(const QString &animeName, const QString &epPath);
     void epUpdated(const QString &animeName, const QString &epPath);

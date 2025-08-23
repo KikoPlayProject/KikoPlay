@@ -27,6 +27,7 @@ struct ScriptState
     ScriptState(StateCode c, const QString &i=""):state(c), info(i) {}
     operator QString() {return info;}
     operator bool() {return state==S_NORM;}
+    bool isBusy() const { return state == S_BUSY; }
 
     StateCode state;
     QString info;
@@ -35,7 +36,7 @@ Q_DECLARE_METATYPE(ScriptState)
 
 enum ScriptType
 {
-    DANMU, LIBRARY, RESOURCE, BGM_CALENDAR, UNKNOWN_STYPE, PLAYGROUND
+    DANMU, MATCH, LIBRARY, RESOURCE, BGM_CALENDAR, UNKNOWN_STYPE, PLAYGROUND
 };
 Q_DECLARE_METATYPE(ScriptType)
 
@@ -85,6 +86,7 @@ public:
     ScriptState scriptMenuClick(const QString &mid);
 
     virtual ScriptState loadScript(const QString &path);
+    virtual void stop();
 
 protected:
     const char *luaSettingsTable = "settings";
@@ -104,7 +106,7 @@ protected:
     QString settingPath;
     ScriptType sType;
 
-    QVariantList call(const char *fname, const QVariantList &params, int nRet, QString &errInfo);
+    QVariantList call(const char *fname, const QVariantList &params, int nRet, QString &errInfo, bool retUseString = true);
     QVariant get(const char *name);
     void set(const char *name, const QVariant &val);
     ScriptState setTable(const char *tname, const QVariant &key, const QVariant &val);
@@ -123,6 +125,8 @@ public:
     static QVariant getValue(lua_State *L, bool useString=true);
     static int getTableLength(lua_State *L, int pos);
     static ScriptBase *getScript(lua_State *L);
+
+    static void exitHook(lua_State *L, lua_Debug *ar);
 };
 
 #endif // SCRIPTBASE_H

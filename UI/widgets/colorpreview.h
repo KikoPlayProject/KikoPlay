@@ -11,9 +11,12 @@ public:
     void setColor(const QColor &c);
     void setPixmap(const QPixmap &p);
     void setUseColorDialog(bool on);
+    void setCheckable(bool on);
+    void setChecked(bool on);
+    QColor getColor() const { return color; }
 
 signals:
-    void click();
+    void click(bool checked);
     void colorChanged(QColor c);
 
 protected:
@@ -28,6 +31,8 @@ private:
     QColor color;
     QPixmap pixmap;
     bool isEnter{false};
+    bool checkable{false};
+    bool isChecked{false};
 
 };
 

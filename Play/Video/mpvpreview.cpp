@@ -27,6 +27,7 @@ MPVPreview::MPVPreview(const QSize &previewSize, int pInterval, QObject *parent)
         throw std::runtime_error("could not initialize mpv context");
     mpv::qt::set_property(mpv, "mute", true);
     mpv_set_option_string(mpv, "vo", "libmpv");
+    mpv::qt::set_property(mpv, "sub-visibility", "no");
 
     pSurface = new QOffscreenSurface(nullptr, this);
     pSurface->setFormat(QSurfaceFormat::defaultFormat());

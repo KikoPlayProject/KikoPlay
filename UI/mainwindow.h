@@ -44,19 +44,23 @@ public:
 
     ListWindow *getList() const {return listWindow;}
 
+    double getDefaultBlur() const { return defaultBlurRadius; }
+    void setDefaultBlur(double val);
+
 private:
     bool hasBackground;
     bool hasCoverBg;
     QImage bgImg;
     QPixmap coverPixmap;
     int curPage;
+    double defaultBlurRadius{0};
 
 #ifdef Q_OS_WIN
      QWinTaskbarButton *winTaskbarButton = nullptr;
      QWinTaskbarProgress *winTaskbarProgress = nullptr;
 #endif
 
-    QToolButton *buttonIcon, *buttonPage_Play, *buttonPage_Library, *buttonPage_Downlaod;
+    QToolButton *buttonPage_Play, *buttonPage_Library, *buttonPage_Downlaod;
     QToolButton *appButton, *minButton, *maxButton, *closeButton;
     QSplitter *playSplitter{nullptr};
     PlayerWindow *playerWindow{nullptr};

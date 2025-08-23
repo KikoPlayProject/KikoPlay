@@ -366,6 +366,12 @@ int LuaUtil::envInfo(lua_State *L)
     lua_pushstring(L, GlobalObjects::context()->dataPath.toStdString().c_str()); // tabel key value
     lua_rawset(L, -3); //table
 
+#ifdef KSERVICE
+    lua_pushstring(L, "kservice"); // table key
+    lua_pushboolean(L, 1);  // tabel key value
+    lua_rawset(L, -3); //table
+#endif
+
     return 1;
 }
 

@@ -10,6 +10,7 @@
 #include <QMessageBox>
 #include <QStyle>
 
+#include "Extension/Script/scriptmanager.h"
 #include "Play/Subtitle/subitemdelegate.h"
 #include "UI/ela/ElaCheckBox.h"
 #include "UI/ela/ElaLineEdit.h"
@@ -39,6 +40,7 @@
 #include "Download/downloadmodel.h"
 #include "widgets/lazycontainer.h"
 #include "dialogs/subrecognizedialog.h"
+#include "Common/eventbus.h"
 
 namespace
 {
@@ -327,8 +329,8 @@ void ListWindow::initActions()
         QModelIndex index = selection.size() == 0 ? QModelIndex() : selection.last();
         playItem(index);
     });
-    act_autoMatch=new QAction(tr("Associate Danmu Pool"),this);
-    QObject::connect(act_autoMatch, &QAction::triggered, this, [=]() {matchPool(); });
+    act_autoMatch=new QAction(tr("Start File Match"),this);
+    QObject::connect(act_autoMatch, &QAction::triggered, this, [=]() {matchPool(GlobalObjects::animeProvider->defaultMatchScript()); });
     act_removeMatch=new QAction(tr("Remove Match"),this);
     QObject::connect(act_removeMatch, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
@@ -393,10 +395,13 @@ void ListWindow::initActions()
         std::sort(poolTitles.begin(),poolTitles.end(), [&](const QString &s1, const QString &s2){
             return comparer.compare(s1, s2)>=0?false:true;
         });
-        AddDanmu addDanmuDialog(item, this,true,poolTitles);
+        AddDanmu addDanmuDialog(item, this, true, poolTitles);
         if (QDialog::Accepted == addDanmuDialog.exec())
         {
             auto &infoList = addDanmuDialog.danmuInfoList;
+#ifdef KSERVICE
+            QList<QPair<Pool *, DanmuSource>> poolSrcs;
+#endif
             for (SearchDanmuInfo &info : infoList)
             {
                 Pool *pool = GlobalObjects::danmuManager->getPool(poolIdMap.value(info.pool));
@@ -407,6 +412,15 @@ void ListWindow::initActions()
                     {
                         qDeleteAll(info.danmus);
                     }
+                    else
+                    {
+#ifdef KSERVICE
+                        if (!info.src.scriptId.isEmpty())
+                        {
+                            poolSrcs.append({ pool, info.src });
+                        }
+#endif
+                    }
                 }
                 else
                 {
@@ -414,6 +428,9 @@ void ListWindow::initActions()
                 }
             }
             showMessage(tr("Done"), NotifyMessageFlag::NM_HIDE);
+#ifdef KSERVICE
+            if (!poolSrcs.empty()) GlobalObjects::danmuManager->sendDanmuAddedEvent(poolSrcs);
+#endif
         }
 
     });
@@ -783,6 +800,9 @@ void ListWindow::initActions()
         AddDanmu addDanmuDialog(currentItem, this);
         if (QDialog::Accepted == addDanmuDialog.exec())
         {
+#ifdef KSERVICE
+            QList<QPair<Pool *, DanmuSource>> poolSrcs;
+#endif
             auto &infoList = addDanmuDialog.danmuInfoList;
             Pool *pool = GlobalObjects::danmuPool->getPool();
             for (SearchDanmuInfo &info : infoList)
@@ -791,7 +811,19 @@ void ListWindow::initActions()
                 {
                     qDeleteAll(info.danmus);
                 }
+                else
+                {
+#ifdef KSERVICE
+                    if (GlobalObjects::danmuPool->hasPool() && !info.src.scriptId.isEmpty())
+                    {
+                        poolSrcs.append({ pool, info.src });
+                    }
+#endif
+                }
             }
+#ifdef KSERVICE
+            if (!poolSrcs.empty()) GlobalObjects::danmuManager->sendDanmuAddedEvent(poolSrcs);
+#endif
         }
         if (restorePlayState) GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
@@ -1037,49 +1069,72 @@ void ListWindow::matchPool(const QString &scriptId)
     if (selection.size() == 0)return;
     QModelIndexList indexes(selection.indexes());
     const PlayListItem *item=GlobalObjects::playlist->getItem(indexes.first());
-    if(indexes.size()==1 && !item->children)
+    if (indexes.size() == 1 && !item->children)
     {
         bool matchSuccess = false;
-        if(!item->hasPool() && item->type == PlayListItem::ItemType::LOCAL_FILE)
+        auto script = GlobalObjects::scriptManager->getScript(scriptId);
+        bool isMatchScript = script && script->type() == ScriptType::MATCH;
+        if (isMatchScript)
         {
-            showMessage(tr("Match Start"),NotifyMessageFlag::NM_PROCESS);
-            MatchResult match;
-            GlobalObjects::danmuManager->localMatch(item->path, match);
-            if(!match.success) GlobalObjects::animeProvider->match(scriptId.isEmpty()?GlobalObjects::animeProvider->defaultMatchScript():scriptId, item->path, match);
-            if(match.success)
+            if (!item->hasPool() && item->type == PlayListItem::ItemType::LOCAL_FILE)
             {
-                GlobalObjects::playlist->matchIndex(indexes.first(), match);
-                matchSuccess = true;
+                showMessage(tr("Match Start"),NotifyMessageFlag::NM_PROCESS);
+                MatchResult match;
+                GlobalObjects::danmuManager->localMatch(item->path, match);
+                if(!match.success) GlobalObjects::animeProvider->match(scriptId, item->path, match);
+                if(match.success)
+                {
+                    GlobalObjects::playlist->matchIndex(indexes.first(), match);
+                    matchSuccess = true;
+                }
+                showMessage(tr("Match Done"), NotifyMessageFlag::NM_HIDE);
             }
-            showMessage(tr("Match Done"), NotifyMessageFlag::NM_HIDE);
         }
-        if(!matchSuccess)
+        if (!matchSuccess)
         {
             QList<const PlayListItem *> &&siblings=GlobalObjects::playlist->getSiblings(item, false);
-            MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()),&siblings,this);
-            if(QDialog::Accepted==matchEditor.exec())
+            MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()), &siblings, isMatchScript ? "" : scriptId, this);
+            if (QDialog::Accepted == matchEditor.exec())
             {
-                if(matchEditor.singleEp.type!=EpType::UNKNOWN)
+                if (matchEditor.singleEp.type != EpType::UNKNOWN)
                 {
                     MatchResult match;
                     match.success = true;
-                    match.name = matchEditor.anime;
+                    match.name = matchEditor.curAnime.name;
                     match.ep = matchEditor.singleEp;
                     GlobalObjects::playlist->matchIndex(indexes.first(), match);
                 }
                 else
                 {
-                     QList<const PlayListItem *> items;
-                     QList<EpInfo> eps;
-                     for(int i=0;i<siblings.size();++i)
-                     {
-                         if(matchEditor.epCheckedList[i])
-                         {
-                             items.append(siblings[i]);
-                             eps.append(matchEditor.epList[i]);
-                         }
-                     }
-                     GlobalObjects::playlist->matchItems(items, matchEditor.anime, eps);
+                    QList<const PlayListItem *> items;
+                    QList<EpInfo> eps;
+                    auto &matchEpList = matchEditor.matchEpList;
+                    for (int i = 0; i < matchEpList.size(); ++i)
+                    {
+                        if (matchEpList[i].checked)
+                        {
+                            items.append(matchEpList[i].item);
+                            eps.append(matchEpList[i].ep);
+                        }
+                    }
+                    GlobalObjects::playlist->matchItems(items, matchEditor.curAnime, eps);
+#ifdef KSERVICE
+                    if (EventBus::getEventBus()->hasListener(EventBus::EVENT_FILE_MATCH_DOWN))
+                    {
+                        QStringList files;
+                        for (auto item : items) files.append(item->path);
+                        QVariantList epInfo;
+                        for (auto &ep : eps) epInfo.append(ep.toMap());
+                        QVariantMap param = {
+                            { "files", files },
+                            { "eps", epInfo },
+                            { "anime", matchEditor.curAnime.name },
+                            { "scriptId", matchEditor.curAnime.scriptId },
+                            { "scriptData", matchEditor.curAnime.scriptData },
+                        };
+                        EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_FILE_MATCH_DOWN, param});
+                    }
+#endif
                 }
             }
         }
@@ -1293,45 +1348,32 @@ QWidget *ListWindow::initPlaylistPage()
     addSubMenu->addAction(act_addWebDAVCollection);
     playlistContextMenu->addMenu(addSubMenu);
 
-    matchSubMenu = new ElaMenu(tr("Match"),playlistContextMenu);
+    matchSubMenu = new ElaMenu(tr("File Match"),playlistContextMenu);
     matchSubMenu->addAction(act_autoMatch);
     matchSubMenu->addAction(act_removeMatch);
 
     QAction *matchSep = new QAction(this);
     matchSep->setSeparator(true);
     playlistContextMenu->addMenu(matchSubMenu);
-    QActionGroup *matchCheckGroup = new QActionGroup(this);
-    auto matchProviders = GlobalObjects::animeProvider->getMatchProviders();
+
     static QList<QAction *> matchActions;
-    if (matchProviders.count() > 0)
-    {
-        matchSubMenu->addAction(matchSep);
-        QString defaultSctiptId = GlobalObjects::animeProvider->defaultMatchScript();
-        for (const auto &p : matchProviders)
+    auto addAllInfoProviders = [=](){
+        auto infoProviders = GlobalObjects::animeProvider->getSearchProviders();
+        if (!infoProviders.empty())
         {
-            QAction *mAct = new QAction(p.first);
-            mAct->setData(p.second); //id
-            matchActions.append(mAct);
-            matchSubMenu->addAction(mAct);
+            matchSubMenu->addAction(matchSep);
+            for (const auto &p : infoProviders)
+            {
+                QAction *mAct = new QAction(p.first);
+                mAct->setData(p.second);  //id
+                matchActions.append(mAct);
+                matchSubMenu->addAction(mAct);
+            }
         }
-    }
-    QObject::connect(matchSubMenu, &QMenu::triggered, this, [this, matchCheckGroup](QAction *act){
-        if(matchCheckGroup->actions().contains(act)) return;
-        QString scriptId = act->data().toString();
-        if(!scriptId.isEmpty())
-        {
-            matchPool(scriptId);
-        }
-    });
-    QObject::connect(matchCheckGroup, &QActionGroup::triggered, this, [](QAction *act){
-        QString scriptId = act->data().toString();
-        if(!scriptId.isEmpty())
-        {
-            GlobalObjects::animeProvider->setDefaultMatchScript(scriptId);
-        }
-    });
-    QObject::connect(GlobalObjects::animeProvider, &AnimeProvider::matchProviderChanged, this, [=](){
-         auto matchProviders = GlobalObjects::animeProvider->getMatchProviders();
+    };
+    addAllInfoProviders();
+
+    QObject::connect(GlobalObjects::animeProvider, &AnimeProvider::infoProviderChanged, this, [=](){
          for (QAction *mAct : matchActions)
          {
              matchSubMenu->removeAction(mAct);
@@ -1340,18 +1382,15 @@ QWidget *ListWindow::initPlaylistPage()
          matchActions.clear();
          matchSubMenu->removeAction(matchSep);
 
-         if (matchProviders.count() > 0)
-         {
-             QString defaultSctiptId = GlobalObjects::animeProvider->defaultMatchScript();
-             matchSubMenu->addAction(matchSep);
-             for (const auto &p : matchProviders)
-             {
-                 QAction *mAct = new QAction(p.first);
-                 mAct->setData(p.second); //id
-                 matchActions.append(mAct);
-                 matchSubMenu->addAction(mAct);
-             }
-         }
+         addAllInfoProviders();
+    });
+
+    QObject::connect(matchSubMenu, &QMenu::triggered, this, [this](QAction *act){
+        QString scriptId = act->data().toString();
+        if (!scriptId.isEmpty())
+        {
+            matchPool(scriptId);
+        }
     });
 
     QMenu *danmuSubMenu = new ElaMenu(tr("Danmu"),playlistContextMenu);

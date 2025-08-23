@@ -22,7 +22,7 @@ void KUpdater::check()
     QNetworkRequest req(QUrl("https://raw.githubusercontent.com/KikoPlayProject/KikoPlay/master/newVersion/version.json"));
     QNetworkAccessManager *manager = Network::getManager();
     QNetworkReply *reply = manager->get(req);
-    QObject::connect(reply, &QNetworkReply::finished, [this, reply](){
+    QObject::connect(reply, &QNetworkReply::finished, this, [this, reply](){
         if (reply->error() == QNetworkReply::NoError)
         {
             QJsonObject newVersionObj(Network::toJson(reply->readAll()).object());

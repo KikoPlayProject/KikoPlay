@@ -71,6 +71,7 @@ public:
 
     static constexpr const char *normalFont = "Microsoft Yahei UI";
     static constexpr const char *kikoVersion = "2.0.0";
+    static constexpr const int kikoVersionNum = 200000;
 
 
     static void registerCustomSettingType();

@@ -1,4 +1,6 @@
 #include "colorpicker.h"
+#include "UI/widgets/colorpreview.h"
+#include "UI/widgets/kpushbutton.h"
 #include <QPainter>
 #include <QStyleOption>
 #include <QPaintEvent>
@@ -166,4 +168,66 @@ void ColorMenu::clean()
         layout()->removeWidget(btn);
     }
     layout()->removeWidget(moreColor);
+}
+
+ColorSelector::ColorSelector(const QList<QColor> &colors, QWidget *parent) : QWidget(parent)
+{
+    QHBoxLayout *hLayout = new QHBoxLayout(this);
+    for (const QColor &c : colors)
+    {
+        ColorPreview *bg = new ColorPreview(this);
+        candidates << bg;
+        bg->setColor(c);
+        bg->setCheckable(true);
+
+        hLayout->addWidget(bg);
+        bg->setFixedSize(32, 32);
+
+        QObject::connect(bg, &ColorPreview::click, this, std::bind(&ColorSelector::selectColor, this, bg, std::placeholders::_1));
+    }
+
+    customColor = candidates.back();
+
+    KPushButton *browseColorBtn = new KPushButton(tr("Custom"), this);
+    hLayout->addStretch(1);
+    hLayout->addSpacing(8);
+    hLayout->addWidget(browseColorBtn);
+    QObject::connect(browseColorBtn, &KPushButton::clicked, this, [=](){
+        QColor c = QColorDialog::getColor(customColor->getColor(), this, tr("Select Color"), QColorDialog::ColorDialogOption::ShowAlphaChannel);
+        if (c.isValid())
+        {
+            customColor->setColor(c);
+            selectColor(customColor, true);
+        }
+    });
+}
+
+void ColorSelector::setColor(const QColor &color)
+{
+    for (auto c : candidates)
+    {
+        if (c->getColor() == color)
+        {
+            selectColor(c, true);
+            return;
+        }
+    }
+    customColor->setColor(color);
+    customColor->show();
+    selectColor(customColor, true);
+}
+
+QColor ColorSelector::color() const
+{
+    if (!lastSelectColor) return QColor();
+    return lastSelectColor->getColor();
+}
+
+void ColorSelector::selectColor(ColorPreview *p, bool checked)
+{
+    if (!checked || p == lastSelectColor) return;
+    if (lastSelectColor) lastSelectColor->setChecked(false);
+    p->setChecked(true);
+    lastSelectColor = p;
+    emit colorChanged(p->getColor());
 }

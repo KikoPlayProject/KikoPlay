@@ -11,7 +11,6 @@ public:
     ScriptState loadScript(const QString &scriptPath);
 public:
     bool supportSearch() const {return canSearch;}
-    bool supportLaunch() const {return canLaunch;}
     const QStringList &sampleURLs() const {return sampleSupporedURLs;}
     QColor labelColor() const;
 public:
@@ -19,8 +18,6 @@ public:
     ScriptState getEpInfo(const DanmuSource *source, QList<DanmuSource> &results);
     ScriptState getURLInfo(const QString &url, QList<DanmuSource> &results);
     ScriptState getDanmu(const DanmuSource *item, DanmuSource **nItem, QVector<DanmuComment *> &danmuList);
-    ScriptState hasSourceToLaunch(const QList<DanmuSource> &sources, bool &result);
-    ScriptState launch(const QList<DanmuSource> &sources, const DanmuComment *comment);
     bool supportURL(const QString &url);
 
 private:
@@ -28,13 +25,11 @@ private:
     const char *luaEpFunc = "epinfo";
     const char *luaURLFunc = "urlinfo";
     const char *luaDanmuFunc = "danmu";
-    const char *luaLaunchCheckFunc = "canlaunch";
-    const char *luaLaunchFunc = "launch";
     const char *urlReTable = "supportedURLsRe";
     const char *sampleUrlTable = "sampleSupporedURLs";
     const char *labelColorName = "label_color";
 
-    bool canSearch, canLaunch;
+    bool canSearch;
     QStringList supportedURLsRe, sampleSupporedURLs;
     QString callGetSources(const char *fname,  const QVariant &param, bool passOption, QList<DanmuSource> &results);
 };

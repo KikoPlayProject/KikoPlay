@@ -18,6 +18,7 @@
 #include "UI/dialogs/mpvconfediror.h"
 #include "UI/ela/ElaMenu.h"
 #include "UI/inputdialog.h"
+#include "UI/widgets/colorpicker.h"
 #include "UI/widgets/elidedlabel.h"
 #include "UI/widgets/klineedit.h"
 #include "qwidgetaction.h"
@@ -41,7 +42,6 @@
 #include "Play/Danmu/danmuprovider.h"
 #include "MediaLibrary/animeworker.h"
 #include "Download/util.h"
-#include "danmulaunch.h"
 #include "globalobjects.h"
 #include "Common/eventbus.h"
 #include "Common/keyactionmodel.h"
@@ -56,9 +56,14 @@
 #include <Windows.h>
 #endif
 
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#endif
+
 #define SETTING_KEY_FORWARD_JUMP "Play/ForwardJump"
 #define SETTING_KEY_BACKWARD_JUMP "Play/BackwardJump"
 #define SETTING_KEY_CUSTOM_PLAYBACK_RATE "Play/CustomPlaybackRate"
+#define SETTING_KEY_LAUNCH_CUSTOM_COLOR "Play/LaunchCustomColor"
 
 namespace
 {
@@ -242,8 +247,6 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent)
 
     initActions();
     initSettings();
-
-    launchWindow = new DanmuLaunch(this);
 
     QWidget *playerLayer = initPlayerLayer(centralWidget);
     QWidget *liveDanmuLayer = initLiveDanmuLayer(centralWidget);
@@ -1400,6 +1403,81 @@ void PlayerWindow::initVolumeSetting()
 
 }
 
+void PlayerWindow::initLaunchOptionSetting()
+{
+    launchOptionPage = new OptionMenu(this->centralWidget());
+    launchOptionPage->installEventFilter(this);
+    OptionMenu *menu = static_cast<OptionMenu *>(launchOptionPage);
+    OptionMenuPanel *rootPanel = menu->defaultMenuPanel();
+
+    {
+        OptionMenuItem *colorMenu = rootPanel->addMenu("");
+        colorMenu->setFixHeight(54);
+        colorMenu->setSelectAble(false);
+        ColorSelector *colorSelector = new ColorSelector(QList<QColor>{
+            QColor(255, 255, 255),
+            QColor(0xFE, 0x03, 0x02),
+            QColor(0xFF, 0xFF, 0x00),
+            QColor(0x00, 0xCD, 0x00),
+            QColor(0x42, 0x66, 0xBE),
+            QColor(0xCC, 0x02, 0x73),
+        }, colorMenu);
+        QColor customColor = GlobalObjects::appSetting->value(SETTING_KEY_LAUNCH_CUSTOM_COLOR, QColor(255, 255, 255)).value<QColor>();
+        if (customColor.isValid())
+        {
+            colorSelector->setColor(customColor);
+            launchColor = customColor;
+        }
+        QObject::connect(colorSelector, &ColorSelector::colorChanged, this, [=](const QColor &c){
+            launchColor = c;
+            GlobalObjects::appSetting->setValue(SETTING_KEY_LAUNCH_CUSTOM_COLOR, launchColor);
+        });
+
+        colorMenu->setWidget(colorSelector, true);
+    }
+
+    {
+        OptionMenuItem *posMenu = rootPanel->addMenu("");
+        posMenu->setSelectAble(false);
+        QButtonGroup *posBtnGroup = new QButtonGroup(posMenu);
+        QWidget *container = new QWidget(posMenu);
+        QHBoxLayout *cHLayout = new QHBoxLayout(container);
+        cHLayout->setContentsMargins(0, 0, 0, 0);
+        const QStringList posTips = { tr("Rolling"), tr("Top"), tr("Bottom") };
+        for (int i = 0; i < DanmuComment::DanmuType::UNKNOW; ++i)
+        {
+            QPushButton *posBtn = new QPushButton(posTips[i], container);
+            posBtn->setCheckable(true);
+            if (i == 0) posBtn->setChecked(true);
+            posBtn->setObjectName(QStringLiteral("MenuCheckButton"));
+            cHLayout->addWidget(posBtn);
+            posBtnGroup->addButton(posBtn, i);
+        }
+        QObject::connect(posBtnGroup, &QButtonGroup::idToggled, this, [=](int id, bool checked){
+            if (checked) launchType = DanmuComment::DanmuType(id);
+        });
+
+        cHLayout->addSpacing(10);
+        QButtonGroup *sizeBtnGroup = new QButtonGroup(posMenu);
+        const QStringList sizeTips = { tr("Normal"), tr("Small"), tr("Large") };
+        for (int i = 0; i < 3; ++i)
+        {
+            QPushButton *sizeBtn = new QPushButton(sizeTips[i], container);
+            sizeBtn->setCheckable(true);
+            if (i == 0) sizeBtn->setChecked(true);
+            sizeBtn->setObjectName(QStringLiteral("MenuCheckButton"));
+            cHLayout->addWidget(sizeBtn);
+            sizeBtnGroup->addButton(sizeBtn, i);
+        }
+        QObject::connect(sizeBtnGroup, &QButtonGroup::idToggled, this, [=](int id, bool checked){
+            if (checked) launchSize = DanmuComment::FontSizeLevel(id);
+        });
+
+        posMenu->setWidget(container, true);
+    }
+
+}
+
 QPoint PlayerWindow::getPopupMenuPos(QWidget *ref, QWidget *popup, int topSpace)
 {
     QPoint refCenter = ref->mapToGlobal(QPoint(ref->width() / 2, 0));
@@ -1638,13 +1716,14 @@ void PlayerWindow::initSignals()
     QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::fileChanged, this, [this](){
         const PlayListItem *currentItem = GlobalObjects::playlist->getCurrentItem();
         showPlayerRegion(true);
+        launchFocusTimeS = -1;
         progress->setEventMark(QVector<DanmuEvent>());
         progress->setChapterMark(QVector<MPVPlayer::ChapterInfo>());
         QString mediaTitle(GlobalObjects::mpvplayer->getMediaTitle());
         if (!currentItem)
         {
             titleLabel->setText(mediaTitle);
-            launch->hide();
+            launchDanmuEdit->hide();
             GlobalObjects::danmuPool->setPoolID("");
             if(resizePercent!=-1 && !miniModeOn) adjustPlayerSize(resizePercent);
 #ifdef QT_DEBUG
@@ -1670,11 +1749,11 @@ void PlayerWindow::initSignals()
         if (currentItem->hasPool())
         {
             GlobalObjects::danmuPool->setPoolID(currentItem->poolID);
-            GlobalObjects::danmuProvider->checkSourceToLaunch(currentItem->poolID);
+            launchDanmuEdit->show();
         }
         else
         {
-            launch->hide();
+            launchDanmuEdit->hide();
             GlobalObjects::danmuPool->setPoolID("");
             if (currentItem->type == PlayListItem::ItemType::LOCAL_FILE)
             {
@@ -1733,6 +1812,7 @@ void PlayerWindow::initSignals()
             titleLabel->setText(currentItem->title);
         else
             titleLabel->setText(QString("%1-%2").arg(currentItem->animeTitle, currentItem->title));
+        launchDanmuEdit->setVisible(currentItem->hasPool());
     });
     QObject::connect(GlobalObjects::danmuPool, &DanmuPool::eventAnalyzeFinished, progress, &ClickSlider::setEventMark);
     QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::positionChanged, this, [this](int newtime){
@@ -1828,7 +1908,8 @@ void PlayerWindow::initSignals()
         case MPVPlayer::Stop:
         {
             QCoreApplication::processEvents();
-            launch->hide();
+            launchDanmuEdit->hide();
+            launchFocusTimeS = -1;
             playPause->setText(QChar(0xe628));
             progress->setValue(0);
             progress->setRange(0, 0);
@@ -1970,21 +2051,53 @@ void PlayerWindow::initSignals()
         PlayContext::context()->seekable = seekable;
     });
 
+    QObject::connect(launchOptionBtn, &QPushButton::clicked, this, [this](){
+        if (!launchOptionPage)
+        {
+            initLaunchOptionSetting();
+        }
+        if (!launchOptionPage->isHidden())
+        {
+            launchOptionPage->hide();
+            return;
+        }
+        if (playSettingPage && !playSettingPage->isHidden())
+        {
+            playSettingPage->hide();
+        }
+        if (danmuSettingPage && !danmuSettingPage->isHidden())
+        {
+            danmuSettingPage->hide();
+        }
+        launchOptionPage->resize(launchOptionPage->sizeHint());
+        launchOptionPage->show();
+        launchOptionPage->raise();
+        launchOptionPage->move(getPopupMenuPos(launchOptionBtn, launchOptionPage, 10));
+    });
+    QObject::connect(launchDanmuEdit, &QLineEdit::returnPressed, this, [this](){
+        if (!GlobalObjects::danmuPool->hasPool()) return;
+        if (GlobalObjects::mpvplayer->getCurrentFile().isEmpty()) return;
+        QString text = launchDanmuEdit->text().trimmed();
+        if (text.isEmpty()) return;
+        int launchSendTimeS = PlayContext::context()->playtime;
+        if (launchSendTimeS < 0) return;
+        int time = launchSendTimeS;
+        if (launchFocusTimeS > 0 && launchSendTimeS - launchFocusTimeS < 5) time = launchFocusTimeS;
 
-    QObject::connect(launch, &QPushButton::clicked, this, [this]() {
-        launchWindow->exec();
+        QSharedPointer<DanmuComment> comment{new DanmuComment};
+        comment->originTime = comment->time = time * 1000;  //ms
+        comment->color = launchColor.rgb();
+        comment->text = text;
+        comment->type = launchType;
+        comment->fontSizeLevel = launchSize;
+        comment->date = QDateTime::currentDateTime().toSecsSinceEpoch();
+#ifdef KSERVICE
+        KService::instance()->launch(comment, GlobalObjects::danmuPool->getPool()->id(), GlobalObjects::mpvplayer->getCurrentFile());
+#endif
+        GlobalObjects::danmuPool->launch({comment});
+        launchDanmuEdit->clear();
     });
-    QObject::connect(GlobalObjects::danmuProvider, &DanmuProvider::sourceCheckDown, this, [=](const QString &poolId, const QStringList &supportedScripts){
-        const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
-        if(currentItem && currentItem->hasPool() && poolId == currentItem->poolID && supportedScripts.size()>0)
-        {
-            launch->show();
-        }
-        else
-        {
-            launch->hide();
-        }
-    });
+
 
     QObject::connect(danmu, &QPushButton::clicked, this, [this]() {
         if (!danmuSettingPage)
@@ -1999,7 +2112,10 @@ void PlayerWindow::initSignals()
         if (playSettingPage && !playSettingPage->isHidden())
         {
             playSettingPage->hide();
-            return;
+        }
+        if (launchOptionPage && !launchOptionPage->isHidden())
+        {
+            launchOptionPage->hide();
         }
         danmuSettingPage->resize(danmuSettingPage->sizeHint());
         danmuSettingPage->show();
@@ -2019,7 +2135,10 @@ void PlayerWindow::initSignals()
         if (danmuSettingPage && !danmuSettingPage->isHidden())
         {
             danmuSettingPage->hide();
-            return;
+        }
+        if (launchOptionPage && !launchOptionPage->isHidden())
+        {
+            launchOptionPage->hide();
         }
         playSettingPage->resize(playSettingPage->sizeHint());
         playSettingPage->show();
@@ -2149,13 +2268,6 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
 
     GlobalObjects::iconfont->setPointSize(18);
 
-    launch = new QPushButton(playControlPanel);
-    launch->setFont(*GlobalObjects::iconfont);
-    launch->setText(QChar(0xe947));
-    launch->setToolTip(tr("Launch Danmu"));
-    launch->setObjectName(QStringLiteral("PlayControlButton"));
-    launch->hide();
-
     setting = new QPushButton(playControlPanel);
     setting->setFont(*GlobalObjects::iconfont);
     setting->setText(QChar(0xe625));
@@ -2186,8 +2298,9 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
     QPalette palette = launchDanmuEdit->palette();
     palette.setColor(QPalette::PlaceholderText, QColor(0, 0, 0, 100));
     launchDanmuEdit->setPalette(palette);
+    launchDanmuEdit->installEventFilter(this);
 
-    QPushButton *launchOptionBtn = new QPushButton(launchDanmuEdit);
+    launchOptionBtn = new QPushButton(launchDanmuEdit);
     launchOptionBtn->setObjectName(QStringLiteral("LaunchOptionButton"));
     GlobalObjects::iconfont->setPointSize(12);
     launchOptionBtn->setFont(*GlobalObjects::iconfont);
@@ -2225,7 +2338,6 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
     buttonHLayout->addStretch(5);
     buttonHLayout->addWidget(launchDanmuEdit);
     buttonHLayout->addStretch(7);
-    buttonHLayout->addWidget(launch);
     buttonHLayout->addWidget(setting);
     buttonHLayout->addWidget(danmu);
     buttonHLayout->addWidget(fullscreen);
@@ -2563,6 +2675,14 @@ void PlayerWindow::mouseReleaseEvent(QMouseEvent *event)
                 return;
             }
         }
+        if (launchOptionPage && !launchOptionPage->isHidden())
+        {
+            if (!launchOptionPage->underMouse())
+            {
+                launchOptionPage->hide();
+                return;
+            }
+        }
         if (GlobalObjects::mpvplayer->getClickBehavior() == 1)
         {
             if (playControlPanel->isHidden())
@@ -2617,7 +2737,7 @@ void PlayerWindow::leaveEvent(QEvent *)
     {
         if (!launchDanmuEdit->hasFocus())
         {
-            QTimer::singleShot(500, [this](){
+            QTimer::singleShot(500, this, [this](){
                 this->playControlPanel->hide();
                 this->playInfoPanel->hide();
                 this->sidePanel->hide();
@@ -2626,7 +2746,7 @@ void PlayerWindow::leaveEvent(QEvent *)
     }
     if (miniModeOn && !miniProgress->isHidden())
     {
-        QTimer::singleShot(500, [this](){
+        QTimer::singleShot(500, this, [this](){
             miniProgress->hide();
         });
     }
@@ -2634,7 +2754,7 @@ void PlayerWindow::leaveEvent(QEvent *)
 
 bool PlayerWindow::eventFilter(QObject *watched, QEvent *event)
 {
-    if (watched == danmuSettingPage || watched == playSettingPage)
+    if (watched == danmuSettingPage || watched == playSettingPage || watched == launchOptionPage)
     {
         if (event->type() == QEvent::Show)
         {
@@ -2677,6 +2797,13 @@ bool PlayerWindow::eventFilter(QObject *watched, QEvent *event)
         {
             volumeHideTimer.stop();
             return true;
+        }
+    }
+    if (watched == launchDanmuEdit)
+    {
+        if (event->type() == QEvent::FocusIn)
+        {
+            launchFocusTimeS = PlayContext::context()->playtime;
         }
     }
     return QWidget::eventFilter(watched,event);

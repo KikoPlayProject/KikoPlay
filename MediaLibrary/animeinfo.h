@@ -90,13 +90,25 @@ Q_DECLARE_METATYPE(AnimeLite)
 
 struct MatchResult
 {
-    bool success;
+    bool success{false};
     QString name;
     QString scriptId;
     QString scriptData;
     EpInfo ep;
-};
 
+    bool kServiceMatch{false};
+    int infoSrcType;
+    struct MatchDanmuSource
+    {
+        int type;
+        int durationSeconds;
+        QString name;
+        QString scriptId;
+        QString scriptData;
+    };
+    QList<MatchDanmuSource> danmuSources;
+};
+Q_DECLARE_METATYPE(MatchResult)
 
 struct Character
 {
@@ -137,7 +149,9 @@ class Anime
     friend class LibraryScript;
     friend struct AnimeLite;
     friend class AnimeProvider;
+    friend class AnimeScrapingTask;
     friend class Extension::LibraryInterface;
+    friend class AnimeModel;
 
     QString _name;
     QString _desc;
@@ -156,6 +170,7 @@ class Anime
     int _epCount;
     bool crtImagesLoaded;
     bool epLoaded;
+    bool _refreshFlag;
 
 public:
     const QString &name() const {return _name;}
@@ -170,6 +185,7 @@ public:
     const QPixmap &cover(bool onlyCache=false);
     const QPixmap &rawCover();
     const QString &coverURL() const {return _coverURL;}
+    bool refreshing() const { return _refreshFlag; }
 
     constexpr static const char *emptyCoverURL = "<empty>";
 

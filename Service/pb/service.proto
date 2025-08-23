@@ -1,0 +1,229 @@
+syntax = "proto3";
+package kservice;
+option optimize_for = LITE_RUNTIME;
+
+message EventHeader {
+    int64 timestamp = 1;
+    string event = 2;
+    string os = 3;
+    int32 version = 4;
+    string did = 5;
+    string uid = 6;
+}
+
+message CommonEvent {
+    EventHeader header = 1;
+    string extra = 2;
+}
+
+message ResponseHeader {
+    int32 status = 1;  // 0 - failed, 1 - success
+    string err_msg = 2;  // Error message if status is 0
+}
+
+message RegisterRequest {
+    EventHeader header = 1;
+    string username = 2;
+    string password = 3;
+    string email = 4;
+    string verification_code = 5;
+}
+
+message RegisterResponse {
+    ResponseHeader header = 1;
+    string uid = 2;
+    string username = 3;
+    string email = 4;
+}
+
+message LoginRequest {
+    EventHeader header = 1;
+    string email = 2;
+    string password = 3;
+}
+
+message LoginResponse {
+    ResponseHeader header = 1;
+    string uid = 2;
+    string username = 3;
+    string email = 4;
+    string access_token = 5;  // JWT token for session management
+    string refresh_token = 6;  // Refresh token for session management
+}
+
+message RefreshRequest {
+    EventHeader header = 1;
+}
+
+message RefreshResponse {
+    ResponseHeader header = 1;
+    string uid = 2;
+    string access_token = 3;  // JWT token for session management
+}
+
+message SendVerificationRequest {
+    EventHeader header = 1;
+    string email = 2;
+}
+
+message SendVerificationResponse {
+    ResponseHeader header = 1;
+}
+
+
+message UVEvent {
+    EventHeader header = 1;
+    bool isStartup = 2;
+    int64 startupTs = 3;
+    message StepTime {
+        string step = 1;
+        int64 time = 2;
+    }
+    repeated StepTime stepTimes = 4;
+}
+
+message UVEventResponse {
+    ResponseHeader header = 1;
+    message LatestVersion {
+        int32 version = 1;
+        string url = 2;
+        string info = 3;
+    }
+    LatestVersion latestVersionInfo = 2;
+}
+
+message KFileInfo {
+    string fileName = 1;
+    string fullPath = 2;
+    string hash32 = 3;
+    string torrentHash = 4;
+    string url = 5;
+    int64 durationMs = 6;
+    int64 fileSize = 7;
+    bool isLocal = 8;  // true if the file is stored locally, false if it's a remote URL
+}
+
+message RecoRequest {
+    EventHeader header = 1;
+    KFileInfo fileInfo = 2;
+}
+
+enum EpType
+{
+    UNKNOWN_EP = 0;
+    EP = 1;
+    SP = 2;
+    OP = 3;
+    ED = 4;
+    Trailer = 5;
+    MAD = 6;
+    Other = 7;
+}
+
+enum DanmuSourceType {
+    UNKNOWN_DM_SRC = 0;
+    KIKO = 1;
+    BILIBILI = 2;
+    GAMER = 3;
+    IQIYI = 4;
+    TENCENT = 5;
+    YOUKU = 6;
+    MGTV = 7;
+    TUCAO = 8;
+    ACFUN = 9;
+    YSJ = 10;
+}
+
+message DanmuSource {
+    DanmuSourceType type = 1;
+    string title = 2;
+    string scriptId = 3;
+    string scriptData = 4;
+    int32 durationSeconds = 5;
+}
+
+enum InfoSourceType {
+    UNKNOWN_INFO_SRC = 0;
+    BGM = 1;
+    DOUBAN = 2;
+}
+
+message InfoSource {
+    InfoSourceType type = 1;
+    string scriptId = 2;
+    string scriptData = 3;
+}
+
+message Pool {
+    string name = 1;
+    EpType epType = 2;
+    string epName = 3;
+    double epIndex = 4;
+    string poolid = 5;
+}
+
+message RecoResponse {
+    ResponseHeader header = 1;  // 0 - failed, 1 - success, 2 - fuzzy match
+    Pool matchResult = 2;
+    repeated InfoSource infoSources = 3;
+    repeated DanmuSource danmuSources = 4;
+}
+
+message MatchEvent {
+    EventHeader header = 1;
+    message Match {
+        KFileInfo fileInfo = 1;
+        Pool poolInfo = 2;
+        repeated InfoSource infoSources = 3;
+    }
+    repeated Match matches = 2;
+}
+
+message AddDanmuSourceEvent {
+    EventHeader header = 1;
+    message DanmuPoolSource {
+        Pool poolInfo = 1;
+        repeated DanmuSource danmuSources = 2;
+    }
+    repeated DanmuPoolSource danmuPoolSources = 2;
+}
+
+message DanmuComment {
+    string senderId = 1;
+    string text = 2;
+    int32 color = 3;
+    int32 time = 4;  // ms
+    int32 mode = 5;  // 0 - rolling, 1 - top, 2 - bottom
+    int32 size = 6;  // 0 - normal, 1 - small, 2 - large
+    int64 timestamp = 7;  // Unix timestamp in seconds
+}
+
+message LaunchRequest {
+    EventHeader header = 1;
+    Pool poolInfo = 2;
+    KFileInfo fileInfo = 3;
+    DanmuComment comment = 4;
+}
+
+message LaunchResponse {
+    ResponseHeader header = 1;
+    string poolId = 2;
+    DanmuSource danmuSource = 3;
+    DanmuComment comment = 4;
+}
+
+message KikoDanmuRequest {
+    EventHeader header = 1;
+    Pool poolInfo = 2;
+    int32 duration = 3;  // Duration in seconds
+}
+
+message KikoDanmuResponse {
+    ResponseHeader header = 1;
+    Pool poolInfo = 2;
+    message DanmuSourceComments {
+        DanmuSource source = 1;
+        repeated DanmuComment danmuComments = 2;
+    }
+    repeated DanmuSourceComments danmuSources = 3;
+}

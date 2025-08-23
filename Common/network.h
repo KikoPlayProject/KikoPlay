@@ -4,10 +4,20 @@
 #include <QNetworkReply>
 #include <QNetworkAccessManager>
 #include <QtCore>
+
+#define APP_ID_KIKO ""
+#define APP_SECRET_KIKO ""
+#define APP_ID_DANDAN ""
+#define APP_SECRET_DANDAN ""
+
+#ifdef KSERVICE
+#include "secrets.h"
+#endif
+
 namespace Network
 {
-    static constexpr const int timeout=10000;
-    static constexpr const int maxRedirectTimes=10;
+    static constexpr const int timeout = 10000;
+    static constexpr const int maxRedirectTimes = 10;
     struct Reply
     {
         int statusCode;
@@ -32,6 +42,22 @@ namespace Network
         NetworkError(QString info):errorInfo(info){}
         QString errorInfo;
     };
+
+    class ReqAbortFlagObj : public QObject
+    {
+        Q_OBJECT
+    public:
+        using QObject::QObject;
+        void abortRequest();
+    signals:
+        void abort();
+    };
+    ReqAbortFlagObj *getAbortFlag();
+
+    static constexpr const char *kKikoAppId = APP_ID_KIKO;
+    static constexpr const char *kKikoAppSecret = APP_SECRET_KIKO;
+    static constexpr const char *kDanDanAppId = APP_ID_DANDAN;
+    static constexpr const char *kDanDanAppSecret = APP_SECRET_DANDAN;
 }
 
 #endif // NETWORK_H

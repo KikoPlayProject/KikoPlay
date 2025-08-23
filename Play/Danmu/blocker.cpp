@@ -7,7 +7,10 @@
 #include "Play/Danmu/danmupool.h"
 #include "UI/widgets/elidelineedit.h"
 #include "Common/network.h"
-#define BlockNameRole Qt::UserRole+1
+
+#define SETTING_KEY_BLOCK_INITED "Play/BlockInited"
+
+
 QWidget *ComboBoxDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     Blocker::Columns col=static_cast<Blocker::Columns>(index.column());
@@ -53,7 +56,7 @@ void ComboBoxDelegate::setEditorData(QWidget *editor, const QModelIndex &index) 
     case Blocker::Columns::CONTENT:
     {
         QLineEdit *lineEdit=static_cast<QLineEdit *>(editor);
-        lineEdit->setText(index.data(col==Blocker::Columns::ID?BlockNameRole:Qt::DisplayRole).toString());
+        lineEdit->setText(index.data(col==Blocker::Columns::ID ? Blocker::BlockNameRole : Qt::DisplayRole).toString());
         break;
     }
     default:
@@ -79,9 +82,23 @@ void ComboBoxDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, 
 Blocker::Blocker(QObject *parent):QAbstractItemModel(parent),maxId(1)
 {
     blockFileName=GlobalObjects::context()->dataPath + "block.xml";
-    QFile blockFile(blockFileName);
-    bool ret=blockFile.open(QIODevice::ReadOnly|QIODevice::Text);
-    if(!ret) return;
+    QFile blockFile;
+    bool inited = false;
+    if (QFile::exists(blockFileName))
+    {
+        blockFile.setFileName(blockFileName);
+    }
+    else
+    {
+        if (!GlobalObjects::appSetting->value(SETTING_KEY_BLOCK_INITED, false).toBool())
+        {
+            blockFile.setFileName(":/res/block.xml");
+            GlobalObjects::appSetting->setValue(SETTING_KEY_BLOCK_INITED, true);
+            inited = true;
+        }
+    }
+    bool ret = blockFile.open(QIODevice::ReadOnly|QIODevice::Text);
+    if (!ret) return;
     beginResetModel();
     QXmlStreamReader reader(&blockFile);
     while(!reader.atEnd())
@@ -108,6 +125,7 @@ Blocker::Blocker(QObject *parent):QAbstractItemModel(parent),maxId(1)
         reader.readNext();
     }
     endResetModel();
+    if (inited) saveBlockRules();
 }
 
 Blocker::~Blocker()
@@ -435,6 +453,8 @@ QVariant Blocker::data(const QModelIndex &index, int role) const
         break;
     case BlockNameRole:
         return rule->name;
+    case BlockRuleIdRole:
+        return rule->id;
     }
 	
 	return QVariant();
@@ -480,7 +500,10 @@ bool Blocker::setData(const QModelIndex &index, const QVariant &value, int)
         return false;
     }
     if(col != Columns::ID && col != Columns::PREFILTER)
+    {
+        rule->blockCount = 0;
         GlobalObjects::danmuPool->testBlockRule(rule);
+    }
     ruleChanged=true;
     return true;
 }

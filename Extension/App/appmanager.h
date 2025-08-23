@@ -15,6 +15,7 @@ public:
     void refresh(bool inWorkerThread = false);
     void start(const QModelIndex &index);
     void autoStart();
+    void closeAll();
 public:
     enum struct Columns
     {

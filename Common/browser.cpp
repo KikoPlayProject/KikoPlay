@@ -17,7 +17,7 @@ static TimeLimitedCachePool<QWebEngineView *> browserCache{30*1000, [](QWebEngin
 
 BrowserManager *BrowserManager::instance()
 {
-    static QScopedPointer<BrowserManager> manager;
+    static QScopedPointer<BrowserManager, QScopedPointerDeleteLater> manager;
     if (!manager)
     {
         if (QThread::currentThread() == QCoreApplication::instance()->thread())

@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QDateTime>
 #include "danmuscript.h"
+#include "matchscript.h"
 #include "libraryscript.h"
 #include "resourcescript.h"
 #include "bgmcalendarscript.h"
@@ -14,9 +15,20 @@ ScriptManager::ScriptManager(QObject *parent) : QObject(parent)
     qRegisterMetaType<ScriptState>("ScriptState");
     qRegisterMetaType<ScriptManager::ScriptChangeState>("ScriptChangeState");
     refreshScripts(ScriptType::DANMU);
+    refreshScripts(ScriptType::MATCH);
     refreshScripts(ScriptType::LIBRARY);
     refreshScripts(ScriptType::RESOURCE);
     refreshScripts(ScriptType::BGM_CALENDAR);
+
+    scriptThread = new QThread();
+    scriptThread->setObjectName(QStringLiteral("scriptThread"));
+    scriptThread->start(QThread::NormalPriority);
+}
+
+ScriptManager::~ScriptManager()
+{
+    scriptThread->quit();
+    scriptThread->wait();
 }
 
 void ScriptManager::refreshScripts(ScriptType type)
@@ -41,9 +53,9 @@ void ScriptManager::refreshScripts(ScriptType type)
             qint64 modifyTime = fileInfo.fileTime(QFile::FileModificationTime).toSecsSinceEpoch();
             bool add = !curScripts.contains(path);
             existPaths.insert(path);
-            if(!add)
+            if (!add)
             {
-                if(curScripts[path]->getValue("time").toLongLong() < modifyTime)
+                if (curScripts[path]->getValue("time").toLongLong() < modifyTime)
                 {
                     QString id = curScripts[path]->id();
                     scriptLists[type].removeAll(curScripts[path]);
@@ -53,17 +65,18 @@ void ScriptManager::refreshScripts(ScriptType type)
                     changed = true;
                 }
             }
-            if(add)
+            if (add)
             {
                 QSharedPointer<ScriptBase> cs;
-                if(type == ScriptType::DANMU) cs.reset(new DanmuScript);
-                else if(type == ScriptType::LIBRARY) cs.reset(new LibraryScript);
-                else if(type == ScriptType::RESOURCE) cs.reset(new ResourceScript);
-                else if(type == ScriptType::BGM_CALENDAR) cs.reset(new BgmCalendarScript);
-                if(cs)
+                if (type == ScriptType::DANMU) cs.reset(new DanmuScript);
+                else if (type == ScriptType::MATCH) cs.reset(new MatchScript);
+                else if (type == ScriptType::LIBRARY) cs.reset(new LibraryScript);
+                else if (type == ScriptType::RESOURCE) cs.reset(new ResourceScript);
+                else if (type == ScriptType::BGM_CALENDAR) cs.reset(new BgmCalendarScript);
+                if (cs)
                 {
                     ScriptState state = cs->loadScript(path);
-                    if(state)
+                    if (state)
                     {
                         scriptLists[type].append(cs);
                         id2scriptHash[cs->id()] = cs;
@@ -79,9 +92,9 @@ void ScriptManager::refreshScripts(ScriptType type)
         }
     }
     auto &scripts = scriptLists[type];
-    for(auto iter=scripts.begin(); iter!=scripts.end();)
+    for (auto iter = scripts.begin(); iter != scripts.end();)
     {
-        if(!existPaths.contains((*iter)->getValue("path")))
+        if (!existPaths.contains((*iter)->getValue("path")))
         {
             QString id((*iter)->id());
             id2scriptHash.remove(id);
@@ -91,7 +104,7 @@ void ScriptManager::refreshScripts(ScriptType type)
             ++iter;
         }
     }
-    if(changed) emit scriptChanged(type);
+    if (changed) emit scriptChanged(type);
 }
 
 void ScriptManager::deleteScript(const QString &id)

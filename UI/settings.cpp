@@ -62,7 +62,7 @@ Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings")
     gLayout->addLayout(pageSLayout, 0, 1);
     gLayout->setColumnStretch(1, 1);
 
-    setSizeSettingKey("DialogSize/Setting",QSize(400, 400));
+    setSizeSettingKey("DialogSize/Setting",QSize(680, 500));
 }
 
 void Settings::onClose()

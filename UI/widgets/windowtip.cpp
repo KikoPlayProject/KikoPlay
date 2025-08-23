@@ -200,6 +200,7 @@ void TipWindowWidget::reset(const TipParams &param)
     messageLabel->setText(param.message);
     timeout = param.timeout;
     closeButton->setVisible(param.showClose);
+    update();
 }
 
 void TipWindowWidget::paintEvent(QPaintEvent *event)

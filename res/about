@@ -7,3 +7,4 @@ zlib 1.2.11
 QtWebApp 1.8.5
 Lua 5.3
 ElaWidgetTools
+protobuf 3.21.8

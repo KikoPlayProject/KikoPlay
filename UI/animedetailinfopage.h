@@ -86,6 +86,7 @@ private:
     QMenu *tagContextMenu;
     QPushButton *currentTagButton;
     bool allowCheck;
+    QPushButton *addTagBtn;
 
     // QWidget interface
 public:

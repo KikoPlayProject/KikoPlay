@@ -80,7 +80,11 @@ void AppItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
 
     if (viewOption.state.testFlag(QStyle::State_MouseOver))
     {
-        painter->fillRect(option.rect, QColor(255, 255, 255, 60));
+        painter->save();
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(QColor(255, 255, 255, 60));
+        painter->drawRoundedRect(option.rect, 4, 4);
+        painter->restore();
     }
     else
     {

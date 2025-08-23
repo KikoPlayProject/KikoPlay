@@ -17,12 +17,7 @@ public:
     ScriptState getEpInfo(const DanmuSource *source, QList<DanmuSource> &results);
     ScriptState getURLInfo(const QString &url, QList<DanmuSource> &results);
     ScriptState downloadDanmu(const DanmuSource *item, QVector<DanmuComment *> &danmuList, DanmuSource **nItem=nullptr);
-    void checkSourceToLaunch(const QString &poolId);
-    void launch(const QStringList &ids, const QString &poolId, const QList<DanmuSource> &sources, DanmuComment *comment);
 
-signals:
-    void sourceCheckDown(const QString &poolId, const QStringList &supportedScripts);
-    void danmuLaunchStatus(const QString &poolId, const QStringList &scriptIds, const QStringList &status, DanmuComment *comment);
 };
 
 #endif // PROVIDERMANAGER_H

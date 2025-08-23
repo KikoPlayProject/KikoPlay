@@ -65,5 +65,7 @@
         <file>res/images/null-cover-recent.png</file>
         <file>res/images/empty-bg.svg</file>
         <file>res/translators.json</file>
+        <file>res/block.xml</file>
+        <file>res/tracker.xml</file>
     </qresource>
 </RCC>

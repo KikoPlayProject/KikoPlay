@@ -25,6 +25,8 @@ moc_*.cpp
 moc_predefs.h
 texture_test.jpg
 vc140.pdb
+Common/secrets.h
+protoc.exe
 
 # cmake build dir
 build

@@ -5,6 +5,7 @@
 #include "globalobjects.h"
 
 #define SETTING_KEY_TRACKER_AUTOCHECK "Download/TrackerSubscriberAutoCheck"
+#define SETTING_KEY_TRACKER_INITED "Download/TrackerInited"
 
 TrackerSubscriber::TrackerSubscriber(QObject *parent) : QAbstractItemModel(parent), lastCheckTime(0)
 {
@@ -183,6 +184,14 @@ void TrackerSubscriber::loadTrackerListSource()
     if(isChecking) return;
     QString filename = GlobalObjects::context()->dataPath + "tracker.xml";
     QFile trackerFile(filename);
+    if (!trackerFile.exists())
+    {
+        if (!GlobalObjects::appSetting->value(SETTING_KEY_TRACKER_INITED, false).toBool())
+        {
+            trackerFile.setFileName(":/res/tracker.xml");
+            GlobalObjects::appSetting->setValue(SETTING_KEY_TRACKER_INITED, true);
+        }
+    }
     bool ret=trackerFile.open(QIODevice::ReadOnly|QIODevice::Text);
     if(!ret) return;
     QXmlStreamReader reader(&trackerFile);

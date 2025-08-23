@@ -309,7 +309,7 @@ void LibraryWindow::initAnimeView()
         QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
         if(selection.size()==0) return;
         Anime *anime = animeModel->getAnime(selection.indexes().first());
-        if (anime)
+        if (anime && !anime->refreshing())
         {
             if (detailPage && detailPage->curAnime() == anime) detailPage->setAnime(nullptr);
             LabelModel::instance()->removeTag(anime->name(), anime->airDate(), anime->scriptId());
@@ -331,6 +331,7 @@ void LibraryWindow::initAnimeView()
         QItemSelection selection=proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
         if (selection.empty()) return;
         Anime *currentAnime = animeModel->getAnime(selection.indexes().first());
+        if (!currentAnime || currentAnime->refreshing()) return;
         if (currentAnime->scriptId().isEmpty())
         {
             showMessage(tr("No Script ID, Search For Detail First"), NM_HIDE);
@@ -402,6 +403,7 @@ void LibraryWindow::initAnimeView()
         qDeleteAll(scriptActions);
         scriptActions.clear();
         Anime *currentAnime = animeModel->getAnime(selection.indexes().first());
+        if (!currentAnime || currentAnime->refreshing()) return;
         auto script = GlobalObjects::scriptManager->getScript(currentAnime->scriptId());
         if (script)
         {

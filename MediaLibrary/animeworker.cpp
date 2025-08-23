@@ -1,4 +1,5 @@
 #include "animeworker.h"
+#include "MediaLibrary/animescrapingtask.h"
 #include "tagnode.h"
 #include "globalobjects.h"
 #include "Common/threadtask.h"
@@ -28,7 +29,7 @@ void AnimeWorker::deleteAnime(Anime *anime)
         query.prepare("delete from alias where Anime=?");
         query.bindValue(0,anime->_name);
         query.exec();
-        animesMap.remove(anime->_name);
+        removeAnimeInMap(anime->_name);
         db.commit();
         removeAlias(anime->_name);
         delete anime;
@@ -40,11 +41,13 @@ Anime *AnimeWorker::getAnime(const QString &name)
 {
     const QString alias = isAlias(name);
     const QString matchAnimeName = alias.isEmpty()? name : alias;
+    QReadLocker l(&animeMapLock);
     return animesMap.value(matchAnimeName, nullptr);
 }
 
 bool AnimeWorker::hasAnime(const QString &name)
 {
+    QReadLocker l(&animeMapLock);
     if(animesMap.contains(name)) return true;
     return checkAnimeExist(name);
 }
@@ -189,7 +192,7 @@ int AnimeWorker::fetchAnimes(QVector<Anime *> *animes, int offset, int limit)
                 anime->characters.append(crt);
             }
             animes->append(anime);
-            animesMap.insert(anime->_name,anime);
+            insertAnimeInMap(anime);
             count++;
         }
         return count;
@@ -268,7 +271,7 @@ void AnimeWorker::addAnime(const MatchResult &match)
         // If episode exists, update
         if(checkEpExist(matchAnimeName, match.ep)) return;
         // Or add anime & episode
-        Anime *anime = animesMap.value(matchAnimeName, nullptr);
+        Anime *anime = getAnimeInMap(matchAnimeName);
         //anime exists
         if(anime || !alias.isEmpty() || checkAnimeExist(matchAnimeName))
         {
@@ -290,7 +293,19 @@ void AnimeWorker::addAnime(const MatchResult &match)
         query.exec();
         if(!anime->_scriptId.isEmpty()) emit addScriptTag(anime->_scriptId);
         addEp(matchAnimeName, match.ep);
-        animesMap.insert(matchAnimeName,anime);
+        insertAnimeInMap(anime);
+        if (match.success && !match.scriptId.isEmpty())
+        {
+            emit animeRefreshStateChanged(anime, true);
+            AnimeScrapingTask *task = new AnimeScrapingTask(anime, match);
+            QObject::connect(task, &KTask::statusChanged, this, [=](TaskStatus status){
+                if (status == TaskStatus::Finished || status == TaskStatus::Failed || status == TaskStatus::Cancelled)
+                {
+                    emit animeRefreshStateChanged(anime, false);
+                }
+            });
+            TaskPool::instance()->submitTask(task);
+        }
         emit animeAdded(anime);
     });
 }
@@ -299,19 +314,18 @@ void AnimeWorker::addAnime(const QString &name)
 {
     ThreadTask task(GlobalObjects::workThread);
     task.RunOnce([=](){
-        if(!animesMap.contains(name) && !checkAnimeExist(name))
-        {
-            Anime *anime=new Anime;
-            anime->_name=name;
-            anime->_addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
-            QSqlQuery query(DBManager::instance()->getDB(DBManager::Bangumi));
-            query.prepare("insert into anime(Anime,AddTime) values(?,?)");
-            query.bindValue(0,anime->_name);
-            query.bindValue(1,anime->_addTime);
-            query.exec();
-            animesMap.insert(name,anime);
-            emit animeAdded(anime);
-        }
+        if (getAnimeInMap(name) || checkAnimeExist(name)) return;
+
+        Anime *anime = new Anime;
+        anime->_name = name;
+        anime->_addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
+        QSqlQuery query(DBManager::instance()->getDB(DBManager::Bangumi));
+        query.prepare("insert into anime(Anime,AddTime) values(?,?)");
+        query.bindValue(0,anime->_name);
+        query.bindValue(1,anime->_addTime);
+        query.exec();
+        insertAnimeInMap(anime);
+        emit animeAdded(anime);
     });
 }
 
@@ -319,10 +333,10 @@ bool AnimeWorker::addAnime(Anime *anime)
 {
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([=](){
-        Anime *animeInMap = animesMap.value(anime->_name, nullptr);
-        if(animeInMap || checkAnimeExist(anime->_name))  //anime exists
+        Anime *animeInMap = getAnimeInMap(anime->_name);
+        if (animeInMap || checkAnimeExist(anime->_name))  //anime exists
         {
-            if(animeInMap == anime) return false;
+            if (animeInMap == anime) return false;
             delete anime;
             return false;
         }
@@ -335,7 +349,7 @@ bool AnimeWorker::addAnime(Anime *anime)
             query.bindValue(1,anime->_addTime);
             query.exec();
             updateAnimeInfo(anime);
-            animesMap.insert(anime->_name,anime);
+            insertAnimeInMap(anime);
             emit animeAdded(anime);
             if(!anime->_airDate.isEmpty()) emit addTimeTag(anime->_airDate);
             if(!anime->_scriptId.isEmpty()) emit addScriptTag(anime->_scriptId);
@@ -348,16 +362,16 @@ const QString AnimeWorker::addAnime(Anime *srcAnime, Anime *newAnime)
 {
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([=](){
-        Q_ASSERT(animesMap.contains(srcAnime->_name));
+        Q_ASSERT(getAnimeInMap(srcAnime->_name));
         QString retAnimeName = srcAnime->_name;
         if(srcAnime->_name!=newAnime->_name)
         {
             addAlias(newAnime->_name, srcAnime->_name);
             retAnimeName = newAnime->_name;
             emit renameEpTag(srcAnime->_name, newAnime->_name);
-            Anime *animeInMap = animesMap.value(newAnime->_name, nullptr);
+            Anime *animeInMap = getAnimeInMap(newAnime->_name);
             QSqlQuery query(DBManager::instance()->getDB(DBManager::Bangumi));
-            if(animeInMap || checkAnimeExist(newAnime->_name))  //newAnime exists, merge episodes of srcAnime to newAnime
+            if (animeInMap || checkAnimeExist(newAnime->_name))  //newAnime exists, merge episodes of srcAnime to newAnime
             {
                 query.prepare("update episode set Anime=? where Anime=?");
                 query.bindValue(0,newAnime->_name);
@@ -367,12 +381,12 @@ const QString AnimeWorker::addAnime(Anime *srcAnime, Anime *newAnime)
                 query.bindValue(0,newAnime->_name);
                 query.bindValue(1,srcAnime->_name);
                 query.exec();
-                if(animeInMap && animeInMap->epLoaded)
+                if (animeInMap && animeInMap->epLoaded)
                 {
                     animeInMap->epLoaded = false;
                     emit epReset(animeInMap->_name);
                 }
-                animesMap.remove(srcAnime->_name);
+                removeAnimeInMap(srcAnime->_name);
                 if(!srcAnime->_airDate.isEmpty()) emit removeTimeTag(srcAnime->_airDate);
                 if(!srcAnime->_scriptId.isEmpty()) emit removeScriptTag(srcAnime->_scriptId);
                 emit animeRemoved(srcAnime);
@@ -383,21 +397,21 @@ const QString AnimeWorker::addAnime(Anime *srcAnime, Anime *newAnime)
                 query.bindValue(0, newAnime->_name);
                 query.bindValue(1, srcAnime->_name);
                 bool success = query.exec();
-                if(success && updateAnimeInfo(newAnime))
+                if (success && updateAnimeInfo(newAnime))
                 {
-                    if(srcAnime->_airDate!=newAnime->_airDate)
+                    if (srcAnime->_airDate != newAnime->_airDate)
                     {
                         emit removeTimeTag(srcAnime->_airDate);
                         emit addTimeTag(newAnime->_airDate);
                     }
-                    if(srcAnime->_scriptId!=newAnime->_scriptId)
+                    if (srcAnime->_scriptId != newAnime->_scriptId)
                     {
                         emit removeScriptTag(srcAnime->_scriptId);
                         emit addScriptTag(newAnime->_scriptId);
                     }
-                    animesMap.remove(srcAnime->_name);
-                    srcAnime->_name=newAnime->_name;
-                    animesMap.insert(srcAnime->_name, srcAnime);
+                    removeAnimeInMap(srcAnime->_name);
+                    srcAnime->_name = newAnime->_name;
+                    insertAnimeInMap(srcAnime);
                     srcAnime->assign(newAnime);
                     emit animeUpdated(srcAnime);
                 }
@@ -405,14 +419,14 @@ const QString AnimeWorker::addAnime(Anime *srcAnime, Anime *newAnime)
         }
         else  // has same name, only update info
         {
-            if(updateAnimeInfo(newAnime))
+            if (updateAnimeInfo(newAnime))
             {
-                if(srcAnime->_airDate!=newAnime->_airDate)
+                if (srcAnime->_airDate != newAnime->_airDate)
                 {
                     emit removeTimeTag(srcAnime->_airDate);
                     emit addTimeTag(newAnime->_airDate);
                 }
-                if(srcAnime->_scriptId!=newAnime->_scriptId)
+                if (srcAnime->_scriptId != newAnime->_scriptId)
                 {
                     emit removeScriptTag(srcAnime->_scriptId);
                     emit addScriptTag(newAnime->_scriptId);
@@ -437,7 +451,7 @@ void AnimeWorker::addEp(const QString &animeName, const EpInfo &ep)
     query.bindValue(3,(int)ep.type);
     query.bindValue(4,ep.localFile);
     query.exec();
-    Anime *anime = animesMap.value(animeName, nullptr);
+    Anime *anime = getAnimeInMap(animeName);
     if(anime) anime->addEp(ep);
     emit epAdded(animeName, ep);
 }
@@ -448,7 +462,7 @@ void AnimeWorker::removeEp(const QString &animeName, const QString &path)
     query.prepare("delete from episode where LocalFile=?");
     query.bindValue(0,path);
     query.exec();
-    Anime *anime = animesMap.value(animeName, nullptr);
+    Anime *anime = getAnimeInMap(animeName);
     if(anime) anime->removeEp(path);
     emit epRemoved(animeName, path);
 }
@@ -481,7 +495,7 @@ void AnimeWorker::updateEpTime(const QString &animeName, const QString &path, bo
         query.bindValue(0,time);
         query.bindValue(1,path);
         query.exec();
-        Anime *anime = animesMap.value(animeName, nullptr);
+        Anime *anime = getAnimeInMap(animeName);
         if(anime && anime->epLoaded)
         {
             anime->updateEpTime(path, time, finished);
@@ -501,7 +515,7 @@ void AnimeWorker::updateEpInfo(const QString &animeName, const QString &path, co
         query.bindValue(2,(int)nEp.type);
         query.bindValue(3,path);
         query.exec();
-        Anime *anime = animesMap.value(animeName, nullptr);
+        Anime *anime = getAnimeInMap(animeName);
         if(anime) anime->updateEpInfo(path, nEp);
         emit epUpdated(animeName, path);
     });
@@ -521,7 +535,7 @@ void AnimeWorker::updateEpPath(const QString &animeName, const QString &path, co
         query.bindValue(0,nPath);
         query.bindValue(1,path);
         query.exec();
-        Anime *anime = animesMap.value(animeName, nullptr);
+        Anime *anime = getAnimeInMap(animeName);
         if(anime) anime->updateEpPath(path, nPath);
         emit epUpdated(animeName, path);
     });
@@ -1100,7 +1114,11 @@ bool AnimeWorker::checkEpExist(const QString &animeName, const EpInfo &ep)
             query.bindValue(2,(int)ep.type);
             query.bindValue(3,ep.localFile);
             query.exec();
-            Anime *anime = animesMap.value(animeName, nullptr);
+            Anime *anime = nullptr;
+            {
+                QReadLocker l(&animeMapLock);
+                anime = animesMap.value(animeName, nullptr);
+            }
             if(anime) anime->addEp(ep);
             emit epUpdated(animeName, ep.localFile);
         }

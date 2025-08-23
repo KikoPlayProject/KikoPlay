@@ -120,10 +120,11 @@ QVariant TaskPool::headerData(int section, Qt::Orientation orientation, int role
 
 void KTaskWrapper::run()
 {
-    QThread *srcThread = _taskObj->thread();
-    _taskObj->moveToThread(QThread::currentThread());
+    //QThread *srcThread = _taskObj->thread();
+    //_taskObj->moveToThread(QThread::currentThread());
+    //Logger::logger()->log(Logger::APP, QString::asprintf("ktast run thread: %p, src: %p", QThread::currentThread(), srcThread));
     _taskObj->run();
-    _taskObj->moveToThread(srcThread);
+    //_taskObj->moveToThread(srcThread);
 }
 
 void KTask::run()
