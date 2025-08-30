@@ -9,8 +9,8 @@
 
 namespace
 {
-LRUCache<Anime *, QSharedPointer<QPixmap>> coverCache{"PreviewCover", 128, true},
-    rawCoverCache{"RawCover", 16};
+LRUCache<Anime *, QSharedPointer<QPixmap>> coverCache{"PreviewCover", 128, true, true},
+    rawCoverCache{"RawCover", 16, false, true};
 }
 const QPixmap &Anime::cover(bool onlyCache)
 {

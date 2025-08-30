@@ -107,7 +107,7 @@ private:
         const K *key;
         V value;
     };
-    QHash<K, Node> hash;
+    QMap<K, Node> hash;
     Node *h, *t;
     inline void take(Node *node)
     {

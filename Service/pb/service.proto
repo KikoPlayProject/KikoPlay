@@ -162,11 +162,19 @@ message Pool {
     string poolid = 5;
 }
 
+enum RecoBy {
+    R_NONE = 0;
+    R_HASH32 = 1;
+    R_INFOHASH = 2;
+    R_FILENAME = 3;
+}
+
 message RecoResponse {
     ResponseHeader header = 1;  // 0 - failed, 1 - success, 2 - fuzzy match
     Pool matchResult = 2;
     repeated InfoSource infoSources = 3;
     repeated DanmuSource danmuSources = 4;
+    RecoBy recoBy = 5;
 }
 
 message MatchEvent {

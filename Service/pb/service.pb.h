@@ -251,6 +251,29 @@ inline const std::string& InfoSourceType_Name(T enum_t_value) {
 }
 bool InfoSourceType_Parse(
     ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, InfoSourceType* value);
+enum RecoBy : int {
+  R_NONE = 0,
+  R_HASH32 = 1,
+  R_INFOHASH = 2,
+  R_FILENAME = 3,
+  RecoBy_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  RecoBy_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool RecoBy_IsValid(int value);
+constexpr RecoBy RecoBy_MIN = R_NONE;
+constexpr RecoBy RecoBy_MAX = R_FILENAME;
+constexpr int RecoBy_ARRAYSIZE = RecoBy_MAX + 1;
+
+const std::string& RecoBy_Name(RecoBy value);
+template<typename T>
+inline const std::string& RecoBy_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, RecoBy>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function RecoBy_Name.");
+  return RecoBy_Name(static_cast<RecoBy>(enum_t_value));
+}
+bool RecoBy_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, RecoBy* value);
 // ===================================================================
 
 class EventHeader final :
@@ -3833,6 +3856,7 @@ class RecoResponse final :
     kDanmuSourcesFieldNumber = 4,
     kHeaderFieldNumber = 1,
     kMatchResultFieldNumber = 2,
+    kRecoByFieldNumber = 5,
   };
   // repeated .kservice.InfoSource infoSources = 3;
   int infosources_size() const;
@@ -3906,6 +3930,15 @@ class RecoResponse final :
       ::kservice::Pool* matchresult);
   ::kservice::Pool* unsafe_arena_release_matchresult();
 
+  // .kservice.RecoBy recoBy = 5;
+  void clear_recoby();
+  ::kservice::RecoBy recoby() const;
+  void set_recoby(::kservice::RecoBy value);
+  private:
+  ::kservice::RecoBy _internal_recoby() const;
+  void _internal_set_recoby(::kservice::RecoBy value);
+  public:
+
   // @@protoc_insertion_point(class_scope:kservice.RecoResponse)
  private:
   class _Internal;
@@ -3918,6 +3951,7 @@ class RecoResponse final :
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DanmuSource > danmusources_;
     ::kservice::ResponseHeader* header_;
     ::kservice::Pool* matchresult_;
+    int recoby_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -9594,6 +9628,26 @@ RecoResponse::danmusources() const {
   return _impl_.danmusources_;
 }
 
+// .kservice.RecoBy recoBy = 5;
+inline void RecoResponse::clear_recoby() {
+  _impl_.recoby_ = 0;
+}
+inline ::kservice::RecoBy RecoResponse::_internal_recoby() const {
+  return static_cast< ::kservice::RecoBy >(_impl_.recoby_);
+}
+inline ::kservice::RecoBy RecoResponse::recoby() const {
+  // @@protoc_insertion_point(field_get:kservice.RecoResponse.recoBy)
+  return _internal_recoby();
+}
+inline void RecoResponse::_internal_set_recoby(::kservice::RecoBy value) {
+  
+  _impl_.recoby_ = value;
+}
+inline void RecoResponse::set_recoby(::kservice::RecoBy value) {
+  _internal_set_recoby(value);
+  // @@protoc_insertion_point(field_set:kservice.RecoResponse.recoBy)
+}
+
 // -------------------------------------------------------------------
 
 // MatchEvent_Match
@@ -11747,6 +11801,7 @@ PROTOBUF_NAMESPACE_OPEN
 template <> struct is_proto_enum< ::kservice::EpType> : ::std::true_type {};
 template <> struct is_proto_enum< ::kservice::DanmuSourceType> : ::std::true_type {};
 template <> struct is_proto_enum< ::kservice::InfoSourceType> : ::std::true_type {};
+template <> struct is_proto_enum< ::kservice::RecoBy> : ::std::true_type {};
 
 PROTOBUF_NAMESPACE_CLOSE
 

@@ -43,7 +43,8 @@ AnimeProvider::AnimeProvider(QObject *parent) : QObject(parent)
     });
     setMatchProviders();
     defaultMatchScriptId = GlobalObjects::appSetting->value(setting_MatchScriptId).toString();
-    if(defaultMatchScript().isEmpty() && !matchProviderIds.isEmpty())
+    auto script = GlobalObjects::scriptManager->getScript(defaultMatchScriptId).staticCast<MatchScript>();
+    if (!script && !matchProviderIds.isEmpty())
     {
         setDefaultMatchScript(matchProviders.first().second);
     }
@@ -207,7 +208,7 @@ ScriptState AnimeProvider::kMatch(const QString &scriptId, const QString &path, 
     {
         if (statusFlag->kServiceSuccess)
         {
-            script->stop();
+            if (script) script->stop();
             if (abortFlag) emit abortFlag->abort();
             Logger::logger()->log(Logger::APP, QString("KService Match Success: %1: %2 %3").arg(path, result.name, result.ep.toString()));
             result = statusFlag->kServiceMatch;

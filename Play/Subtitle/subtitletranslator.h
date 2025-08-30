@@ -15,7 +15,7 @@ struct TranslatorConfig
     QString model;
     QString prompt;
     int batchSize{20};
-    bool postHistorySub{false};
+    bool postHistorySub{true};
     QString tip;
 
     bool isValid() const { return !url.isEmpty() && !model.isEmpty() && !apiKey.isEmpty() && !prompt.isEmpty() && batchSize > 0; }

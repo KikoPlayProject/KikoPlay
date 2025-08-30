@@ -333,6 +333,7 @@ PROTOBUF_CONSTEXPR RecoResponse::RecoResponse(
   , /*decltype(_impl_.danmusources_)*/{}
   , /*decltype(_impl_.header_)*/nullptr
   , /*decltype(_impl_.matchresult_)*/nullptr
+  , /*decltype(_impl_.recoby_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct RecoResponseDefaultTypeInternal {
   PROTOBUF_CONSTEXPR RecoResponseDefaultTypeInternal()
@@ -711,6 +712,65 @@ bool InfoSourceType_Parse(
       InfoSourceType_entries, 3, name, &int_value);
   if (success) {
     *value = static_cast<InfoSourceType>(int_value);
+  }
+  return success;
+}
+bool RecoBy_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> RecoBy_strings[4] = {};
+
+static const char RecoBy_names[] =
+  "R_FILENAME"
+  "R_HASH32"
+  "R_INFOHASH"
+  "R_NONE";
+
+static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry RecoBy_entries[] = {
+  { {RecoBy_names + 0, 10}, 3 },
+  { {RecoBy_names + 10, 8}, 1 },
+  { {RecoBy_names + 18, 10}, 2 },
+  { {RecoBy_names + 28, 6}, 0 },
+};
+
+static const int RecoBy_entries_by_number[] = {
+  3, // 0 -> R_NONE
+  1, // 1 -> R_HASH32
+  2, // 2 -> R_INFOHASH
+  0, // 3 -> R_FILENAME
+};
+
+const std::string& RecoBy_Name(
+    RecoBy value) {
+  static const bool dummy =
+      ::PROTOBUF_NAMESPACE_ID::internal::InitializeEnumStrings(
+          RecoBy_entries,
+          RecoBy_entries_by_number,
+          4, RecoBy_strings);
+  (void) dummy;
+  int idx = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumName(
+      RecoBy_entries,
+      RecoBy_entries_by_number,
+      4, value);
+  return idx == -1 ? ::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString() :
+                     RecoBy_strings[idx].get();
+}
+bool RecoBy_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, RecoBy* value) {
+  int int_value;
+  bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
+      RecoBy_entries, 4, name, &int_value);
+  if (success) {
+    *value = static_cast<RecoBy>(int_value);
   }
   return success;
 }
@@ -6867,6 +6927,7 @@ RecoResponse::RecoResponse(const RecoResponse& from)
     , decltype(_impl_.danmusources_){from._impl_.danmusources_}
     , decltype(_impl_.header_){nullptr}
     , decltype(_impl_.matchresult_){nullptr}
+    , decltype(_impl_.recoby_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
@@ -6876,6 +6937,7 @@ RecoResponse::RecoResponse(const RecoResponse& from)
   if (from._internal_has_matchresult()) {
     _this->_impl_.matchresult_ = new ::kservice::Pool(*from._impl_.matchresult_);
   }
+  _this->_impl_.recoby_ = from._impl_.recoby_;
   // @@protoc_insertion_point(copy_constructor:kservice.RecoResponse)
 }
 
@@ -6888,6 +6950,7 @@ inline void RecoResponse::SharedCtor(
     , decltype(_impl_.danmusources_){arena}
     , decltype(_impl_.header_){nullptr}
     , decltype(_impl_.matchresult_){nullptr}
+    , decltype(_impl_.recoby_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
@@ -6929,6 +6992,7 @@ void RecoResponse::Clear() {
     delete _impl_.matchresult_;
   }
   _impl_.matchresult_ = nullptr;
+  _impl_.recoby_ = 0;
   _internal_metadata_.Clear<std::string>();
 }
 
@@ -6977,6 +7041,15 @@ const char* RecoResponse::_InternalParse(const char* ptr, ::_pbi::ParseContext* 
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<34>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // .kservice.RecoBy recoBy = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_recoby(static_cast<::kservice::RecoBy>(val));
         } else
           goto handle_unusual;
         continue;
@@ -7039,6 +7112,13 @@ uint8_t* RecoResponse::_InternalSerialize(
         InternalWriteMessage(4, repfield, repfield.GetCachedSize(), target, stream);
   }
 
+  // .kservice.RecoBy recoBy = 5;
+  if (this->_internal_recoby() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
+      5, this->_internal_recoby(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
@@ -7083,6 +7163,12 @@ size_t RecoResponse::ByteSizeLong() const {
         *_impl_.matchresult_);
   }
 
+  // .kservice.RecoBy recoBy = 5;
+  if (this->_internal_recoby() != 0) {
+    total_size += 1 +
+      ::_pbi::WireFormatLite::EnumSize(this->_internal_recoby());
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
@@ -7114,6 +7200,9 @@ void RecoResponse::MergeFrom(const RecoResponse& from) {
     _this->_internal_mutable_matchresult()->::kservice::Pool::MergeFrom(
         from._internal_matchresult());
   }
+  if (from._internal_recoby() != 0) {
+    _this->_internal_set_recoby(from._internal_recoby());
+  }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
@@ -7134,8 +7223,8 @@ void RecoResponse::InternalSwap(RecoResponse* other) {
   _impl_.infosources_.InternalSwap(&other->_impl_.infosources_);
   _impl_.danmusources_.InternalSwap(&other->_impl_.danmusources_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(RecoResponse, _impl_.matchresult_)
-      + sizeof(RecoResponse::_impl_.matchresult_)
+      PROTOBUF_FIELD_OFFSET(RecoResponse, _impl_.recoby_)
+      + sizeof(RecoResponse::_impl_.recoby_)
       - PROTOBUF_FIELD_OFFSET(RecoResponse, _impl_.header_)>(
           reinterpret_cast<char*>(&_impl_.header_),
           reinterpret_cast<char*>(&other->_impl_.header_));

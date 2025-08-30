@@ -102,7 +102,8 @@ void BackgroundMainWindow::paintEvent(QPaintEvent *event)
     if (!img.isNull())
     {
         QPainter painter(this);
-        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
         painter.drawPixmap(0, 0, bgCache);
         painter.fillRect(rect(), opColor);
     }

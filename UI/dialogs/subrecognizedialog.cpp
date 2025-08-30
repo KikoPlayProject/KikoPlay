@@ -11,6 +11,7 @@
 #include <QListView>
 #include <QHeaderView>
 #include "Common/notifier.h"
+#include "Play/Playlist/playlist.h"
 #include "Play/Subtitle/subtitleloader.h"
 #include "UI/ela/ElaComboBox.h"
 #include "UI/ela/ElaCheckBox.h"
@@ -454,6 +455,7 @@ void SubRecognizeEditDialog::init(const SubFile &_subFile, const QString &videoF
         if (saveSub(savePath))
         {
             GlobalObjects::mpvplayer->addSubtitle(savePath);
+            GlobalObjects::playlist->addCurrentSub(savePath);
             CFramelessDialog::onAccept();
         }
         else
