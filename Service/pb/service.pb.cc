@@ -376,7 +376,9 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORIT
 PROTOBUF_CONSTEXPR AddDanmuSourceEvent_DanmuPoolSource::AddDanmuSourceEvent_DanmuPoolSource(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.danmusources_)*/{}
+  , /*decltype(_impl_.infosources_)*/{}
   , /*decltype(_impl_.poolinfo_)*/nullptr
+  , /*decltype(_impl_.fileinfo_)*/nullptr
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct AddDanmuSourceEvent_DanmuPoolSourceDefaultTypeInternal {
   PROTOBUF_CONSTEXPR AddDanmuSourceEvent_DanmuPoolSourceDefaultTypeInternal()
@@ -7744,11 +7746,16 @@ std::string MatchEvent::GetTypeName() const {
 class AddDanmuSourceEvent_DanmuPoolSource::_Internal {
  public:
   static const ::kservice::Pool& poolinfo(const AddDanmuSourceEvent_DanmuPoolSource* msg);
+  static const ::kservice::KFileInfo& fileinfo(const AddDanmuSourceEvent_DanmuPoolSource* msg);
 };
 
 const ::kservice::Pool&
 AddDanmuSourceEvent_DanmuPoolSource::_Internal::poolinfo(const AddDanmuSourceEvent_DanmuPoolSource* msg) {
   return *msg->_impl_.poolinfo_;
+}
+const ::kservice::KFileInfo&
+AddDanmuSourceEvent_DanmuPoolSource::_Internal::fileinfo(const AddDanmuSourceEvent_DanmuPoolSource* msg) {
+  return *msg->_impl_.fileinfo_;
 }
 AddDanmuSourceEvent_DanmuPoolSource::AddDanmuSourceEvent_DanmuPoolSource(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
@@ -7761,12 +7768,17 @@ AddDanmuSourceEvent_DanmuPoolSource::AddDanmuSourceEvent_DanmuPoolSource(const A
   AddDanmuSourceEvent_DanmuPoolSource* const _this = this; (void)_this;
   new (&_impl_) Impl_{
       decltype(_impl_.danmusources_){from._impl_.danmusources_}
+    , decltype(_impl_.infosources_){from._impl_.infosources_}
     , decltype(_impl_.poolinfo_){nullptr}
+    , decltype(_impl_.fileinfo_){nullptr}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   if (from._internal_has_poolinfo()) {
     _this->_impl_.poolinfo_ = new ::kservice::Pool(*from._impl_.poolinfo_);
+  }
+  if (from._internal_has_fileinfo()) {
+    _this->_impl_.fileinfo_ = new ::kservice::KFileInfo(*from._impl_.fileinfo_);
   }
   // @@protoc_insertion_point(copy_constructor:kservice.AddDanmuSourceEvent.DanmuPoolSource)
 }
@@ -7777,7 +7789,9 @@ inline void AddDanmuSourceEvent_DanmuPoolSource::SharedCtor(
   (void)is_message_owned;
   new (&_impl_) Impl_{
       decltype(_impl_.danmusources_){arena}
+    , decltype(_impl_.infosources_){arena}
     , decltype(_impl_.poolinfo_){nullptr}
+    , decltype(_impl_.fileinfo_){nullptr}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
@@ -7794,7 +7808,9 @@ AddDanmuSourceEvent_DanmuPoolSource::~AddDanmuSourceEvent_DanmuPoolSource() {
 inline void AddDanmuSourceEvent_DanmuPoolSource::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
   _impl_.danmusources_.~RepeatedPtrField();
+  _impl_.infosources_.~RepeatedPtrField();
   if (this != internal_default_instance()) delete _impl_.poolinfo_;
+  if (this != internal_default_instance()) delete _impl_.fileinfo_;
 }
 
 void AddDanmuSourceEvent_DanmuPoolSource::SetCachedSize(int size) const {
@@ -7808,10 +7824,15 @@ void AddDanmuSourceEvent_DanmuPoolSource::Clear() {
   (void) cached_has_bits;
 
   _impl_.danmusources_.Clear();
+  _impl_.infosources_.Clear();
   if (GetArenaForAllocation() == nullptr && _impl_.poolinfo_ != nullptr) {
     delete _impl_.poolinfo_;
   }
   _impl_.poolinfo_ = nullptr;
+  if (GetArenaForAllocation() == nullptr && _impl_.fileinfo_ != nullptr) {
+    delete _impl_.fileinfo_;
+  }
+  _impl_.fileinfo_ = nullptr;
   _internal_metadata_.Clear<std::string>();
 }
 
@@ -7839,6 +7860,27 @@ const char* AddDanmuSourceEvent_DanmuPoolSource::_InternalParse(const char* ptr,
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<18>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // .kservice.KFileInfo fileInfo = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
+          ptr = ctx->ParseMessage(_internal_mutable_fileinfo(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated .kservice.InfoSource infoSources = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_infosources(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<34>(ptr));
         } else
           goto handle_unusual;
         continue;
@@ -7886,6 +7928,21 @@ uint8_t* AddDanmuSourceEvent_DanmuPoolSource::_InternalSerialize(
         InternalWriteMessage(2, repfield, repfield.GetCachedSize(), target, stream);
   }
 
+  // .kservice.KFileInfo fileInfo = 3;
+  if (this->_internal_has_fileinfo()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(3, _Internal::fileinfo(this),
+        _Internal::fileinfo(this).GetCachedSize(), target, stream);
+  }
+
+  // repeated .kservice.InfoSource infoSources = 4;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_infosources_size()); i < n; i++) {
+    const auto& repfield = this->_internal_infosources(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(4, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
@@ -7909,11 +7966,25 @@ size_t AddDanmuSourceEvent_DanmuPoolSource::ByteSizeLong() const {
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
+  // repeated .kservice.InfoSource infoSources = 4;
+  total_size += 1UL * this->_internal_infosources_size();
+  for (const auto& msg : this->_impl_.infosources_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
   // .kservice.Pool poolInfo = 1;
   if (this->_internal_has_poolinfo()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *_impl_.poolinfo_);
+  }
+
+  // .kservice.KFileInfo fileInfo = 3;
+  if (this->_internal_has_fileinfo()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.fileinfo_);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -7938,9 +8009,14 @@ void AddDanmuSourceEvent_DanmuPoolSource::MergeFrom(const AddDanmuSourceEvent_Da
   (void) cached_has_bits;
 
   _this->_impl_.danmusources_.MergeFrom(from._impl_.danmusources_);
+  _this->_impl_.infosources_.MergeFrom(from._impl_.infosources_);
   if (from._internal_has_poolinfo()) {
     _this->_internal_mutable_poolinfo()->::kservice::Pool::MergeFrom(
         from._internal_poolinfo());
+  }
+  if (from._internal_has_fileinfo()) {
+    _this->_internal_mutable_fileinfo()->::kservice::KFileInfo::MergeFrom(
+        from._internal_fileinfo());
   }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
@@ -7960,7 +8036,13 @@ void AddDanmuSourceEvent_DanmuPoolSource::InternalSwap(AddDanmuSourceEvent_Danmu
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   _impl_.danmusources_.InternalSwap(&other->_impl_.danmusources_);
-  swap(_impl_.poolinfo_, other->_impl_.poolinfo_);
+  _impl_.infosources_.InternalSwap(&other->_impl_.infosources_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(AddDanmuSourceEvent_DanmuPoolSource, _impl_.fileinfo_)
+      + sizeof(AddDanmuSourceEvent_DanmuPoolSource::_impl_.fileinfo_)
+      - PROTOBUF_FIELD_OFFSET(AddDanmuSourceEvent_DanmuPoolSource, _impl_.poolinfo_)>(
+          reinterpret_cast<char*>(&_impl_.poolinfo_),
+          reinterpret_cast<char*>(&other->_impl_.poolinfo_));
 }
 
 std::string AddDanmuSourceEvent_DanmuPoolSource::GetTypeName() const {

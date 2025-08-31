@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QNetworkInterface>
 #include "Download/downloadmodel.h"
+#include "MediaLibrary/animeworker.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "globalobjects.h"
 #include "Common/logger.h"
@@ -34,6 +35,11 @@
 namespace
 {
     static LRUCache<QString, kservice::KFileInfo> fileInfoCache{"KServiceFileInfo", 128, true};
+
+    static const QMap<QString, int> matchScriptTypeMap = {
+        {"Kikyou.l.Bangumi", kservice::InfoSourceType::BGM},
+        {"Kikyou.l.Douban", kservice::InfoSourceType::DOUBAN},
+    };
 }
 
 KService::KService() : QObject{nullptr}, baseURL("https://www.kstat.top")
@@ -178,7 +184,7 @@ void KService::setFileInfo(kservice::KFileInfo &fileInfo, const QString &path)
         return;
     }
 
-    fileInfo.set_filename(fi.baseName().toStdString());
+    fileInfo.set_filename(fi.completeBaseName().toStdString());
     fileInfo.set_fullpath(fi.absoluteFilePath().toStdString());
     fileInfo.set_islocal(true);
 
@@ -260,11 +266,7 @@ void KService::listenMatchDown(const EventParam *p)
 
     static QHash<QString, int> fileMatchTimes;
 
-    static const QMap<QString, int> scriptTypeMap = {
-        {"Kikyou.l.Bangumi", kservice::InfoSourceType::BGM},
-        {"Kikyou.l.Douban", kservice::InfoSourceType::DOUBAN},
-    };
-    if (!scriptTypeMap.contains(scriptId)) return;
+    if (!matchScriptTypeMap.contains(scriptId)) return;
 
     for (int i = 0; i < files.size(); ++i)
     {
@@ -283,7 +285,7 @@ void KService::listenMatchDown(const EventParam *p)
         pool->set_epname(epInfo["name"].toString().toStdString());
 
         kservice::InfoSource *src = match->add_infosources();
-        src->set_type(kservice::InfoSourceType(scriptTypeMap.value(scriptId)));
+        src->set_type(kservice::InfoSourceType(matchScriptTypeMap.value(scriptId)));
         src->set_scriptid(scriptId.toStdString());
         src->set_scriptdata(scriptData.toStdString());
     }
@@ -327,12 +329,29 @@ void KService::listenDanmuAdded(const EventParam *p)
         kservice::AddDanmuSourceEvent::DanmuPoolSource *kSrc = kSrcMap.value(poolId, nullptr);
         if (!kSrc)
         {
+            const QString animeName = srcMap.value("name").toString();
             kSrc = dmSrcEvent.add_danmupoolsources();
-            kSrc->mutable_poolinfo()->set_name(srcMap.value("name").toString().toStdString());
+            kSrc->mutable_poolinfo()->set_name(animeName.toStdString());
             kSrc->mutable_poolinfo()->set_eptype(kservice::EpType(srcMap.value("epType").toInt()));
             kSrc->mutable_poolinfo()->set_epindex(srcMap.value("epIndex").toDouble());
             kSrc->mutable_poolinfo()->set_epname(srcMap.value("epName").toString().toStdString());
             kSrc->mutable_poolinfo()->set_poolid(poolId.toStdString());
+            if (srcMap.contains("filePath"))
+            {
+                const QString filePath = srcMap["filePath"].toString().trimmed();
+                if (!filePath.isEmpty())
+                {
+                    setFileInfo(*kSrc->mutable_fileinfo(), filePath);
+                }
+            }
+            Anime *anime = AnimeWorker::instance()->getAnime(animeName);
+            if (anime && matchScriptTypeMap.contains(anime->scriptId()))
+            {
+                kservice::InfoSource *src = kSrc->add_infosources();
+                src->set_type(kservice::InfoSourceType(matchScriptTypeMap.value(anime->scriptId())));
+                src->set_scriptid(anime->scriptId().toStdString());
+                src->set_scriptdata(anime->scriptData().toStdString());
+            }
             kSrcMap[poolId] = kSrc;
         }
 

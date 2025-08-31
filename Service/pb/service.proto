@@ -192,6 +192,8 @@ message AddDanmuSourceEvent {
     message DanmuPoolSource {
         Pool poolInfo = 1;
         repeated DanmuSource danmuSources = 2;
+        KFileInfo fileInfo = 3;
+        repeated InfoSource infoSources = 4;
     }
     repeated DanmuPoolSource danmuPoolSources = 2;
 }

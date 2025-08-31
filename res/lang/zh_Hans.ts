@@ -4093,7 +4093,7 @@ Finish Time: ----</source>
     <message>
         <location filename="../../Service/kservice.cpp" line="432"/>
         <source>Invalid UserName: Only Chinese characters, English letters, numbers, and underscores are allowed</source>
-        <translation type="unfinished">用户名无效：只允许中文字符，英文字母，数字和下划线</translation>
+        <translation>用户名无效：只允许中文字符，英文字母，数字和下划线</translation>
     </message>
     <message>
         <location filename="../../Service/kservice.cpp" line="437"/>

@@ -54,7 +54,7 @@ protected:
             }
             if (opContentPos>-1)
             {
-                setFormat(opContentPos + 1, opList.at(2).length() - 1, optionContentFormat);
+                setFormat(opContentPos, opList.at(2).length(), optionContentFormat);
             }
         }
     }

@@ -380,7 +380,7 @@ void ListWindow::initActions()
             return;
         }
         const QList<const PlayListItem *> &siblings=GlobalObjects::playlist->getSiblings(item);
-        QMap<QString, QString> poolIdMap;
+        QMap<QString, const PlayListItem *> poolIdMap;
         QStringList poolTitles;
         for(auto sItem:siblings)
         {
@@ -388,7 +388,8 @@ void ListWindow::initActions()
             if(pool)
             {
                 EpInfo ep(pool->toEp());
-                poolIdMap.insert(ep.toString(),pool->id());
+                // poolIdMap.insert(ep.toString(),pool->id());
+                poolIdMap.insert(ep.toString(), sItem);
                 poolTitles<<ep.toString();
             }
         }
@@ -400,11 +401,12 @@ void ListWindow::initActions()
         {
             auto &infoList = addDanmuDialog.danmuInfoList;
 #ifdef KSERVICE
-            QList<QPair<Pool *, DanmuSource>> poolSrcs;
+            QList<QPair<Pool *, QPair<DanmuSource, QString>>> poolSrcs;
 #endif
             for (SearchDanmuInfo &info : infoList)
             {
-                Pool *pool = GlobalObjects::danmuManager->getPool(poolIdMap.value(info.pool));
+                const PlayListItem *item = poolIdMap.value(info.pool);
+                Pool *pool = item ? GlobalObjects::danmuManager->getPool(item->poolID) : nullptr;
                 if (pool)
                 {
                     showMessage(tr("Adding: %1").arg(pool->epTitle()), NotifyMessageFlag::NM_PROCESS);
@@ -417,7 +419,7 @@ void ListWindow::initActions()
 #ifdef KSERVICE
                         if (!info.src.scriptId.isEmpty())
                         {
-                            poolSrcs.append({ pool, info.src });
+                            poolSrcs.append({ pool, { info.src, item->type == PlayListItem::ItemType::LOCAL_FILE ? item->path : "" } });
                         }
 #endif
                     }
@@ -801,7 +803,8 @@ void ListWindow::initActions()
         if (QDialog::Accepted == addDanmuDialog.exec())
         {
 #ifdef KSERVICE
-            QList<QPair<Pool *, DanmuSource>> poolSrcs;
+            QList<QPair<Pool *, QPair<DanmuSource, QString>>> poolSrcs;
+            QString filePath = currentItem && currentItem->type == PlayListItem::LOCAL_FILE ? currentItem->path : "";
 #endif
             auto &infoList = addDanmuDialog.danmuInfoList;
             Pool *pool = GlobalObjects::danmuPool->getPool();
@@ -816,7 +819,7 @@ void ListWindow::initActions()
 #ifdef KSERVICE
                     if (GlobalObjects::danmuPool->hasPool() && !info.src.scriptId.isEmpty())
                     {
-                        poolSrcs.append({ pool, info.src });
+                        poolSrcs.append({ pool, { info.src, filePath } });
                     }
 #endif
                 }

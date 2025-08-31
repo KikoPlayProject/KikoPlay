@@ -111,7 +111,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
             this->showBusyState(true);
             auto &infoList = addDanmuDialog.danmuInfoList;
 #ifdef KSERVICE
-            QList<QPair<Pool *, DanmuSource>> poolSrcs;
+            QList<QPair<Pool *, QPair<DanmuSource, QString>>> poolSrcs;
 #endif
             for (SearchDanmuInfo &info : infoList)
             {
@@ -130,7 +130,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
 #ifdef KSERVICE
                 if (!info.src.scriptId.isEmpty())
                 {
-                    poolSrcs.append({ pool, info.src });
+                    poolSrcs.append({ pool, { info.src, "" } });
                 }
 #endif
                 DanmuPoolSourceNode *sourceNode(nullptr);

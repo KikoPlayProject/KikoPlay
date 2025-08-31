@@ -316,7 +316,7 @@ QString DanmuManager::getFileHash(const QString &fileName)
     return QCryptographicHash::hash(file16MB,QCryptographicHash::Md5).toHex();
 }
 
-void DanmuManager::sendDanmuAddedEvent(const QList<QPair<Pool *, DanmuSource> > &poolSrcs)
+void DanmuManager::sendDanmuAddedEvent(const QList<QPair<Pool *, QPair<DanmuSource, QString>> > &poolSrcs)
 {
     if (poolSrcs.empty() || !EventBus::getEventBus()->hasListener(EventBus::EVENT_DANMU_SRC_ADDED)) return;
     QVariantList sourceList;
@@ -328,10 +328,11 @@ void DanmuManager::sendDanmuAddedEvent(const QList<QPair<Pool *, DanmuSource> > 
             { "epIndex",       p.first->epIndex },
             { "epName",        p.first->epTitle() },
             { "id",            p.first->id() },
-            { "scriptId",      p.second.scriptId },
-            { "scriptData",    p.second.scriptData },
-            { "srcTitle",      p.second.title },
-            { "duration",      p.second.duration },
+            { "scriptId",      p.second.first.scriptId },
+            { "scriptData",    p.second.first.scriptData },
+            { "srcTitle",      p.second.first.title },
+            { "duration",      p.second.first.duration },
+            { "filePath",      p.second.second },
         };
         sourceList.append(poolSrcInfo);
     }

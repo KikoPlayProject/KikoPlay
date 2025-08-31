@@ -102,7 +102,7 @@ KeyAction *KeyAction::createAction(ActionType actType)
     case KeyAction::ACT_VOLUME_UP:
         return new KeyActionVolumeUp;
     case KeyAction::ACT_VOLUME_DOWN:
-        return new KeyActionVolumeUp;
+        return new KeyActionVolumeDown;
     case KeyAction::ACT_FULLSCREEN:
         return new KeyActionFullScreen;
     case KeyAction::ACT_MINIMODE:

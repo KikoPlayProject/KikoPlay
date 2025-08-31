@@ -4403,7 +4403,9 @@ class AddDanmuSourceEvent_DanmuPoolSource final :
 
   enum : int {
     kDanmuSourcesFieldNumber = 2,
+    kInfoSourcesFieldNumber = 4,
     kPoolInfoFieldNumber = 1,
+    kFileInfoFieldNumber = 3,
   };
   // repeated .kservice.DanmuSource danmuSources = 2;
   int danmusources_size() const;
@@ -4423,6 +4425,24 @@ class AddDanmuSourceEvent_DanmuPoolSource final :
   const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DanmuSource >&
       danmusources() const;
 
+  // repeated .kservice.InfoSource infoSources = 4;
+  int infosources_size() const;
+  private:
+  int _internal_infosources_size() const;
+  public:
+  void clear_infosources();
+  ::kservice::InfoSource* mutable_infosources(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::InfoSource >*
+      mutable_infosources();
+  private:
+  const ::kservice::InfoSource& _internal_infosources(int index) const;
+  ::kservice::InfoSource* _internal_add_infosources();
+  public:
+  const ::kservice::InfoSource& infosources(int index) const;
+  ::kservice::InfoSource* add_infosources();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::InfoSource >&
+      infosources() const;
+
   // .kservice.Pool poolInfo = 1;
   bool has_poolinfo() const;
   private:
@@ -4441,6 +4461,24 @@ class AddDanmuSourceEvent_DanmuPoolSource final :
       ::kservice::Pool* poolinfo);
   ::kservice::Pool* unsafe_arena_release_poolinfo();
 
+  // .kservice.KFileInfo fileInfo = 3;
+  bool has_fileinfo() const;
+  private:
+  bool _internal_has_fileinfo() const;
+  public:
+  void clear_fileinfo();
+  const ::kservice::KFileInfo& fileinfo() const;
+  PROTOBUF_NODISCARD ::kservice::KFileInfo* release_fileinfo();
+  ::kservice::KFileInfo* mutable_fileinfo();
+  void set_allocated_fileinfo(::kservice::KFileInfo* fileinfo);
+  private:
+  const ::kservice::KFileInfo& _internal_fileinfo() const;
+  ::kservice::KFileInfo* _internal_mutable_fileinfo();
+  public:
+  void unsafe_arena_set_allocated_fileinfo(
+      ::kservice::KFileInfo* fileinfo);
+  ::kservice::KFileInfo* unsafe_arena_release_fileinfo();
+
   // @@protoc_insertion_point(class_scope:kservice.AddDanmuSourceEvent.DanmuPoolSource)
  private:
   class _Internal;
@@ -4450,7 +4488,9 @@ class AddDanmuSourceEvent_DanmuPoolSource final :
   typedef void DestructorSkippable_;
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DanmuSource > danmusources_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::InfoSource > infosources_;
     ::kservice::Pool* poolinfo_;
+    ::kservice::KFileInfo* fileinfo_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -10138,6 +10178,136 @@ inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DanmuSource 
 AddDanmuSourceEvent_DanmuPoolSource::danmusources() const {
   // @@protoc_insertion_point(field_list:kservice.AddDanmuSourceEvent.DanmuPoolSource.danmuSources)
   return _impl_.danmusources_;
+}
+
+// .kservice.KFileInfo fileInfo = 3;
+inline bool AddDanmuSourceEvent_DanmuPoolSource::_internal_has_fileinfo() const {
+  return this != internal_default_instance() && _impl_.fileinfo_ != nullptr;
+}
+inline bool AddDanmuSourceEvent_DanmuPoolSource::has_fileinfo() const {
+  return _internal_has_fileinfo();
+}
+inline void AddDanmuSourceEvent_DanmuPoolSource::clear_fileinfo() {
+  if (GetArenaForAllocation() == nullptr && _impl_.fileinfo_ != nullptr) {
+    delete _impl_.fileinfo_;
+  }
+  _impl_.fileinfo_ = nullptr;
+}
+inline const ::kservice::KFileInfo& AddDanmuSourceEvent_DanmuPoolSource::_internal_fileinfo() const {
+  const ::kservice::KFileInfo* p = _impl_.fileinfo_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::KFileInfo&>(
+      ::kservice::_KFileInfo_default_instance_);
+}
+inline const ::kservice::KFileInfo& AddDanmuSourceEvent_DanmuPoolSource::fileinfo() const {
+  // @@protoc_insertion_point(field_get:kservice.AddDanmuSourceEvent.DanmuPoolSource.fileInfo)
+  return _internal_fileinfo();
+}
+inline void AddDanmuSourceEvent_DanmuPoolSource::unsafe_arena_set_allocated_fileinfo(
+    ::kservice::KFileInfo* fileinfo) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.fileinfo_);
+  }
+  _impl_.fileinfo_ = fileinfo;
+  if (fileinfo) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.AddDanmuSourceEvent.DanmuPoolSource.fileInfo)
+}
+inline ::kservice::KFileInfo* AddDanmuSourceEvent_DanmuPoolSource::release_fileinfo() {
+  
+  ::kservice::KFileInfo* temp = _impl_.fileinfo_;
+  _impl_.fileinfo_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::KFileInfo* AddDanmuSourceEvent_DanmuPoolSource::unsafe_arena_release_fileinfo() {
+  // @@protoc_insertion_point(field_release:kservice.AddDanmuSourceEvent.DanmuPoolSource.fileInfo)
+  
+  ::kservice::KFileInfo* temp = _impl_.fileinfo_;
+  _impl_.fileinfo_ = nullptr;
+  return temp;
+}
+inline ::kservice::KFileInfo* AddDanmuSourceEvent_DanmuPoolSource::_internal_mutable_fileinfo() {
+  
+  if (_impl_.fileinfo_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::KFileInfo>(GetArenaForAllocation());
+    _impl_.fileinfo_ = p;
+  }
+  return _impl_.fileinfo_;
+}
+inline ::kservice::KFileInfo* AddDanmuSourceEvent_DanmuPoolSource::mutable_fileinfo() {
+  ::kservice::KFileInfo* _msg = _internal_mutable_fileinfo();
+  // @@protoc_insertion_point(field_mutable:kservice.AddDanmuSourceEvent.DanmuPoolSource.fileInfo)
+  return _msg;
+}
+inline void AddDanmuSourceEvent_DanmuPoolSource::set_allocated_fileinfo(::kservice::KFileInfo* fileinfo) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.fileinfo_;
+  }
+  if (fileinfo) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(fileinfo);
+    if (message_arena != submessage_arena) {
+      fileinfo = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, fileinfo, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.fileinfo_ = fileinfo;
+  // @@protoc_insertion_point(field_set_allocated:kservice.AddDanmuSourceEvent.DanmuPoolSource.fileInfo)
+}
+
+// repeated .kservice.InfoSource infoSources = 4;
+inline int AddDanmuSourceEvent_DanmuPoolSource::_internal_infosources_size() const {
+  return _impl_.infosources_.size();
+}
+inline int AddDanmuSourceEvent_DanmuPoolSource::infosources_size() const {
+  return _internal_infosources_size();
+}
+inline void AddDanmuSourceEvent_DanmuPoolSource::clear_infosources() {
+  _impl_.infosources_.Clear();
+}
+inline ::kservice::InfoSource* AddDanmuSourceEvent_DanmuPoolSource::mutable_infosources(int index) {
+  // @@protoc_insertion_point(field_mutable:kservice.AddDanmuSourceEvent.DanmuPoolSource.infoSources)
+  return _impl_.infosources_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::InfoSource >*
+AddDanmuSourceEvent_DanmuPoolSource::mutable_infosources() {
+  // @@protoc_insertion_point(field_mutable_list:kservice.AddDanmuSourceEvent.DanmuPoolSource.infoSources)
+  return &_impl_.infosources_;
+}
+inline const ::kservice::InfoSource& AddDanmuSourceEvent_DanmuPoolSource::_internal_infosources(int index) const {
+  return _impl_.infosources_.Get(index);
+}
+inline const ::kservice::InfoSource& AddDanmuSourceEvent_DanmuPoolSource::infosources(int index) const {
+  // @@protoc_insertion_point(field_get:kservice.AddDanmuSourceEvent.DanmuPoolSource.infoSources)
+  return _internal_infosources(index);
+}
+inline ::kservice::InfoSource* AddDanmuSourceEvent_DanmuPoolSource::_internal_add_infosources() {
+  return _impl_.infosources_.Add();
+}
+inline ::kservice::InfoSource* AddDanmuSourceEvent_DanmuPoolSource::add_infosources() {
+  ::kservice::InfoSource* _add = _internal_add_infosources();
+  // @@protoc_insertion_point(field_add:kservice.AddDanmuSourceEvent.DanmuPoolSource.infoSources)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::InfoSource >&
+AddDanmuSourceEvent_DanmuPoolSource::infosources() const {
+  // @@protoc_insertion_point(field_list:kservice.AddDanmuSourceEvent.DanmuPoolSource.infoSources)
+  return _impl_.infosources_;
 }
 
 // -------------------------------------------------------------------
