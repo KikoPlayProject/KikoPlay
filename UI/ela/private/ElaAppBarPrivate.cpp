@@ -32,14 +32,11 @@ void ElaAppBarPrivate::onMinButtonClicked()
 void ElaAppBarPrivate::onMaxButtonClicked()
 {
     Q_Q(ElaAppBar);
-    if (q->window()->isMaximized())
-    {
-        q->window()->showNormal();
-    }
-    else
-    {
-        q->window()->showMaximized();
-    }
+    bool isMaximized = q->window()->isMaximized();
+    isMaximized ? q->window()->showNormal() : q->window()->showMaximized();
+#ifndef Q_OS_WIM
+    _changeMaxButtonAwesome(!isMaximized);
+#endif
 }
 
 void ElaAppBarPrivate::onCloseButtonClicked()
@@ -69,12 +66,16 @@ void ElaAppBarPrivate::onStayTopButtonClicked()
         q->window()->show();
     }
 #endif
-    _stayTopButton->setIsSelected(_pIsStayTop);
-    _stayTopButton->update();
+    if (_stayTopButton)
+    {
+        _stayTopButton->setIsSelected(_pIsStayTop);
+        _stayTopButton->update();
+    }
 }
 
 void ElaAppBarPrivate::_changeMaxButtonAwesome(bool isMaximized)
 {
+    if (!_maxButton) return;
     if (isMaximized)
     {
         _maxButton->setAwesome(ElaIconType::WindowRestore);
@@ -88,6 +89,7 @@ void ElaAppBarPrivate::_changeMaxButtonAwesome(bool isMaximized)
 void ElaAppBarPrivate::_showSystemMenu(QPoint point)
 {
     Q_Q(const ElaAppBar);
+    if (_controlMode != ElaAppBarControlType::Main) return;
 #ifdef Q_OS_WIN
     QScreen* screen = qApp->screenAt(QCursor::pos());
     if (!screen)
@@ -207,12 +209,12 @@ int ElaAppBarPrivate::_calculateMinimumWidth()
 {
     Q_Q(ElaAppBar);
     int width = 5;
-    if (_titleLabel->isVisible())
+    if (_titleLabel && _titleLabel->isVisible())
     {
         width += _titleLabel->width();
         width += 10;
     }
-    if (_iconButton->isVisible())
+    if (_iconButton && _iconButton->isVisible())
     {
         width += _iconButton->width();
         width += 10;

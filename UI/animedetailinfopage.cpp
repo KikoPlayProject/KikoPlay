@@ -806,9 +806,11 @@ void AnimeDetailInfoPage::updateCover()
     static QPixmap nullCover(":/res/images/null-cover.png");
 
     const int pxR = devicePixelRatio();
-    const int w = AnimeItemDelegate::CoverWidth * 1.3;
-    const int h = AnimeItemDelegate::CoverHeight * 1.3;
+    const int w = AnimeItemDelegate::CoverWidth * 1.4;
+    const int h = AnimeItemDelegate::CoverHeight * 1.4;
     QPixmap dest(w*pxR, h*pxR);
+    QPixmap cover = currentAnime->rawCover().isNull() ? nullCover : currentAnime->rawCover();
+    QPixmap coverDest = cover.scaled(w*2, h*2, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
     dest.setDevicePixelRatio(pxR);
     dest.fill(Qt::transparent);
     QPainter painter(&dest);
@@ -817,7 +819,7 @@ void AnimeDetailInfoPage::updateCover()
     QPainterPath path;
     path.addRoundedRect(0, 0, w, h, 8, 8);
     painter.setClipPath(path);
-    painter.drawPixmap(QRect(0, 0, w, h), currentAnime->rawCover().isNull() ? nullCover : currentAnime->rawCover());
+    painter.drawPixmap(QRect(0, 0, w, h), coverDest);
 
     coverLabel->setPixmap(dest);
 }

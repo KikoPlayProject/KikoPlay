@@ -534,7 +534,7 @@ SearchItemWidget::SearchItemWidget(const DanmuSource &item):source(item)
 	QLabel *descLabel = new QLabel(this);
     titleLabel->setToolTip(item.title);
 	titleLabel->adjustSize();
-    titleLabel->setText(QString("<font size=\"5\" face=\"Microsoft Yahei\" color=\"#f33aa0\">%1</font>").arg(item.title));
+    titleLabel->setText(QString("<b><font size=\"5\" face=\"Microsoft Yahei\" color=\"#ED3B95\">%1</font></b>").arg(item.title));
     titleLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
     descLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
     descLabel->setText(QString("<font size=\"3\" face=\"Microsoft Yahei\">%1</font>").arg(item.desc.trimmed()));

@@ -51,6 +51,8 @@
 class ElaAppBarPrivate;
 class ElaToolButton;
 class ElaIconButton;
+class QPushButton;
+class LoadingIcon;
 class ElaAppBar : public QWidget
 {
     Q_OBJECT
@@ -62,7 +64,7 @@ class ElaAppBar : public QWidget
     Q_PROPERTY_CREATE_Q_H(int, AppBarHeight)
     Q_PROPERTY_CREATE_Q_H(int, CustomWidgetMaximumWidth)
 public:
-    explicit ElaAppBar(QWidget* parent = nullptr);
+    explicit ElaAppBar(QWidget* parent = nullptr, ElaAppBarControlType::AppBarControlType controlType = ElaAppBarControlType::Main);
     ~ElaAppBar();
 
     void setCustomWidget(ElaAppBarType::CustomArea customArea, QWidget* customWidget);
@@ -75,6 +77,11 @@ public:
     void setIcon(const QIcon &icon);
     ElaToolButton *iconButton();
     ElaToolButton *appButton();
+    QPushButton *dialogCloseButton();
+    QPushButton *dialogAcceptButton();
+    QPushButton *dialogHideButton();
+    QPushButton *dialogPinButton();
+    LoadingIcon *dialogBusyIcon();
 
     void hideAppBar(bool on, bool isFullScreen = false);
     void setOnTop(bool on);
@@ -89,9 +96,16 @@ public:
 #endif
 Q_SIGNALS:
     Q_SIGNAL void closeButtonClicked();
+    Q_SIGNAL void acceptButtonClicked();
+    Q_SIGNAL void hideButtonClicked();
+    Q_SIGNAL void pinButtonClicked();
 
 protected:
     virtual bool eventFilter(QObject* obj, QEvent* event) override;
+
+    void initMainControls();
+    void initDialogControls();
+    void initAppDialogControls();
 
 };
 

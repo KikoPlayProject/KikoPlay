@@ -16,7 +16,7 @@ Capture::Capture(QImage &captureImage, QWidget *parent, const PlayListItem *item
     imgLabel=new QLabel(this);
     imgLabel->setScaledContents(true);
     aspectRatio = double(captureImage.width())/captureImage.height();
-    double w=500*logicalDpiX()/96;
+    double w = 500;
     double h=w/aspectRatio;
     imgLabel->setPixmap(QPixmap::fromImage(captureImage));
     imgLabel->setGeometry(2,2,w,h);
@@ -41,7 +41,7 @@ Capture::Capture(QImage &captureImage, QWidget *parent, const PlayListItem *item
     });
     QPushButton *addToLibrary = new KPushButton(tr("Add To Library"), buttonContainer);
     addToLibrary->setEnabled(item && !item->animeTitle.isEmpty());
-    QObject::connect(addToLibrary,&QPushButton::clicked,[&captureImage,item,this](){
+    QObject::connect(addToLibrary, &QPushButton::clicked, this, [&captureImage,item,this](){
         int curTime=GlobalObjects::mpvplayer->getTime();
         int cmin=curTime/60;
         int cls=curTime-cmin*60;
@@ -58,13 +58,13 @@ Capture::Capture(QImage &captureImage, QWidget *parent, const PlayListItem *item
     resize(w+4,h+hExtend);
 }
 
-void Capture::resizeEvent(QResizeEvent *event)
+void Capture::resizeEvent(QResizeEvent* event)
 {
-    double w=500*logicalDpiX()/96;
-    double h=w/aspectRatio;
-    imgLabel->setGeometry(2,2,w,h);
+    double w = size().width();
+    double h = w / aspectRatio;
+    imgLabel->setGeometry(2, 2, w, h);
     imgLabel->lower();
     hExtend = buttonContainer->layout()->sizeHint().height() + 8;
-    buttonContainer->setGeometry(0,h+2,w,hExtend);
+    buttonContainer->setGeometry(0, h + (size().height() - h - hExtend) / 2, w, hExtend);
     CFramelessDialog::resizeEvent(event);
 }

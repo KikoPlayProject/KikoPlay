@@ -12,6 +12,8 @@ class ElaText;
 class ElaAppBar;
 class ElaIconButton;
 class ElaToolButton;
+class QPushButton;
+class LoadingIcon;
 class ElaAppBarPrivate : public QObject
 {
     Q_OBJECT
@@ -33,7 +35,6 @@ public:
 
 private:
     QHBoxLayout* _mainLayout{nullptr};
-    QVBoxLayout* _iconLabelLayout{nullptr};
     QVBoxLayout* _titleLabelLayout{nullptr};
     ElaAppBarType::ButtonFlags _buttonFlags;
     ElaToolButton* _stayTopButton{nullptr};
@@ -60,6 +61,14 @@ private:
     QVBoxLayout* _createVLayout(QWidget* widget);
     bool _isFullScreen{false};
     bool _screenSave{true};
+
+    ElaAppBarControlType::AppBarControlType _controlMode{ElaAppBarControlType::Main};
+
+    QPushButton *_dialogCloseButton{nullptr};
+    QPushButton *_dialogAcceptButton{nullptr};
+    QPushButton *_dialogHideButton{nullptr};
+    QPushButton *_dialogPinButton{nullptr};
+    LoadingIcon *_dialogBusyLabel{nullptr};
 };
 
 #endif // ELAAPPBARPRIVATE_H

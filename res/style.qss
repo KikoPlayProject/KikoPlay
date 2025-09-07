@@ -90,7 +90,9 @@ QWidget#PlayInfoBar{
     background-color:rgb(50,50,50);
 }
 QWidget#widgetPlayerSidePanel {
-    background-color: transparent;
+    background-color: qradialgradient(cx: 1.0, cy: 0.5, radius: 1.0, fx: 1.2, fy: 0.5,  stop:0 rgba(0, 0, 0, 128), stop:1 rgba(0, 0, 0, 0) );
+    background-origin: border-box;
+    background-clip: border-box;
 }
 QWidget#LibraryWindow {
     @if{hasBackground}
@@ -369,8 +371,8 @@ ClickSliderColorStyle {
         qproperty-sliderColor: rgba(@ThemeColor, 100);
         qproperty-handleColor: rgba(@ThemeColor, 200);
     @else
-        qproperty-sliderColor: rgba(0, 174, 236, 100);
-        qproperty-handleColor: rgba(0, 162, 219, 200);
+        qproperty-sliderColor: rgba(0, 174, 236, 120);
+        qproperty-handleColor: rgba(0, 162, 219, 220);
     @endif
 }
 
@@ -406,6 +408,15 @@ QTreeView::branch:open:has-children {
 }
 QTreeView::branch:closed:has-children {
     image: url(:/res/images/playlist-branch-closed.svg);
+}
+QTreeView::indicator:checked {
+    image: url(:/res/images/label-check.svg);
+}
+QTreeView::indicator:unchecked {
+    image: url(:/res/images/label-uncheck.svg);
+}
+QTreeView::indicator:indeterminate {
+    image: url(:/res/images/label-partially.svg);
 }
 
 QTreeView#playlist {
@@ -1273,21 +1284,30 @@ KPushButton#AutoSetPoolBtn {
 /* ------------------- QScrollBar Setting ------------------- */
 QScrollBar:vertical{
     background: transparent;
-    width: 4px;
+    width: 8px;
+    margin: 0px;
 }
 QScrollBar:horizontal{
     background: transparent;
-    height: 4px;
+    height: 8px;
+    margin: 0px;
 }
 QScrollBar::handle:vertical,
 QScrollBar::handle:horizontal{
     background: rgba(255,255,255,180);
-    min-height: 20px;
     border-radius: 2px;
+    margin: 2px 2px;
+}
+QScrollBar::handle:vertical{
+    min-height: 30px;
+}
+QScrollBar::handle:horizontal{
+    min-width: 30px;
 }
 QScrollBar::handle:vertical:hover,
 QScrollBar::handle:horizontal:hover{
     background: rgba(255,255,255,255);
+    margin: 0px;
 }
 QScrollBar::handle:vertical:pressed,
 QScrollBar::handle:horizontal:pressed{

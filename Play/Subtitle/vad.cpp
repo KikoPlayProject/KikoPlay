@@ -14,7 +14,11 @@ void VadIterator::init_onnx_model(const QString &model_path)
     // Init threads = 1 for
     init_engine_threads(1, 1);
     // Load model
+#ifdef Q_OS_WIN
     session = std::make_shared<Ort::Session>(env, model_path.toStdWString().c_str(), session_options);
+#else
+    session = std::make_shared<Ort::Session>(env, model_path.toStdString().c_str(), session_options);
+#endif
 }
 
 void VadIterator::reset_states()

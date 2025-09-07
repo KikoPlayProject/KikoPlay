@@ -92,6 +92,7 @@ private:
 public:
     QSize sizeHint() const;
 };
+
 class AnimeDetailInfoPage : public QWidget
 {
     Q_OBJECT

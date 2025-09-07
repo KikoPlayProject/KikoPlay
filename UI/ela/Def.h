@@ -137,6 +137,16 @@ enum TextStyle
 Q_ENUM_CREATE(TextStyle)
 Q_END_ENUM_CREATE(ElaTextType)
 
+Q_BEGIN_ENUM_CREATE(ElaAppBarControlType)
+enum AppBarControlType
+{
+    Main = 0x0000,
+    Dialog = 0x0001,
+    AppDialog = 0x0002,
+};
+Q_ENUM_CREATE(AppBarControlType)
+Q_END_ENUM_CREATE(ElaAppBarControlType)
+
 Q_BEGIN_ENUM_CREATE(ElaNavigationType)
 enum NodeOperateReturnType
 {

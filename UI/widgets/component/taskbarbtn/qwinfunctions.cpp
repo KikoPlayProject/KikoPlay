@@ -63,6 +63,9 @@
 #include <comdef.h>
 #include "winshobjidl_p.h"
 
+#pragma comment (lib,"Dwmapi.lib")
+#pragma comment (lib,"user32.lib")
+
 QT_BEGIN_NAMESPACE
 
 Q_GUI_EXPORT HBITMAP qt_createIconMask(const QBitmap &bitmap);

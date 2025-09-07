@@ -7,6 +7,7 @@
 #include <QEventLoop>
 #include <QRegularExpression>
 #include <QCoreApplication>
+#include <QDir>
 #include "Common/logger.h"
 #include "vad.h"
 #include "wav.h"

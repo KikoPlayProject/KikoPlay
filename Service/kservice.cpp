@@ -1018,6 +1018,7 @@ void KServiceProfile::loadProfile(QSettings *settings)
     if (deviceId.isEmpty())
     {
         deviceId = generateDeviceId();
+        saveProfile(settings);
     }
     userId = settings->value(SERVICE_KEY_USER_ID).toString();
     userName = settings->value(SERVICE_KEY_USER_NAME).toString();

@@ -97,7 +97,6 @@ bool isRunning()
 
 int main(int argc, char *argv[])
 {
-    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))

@@ -77,7 +77,6 @@ AppWindow::AppWindow(AppWidget *parent)
 {
     widget = new AppFramelessDialog("App", parent? parent->getWidget() : nullptr);
     widget->setLayout(new QVBoxLayout);
-    widget->setContentsMargins(0, 0, 0, 0);
 }
 
 bool AppWindow::setWidgetOption(AppWidgetOption option, const QVariant &val)

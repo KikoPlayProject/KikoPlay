@@ -4,6 +4,8 @@
 #include "Play/Video/mpvplayer.h"
 #include <QProxyStyle>
 
+class ClickSliderStyle;
+
 class ClickSlider : public QSlider
 {
     friend class ClickSliderStyle;
@@ -64,7 +66,7 @@ public:
     void setHandleColor(const QColor& color) { handleColor = color; }
 private:
     QColor eColor1{255,117,0}, eColor2{0xff,0xff,0x00}, cColor1{0xbc,0xbc,0xbc}, cColor2{0,117,158};
-    QColor sliderColor{0, 174, 236, 100};
+    QColor sliderColor{0, 174, 236, 120};
     QColor handleColor{0, 162, 219};
 };
 

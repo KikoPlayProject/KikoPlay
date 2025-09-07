@@ -39,7 +39,6 @@
 #include "Play/Danmu/danmupool.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Danmu/blocker.h"
-#include "Play/Danmu/danmuprovider.h"
 #include "MediaLibrary/animeworker.h"
 #include "Download/util.h"
 #include "globalobjects.h"
@@ -1530,14 +1529,14 @@ QWidget *PlayerWindow::initPlayerLayer(QWidget *parent)
     playerContent = new PlayerContent(playerLayerContainer);
     playerContent->raise();
 
+    // side panel
+    initSidePanel(playerLayerContainer);
+
     // title info
     playInfoPanel = new QWidget(playerLayerContainer);
     playInfoPanel->setObjectName(QStringLiteral("widgetPlayInfo"));
     playInfoPanel->hide();
     initPlayInfo(playInfoPanel);
-
-    // side panel
-    initSidePanel(playerLayerContainer);
 
     // control area
     playControlPanel = new QWidget(playerLayerContainer);
@@ -1933,6 +1932,7 @@ void PlayerWindow::initSignals()
             danmuStatisBar->hide();
             PlayContext::context()->clear();
             showPlayerRegion(false);
+            sidePanel->show();
             break;
         }
         }
@@ -2223,7 +2223,7 @@ void PlayerWindow::showMessage(const QString &msg, const QString &type, int time
 
 QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
 {
-    GlobalObjects::iconfont->setPointSize(20);
+    GlobalObjects::iconfont->setPointSize(22);
     QFont normalFont;
     normalFont.setFamily(GlobalObjects::normalFont);
 
@@ -2251,7 +2251,7 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
     next->setToolTip(tr("Next(PageDown)"));
     next->setObjectName(QStringLiteral("PlayControlButton"));
 
-    GlobalObjects::iconfont->setPointSize(18);
+    GlobalObjects::iconfont->setPointSize(20);
 
     stop = new QPushButton(playControlPanel);
     stop->setFont(*GlobalObjects::iconfont);
@@ -2266,7 +2266,7 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
     mute->setObjectName(QStringLiteral("PlayControlButton"));
     mute->installEventFilter(this);
 
-    GlobalObjects::iconfont->setPointSize(18);
+    GlobalObjects::iconfont->setPointSize(20);
 
     setting = new QPushButton(playControlPanel);
     setting->setFont(*GlobalObjects::iconfont);
@@ -2367,7 +2367,7 @@ void PlayerWindow::initPlayInfo(QWidget *playInfoPanel)
     QPushButton **infoBtnPtrs[infoBtnCount] = {
         &mediaInfoBtn, &captureBtn, &miniModeBtn
     };
-    GlobalObjects::iconfont->setPointSize(16);
+    GlobalObjects::iconfont->setPointSize(18);
     QHBoxLayout *infoHLayout = new QHBoxLayout(playInfoPanel);
     infoHLayout->setSpacing(10);
     infoHLayout->addWidget(titleLabel);
@@ -2458,10 +2458,11 @@ void PlayerWindow::initSidePanel(QWidget *parent)
     QPushButton **sideBtnPtrs[sideBtnCount] = {
         &playlistBtn, &danmuBtn, &subBtn
     };
-    GlobalObjects::iconfont->setPointSize(16);
+    GlobalObjects::iconfont->setPointSize(18);
     QHBoxLayout *sideHLayout = new QHBoxLayout(sidePanel);
     QVBoxLayout *sideVLayout = new QVBoxLayout();
-    sideVLayout->setSpacing(8);
+    sideVLayout->setSpacing(20);
+    sideVLayout->addStretch(1);
     for (int i = 0; i < sideBtnCount; ++i)
     {
         *sideBtnPtrs[i] = new QPushButton(sidePanel);
@@ -2473,10 +2474,11 @@ void PlayerWindow::initSidePanel(QWidget *parent)
         tb->setCheckable(true);
         sideVLayout->addWidget(tb);
     }
+    sideVLayout->addStretch(1);
     sideHLayout->addStretch(1);
     sideHLayout->addLayout(sideVLayout);
     sidePanel->resize(sidePanel->sizeHint());
-    sidePanel->hide();
+    // sidePanel->hide();
 
     bool listVisibility = GlobalObjects::appSetting->value("MainWindow/ListVisibility", true).toBool();
     if (listVisibility) playlistBtn->setChecked(true);
@@ -2614,7 +2616,7 @@ void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
     }
     else
     {
-        sidePanel->hide();
+        if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty()) sidePanel->hide();
     }
 }
 
@@ -2695,7 +2697,7 @@ void PlayerWindow::mouseReleaseEvent(QMouseEvent *event)
             {
                 playInfoPanel->hide();
                 playControlPanel->hide();
-                sidePanel->hide();
+                if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty()) sidePanel->hide();
             }
         }
         else
@@ -2708,7 +2710,8 @@ void PlayerWindow::mouseReleaseEvent(QMouseEvent *event)
 void PlayerWindow::resizeEvent(QResizeEvent *)
 {
     playInfoPanel->setMaximumWidth(width());
-    sidePanel->move(QPoint(width() - sidePanel->width(), (height() - sidePanel->height()) / 2));
+    //sidePanel->move(QPoint(width() - sidePanel->width(), (height() - sidePanel->height()) / 2));
+    sidePanel->setGeometry(width() - sidePanel->width(), 0, sidePanel->width(), height());
     //playListCollapseButton->setGeometry(width()-playlistCollapseWidth,(height()-playlistCollapseHeight)/2,playlistCollapseWidth,playlistCollapseHeight);
     if (playSettingPage && !playSettingPage->isHidden())
     {
@@ -2729,6 +2732,7 @@ void PlayerWindow::resizeEvent(QResizeEvent *)
     static_cast<InfoTips *>(playInfo)->updatePosition();
     liveDanmuList->setFixedSize(width() * 0.45, height() * static_cast<float>(liveVRange) / 100);
     liveDanmuList->scrollToBottom();
+    launchDanmuEdit->setMinimumWidth(width() / 5);
 }
 
 void PlayerWindow::leaveEvent(QEvent *)
@@ -2740,7 +2744,7 @@ void PlayerWindow::leaveEvent(QEvent *)
             QTimer::singleShot(500, this, [this](){
                 this->playControlPanel->hide();
                 this->playInfoPanel->hide();
-                this->sidePanel->hide();
+                if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty()) this->sidePanel->hide();
             });
         }
     }
@@ -2878,7 +2882,13 @@ void PlayerWindow::keyPressEvent(QKeyEvent *event)
     default:
         break;
     }
-    const QString pressKeyStr = QKeySequence(event->modifiers()|event->key()).toString();
+
+    Qt::KeyboardModifiers modifiers = event->modifiers();
+    modifiers = modifiers & ~Qt::KeyboardModifier::ControlModifier;
+    modifiers = modifiers & ~Qt::KeyboardModifier::AltModifier;
+    modifiers = modifiers & ~Qt::KeyboardModifier::ShiftModifier;
+
+    const QString pressKeyStr = QKeySequence((modifiers == Qt::KeyboardModifier::NoModifier ? event->modifiers() : 0) | event->key()).toString();
     KeyActionModel::instance()->runAction(pressKeyStr, KeyActionItem::KEY_PRESS, this);
 }
 

@@ -5,6 +5,7 @@
 #include "UI/framelessdialog.h"
 
 class QWebEngineView;
+class QLabel;
 
 namespace Extension
 {

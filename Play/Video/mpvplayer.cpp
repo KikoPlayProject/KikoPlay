@@ -457,7 +457,7 @@ void MPVPlayer::frameStep(bool forward)
 
 void MPVPlayer::setVolume(int vol)
 {
-    volume = qBound(0, vol, 130);
+    volume = qBound(0, vol, 150);
     setMPVProperty("volume",volume);
 }
 

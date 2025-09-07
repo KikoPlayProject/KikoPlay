@@ -39,17 +39,6 @@ CONFIG(debug, debug|release) {
     TARGET = $${TARGET}
 }
 
-contains(DEFINES, KSERVICE) {
-    SOURCES += \
-        Service/pb/service.pb.cc
-
-    HEADERS += \
-        Service/pb/service.pb.h
-
-    INCLUDEPATH += \
-        Service/pb
-}
-
 SOURCES += \
     Common/browser.cpp \
     Common/counter.cpp \
@@ -145,9 +134,6 @@ SOURCES += \
     Play/Subtitle/subtitletranslator.cpp \
     Play/Subtitle/vad.cpp \
     Play/Video/mpvmediainfo.cpp \
-    Service/klogin.cpp \
-    Service/kregister.cpp \
-    Service/kservice.cpp \
     UI/animeepisodeeditor.cpp \
     UI/dialogs/adddanmu.cpp \
     UI/dialogs/blockeditor.cpp \
@@ -226,12 +212,6 @@ SOURCES += \
     UI/widgets/colorpreview.cpp \
     UI/widgets/component/flowlayout.cpp \
     UI/widgets/component/ktreeviewitemdelegate.cpp \
-    UI/widgets/component/taskbarbtn/qwinevent.cpp \
-    UI/widgets/component/taskbarbtn/qwineventfilter.cpp \
-    UI/widgets/component/taskbarbtn/qwinfunctions.cpp \
-    UI/widgets/component/taskbarbtn/qwintaskbarbutton.cpp \
-    UI/widgets/component/taskbarbtn/qwintaskbarprogress.cpp \
-    UI/widgets/component/taskbarbtn/windowsguidsdefs.cpp \
     UI/widgets/danmusourcetip.cpp \
     UI/widgets/elidedlabel.cpp \
     UI/widgets/floatscrollbar.cpp \
@@ -321,7 +301,6 @@ SOURCES += \
     UI/dlnadiscover.cpp \
     UI/downloadwindow.cpp \
     UI/framelessdialog.cpp \
-    UI/framelesswindow.cpp \
     UI/gifcapture.cpp \
     UI/inputdialog.cpp \
     UI/librarywindow.cpp \
@@ -461,9 +440,6 @@ HEADERS += \
     Play/Subtitle/vad.h \
     Play/Subtitle/wav.h \
     Play/Video/mpvmediainfo.h \
-    Service/klogin.h \
-    Service/kregister.h \
-    Service/kservice.h \
     UI/animeepisodeeditor.h \
     UI/dialogs/adddanmu.h \
     UI/dialogs/blockeditor.h \
@@ -546,16 +522,6 @@ HEADERS += \
     UI/widgets/colorpreview.h \
     UI/widgets/component/flowlayout.h \
     UI/widgets/component/ktreeviewitemdelegate.h \
-    UI/widgets/component/taskbarbtn/qwinevent.h \
-    UI/widgets/component/taskbarbtn/qwineventfilter_p.h \
-    UI/widgets/component/taskbarbtn/qwinfunctions.h \
-    UI/widgets/component/taskbarbtn/qwinfunctions_p.h \
-    UI/widgets/component/taskbarbtn/qwintaskbarbutton.h \
-    UI/widgets/component/taskbarbtn/qwintaskbarbutton_p.h \
-    UI/widgets/component/taskbarbtn/qwintaskbarprogress.h \
-    UI/widgets/component/taskbarbtn/windowsguidsdefs_p.h \
-    UI/widgets/component/taskbarbtn/winpropkey_p.h \
-    UI/widgets/component/taskbarbtn/winshobjidl_p.h \
     UI/widgets/danmusourcetip.h \
     UI/widgets/elidedlabel.h \
     UI/widgets/floatscrollbar.h \
@@ -646,7 +612,6 @@ HEADERS += \
     UI/dlnadiscover.h \
     UI/downloadwindow.h \
     UI/framelessdialog.h \
-    UI/framelesswindow.h \
     UI/gifcapture.h \
     UI/inputdialog.h \
     UI/librarywindow.h \
@@ -684,6 +649,47 @@ HEADERS += \
     UI/widgets/optionslider.h \
     UI/widgets/scriptsearchoptionpanel.h \
     UI/widgets/smoothscrollbar.h
+
+win32 {
+    SOURCES += \
+        UI/widgets/component/taskbarbtn/qwinevent.cpp \
+        UI/widgets/component/taskbarbtn/qwineventfilter.cpp \
+        UI/widgets/component/taskbarbtn/qwinfunctions.cpp \
+        UI/widgets/component/taskbarbtn/qwintaskbarbutton.cpp \
+        UI/widgets/component/taskbarbtn/qwintaskbarprogress.cpp \
+        UI/widgets/component/taskbarbtn/windowsguidsdefs.cpp \
+
+    HEADERS += \
+        UI/widgets/component/taskbarbtn/qwinevent.h \
+        UI/widgets/component/taskbarbtn/qwineventfilter_p.h \
+        UI/widgets/component/taskbarbtn/qwinfunctions.h \
+        UI/widgets/component/taskbarbtn/qwinfunctions_p.h \
+        UI/widgets/component/taskbarbtn/qwintaskbarbutton.h \
+        UI/widgets/component/taskbarbtn/qwintaskbarbutton_p.h \
+        UI/widgets/component/taskbarbtn/qwintaskbarprogress.h \
+        UI/widgets/component/taskbarbtn/windowsguidsdefs_p.h \
+        UI/widgets/component/taskbarbtn/winpropkey_p.h \
+        UI/widgets/component/taskbarbtn/winshobjidl_p.h \
+
+}
+
+contains(DEFINES, KSERVICE) {
+    SOURCES += \
+        Service/klogin.cpp \
+        Service/kregister.cpp \
+        Service/kservice.cpp \
+        Service/pb/service.pb.cc \
+
+    HEADERS += \
+        Service/klogin.h \
+        Service/kregister.h \
+        Service/kservice.h \
+        Service/pb/service.pb.h \
+
+    INCLUDEPATH += \
+        Service/pb
+
+}
 
 INCLUDEPATH += \
     Play/Video \
@@ -735,6 +741,10 @@ linux-g++* {
     }
     LIBS += -LExtension/Lua -l:liblua53.a
     LIBS += -lm -ldl
+    LIBS += -L/usr/local/lib -lonnxruntime
+    contains(DEFINES, KSERVICE) {
+        LIBS += -L/usr/local/protobuf/lib -l:libprotobuf-lite.a
+    }
 }
 
 unix {

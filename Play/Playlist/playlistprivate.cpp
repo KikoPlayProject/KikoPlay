@@ -261,6 +261,14 @@ void PlayListPrivate::updateRecentItemInfo(const PlayListItem *item, const QImag
             if (!cover.isNull())
             {
                 const int w = 160, h = 90;
+                double cw = cover.width(), ch = cover.height();
+                double dw = w, dh = h;
+                if (cw * h / w < ch) {
+                    dw = dh * cw / ch;
+                } else {
+                    dh = dw * ch / cw;
+                }
+                QImage coverDest = cover.scaled(dw*2, dh*2, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
                 QImage dest(w * GlobalObjects::context()->devicePixelRatioF, h * GlobalObjects::context()->devicePixelRatioF, QImage::Format_ARGB32_Premultiplied);
                 dest.setDevicePixelRatio(GlobalObjects::context()->devicePixelRatioF);
                 dest.fill(Qt::transparent);
@@ -269,8 +277,9 @@ void PlayListPrivate::updateRecentItemInfo(const PlayListItem *item, const QImag
                 painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
                 QPainterPath path;
                 path.addRoundedRect(0, 0, w, h, 8, 8);
+                painter.fillPath(path, Qt::black);
                 painter.setClipPath(path);
-                painter.drawImage(QRect(0, 0, w, h), cover);
+                painter.drawImage(QRect(dw < w ? (w - dw) / 2 : 0, dh < h ? (h - dh) / 2 : 0, dw, dh), coverDest);
                 recentItem.stopFrame = dest;
             }
             emit q->recentItemInfoUpdated(index);

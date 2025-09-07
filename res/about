@@ -2,7 +2,6 @@ KikoPlay 基于这些项目:
 Qt 6.6.3
 libmpv 0.40
 aria2 1.37
-Qt-Nice-Frameless-Window
 zlib 1.2.11
 QtWebApp 1.8.5
 Lua 5.3

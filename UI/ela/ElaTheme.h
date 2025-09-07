@@ -7,7 +7,9 @@
 #include "Def.h"
 #include "singleton.h"
 #include "stdafx.h"
-
+#ifndef Q_OS_WIN
+#include "private/ElaThemePrivate.h"
+#endif
 #define eTheme ElaTheme::getInstance()
 #define ElaThemeColor(themeMode, themeColor) eTheme->getThemeColor(themeMode, ElaThemeType::themeColor)
 #define ElaSelfThemeColor(selfThemePtr, themeMode, themeColor) (selfThemePtr && selfThemePtr->hasThemeColor(themeMode, ElaThemeType::themeColor) ? selfThemePtr->getThemeColor(themeMode, ElaThemeType::themeColor) : eTheme->getThemeColor(themeMode, ElaThemeType::themeColor))

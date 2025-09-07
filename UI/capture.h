@@ -3,6 +3,7 @@
 
 #include "framelessdialog.h"
 struct PlayListItem;
+class QLabel;
 class Capture : public CFramelessDialog
 {
     Q_OBJECT

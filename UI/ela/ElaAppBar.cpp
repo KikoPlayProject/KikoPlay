@@ -6,6 +6,7 @@
 //#include "ElaText.h"
 #include "ElaToolButton.h"
 #include "ElaWinShadowHelper.h"
+#include "UI/widgets/loadingicon.h"
 #ifndef Q_OS_WIN
 #include <QDateTime>
 #include <QWindow>
@@ -24,11 +25,12 @@
 #include "ElaIconButton.h"
 #include "ElaTheme.h"
 #include "private/ElaAppBarPrivate.h"
+#include "globalobjects.h"
 Q_PROPERTY_CREATE_Q_CPP(ElaAppBar, bool, IsStayTop)
 Q_PROPERTY_CREATE_Q_CPP(ElaAppBar, bool, IsDefaultClosed)
 Q_PROPERTY_CREATE_Q_CPP(ElaAppBar, bool, IsOnlyAllowMinAndClose)
 
-ElaAppBar::ElaAppBar(QWidget* parent)
+ElaAppBar::ElaAppBar(QWidget* parent, ElaAppBarControlType::AppBarControlType controlType)
     : QWidget{parent}, d_ptr(new ElaAppBarPrivate())
 {
     Q_D(ElaAppBar);
@@ -50,101 +52,17 @@ ElaAppBar::ElaAppBar(QWidget* parent)
     window()->setWindowFlags((window()->windowFlags()) | Qt::WindowMinimizeButtonHint | Qt::FramelessWindowHint);
 #endif
 #else
-    window()->setWindowFlags((window()->windowFlags()) | Qt::FramelessWindowHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
+    window()->setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::FramelessWindowHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint | Qt::WindowFullscreenButtonHint | Qt::WindowSystemMenuHint);
 #endif
     setMouseTracking(true);
     setObjectName("ElaAppBar");
     setStyleSheet("#ElaAppBar{background-color:transparent;}");
 
-    const QColor btnColor(220, 220, 220);
-    const QColor hoverColor(255, 255, 255, 25);
+    d->_controlMode = controlType;
+    if (controlType == ElaAppBarControlType::Dialog) initDialogControls();
+    else if (controlType == ElaAppBarControlType::AppDialog) initAppDialogControls();
+    else initMainControls();
 
-    d->_stayTopButton = new ElaToolButton(this);
-    d->_stayTopButton->setElaIcon(ElaIconType::ArrowUpToArc);
-    d->_stayTopButton->setFixedSize(40, 30);
-    connect(d->_stayTopButton, &ElaIconButton::clicked, this, [=]() { this->setIsStayTop(!this->getIsStayTop()); });
-    connect(this, &ElaAppBar::pIsStayTopChanged, d, &ElaAppBarPrivate::onStayTopButtonClicked);
-
-    d->_iconButton = new ElaToolButton(this);
-    d->_iconButton->setIconSize(QSize(18, 18));
-    d->_iconButton->setMinimumWidth(48);
-    ElaSelfTheme *iconSelfTheme = new ElaSelfTheme(d->_iconButton);
-    iconSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicText, btnColor);
-    iconSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicText, btnColor);
-    iconSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicHoverAlpha, hoverColor);
-    d->_iconButton->setSelfTheme(iconSelfTheme);
-    if (parent->windowIcon().isNull())
-    {
-        d->_iconButton->setVisible(false);
-    }
-    else
-    {
-        d->_iconButton->setIcon(parent->windowIcon().pixmap(18, 18));
-    }
-    connect(parent, &QWidget::windowIconChanged, this, [=](const QIcon& icon) {
-        d->_iconButton->setIcon(icon.pixmap(18, 18));
-        d->_iconButton->setVisible(icon.isNull() ? false : true);
-    });
-
-    d->_titleLabel = new QLabel(this);
-    d->_titleLabel->setFont(QFont(d->_titleLabel->font().family(), 13));
-    if (parent->windowTitle().isEmpty())
-    {
-        d->_titleLabel->setVisible(false);
-    }
-    else
-    {
-        d->_titleLabel->setText(parent->windowTitle());
-    }
-    connect(parent, &QWidget::windowTitleChanged, this, [=](const QString& title) {
-        d->_titleLabel->setText(title);
-        d->_titleLabel->setVisible(title.isEmpty() ? false : true);
-    });
-
-    d->_appButton = new ElaToolButton(this);
-    d->_appButton->setElaIcon(ElaIconType::Grid2);
-    d->_appButton->setIconSize(QSize(24, 24));
-    d->_appButton->setBorderRadius(0);
-    d->_appButton->setFixedSize(45, 45);
-    ElaSelfTheme *appSelfTheme = new ElaSelfTheme(d->_appButton);
-    appSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicText, btnColor);
-    appSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicText, btnColor);
-    appSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicHoverAlpha, hoverColor);
-    d->_appButton->setSelfTheme(appSelfTheme);
-
-    d->_minButton = new ElaIconButton(ElaIconType::WindowMinimize, 16, 45, 45, this);
-    d->_minButton->setLightIconColor(btnColor);
-    d->_minButton->setLightHoverIconColor(btnColor);
-    d->_minButton->setDarkHoverColor(hoverColor);
-    connect(d->_minButton, &ElaIconButton::clicked, d, &ElaAppBarPrivate::onMinButtonClicked);
-
-    d->_maxButton = new ElaIconButton(ElaIconType::Square, 16, 45, 45, this);
-    d->_maxButton->setLightIconColor(btnColor);
-    d->_maxButton->setLightHoverIconColor(btnColor);
-    d->_maxButton->setDarkHoverColor(hoverColor);
-    connect(d->_maxButton, &ElaIconButton::clicked, d, &ElaAppBarPrivate::onMaxButtonClicked);
-
-    d->_closeButton = new ElaIconButton(ElaIconType::Xmark, 18, 45, 45, this);
-    d->_closeButton->setLightHoverColor(QColor(0xE8, 0x11, 0x23));
-    d->_closeButton->setDarkHoverColor(QColor(0xE8, 0x11, 0x23));
-    d->_closeButton->setLightHoverIconColor(btnColor);
-    d->_closeButton->setDarkHoverIconColor(btnColor);
-    d->_closeButton->setLightIconColor(btnColor);
-
-    connect(d->_closeButton, &ElaIconButton::clicked, d, &ElaAppBarPrivate::onCloseButtonClicked);
-
-    d->_mainLayout = new QHBoxLayout(this);
-    d->_mainLayout->setContentsMargins(12, 0, 0, 0);
-    d->_mainLayout->setSpacing(0);
-    d->_mainLayout->addWidget(d->_iconButton);
-    d->_mainLayout->addWidget(d->_titleLabel);
-    d->_mainLayout->addStretch();
-    d->_mainLayout->addStretch();
-    d->_mainLayout->addWidget(d->_stayTopButton);
-    d->_mainLayout->addWidget(d->_appButton);
-    d->_mainLayout->addWidget(d->_minButton);
-    d->_mainLayout->addWidget(d->_maxButton);
-    d->_mainLayout->addWidget(d->_closeButton);
 
 #ifdef Q_OS_WIN
     for (int i = 0; i < qApp->screens().count(); i++)
@@ -325,6 +243,36 @@ ElaToolButton *ElaAppBar::appButton()
 {
     Q_D(ElaAppBar);
     return d->_appButton;
+}
+
+QPushButton *ElaAppBar::dialogCloseButton()
+{
+    Q_D(ElaAppBar);
+    return d->_dialogCloseButton;
+}
+
+QPushButton *ElaAppBar::dialogAcceptButton()
+{
+    Q_D(ElaAppBar);
+    return d->_dialogAcceptButton;
+}
+
+QPushButton *ElaAppBar::dialogHideButton()
+{
+    Q_D(ElaAppBar);
+    return d->_dialogHideButton;
+}
+
+QPushButton *ElaAppBar::dialogPinButton()
+{
+    Q_D(ElaAppBar);
+    return d->_dialogPinButton;
+}
+
+LoadingIcon *ElaAppBar::dialogBusyIcon()
+{
+    Q_D(ElaAppBar);
+    return d->_dialogBusyLabel;
 }
 
 void ElaAppBar::hideAppBar(bool on, bool isFullScreen)
@@ -840,4 +788,232 @@ bool ElaAppBar::eventFilter(QObject* obj, QEvent* event)
     }
     }
     return QObject::eventFilter(obj, event);
+}
+
+void ElaAppBar::initMainControls()
+{
+    Q_D(ElaAppBar);
+
+    const QColor btnColor(220, 220, 220);
+    const QColor hoverColor(255, 255, 255, 25);
+
+    d->_stayTopButton = new ElaToolButton(this);
+    d->_stayTopButton->setElaIcon(ElaIconType::ArrowUpToArc);
+    d->_stayTopButton->setFixedSize(40, 30);
+    connect(d->_stayTopButton, &ElaIconButton::clicked, this, [=]() { this->setIsStayTop(!this->getIsStayTop()); });
+    connect(this, &ElaAppBar::pIsStayTopChanged, d, &ElaAppBarPrivate::onStayTopButtonClicked);
+
+    d->_iconButton = new ElaToolButton(this);
+    d->_iconButton->setIconSize(QSize(18, 18));
+    d->_iconButton->setMinimumWidth(48);
+    ElaSelfTheme *iconSelfTheme = new ElaSelfTheme(d->_iconButton);
+    iconSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicText, btnColor);
+    iconSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicText, btnColor);
+    iconSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicHoverAlpha, hoverColor);
+    d->_iconButton->setSelfTheme(iconSelfTheme);
+
+    QWidget *parent = this->parentWidget();
+
+    if (parent->windowIcon().isNull())
+    {
+        d->_iconButton->setVisible(false);
+    }
+    else
+    {
+        d->_iconButton->setIcon(parent->windowIcon().pixmap(18, 18));
+    }
+    connect(parent, &QWidget::windowIconChanged, this, [=](const QIcon& icon) {
+        d->_iconButton->setIcon(icon.pixmap(18, 18));
+        d->_iconButton->setVisible(icon.isNull() ? false : true);
+    });
+
+    d->_titleLabel = new QLabel(this);
+    d->_titleLabel->setFont(QFont(d->_titleLabel->font().family(), 13));
+    if (parent->windowTitle().isEmpty())
+    {
+        d->_titleLabel->setVisible(false);
+    }
+    else
+    {
+        d->_titleLabel->setText(parent->windowTitle());
+    }
+    connect(parent, &QWidget::windowTitleChanged, this, [=](const QString& title) {
+        d->_titleLabel->setText(title);
+        d->_titleLabel->setVisible(title.isEmpty() ? false : true);
+    });
+
+    d->_appButton = new ElaToolButton(this);
+    d->_appButton->setElaIcon(ElaIconType::Grid2);
+    d->_appButton->setIconSize(QSize(24, 24));
+    d->_appButton->setBorderRadius(0);
+    d->_appButton->setFixedSize(45, 45);
+    ElaSelfTheme *appSelfTheme = new ElaSelfTheme(d->_appButton);
+    appSelfTheme->setThemeColor(ElaThemeType::Light, ElaThemeType::BasicText, btnColor);
+    appSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicText, btnColor);
+    appSelfTheme->setThemeColor(ElaThemeType::Dark, ElaThemeType::BasicHoverAlpha, hoverColor);
+    d->_appButton->setSelfTheme(appSelfTheme);
+
+    d->_minButton = new ElaIconButton(ElaIconType::WindowMinimize, 16, 45, 45, this);
+    d->_minButton->setLightIconColor(btnColor);
+    d->_minButton->setLightHoverIconColor(btnColor);
+    d->_minButton->setDarkHoverColor(hoverColor);
+    connect(d->_minButton, &ElaIconButton::clicked, d, &ElaAppBarPrivate::onMinButtonClicked);
+
+    d->_maxButton = new ElaIconButton(ElaIconType::Square, 16, 45, 45, this);
+    d->_maxButton->setLightIconColor(btnColor);
+    d->_maxButton->setLightHoverIconColor(btnColor);
+    d->_maxButton->setDarkHoverColor(hoverColor);
+    connect(d->_maxButton, &ElaIconButton::clicked, d, &ElaAppBarPrivate::onMaxButtonClicked);
+
+    d->_closeButton = new ElaIconButton(ElaIconType::Xmark, 18, 45, 45, this);
+    d->_closeButton->setLightHoverColor(QColor(0xE8, 0x11, 0x23));
+    d->_closeButton->setDarkHoverColor(QColor(0xE8, 0x11, 0x23));
+    d->_closeButton->setLightHoverIconColor(btnColor);
+    d->_closeButton->setDarkHoverIconColor(btnColor);
+    d->_closeButton->setLightIconColor(btnColor);
+
+    connect(d->_closeButton, &ElaIconButton::clicked, d, &ElaAppBarPrivate::onCloseButtonClicked);
+
+    d->_mainLayout = new QHBoxLayout(this);
+    d->_mainLayout->setContentsMargins(12, 0, 0, 0);
+    d->_mainLayout->setSpacing(0);
+    d->_mainLayout->addWidget(d->_iconButton);
+    d->_mainLayout->addWidget(d->_titleLabel);
+    d->_mainLayout->addStretch();
+    d->_mainLayout->addStretch();
+    d->_mainLayout->addWidget(d->_stayTopButton);
+    d->_mainLayout->addWidget(d->_appButton);
+    d->_mainLayout->addWidget(d->_minButton);
+    d->_mainLayout->addWidget(d->_maxButton);
+    d->_mainLayout->addWidget(d->_closeButton);
+}
+
+void ElaAppBar::initDialogControls()
+{
+    Q_D(ElaAppBar);
+    d->_buttonFlags = ElaAppBarType::TitleHint;
+
+    QWidget *parent = this->parentWidget();
+
+    d->_titleLabel = new QLabel(this);
+    d->_titleLabel->setFont(QFont(d->_titleLabel->font().family(), 13));
+    d->_titleLabel->setText(parent->windowTitle());
+    d->_titleLabel->setOpenExternalLinks(true);
+
+    connect(parent, &QWidget::windowTitleChanged, this, [=](const QString& title) {
+        d->_titleLabel->setText(title);
+        d->_titleLabel->setVisible(title.isEmpty() ? false : true);
+    });
+
+    GlobalObjects::iconfont->setPointSize(13);
+    QFontMetrics fm(*GlobalObjects::iconfont);
+    int btnH = qMax(fm.horizontalAdvance(QChar(0xe60b)), fm.horizontalAdvance(QChar(0xe680)));
+    btnH = qMax(btnH, fm.height())*1.6;
+    QSize btnSize(btnH, btnH);
+
+    d->_dialogCloseButton = new QPushButton(this);
+    d->_dialogCloseButton->setObjectName(QStringLiteral("DialogCloseButton"));
+    d->_dialogCloseButton->setFixedSize(btnSize);
+    d->_dialogCloseButton->setFont(*GlobalObjects::iconfont);
+    d->_dialogCloseButton->setText(QChar(0xe60b));
+    QObject::connect(d->_dialogCloseButton, &QPushButton::clicked, this, &ElaAppBar::closeButtonClicked);
+    d->_dialogCloseButton->setDefault(false);
+    d->_dialogCloseButton->setAutoDefault(false);
+    d->_customWidgets.append(d->_dialogCloseButton);
+
+    d->_dialogAcceptButton = new QPushButton(this);
+    d->_dialogAcceptButton->setObjectName(QStringLiteral("DialogAcceptButton"));
+    d->_dialogAcceptButton->setFixedSize(btnSize);
+    d->_dialogAcceptButton->setFont(*GlobalObjects::iconfont);
+    d->_dialogAcceptButton->setText(QChar(0xe680));
+    QObject::connect(d->_dialogAcceptButton, &QPushButton::clicked, this, &ElaAppBar::acceptButtonClicked);
+    d->_dialogAcceptButton->setDefault(false);
+    d->_dialogAcceptButton->setAutoDefault(false);
+    d->_customWidgets.append(d->_dialogAcceptButton);
+
+    d->_dialogBusyLabel = new LoadingIcon(QColor(200, 200, 200), this);
+    d->_dialogBusyLabel->setFixedSize(QSize(btnH*0.9, btnH*0.9));
+    d->_dialogBusyLabel->hide();
+
+    d->_mainLayout = new QHBoxLayout(this);
+    d->_mainLayout->setContentsMargins(12, 0, 12, 0);
+    d->_mainLayout->setSpacing(0);
+    d->_mainLayout->addWidget(d->_titleLabel);
+    d->_mainLayout->addStretch();
+    d->_mainLayout->addWidget(d->_dialogBusyLabel);
+    d->_mainLayout->addSpacing(12);
+    d->_mainLayout->addWidget(d->_dialogAcceptButton);
+    d->_mainLayout->addSpacing(8);
+    d->_mainLayout->addWidget(d->_dialogCloseButton);
+}
+
+void ElaAppBar::initAppDialogControls()
+{
+    Q_D(ElaAppBar);
+    d->_buttonFlags = ElaAppBarType::TitleHint;
+
+    QWidget *parent = this->parentWidget();
+
+    d->_titleLabel = new QLabel(this);
+    d->_titleLabel->setFont(QFont(d->_titleLabel->font().family(), 13));
+    d->_titleLabel->setText(parent->windowTitle());
+    d->_titleLabel->setOpenExternalLinks(true);
+
+    connect(parent, &QWidget::windowTitleChanged, this, [=](const QString& title) {
+        d->_titleLabel->setText(title);
+        d->_titleLabel->setVisible(title.isEmpty() ? false : true);
+    });
+
+    GlobalObjects::iconfont->setPointSize(13);
+    QFontMetrics fm(*GlobalObjects::iconfont);
+    int btnH = qMax(fm.horizontalAdvance(QChar(0xe60b)), fm.horizontalAdvance(QChar(0xe680)));
+    btnH = qMax(btnH, fm.height())*1.6;
+    QSize btnSize(btnH, btnH);
+
+    d->_dialogCloseButton = new QPushButton(this);
+    d->_dialogCloseButton->setObjectName(QStringLiteral("DialogCloseButton"));
+    d->_dialogCloseButton->setFixedSize(btnSize);
+    d->_dialogCloseButton->setFont(*GlobalObjects::iconfont);
+    d->_dialogCloseButton->setText(QChar(0xe60b));
+    QObject::connect(d->_dialogCloseButton, &QPushButton::clicked, this, &ElaAppBar::closeButtonClicked);
+    d->_dialogCloseButton->setDefault(false);
+    d->_dialogCloseButton->setAutoDefault(false);
+    d->_customWidgets.append(d->_dialogCloseButton);
+
+    d->_dialogHideButton = new QPushButton(this);
+    d->_dialogHideButton->setObjectName(QStringLiteral("DialogHideButton"));
+    d->_dialogHideButton->setFixedSize(btnSize);
+    d->_dialogHideButton->setFont(*GlobalObjects::iconfont);
+    d->_dialogHideButton->setText(QChar(0xe651));
+    QObject::connect(d->_dialogHideButton, &QPushButton::clicked, this, &ElaAppBar::hideButtonClicked);
+    d->_dialogHideButton->setDefault(false);
+    d->_dialogHideButton->setAutoDefault(false);
+    d->_customWidgets.append(d->_dialogHideButton);
+
+    d->_dialogPinButton = new QPushButton(this);
+    d->_dialogPinButton->setObjectName(QStringLiteral("DialogHideButton"));
+    d->_dialogPinButton->setFixedSize(btnSize);
+    d->_dialogPinButton->setFont(*GlobalObjects::iconfont);
+    d->_dialogPinButton->setText(QChar(0xe864));
+    QObject::connect(d->_dialogPinButton, &QPushButton::clicked, this, &ElaAppBar::pinButtonClicked);
+    d->_dialogPinButton->setDefault(false);
+    d->_dialogPinButton->setAutoDefault(false);
+    d->_customWidgets.append(d->_dialogPinButton);
+
+    d->_dialogBusyLabel = new LoadingIcon(QColor(153, 153, 153), this);
+    d->_dialogBusyLabel->setFixedSize(QSize(btnH*0.9, btnH*0.9));
+    d->_dialogBusyLabel->hide();
+
+    d->_mainLayout = new QHBoxLayout(this);
+    d->_mainLayout->setContentsMargins(12, 0, 12, 0);
+    d->_mainLayout->setSpacing(0);
+    d->_mainLayout->addWidget(d->_titleLabel);
+    d->_mainLayout->addStretch();
+    d->_mainLayout->addWidget(d->_dialogBusyLabel);
+    d->_mainLayout->addSpacing(12);
+    d->_mainLayout->addWidget(d->_dialogPinButton);
+    d->_mainLayout->addSpacing(8);
+    d->_mainLayout->addWidget(d->_dialogHideButton);
+    d->_mainLayout->addSpacing(8);
+    d->_mainLayout->addWidget(d->_dialogCloseButton);
 }

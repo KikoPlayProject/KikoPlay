@@ -40,13 +40,14 @@ bool FloatScrollBar::eventFilter(QObject *watched, QEvent *event)
         raise();
         setSingleStep(_originScrollBar->singleStep());
         setPageStep(_originScrollBar->pageStep());
+        int handleWidth = 8;
         if (orientation() == Qt::Horizontal)
         {
-            setGeometry(0, _originScrollArea->height() - 5, _originScrollArea->width(), 5);
+            setGeometry(0, _originScrollArea->height() - handleWidth, _originScrollArea->width(), handleWidth);
         }
         else
         {
-            setGeometry(_originScrollArea->width() - 5, 0, 5, _originScrollArea->height());
+            setGeometry(_originScrollArea->width() - handleWidth, 0, handleWidth, _originScrollArea->height());
         }
         break;
     }

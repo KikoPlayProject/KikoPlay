@@ -8,6 +8,7 @@
 class QVBoxLayout;
 class QSpacerItem;
 class QStackedLayout;
+class QLabel;
 
 class PoolItem : public QWidget
 {
