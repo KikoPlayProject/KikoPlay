@@ -1,0 +1,9 @@
+Package: kikoplay
+Version: 
+Section: video
+Priority: optional
+Architecture: 
+Depends: aria2, libmpv-dev, ffmpeg, libprotobuf-dev, libxkbcommon-x11-dev, libxcb-cursor-dev, libminizip-dev, libevent-dev, liblua5.3-dev, libonnxruntime-dev, qt6-webengine-dev
+Maintainer: KikoPlayProject <i@pugai.life>
+Homepage: https://github.com/KikoPlayProject/KikoPlay
+Description: Full-featured danmu player with media library and extension support.

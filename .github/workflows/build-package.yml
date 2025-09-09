@@ -1,0 +1,118 @@
+name: Build and Package KikoPlay
+
+on:
+  push:
+    tags:
+      - '*'
+  pull_request:
+  workflow_dispatch:
+
+env:
+  QT_VERSION: "6.8.3"
+  BUILD_TYPE: "Release"
+
+jobs:
+  build-linux:
+    strategy:
+      matrix:
+        include:
+          - artifact_name: kikoplay-amd64
+            arch: amd64
+            qt_arch: linux_gcc_64
+          - artifact_name: kikoplay-arm64
+            arch: arm64
+            qt_arch: linux_gcc_arm64
+
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          libmpv-dev \
+          ffmpeg \
+          libprotobuf-dev \
+          libxkbcommon-x11-dev \
+          libxcb-cursor-dev \
+          libminizip-dev \
+          libevent-dev \
+          liblua5.3-dev
+
+    - name: Install ONNX Runtime
+      run: |
+        # Download and install ONNX Runtime from GitHub releases
+        if [ "${{ matrix.arch }}" = "amd64" ]; then
+          wget https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-x64-1.22.0.tgz
+          tar -xzf onnxruntime-linux-x64-1.22.0.tgz
+          sudo cp -r onnxruntime-linux-x64-1.22.0/lib/* /usr/lib/
+          sudo cp -r onnxruntime-linux-x64-1.22.0/include/* /usr/include/
+        else
+          wget https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-aarch64-1.22.0.tgz
+          tar -xzf onnxruntime-linux-aarch64-1.22.0.tgz
+          sudo cp -r onnxruntime-linux-aarch64-1.22.0/lib/* /usr/lib/
+          sudo cp -r onnxruntime-linux-aarch64-1.22.0/include/* /usr/include/
+        fi
+
+    - name: Setup Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: ${{ env.QT_VERSION }}
+        arch: ${{ matrix.qt_arch }}
+        target: 'desktop'
+        modules: 'qtpositioning qtwebchannel qtwebengine qtwebsockets qtwaylandcompositor'
+
+    - name: Create secrets header
+      run: |
+        cat > Common/secrets.h << 'EOF'
+        #undef APP_ID_KIKO
+        #undef APP_SECRET_KIKO
+        #undef APP_ID_DANDAN
+        #undef APP_SECRET_DANDAN
+        
+        #define APP_ID_KIKO "${{ secrets.APP_ID_KIKO }}"
+        #define APP_SECRET_KIKO "${{ secrets.APP_SECRET_KIKO }}"
+        #define APP_ID_DANDAN "${{ secrets.APP_ID_DANDAN }}"
+        #define APP_SECRET_DANDAN "${{ secrets.APP_SECRET_DANDAN }}"
+        EOF
+
+    - name: Build main application
+      run: |
+        qmake6 build.pro
+        make -j$(nproc)
+
+    - name: Package .deb
+      run: |
+        make INSTALL_ROOT=$PWD/debian install
+
+        # Get version from git tag or use default
+        if [ -n "${{ github.ref_name }}" ] && echo "${{ github.ref_name }}" | grep -q '^[0-9]'; then
+            VERSION="${{ github.ref_name }}"
+        else
+            VERSION="2.0.0"
+        fi
+
+        # Update version and architecture in control file
+        sed -i "s/^Version:.*/Version: ${VERSION}/" debian/DEBIAN/control
+        sed -i "s/^Architecture:.*/Architecture: ${{ matrix.arch }}/" debian/DEBIAN/control
+
+        dpkg-deb --build --root-owner-group debian kikoplay-${{ matrix.arch }}.deb
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: kikoplay-${{ matrix.arch }}.deb
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          kikoplay-${{ matrix.arch }}.deb
+        draft: false
+        prerelease: false

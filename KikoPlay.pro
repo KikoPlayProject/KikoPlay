@@ -750,14 +750,16 @@ linux-g++* {
 unix {
     # Install settings
     target.path += /usr/bin
-    unix:icons.path = /usr/share/pixmaps
     unix:desktop.path = /usr/share/applications
-    unix:icons.files = kikoplay.png kikoplay.xpm
-    unix:desktop.files = kikoplay.desktop
+    unix:desktop.files = io.github.KikoPlayProject.KikoPlay.desktop
+    unix:icons.path = /usr/share/icons/hicolor/128x128/apps
+    unix:icons.files = io.github.KikoPlayProject.KikoPlay.png
+    unix:metainfo.path = /usr/share/metainfo
+    unix:metainfo.files = io.github.KikoPlayProject.KikoPlay.metainfo.xml
     unix:web.path = /usr/share/kikoplay/web
     unix:web.files = web/*
 
-    INSTALLS += target icons desktop web
+    INSTALLS += target desktop icons metainfo web
     DEFINES += CONFIG_UNIX_DATA
 
     LIBS += -lmpv

@@ -59,7 +59,7 @@ KikoPlay 2.0依赖Qt 6.6.3，直接通过apt等工具安装可能版本不对，
 KikoPlay 2.0还依赖了onnxruntime，从[这里](https://github.com/microsoft/onnxruntime/releases/tag/v1.19.2)下载
 onnxruntime-linux-x64-1.19.2.tgz，解压后将`lib`下的内容复制到`/usr/local/lib`下。
 
-`KikoPlay.pro`默认开启了KService（`DEFINES += KSERVICE`），编译时还依赖protobuf 3.21.8，可手动下载（[release](https://github.com/protocolbuffers/protobuf/releases/tag/v21.80)，选择`protobuf-cpp-3.21.8.tar.gz`），解压后编译：
+`KikoPlay.pro`默认开启了KService（`DEFINES += KSERVICE`），编译时还依赖protobuf 3.21.8，可手动下载（[release](https://github.com/protocolbuffers/protobuf/releases/tag/v21.8)，选择`protobuf-cpp-3.21.8.tar.gz`），解压后编译：
 
 ```bash
 ./configure --prefix=/usr/local/protobuf 
