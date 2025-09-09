@@ -731,7 +731,7 @@ macx {
 }
 
 linux-g++* {
-    QMAKE_LFLAGS += -fuse-ld=gold -Wl,--exclude-libs,liblua53.a
+    QMAKE_LFLAGS += -fuse-ld=bfd -Wl,--exclude-libs,liblua53.a
 
     # Link library settings by ARCH
     contains(QT_ARCH, i386) {
