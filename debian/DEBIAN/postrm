@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+# Update desktop database on removal
+if [ -x "$(command -v update-desktop-database)" ]; then
+    update-desktop-database -q /usr/share/applications
+fi
+
+# Update icon cache on removal
+if [ -x "$(command -v gtk-update-icon-cache)" ]; then
+    gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor
+fi
+
+# Update mime database on removal
+if [ -x "$(command -v update-mime-database)" ]; then
+    update-mime-database /usr/share/mime
+fi

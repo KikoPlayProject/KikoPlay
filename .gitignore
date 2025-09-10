@@ -36,3 +36,6 @@ build
 
 # vscode config idr
 .vscode
+
+# AI
+CLAUDE.md

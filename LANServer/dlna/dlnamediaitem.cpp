@@ -2,6 +2,9 @@
 #include <QXmlStreamWriter>
 #include <QMimeDatabase>
 #include <QCryptographicHash>
+#include <QMap>
+#include <QHash>
+#include <QString>
 
 namespace
 {

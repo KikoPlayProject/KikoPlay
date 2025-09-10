@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.KikoPlayProject.KikoPlay</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0</project_license>
+  <developer id="fun.kikoplay">
+    <name>KikoPlayProject</name>
+  </developer>
+  <name>KikoPlay</name>
+  <summary>Full-Featured Danmu Player</summary>
+  <summary xml:lang="zh_CN">全功能弹幕播放器</summary>
+  <recommends>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </recommends>
+  <description>
+    <p>KikoPlay is a comprehensive danmu player offering video playback, barrage management, media library organization, cross-device casting, and more. Key features include:</p>
+    <p xml:lang="zh_CN">KikoPlay 是一个全功能弹幕播放器，提供视频播放、弹幕管理、媒体库管理、跨设备投屏等功能。主要特性包括：</p>
+    <ul>
+      <li>OpenGL rendering, smooth barrage experience</li>
+      <li xml:lang="zh_CN">OpenGL 渲染，流畅的弹幕体验</li>
+      <li>Libmpv playback kernel with real-time progress preview</li>
+      <li xml:lang="zh_CN">Libmpv 播放内核支持实时进度预览</li>
+      <li>Tree-structured playlist organization</li>
+      <li xml:lang="zh_CN">树形结构播放列表管理</li>
+      <li>Support danmu search and download on all mainstream video websites, and support more danmu sources through scripts</li>
+      <li xml:lang="zh_CN">支持弹幕搜索和下载所有主流视频网站，并通过脚本支持更多弹幕来源</li>
+      <li>Flexible barrage shielding rule settings, supporting automatic merging of similar barrages, analysis and annotation of barrage events, improving viewing experience</li>
+      <li xml:lang="zh_CN">灵活的弹幕屏蔽规则设置，支持自动合并相似弹幕，分析和注释弹幕事件，提高观看体验</li>
+      <li>Support batch management of barrage pools and adjustment of barrage timelines to better handle inconsistencies in the duration of local videos and videos on websites</li>
+      <li xml:lang="zh_CN">支持弹幕池批量管理和调整弹幕时间线，以更好地处理本地视频和网站视频的持续时间不一致问题</li>
+      <li>Powerful database function, supporting recording and organizing animations you have watched in multiple ways, and supporting more information sources through script expansion</li>
+      <li xml:lang="zh_CN">强大的数据库功能，支持以多种方式记录和组织您观看过的动画，并通过脚本扩展支持更多信息来源</li>
+      <li>LAN service, you can watch it on other devices through a webpage, and there is now an Android version available for selection</li>
+      <li xml:lang="zh_CN">LAN服务，您可以通过网页在其他设备上观看，现在有一个Android版本可供选择</li>
+      <li>DLNA function supports screen projection to other devices and can also serve as a media server for other devices to access</li>
+      <li xml:lang="zh_CN">DLNA功能支持屏幕投影到其他设备，也可以作为其他设备的媒体服务器访问</li>
+      <li>Integrating functions such as daily playback, resource search, aria2 download, and automatic download, all operations such as download, viewing, and management can be completed in KikoPlay</li>
+      <li xml:lang="zh_CN">集成功能，如每日播放、资源搜索、aria2下载和自动下载，所有下载、观看和管理操作都可以在KikoPlay中完成</li>
+    </ul>
+  </description>
+  <url type="homepage">https://github.com/KikoPlayProject/KikoPlay</url>
+  <url type="bugtracker">https://github.com/KikoPlayProject/KikoPlay/issues</url>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://kikoplay.fun/static/projects/player.jpg</image>
+      <caption>Player</caption>
+      <caption xml:lang="zh_CN">播放器</caption>
+    </screenshot>
+    <screenshot type="default">
+      <image>https://kikoplay.fun/static/projects/library.jpg</image>
+      <caption>Library</caption>
+      <caption xml:lang="zh_CN">媒体库</caption>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="2.0.0" date="2025-09-10">
+      <description></description>
+    </release>
+  </releases>
+  <launchable type="desktop-id">io.github.KikoPlayProject.KikoPlay.desktop</launchable>
+  <content_rating type="oars-1.1"/>
+  <update_contact>valigarmanda55@gmail.com</update_contact>
+</component>
