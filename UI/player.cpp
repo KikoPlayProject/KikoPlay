@@ -1561,8 +1561,11 @@ QWidget *PlayerWindow::initPlayerLayer(QWidget *parent)
     QVBoxLayout *controlVLayout = new QVBoxLayout(playControlPanel);
     controlVLayout->setSpacing(0);
     controlVLayout->addStretch(1);
+    controlVLayout->addSpacing(20);
     controlVLayout->addWidget(statWidget);
+    controlVLayout->addSpacing(2);
     controlVLayout->addWidget(progress);
+    controlVLayout->addSpacing(2);
     controlVLayout->addLayout(initPlayControl(playControlPanel));
 
     miniProgress = new ClickSlider(playerLayerContainer);
@@ -2289,6 +2292,7 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
 
     launchDanmuEdit = new KLineEdit(playControlPanel);
     launchDanmuEdit->setPlaceholderText(tr("Launch Danmu"));
+    launchDanmuEdit->setMinimumHeight(30);
     QMargins textMargins = launchDanmuEdit->textMargins();
     textMargins.setRight(6);
     launchDanmuEdit->setTextMargins(textMargins);
@@ -2534,7 +2538,7 @@ void PlayerWindow::adjustProgressInfoPos()
 {
     //int ty=danmuStatisBar->isHidden()?height()-playControlPanel->height()-progressInfo->height():
     //                                  height()-playControlPanel->height()-progressInfo->height()-statisBarHeight;
-    int ty = height()-playControlPanel->height()-progressInfo->height()+(danmuStatisBar->isHidden()?0:danmuStatisBar->height()/3);
+    int ty = height()-playControlPanel->height()-progressInfo->height()+(danmuStatisBar->isHidden()?20:danmuStatisBar->height()/2);
     int nx = progress->curMouseX()-progressInfo->width()/3;
     if(nx+progressInfo->width()>width()) nx = width()-progressInfo->width();
     progressInfo->move(nx<0?0:nx,ty);

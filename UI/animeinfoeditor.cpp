@@ -8,6 +8,7 @@
 #include <QGridLayout>
 #include <QSplitter>
 #include <QAction>
+#include <QHeaderView>
 #include <QScrollArea>
 #include <QStyledItemDelegate>
 #include "Common/notifier.h"
@@ -23,6 +24,7 @@
 #include "UI/widgets/fonticonbutton.h"
 #include "UI/widgets/kplaintextedit.h"
 #include "UI/widgets/component/flowlayout.h"
+#include "globalobjects.h"
 
 namespace
 {
@@ -80,6 +82,8 @@ AnimeInfoEditor::AnimeInfoEditor(Anime *anime, QWidget *parent) :
     staffView->setContextMenuPolicy(Qt::CustomContextMenu);
     staffView->setEditTriggers(QAbstractItemView::DoubleClicked);
     staffView->setRootIsDecorated(false);
+    staffView->setFont(QFont(GlobalObjects::normalFont, 11));
+    staffView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
     staffView->setItemDelegate(new StaffItemDelegate(staffView));
     staffView->setAlternatingRowColors(true);
     staffModel = new StaffModel(anime, this);

@@ -24,6 +24,7 @@ KeyActionPage::KeyActionPage(QWidget *parent) : SettingPage(parent)
 {
     QTreeView *shortcutView = new QTreeView(this);
     shortcutView->setRootIsDecorated(false);
+    shortcutView->setFont(QFont(GlobalObjects::normalFont, 11));
     shortcutView->setItemDelegate(new KTreeviewItemDelegate(shortcutView));
     shortcutView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     shortcutView->setModel(KeyActionModel::instance());

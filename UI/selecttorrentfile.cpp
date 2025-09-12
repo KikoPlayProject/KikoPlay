@@ -9,6 +9,8 @@
 #include "UI/ela/ElaCheckBox.h"
 #include "widgets/dirselectwidget.h"
 #include "Download/torrent.h"
+#include "globalobjects.h"
+
 SelectTorrentFile::SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *parent, const QString &path) : CFramelessDialog(tr("Add Torrent"),parent,true),model(nullptr)
 {   
     model=new TorrentFileModel(torrentFileTree,this);
@@ -16,6 +18,7 @@ SelectTorrentFile::SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *pare
     torrentFileView->setObjectName(QStringLiteral("TaskFileInfoView"));
     torrentFileView->setAlternatingRowColors(true);
     torrentFileView->setModel(model);
+    torrentFileView->setFont(QFont(GlobalObjects::normalFont, 11));
     torrentFileView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     torrentFileView->header()->resizeSection(0,240*logicalDpiX()/96);
     torrentFileView->header()->resizeSection(1,50*logicalDpiX()/96);

@@ -100,6 +100,7 @@ public:
     unsigned int getSubBackColor() const { return subBackColor; }
     double getSubOutlineSize() const { return subOutlineSize; }
     QString getSubBorderStyle() const { return subBorderStyle; }
+    bool getEnableEmbeddedWindow() const { return enableEmbeddedWindow; }
 
     VideoSizeInfo getVideoSizeInfo();
     QString expandMediaInfo(const QString &text);
@@ -180,6 +181,7 @@ public slots:
     void setSubBackColor(QColor color);
     void setSubOutlineSize(double size);
     void setSubBorderStyle(const QString val);
+    void setEmbeddedWindow(bool on);
 
 protected:
     void initializeGL() override;
@@ -222,6 +224,7 @@ private:
     bool isShowPreview;
     bool isShowRecent;
     bool useSample2DArray;
+    bool enableEmbeddedWindow{true};
 
     QString subAuto;
     QString subFont;

@@ -77,6 +77,12 @@ void ElaComboBox::setEditable(bool editable)
     }
 }
 
+void ElaComboBox::setWordWrap(bool on)
+{
+    Q_D(ElaComboBox);
+    d->_comboBoxStyle->setWordWrap(on);
+}
+
 void ElaComboBox::showPopup()
 {
     Q_D(ElaComboBox);
@@ -92,11 +98,11 @@ void ElaComboBox::showPopup()
             int containerHeight = 0;
             if (count() >= maxVisibleItems())
             {
-                containerHeight = maxVisibleItems() * 35 + 8;
+                containerHeight = (maxVisibleItems() - 1) * 35 + d->_comboBoxStyle->maxItemHeight + 8;
             }
             else
             {
-                containerHeight = count() * 35 + 8;
+                containerHeight = (count() - 1) * 35 + d->_comboBoxStyle->maxItemHeight + 8;
             }
             view()->resize(view()->width(), containerHeight - 8);
             container->move(container->x(), container->y() + 3);

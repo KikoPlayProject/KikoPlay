@@ -7,6 +7,8 @@
 
 #include "ElaTheme.h"
 #include "private/ElaApplicationPrivate.h"
+#include "globalobjects.h"
+
 Q_SINGLETON_CREATE_CPP(ElaApplication)
 ElaApplication::ElaApplication(QObject* parent)
     : QObject{parent}, d_ptr(new ElaApplicationPrivate())
@@ -65,7 +67,7 @@ void ElaApplication::init()
     //默认字体
     QFont font = qApp->font();
     font.setPixelSize(13);
-    font.setFamily("Microsoft YaHei");
+    font.setFamily(GlobalObjects::normalFont);
     font.setHintingPreference(QFont::PreferNoHinting);
     qApp->setFont(font);
 }

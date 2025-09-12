@@ -15,6 +15,7 @@ public:
     explicit ElaComboBox(QWidget* parent = nullptr);
     ~ElaComboBox();
     void setEditable(bool editable);
+    void setWordWrap(bool on);
 
 protected:
     virtual void showPopup() override;

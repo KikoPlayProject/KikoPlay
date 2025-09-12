@@ -69,7 +69,9 @@ public:
 
     static GlobalContext *context();
 
-    static constexpr const char *normalFont = "Microsoft Yahei UI";
+    static QString normalFont;
+    static void setFont(const QString &font);
+
     static constexpr const char *kikoVersion = "2.0.0";
     static constexpr const int kikoVersionNum = 200000;
 

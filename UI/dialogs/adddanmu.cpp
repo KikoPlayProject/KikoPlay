@@ -534,10 +534,10 @@ SearchItemWidget::SearchItemWidget(const DanmuSource &item):source(item)
 	QLabel *descLabel = new QLabel(this);
     titleLabel->setToolTip(item.title);
 	titleLabel->adjustSize();
-    titleLabel->setText(QString("<b><font size=\"5\" face=\"Microsoft Yahei\" color=\"#ED3B95\">%1</font></b>").arg(item.title));
+    titleLabel->setText(QString("<font size=\"5\" face=\"%2\" color=\"#f0a277\">%1</font>").arg(item.title, GlobalObjects::normalFont));
     titleLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
     descLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
-    descLabel->setText(QString("<font size=\"3\" face=\"Microsoft Yahei\">%1</font>").arg(item.desc.trimmed()));
+    descLabel->setText(QString("<font size=\"3\" color=\"#d0d0d0\" face=\"%2\">%1</font>").arg(item.desc.trimmed(), GlobalObjects::normalFont));
     descLabel->setToolTip(item.desc);
     QPushButton *addItemButton = new KPushButton(tr("Add"), this);
     QObject::connect(addItemButton,&QPushButton::clicked,this,[this,addItemButton](){
@@ -614,6 +614,8 @@ DanmuItemWidget::DanmuItemWidget(QList<SearchDanmuInfo> &danmuList, int index, c
 
     poolCombo = new ElaComboBox(this);
     poolCombo->setMaximumWidth(260);
+    static_cast<ElaComboBox *>(poolCombo)->setWordWrap(true);
+
     QPushButton *autoSetPoolBtn = new KPushButton(this);
     autoSetPoolBtn->setToolTip(tr("Set PoolId in Sequence"));
     autoSetPoolBtn->setObjectName(QStringLiteral("AutoSetPoolBtn"));

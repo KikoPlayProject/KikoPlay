@@ -40,7 +40,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     ruleView->setRootIsDecorated(false);
     ruleView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ruleView->setAlternatingRowColors(true);
-    ruleView->setFont(QFont(GlobalObjects::normalFont,10));
+    ruleView->setFont(QFont(GlobalObjects::normalFont,11));
     ruleView->setItemDelegate(new KTreeviewItemDelegate(ruleView));
     ruleView->setModel(GlobalObjects::autoDownloadManager);
     new FloatScrollBar(ruleView->verticalScrollBar(), ruleView);
@@ -57,13 +57,14 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     logView->setSelectionMode(QAbstractItemView::SingleSelection);
     logView->setAlternatingRowColors(true);
     logView->setItemDelegate(new KTreeviewItemDelegate(logView));
-    logView->setFont(QFont(GlobalObjects::normalFont, 10));
+    logView->setFont(QFont(GlobalObjects::normalFont, 11));
     new FloatScrollBar(logView->verticalScrollBar(), logView);
     LogFilterProxyModel *logProxyModel=new LogFilterProxyModel(this);
     logProxyModel->setSourceModel(GlobalObjects::autoDownloadManager->logModel);
     logView->setModel(logProxyModel);
     logView->header()->resizeSection(0, 200);
     logView->header()->resizeSection(1, 240);
+    logView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
     logView->setContextMenuPolicy(Qt::CustomContextMenu);
     QObject::connect(GlobalObjects::autoDownloadManager->logModel, &LogModel::rowsInserted,logView, &QTreeView::scrollToBottom);
 
@@ -76,6 +77,7 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     urlView->setFont(QFont(GlobalObjects::normalFont,10));
     urlView->setModel(GlobalObjects::autoDownloadManager->urlModel);
     urlView->header()->resizeSection(0, 500);
+    urlView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
     urlView->setContextMenuPolicy(Qt::CustomContextMenu);
     QObject::connect(GlobalObjects::autoDownloadManager->urlModel, &URLModel::rowsInserted, urlView, &QTreeView::scrollToBottom);
 

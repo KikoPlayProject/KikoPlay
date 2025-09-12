@@ -46,7 +46,7 @@ AutoDownloadManager *GlobalObjects::autoDownloadManager=nullptr;
 QMainWindow *GlobalObjects::mainWindow=nullptr;
 QFont* GlobalObjects::iconfont;
 
-constexpr const char *GlobalObjects::normalFont;
+QString GlobalObjects::normalFont;
 constexpr const char *GlobalObjects::kikoVersion;
 
 void GlobalObjects::init(QElapsedTimer *elapsedTimer)
@@ -54,8 +54,10 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
     context()->init();
 
     registerCustomSettingType();
-    appSetting=new QSettings(context()->dataPath + "settings.ini", QSettings::IniFormat);
+    appSetting = new QSettings(context()->dataPath + "settings.ini", QSettings::IniFormat);
     Logger::logger();
+
+    normalFont = appSetting->value("UI/Font", "Microsoft YaHei UI").toString();
 
     QThread::currentThread()->setObjectName(QStringLiteral("mainThread"));
     workThread = new QThread();
@@ -130,7 +132,7 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
 
     QFont font = qApp->font();
     font.setPixelSize(13);
-    font.setFamily("Microsoft YaHei");
+    font.setFamily(normalFont);
     font.setHintingPreference(QFont::PreferNoHinting);
     qApp->setFont(font);
 }
@@ -159,6 +161,11 @@ GlobalContext *GlobalObjects::context()
 {
     static GlobalContext context;
     return &context;
+}
+
+void GlobalObjects::setFont(const QString &font)
+{
+    appSetting->setValue("UI/Font", font);
 }
 
 void GlobalObjects::registerCustomSettingType()

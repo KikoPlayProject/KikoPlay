@@ -4,8 +4,10 @@
 #include <QWidget>
 #include <QStackedWidget>
 #include <QVariant>
+#include <QScrollArea>
 class OptionMenuPanel;
 class OptionMenuItem;
+class FloatScrollBar;
 class QVBoxLayout;
 class QHBoxLayout;
 class QPropertyAnimation;
@@ -37,9 +39,10 @@ private:
     QMap<QString, OptionMenuPanel *> panelMap;
 };
 
-class OptionMenuPanel : public QWidget
+class OptionMenuPanel : public QScrollArea
 {
     Q_OBJECT
+    friend class OptionMenu;
 public:
     explicit OptionMenuPanel(OptionMenu *menu);
     virtual QSize sizeHint() const;
@@ -53,6 +56,9 @@ public:
     void removeMenu(OptionMenuItem *menu);
     void removeFlag(const QString &flag);
 private:
+    QWidget *_itemContainer{nullptr};
+    FloatScrollBar *_scroll{nullptr};
+    int _maxHeight{350};
     OptionMenu *_menu;
     QVBoxLayout *_menuLayout{nullptr};
     QVector<OptionMenuItem *> menus;

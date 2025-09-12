@@ -7,9 +7,15 @@
 #include <QPropertyAnimation>
 #include <QVBoxLayout>
 #include <QStyleFactory>
+#include <QSettings>
 
 #include "DeveloperComponents/ElaMenuStyle.h"
 #include "private/ElaMenuPrivate.h"
+#include "globalobjects.h"
+
+int ElaMenu::_showMenuAnimation = -1;
+#define SETTING_KEY_SHOW_MENU_ANIME "UI/ShowMenuAnimation"
+
 ElaMenu::ElaMenu(QWidget* parent)
     : QMenu(parent), d_ptr(new ElaMenuPrivate())
 {
@@ -21,6 +27,12 @@ ElaMenu::ElaMenu(QWidget* parent)
     d->_menuStyle = new ElaMenuStyle(style());
     setStyle(d->_menuStyle);
     d->_pAnimationImagePosY = 0;
+    d->_isSubMenu = dynamic_cast<QMenu*>(parent) != nullptr;
+
+    if (_showMenuAnimation < 0)
+    {
+        _showMenuAnimation = GlobalObjects::appSetting->value(SETTING_KEY_SHOW_MENU_ANIME, true).toBool();
+    }
 }
 
 ElaMenu::ElaMenu(const QString& title, QWidget* parent)
@@ -129,15 +141,27 @@ bool ElaMenu::isHasIcon() const
     return false;
 }
 
+void ElaMenu::setShowMenuAnimation(bool on)
+{
+    _showMenuAnimation = on;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_SHOW_MENU_ANIME, on);
+}
+
 void ElaMenu::showEvent(QShowEvent* event)
 {
     Q_EMIT menuShow();
     Q_D(ElaMenu);
     //消除阴影偏移
-    move(this->pos().x() - 6, this->pos().y());
+    if (d->_isSubMenu && this->pos().x() < QCursor::pos().x())
+        move(this->pos().x() + 8, this->pos().y());
     if (!d->_animationPix.isNull())
     {
         d->_animationPix = QPixmap();
+    }
+    if (!_showMenuAnimation)
+    {
+        QMenu::showEvent(event);
+        return;
     }
     d->_animationPix = this->grab(this->rect());
     QPropertyAnimation* posAnimation = new QPropertyAnimation(d, "pAnimationImagePosY");

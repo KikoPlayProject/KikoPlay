@@ -75,10 +75,21 @@ SettingItemArea *PlayerPage::initMpvArea()
     KPushButton *confEditBtn = new KPushButton(tr("Edit"), this);
     mpvArea->addItem(tr("Player Configuration"), confEditBtn);
 
+    ElaToggleSwitch *embWindowSwitch = new ElaToggleSwitch(this);
+    embWindowSwitch->setIsToggled(GlobalObjects::mpvplayer->getEnableEmbeddedWindow());
+    mpvArea->addItem(tr("Enable Player Independent Embedded Window(Restart required)"), embWindowSwitch);
+    QLabel *descLabel = new QLabel(tr("The Windows system enables it by default to prevent abnormal display of the main window"), mpvArea);
+    descLabel->setObjectName(QStringLiteral("SettingDescLabel"));
+    mpvArea->addItem(descLabel, Qt::AlignLeft);
+
 
     QObject::connect(confEditBtn, &KPushButton::clicked, this, [=](){
         MPVConfEdiror editor(this);
         editor.exec();
+    });
+
+    QObject::connect(embWindowSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked){
+        GlobalObjects::mpvplayer->setEmbeddedWindow(checked);
     });
 
     return mpvArea;

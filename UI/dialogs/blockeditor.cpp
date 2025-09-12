@@ -20,12 +20,11 @@ BlockEditor::BlockEditor(QWidget *parent) : CFramelessDialog(tr("Block Rules"), 
 {
     BlockProxyModel *proxyModel = new BlockProxyModel(this);
     proxyModel->setSourceModel(GlobalObjects::blocker);
-    setFont(QFont(GlobalObjects::normalFont,10));
     QTreeView *blockView=new QTreeView(this);
     blockView->setRootIsDecorated(false);
     blockView->setSelectionMode(QAbstractItemView::ExtendedSelection);
 	blockView->setItemDelegate(new ComboBoxDelegate(this));
-    blockView->setFont(this->font());
+    blockView->setFont(QFont(GlobalObjects::normalFont, 11));
     blockView->setModel(proxyModel);
     blockView->setAlternatingRowColors(true);
     blockView->setContextMenuPolicy(Qt::CustomContextMenu);

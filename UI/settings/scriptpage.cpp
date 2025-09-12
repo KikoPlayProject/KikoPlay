@@ -49,6 +49,8 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
     scriptView->setRootIsDecorated(false);
     scriptView->setSelectionMode(QAbstractItemView::SingleSelection);
     scriptView->setModel(proxyModel);
+    scriptView->setFont(QFont(GlobalObjects::normalFont, 11));
+    scriptView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
     scriptView->setAlternatingRowColors(true);
     scriptView->setItemDelegate(delegate);
     new FloatScrollBar(scriptView->verticalScrollBar(), scriptView);

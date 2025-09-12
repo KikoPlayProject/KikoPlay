@@ -186,7 +186,7 @@ void AnimeDetailInfoPage::initPageUI()
     pageSLayout->addWidget(initInfoPage());
     pageSLayout->addWidget(initEpisodePage());
     pageSLayout->addWidget(initCapturePage());
-    QObject::connect(btnGroup, &QButtonGroup::idToggled, [=](int id, bool checked) {
+    QObject::connect(btnGroup, &QButtonGroup::idToggled, this, [=](int id, bool checked) {
         if (checked)
         {
             pageSLayout->setCurrentIndex(id);
@@ -308,7 +308,7 @@ QWidget *AnimeDetailInfoPage::initEpisodePage()
     episodeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     epDelegate = new EpItemDelegate(this);
     episodeView->setItemDelegate(epDelegate);
-    episodeView->setFont(QFont(GlobalObjects::normalFont, 10));
+    episodeView->setFont(QFont(GlobalObjects::normalFont, 11));
     episodeView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
     epModel = new EpisodesModel(nullptr, this);
     episodeView->setModel(epModel);

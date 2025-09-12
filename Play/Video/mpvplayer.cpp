@@ -43,6 +43,7 @@
 #define SETTING_KEY_SUB_BACK_COLOR "Play/SubBackColor"
 #define SETTING_KEY_SUB_OUTLINE_SIZE "Play/SubOutlineSize"
 #define SETTING_KEY_SUB_BORDER_STYLE "Play/SubBorderStyle"
+#define SETTING_KEY_ENABLE_EMBEDDED_WINDOW "Play/EnableEmbeddedWindow"
 
 
 namespace
@@ -694,6 +695,12 @@ void MPVPlayer::setSubBorderStyle(const QString val)
     GlobalObjects::appSetting->setValue(SETTING_KEY_SUB_BORDER_STYLE, val);
 }
 
+void MPVPlayer::setEmbeddedWindow(bool on)
+{
+    enableEmbeddedWindow = on;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_ENABLE_EMBEDDED_WINDOW, enableEmbeddedWindow);
+}
+
 void MPVPlayer::initializeGL()
 {
     QOpenGLFunctions *glFuns=context()->functions();
@@ -1217,6 +1224,12 @@ void MPVPlayer::loadSettings()
 
     subBorderStyle = GlobalObjects::appSetting->value(SETTING_KEY_SUB_BORDER_STYLE, "outline-and-shadow").toString();
     setMPVProperty("sub-border-style", subBorderStyle);
+
+    bool embedded = true;
+#ifndef Q_OS_WIN
+    embedded = false;
+#endif
+    enableEmbeddedWindow = GlobalObjects::appSetting->value(SETTING_KEY_ENABLE_EMBEDDED_WINDOW, embedded).toBool();
 }
 
 void MPVPlayer::loadPredefineOptions(QStringList &optionGroupKeys, QVector<QStringList> &optionsGroupList)

@@ -58,6 +58,7 @@ void DanmuView::initView()
     danmuView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     danmuView->setItemDelegate(new KTreeviewItemDelegate(this));
     danmuView->setSortingEnabled(true);
+    danmuView->setFont(QFont(GlobalObjects::normalFont, 11));
     danmuView->header()->setSortIndicator(0, Qt::SortOrder::AscendingOrder);
     danmuView->setObjectName(QStringLiteral("DanmuView"));
 
@@ -95,6 +96,7 @@ DanmuFilterBox::DanmuFilterBox(QWidget *parent): KLineEdit(parent)
     setObjectName(QStringLiteral("FilterEdit"));
     setClearButtonEnabled(true);
     setFont(QFont(GlobalObjects::normalFont, 14));
+    setMinimumHeight(30);
 
     QMenu *menu = new ElaMenu(this);
 

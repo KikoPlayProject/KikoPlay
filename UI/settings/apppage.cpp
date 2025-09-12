@@ -16,6 +16,7 @@ AppPage::AppPage(QWidget *parent)
     appView->setSelectionMode(QAbstractItemView::SingleSelection);
     appView->setModel(GlobalObjects::appManager);
     appView->setAlternatingRowColors(true);
+    appView->setFont(QFont(GlobalObjects::normalFont, 11));
     appView->setItemDelegate(new AppPageItemDelegate(qMax<int>(appView->fontMetrics().height() * 1.6, 32), this));
     QVariant headerState(GlobalObjects::appSetting->value("HeaderViewState/AppPageView"));
     if(!headerState.isNull())

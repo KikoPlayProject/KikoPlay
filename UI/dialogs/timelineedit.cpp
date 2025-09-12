@@ -11,6 +11,8 @@
 #include <QAction>
 #include <QHeaderView>
 #include <QVBoxLayout>
+#include "globalobjects.h"
+
 namespace
 {
     QString formatTime(int mSec)
@@ -34,7 +36,8 @@ TimelineEdit::TimelineEdit(const DanmuSource *source, const QVector<SimpleDanmuI
     QTreeView *timelineView=new QTreeView(this);
     timelineView->setRootIsDecorated(false);
     timelineView->setSelectionMode(QAbstractItemView::SingleSelection);
-    timelineView->setFont(font());
+    timelineView->setFont(QFont(GlobalObjects::normalFont, 11));
+    timelineView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
     timelineView->setAlternatingRowColors(true);
     timelineView->setModel(timelineModel);
     timelineView->setItemDelegate(new KTreeviewItemDelegate(timelineView));
@@ -83,7 +86,8 @@ TimelineEdit::TimelineEdit(const DanmuSource *source, const QVector<SimpleDanmuI
 
     QTreeView *simpleDPView = new QTreeView(this);
     simpleDPView->setRootIsDecorated(false);
-    simpleDPView->setFont(font());
+    simpleDPView->setFont(QFont(GlobalObjects::normalFont, 11));
+    simpleDPView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
     simpleDPView->setAlternatingRowColors(true);
     simpleDPView->setItemDelegate(new KTreeviewItemDelegate(simpleDPView));
     simpleDPView->setModel(simpleDanmuPool);

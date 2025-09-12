@@ -7,6 +7,7 @@
 #include <QPropertyAnimation>
 #include "UI/ela/Def.h"
 #include "UI/ela/ElaIconButton.h"
+#include "UI/widgets/floatscrollbar.h"
 #include <QTimer>
 #include <QDebug>
 
@@ -20,6 +21,10 @@ OptionMenu::OptionMenu(QWidget *parent) : QStackedWidget{parent}
     const int durationTimeMs = 120;
     geoAnimation = new QPropertyAnimation(this, "geometry", this);
     geoAnimation->setDuration(durationTimeMs);
+    QObject::connect(geoAnimation, &QPropertyAnimation::finished, this, [=](){
+        OptionMenuPanel *curPanel = static_cast<OptionMenuPanel *>(currentWidget());
+        if (curPanel && curPanel->_scroll) curPanel->_scroll->setForceHide(false);
+    });
 }
 
 QSize OptionMenu::sizeHint() const
@@ -49,8 +54,15 @@ void OptionMenu::switchToPanel(OptionMenuPanel *menuPanel, SizeAnchor anchor)
     OptionMenuPanel *curPanel = static_cast<OptionMenuPanel *>(currentWidget());
     if (curPanel == menuPanel) return;
     panelStack.push_back(curPanel);
+    curPanel->_scroll->setForceHide(true);
 
-    updateSize(menuPanel->sizeHint(), anchor);
+    const QSize sz = menuPanel->sizeHint();
+    updateSize(sz, anchor);
+    if (sz.height() < menuPanel->_maxHeight)
+    {
+        menuPanel->_scroll->setForceHide(true);
+        menuPanel->_scroll->hide();
+    }
     setCurrentWidget(menuPanel);
 }
 
@@ -101,10 +113,16 @@ void OptionMenu::updateSize(const QSize &size, SizeAnchor anchor)
     geoAnimation->start();
 }
 
-OptionMenuPanel::OptionMenuPanel(OptionMenu *menu) : QWidget{menu}, _menu(menu)
+OptionMenuPanel::OptionMenuPanel(OptionMenu *menu) : QScrollArea{menu}, _menu(menu)
 {
     setMouseTracking(true);
-    QVBoxLayout *vLayout = new QVBoxLayout(this);
+    _itemContainer = new QWidget(this);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setWidget(_itemContainer);
+    setWidgetResizable(true);
+    _scroll = new FloatScrollBar(verticalScrollBar(), this);
+
+    QVBoxLayout *vLayout = new QVBoxLayout(_itemContainer);
     vLayout->setContentsMargins(1, 0, 1, 0);
     vLayout->setSpacing(0);
     _menuLayout = new QVBoxLayout();
@@ -118,7 +136,9 @@ OptionMenuPanel::OptionMenuPanel(OptionMenu *menu) : QWidget{menu}, _menu(menu)
 
 QSize OptionMenuPanel::sizeHint() const
 {
-    return layout()->sizeHint();
+    QSize s = _itemContainer->layout()->sizeHint() + QSize(0, 4);
+    if (s.height() > _maxHeight) s.setHeight(_maxHeight);
+    return s;
 }
 
 OptionMenuItem *OptionMenuPanel::addMenu(const QString &text)
@@ -129,7 +149,7 @@ OptionMenuItem *OptionMenuPanel::addMenu(const QString &text)
     menus.append(menuItem);
     if (_menu->currentWidget() == this && !_menu->isHidden())
     {
-        QTimer::singleShot(0, [=](){
+        QTimer::singleShot(0, this, [=](){
             _menu->updateSize(sizeHint());
         });
     }

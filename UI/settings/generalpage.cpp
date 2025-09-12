@@ -15,12 +15,14 @@
 #include "../stylemanager.h"
 #include "UI/ela/ElaComboBox.h"
 #include "UI/ela/ElaToggleSwitch.h"
+#include "UI/ela/ElaMenu.h"
 #include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 #include "UI/widgets/colorslider.h"
 #include "UI/widgets/colorpreview.h"
 #include "Common/threadtask.h"
 #include <QPainterPath>
+#include <QFontDatabase>
 #include <algorithm>
 
 
@@ -34,15 +36,15 @@ GeneralPage::GeneralPage(QWidget *parent) : SettingPage(parent)
     SettingItemArea *generalArea = new SettingItemArea(tr("General"), this);
 
     ElaComboBox *langCombo = new ElaComboBox(this);
-    const QVector<QPair<QString, QString>> langs = {
-        {"English", "en-US"},
-        {"Chinese Simplified", "zh-CN"},
+    const QVector<QPair<QString, QVector<QString>>> langs = {
+        {"English", {"en-US"}},
+        {"Chinese Simplified", {"zh-CN", "zh-Hans-CN"}},
     };
     int defalutIndex = -1, curIndex = 0;
     for (const auto &p : langs)
     {
-        langCombo->addItem(p.first, p.second);
-        if (p.second == GlobalObjects::context()->lang)
+        langCombo->addItem(p.first, p.second.first());
+        if (p.second.contains(GlobalObjects::context()->lang))
         {
             defalutIndex = curIndex;
         }
@@ -58,6 +60,16 @@ GeneralPage::GeneralPage(QWidget *parent) : SettingPage(parent)
         hideToTrayCombo->addItem(hideTypes[i], i);
     }
     generalArea->addItem(tr("Hide To Tray"), hideToTrayCombo);
+
+    ElaComboBox *fontCombo = new ElaComboBox(this);
+    const QStringList fontFamilies = QFontDatabase::families();
+    fontCombo->addItems(fontFamilies);
+    fontCombo->setCurrentIndex(fontFamilies.indexOf(GlobalObjects::normalFont));
+    generalArea->addItem(tr("UI Font(Restart required)"), fontCombo);
+
+    ElaToggleSwitch *menuAnimeSwitch = new ElaToggleSwitch(this);
+    menuAnimeSwitch->setIsToggled(ElaMenu::_showMenuAnimation);
+    generalArea->addItem(tr("Show Menu Animation"), menuAnimeSwitch);
 
 
     SettingItemArea *appearanceArea = new SettingItemArea(tr("Appearance"), this);
@@ -109,6 +121,15 @@ GeneralPage::GeneralPage(QWidget *parent) : SettingPage(parent)
             GlobalObjects::appSetting->setValue(SETTING_KEY_KIKOPLAY_LANG, lang);
         }
     });
+
+    QObject::connect(fontCombo, &ElaComboBox::currentTextChanged, this, [=](const QString &fontFamily){
+        GlobalObjects::setFont(fontFamily);
+    });
+
+    QObject::connect(menuAnimeSwitch, &ElaToggleSwitch::toggled, this, [=](bool toggled){
+        ElaMenu::setShowMenuAnimation(toggled);
+    });
+
 
     QObject::connect(bgSelector, &BgImageSelector::setBackground, this, [](const QString &path){
         MainWindow *mW = static_cast<MainWindow *>(GlobalObjects::mainWindow);

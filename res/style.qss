@@ -42,7 +42,7 @@ QToolButton#FilterOptionButton:hover {
     @if{useThemeColor}
         color: rgb(@ThemeColor);
     @else
-        color:#1CA0E4;
+        color:#37abe7;
     @endif
 }
 QToolButton#FilterOptionButton::menu-indicator {
@@ -74,7 +74,7 @@ QWidget#widgetPagePlay{
     @endif
 }
 QWidget#widgetPlayControl{
-    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(0,0,0,0),stop:1 rgba(0,0,0,240));
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(0,0,0,0),stop:0.6 rgba(0,0,0,200),stop:1 rgba(0,0,0,250));
 }
 QWidget#widgetPlayInfo{
     background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(0,0,0,200),stop:1 rgba(0,0,0,0));
@@ -90,7 +90,7 @@ QWidget#PlayInfoBar{
     background-color:rgb(50,50,50);
 }
 QWidget#widgetPlayerSidePanel {
-    background-color: qradialgradient(cx: 1.0, cy: 0.5, radius: 1.0, fx: 1.2, fy: 0.5,  stop:0 rgba(0, 0, 0, 128), stop:1 rgba(0, 0, 0, 0) );
+    background-color: qradialgradient(cx: 1.0, cy: 0.5, radius: 1.0, fx: 1.2, fy: 0.5,  stop:0 rgba(0, 0, 0, 180), stop:1 rgba(0, 0, 0, 0) );
     background-origin: border-box;
     background-clip: border-box;
 }
@@ -409,6 +409,10 @@ QTreeView::branch:open:has-children {
 QTreeView::branch:closed:has-children {
     image: url(:/res/images/playlist-branch-closed.svg);
 }
+QTreeView::indicator {
+    width:16px;
+    height:16px;
+}
 QTreeView::indicator:checked {
     image: url(:/res/images/label-check.svg);
 }
@@ -608,7 +612,7 @@ QHeaderView::section {
         border-right: 0px solid #6c6c6c;
     @endif
     color: white;
-    font-size: 15px;
+    font-size: 16px;
     padding-left: 4px;
     padding-top: 2px;
     padding-bottom: 2px;
@@ -913,9 +917,9 @@ QPushButton#ListSearchButton {
     color: rgba(255, 255, 255, 160);
 }
 QPushButton#PlaySideButton{
-    background-color: qradialgradient(cx: 0.5, cy: 0.5, radius:0.5, fx: 0.5, fy: 0.5, stop:0 rgba(0,0,0,100),stop:1 rgba(0,0,0,0));
+    /*background-color: qradialgradient(cx: 0.5, cy: 0.5, radius:0.5, fx: 0.5, fy: 0.5, stop:0 rgba(0,0,0,100),stop:1 rgba(0,0,0,0));*/
     border-style: none;
-    color: rgba(255, 255, 255, 200);
+    color: rgba(255, 255, 255, 230);
 }
 QPushButton#LibraryPageButton {
     background: none;
@@ -930,7 +934,7 @@ QPushButton#LibraryPageButton:hover, QPushButton#LibraryPageButton:pressed, QPus
     @if{useThemeColor}
         color: rgb(@ThemeColorL2);
     @else
-        color: #1CA0E4;
+        color: #37abe7;
     @endif
 }
 
@@ -1190,7 +1194,7 @@ QPushButton#ElideLineEditBtn {
 QPushButton#ElideLineEditBtn:hover,
 QPushButton#ElideLineEditBtn:pressed,
 QPushButton#ElideLineEditBtn:checked{
-    color:#1CA0E4;
+    color:#37abe7;
 }
 AppBarBtn {
     border-style:none;

@@ -40,7 +40,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     QTreeView *poolView=new QTreeView(this);
     poolView->setItemDelegate(new KTreeviewItemDelegate(poolView));
     poolView->setSelectionMode(QAbstractItemView::SingleSelection);
-    poolView->setFont(this->font());
+    poolView->setFont(QFont(GlobalObjects::normalFont, 11));
     poolView->setAnimated(true);
     poolView->setAlternatingRowColors(true);
     poolView->header()->setSortIndicator(0, Qt::SortOrder::AscendingOrder);

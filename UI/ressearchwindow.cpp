@@ -51,6 +51,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     searchEdit->setFont(QFont(GlobalObjects::normalFont, 14));
     searchEdit->setClearButtonEnabled(true);
     searchEdit->setPlaceholderText(tr("Search"));
+    searchEdit->setMinimumHeight(30);
 
     QMenu *scriptMenu = new ElaMenu(this);
     scriptCheckGroup = new QActionGroup(this);
@@ -126,6 +127,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     QMargins textMargins = filterEdit->textMargins();
     textMargins.setLeft(6);
     filterEdit->setTextMargins(textMargins);
+    filterEdit->setMinimumHeight(30);
 
     QObject::connect(filterEdit,&QLineEdit::textChanged, searchProxyModel, [=](const QString &text){
         searchProxyModel->setFilterRegularExpression(text);
@@ -181,7 +183,7 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     searchListView->setItemDelegate(new KTreeviewItemDelegate(searchListView));
     searchListView->setRootIsDecorated(false);
     searchListView->setAlternatingRowColors(true);
-    searchListView->setFont(QFont(GlobalObjects::normalFont,10));
+    searchListView->setFont(QFont(GlobalObjects::normalFont,11));
     searchListView->setIndentation(0);
     searchListView->setContextMenuPolicy(Qt::CustomContextMenu);
     searchListView->setSortingEnabled(true);

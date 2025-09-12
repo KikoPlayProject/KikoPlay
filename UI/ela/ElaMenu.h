@@ -29,6 +29,11 @@ public:
 
     bool isHasChildMenu() const;
     bool isHasIcon() const;
+
+public:
+    static int _showMenuAnimation;
+    static void setShowMenuAnimation(bool on);
+
 Q_SIGNALS:
     Q_SIGNAL void menuShow();
 

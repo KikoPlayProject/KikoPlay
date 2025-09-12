@@ -58,6 +58,11 @@ namespace
             return editor;
         }
 
+        QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override
+        {
+            return QStyledItemDelegate::sizeHint(option, index) + QSize(0, 4);
+        }
+
         void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
         {
             QStyleOptionViewItem viewOption(option);
@@ -183,7 +188,12 @@ namespace
         explicit TextColorDelegate(QObject* parent = nullptr) : QStyledItemDelegate(parent)
         { }
 
-        void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+        QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override
+        {
+            return QStyledItemDelegate::sizeHint(option, index) + QSize(0, 4);
+        }
+
+        void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
         {
             QStyleOptionViewItem viewOption(option);
             initStyleOption(&viewOption, index);

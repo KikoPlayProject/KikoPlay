@@ -23,6 +23,7 @@ FloatScrollBar::FloatScrollBar(QScrollBar *originScrollBar, QAbstractScrollArea 
     QObject::connect(this, &QScrollBar::valueChanged, _originScrollBar, &QScrollBar::setValue);
     QObject::connect(_originScrollBar, &QScrollBar::rangeChanged, this, [=](int min, int max){
         setRange(min, max);
+        if (_forceHide) return;
         if (parent->underMouse() && _autoHide) setVisible(max > 0);
         else if (!_autoHide) setVisible(max > 0);
     });
@@ -53,13 +54,13 @@ bool FloatScrollBar::eventFilter(QObject *watched, QEvent *event)
     }
     case QEvent::Enter:
     {
-        if (maximum() > 0 && _autoHide)
+        if (maximum() > 0 && _autoHide && !_forceHide)
             show();
         break;
     }
     case QEvent::Leave:
     {
-        if (maximum() > 0 && _autoHide)
+        if (maximum() > 0 && _autoHide && !_forceHide)
             hide();
         break;
     }

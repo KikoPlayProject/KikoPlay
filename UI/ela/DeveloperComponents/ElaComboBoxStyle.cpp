@@ -4,12 +4,15 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QStyleOption>
+#include <QTextLayout>
 
 #include "../ElaTheme.h"
 ElaComboBoxStyle::ElaComboBoxStyle(QStyle* style)
 {
     _pExpandIconRotate = 0;
     _pExpandMarkWidth = 0;
+    _pWordWrap = false;
+    maxItemHeight = 35;
     _themeMode = eTheme->getThemeMode();
     connect(eTheme, &ElaTheme::themeModeChanged, this, [=](ElaThemeType::ThemeMode themeMode) { _themeMode = themeMode; });
 }
@@ -115,7 +118,7 @@ void ElaComboBoxStyle::drawControl(ControlElement element, const QStyleOption* o
             }
             // 文字绘制
             painter->setPen(ElaThemeColor(_themeMode, BasicText));
-            painter->drawText(QRect(option->rect.x() + 15, option->rect.y(), option->rect.width() - 15, option->rect.height()), Qt::AlignVCenter, vopt->text);
+            painter->drawText(QRect(option->rect.x() + 15, option->rect.y(), option->rect.width() - 30, option->rect.height()), _pWordWrap ? Qt::AlignVCenter | Qt::TextWordWrap : Qt::AlignVCenter, vopt->text);
             painter->restore();
         }
         return;
@@ -232,6 +235,19 @@ QSize ElaComboBoxStyle::sizeFromContents(ContentsType type, const QStyleOption* 
     case QStyle::CT_ItemViewItem:
     {
         QSize itemSize = QProxyStyle::sizeFromContents(type, option, size, widget);
+        const QStyleOptionViewItem *itemOption = qstyleoption_cast<const QStyleOptionViewItem*>(option);
+        if (_pWordWrap && itemOption && !itemOption->text.isEmpty()) {
+            int width = itemSize.width();
+            if (widget && width == widget->width()) {
+                width -= 45;
+            }
+            int textHeight = calculateTextHeight(itemOption->text, width, itemOption->font);
+            if (textHeight > 0)
+            {
+                maxItemHeight = qMax(maxItemHeight, textHeight);
+                return QSize(itemSize.width(), textHeight);
+            }
+        }
         itemSize.setHeight(35);
         return itemSize;
     }
@@ -247,4 +263,35 @@ QSize ElaComboBoxStyle::sizeFromContents(ContentsType type, const QStyleOption* 
     }
     }
     return QProxyStyle::sizeFromContents(type, option, size, widget);
+}
+
+int ElaComboBoxStyle::calculateTextHeight(const QString &text, int width, const QFont &font) const
+{
+    if (width <= 0) return 0;
+
+    QTextLayout textLayout(text, font);
+    QTextOption textOption;
+    textOption.setWrapMode(QTextOption::WordWrap);
+    textLayout.setTextOption(textOption);
+
+    qreal height = 0;
+    int lines = 0;
+    textLayout.beginLayout();
+    while (true)
+    {
+        QTextLine line = textLayout.createLine();
+        if (!line.isValid())
+            break;
+
+        lines++;
+        line.setLineWidth(width);
+        height += line.height();
+        line.setPosition(QPointF(0, height));
+    }
+    textLayout.endLayout();
+
+    if (lines == 1) return 0;
+
+    if (lines > 1) height += 16;
+    return qMax(height, 35.0);
 }

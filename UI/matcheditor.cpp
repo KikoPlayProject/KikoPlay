@@ -621,6 +621,8 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime, const QString &se
 
     animeModel = new AnimeListModel(this);
     animeView->setRootIsDecorated(false);
+    animeView->setFont(QFont(GlobalObjects::normalFont, 11));
+    animeView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
     animeView->setSelectionMode(QAbstractItemView::SingleSelection);
     animeView->setModel(animeModel);
     animeView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -709,6 +711,7 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime, const QString &se
     animeLabel->setFont(QFont(GlobalObjects::normalFont, 12));
 
     epListView = new QListWidget(matchSubPage);
+    epListView->setFont(QFont(GlobalObjects::normalFont, 11));
     epListView->setDragEnabled(true);
     epListView->setObjectName(QStringLiteral("MatchEpListView"));
     epListView->setAcceptDrops(true);
