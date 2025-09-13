@@ -897,7 +897,9 @@ SearchWidget QLineEdit {
 
 
 /* ------------------- QComboBox ------------------- */
-
+QComboBox {
+    color: rgb(255, 255, 255);
+}
 
 /* ------------------- QPushButton ------------------- */
 QPushButton#PlayControlButton {

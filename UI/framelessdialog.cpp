@@ -50,22 +50,22 @@ void CFramelessDialog::setResizeable(bool resizeable)
 void CFramelessDialog::onAccept()
 {
     accept();
-    if(restorePlayState)
+    if (restorePlayState)
         GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
-    if(!sizeSettingKey.isEmpty())
-        GlobalObjects::appSetting->setValue(sizeSettingKey,size());
-    for(auto &func : onCloseCallback)
+    if (!sizeSettingKey.isEmpty() && lastSize.isValid())
+        GlobalObjects::appSetting->setValue(sizeSettingKey, lastSize);
+    for (auto &func : onCloseCallback)
         func();
 }
 
 void CFramelessDialog::onClose()
 {
     reject();
-    if(restorePlayState)
+    if (restorePlayState)
         GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
-    if(!sizeSettingKey.isEmpty())
-        GlobalObjects::appSetting->setValue(sizeSettingKey,size());
-    for(auto &func : onCloseCallback)
+    if (!sizeSettingKey.isEmpty() && lastSize.isValid())
+        GlobalObjects::appSetting->setValue(sizeSettingKey, lastSize);
+    for (auto &func : onCloseCallback)
         func();
 }
 
@@ -85,6 +85,10 @@ void CFramelessDialog::keyPressEvent(QKeyEvent *event)
 void CFramelessDialog::resizeEvent(QResizeEvent *event)
 {
     dialogTip->move((width()-dialogTip->width())/2, dialogTip->y());
+    if (event->spontaneous())
+    {
+        lastSize = event->size();
+    }
 }
 
 void CFramelessDialog::showBusyState(bool busy)

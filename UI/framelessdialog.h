@@ -32,6 +32,7 @@ private:
     bool restorePlayState;
     bool isBusy;
 
+    QSize lastSize;
     DialogTip *dialogTip;
     QString sizeSettingKey;
     QVector<std::function<void()>> onCloseCallback;

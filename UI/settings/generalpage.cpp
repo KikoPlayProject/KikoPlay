@@ -59,6 +59,7 @@ GeneralPage::GeneralPage(QWidget *parent) : SettingPage(parent)
     {
         hideToTrayCombo->addItem(hideTypes[i], i);
     }
+    hideToTrayCombo->setCurrentIndex(static_cast<int>(static_cast<MainWindow *>(GlobalObjects::mainWindow)->getHideToTrayType()));
     generalArea->addItem(tr("Hide To Tray"), hideToTrayCombo);
 
     ElaComboBox *fontCombo = new ElaComboBox(this);
@@ -120,6 +121,11 @@ GeneralPage::GeneralPage(QWidget *parent) : SettingPage(parent)
         {
             GlobalObjects::appSetting->setValue(SETTING_KEY_KIKOPLAY_LANG, lang);
         }
+    });
+
+    QObject::connect(hideToTrayCombo, (void (QComboBox:: *)(int))&QComboBox::currentIndexChanged, this, [=](int index){
+        MainWindow *mW = static_cast<MainWindow *>(GlobalObjects::mainWindow);
+        mW->setHideToTrayType(static_cast<MainWindow::HideToTrayType>(index));
     });
 
     QObject::connect(fontCombo, &ElaComboBox::currentTextChanged, this, [=](const QString &fontFamily){

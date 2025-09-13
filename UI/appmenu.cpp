@@ -10,6 +10,9 @@
 AppMenu::AppMenu(QWidget *p, QWidget *parent)
     : QMenu{parent}, popupFromWidget(p)
 {
+#if (QT_VERSION > QT_VERSION_CHECK(6, 6, 3))
+    addAction("");
+#endif
     setWindowFlag(Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setObjectName(QStringLiteral("AppMenu"));

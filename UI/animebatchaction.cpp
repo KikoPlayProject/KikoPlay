@@ -56,6 +56,7 @@ AnimeBatchAction::AnimeBatchAction(AnimeModel *animeModel, QWidget *parent) :
         {
             QModelIndex proxyIndex = proxyModel->index(row, 0);
             proxyModel->setData(proxyIndex, checkAll? Qt::CheckState::Checked : Qt::CheckState::Unchecked, Qt::CheckStateRole);
+            emit proxyModel->dataChanged(proxyIndex, proxyIndex, {Qt::CheckStateRole});
         }
     });
 

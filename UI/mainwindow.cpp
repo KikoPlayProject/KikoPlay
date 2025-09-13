@@ -50,6 +50,7 @@
 
 #define SETTING_KEY_MAIN_BACKGROUND "MainWindow/Background"
 #define SETTING_KEY_MAIN_DEFAULT_BLUR "MainWindow/DefaultBlurRadius"
+#define SETTING_KEY_HIDE_TRAY_TYPE "MainWindow/hideToTrayType"
 
 
 Q_TAKEOVER_NATIVEEVENT_CPP(MainWindow, elaAppBar);
@@ -83,6 +84,7 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::setHideToTrayType(HideToTrayType type)
 {
     hideToTrayType = type;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_HIDE_TRAY_TYPE, static_cast<int>(hideToTrayType));
 }
 
 void MainWindow::setDefaultBlur(double val)
@@ -303,7 +305,7 @@ void MainWindow::initIconAction()
 
 void MainWindow::initTray()
 {
-    hideToTrayType = static_cast<HideToTrayType>(GlobalObjects::appSetting->value("MainWindow/hideToTrayType", 0).toInt());
+    hideToTrayType = static_cast<HideToTrayType>(GlobalObjects::appSetting->value(SETTING_KEY_HIDE_TRAY_TYPE, 0).toInt());
     trayIcon = new QSystemTrayIcon(windowIcon(), this);
     trayIcon->setToolTip("KikoPlay");
     QObject::connect(trayIcon, &QSystemTrayIcon::activated, this, [=](QSystemTrayIcon::ActivationReason reason){
@@ -317,7 +319,7 @@ void MainWindow::initTray()
     });
     QMenu *trayMenu = new ElaMenu(this);
     QAction *actTrayExit = new QAction(tr("Exit"), trayMenu);
-    QObject::connect(actTrayExit, &QAction::triggered, this, &MainWindow::close);
+    QObject::connect(actTrayExit, &QAction::triggered, this, [=](){ this->onClose(true); });
     trayMenu->addAction(actTrayExit);
     trayIcon->setContextMenu(trayMenu);
 }
@@ -791,7 +793,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
         return;
     }
 	GlobalObjects::appSetting->setValue("MainWindow/miniGeometry", miniGeo);
-    GlobalObjects::appSetting->setValue("MainWindow/hideToTrayType", static_cast<int>(hideToTrayType));
     GlobalObjects::appSetting->setValue("MainWindow/ListWindowWidth", listWindowWidth);
     if(GlobalObjects::playlist->getCurrentItem()==nullptr && !isFullScreen())
     {

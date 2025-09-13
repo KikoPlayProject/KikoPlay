@@ -2819,7 +2819,8 @@ bool PlayerWindow::eventFilter(QObject *watched, QEvent *event)
 
 void PlayerWindow::keyPressEvent(QKeyEvent *event)
 {
-    if (QApplication::focusWidget()->inherits("QLineEdit")) return QWidget::keyPressEvent(event);
+    QWidget *focusWidget = QApplication::focusWidget();
+    if (focusWidget && focusWidget->inherits("QLineEdit")) return QWidget::keyPressEvent(event);
 
     int key = event->key();
     switch (key)
