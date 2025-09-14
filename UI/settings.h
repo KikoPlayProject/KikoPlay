@@ -25,7 +25,7 @@ public:
 protected:
     void onClose() override;
 private:
-    QHash<Page, SettingPage *> pages;
+    SettingPage *pages[PAGE_STOP];
     QStackedLayout *pageSLayout;
     SettingPage *getOrCreatePage(Page p);
 };

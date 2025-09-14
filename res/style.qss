@@ -133,9 +133,21 @@ QWidget#AutoDownloadWindow {
     qproperty-logGeneralColor: rgb(200,200,200);
 }
 QWidget#TaskBlockView{
-    qproperty-borderColor: rgb(120, 120, 120);
-    qproperty-fColor: rgb(12, 167, 250);
-    qproperty-uColor: rgb(120, 120, 120);
+    @if{useThemeColor}
+        @if{hasBackground}
+            qproperty-borderColor: rgb(200, 200, 200);
+            qproperty-fColor: rgba(@ThemeColor, 140);
+            qproperty-uColor: rgba(200, 200, 200, 90);
+        @else
+            qproperty-borderColor: rgb(120, 120, 120);
+            qproperty-fColor: rgb(@ThemeColor);
+            qproperty-uColor: rgb(120, 120, 120);
+        @endif
+    @else
+        qproperty-borderColor: rgb(120, 120, 120);
+        qproperty-fColor: rgb(12, 167, 250);
+        qproperty-uColor: rgb(120, 120, 120);
+    @endif
 }
 QWidget#TaskPeerView{
     qproperty-borderColor: rgb(200,200,200);

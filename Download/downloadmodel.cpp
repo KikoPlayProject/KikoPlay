@@ -137,7 +137,7 @@ void DownloadModel::removeItem(DownloadTask *task, bool deleteFile)
 
 bool DownloadModel::containTask(const QString &taskId)
 {
-    QSqlQuery query(QSqlDatabase::database("Download_M"));
+    QSqlQuery query(DBManager::instance()->getDB(DBManager::Download));
     query.prepare("select * from task where TaskID=?");
     query.bindValue(0,taskId);
     query.exec();
@@ -326,7 +326,7 @@ DownloadTask *DownloadModel::getDownloadTask(const QModelIndex &index)
 
 void DownloadModel::tryLoadTorrentContent(DownloadTask *task)
 {
-    QSqlQuery query(QSqlDatabase::database("Download_M"));
+    QSqlQuery query(DBManager::instance()->getDB(DBManager::Download));
     query.prepare("select Torrent from torrent where TaskID=?");
     query.bindValue(0,task->taskID);
     query.exec();
@@ -391,7 +391,7 @@ void DownloadModel::saveItemStatus()
         DownloadTask *task=iter.value();
         if(task->status!=DownloadTask::Complete)
         {
-            QSqlQuery query(QSqlDatabase::database("Download_M"));
+            QSqlQuery query(DBManager::instance()->getDB(DBManager::Download));
             query.prepare("update task set Title=?,FTime=?,TLength=?,CLength=?,SFIndexes=? where TaskID=?");
             query.bindValue(0,task->title);
             query.bindValue(1,task->finishTime);

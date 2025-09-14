@@ -679,7 +679,7 @@ QWidget *DownloadWindow::setupGlobalLogPage(QWidget *parent)
 void DownloadWindow::initActions()
 {
     act_Pause=new QAction(tr("Pause"),this);
-    QObject::connect(act_Pause,&QAction::triggered,[this](){
+    QObject::connect(act_Pause, &QAction::triggered, this, [this](){
         TaskFilterProxyModel *model = static_cast<TaskFilterProxyModel *>(downloadView->model());
         QItemSelection selection = model->mapSelectionToSource(downloadView->selectionModel()->selection());
         if (selection.size() == 0) return;
@@ -693,7 +693,7 @@ void DownloadWindow::initActions()
         }
     });
     act_Start=new QAction(tr("Start"), this);
-    QObject::connect(act_Start,&QAction::triggered,[this](){
+    QObject::connect(act_Start, &QAction::triggered, this, [this](){
         TaskFilterProxyModel *model = static_cast<TaskFilterProxyModel *>(downloadView->model());
         QItemSelection selection = model->mapSelectionToSource(downloadView->selectionModel()->selection());
         if (selection.size() == 0) return;

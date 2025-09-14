@@ -233,7 +233,24 @@ protected:
     }
 };
 
+class SidePanel : public QWidget
+{
+public:
+    using QWidget::QWidget;
+protected:
+    virtual void mouseMoveEvent(QMouseEvent *event) override
+    {
+        const QPoint pos = event->pos();
+        if (pos.y() < height() * 0.2 || pos.y() > height() * 0.8)
+        {
+            if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty()) hide();
+        }
+        QWidget::mouseMoveEvent(event);
+    }
+};
+
 }
+
 PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent)
 {
     Notifier::getNotifier()->addNotify(Notifier::PLAYER_NOTIFY, this);
@@ -2449,7 +2466,8 @@ void PlayerWindow::initPlayInfoPage()
 
 void PlayerWindow::initSidePanel(QWidget *parent)
 {
-    sidePanel = new QWidget(parent);
+    sidePanel = new SidePanel(parent);
+    sidePanel->setMouseTracking(true);
     sidePanel->setObjectName(QStringLiteral("widgetPlayerSidePanel"));
 
     constexpr const int sideBtnCount = 3;
@@ -2613,15 +2631,15 @@ void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
     {
         playInfoPanel->hide();
         playControlPanel->hide();
-    }
-    if (this->width() - pos.x() < sidePanel->width())
-    {
-        sidePanel->show();
-    }
-    else
-    {
-        if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty()) sidePanel->hide();
-    }
+        if (this->width() - pos.x() < sidePanel->width() && pos.y() > sidePanel->height() * 0.2 && pos.y() < sidePanel->height() * 0.8)
+        {
+            sidePanel->show();
+        }
+        else
+        {
+            if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty()) sidePanel->hide();
+        }
+    } 
 }
 
 void PlayerWindow::mouseDoubleClickEvent(QMouseEvent *)

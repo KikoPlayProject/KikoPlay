@@ -19,6 +19,7 @@ AppFramelessDialog::AppFramelessDialog(const QString &titleStr, QWidget *parent)
     setWindowTitle(titleStr);
 
     QObject::connect(elaAppBar, &ElaAppBar::closeButtonClicked, this, &AppFramelessDialog::reject);
+    QObject::connect(this, &AppFramelessDialog::rejected, this, &AppFramelessDialog::onClose);
     QObject::connect(elaAppBar, &ElaAppBar::hideButtonClicked, this, &AppFramelessDialog::onHide);
     QObject::connect(elaAppBar, &ElaAppBar::pinButtonClicked, this, &AppFramelessDialog::onPin);
 
