@@ -211,12 +211,13 @@ enum DanmuSourceType : int {
   TUCAO = 8,
   ACFUN = 9,
   YSJ = 10,
+  DM5 = 11,
   DanmuSourceType_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
   DanmuSourceType_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
 };
 bool DanmuSourceType_IsValid(int value);
 constexpr DanmuSourceType DanmuSourceType_MIN = UNKNOWN_DM_SRC;
-constexpr DanmuSourceType DanmuSourceType_MAX = YSJ;
+constexpr DanmuSourceType DanmuSourceType_MAX = DM5;
 constexpr int DanmuSourceType_ARRAYSIZE = DanmuSourceType_MAX + 1;
 
 const std::string& DanmuSourceType_Name(DanmuSourceType value);

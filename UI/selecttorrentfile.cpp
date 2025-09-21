@@ -7,6 +7,7 @@
 #include <QHeaderView>
 #include "Common/notifier.h"
 #include "UI/ela/ElaCheckBox.h"
+#include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "widgets/dirselectwidget.h"
 #include "Download/torrent.h"
 #include "globalobjects.h"
@@ -20,6 +21,7 @@ SelectTorrentFile::SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *pare
     torrentFileView->setModel(model);
     torrentFileView->setFont(QFont(GlobalObjects::normalFont, 11));
     torrentFileView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
+    torrentFileView->setItemDelegate(new KTreeviewItemDelegate(torrentFileView));
     torrentFileView->header()->resizeSection(0,240*logicalDpiX()/96);
     torrentFileView->header()->resizeSection(1,50*logicalDpiX()/96);
     torrentFileView->header()->resizeSection(2,50*logicalDpiX()/96);
@@ -37,7 +39,7 @@ SelectTorrentFile::SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *pare
         model->checkVideoFiles(state==Qt::Checked);
     });
     QLabel *checkedFileSizeLabel=new QLabel(this);
-    QObject::connect(model,&TorrentFileModel::checkedIndexChanged,[this,checkedFileSizeLabel](){
+    QObject::connect(model, &TorrentFileModel::checkedIndexChanged, this, [this,checkedFileSizeLabel](){
         checkedFileSize=model->getCheckedFileSize();
         checkedFileSizeLabel->setText(tr("Select: %1").arg(formatSize(false,checkedFileSize)));
     });

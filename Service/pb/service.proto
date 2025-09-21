@@ -132,6 +132,7 @@ enum DanmuSourceType {
     TUCAO = 8;
     ACFUN = 9;
     YSJ = 10;
+    DM5 = 11;
 }
 
 message DanmuSource {

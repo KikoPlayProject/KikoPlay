@@ -35,7 +35,7 @@ public:
     void setIgnoreColor(const QColor &color);
 protected:
     TorrentFile *root;
-    QColor normColor{0,0,0}, ignoreColor{200,200,200};
+    QColor normColor{240,240,240}, ignoreColor{160,160,160};
     const QStringList headers={tr("Name"),tr("Format"),tr("Size")};
     void refreshChildrenCheckStatus(const QModelIndex &index);
     void refreshParentCheckStatus(const QModelIndex &index);

@@ -10,6 +10,7 @@
 #include <QScrollArea>
 #include <QHeaderView>
 #include <QMouseEvent>
+#include "Common/notifier.h"
 #include "Common/threadtask.h"
 #include "Extension/Script/scriptmodel.h"
 #include "UI/ela/ElaComboBox.h"
@@ -133,7 +134,14 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
                 QObject::connect(scriptMenu, &QMenu::triggered, this, [=](QAction *act){
                     if (!act->data().isNull())
                     {
-                        script->scriptMenuClick(act->data().toString());
+                        emit showBusyState(true);
+                        emit showMessage(tr("Script running..."), NM_PROCESS | NM_DARKNESS_BACK);
+                        ThreadTask task(GlobalObjects::scriptManager->scriptThread);
+                        task.Run([&](){
+                            return QVariant::fromValue(script->scriptMenuClick(act->data().toString()));
+                        }).value<ScriptState>();
+                        emit showBusyState(false);
+                        emit showMessage(tr("Script running..."), NM_HIDE);
                     }
                 });
                 scriptMenu->exec(QCursor::pos());

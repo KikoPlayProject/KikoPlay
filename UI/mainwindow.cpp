@@ -142,6 +142,10 @@ void MainWindow::initUI()
         {
             GlobalObjects::context()->curMainPage = id;
             contentStackLayout->setCurrentIndex(id);
+            if (id == 0)
+            {
+                playerWindow->setFocus();
+            }
             if (id == 1 && hasCoverBg)
             {
                 if(!coverPixmap.isNull()) BackgroundMainWindow::setBackground(coverPixmap);
@@ -827,6 +831,9 @@ void MainWindow::changeEvent(QEvent *event)
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
+    QWidget* focusWidget = QApplication::focusWidget();
+    if (focusWidget && focusWidget->inherits("QLineEdit")) return QMainWindow::keyPressEvent(event);
+
     const QString pressKeyStr = QKeySequence(event->modifiers()|event->key()).toString();
     KeyActionModel::instance()->runAction(pressKeyStr, KeyActionItem::KEY_PRESS, this);
     QMainWindow::keyPressEvent(event);

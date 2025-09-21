@@ -27,6 +27,7 @@ texture_test.jpg
 vc140.pdb
 Common/secrets.h
 protoc.exe
+docs/raw/
 
 # cmake build dir
 build

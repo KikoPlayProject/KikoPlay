@@ -47,17 +47,22 @@ LANServerPage::LANServerPage(QWidget *parent) : SettingPage(parent)
     QLabel *addressTip = new QLabel(this);
     addressTip->setTextInteractionFlags(Qt::TextBrowserInteraction);
     addressTip->setObjectName(QStringLiteral("ServerAddressTip"));
-    QStringList tips;
-    tips << QString("<h2>%1</h2>").arg(tr("KikoPlay Server Address"));
-    for (QHostAddress &address : QNetworkInterface::allAddresses())
-    {
-        if (address.protocol() == QAbstractSocket::IPv4Protocol)
-        {
-            tips << QString("<p style='color: rgb(220,220,220); font-size: 16px;'>%1</p>").arg(address.toString());
-        }
-    }
-    addressTip->setText(tips.join('\n'));
     addressTip->setVisible(serviceSwitch->getIsToggled());
+    addressTip->setOpenExternalLinks(true);
+
+    auto refreshTips = [=](){
+        QStringList tips;
+        tips << QString("<h2>%1</h2>").arg(tr("KikoPlay Server Address"));
+        for (QHostAddress &address : QNetworkInterface::allAddresses())
+        {
+            if (address.protocol() == QAbstractSocket::IPv4Protocol)
+            {
+                tips << QString("<p style='color: rgb(220,220,220); font-size: 16px;'><a style='color: rgb(96, 208, 252);' href=\"http://%1:%2/\">%1</a></p>").arg(address.toString(), portEdit->text());
+            }
+        }
+        addressTip->setText(tips.join('\n'));
+    };
+    refreshTips();
 
     QVBoxLayout *itemVLayout = new QVBoxLayout(this);
     itemVLayout->setSpacing(8);
@@ -74,6 +79,7 @@ LANServerPage::LANServerPage(QWidget *parent) : SettingPage(parent)
             serviceSwitch->setIsToggled(GlobalObjects::lanServer->startServer(port));
             portEdit->setEnabled(!serviceSwitch->getIsToggled());
             startDLNASwitch->setEnabled(true);
+            refreshTips();
             addressTip->show();
             if (serviceSwitch->getIsToggled() && startDLNASwitch->getIsToggled())
             {

@@ -139,7 +139,7 @@ ScriptState AnimeProvider::menuClick(const QString &mid, Anime *anime)
     ThreadTask task(GlobalObjects::scriptManager->scriptThread);
     return task.Run([&](){
         return QVariant::fromValue(script->menuClick(mid, anime));
-               }).value<ScriptState>();
+    }).value<ScriptState>();
 }
 
 void AnimeProvider::setMatchProviders()

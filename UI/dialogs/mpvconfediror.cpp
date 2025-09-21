@@ -65,7 +65,7 @@ private:
     QRegularExpression optionRe,commentRe;
 };
 }
-MPVConfEdiror::MPVConfEdiror(QWidget *parent) : CFramelessDialog(tr("MPV Configuration"), parent, true)
+MPVConfEdiror::MPVConfEdiror(QWidget *parent) : CFramelessDialog(tr("MPV Configuration"), parent, true), hasRemoved(false), currentRemoved(false)
 {
     QLabel *tipLable = new QLabel(tr("One option per line, without the leading \"--\". "
                                      "Some options take effect after restart"), this);

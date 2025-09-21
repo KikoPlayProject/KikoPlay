@@ -1739,6 +1739,7 @@ void PlayerWindow::initSignals()
         progress->setEventMark(QVector<DanmuEvent>());
         progress->setChapterMark(QVector<MPVPlayer::ChapterInfo>());
         QString mediaTitle(GlobalObjects::mpvplayer->getMediaTitle());
+        this->setFocus();
         if (!currentItem)
         {
             titleLabel->setText(mediaTitle);
@@ -2258,18 +2259,21 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
     playPause->setText(QChar(0xe628));
     playPause->setObjectName(QStringLiteral("PlayControlButton"));
     playPause->setToolTip(tr("Play/Pause(Space)"));
+    playPause->setFocusPolicy(Qt::NoFocus);
 
     prev = new QPushButton(playControlPanel);
     prev->setFont(*GlobalObjects::iconfont);
     prev->setText(QChar(0xe78c));
     prev->setToolTip(tr("Prev(PageUp)"));
     prev->setObjectName(QStringLiteral("PlayControlButton"));
+    prev->setFocusPolicy(Qt::NoFocus);
 
     next = new QPushButton(playControlPanel);
     next->setFont(*GlobalObjects::iconfont);
     next->setText(QChar(0xea3b));
     next->setToolTip(tr("Next(PageDown)"));
     next->setObjectName(QStringLiteral("PlayControlButton"));
+    next->setFocusPolicy(Qt::NoFocus);
 
     GlobalObjects::iconfont->setPointSize(20);
 
@@ -2278,6 +2282,7 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
     stop->setText(QChar(0xea89));
     stop->setToolTip(tr("Stop"));
     stop->setObjectName(QStringLiteral("PlayControlButton"));
+    stop->setFocusPolicy(Qt::NoFocus);
 
     mute = new QPushButton(playControlPanel);
     mute->setFont(*GlobalObjects::iconfont);
@@ -2285,6 +2290,7 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
     mute->setToolTip(tr("Mute/Unmute"));
     mute->setObjectName(QStringLiteral("PlayControlButton"));
     mute->installEventFilter(this);
+    mute->setFocusPolicy(Qt::NoFocus);
 
     GlobalObjects::iconfont->setPointSize(20);
 
@@ -2293,18 +2299,21 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
     setting->setText(QChar(0xe625));
     setting->setToolTip(tr("Play Setting"));
     setting->setObjectName(QStringLiteral("PlayControlButton"));
+    setting->setFocusPolicy(Qt::NoFocus);
 
     danmu = new QPushButton(playControlPanel);
     danmu->setFont(*GlobalObjects::iconfont);
     danmu->setText(QChar(0xe619));
     danmu->setToolTip(tr("Danmu Setting"));
     danmu->setObjectName(QStringLiteral("PlayControlButton"));
+    danmu->setFocusPolicy(Qt::NoFocus);
 
     fullscreen = new QPushButton(playControlPanel);
     fullscreen->setFont(*GlobalObjects::iconfont);
     fullscreen->setText(QChar(0xe649));
     fullscreen->setToolTip(tr("FullScreen"));
     fullscreen->setObjectName(QStringLiteral("PlayControlButton"));
+    fullscreen->setFocusPolicy(Qt::NoFocus);
 
 
     launchDanmuEdit = new KLineEdit(playControlPanel);
@@ -2401,6 +2410,7 @@ void PlayerWindow::initPlayInfo(QWidget *playInfoPanel)
         tb->setText(infoButtonTexts[i].first);
         tb->setToolTip(infoButtonTexts[i].second);
         tb->setObjectName(QStringLiteral("PlayControlButton"));
+        tb->setFocusPolicy(Qt::NoFocus);
         infoHLayout->addWidget(tb);
     }
 
@@ -2494,6 +2504,7 @@ void PlayerWindow::initSidePanel(QWidget *parent)
         tb->setToolTip(sideButtonTexts[i].second);
         tb->setObjectName(QStringLiteral("PlaySideButton"));
         tb->setCheckable(true);
+        tb->setFocusPolicy(Qt::NoFocus);
         sideVLayout->addWidget(tb);
     }
     sideVLayout->addStretch(1);
@@ -2638,6 +2649,7 @@ void PlayerWindow::mouseMoveEvent(QMouseEvent *event)
         else
         {
             if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty()) sidePanel->hide();
+            this->setFocus();
         }
     } 
 }

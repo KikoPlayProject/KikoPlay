@@ -593,7 +593,6 @@ PeerTreeView {
 }
 
 
-
 /* ------------------- QHeaderView ------------------- */
 QHeaderView {
     @if{hasBackground}

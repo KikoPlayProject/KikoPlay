@@ -15,12 +15,13 @@ void DanmuStatisWidget::refreshStatis()
 {
     int pxW = width();
     int pxH = height();
-    int pxR = devicePixelRatio();
+    double pxR = devicePixelRatio();
     QPixmap statImg(pxW * pxR, pxH * pxR);
     statImg.setDevicePixelRatio(pxR);
     statImg.fill(bgColor);
     QPainter painter(&statImg);
-    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHints(QPainter::Antialiasing, true);
+    painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
     auto bRect = statImg.rect();
     if (curDuration==0)
     {

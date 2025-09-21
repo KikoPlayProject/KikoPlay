@@ -216,7 +216,7 @@ void KService::setFileInfo(kservice::KFileInfo &fileInfo, const QString &path)
         auto match = re.match(downloadURL);
         if (match.hasMatch())
         {
-            fileInfo.set_torrenthash(match.capturedTexts()[1].toStdString());
+            fileInfo.set_torrenthash(match.capturedTexts()[1].toLower().toStdString());
         }
     }
     fileInfoCache.put(fi.absoluteFilePath(), fileInfo);
@@ -315,6 +315,7 @@ void KService::listenDanmuAdded(const EventParam *p)
         {"Kikyou.d.Tucao", kservice::DanmuSourceType::TUCAO},
         {"Kikyou.d.AcFun", kservice::DanmuSourceType::ACFUN},
         {"Kikyou.d.ysjdm", kservice::DanmuSourceType::YSJ},
+        {"Kikyou.d.5dm", kservice::DanmuSourceType::DM5},
     };
 
     QHash<QString, kservice::AddDanmuSourceEvent::DanmuPoolSource *> kSrcMap;

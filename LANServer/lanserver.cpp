@@ -14,13 +14,19 @@ LANServer::LANServer(QObject *parent) : QObject(parent)
     httpThread->setObjectName(QStringLiteral("httpThread"));
     httpThread->start(QThread::NormalPriority);
 
-    serverSettings = new QSettings("KikoPlayProject", "KikoPlay");
-    serverSettings->setValue("minThreads","4");
-    serverSettings->setValue("maxThreads","100");
-    serverSettings->setValue("cleanupInterval","60000");
-    serverSettings->setValue("readTimeout","60000");
-    serverSettings->setValue("maxRequestSize","16000");
-    serverSettings->setValue("maxMultiPartSize","10000000");
+    const QString settingFile = GlobalObjects::context()->dataPath + "server.ini";
+    bool settingFileExists = QFile::exists(settingFile);
+
+    serverSettings = new QSettings(settingFile, QSettings::IniFormat);
+    if (!settingFileExists)
+    {
+        serverSettings->setValue("minThreads","4");
+        serverSettings->setValue("maxThreads","100");
+        serverSettings->setValue("cleanupInterval","60000");
+        serverSettings->setValue("readTimeout","60000");
+        serverSettings->setValue("maxRequestSize","16000");
+        serverSettings->setValue("maxMultiPartSize","10000000");
+    }
 
     router = new Router;
     listener = new stefanfrings::HttpListener(serverSettings, router);

@@ -588,17 +588,19 @@ bool DanmuSourceType_IsValid(int value) {
     case 8:
     case 9:
     case 10:
+    case 11:
       return true;
     default:
       return false;
   }
 }
 
-static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> DanmuSourceType_strings[11] = {};
+static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> DanmuSourceType_strings[12] = {};
 
 static const char DanmuSourceType_names[] =
   "ACFUN"
   "BILIBILI"
+  "DM5"
   "GAMER"
   "IQIYI"
   "KIKO"
@@ -612,29 +614,31 @@ static const char DanmuSourceType_names[] =
 static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry DanmuSourceType_entries[] = {
   { {DanmuSourceType_names + 0, 5}, 9 },
   { {DanmuSourceType_names + 5, 8}, 2 },
-  { {DanmuSourceType_names + 13, 5}, 3 },
-  { {DanmuSourceType_names + 18, 5}, 4 },
-  { {DanmuSourceType_names + 23, 4}, 1 },
-  { {DanmuSourceType_names + 27, 4}, 7 },
-  { {DanmuSourceType_names + 31, 7}, 5 },
-  { {DanmuSourceType_names + 38, 5}, 8 },
-  { {DanmuSourceType_names + 43, 14}, 0 },
-  { {DanmuSourceType_names + 57, 5}, 6 },
-  { {DanmuSourceType_names + 62, 3}, 10 },
+  { {DanmuSourceType_names + 13, 3}, 11 },
+  { {DanmuSourceType_names + 16, 5}, 3 },
+  { {DanmuSourceType_names + 21, 5}, 4 },
+  { {DanmuSourceType_names + 26, 4}, 1 },
+  { {DanmuSourceType_names + 30, 4}, 7 },
+  { {DanmuSourceType_names + 34, 7}, 5 },
+  { {DanmuSourceType_names + 41, 5}, 8 },
+  { {DanmuSourceType_names + 46, 14}, 0 },
+  { {DanmuSourceType_names + 60, 5}, 6 },
+  { {DanmuSourceType_names + 65, 3}, 10 },
 };
 
 static const int DanmuSourceType_entries_by_number[] = {
-  8, // 0 -> UNKNOWN_DM_SRC
-  4, // 1 -> KIKO
+  9, // 0 -> UNKNOWN_DM_SRC
+  5, // 1 -> KIKO
   1, // 2 -> BILIBILI
-  2, // 3 -> GAMER
-  3, // 4 -> IQIYI
-  6, // 5 -> TENCENT
-  9, // 6 -> YOUKU
-  5, // 7 -> MGTV
-  7, // 8 -> TUCAO
+  3, // 3 -> GAMER
+  4, // 4 -> IQIYI
+  7, // 5 -> TENCENT
+  10, // 6 -> YOUKU
+  6, // 7 -> MGTV
+  8, // 8 -> TUCAO
   0, // 9 -> ACFUN
-  10, // 10 -> YSJ
+  11, // 10 -> YSJ
+  2, // 11 -> DM5
 };
 
 const std::string& DanmuSourceType_Name(
@@ -643,12 +647,12 @@ const std::string& DanmuSourceType_Name(
       ::PROTOBUF_NAMESPACE_ID::internal::InitializeEnumStrings(
           DanmuSourceType_entries,
           DanmuSourceType_entries_by_number,
-          11, DanmuSourceType_strings);
+          12, DanmuSourceType_strings);
   (void) dummy;
   int idx = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumName(
       DanmuSourceType_entries,
       DanmuSourceType_entries_by_number,
-      11, value);
+      12, value);
   return idx == -1 ? ::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString() :
                      DanmuSourceType_strings[idx].get();
 }
@@ -656,7 +660,7 @@ bool DanmuSourceType_Parse(
     ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, DanmuSourceType* value) {
   int int_value;
   bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
-      DanmuSourceType_entries, 11, name, &int_value);
+      DanmuSourceType_entries, 12, name, &int_value);
   if (success) {
     *value = static_cast<DanmuSourceType>(int_value);
   }
