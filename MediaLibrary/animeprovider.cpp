@@ -210,8 +210,8 @@ ScriptState AnimeProvider::kMatch(const QString &scriptId, const QString &path, 
         {
             if (script) script->stop();
             if (abortFlag) emit abortFlag->abort();
-            Logger::logger()->log(Logger::APP, QString("KService Match Success: %1: %2 %3").arg(path, result.name, result.ep.toString()));
             result = statusFlag->kServiceMatch;
+            Logger::logger()->log(Logger::APP, QString("KService Match Success: %1: %2 %3").arg(path, result.name, result.ep.toString()));
             return ScriptState(ScriptState::S_NORM);
         }
         else if (statusFlag->scriptSuccess)

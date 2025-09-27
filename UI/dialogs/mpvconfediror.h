@@ -21,6 +21,7 @@ private:
     };
     QVector<OptionGroup> optionGroups;
     bool hasRemoved, currentRemoved;
+    QString currentRemovedName;
     void loadOptions();
 };
 

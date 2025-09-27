@@ -203,6 +203,11 @@ SettingItemArea *DanmuPage::initMergeArea()
     minMergeCountSpin->setValue(GlobalObjects::danmuPool->getMinMergeCount());
     mergeArea->addItem(tr("Minimum Danmu Required to Merge"), minMergeCountSpin);
 
+    ElaSpinBox *maxDiffCountSpin = new ElaSpinBox(this);
+    maxDiffCountSpin->setRange(1, 8);
+    maxDiffCountSpin->setValue(GlobalObjects::danmuPool->getMaxUnsimCount());
+    mergeArea->addItem(tr("Maximum differing characters between two danmus"), maxDiffCountSpin);
+
     ElaSpinBox *mergeIntervalSpin = new ElaSpinBox(this);
     mergeIntervalSpin->setRange(1, 30);
     mergeIntervalSpin->setValue(GlobalObjects::danmuPool->getMergeInterval());
@@ -218,6 +223,10 @@ SettingItemArea *DanmuPage::initMergeArea()
 
     QObject::connect(mergeCountTipPosCombo, (void (QComboBox:: *)(int))&QComboBox::currentIndexChanged, this, [](int index){
         GlobalObjects::danmuRender->setMergeCountPos(index);
+    });
+
+    QObject::connect(maxDiffCountSpin, QOverload<int>::of(&ElaSpinBox::valueChanged), this, [=](int val){
+        GlobalObjects::danmuPool->setMaxUnSimCount(val);
     });
 
     QObject::connect(minMergeCountSpin, QOverload<int>::of(&ElaSpinBox::valueChanged), this, [=](int val){

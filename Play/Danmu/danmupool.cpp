@@ -260,6 +260,7 @@ void DanmuPool::setMerged()
         finalPool=danmuPool;
     }
     currentPosition = std::lower_bound(finalPool.begin(), finalPool.end(), currentTime, DanmuComparer) - finalPool.begin();
+    emit statisInfoChange();
 #ifdef QT_DEBUG
     qDebug()<<"merge done:"<<timer.elapsed()<<"ms";
 #endif

@@ -115,7 +115,7 @@ int AppCombo::clear(lua_State *L)
     return 0;
 }
 
-AppCombo::AppCombo(AppWidget *parent) : AppWidget{parent}
+AppCombo::AppCombo(AppWidget *parent) : AppWidget{parent}, dataRef(-1)
 {
     widget = new ElaComboBox(parent? parent->getWidget() : nullptr);
 }

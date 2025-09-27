@@ -20,7 +20,7 @@ CheckUpdate::CheckUpdate(QWidget *parent) : CFramelessDialog(tr("Check For Updat
     curVersionLabel->setText(tr("Current Version: %1").arg(GlobalObjects::kikoVersion));
     newVersionLabel->setText(tr("Checking for updates..."));
     versionDescLabel->setOpenExternalLinks(true);
-    versionDescLabel->setTextInteractionFlags(Qt::TextInteractionFlag::TextSelectableByMouse);
+    versionDescLabel->setTextInteractionFlags(Qt::TextInteractionFlag::TextBrowserInteraction);
     versionDescLabel->hide();
 
     showBusyState(true);

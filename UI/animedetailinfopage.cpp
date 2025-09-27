@@ -1200,6 +1200,7 @@ TagPanel::TagPanel(QWidget *parent, bool allowDelete, bool checkAble, bool allow
 
     addTagBtn = new FontIconButton(QChar(0xe667), tr("Add Tag"), 12, 12, 2, this);
     addTagBtn->setContentsMargins(4, -1, 4, -1);
+    addTagBtn->setMinimumHeight(32);
     addTagBtn->setObjectName(QStringLiteral("FontIconToolButton"));
     QObject::connect(addTagBtn, &QPushButton::clicked, actAddTag, &QAction::trigger);
     layout()->addWidget(addTagBtn);
@@ -1245,6 +1246,7 @@ void TagPanel::addTag(const QStringList &tags)
         tagButton->setFont(QFont(GlobalObjects::normalFont, 12));
         tagButton->setContextMenuPolicy(Qt::CustomContextMenu);
         tagButton->setMinimumWidth(40);
+        tagButton->setMinimumHeight(32);
         QObject::connect(tagButton, &QPushButton::customContextMenuRequested, this, [=](const QPoint &pos){
             currentTagButton = tagButton;
             tagContextMenu->exec(tagButton->mapToGlobal(pos));

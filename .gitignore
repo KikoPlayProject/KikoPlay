@@ -28,6 +28,7 @@ vc140.pdb
 Common/secrets.h
 protoc.exe
 docs/raw/
+newVersion/desc_encode.lua
 
 # cmake build dir
 build

@@ -292,6 +292,11 @@ void MainWindow::initIconAction()
         tip.exec();
     });
 
+    QAction *actSponsor = iconMenu->addAction(tr("Sponsor"));
+    QObject::connect(actSponsor, &QAction::triggered, this, [=](){
+        QDesktopServices::openUrl(QUrl("https://afdian.com/a/KikoPlay"));
+    });
+
 
     QAction *actAbout = iconMenu->addAction(tr("About"));
     QObject::connect(actAbout,&QAction::triggered, this, [this](){

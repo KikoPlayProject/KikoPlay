@@ -32,6 +32,7 @@ public:
     bool isEnableAnalyze() const { return enableAnalyze; }
     bool isEnableMerge() const { return enableMerged; }
     int getMinMergeCount() const { return minMergeCount; }
+    int getMaxUnsimCount() const { return maxContentUnsimCount; }
     int getMergeInterval() const { return mergeInterval / 1000; }
     bool isLoadLocalDanmu() const { return loadLoaclDanmu; }
 

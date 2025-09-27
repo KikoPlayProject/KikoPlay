@@ -117,6 +117,7 @@ MPVConfEdiror::MPVConfEdiror(QWidget *parent) : CFramelessDialog(tr("MPV Configu
         if(index == 0) return;
         hasRemoved = true;
         currentRemoved = optionGroups[index].groupKey == GlobalObjects::mpvplayer->currentOptionGroup();
+        if (currentRemoved) currentRemovedName = optionGroups[index].groupKey;
         optionGroups.remove(index);
         tab->removeTab(index);
     });
@@ -165,8 +166,8 @@ void MPVConfEdiror::onAccept()
     GlobalObjects::mpvplayer->loadOptions();
     if (currentRemoved)
     {
+        Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tr("Option Group \"%1\" has been removed, switch to default").arg(currentRemovedName));
         GlobalObjects::mpvplayer->setOptionGroup("default");
-        Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tr("Option Group \"%1\" has been removed, switch to default").arg(GlobalObjects::mpvplayer->currentOptionGroup()));
     }
     else if (currentChanged)
     {
