@@ -1,0 +1,3 @@
+debian/DEBIAN/postinst text eol=lf
+debian/DEBIAN/postrm text eol=lf
+debian/DEBIAN/control text eol=lf

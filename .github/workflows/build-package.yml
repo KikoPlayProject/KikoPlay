@@ -41,7 +41,8 @@ jobs:
           libxcb-cursor-dev \
           libminizip-dev \
           libevent-dev \
-          liblua5.3-dev
+          liblua5.3-dev \
+          libfuse2
 
     - name: Install ONNX Runtime
       run: |
@@ -102,11 +103,39 @@ jobs:
 
         dpkg-deb --build --root-owner-group debian kikoplay-${{ matrix.arch }}.deb
 
+    - name: Full Package
+      run: |
+        sed -i "s/^Depends:.*/Depends: /" debian/DEBIAN/control
+        if [ "${{ matrix.arch }}" = "amd64" ]; then
+          wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
+          mv linuxdeployqt-continuous-x86_64.AppImage linuxdeployqt.AppImage
+          chmod a+x linuxdeployqt.AppImage
+        else
+          wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-aarch64.AppImage
+          mv linuxdeployqt-continuous-aarch64.AppImage linuxdeployqt.AppImage
+          chmod a+x linuxdeployqt.AppImage
+        fi
+        mkdir -p debian/usr/share/doc/libc6/
+        touch debian/usr/share/doc/libc6/copyright
+        ./linuxdeployqt.AppImage debian/usr/share/applications/io.github.KikoPlayProject.KikoPlay.desktop -appimage -unsupported-allow-new-glibc -exclude-libs=libqsqlmimer,libmysqlclient,libqsqlmysql,libqsqlpsql,libqsqlodbc,libqtposition_nmea
+        if [ "${{ matrix.arch }}" = "amd64" ]; then
+          mv KikoPlay-*x86_64.AppImage kikoplay-${{ matrix.arch }}-full.AppImage
+        else
+          mv KikoPlay-*aarch64.AppImage kikoplay-${{ matrix.arch }}-full.AppImage
+        fi
+        ls -lah
+        rm -rf debian/usr/share/doc
+        dpkg-deb --build --root-owner-group debian kikoplay-${{ matrix.arch }}-full.deb
+
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.artifact_name }}
-        path: kikoplay-${{ matrix.arch }}.deb
+        path: |
+          kikoplay-${{ matrix.arch }}.deb
+          kikoplay-${{ matrix.arch }}-full.deb
+          kikoplay-${{ matrix.arch }}-full.AppImage
 
     - name: Create GitHub Release
       if: startsWith(github.ref, 'refs/tags/')
@@ -114,5 +143,7 @@ jobs:
       with:
         files: |
           kikoplay-${{ matrix.arch }}.deb
+          kikoplay-${{ matrix.arch }}-full.deb
+          kikoplay-${{ matrix.arch }}-full.AppImage
         draft: false
         prerelease: false
