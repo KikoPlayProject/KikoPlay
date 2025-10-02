@@ -90,23 +90,17 @@ jobs:
     - name: Package .deb
       run: |
         make INSTALL_ROOT=$PWD/debian install
-
-        # Get version from git tag or use default
-        if [ -n "${{ github.ref_name }}" ] && echo "${{ github.ref_name }}" | grep -q '^[0-9]'; then
-            VERSION="${{ github.ref_name }}"
-        else
-            VERSION="2.0.0"
-        fi
+        export KIKOPLAY_VERSION="2.0.0"
 
         # Update version and architecture in control file
-        sed -i "s|^Version:.*|Version: ${VERSION}|" debian/DEBIAN/control
-        sed -i "s|^Architecture:.*|Architecture: ${{ matrix.arch }}|" debian/DEBIAN/control
+        sed -i "s/^Version:.*/Version: ${KIKOPLAY_VERSION}/" debian/DEBIAN/control
+        sed -i "s/^Architecture:.*/Architecture: ${{ matrix.arch }}/" debian/DEBIAN/control
 
         dpkg-deb --build --root-owner-group debian kikoplay-${{ matrix.arch }}.deb
 
     - name: Full Package
       run: |
-        sed -i "s|^Depends:.*|Depends: |" debian/DEBIAN/control
+        sed -i "s/^Depends:.*/Depends: /" debian/DEBIAN/control
         if [ "${{ matrix.arch }}" = "amd64" ]; then
           wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
           mv linuxdeployqt-continuous-x86_64.AppImage linuxdeployqt.AppImage
