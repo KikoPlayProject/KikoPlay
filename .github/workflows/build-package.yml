@@ -106,7 +106,7 @@ jobs:
 
     - name: Full Package
       run: |
-        sed -i "s/^Depends:.*/Depends: /" debian/DEBIAN/control
+        sed -i "s|^Depends:.*/Depends: |" debian/DEBIAN/control
         if [ "${{ matrix.arch }}" = "amd64" ]; then
           wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
           mv linuxdeployqt-continuous-x86_64.AppImage linuxdeployqt.AppImage
