@@ -42,7 +42,8 @@ jobs:
           libminizip-dev \
           libevent-dev \
           liblua5.3-dev \
-          libfuse2
+          libfuse2 \
+          desktop-file-utils
 
     - name: Install ONNX Runtime
       run: |
