@@ -99,8 +99,8 @@ jobs:
         fi
 
         # Update version and architecture in control file
-        sed -i "s/^Version:.*/Version: ${VERSION}/" debian/DEBIAN/control
-        sed -i "s/^Architecture:.*/Architecture: ${{ matrix.arch }}/" debian/DEBIAN/control
+        sed -i "s|^Version:.*/Version: ${VERSION}|" debian/DEBIAN/control
+        sed -i "s|^Architecture:.*/Architecture: ${{ matrix.arch }}|" debian/DEBIAN/control
 
         dpkg-deb --build --root-owner-group debian kikoplay-${{ matrix.arch }}.deb
 
