@@ -17,6 +17,8 @@ release/
 debug/
 res_local/
 Makefile
+Makefile.Debug
+Makefile.Release
 KikoPlay
 kikoplay
 *.o
@@ -41,3 +43,13 @@ build
 
 # AI
 CLAUDE.md
+
+*.AppImage
+*.deb
+debian/usr
+debian/.DirIcon
+debian/AppRun
+debian/io.github.KikoPlayProject.KikoPlay.desktop
+debian/io.github.KikoPlayProject.KikoPlay.png
+
+Extension/Lua/liblua53.a
