@@ -23,7 +23,7 @@
  - 1.0起支持lua扩展app，通过扩展app可以为KikoPlay添加更多功能，包括bangumi同步、网页视频下载、m3u8直播等等
  - .........
 
-使用说明可参考[KikoPlay使用说明](docs/KikoPlay使用说明.pdf)  
+使用说明可参考[KikoPlay使用说明](docs/KikoPlay使用说明.pdf)，[bilibili](https://space.bilibili.com/3632305396517123)  
 欢迎大家为KikoPlay编写脚本，[脚本仓库](https://github.com/KikoPlayProject/KikoPlayScript)  
 还可以通过KikoPlay的Web API实现其他功能，[Web API参考](web/README.md)  
 自1.0.0起增加了扩展App功能，通过扩展App可以为KikoPlay增加更多自定义功能，[App仓库](https://github.com/KikoPlayProject/KikoPlayApp)
