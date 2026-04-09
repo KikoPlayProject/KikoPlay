@@ -5,6 +5,7 @@
 #include <QOpenGLPaintDevice>
 #include <QCoreApplication>
 #include <QApplication>
+#include <QSurfaceFormat>
 //#include <QDesktopWidget>
 #include <QDebug>
 #include <QMap>
@@ -74,6 +75,32 @@ const char *fShaderDanmu =
         "    gl_FragColor.rgba = texture2D(u_SamplerD[int(texId)], v_vTexCoord).bgra;\n"
         "    gl_FragColor.a *= alpha;\n"
         "}\n";
+const char *vShaderDanmu_Core =
+        "#version 150 core\n"
+        "in vec4 a_VtxCoord;\n"
+        "in vec2 a_TexCoord;\n"
+        "in float a_Tex;\n"
+        "out vec2 v_vTexCoord;\n"
+        "flat out int texId;\n"
+        "void main(void)\n"
+        "{\n"
+        "    gl_Position = a_VtxCoord;\n"
+        "    v_vTexCoord = a_TexCoord;\n"
+        "    texId = int(a_Tex);\n"
+        "}\n";
+
+const char *fShaderDanmu_Core =
+        "#version 150 core\n"
+        "in vec2 v_vTexCoord;\n"
+        "flat in int texId;\n"
+        "uniform sampler2D u_SamplerD[16];\n"
+        "uniform float alpha;\n"
+        "out vec4 fragColor;\n"
+        "void main(void)\n"
+        "{\n"
+        "    fragColor = texture(u_SamplerD[texId], v_vTexCoord).bgra;\n"
+        "    fragColor.a *= alpha;\n"
+        "}\n";
 const char *vShaderDanmu_Old =
         "attribute mediump vec4 a_VtxCoord;\n"
         "attribute mediump vec2 a_TexCoord;\n"
@@ -96,6 +123,28 @@ const char *fShaderDanmu_Old =
         "    gl_FragColor.rgba = texture2D(u_SamplerD, v_vTexCoord).bgra;\n"
         "    gl_FragColor.a *= alpha;\n"
 "}\n";
+const char *vShaderDanmu_Old_Core =
+        "#version 150 core\n"
+        "in vec4 a_VtxCoord;\n"
+        "in vec2 a_TexCoord;\n"
+        "out vec2 v_vTexCoord;\n"
+        "void main(void)\n"
+        "{\n"
+        "    gl_Position = a_VtxCoord;\n"
+        "    v_vTexCoord = a_TexCoord;\n"
+        "}\n";
+
+const char *fShaderDanmu_Old_Core =
+        "#version 150 core\n"
+        "in vec2 v_vTexCoord;\n"
+        "uniform sampler2D u_SamplerD;\n"
+        "uniform float alpha;\n"
+        "out vec4 fragColor;\n"
+        "void main(void)\n"
+        "{\n"
+        "    fragColor = texture(u_SamplerD, v_vTexCoord).bgra;\n"
+        "    fragColor.a *= alpha;\n"
+        "}\n";
 #ifdef Q_OS_WIN
 #pragma comment (lib,"user32.lib")
 #pragma comment (lib,"gdi32.lib")
@@ -121,7 +170,8 @@ static QString get_color_profile(HWND hwnd)
 }
 #endif
 
-static QSet<QString> optionsBeforeInit{"config", "config-dir", "input-conf", "load-scripts", "script", "scripts"};
+static QSet<QString> optionsBeforeInit{"config", "config-dir", "input-conf", "load-scripts", "script", "scripts",
+                                       "hwdec", "gpu-context", "vo", "terminal", "keep-open", "icc-profile-auto"};
 
 }
 MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::Stop),
@@ -133,7 +183,16 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
 
     loadSettings();
     loadOptions();
-    const QMap<QString, QString> &optionsMap = optionsGroupMap[curOptionGroup];
+    QMap<QString, QString> optionsMap = optionsGroupMap[curOptionGroup];
+#ifdef Q_OS_MACOS
+    optionsMap["gpu-context"] = "cocoa";
+    optionsMap["hwdec"] = "no";
+    optionsMap["vo"] = "libmpv";
+    if (!optionsMap.contains("icc-profile-auto"))
+    {
+        optionsMap["icc-profile-auto"] = "yes";
+    }
+#endif
     for(auto iter = optionsMap.cbegin(); iter != optionsMap.cend(); ++iter)
     {
         if(optionsBeforeInit.contains(iter.key()))
@@ -145,6 +204,14 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
             }
         }
     }
+
+    mpv_set_option_string(mpv, "terminal", "yes");
+    mpv_set_option_string(mpv, "keep-open", "yes");
+    mpv_set_option_string(mpv, "vo", "libmpv");
+#ifdef Q_OS_MACOS
+    mpv_set_option_string(mpv, "gpu-context", "cocoa");
+    mpv_set_option_string(mpv, "hwdec", "no");
+#endif
 
     if (mpv_initialize(mpv) < 0)
         throw std::runtime_error("could not initialize mpv context");
@@ -159,10 +226,6 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
             Logger::logger()->log(Logger::MPV, QString("[kiko][option error]: %1, %2").arg(iter.key(), QString::number(ret)));
         }
     }
-
-    mpv_set_option_string(mpv, "terminal", "yes");
-    mpv_set_option_string(mpv, "keep-open", "yes");
-    mpv_set_option_string(mpv, "vo", "libmpv");
 
     QObject::connect(this, &MPVPlayer::frameSwapped, this,&MPVPlayer::swapped);
 
@@ -203,11 +266,19 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
 
     if (isShowPreview)
     {
-        mpvPreview = new MPVPreview(QSize(220*logicalDpiX()/96,124*logicalDpiY()/96));
-        previewThread = new QThread();
-        previewThread->start();
-        mpvPreview->moveToThread(previewThread);
-        QObject::connect(mpvPreview, &MPVPreview::previewDown, this, &MPVPlayer::refreshPreview);
+        try
+        {
+            mpvPreview = new MPVPreview(QSize(220*logicalDpiX()/96,124*logicalDpiY()/96));
+            previewThread = new QThread();
+            previewThread->start();
+            mpvPreview->moveToThread(previewThread);
+            QObject::connect(mpvPreview, &MPVPreview::previewDown, this, &MPVPlayer::refreshPreview);
+        }
+        catch (const std::exception &ex)
+        {
+            isShowPreview = false;
+            Logger::logger()->log(Logger::MPV, QString("[kiko][mpv preview init failed]: %1").arg(ex.what()));
+        }
     }
 }
 
@@ -296,6 +367,10 @@ void MPVPlayer::setIccProfileOption()
 
 void MPVPlayer::drawTexture(QVector<const DanmuObject *> &objList, float alpha)
 {
+    if (!danmuShaderAvailable)
+    {
+        return;
+    }
     static QVector<GLfloat> vtx(6*2*64),tex(6*2*64),texId(6*64);
     static int Textures[] ={GL_TEXTURE0,GL_TEXTURE1,GL_TEXTURE2,GL_TEXTURE3,
                             GL_TEXTURE4,GL_TEXTURE5,GL_TEXTURE6,GL_TEXTURE7,
@@ -713,8 +788,20 @@ void MPVPlayer::initializeGL()
     }
 #endif
 #endif
+    renderContextAvailable = false;
+    danmuShaderAvailable = false;
     QOpenGLFunctions *glFuns=context()->functions();
     glFuns->initializeOpenGLFunctions();
+    if (mpv_gl)
+    {
+        mpv_render_context_set_update_callback(mpv_gl, nullptr, nullptr);
+        mpv_render_context_free(mpv_gl);
+        mpv_gl = nullptr;
+    }
+#ifdef Q_OS_MACOS
+    auto fmt = context()->format();
+    qInfo() << "OpenGL format:" << fmt.majorVersion() << fmt.minorVersion() << fmt.profile() << fmt.renderableType();
+#endif
     mpv_opengl_init_params gl_init_params{get_proc_address, nullptr};
     mpv_render_param params[]{
         {MPV_RENDER_PARAM_API_TYPE, const_cast<char *>(MPV_RENDER_API_TYPE_OPENGL)},
@@ -722,8 +809,14 @@ void MPVPlayer::initializeGL()
         {MPV_RENDER_PARAM_INVALID, nullptr}
     };
 
-    if (mpv_render_context_create(&mpv_gl, mpv, params) < 0)
-        throw std::runtime_error("failed to initialize mpv GL context");
+    const int ret = mpv_render_context_create(&mpv_gl, mpv, params);
+    if (ret < 0)
+    {
+        Logger::logger()->log(Logger::MPV, QString("[kiko][mpv gl init failed]: %1").arg(ret));
+        qCritical() << "failed to initialize mpv GL context" << ret;
+        return;
+    }
+    renderContextAvailable = true;
     mpv_render_context_set_update_callback(mpv_gl, MPVPlayer::on_update, reinterpret_cast<void *>(this));
 
     const char *version = reinterpret_cast<const char*>(glFuns->glGetString(GL_VERSION));
@@ -738,24 +831,35 @@ void MPVPlayer::initializeGL()
     if (oldOpenGLVersion) qInfo()<<"Unsupport sampler2D Array";
     useSample2DArray = GlobalObjects::appSetting->value(SETTING_KEY_USE_SAMPLE2DARRAY, true).toBool();
 	if (!oldOpenGLVersion && !useSample2DArray) oldOpenGLVersion = true;
+    const bool coreProfile = context()->format().profile() == QSurfaceFormat::CoreProfile;
+    danmuShader.removeAllShaders();
+    danmuShader.bindAttributeLocation("a_VtxCoord", 0);
+    danmuShader.bindAttributeLocation("a_TexCoord", 1);
+    if (!oldOpenGLVersion)
+    {
+        danmuShader.bindAttributeLocation("a_Tex", 2);
+    }
     if (oldOpenGLVersion)
     {
-        danmuShader.addShaderFromSourceCode(QOpenGLShader::Vertex, vShaderDanmu_Old);
-        danmuShader.addShaderFromSourceCode(QOpenGLShader::Fragment, fShaderDanmu_Old);
-        danmuShader.link();
-        danmuShader.bind();
-        danmuShader.bindAttributeLocation("a_VtxCoord", 0);
-        danmuShader.bindAttributeLocation("a_TexCoord", 1);
+        danmuShaderAvailable = danmuShader.addShaderFromSourceCode(QOpenGLShader::Vertex, coreProfile ? vShaderDanmu_Old_Core : vShaderDanmu_Old);
+        danmuShaderAvailable = danmuShader.addShaderFromSourceCode(QOpenGLShader::Fragment, coreProfile ? fShaderDanmu_Old_Core : fShaderDanmu_Old) && danmuShaderAvailable;
     }
     else
     {
-        danmuShader.addShaderFromSourceCode(QOpenGLShader::Vertex, vShaderDanmu);
-        danmuShader.addShaderFromSourceCode(QOpenGLShader::Fragment, fShaderDanmu);
-        danmuShader.link();
-        danmuShader.bind();
-        danmuShader.bindAttributeLocation("a_VtxCoord", 0);
-        danmuShader.bindAttributeLocation("a_TexCoord", 1);
-        danmuShader.bindAttributeLocation("a_Tex", 2);
+        danmuShaderAvailable = danmuShader.addShaderFromSourceCode(QOpenGLShader::Vertex, coreProfile ? vShaderDanmu_Core : vShaderDanmu);
+        danmuShaderAvailable = danmuShader.addShaderFromSourceCode(QOpenGLShader::Fragment, coreProfile ? fShaderDanmu_Core : fShaderDanmu) && danmuShaderAvailable;
+    }
+    if (danmuShaderAvailable)
+    {
+        danmuShaderAvailable = danmuShader.link();
+    }
+    if (danmuShaderAvailable)
+    {
+        danmuShaderAvailable = danmuShader.bind();
+    }
+    if (!danmuShaderAvailable)
+    {
+        qWarning() << "failed to initialize danmu shader" << danmuShader.log();
     }
     doneCurrent();
     emit initContext();
@@ -763,10 +867,15 @@ void MPVPlayer::initializeGL()
 
 void MPVPlayer::paintGL()
 {
+    QOpenGLFunctions *glFuns=context()->functions();
+    glFuns->glClearColor(0, 0, 0, 0);
+    glFuns->glClear(GL_COLOR_BUFFER_BIT);
+    if (!renderContextAvailable || !mpv_gl)
+    {
+        return;
+    }
     if (state == PlayState::Stop)
     {
-        QOpenGLFunctions *glFuns=context()->functions();
-        glFuns->glClearColor(0, 0, 0, 0);
         return;
     }
     mpv_opengl_fbo mpfbo{static_cast<int>(defaultFramebufferObject()),
@@ -818,6 +927,11 @@ void MPVPlayer::on_mpv_events()
 
 void MPVPlayer::maybeUpdate()
 {
+    if (!renderContextAvailable || !mpv_gl)
+    {
+        update();
+        return;
+    }
     if (window()->isMinimized())
     {
         makeCurrent();

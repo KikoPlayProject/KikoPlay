@@ -191,8 +191,8 @@ private slots:
     void on_mpv_events();
     void maybeUpdate();
 private:
-    mpv_handle *mpv;
-    mpv_render_context *mpv_gl;
+    mpv_handle *mpv{nullptr};
+    mpv_render_context *mpv_gl{nullptr};
     void handle_mpv_event(mpv_event *event);
     static void on_update(void *ctx);
     static void wakeup(void *ctx);
@@ -207,6 +207,8 @@ private:
     int volume;
     int videoAspectIndex;
     bool oldOpenGLVersion;
+    bool renderContextAvailable{false};
+    bool danmuShaderAvailable{false};
     double playSpeed;
     qint64 cacheSpeed;
     int brightness;

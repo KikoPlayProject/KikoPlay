@@ -119,6 +119,13 @@ SubRecognizeDialog::SubRecognizeDialog(const QString &videoFile, QWidget *parent
     if (lastLangIndex >= 0) langCombo->setCurrentIndex(lastLangIndex);
 
     cudaCheck->setChecked(GlobalObjects::appSetting->value(SETTING_KEY_SUB_RECOGNIZE_USE_CUDA, false).toBool());
+    const bool hasCudaRecognizer = QFile::exists(options.whisperCudaPath);
+    cudaCheck->setEnabled(hasCudaRecognizer);
+    if (!hasCudaRecognizer)
+    {
+        cudaCheck->setChecked(false);
+        cudaCheck->setToolTip(tr("CUDA recognizer is not available on this platform or not installed"));
+    }
     vadCheck->setChecked(GlobalObjects::appSetting->value(SETTING_KEY_SUB_RECOGNIZE_USE_VAD, true).toBool());
     vadThresTip->setVisible(vadCheck->isChecked());
     vadThresSlider->setVisible(vadCheck->isChecked());

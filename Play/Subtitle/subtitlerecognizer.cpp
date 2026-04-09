@@ -14,6 +14,8 @@
 #include "subtitleloader.h"
 #ifdef Q_OS_WIN
 #include <windows.h>
+#elif defined(Q_OS_MACOS)
+#include <CoreFoundation/CoreFoundation.h>
 #endif
 
 SubtitleRecognizer::SubtitleRecognizer(const SubRecognizeOptions &options) : KTask{"sub_recognizer"}, _options(options)
@@ -31,6 +33,11 @@ SubtitleRecognizer::~SubtitleRecognizer()
 
 QString SubtitleRecognizer::recognize()
 {
+    if (_options.whisperUseCuda && !QFile::exists(_options.whisperCudaPath))
+    {
+        Logger::logger()->log(Logger::APP, tr("CUDA whisper executable not found, fallback to CPU"));
+        _options.whisperUseCuda = false;
+    }
     setInfo(tr("Processing...Extract Audio"), 0);
     QString wavExtracted = extractAudio(_options.videoPath);
     if (_cancelFlag)
@@ -342,6 +349,19 @@ QString SubtitleRecognizer::toSimplified(const QString &text)
     QScopedPointer<QChar> buf(new QChar[text.length()]);
     LCMapString(Locale,LCMAP_SIMPLIFIED_CHINESE, reinterpret_cast<LPCWSTR>(text.constData()), text.length(),reinterpret_cast<LPWSTR>(buf.data()), text.length());
     return QString(buf.data(), text.length());
+#elif defined(Q_OS_MACOS)
+    CFMutableStringRef mutableText = CFStringCreateMutableCopy(kCFAllocatorDefault, 0,
+        reinterpret_cast<CFStringRef>(text.toCFString()));
+    if (!mutableText) return text;
+
+    const bool transformed = CFStringTransform(mutableText, nullptr, CFSTR("Traditional-Simplified"), false);
+    QString simplified = text;
+    if (transformed)
+    {
+        simplified = QString::fromCFString(mutableText);
+    }
+    CFRelease(mutableText);
+    return simplified;
 #else
     return text;
 #endif
@@ -403,8 +423,13 @@ SubRecognizeOptions::SubRecognizeOptions()
     rPathBase = strApp;
 #endif
 
+#ifdef Q_OS_WIN
     whisperPath = rPathBase + "/whisper/main.exe";
     whisperCudaPath = rPathBase + "/whisper/cuda/main.exe";
+#else
+    whisperPath = rPathBase + "/whisper/main";
+    whisperCudaPath = rPathBase + "/whisper/cuda/main";
+#endif
     modelPathBase = rPathBase + "/model";
     vadModelPath = rPathBase + "/silero_vad.onnx";
 
