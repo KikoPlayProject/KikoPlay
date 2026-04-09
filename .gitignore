@@ -53,3 +53,7 @@ debian/io.github.KikoPlayProject.KikoPlay.desktop
 debian/io.github.KikoPlayProject.KikoPlay.png
 
 Extension/Lua/liblua53.a
+lib/mac/
+build-macos-arm64/
+dist-macos/
+.DS_Store

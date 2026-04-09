@@ -4,4 +4,5 @@ hwdec=auto
 demuxer-max-bytes=1024MiB
 hr-seek-framedrop=yes
 profile=fast
+icc-profile-auto=yes
 glsl-shaders=

@@ -46,6 +46,7 @@ class PlayerContent : public QWidget
 public:
     explicit PlayerContent(QWidget *parent = nullptr);
     void refreshItems();
+    void setContentVisible(bool on);
     bool eventFilter(QObject *watched, QEvent *event);
 private:
     QVector<RecentItem *> items;
@@ -68,7 +69,7 @@ public:
 
 private:
     //----------------------------------------
-    QWidget *playerContent{nullptr};  // logo, recent list
+    PlayerContent *playerContent{nullptr};  // logo, recent list
     QObject *playInfo;                // message tip
 
     // top, bottom, side panels

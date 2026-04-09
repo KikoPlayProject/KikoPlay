@@ -80,6 +80,11 @@ win32 {
     }
 }
 
+macx {
+    QMAKE_CFLAGS_RELEASE += -DLUA_USE_MACOSX -DLUA_COMPAT_5_2
+    DESTDIR = $$PWD/../../lib/mac
+}
+
 linux-g++* {
     QMAKE_CFLAGS_RELEASE += -DLUA_USE_LINUX -DLUA_COMPAT_5_2
 }

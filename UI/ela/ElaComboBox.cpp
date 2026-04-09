@@ -2,11 +2,13 @@
 
 #include <QAbstractItemView>
 #include <QApplication>
+#include <QGuiApplication>
 #include <QLayout>
 #include <QListView>
 #include <QMouseEvent>
 #include <QLineEdit>
 #include <QPropertyAnimation>
+#include <QScreen>
 
 #include "DeveloperComponents/ElaComboBoxStyle.h"
 #include "ElaScrollBar.h"
@@ -14,6 +16,58 @@
 #include "UI/widgets/floatscrollbar.h"
 #include "private/ElaComboBoxPrivate.h"
 Q_PROPERTY_CREATE_Q_CPP(ElaComboBox, int, BorderRadius)
+
+namespace {
+void positionPopupContainer(QComboBox* combo, QWidget* container, int popupHeight)
+{
+    if (!combo || !container)
+    {
+        return;
+    }
+
+    const QRect comboRect(combo->mapToGlobal(QPoint(0, 0)), combo->size());
+    QScreen* screen = QGuiApplication::screenAt(comboRect.center());
+    if (!screen)
+    {
+        screen = combo->screen();
+    }
+    if (!screen)
+    {
+        screen = QGuiApplication::primaryScreen();
+    }
+
+    QRect availableGeometry = screen ? screen->availableGeometry() : QRect(comboRect.topLeft(), QSize(1920, 1080));
+    const int popupWidth = qMax(container->width(), combo->width());
+    int x = comboRect.left();
+    int y = comboRect.bottom() + 1;
+
+    if (x + popupWidth > availableGeometry.right())
+    {
+        x = availableGeometry.right() - popupWidth;
+    }
+    if (x < availableGeometry.left())
+    {
+        x = availableGeometry.left();
+    }
+
+    if (y + popupHeight > availableGeometry.bottom())
+    {
+        const int aboveY = comboRect.top() - popupHeight - 1;
+        if (aboveY >= availableGeometry.top())
+        {
+            y = aboveY;
+        }
+        else
+        {
+            y = qMax(availableGeometry.top(), availableGeometry.bottom() - popupHeight);
+        }
+    }
+
+    container->setFixedWidth(popupWidth);
+    container->move(x, y);
+}
+}
+
 ElaComboBox::ElaComboBox(QWidget* parent)
     : QComboBox(parent), d_ptr(new ElaComboBoxPrivate())
 {
@@ -105,7 +159,10 @@ void ElaComboBox::showPopup()
                 containerHeight = (count() - 1) * 35 + d->_comboBoxStyle->maxItemHeight + 8;
             }
             view()->resize(view()->width(), containerHeight - 8);
+            positionPopupContainer(this, container, containerHeight);
+#ifdef Q_OS_WIN
             container->move(container->x(), container->y() + 3);
+#endif
             QLayout* layout = container->layout();
             while (layout->count())
             {
