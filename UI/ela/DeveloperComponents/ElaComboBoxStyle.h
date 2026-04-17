@@ -4,6 +4,7 @@
 #include <QProxyStyle>
 
 #include "../Def.h"
+class QStyleOptionViewItem;
 class ElaComboBoxStyle : public QProxyStyle
 {
     Q_OBJECT
@@ -24,6 +25,8 @@ public:
     mutable int maxItemHeight;
 
 private:
+    int calculateAvailableTextWidth(const QWidget* widget) const;
+    int calculateItemHeight(const QStyleOptionViewItem *itemOption, const QWidget* widget) const;
     ElaThemeType::ThemeMode _themeMode;
     int _shadowBorderWidth{4};
     int calculateTextHeight(const QString &text, int width, const QFont &font) const;

@@ -22,7 +22,7 @@ struct WebDAVInfo
 
 struct PlayListItem
 {
-    PlayListItem(PlayListItem *p = nullptr, bool leaf = false, int insertPosition = -1);
+    PlayListItem(PlayListItem *p = nullptr, bool leaf = false, int insertPosition = -1, const QString &filePath = "");
     ~PlayListItem();
 
     static PlayListItem *parseCollection(QXmlStreamReader &reader, PlayListItem *parent = nullptr);

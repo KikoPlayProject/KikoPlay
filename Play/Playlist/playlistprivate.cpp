@@ -368,7 +368,6 @@ bool PlayListPrivate::addSubFolder(QString folderStr, PlayListItem *parent, int 
     PlayListItem *folderCollection = new PlayListItem();
     folderCollection->title = folder.dirName();
     folderCollection->path = folderStr;
-    folderCollection->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
     for (QFileInfo fileInfo : folder.entryInfoList())
     {
         QString fileName = fileInfo.fileName();
@@ -378,12 +377,9 @@ bool PlayListPrivate::addSubFolder(QString folderStr, PlayListItem *parent, int 
             {
                 if(!fileItems.contains(fileInfo.filePath()))
                 {
-                    PlayListItem *newItem = new PlayListItem(folderCollection, true);
+                    PlayListItem *newItem = new PlayListItem(folderCollection, true, -1, fileInfo.filePath());
                     int suffixPos = fileName.lastIndexOf('.'), pathPos = fileName.lastIndexOf('/') + 1;
                     newItem->title = fileName.mid(pathPos, suffixPos - pathPos);
-                    newItem->path = fileInfo.filePath();
-                    newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
-                    newItem->pathHash = QCryptographicHash::hash(newItem->path.toUtf8(),QCryptographicHash::Md5).toHex();
                     containsVideoFile = true;
                     itemCount++;
                     fileItems.insert(newItem->path,newItem);
@@ -431,11 +427,9 @@ int PlayListPrivate::refreshFolder(PlayListItem *folderItem, QVector<PlayListIte
                     && !fileItems.contains(filePath))
             {
                 if(oFolder) q_ptr->beginInsertRows(fIndex, folderItem->children->size(), folderItem->children->size());
-                PlayListItem *newItem = new PlayListItem(folderItem, true);
+                PlayListItem *newItem = new PlayListItem(folderItem, true, -1, filePath);
                 int suffixPos = fileName.lastIndexOf('.'), pathPos = fileName.lastIndexOf('/') + 1;
                 newItem->title = fileName.mid(pathPos, suffixPos - pathPos);
-                newItem->path = filePath;
-                newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
                 fileItems.insert(newItem->path,newItem);
                 nItems<<newItem;
                 ++nCount;
@@ -451,7 +445,6 @@ int PlayListPrivate::refreshFolder(PlayListItem *folderItem, QVector<PlayListIte
                 PlayListItem *folderCollection = new PlayListItem();
                 folderCollection->title = fileName;
                 folderCollection->path = filePath;
-                folderCollection->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
                 int c = refreshFolder(folderCollection, nItems);
                 if(c>0)
                 {

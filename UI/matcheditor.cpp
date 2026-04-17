@@ -46,7 +46,7 @@ namespace
     {
     public:
         using QStyledItemDelegate::QStyledItemDelegate;
-        void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+        void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override
         {
             {
                 QString type = index.data(Qt::AccessibleDescriptionRole ).toString();
@@ -64,239 +64,29 @@ namespace
                 }
             }
         }
-    };
-/*
-    class EpModel : public QAbstractItemModel
-    {
-    public:
-        EpModel(MatchEditor *matchEditor, QObject *parent = nullptr) : QAbstractItemModel(parent)
-        {
-            epList = &matchEditor->epList;
-            epCheckedList = &matchEditor->epCheckedList;
 
-            QHash<const PlayListItem *, QString> titleHash;
-            for(auto i : *matchEditor->batchItems)
+        QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override
+        {
+            QSize itemSize = QStyledItemDelegate::sizeHint(option, index);
+            QString type = index.data(Qt::AccessibleDescriptionRole).toString();
+            if (type != QLatin1String("child") || !option.widget)
             {
-                int pathPos = i->path.lastIndexOf('/') + 1;
-                titleHash[i] = i->path.mid(pathPos);
-            }
-            std::sort(matchEditor->batchItems->begin(), matchEditor->batchItems->end(),
-                      [&](const PlayListItem *p1, const PlayListItem *p2){
-                return comparer.compare(titleHash[p1], titleHash[p2])>=0?false:true;
-            });
-            for(auto i : *matchEditor->batchItems)
-            {
-                fileTitles.append(titleHash[i]);
-                EpInfo ep;
-                ep.localFile = i->path;
-                epList->append(ep);
-                epCheckedList->append(i==matchEditor->curItem);
+                return itemSize;
             }
 
-        }
-        void reset(const AnimeLite &anime)
-        {
-            this->anime = anime;
-            beginResetModel();
-            int pEp = -1;
-            EpInfo epLast;
-            auto &eps = *anime.epList;
-            for(int i=0; i<fileTitles.size(); ++i)
+            int indent = option.fontMetrics.horizontalAdvance(QString(4, QChar(' ')));
+            int textWidth = option.widget->width() - 30 - indent;
+            if (textWidth <= 0)
             {
-                if(++pEp<eps.size())
-                {
-                    epLast = eps[pEp];
-                }
-                (*epList)[i].infoAssign(epLast);
+                return itemSize;
             }
-            endResetModel();
-        }
-        void toggleCheckedState()
-        {
-            if(epCheckedList->size()==0) return;
-            bool state = !(*epCheckedList)[0];
-            beginResetModel();
-            for(auto &b : *epCheckedList)
-            {
-                b = state;
-            }
-            endResetModel();
-        }
-        void seqSetEpisode(int startIndex)
-        {
-            if(!anime.epList || anime.epList->size()<=1 || startIndex>=epList->size()) return;
 
-            int epIndex = anime.epList->indexOf(epList->value(startIndex));
-            if(epIndex < 0) return;
-            for(++startIndex; startIndex<epList->size();++startIndex)
-            {
-                if((*epCheckedList)[startIndex])
-                {
-                    if(++epIndex >= anime.epList->size()) break;
-                    (*epList)[startIndex].infoAssign(anime.epList->value(epIndex));
-                    QModelIndex modelIndex(this->index(startIndex, (int)EpModel::Columns::EPNAME, QModelIndex()));
-                    emit dataChanged(modelIndex,modelIndex);
-                }
-            }
-        }
-        enum class Columns
-        {
-            FILETITLE,
-            EPNAME
-        };
-
-    private:
-        QStringList fileTitles;
-        QList<EpInfo> *epList;
-        AnimeLite anime;
-        QList<bool> *epCheckedList;
-        QStringList headers={QObject::tr("FileTitle"),QObject::tr("EpName")};
-    public:
-        inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
-        inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}
-        inline virtual int rowCount(const QModelIndex &parent) const {return parent.isValid()?0:fileTitles.count();}
-        inline virtual int columnCount(const QModelIndex &) const{return headers.size();}
-        virtual QVariant data(const QModelIndex &index, int role) const
-        {
-            if(!index.isValid()) return QVariant();
-            int row = index.row();
-            Columns col=static_cast<Columns>(index.column());
-            if(role==Qt::DisplayRole)
-            {
-                switch (col)
-                {
-                case Columns::FILETITLE:
-                    return fileTitles[row];
-                case Columns::EPNAME:
-                    return (*epList)[row].toString();
-                }
-            }
-            else if(role==Qt::CheckStateRole)
-            {
-                if(col==Columns::FILETITLE)
-                    return epCheckedList->at(index.row())?Qt::Checked:Qt::Unchecked;
-            }
-            else if(role==EpRole)
-            {
-                return QVariant::fromValue<EpInfo>((*epList)[row]);
-            }
-            return QVariant();
-        }
-        virtual bool setData(const QModelIndex &index, const QVariant &value, int role)
-        {
-            int row=index.row();
-            Columns col=static_cast<Columns>(index.column());
-            switch (col)
-            {
-            case Columns::FILETITLE:
-                (*epCheckedList)[row]=(value==Qt::Checked);
-                break;
-            case Columns::EPNAME:
-                (*epList)[row].infoAssign(value.value<EpInfo>());
-                break;
-            default:
-                return false;
-            }
-            return true;
-        }
-        virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const
-        {
-            if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
-            {
-                if(section<headers.size())return headers.at(section);
-            }
-            return QVariant();
-        }
-        virtual Qt::ItemFlags flags(const QModelIndex &index) const
-        {
-            Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index);
-            if(!index.isValid()) return defaultFlags;
-            Columns col = static_cast<Columns>(index.column());
-            if(col==Columns::FILETITLE)
-                defaultFlags |= Qt::ItemIsUserCheckable;
-            else if(col==Columns::EPNAME)
-                defaultFlags |= Qt::ItemIsEditable;
-            return defaultFlags;
+            QRect wrappedTextRect = option.fontMetrics.boundingRect(QRect(0, 0, textWidth, INT_MAX), Qt::TextWordWrap | Qt::AlignLeft, index.data().toString());
+            int wrappedHeight = wrappedTextRect.height() + 16;
+            itemSize.setHeight(qMax(itemSize.height(), qMax(wrappedHeight, 35)));
+            return itemSize;
         }
     };
-
-    class EpComboDelegate : public KTreeviewItemDelegate
-    {
-    public:
-        EpComboDelegate(QObject *parent = nullptr):KTreeviewItemDelegate(parent){}
-        void setEpList(const QVector<EpInfo> &eps) {epList = eps;}
-
-        QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override
-        {
-            if(index.column()==static_cast<int>(EpModel::Columns::EPNAME))
-            {
-                QComboBox *combo=new QComboBox(parent);
-                combo->setFrame(false);
-                int lastType = -1;
-                int index = 0;
-                for(auto &ep : epList)
-                {
-                    if(static_cast<int>(ep.type)!=lastType)
-                    {
-                        addParentItem(combo, EpTypeName[static_cast<int>(ep.type)-1]);
-                    }
-                    addChildItem(combo, ep.toString(), index++);
-                    lastType = static_cast<int>(ep.type);
-                }
-                combo->view()->setItemDelegate(new EpComboItemDelegate(combo));
-                return combo;
-            }
-            return QStyledItemDelegate::createEditor(parent,option,index);
-        }
-        void setEditorData(QWidget *editor, const QModelIndex &index) const override
-        {
-            if(index.column()==static_cast<int>(EpModel::Columns::EPNAME))
-            {
-                QComboBox *combo = static_cast<QComboBox*>(editor);
-                combo->setCurrentIndex(combo->findText(index.data(Qt::DisplayRole).toString()));
-                return;
-            }
-            QStyledItemDelegate::setEditorData(editor,index);
-        }
-        void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const override
-        {
-            if(index.column()==static_cast<int>(EpModel::Columns::EPNAME))
-            {
-                QComboBox *combo = static_cast<QComboBox*>(editor);
-				int epIndex = combo->currentData(EpRole).toInt();
-				if (epList.size() == 0 || epIndex<0 || epIndex>epList.size()) return;
-                model->setData(index, QVariant::fromValue(epList[epIndex]), Qt::EditRole);
-                return;
-            }
-            QStyledItemDelegate::setModelData(editor,model,index);
-        }
-        void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &) const override
-        {
-            editor->setGeometry(option.rect);
-        }
-    private:
-        QVector<EpInfo> epList;
-        void addParentItem(QComboBox *combo, const QString& text) const
-        {
-            QStandardItem* item = new QStandardItem(text);
-            item->setFlags(item->flags() & ~(Qt::ItemIsEnabled | Qt::ItemIsSelectable));
-            item->setData("parent", Qt::AccessibleDescriptionRole);
-            QFont font = item->font();
-            font.setItalic(true);
-            item->setFont(font);
-            QStandardItemModel* itemModel = (QStandardItemModel*)combo->model();
-            itemModel->appendRow(item);
-        }
-        void addChildItem(QComboBox *combo, const QString& text, int epListIndex) const
-        {
-            QStandardItem* item = new QStandardItem(text);
-            item->setData("child", Qt::AccessibleDescriptionRole );
-            item->setData(epListIndex, EpRole);
-            QStandardItemModel* itemModel = (QStandardItemModel*)combo->model();
-            itemModel->appendRow(item);
-        }
-    };
-*/
 
     class AnimeListModel : public QAbstractItemModel
     {
@@ -711,7 +501,7 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime, const QString &se
     animeLabel->setFont(QFont(GlobalObjects::normalFont, 12));
 
     epListView = new QListWidget(matchSubPage);
-    epListView->setFont(QFont(GlobalObjects::normalFont, 11));
+    epListView->setFont(QFont(GlobalObjects::normalFont, 12));
     epListView->setDragEnabled(true);
     epListView->setObjectName(QStringLiteral("MatchEpListView"));
     epListView->setAcceptDrops(true);
@@ -855,6 +645,7 @@ EpItemWidget::EpItemWidget(QList<MatchEpInfo> &matchList, int index, const QList
     epCombo->setMaximumWidth(180);
     epCombo->setFrame(false);
     epCombo->view()->setItemDelegate(new EpComboItemDelegate(this));
+    static_cast<ElaComboBox *>(epCombo)->setWordWrap(true);
 
     QPushButton *autoSetEpBtn = new KPushButton(this);
     autoSetEpBtn->setToolTip(tr("Set Episode in Sequence"));

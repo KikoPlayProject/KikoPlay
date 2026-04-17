@@ -7,14 +7,51 @@
 #include <QListView>
 #include <QMouseEvent>
 #include <QLineEdit>
+#include <QMetaObject>
 #include <QPropertyAnimation>
 #include <QScreen>
+#include <QVector>
 
 #include "DeveloperComponents/ElaComboBoxStyle.h"
 #include "ElaScrollBar.h"
 #include "ElaTheme.h"
 #include "UI/widgets/floatscrollbar.h"
 #include "private/ElaComboBoxPrivate.h"
+namespace
+{
+    constexpr int kDefaultComboItemHeight = 35;
+    constexpr int kPopupExtraHeight = 8;
+
+    int popupContentHeight(QAbstractItemView* view, int itemCount, int visibleItemCount)
+    {
+        if (!view || itemCount <= 0 || visibleItemCount <= 0)
+        {
+            return kDefaultComboItemHeight;
+        }
+
+        const int windowSize = qMin(itemCount, visibleItemCount);
+        QVector<int> rowHeights;
+        rowHeights.reserve(itemCount);
+        for (int row = 0; row < itemCount; ++row)
+        {
+            rowHeights.append(qMax(view->sizeHintForRow(row), kDefaultComboItemHeight));
+        }
+
+        int maxWindowHeight = 0;
+        for (int start = 0; start <= itemCount - windowSize; ++start)
+        {
+            int currentWindowHeight = 0;
+            for (int offset = 0; offset < windowSize; ++offset)
+            {
+                currentWindowHeight += rowHeights.at(start + offset);
+            }
+            maxWindowHeight = qMax(maxWindowHeight, currentWindowHeight);
+        }
+
+        return maxWindowHeight > 0 ? maxWindowHeight : windowSize * kDefaultComboItemHeight;
+    }
+}
+
 Q_PROPERTY_CREATE_Q_CPP(ElaComboBox, int, BorderRadius)
 
 namespace {
@@ -84,6 +121,7 @@ ElaComboBox::ElaComboBox(QWidget* parent)
     setView(new QListView(this));
     QAbstractItemView* comboBoxView = this->view();
     comboBoxView->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    comboBoxView->setTextElideMode(Qt::ElideRight);
     ElaScrollBar* scrollBar = new ElaScrollBar(this);
     comboBoxView->setVerticalScrollBar(scrollBar);
     //ElaScrollBar* floatVScrollBar = new ElaScrollBar(scrollBar, comboBoxView);
@@ -94,6 +132,11 @@ ElaComboBox::ElaComboBox(QWidget* parent)
     comboBoxView->setObjectName("ElaComboBoxView");
     comboBoxView->setStyleSheet("#ElaComboBoxView{background-color:transparent;}");
     comboBoxView->setStyle(d->_comboBoxStyle);
+    if (QListView* listView = qobject_cast<QListView*>(comboBoxView))
+    {
+        listView->setWordWrap(false);
+        listView->setUniformItemSizes(false);
+    }
     QWidget* container = this->findChild<QFrame*>();
     if (container)
     {
@@ -135,11 +178,17 @@ void ElaComboBox::setWordWrap(bool on)
 {
     Q_D(ElaComboBox);
     d->_comboBoxStyle->setWordWrap(on);
+    view()->setTextElideMode(on ? Qt::ElideNone : Qt::ElideRight);
+    if (QListView* listView = qobject_cast<QListView*>(view()))
+    {
+        listView->setWordWrap(on);
+    }
 }
 
 void ElaComboBox::showPopup()
 {
     Q_D(ElaComboBox);
+    d->_comboBoxStyle->maxItemHeight = kDefaultComboItemHeight;
     bool oldAnimationEffects = qApp->isEffectEnabled(Qt::UI_AnimateCombo);
     qApp->setEffectEnabled(Qt::UI_AnimateCombo, false);
     QComboBox::showPopup();
@@ -149,19 +198,14 @@ void ElaComboBox::showPopup()
         QWidget* container = this->findChild<QFrame*>();
         if (container)
         {
-            int containerHeight = 0;
-            if (count() >= maxVisibleItems())
-            {
-                containerHeight = (maxVisibleItems() - 1) * 35 + d->_comboBoxStyle->maxItemHeight + 8;
-            }
-            else
-            {
-                containerHeight = (count() - 1) * 35 + d->_comboBoxStyle->maxItemHeight + 8;
-            }
-            view()->resize(view()->width(), containerHeight - 8);
-            positionPopupContainer(this, container, containerHeight);
+            QMetaObject::invokeMethod(view(), "doItemsLayout", Qt::DirectConnection);
+            int contentHeight = popupContentHeight(view(), count(), maxVisibleItems());
+            int containerHeight = contentHeight + kPopupExtraHeight;
+            view()->resize(view()->width(), contentHeight);
 #ifdef Q_OS_WIN
             container->move(container->x(), container->y() + 3);
+#else
+            positionPopupContainer(this, container, containerHeight);
 #endif
             QLayout* layout = container->layout();
             while (layout->count())

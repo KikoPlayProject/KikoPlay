@@ -21,6 +21,7 @@ class QSortFilterProxyModel;
 class SubtitleModel;
 class QListView;
 class Pool;
+struct PlayListItem;
 
 class ListWindow : public QWidget, public NotifyInterface
 {
@@ -32,6 +33,7 @@ private:
     inline QModelIndex getPSParentIndex();
     inline QSharedPointer<DanmuComment> getSelectedDanmu();
     void matchPool(const QString &scriptId = "");
+    void addOnlineDanmu(const PlayListItem *item);
 
     void initListUI();
 

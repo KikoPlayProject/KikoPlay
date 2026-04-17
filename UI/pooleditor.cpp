@@ -134,9 +134,16 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"), pare
     QObject::connect(addCodeButton, &QPushButton::clicked, this, [this](){
         QClipboard *cb = QApplication::clipboard();
         QString code(cb->text());
-        if(code.isEmpty() ||
-            (!code.startsWith("kikoplay:pool=") &&
-             !code.startsWith("kikoplay:anime="))) return;
+        if (code.isEmpty())
+        {
+            this->showMessage(tr("Clipboard is empty"), NM_ERROR | NM_HIDE);
+            return;
+        }
+        if (!code.startsWith("kikoplay:pool=") && !code.startsWith("kikoplay:anime="))
+        {
+            this->showMessage(tr("Pool Code is invalid"), NM_ERROR | NM_HIDE);
+            return;
+        }
         PoolSignalBlock block;
         bool ret = GlobalObjects::danmuPool->getPool()->addPoolCode(
             code.mid(code.startsWith("kikoplay:pool=")?14:15),

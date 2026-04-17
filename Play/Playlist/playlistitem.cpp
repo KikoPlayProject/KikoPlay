@@ -24,7 +24,7 @@
 
 PlayList* PlayListItem::playlist=nullptr;
 
-PlayListItem::PlayListItem(PlayListItem *p, bool leaf, int insertPosition):
+PlayListItem::PlayListItem(PlayListItem *p, bool leaf, int insertPosition, const QString &filePath):
     parent(p), children(nullptr), type(LOCAL_FILE), playTimeState(UNPLAY), marker(M_NONE), playTime(0), level(0), isBgmCollection(false), addTime(0),
     trackInfo(nullptr), webDAVInfo(nullptr)
 {
@@ -41,6 +41,12 @@ PlayListItem::PlayListItem(PlayListItem *p, bool leaf, int insertPosition):
             parent->children->insert(insertPosition, this);
         level = parent->level + 1;
     }
+    path = filePath;
+    if (leaf && !path.isEmpty())
+    {
+        pathHash = QCryptographicHash::hash(path.toUtf8(),QCryptographicHash::Md5).toHex();
+    }
+    addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
 }
 PlayListItem::~PlayListItem()
 {
@@ -138,11 +144,9 @@ PlayListItem *PlayListItem::parseItem(QXmlStreamReader &reader, PlayListItem *pa
 
     const QString path = reader.readElementText().trimmed();
 
-    PlayListItem *item = new PlayListItem(parent, true);
+    PlayListItem *item = new PlayListItem(parent, true, -1, path);
     item->title = title;
-    item->path = path;
     item->type = type;
-    item->pathHash = QCryptographicHash::hash(path.toUtf8(),QCryptographicHash::Md5).toHex();
     item->playTime = playTime;
     item->duration = duration;
     item->poolID = poolID;

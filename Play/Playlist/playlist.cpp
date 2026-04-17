@@ -107,7 +107,6 @@ PlayList::PlayList(QObject *parent) : QAbstractItemModel(parent), d_ptr(new Play
                     PlayListItem *newCollection = new PlayListItem(nullptr, false);
                     newCollection->title = davItem.name();
                     newCollection->path = fullPath;
-                    newCollection->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
                     newCollection->webDAVInfo = new WebDAVInfo(*item->webDAVInfo);
                     nItems.append(newCollection);
                 }
@@ -121,7 +120,6 @@ PlayList::PlayList(QObject *parent) : QAbstractItemModel(parent), d_ptr(new Play
                     PlayListItem *newItem = new PlayListItem(nullptr, true);
                     newItem->title = davItem.name();
                     newItem->path = fullPath;
-                    newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
                     newItem->type = PlayListItem::ItemType::WEB_URL;
                     d->fileItems.insert(newItem->path, newItem);
                     nItems.append(newItem);
@@ -306,12 +304,9 @@ int PlayList::addItems(const QStringList &items, QModelIndex parent, const QHash
 	{
         int suffixPos = item.lastIndexOf('.'), pathPos = item.lastIndexOf('/') + 1;
 		QString title = item.mid(pathPos,suffixPos-pathPos);
-        PlayListItem *newItem = new PlayListItem(parentItem, true, insertPosition++);
+        PlayListItem *newItem = new PlayListItem(parentItem, true, insertPosition++, item);
         newItem->title = title;
         if (titleMapping && titleMapping->contains(item)) newItem->title = titleMapping->value(item);
-		newItem->path = item;
-        newItem->pathHash = QCryptographicHash::hash(item.toUtf8(),QCryptographicHash::Md5).toHex();
-        newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
         d->fileItems.insert(newItem->path,newItem);
         if(d->autoMatch) matchItems<<newItem;
 	}
@@ -440,7 +435,6 @@ int PlayList::addURL(const QStringList &urls, QModelIndex parent, bool decodeTit
         if (titleMapping && titleMapping->contains(url)) newItem->title = titleMapping->value(url);
         newItem->path = url;
         newItem->type = PlayListItem::ItemType::WEB_URL;
-        newItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
         d->fileItems.insert(newItem->path, newItem);
         ++insertCount;
     }
@@ -608,7 +602,6 @@ QModelIndex PlayList::addCollection(QModelIndex parent, const QString &title)
     beginInsertRows(parent, insertPosition, insertPosition);
     newCollection = new PlayListItem(parentItem,false,insertPosition);
 	newCollection->title = title;
-    newCollection->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
 	endInsertRows();
     d->playListChanged=true;
     d->needRefresh = true;
@@ -641,7 +634,6 @@ QModelIndex PlayList::getCollection(QModelIndex parent, const QStringList &path)
             beginInsertRows(parent, item->children->size(), item->children->size());
             PlayListItem *newCollection = new PlayListItem(item, false, item->children->size());
             newCollection->title = p;
-            newCollection->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
             endInsertRows();
             parent = this->index(item->children->size() - 1, 0, parent);
             item = newCollection;
@@ -712,7 +704,10 @@ QModelIndex PlayList::addItem(QModelIndex parent, PlayListItem *item)
     beginInsertRows(parent, insertPosition, insertPosition);
     item->parent=nullptr;
     item->moveTo(parentItem, insertPosition);
-    item->pathHash = QCryptographicHash::hash(item->path.toUtf8(), QCryptographicHash::Md5).toHex();
+    if (item->type == PlayListItem::ItemType::LOCAL_FILE && item->pathHash.isEmpty() && !item->path.isEmpty())
+    {
+        item->pathHash = QCryptographicHash::hash(item->path.toUtf8(), QCryptographicHash::Md5).toHex();
+    }
     item->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
     d->fileItems.insert(item->path, item);
     endInsertRows();
@@ -873,7 +868,6 @@ void PlayList::autoMoveToBgmCollection(const QModelIndex &index)
         bgmCollectionItem=new PlayListItem(parentItem,false,insertPosition);
         bgmCollectionItem->title = currentItem->animeTitle;
         bgmCollectionItem->isBgmCollection=true;
-        bgmCollectionItem->addTime = QDateTime::currentDateTime().toSecsSinceEpoch();
         endInsertRows();
         d->bgmCollectionItems.insert(bgmCollectionItem->title, bgmCollectionItem);
     }

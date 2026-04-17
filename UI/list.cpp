@@ -381,70 +381,15 @@ void ListWindow::initActions()
     QObject::connect(act_addWebDanmuSource, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
         QItemSelection selection = model->mapSelectionToSource(playlistView->selectionModel()->selection());
-        if (selection.size() == 0)return;
+        if (selection.empty()) return;
         QModelIndex selIndex(selection.indexes().first());
-        const PlayListItem *item=GlobalObjects::playlist->getItem(selIndex);
-        if(!item->hasPool())
+        const PlayListItem *item = GlobalObjects::playlist->getItem(selIndex);
+        if (!item->hasPool())
         {
             showMessage(tr("No pool associated"), NotifyMessageFlag::NM_HIDE);
             return;
         }
-        const QList<const PlayListItem *> &siblings=GlobalObjects::playlist->getSiblings(item);
-        QMap<QString, const PlayListItem *> poolIdMap;
-        QStringList poolTitles;
-        for(auto sItem:siblings)
-        {
-            Pool *pool=GlobalObjects::danmuManager->getPool(sItem->poolID,false);
-            if(pool)
-            {
-                EpInfo ep(pool->toEp());
-                // poolIdMap.insert(ep.toString(),pool->id());
-                poolIdMap.insert(ep.toString(), sItem);
-                poolTitles<<ep.toString();
-            }
-        }
-        std::sort(poolTitles.begin(),poolTitles.end(), [&](const QString &s1, const QString &s2){
-            return comparer.compare(s1, s2)>=0?false:true;
-        });
-        AddDanmu addDanmuDialog(item, this, true, poolTitles);
-        if (QDialog::Accepted == addDanmuDialog.exec())
-        {
-            auto &infoList = addDanmuDialog.danmuInfoList;
-#ifdef KSERVICE
-            QList<QPair<Pool *, QPair<DanmuSource, QString>>> poolSrcs;
-#endif
-            for (SearchDanmuInfo &info : infoList)
-            {
-                const PlayListItem *item = poolIdMap.value(info.pool);
-                Pool *pool = item ? GlobalObjects::danmuManager->getPool(item->poolID) : nullptr;
-                if (pool)
-                {
-                    showMessage(tr("Adding: %1").arg(pool->epTitle()), NotifyMessageFlag::NM_PROCESS);
-                    if (pool->addSource(info.src, info.danmus, true) == -1)
-                    {
-                        qDeleteAll(info.danmus);
-                    }
-                    else
-                    {
-#ifdef KSERVICE
-                        if (!info.src.scriptId.isEmpty())
-                        {
-                            poolSrcs.append({ pool, { info.src, item->type == PlayListItem::ItemType::LOCAL_FILE ? item->path : "" } });
-                        }
-#endif
-                    }
-                }
-                else
-                {
-                    qDeleteAll(info.danmus);
-                }
-            }
-            showMessage(tr("Done"), NotifyMessageFlag::NM_HIDE);
-#ifdef KSERVICE
-            if (!poolSrcs.empty()) GlobalObjects::danmuManager->sendDanmuAddedEvent(poolSrcs);
-#endif
-        }
-
+        addOnlineDanmu(item);
     });
     act_addLocalDanmuSource=new QAction(tr("Add Local Danmu Source"),this);
     QObject::connect(act_addLocalDanmuSource, &QAction::triggered, this, [this](){
@@ -802,12 +747,11 @@ void ListWindow::initActions()
 
     act_addOnlineDanmu=new QAction(tr("Add Online Danmu"),this);
     QObject::connect(act_addOnlineDanmu, &QAction::triggered, this, [this](){
-        const PlayListItem *currentItem=GlobalObjects::playlist->getCurrentItem();
-        bool restorePlayState = false;
-        if (GlobalObjects::mpvplayer->needPause())
+        const PlayListItem *currentItem = GlobalObjects::playlist->getCurrentItem();
+        if (currentItem && currentItem->hasPool())
         {
-            restorePlayState = true;
-            GlobalObjects::mpvplayer->setState(MPVPlayer::Pause);
+            addOnlineDanmu(currentItem);
+            return;
         }
         AddDanmu addDanmuDialog(currentItem, this);
         if (QDialog::Accepted == addDanmuDialog.exec())
@@ -838,7 +782,6 @@ void ListWindow::initActions()
             if (!poolSrcs.empty()) GlobalObjects::danmuManager->sendDanmuAddedEvent(poolSrcs);
 #endif
         }
-        if (restorePlayState) GlobalObjects::mpvplayer->setState(MPVPlayer::Play);
     });
     act_addLocalDanmu=new QAction(tr("Add Local Danmu"),this);
     QObject::connect(act_addLocalDanmu, &QAction::triggered, this, [this](){
@@ -1154,6 +1097,65 @@ void ListWindow::matchPool(const QString &scriptId)
 
     } else {
         GlobalObjects::playlist->matchItems(indexes);
+    }
+}
+
+void ListWindow::addOnlineDanmu(const PlayListItem *item)
+{
+    if (!item->hasPool()) return;
+    const QList<const PlayListItem *> &siblings = GlobalObjects::playlist->getSiblings(item);
+    QMap<QString, const PlayListItem *> poolIdMap;
+    QStringList poolTitles;
+    for (auto sItem : siblings)
+    {
+        Pool *pool = GlobalObjects::danmuManager->getPool(sItem->poolID, false);
+        if (pool)
+        {
+            EpInfo ep(pool->toEp());
+            poolIdMap.insert(ep.toString(), sItem);
+            poolTitles << ep.toString();
+        }
+    }
+    std::sort(poolTitles.begin(),poolTitles.end(), [&](const QString &s1, const QString &s2){
+        return comparer.compare(s1, s2) >=0 ? false : true;
+    });
+    AddDanmu addDanmuDialog(item, this, true, poolTitles);
+    if (QDialog::Accepted == addDanmuDialog.exec())
+    {
+        auto &infoList = addDanmuDialog.danmuInfoList;
+#ifdef KSERVICE
+        QList<QPair<Pool *, QPair<DanmuSource, QString>>> poolSrcs;
+#endif
+        for (SearchDanmuInfo &info : infoList)
+        {
+            const PlayListItem *item = poolIdMap.value(info.pool);
+            Pool *pool = item ? GlobalObjects::danmuManager->getPool(item->poolID) : nullptr;
+            if (pool)
+            {
+                showMessage(tr("Adding: %1").arg(pool->epTitle()), NotifyMessageFlag::NM_PROCESS);
+                if (pool->addSource(info.src, info.danmus, true) == -1)
+                {
+                    qDeleteAll(info.danmus);
+                }
+                else
+                {
+#ifdef KSERVICE
+                    if (!info.src.scriptId.isEmpty())
+                    {
+                        poolSrcs.append({ pool, { info.src, item->type == PlayListItem::ItemType::LOCAL_FILE ? item->path : "" } });
+                    }
+#endif
+                }
+            }
+            else
+            {
+                qDeleteAll(info.danmus);
+            }
+        }
+        showMessage(tr("Done"), NotifyMessageFlag::NM_HIDE);
+#ifdef KSERVICE
+        if (!poolSrcs.empty()) GlobalObjects::danmuManager->sendDanmuAddedEvent(poolSrcs);
+#endif
     }
 }
 

@@ -184,9 +184,16 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         if(!poolNode)return;
         QClipboard *cb = QApplication::clipboard();
         QString code(cb->text());
-        if(code.isEmpty() ||
-                (!code.startsWith("kikoplay:pool=") &&
-                !code.startsWith("kikoplay:anime="))) return;
+        if (code.isEmpty())
+        {
+            this->showMessage(tr("Clipboard is empty"), NM_ERROR | NM_HIDE);
+            return;
+        }
+        if (!code.startsWith("kikoplay:pool=") && !code.startsWith("kikoplay:anime="))
+        {
+            this->showMessage(tr("Pool Code is invalid"), NM_ERROR | NM_HIDE);
+            return;
+        }
         poolView->setEnabled(false);
         this->showBusyState(true);
         Pool *pool = GlobalObjects::danmuManager->getPool(poolNode->idInfo,false);
