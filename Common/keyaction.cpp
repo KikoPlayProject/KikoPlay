@@ -339,13 +339,16 @@ void KeyActionMPVCommand::trigger()
     if (runCommands.isEmpty())
     {
         parseCommand();
+        descHasVariable = actParams[1].val.toString().contains("${");
     }
     int ret = 0;
     for (const auto &command : runCommands)
     {
         ret = GlobalObjects::mpvplayer->runCommand(command);
     }
-    const QString tip = ret == 0 ? getDesc() : QString("%1: %2").arg(getDesc()).arg(ret);
+    QString desc = getDesc();
+    if (descHasVariable) desc = GlobalObjects::mpvplayer->expandMediaInfo(desc);
+    const QString tip = ret == 0 ? desc : QString("%1: %2").arg(desc).arg(ret);
     Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tip, 0, QVariantMap({{"type", "playerInfo"}}));
 }
 

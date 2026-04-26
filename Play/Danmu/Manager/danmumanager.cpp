@@ -638,6 +638,9 @@ void DanmuManager::updatePool(QList<DanmuPoolNode *> &updateList, TaskContext *c
         });
     }
     task.Run([this, &updateList, &cancelFlag](){
+        QHash<QString, qint64> srcTimeCost;
+        QElapsedTimer timer;
+        timer.start();
         for(const DanmuPoolNode *animeNode:updateList)
         {
             if(animeNode->checkStatus==Qt::Unchecked)continue;
@@ -654,11 +657,18 @@ void DanmuManager::updatePool(QList<DanmuPoolNode *> &updateList, TaskContext *c
                     pool->update(srcNode->srcId);
                     srcNode->danmuCount=pool->sources()[srcNode->srcId].count;
                     srcNode->valid = pool->sources()[srcNode->srcId].sourceValid;
+                    srcTimeCost[srcNode->idInfo] += timer.restart();
                 }
             }
         }
 cancel:
         emit workerStateMessage("Done");
+        QStringList timeCosts;
+        for (auto iter = srcTimeCost.begin(); iter != srcTimeCost.end(); ++iter)
+        {
+            timeCosts.append(QString("\t%1: %2").arg(iter.key()).arg(iter.value()));
+        }
+        Logger::logger()->log(Logger::Script, QString("Update Time Cost(ms): \n%1").arg(timeCosts.join("\n")));
         return 0;
     });
 }

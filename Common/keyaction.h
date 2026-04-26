@@ -183,6 +183,7 @@ struct KeyActionMPVCommand : public KeyAction
     QString getDesc() const override;
 
     QVector<QStringList> runCommands;
+    bool descHasVariable;
     void parseCommand();
 };
 

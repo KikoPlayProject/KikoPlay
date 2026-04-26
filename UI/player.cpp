@@ -1559,6 +1559,7 @@ QWidget *PlayerWindow::initPlayerLayer(QWidget *parent)
     playControlPanel = new QWidget(playerLayerContainer);
     playControlPanel->setObjectName(QStringLiteral("widgetPlayControl"));
     playControlPanel->hide();
+    playControlPanel->raise();
 
     progress = new ClickSlider(playControlPanel);
     //progress->setObjectName(QStringLiteral("ProgressSlider"));
@@ -1949,6 +1950,7 @@ void PlayerWindow::initSignals()
             //QTimer::singleShot(100, GlobalObjects::mpvplayer, "update");
             playerContent->raise();
             playerContent->show();
+            playControlPanel->raise();
             liveDanmuList->hide();
             danmuStatisBar->hide();
             PlayContext::context()->clear();
@@ -3335,6 +3337,16 @@ void RecentItem::setData(const RecentlyPlayedItem &item)
         const int p_sec = item.playtime - p_min * 60;
         timeLabel->setText(tr("%1:%2/%3:%4").arg(p_min, 2, 10, QChar('0')).arg(p_sec, 2, 10, QChar('0')).
                            arg(d_min, 2, 10, QChar('0')).arg(d_sec, 2, 10, QChar('0')));
+    }
+    else if (item.playtime > 0)
+    {
+        const int p_min = item.playtime / 60;
+        const int p_sec = item.playtime - p_min * 60;
+        timeLabel->setText(tr("%1:%2").arg(p_min, 2, 10, QChar('0')).arg(p_sec, 2, 10, QChar('0')));
+    }
+    else
+    {
+        timeLabel->setText("");
     }
     timeLabel->adjustSize();
     if (item.stopFrame.isNull())

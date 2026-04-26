@@ -240,6 +240,9 @@ void PlayListPrivate::updateRecentlist(PlayListItem *item)
     }
     RecentlyPlayedItem recentItem;
     recentItem.path = item->path;
+    recentItem.duration = item->duration;
+    recentItem.playtime = item->playTime;
+    recentItem.playTimeState = item->playTimeState;
     recentItem.title = item->animeTitle.isEmpty() ? item->title : QString("%1\n%2").arg(item->animeTitle, item->title);
     recentList.push_front(recentItem);
     if (recentList.count() > q->maxRecentItems) recentList.pop_back();
