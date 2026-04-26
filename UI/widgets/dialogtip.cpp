@@ -1,6 +1,7 @@
 #include "dialogtip.h"
 #include <QLabel>
 #include <QHBoxLayout>
+#include "UI/widgets/kpushbutton.h"
 #include "loadingicon.h"
 #include <QPropertyAnimation>
 #include <QGraphicsOpacityEffect>
@@ -9,6 +10,7 @@
 #include "backgroundfadewidget.h"
 #include <QPainter>
 #include <QPainterPath>
+#include "globalobjects.h"
 
 DialogTip::DialogTip(QWidget *parent):QWidget(parent), moveHide(false)
 {
@@ -31,9 +33,19 @@ DialogTip::DialogTip(QWidget *parent):QWidget(parent), moveHide(false)
     busyWidget = new LoadingIcon(Qt::white, this);
     static_cast<LoadingIcon *>(busyWidget)->hide();
 
+    cancelBtn = new KPushButton(this);
+    cancelBtn->setObjectName(QStringLiteral("TipCancelButton"));
+    GlobalObjects::iconfont->setPointSize(12);
+    cancelBtn->setFont(*GlobalObjects::iconfont);
+    cancelBtn->setText(QChar(0xe60b));
+
+    cancelBtn->hide();
+    QObject::connect(cancelBtn, &QPushButton::clicked, this, &DialogTip::cancelClicked);
+
     QHBoxLayout *infoBarHLayout=new QHBoxLayout(this);
     infoBarHLayout->addWidget(busyWidget);
     infoBarHLayout->addWidget(infoText);
+    infoBarHLayout->addWidget(cancelBtn);
     QObject::connect(&hideTimer,&QTimer::timeout,this,[this](){
         QPoint endPos(this->x(),-this->height()), startPos(this->x(),this->y());
         moveAnime->setStartValue(startPos);
@@ -64,11 +76,19 @@ void DialogTip::showMessage(const QString &msg, int type)
     {
         static_cast<LoadingIcon *>(busyWidget)->hide();
     }
+    if (type & NM_SHOWCANCEL)
+    {
+        cancelBtn->show();
+    }
+    else
+    {
+        cancelBtn->hide();
+    }
     if (hideTimer.isActive()) hideTimer.stop();
     if (type & NM_HIDE)
     {
         hideTimer.setSingleShot(true);
-        hideTimer.start(showDuration);
+        hideTimer.start(type & NM_HIDE_ONCE ? 100 : showDuration);
     }
 
     if(type & NM_DARKNESS_BACK)

@@ -6,14 +6,19 @@ class QLabel;
 class QGraphicsOpacityEffect;
 class QPropertyAnimation;
 class BackgroundFadeWidget;
+class QPushButton;
 class DialogTip : public QWidget
 {
+    Q_OBJECT
 public:
     explicit DialogTip(QWidget *parent);
     void showMessage(const QString &msg, int type=0);
+signals:
+    void cancelClicked();
 private:
     QLabel *infoText;
     QWidget *busyWidget;
+    QPushButton *cancelBtn;
     QTimer hideTimer;
     QColor backColor;
     BackgroundFadeWidget *bgDarkWidget;

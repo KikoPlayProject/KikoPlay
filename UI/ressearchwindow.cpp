@@ -1,5 +1,6 @@
 #include "ressearchwindow.h"
 #include "Common/threadtask.h"
+#include "Common/network.h"
 #include "Extension/Script/scriptmanager.h"
 #include <QPushButton>
 #include <QComboBox>
@@ -266,7 +267,15 @@ void ResSearchWindow::search(const QString &keyword, bool setSearchEdit)
     int pageCount;
     QList<ResourceItem> results;
     setEnable(false);
-    Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, tr("Searching..."), NM_PROCESS | NM_DARKNESS_BACK);
+    TaskContext ctx(this);
+    Network::ReqAbortFlagObj *abortFlag = nullptr;
+    QObject::connect(Notifier::getNotifier(), &Notifier::cancelTrigger, &ctx, [&](int nType){
+        if (nType & Notifier::DOWNLOAD_NOTIFY){
+            if (abortFlag) emit abortFlag->abort();
+            if (resScript) resScript->stop();
+        }
+    });
+    Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, tr("Searching..."), NM_PROCESS | NM_DARKNESS_BACK | NM_SHOWCANCEL);
     if (scriptOptionPanel->hasOptions() && scriptOptionPanel->changed())
     {
         QMap<QString, QString> searchOptions = scriptOptionPanel->getOptionVals();
@@ -277,6 +286,7 @@ void ResSearchWindow::search(const QString &keyword, bool setSearchEdit)
     }
     ThreadTask task(GlobalObjects::workThread);
     ScriptState state = task.Run([&](){
+       abortFlag = Network::getAbortFlag();
        return QVariant::fromValue(resScript->search(keyword, 1, pageCount, results));
     }).value<ScriptState>();
     if (state)
@@ -334,9 +344,18 @@ void ResSearchWindow::pageTurning(int page)
     int pageCount = 0;
     QList<ResourceItem> results;
     setEnable(false);
-    Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, tr("Searching..."), NM_PROCESS | NM_DARKNESS_BACK);
+    TaskContext ctx(this);
+    Network::ReqAbortFlagObj *abortFlag = nullptr;
+    QObject::connect(Notifier::getNotifier(), &Notifier::cancelTrigger, &ctx, [&](int nType){
+        if (nType & Notifier::DOWNLOAD_NOTIFY){
+            if (abortFlag) emit abortFlag->abort();
+            if (resScript) resScript->stop();
+        }
+    });
+    Notifier::getNotifier()->showMessage(Notifier::DOWNLOAD_NOTIFY, tr("Searching..."), NM_PROCESS | NM_DARKNESS_BACK | NM_SHOWCANCEL);
     ThreadTask task(GlobalObjects::workThread);
     ScriptState state = task.Run([&](){
+        abortFlag = Network::getAbortFlag();
         return QVariant::fromValue(resScript->search(currentKeyword, page, pageCount, results));
     }).value<ScriptState>();
     if (state)

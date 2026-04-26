@@ -21,6 +21,7 @@
 #include <QApplication>
 #include <QClipboard>
 
+#include "Common/threadtask.h"
 #include "UI/ela/ElaMenu.h"
 #include "UI/widgets/floatscrollbar.h"
 #include "UI/widgets/lazycontainer.h"
@@ -344,9 +345,11 @@ void LibraryWindow::initAnimeView()
             return;
         }
         QString scriptName(script->name());
-        showMessage(tr("Fetching Info from %1").arg(scriptName),  NM_PROCESS | NM_DARKNESS_BACK);
+        TaskContext ctx;
+        QObject::connect(dialogTip, &DialogTip::cancelClicked, &ctx, &TaskContext::cancel);
+        showMessage(tr("Fetching Info from %1").arg(scriptName),  NM_PROCESS | NM_DARKNESS_BACK | NM_SHOWCANCEL);
         Anime *nAnime = new Anime;
-        ScriptState state = GlobalObjects::animeProvider->getDetail(currentAnime->toLite(), nAnime);
+        ScriptState state = GlobalObjects::animeProvider->getDetail(currentAnime->toLite(), nAnime, &ctx);
         if (!state)
         {
             showMessage(state.info, NM_HIDE | NM_ERROR);
@@ -371,8 +374,10 @@ void LibraryWindow::initAnimeView()
                 Anime *tAnime = AnimeWorker::instance()->getAnime(animeName);
                 if(tAnime)
                 {
-                    showMessage(tr("Fetching Tags from %1").arg(scriptName), NM_PROCESS | NM_DARKNESS_BACK);
-                    GlobalObjects::animeProvider->getTags(tAnime, tags);
+                    TaskContext ctx;
+                    QObject::connect(dialogTip, &DialogTip::cancelClicked, &ctx, &TaskContext::cancel);
+                    showMessage(tr("Fetching Tags from %1").arg(scriptName), NM_PROCESS | NM_DARKNESS_BACK | NM_SHOWCANCEL);
+                    GlobalObjects::animeProvider->getTags(tAnime, tags, &ctx);
                     if(tags.size()>0)
                     {
                         LabelModel::instance()->addCustomTags(tAnime->name(), tags);
@@ -545,11 +550,15 @@ void LibraryWindow::searchAddAnime(Anime *srcAnime)
     while(animeSearch.exec()==QDialog::Accepted)
     {
         Anime *nAnime = new Anime;
+        TaskContext ctx;
+        QObject::connect(dialogTip, &DialogTip::cancelClicked, &ctx, &TaskContext::cancel);
         QString scriptName(GlobalObjects::scriptManager->getScript(animeSearch.curSelectedAnime.scriptId)->name());
-        showMessage(tr("Fetching Info from %1").arg(scriptName), NM_PROCESS | NM_DARKNESS_BACK);
-        ScriptState state = GlobalObjects::animeProvider->getDetail(animeSearch.curSelectedAnime, nAnime);
+        showMessage(tr("Fetching Info from %1").arg(scriptName), NM_PROCESS | NM_DARKNESS_BACK | NM_SHOWCANCEL);
+        ScriptState state = GlobalObjects::animeProvider->getDetail(animeSearch.curSelectedAnime, nAnime, &ctx);
         if(state)
         {
+            TaskContext ctx;
+            QObject::connect(dialogTip, &DialogTip::cancelClicked, &ctx, &TaskContext::cancel);
             QStringList tags;
             if(srcAnime)
             {
@@ -557,8 +566,8 @@ void LibraryWindow::searchAddAnime(Anime *srcAnime)
                 Anime *tAnime = AnimeWorker::instance()->getAnime(animeName);
                 if(tAnime)
                 {
-                    showMessage(tr("Fetching Tags from %1").arg(scriptName), NM_PROCESS | NM_DARKNESS_BACK);
-                    GlobalObjects::animeProvider->getTags(tAnime, tags);
+                    showMessage(tr("Fetching Tags from %1").arg(scriptName), NM_PROCESS | NM_DARKNESS_BACK | NM_SHOWCANCEL);
+                    GlobalObjects::animeProvider->getTags(tAnime, tags, &ctx);
                     if(tags.size()>0)
                     {
                         LabelModel::instance()->addCustomTags(tAnime->name(), tags);
@@ -569,8 +578,8 @@ void LibraryWindow::searchAddAnime(Anime *srcAnime)
             {
                 if(AnimeWorker::instance()->addAnime(nAnime))
                 {
-                    showMessage(tr("Fetching Tags from %1").arg(scriptName), NM_PROCESS | NM_DARKNESS_BACK);
-                    GlobalObjects::animeProvider->getTags(nAnime, tags);
+                    showMessage(tr("Fetching Tags from %1").arg(scriptName), NM_PROCESS | NM_DARKNESS_BACK | NM_SHOWCANCEL);
+                    GlobalObjects::animeProvider->getTags(nAnime, tags, &ctx);
                     if(tags.size()>0)
                     {
                         LabelModel::instance()->addCustomTags(nAnime->name(), tags);

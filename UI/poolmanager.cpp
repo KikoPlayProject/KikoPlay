@@ -11,6 +11,7 @@
 #include <QAction>
 #include <QSortFilterProxyModel>
 #include <QApplication>
+#include "Common/threadtask.h"
 #include "Play/Danmu/Manager/managermodel.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
@@ -421,17 +422,21 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     updateHLayout->addWidget(updateConfirm);
     QObject::connect(updateConfirm,&KPushButton::clicked,[this,stateLabel,poolView,managerModel,updateConfirm,cancel](){
         if(!managerModel->hasSelected())return;
+
+        TaskContext ctx(this);
+        takeCancel = true;
+        QObject::connect(cancel, &KPushButton::clicked, &ctx, &TaskContext::cancel);
+
         this->showBusyState(true);
         updateConfirm->setText(tr("Updating..."));
-        cancel->setEnabled(false);
         poolView->setEnabled(false);
         updateConfirm->setEnabled(false);
-        managerModel->updatePool();
+        managerModel->updatePool(&ctx);
         this->showBusyState(false);
         updateConfirm->setText(tr("Update"));
         poolView->setEnabled(true);
         updateConfirm->setEnabled(true);
-        cancel->setEnabled(true);
+        takeCancel = false;
         stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
     });
 
@@ -507,7 +512,8 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     };
 
     QObject::connect(cancel, &KPushButton::clicked, this, [=](){
-       funcStackLayout->setCurrentIndex(0);
+        if (takeCancel) return;
+        funcStackLayout->setCurrentIndex(0);
         managerModel->setCheckable(false);
     });
     QObject::connect(importKdFile, &KPushButton::clicked, this, [=](){

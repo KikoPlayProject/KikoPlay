@@ -1,4 +1,5 @@
 #include "animelistmodel.h"
+#include "Common/threadtask.h"
 #include "animemodel.h"
 #include "animeworker.h"
 #include "Common/notifier.h"
@@ -15,26 +16,32 @@ AnimeListModel::AnimeListModel(AnimeModel *srcAnimeModel, QObject *parent) : QAb
     endResetModel();
 }
 
-void AnimeListModel::updateCheckedInfo()
+void AnimeListModel::updateCheckedInfo(TaskContext *ctx)
 {
     int totalCount = checkedCount();
     if(totalCount == 0) return;
     cleanState();
     int currentCount = 0;
-    for(int i = 0; i < checkStatus.size(); ++i)
+    bool cancelFlag = false;
+    if (ctx)
     {
-        if(checkStatus[i] != Qt::CheckState::Checked) continue;
+        QObject::connect(ctx, &TaskContext::cancelRequested, this, [&](){ cancelFlag = true; });
+    }
+    for (int i = 0; i < checkStatus.size(); ++i)
+    {
+        if (cancelFlag) break;
+        if (checkStatus[i] != Qt::CheckState::Checked) continue;
         Anime *currentAnime = animeModel->animes[i];
         ++currentCount;
         if (!currentAnime || currentAnime->refreshing()) continue;
-        if(currentAnime->scriptId().isEmpty()) continue;
+        if (currentAnime->scriptId().isEmpty()) continue;
         QSharedPointer<ScriptBase> script = GlobalObjects::scriptManager->getScript(currentAnime->scriptId());
-        if(!script) continue;
+        if (!script) continue;
         showMessage(tr("[%1/%2]Updating %3 from %4").
                     arg(QString::number(currentCount), QString::number(totalCount), currentAnime->name(), script->name()),
-                    NM_PROCESS | NM_DARKNESS_BACK);
+                    NM_PROCESS | NM_DARKNESS_BACK | NM_SHOWCANCEL);
         Anime *nAnime = new Anime;
-        ScriptState state = GlobalObjects::animeProvider->getDetail(currentAnime->toLite(), nAnime);
+        ScriptState state = GlobalObjects::animeProvider->getDetail(currentAnime->toLite(), nAnime, ctx);
         if(!state)
         {
             stateHash[i] = state.info;
@@ -50,26 +57,32 @@ void AnimeListModel::updateCheckedInfo()
     refreshState();
 }
 
-void AnimeListModel::updateCheckedTag()
+void AnimeListModel::updateCheckedTag(TaskContext *ctx)
 {
     int totalCount = checkedCount();
     if(totalCount == 0) return;
     cleanState();
     int currentCount = 0;
-    for(int i = 0; i < checkStatus.size(); ++i)
+    bool cancelFlag = false;
+    if (ctx)
     {
-        if(checkStatus[i] != Qt::CheckState::Checked) continue;
+        QObject::connect(ctx, &TaskContext::cancelRequested, this, [&](){ cancelFlag = true; });
+    }
+    for (int i = 0; i < checkStatus.size(); ++i)
+    {
+        if (cancelFlag) break;
+        if (checkStatus[i] != Qt::CheckState::Checked) continue;
         Anime *currentAnime = animeModel->animes[i];
         ++currentCount;
         if (!currentAnime || currentAnime->refreshing()) continue;
-        if(currentAnime->scriptId().isEmpty()) continue;
+        if (currentAnime->scriptId().isEmpty()) continue;
         QSharedPointer<ScriptBase> script = GlobalObjects::scriptManager->getScript(currentAnime->scriptId());
-        if(!script) continue;
+        if (!script) continue;
         showMessage(tr("[%1/%2]Fetching Tags %3 from %4").
                     arg(QString::number(currentCount), QString::number(totalCount), currentAnime->name(), script->name()),
-                    NM_PROCESS | NM_DARKNESS_BACK);
+                    NM_PROCESS | NM_DARKNESS_BACK | NM_SHOWCANCEL);
         QStringList tags;
-        ScriptState state = GlobalObjects::animeProvider->getTags(currentAnime, tags);
+        ScriptState state = GlobalObjects::animeProvider->getTags(currentAnime, tags, ctx);
         if(!state)
         {
             stateHash[i] = state.info;
@@ -87,18 +100,24 @@ void AnimeListModel::updateCheckedTag()
     refreshState();
 }
 
-void AnimeListModel::removeChecked()
+void AnimeListModel::removeChecked(TaskContext *ctx)
 {
     int totalCount = checkedCount();
     if(totalCount == 0) return;
     cleanState();
     int currentCount = 0;
+    bool cancelFlag = false;
+    if (ctx)
+    {
+        QObject::connect(ctx, &TaskContext::cancelRequested, this, [&](){ cancelFlag = true; });
+    }
     for(int i = checkStatus.size()-1; i>=0; --i)
     {
+        if (cancelFlag) break;
         if(checkStatus[i] != Qt::CheckState::Checked) continue;
         showMessage(tr("[%1/%2]Removing...").
                     arg(QString::number(++currentCount), QString::number(totalCount)),
-                    NM_PROCESS | NM_DARKNESS_BACK);
+                    NM_PROCESS | NM_DARKNESS_BACK | NM_SHOWCANCEL);
         beginRemoveRows(QModelIndex(), i, i);
         checkStatus.removeAt(i);
         animeModel->deleteAnime(animeModel->index(i, 0, QModelIndex()));

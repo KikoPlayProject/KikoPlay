@@ -7,6 +7,7 @@
 #include "nodeinfo.h"
 #include "MediaLibrary/animeinfo.h"
 class Pool;
+class TaskContext;
 class DanmuManager : public QObject
 {
     Q_OBJECT
@@ -20,7 +21,7 @@ public:
     Pool *getPool(const QString &animeTitle, EpType epType, double epIndex, bool loadDanmu=true);
     void loadPoolInfo(QList<DanmuPoolNode *> &poolNodeList);
     void deletePool(const QList<DanmuPoolNode *> &deleteList);
-    void updatePool(QList<DanmuPoolNode *> &updateList);
+    void updatePool(QList<DanmuPoolNode *> &updateList, TaskContext *ctx = nullptr);
     void setPoolDelay(QList<DanmuPoolNode *> &updateList, int delay);
     void exportPool(const QList<DanmuPoolNode *> &exportList, const QString &dir, bool useTimeline=true, bool applyBlockRule=false);
     void exportKdFile(const QList<DanmuPoolNode *> &exportList, const QString &dir, const QString &comment="");

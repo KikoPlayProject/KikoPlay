@@ -36,6 +36,8 @@ CFramelessDialog::CFramelessDialog(const QString &titleStr, QWidget *parent, boo
 
     dialogTip = new DialogTip(this);
     dialogTip->hide();
+    elaAppBar->insertCustomWidget(dialogTip);
+    QObject::connect(dialogTip, &DialogTip::cancelClicked, this, &CFramelessDialog::cancelClicked);
 
 #ifndef Q_OS_WIN
     setAttribute(Qt::WA_Hover);

@@ -1,4 +1,5 @@
 #include "matcheditor.h"
+#include "Common/threadtask.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "MediaLibrary/animeprovider.h"
@@ -470,12 +471,16 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime, const QString &se
         }
         else
         {
+            showMessage(tr("Searching..."),  NM_PROCESS | NM_SHOWCANCEL);
+            TaskContext ctx(this);
+            QObject::connect(this, &CFramelessDialog::cancelClicked, &ctx, &TaskContext::cancel);
             QMap<QString, QString> searchOptions;
             if(scriptOptionPanel->hasOptions() && scriptOptionPanel->changed())
             {
                 searchOptions = scriptOptionPanel->getOptionVals();
             }
-            state = GlobalObjects::animeProvider->animeSearch(scriptCombo->currentData().toString(), keyword, searchOptions, results);
+            state = GlobalObjects::animeProvider->animeSearch(scriptCombo->currentData().toString(), keyword, searchOptions, results, &ctx);
+            if (state) showMessage(tr("Down"),  NM_HIDE | NM_HIDE_ONCE);
         }
         if(state)
         {

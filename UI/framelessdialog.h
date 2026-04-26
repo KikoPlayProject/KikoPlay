@@ -21,6 +21,9 @@ public:
 public:
     void setResizeable(bool resizeable=true);
 
+signals:
+    void cancelClicked();
+
 protected:
     virtual void onAccept();
     virtual void onClose();

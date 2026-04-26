@@ -51,6 +51,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     dialogTip->raise();
     dialogTip->hide();
     Notifier::getNotifier()->addNotify(Notifier::DOWNLOAD_NOTIFY, this);
+    QObject::connect(dialogTip, &DialogTip::cancelClicked, this, [this](){ if(ccb) ccb(this);});
 
     initActions();
 

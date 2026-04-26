@@ -91,9 +91,9 @@ void DanmuManagerModel::deletePool()
     }
 }
 
-void DanmuManagerModel::updatePool()
+void DanmuManagerModel::updatePool(TaskContext *ctx)
 {
-    GlobalObjects::danmuManager->updatePool(animeNodeList);
+    GlobalObjects::danmuManager->updatePool(animeNodeList, ctx);
     for(DanmuPoolNode *animeNode:animeNodeList)
     {
         if(animeNode->checkStatus==Qt::Unchecked) continue;

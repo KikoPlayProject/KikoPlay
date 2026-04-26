@@ -8,6 +8,9 @@ class PoolManager : public CFramelessDialog
     Q_OBJECT
 public:
     explicit PoolManager(QWidget *parent = nullptr);
+
+private:
+    bool takeCancel = false;
 };
 
 #endif // POOLMANAGER_H

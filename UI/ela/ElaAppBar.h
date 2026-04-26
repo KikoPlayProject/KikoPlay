@@ -68,6 +68,7 @@ public:
     ~ElaAppBar();
 
     void setCustomWidget(ElaAppBarType::CustomArea customArea, QWidget* customWidget);
+    void insertCustomWidget(QWidget *w);
     QWidget* getCustomWidget() const;
 
     void setWindowControlFlag(ElaAppBarType::WindowControlType buttonFlag, bool isEnable = true);

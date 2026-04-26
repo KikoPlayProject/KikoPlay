@@ -4,6 +4,7 @@
 #include <QAbstractItemModel>
 #include <QSortFilterProxyModel>
 class AnimeModel;
+class TaskContext;
 class AnimeListModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -15,9 +16,9 @@ public:
         TITLE, AIR_DATE, ADD_TIME, SCRIPT, STATE
     };
 
-    void updateCheckedInfo();
-    void updateCheckedTag();
-    void removeChecked();
+    void updateCheckedInfo(TaskContext *ctx = nullptr);
+    void updateCheckedTag(TaskContext *ctx = nullptr);
+    void removeChecked(TaskContext *ctx = nullptr);
     int checkedCount();
     void setAllChecked(bool on);
 signals:

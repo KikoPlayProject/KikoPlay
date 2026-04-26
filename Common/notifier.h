@@ -12,7 +12,8 @@ enum NotifyMessageFlag
     NM_PROCESS = 2,
     NM_SHOWCANCEL = 4,
     NM_ERROR = 8,
-    NM_DARKNESS_BACK = 16
+    NM_DARKNESS_BACK = 16,
+    NM_HIDE_ONCE = 32,
 };
 
 struct TipParams

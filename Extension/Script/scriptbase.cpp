@@ -157,8 +157,27 @@ void ScriptBase::stop()
 {
     if (L)
     {
+        {
+            QMutexLocker locker(&stopCbLock);
+            for (auto iter = stopCallBacks.begin(); iter != stopCallBacks.end(); ++iter)
+            {
+                iter.value()();
+            }
+        }
         lua_sethook(L, exitHook, LUA_MASKCOUNT, 1);
     }
+}
+
+void ScriptBase::addStopCallBack(const QString &key, const std::function<void ()> &func)
+{
+    QMutexLocker locker(&stopCbLock);
+    stopCallBacks.insert(key, func);
+}
+
+void ScriptBase::removeStopCallBack(const QString &key)
+{
+    QMutexLocker locker(&stopCbLock);
+    stopCallBacks.remove(key);
 }
 
 QVariantList ScriptBase::call(const char *fname, const QVariantList &params, int nRet, QString &errInfo, bool retUseString)

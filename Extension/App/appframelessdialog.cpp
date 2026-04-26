@@ -25,6 +25,7 @@ AppFramelessDialog::AppFramelessDialog(const QString &titleStr, QWidget *parent)
 
     dialogTip = new DialogTip(this);
     dialogTip->hide();
+    elaAppBar->insertCustomWidget(dialogTip);
 
 #ifndef Q_OS_WIN
     setAttribute(Qt::WA_Hover);

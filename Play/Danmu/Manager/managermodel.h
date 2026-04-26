@@ -2,6 +2,7 @@
 #define MANAGERVIEW_H
 #include <QAbstractItemModel>
 #include "nodeinfo.h"
+class TaskContext;
 class DanmuManagerModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -12,7 +13,7 @@ public:
     void exportPool(const QString &dir, bool useTimeline=true, bool applyBlockRule=false);
     void exportKdFile(const QString &dir, const QString &comment="");
     void deletePool();
-    void updatePool();
+    void updatePool(TaskContext *ctx = nullptr);
     void setDelay(int delay);
     int totalDanmuCount();
     int totalPoolCount();

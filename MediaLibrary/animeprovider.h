@@ -3,6 +3,7 @@
 #include <QObject>
 #include "animeinfo.h"
 #include "Extension/Script/scriptbase.h"
+class TaskContext;
 class MatchStatusObj : public QObject
 {
     Q_OBJECT
@@ -31,10 +32,10 @@ public:
     const QString &defaultMatchScript() const {return defaultMatchScriptId;}
     void setDefaultMatchScript(const QString &scriptId);
 
-    ScriptState animeSearch(const QString &scriptId, const QString &keyword, const QMap<QString, QString> &options, QList<AnimeLite> &results);
-    ScriptState getDetail(const AnimeLite &base, Anime *anime);
-    ScriptState getEp(Anime *anime, QVector<EpInfo> &results);
-    ScriptState getTags(Anime *anime, QStringList &results);
+    ScriptState animeSearch(const QString &scriptId, const QString &keyword, const QMap<QString, QString> &options, QList<AnimeLite> &results, TaskContext *ctx = nullptr);
+    ScriptState getDetail(const AnimeLite &base, Anime *anime, TaskContext *ctx = nullptr);
+    ScriptState getEp(Anime *anime, QVector<EpInfo> &results, TaskContext *ctx = nullptr);
+    ScriptState getTags(Anime *anime, QStringList &results, TaskContext *ctx = nullptr);
 
     ScriptState match(const QString &scriptId, const QString &path, MatchResult &result);
     ScriptState menuClick(const QString &mid, Anime *anime);

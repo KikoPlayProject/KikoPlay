@@ -90,6 +90,8 @@ public:
 
     virtual ScriptState loadScript(const QString &path);
     virtual void stop();
+    virtual void addStopCallBack(const QString &key, const std::function<void()> &func);
+    virtual void removeStopCallBack(const QString &key);
 
 protected:
     const char *luaSettingsTable = "settings";
@@ -109,6 +111,8 @@ protected:
     QString settingPath;
     ScriptType sType;
     QIcon _scriptIcon;
+    QRecursiveMutex stopCbLock;
+    QHash<QString, std::function<void()>> stopCallBacks;
 
     QVariantList call(const char *fname, const QVariantList &params, int nRet, QString &errInfo, bool retUseString = true);
     QVariant get(const char *name);

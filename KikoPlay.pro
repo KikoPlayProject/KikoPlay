@@ -53,6 +53,7 @@ SOURCES += \
     Common/network.cpp \
     Common/notifier.cpp \
     Common/taskpool.cpp \
+    Common/threadtask.cpp \
     Download/aria2jsonrpc.cpp \
     Download/autodownloadmanager.cpp \
     Download/BgmList/bgmlist.cpp \

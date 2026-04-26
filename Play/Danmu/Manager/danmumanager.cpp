@@ -627,10 +627,17 @@ void DanmuManager::deleteDanmu(const QString &pid, const QSharedPointer<DanmuCom
     });
 }
 
-void DanmuManager::updatePool(QList<DanmuPoolNode *> &updateList)
+void DanmuManager::updatePool(QList<DanmuPoolNode *> &updateList, TaskContext *ctx)
 {
     ThreadTask task(GlobalObjects::workThread);
-    task.Run([this,&updateList](){
+    bool cancelFlag = false;
+    if (ctx)
+    {
+        QObject::connect(ctx, &TaskContext::cancelRequested, this, [&](){
+            cancelFlag = true;
+        });
+    }
+    task.Run([this, &updateList, &cancelFlag](){
         for(const DanmuPoolNode *animeNode:updateList)
         {
             if(animeNode->checkStatus==Qt::Unchecked)continue;
@@ -640,6 +647,7 @@ void DanmuManager::updatePool(QList<DanmuPoolNode *> &updateList)
                 Pool *pool=getPool(epNode->idInfo);
                 for(DanmuPoolNode *sourceNode:*epNode->children)
                 {
+                    if (cancelFlag) goto cancel;
                     if(sourceNode->checkStatus==Qt::Unchecked)continue;
                     emit workerStateMessage(tr("Updating: %1 %2 %3").arg(animeNode->title, epNode->title, sourceNode->idInfo));
                     DanmuPoolSourceNode *srcNode(static_cast<DanmuPoolSourceNode *>(sourceNode));
@@ -649,6 +657,7 @@ void DanmuManager::updatePool(QList<DanmuPoolNode *> &updateList)
                 }
             }
         }
+cancel:
         emit workerStateMessage("Done");
         return 0;
     });

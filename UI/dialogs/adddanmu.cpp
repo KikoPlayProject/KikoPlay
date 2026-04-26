@@ -15,6 +15,7 @@
 #include <QAction>
 #include <QFileDialog>
 
+#include "Common/threadtask.h"
 #include "Play/Danmu/danmuprovider.h"
 #include "Play/Danmu/Manager/danmumanager.h"
 #include "Play/Danmu/Manager/pool.h"
@@ -160,7 +161,11 @@ void AddDanmu::search()
     {
         searchOptions = scriptOptionPanel->getOptionVals();
     }
-    auto ret = GlobalObjects::danmuProvider->danmuSearch(tmpProviderId, keyword, searchOptions, results);
+    showMessage(tr("Searching..."),  NM_PROCESS | NM_SHOWCANCEL);
+    TaskContext ctx(this);
+    QObject::connect(this, &CFramelessDialog::cancelClicked, &ctx, &TaskContext::cancel);
+    auto ret = GlobalObjects::danmuProvider->danmuSearch(tmpProviderId, keyword, searchOptions, results, &ctx);
+    showMessage(tr("Down"),  NM_HIDE | NM_HIDE_ONCE);
     if(ret)
     {
         if(!themeWord.isEmpty() && themeWord!=keyword)
@@ -266,11 +271,14 @@ void AddDanmu::addURL()
     urlEdit->setEnabled(false);
     beginProcrss();
     int addNum = 0;
+    TaskContext ctx(this);
+    QObject::connect(this, &CFramelessDialog::cancelClicked, &ctx, &TaskContext::cancel);
     for (const QString &url : urls)
     {
+        if (ctx.isCancelRequested()) break;
         QList<DanmuSource> results;
-        showMessage(tr("Adding: %1").arg(url), NM_PROCESS);
-        auto ret = GlobalObjects::danmuProvider->getURLInfo(url, results);
+        showMessage(tr("Adding: %1").arg(url), NM_PROCESS | NM_SHOWCANCEL);
+        auto ret = GlobalObjects::danmuProvider->getURLInfo(url, results, &ctx);
         if (!ret)
         {
             showMessage(ret.info, NM_ERROR | NM_PROCESS);

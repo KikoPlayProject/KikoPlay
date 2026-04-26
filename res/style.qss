@@ -1089,9 +1089,15 @@ QPushButton#RecentItemDeleteButton {
     background:transparent;
     padding:1px;
 }
-QPushButton#RecentItemDeleteButton:hover,
-QPushButton#RecentItemDeleteButton:pressed,
-QPushButton#RecentItemDeleteButton:checked {
+QPushButton#TipCancelButton {
+    border-style:none;
+    color:#fefefe;
+    background:transparent;
+    padding:1px;
+}
+QPushButton#RecentItemDeleteButton:hover, QPushButton#TipCancelButton:hover,
+QPushButton#RecentItemDeleteButton:pressed, QPushButton#TipCancelButton:pressed,
+QPushButton#RecentItemDeleteButton:checked, QPushButton#TipCancelButton:checked {
     color:#fa3605;
 }
 QPushButton#TaskTypeToolButton {

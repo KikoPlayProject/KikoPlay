@@ -3325,7 +3325,7 @@ void RecentItem::setData(const RecentlyPlayedItem &item)
     titleLabel->adjustSize();
     if (item.playTimeState == PlayListItem::PlayState::FINISH)
     {
-        timeLabel->setText(tr("Finished"));
+        timeLabel->setText(QObject::tr("Finished"));
     }
     else if (item.duration > 0 && item.playtime > 0)
     {

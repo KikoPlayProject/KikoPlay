@@ -1,6 +1,22 @@
 #ifndef THREADTASK_H
 #define THREADTASK_H
 #include <QtCore>
+
+class TaskContext : public QObject
+{
+    Q_OBJECT
+public:
+    TaskContext(QObject *parent = nullptr) : QObject(parent) {}
+    void cancel();
+    bool isCancelRequested() const { return _cancelRequested.load(); }
+
+signals:
+    void cancelRequested();
+
+private:
+    std::atomic_bool _cancelRequested{false};
+};
+
 class ThreadTask
 {
 public:

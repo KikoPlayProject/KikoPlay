@@ -71,13 +71,22 @@ void AnimeProvider::setDefaultMatchScript(const QString &scriptId)
     emit defaultMacthProviderChanged(script->name(), scriptId);
 }
 
-ScriptState AnimeProvider::animeSearch(const QString &scriptId, const QString &keyword, const QMap<QString, QString> &options, QList<AnimeLite> &results)
+ScriptState AnimeProvider::animeSearch(const QString &scriptId, const QString &keyword, const QMap<QString, QString> &options, QList<AnimeLite> &results, TaskContext *ctx)
 {
     auto script = GlobalObjects::scriptManager->getScript(scriptId).staticCast<LibraryScript>();
     if(!script) return "Script invalid";
     ThreadTask task(GlobalObjects::scriptManager->scriptThread);
+    Network::ReqAbortFlagObj *abortFlag = nullptr;
+    if (ctx)
+    {
+        QObject::connect(ctx, &TaskContext::cancelRequested, this, [&](){
+            if (abortFlag) emit abortFlag->abort();
+            if (script) script->stop();
+        });
+    }
     return task.Run([&](){
-        for(auto iter = options.cbegin(); iter != options.cend(); ++iter)
+        abortFlag = Network::getAbortFlag();
+        for (auto iter = options.cbegin(); iter != options.cend(); ++iter)
         {
             script->setSearchOption(iter.key(), iter.value());
         }
@@ -85,33 +94,60 @@ ScriptState AnimeProvider::animeSearch(const QString &scriptId, const QString &k
     }).value<ScriptState>();
 }
 
-ScriptState AnimeProvider::getDetail(const AnimeLite &base, Anime *anime)
+ScriptState AnimeProvider::getDetail(const AnimeLite &base, Anime *anime, TaskContext *ctx)
 {
     auto script = GlobalObjects::scriptManager->getScript(base.scriptId).staticCast<LibraryScript>();
     if(!script) return "Script invalid";
     ThreadTask task(GlobalObjects::scriptManager->scriptThread);
+    Network::ReqAbortFlagObj *abortFlag = nullptr;
+    if (ctx)
+    {
+        QObject::connect(ctx, &TaskContext::cancelRequested, this, [&](){
+            if (abortFlag) emit abortFlag->abort();
+            if (script) script->stop();
+        });
+    }
     return task.Run([&](){
+        abortFlag = Network::getAbortFlag();
         ScriptState state = script->getDetail(base, anime);
         return QVariant::fromValue(state);
     }).value<ScriptState>();
 }
 
-ScriptState AnimeProvider::getEp(Anime *anime, QVector<EpInfo> &results)
+ScriptState AnimeProvider::getEp(Anime *anime, QVector<EpInfo> &results, TaskContext *ctx)
 {
     auto script = GlobalObjects::scriptManager->getScript(anime->scriptId()).staticCast<LibraryScript>();
     if(!script) return "Script invalid";
     ThreadTask task(GlobalObjects::scriptManager->scriptThread);
+    Network::ReqAbortFlagObj *abortFlag = nullptr;
+    if (ctx)
+    {
+        QObject::connect(ctx, &TaskContext::cancelRequested, this, [&](){
+            if (abortFlag) emit abortFlag->abort();
+            if (script) script->stop();
+        });
+    }
     return task.Run([&](){
+        abortFlag = Network::getAbortFlag();
         return QVariant::fromValue(script->getEp(anime, results));
     }).value<ScriptState>();
 }
 
-ScriptState AnimeProvider::getTags(Anime *anime, QStringList &results)
+ScriptState AnimeProvider::getTags(Anime *anime, QStringList &results, TaskContext *ctx)
 {
     auto script = GlobalObjects::scriptManager->getScript(anime->scriptId()).staticCast<LibraryScript>();
     if(!script) return "Script invalid";
     ThreadTask task(GlobalObjects::scriptManager->scriptThread);
+    Network::ReqAbortFlagObj *abortFlag = nullptr;
+    if (ctx)
+    {
+        QObject::connect(ctx, &TaskContext::cancelRequested, this, [&](){
+            if (abortFlag) emit abortFlag->abort();
+            if (script) script->stop();
+        });
+    }
     return task.Run([&](){
+        abortFlag = Network::getAbortFlag();
         return QVariant::fromValue(script->getTags(anime, results));
     }).value<ScriptState>();
 }

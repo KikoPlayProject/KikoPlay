@@ -135,6 +135,12 @@ void ElaAppBar::setCustomWidget(ElaAppBarType::CustomArea customArea, QWidget* w
     d->_customWidgets.append(widget);
 }
 
+void ElaAppBar::insertCustomWidget(QWidget *w)
+{
+    Q_D(ElaAppBar);
+    d->_customWidgets.append(w);
+}
+
 QWidget* ElaAppBar::getCustomWidget() const
 {
     Q_D(const ElaAppBar);

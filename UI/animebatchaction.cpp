@@ -12,6 +12,7 @@
 #include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
+#include "Common/threadtask.h"
 
 AnimeBatchAction::AnimeBatchAction(AnimeModel *animeModel, QWidget *parent) :
     CFramelessDialog(tr("Batch Operation"), parent, false, true, false)
@@ -61,14 +62,18 @@ AnimeBatchAction::AnimeBatchAction(AnimeModel *animeModel, QWidget *parent) :
     });
 
     QObject::connect(updateInfo, &QPushButton::clicked, this, [=](){
+        TaskContext ctx;
+        QObject::connect(this, &CFramelessDialog::cancelClicked, &ctx, &TaskContext::cancel);
         showBusyState(true);
-        animeListModel->updateCheckedInfo();
+        animeListModel->updateCheckedInfo(&ctx);
         showBusyState(false);
     });
 
     QObject::connect(updateTags, &QPushButton::clicked, this, [=](){
+        TaskContext ctx;
+        QObject::connect(this, &CFramelessDialog::cancelClicked, &ctx, &TaskContext::cancel);
         showBusyState(true);
-        animeListModel->updateCheckedTag();
+        animeListModel->updateCheckedTag(&ctx);
         showBusyState(false);
     });
 
@@ -78,8 +83,10 @@ AnimeBatchAction::AnimeBatchAction(AnimeModel *animeModel, QWidget *parent) :
         QMessageBox::StandardButton btn = QMessageBox::information(this,tr("Remove"),tr("Are you sure you want to remove these %1 anime(s)?").arg(c),
                                  QMessageBox::Yes|QMessageBox::Cancel,QMessageBox::Cancel);
         if(btn==QMessageBox::Cancel)return;
+        TaskContext ctx;
+        QObject::connect(this, &CFramelessDialog::cancelClicked, &ctx, &TaskContext::cancel);
         showBusyState(true);
-        animeListModel->removeChecked();
+        animeListModel->removeChecked(&ctx);
         showBusyState(false);
     });
 

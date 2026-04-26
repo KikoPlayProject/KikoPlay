@@ -6,6 +6,7 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QComboBox>
+#include "Common/threadtask.h"
 #include "UI/ela/ElaComboBox.h"
 #include "UI/ela/ElaLineEdit.h"
 #include "UI/widgets/kpushbutton.h"
@@ -86,9 +87,13 @@ void AnimeSearch::search()
     {
         searchOptions = scriptOptionPanel->getOptionVals();
     }
-    ScriptState state = GlobalObjects::animeProvider->animeSearch(scriptCombo->currentData().toString(), keyword, searchOptions, animes);
+    showMessage(tr("Searching..."),  NM_PROCESS | NM_SHOWCANCEL);
+    TaskContext ctx(this);
+    QObject::connect(this, &CFramelessDialog::cancelClicked, &ctx, &TaskContext::cancel);
+    ScriptState state = GlobalObjects::animeProvider->animeSearch(scriptCombo->currentData().toString(), keyword, searchOptions, animes, &ctx);
     if (state)
     {
+        showMessage(tr("Down"),  NM_HIDE | NM_HIDE_ONCE);
         model->setAnimes(animes);
     } else {
         showMessage(state.info, NM_ERROR | NM_HIDE);

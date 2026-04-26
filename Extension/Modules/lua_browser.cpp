@@ -10,8 +10,10 @@
 #include <QWebEngineUrlScheme>
 #include <QThread>
 #include "Extension/Common/ext_common.h"
+#include "Extension/Script/scriptbase.h"
 #include "Common/browser.h"
 #include <QStandardPaths>
+#include <QRandomGenerator>
 
 namespace Extension
 {
@@ -79,9 +81,26 @@ int BrowserData::load(lua_State *L)
 
     std::promise<bool> cbPromise;
     std::future<bool> flag = cbPromise.get_future();
-
+    ScriptBase *script = ScriptBase::getScript(L);
+    const QString cbKey = QString("browser_load_%1").arg(QRandomGenerator::global()->generate());
+    if (script)
+    {
+        script->addStopCallBack(cbKey, [&](){
+            try
+            {
+                cbPromise.set_value(false);
+            } catch (const std::future_error& e) {
+                qInfo(e.what());
+            }
+        });
+    }
     auto conn = QObject::connect(d->view, &QWebEngineView::loadFinished, d->view, [&](bool ok){
-        cbPromise.set_value(ok);
+        try
+        {
+            cbPromise.set_value(ok);
+        } catch (const std::future_error& e) {
+            qInfo(e.what());
+        }
     });
 
     auto view = d->view;
@@ -92,6 +111,7 @@ int BrowserData::load(lua_State *L)
     auto status = flag.wait_for(std::chrono::milliseconds{timeout});
     lua_pushboolean(L, status == std::future_status::ready ? flag.get() : false);
     QObject::disconnect(conn);
+    if (script) script->removeStopCallBack(cbKey);
     return 1;
 }
 
@@ -134,16 +154,35 @@ int BrowserData::html(lua_State *L)
 
     std::promise<bool> cbPromise;
     std::future<bool> flag = cbPromise.get_future();
+    ScriptBase *script = ScriptBase::getScript(L);
+    const QString cbKey = QString("browser_html_%1").arg(QRandomGenerator::global()->generate());
+    if (script)
+    {
+        script->addStopCallBack(cbKey, [&](){
+            try
+            {
+                cbPromise.set_value(false);
+            } catch (const std::future_error& e) {
+                qInfo(e.what());
+            }
+        });
+    }
 
     QString content;
     auto resCallBack = [&](QVariant html){
-        content = html.toString();
-        cbPromise.set_value(true);
+        try
+        {
+            content = html.toString();
+            cbPromise.set_value(true);
+        } catch (const std::future_error& e) {
+            qInfo(e.what());
+        }
     };
     QMetaObject::invokeMethod(d->view, [=](){
         d->view->page()->runJavaScript("document.documentElement.outerHTML", resCallBack);
     });
     flag.get();
+    if (script) script->removeStopCallBack(cbKey);
 
     lua_pushstring(L, content.toStdString().c_str());
     return 1;
@@ -160,16 +199,35 @@ int BrowserData::runjs(lua_State *L)
     QString js(lua_tostring(L, 2));
     std::promise<bool> cbPromise;
     std::future<bool> flag = cbPromise.get_future();
+    ScriptBase *script = ScriptBase::getScript(L);
+    const QString cbKey = QString("browser_runjs_%1").arg(QRandomGenerator::global()->generate());
+    if (script)
+    {
+        script->addStopCallBack(cbKey, [&](){
+            try
+            {
+                cbPromise.set_value(false);
+            } catch (const std::future_error& e) {
+                qInfo(e.what());
+            }
+        });
+    }
 
     QVariant result;
     auto resCallBack = [&](QVariant res){
-        result = res;
-        cbPromise.set_value(true);
+        try
+        {
+            result = res;
+            cbPromise.set_value(true);
+        } catch (const std::future_error& e) {
+            qInfo(e.what());
+        }
     };
     QMetaObject::invokeMethod(d->view, [=](){
         d->view->page()->runJavaScript(js, resCallBack);
     });
     flag.get();
+    if (script) script->removeStopCallBack(cbKey);
 
     pushValue(L, result);
     return 1;
