@@ -2,12 +2,14 @@
 
 #include <QAbstractItemView>
 #include <QApplication>
+#include <QGuiApplication>
 #include <QLayout>
 #include <QListView>
 #include <QMouseEvent>
 #include <QLineEdit>
 #include <QMetaObject>
 #include <QPropertyAnimation>
+#include <QScreen>
 #include <QVector>
 
 #include "DeveloperComponents/ElaComboBoxStyle.h"
@@ -51,6 +53,58 @@ namespace
 }
 
 Q_PROPERTY_CREATE_Q_CPP(ElaComboBox, int, BorderRadius)
+
+namespace {
+void positionPopupContainer(QComboBox* combo, QWidget* container, int popupHeight)
+{
+    if (!combo || !container)
+    {
+        return;
+    }
+
+    const QRect comboRect(combo->mapToGlobal(QPoint(0, 0)), combo->size());
+    QScreen* screen = QGuiApplication::screenAt(comboRect.center());
+    if (!screen)
+    {
+        screen = combo->screen();
+    }
+    if (!screen)
+    {
+        screen = QGuiApplication::primaryScreen();
+    }
+
+    QRect availableGeometry = screen ? screen->availableGeometry() : QRect(comboRect.topLeft(), QSize(1920, 1080));
+    const int popupWidth = qMax(container->width(), combo->width());
+    int x = comboRect.left();
+    int y = comboRect.bottom() + 1;
+
+    if (x + popupWidth > availableGeometry.right())
+    {
+        x = availableGeometry.right() - popupWidth;
+    }
+    if (x < availableGeometry.left())
+    {
+        x = availableGeometry.left();
+    }
+
+    if (y + popupHeight > availableGeometry.bottom())
+    {
+        const int aboveY = comboRect.top() - popupHeight - 1;
+        if (aboveY >= availableGeometry.top())
+        {
+            y = aboveY;
+        }
+        else
+        {
+            y = qMax(availableGeometry.top(), availableGeometry.bottom() - popupHeight);
+        }
+    }
+
+    container->setFixedWidth(popupWidth);
+    container->move(x, y);
+}
+}
+
 ElaComboBox::ElaComboBox(QWidget* parent)
     : QComboBox(parent), d_ptr(new ElaComboBoxPrivate())
 {
@@ -148,7 +202,11 @@ void ElaComboBox::showPopup()
             int contentHeight = popupContentHeight(view(), count(), maxVisibleItems());
             int containerHeight = contentHeight + kPopupExtraHeight;
             view()->resize(view()->width(), contentHeight);
+#ifdef Q_OS_WIN
             container->move(container->x(), container->y() + 3);
+#else
+            positionPopupContainer(this, container, containerHeight);
+#endif
             QLayout* layout = container->layout();
             while (layout->count())
             {

@@ -221,6 +221,20 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
                 sAct->setChecked(s->id() == curScriptId);
                 scriptActions << sAct;
             }
+            if (!scriptCheckGroup->checkedAction())
+            {
+                if (!calendarScripts.empty())
+                {
+                    QAction *defaultAct = scriptActions.first();
+                    defaultAct->setChecked(true);
+                    bgmList->setScriptId(defaultAct->data().toString());
+                    GlobalObjects::appSetting->setValue("BgmCalendar/DefaultScriptId", defaultAct->data().toString());
+                }
+                else
+                {
+                    bgmList->setScriptId("");
+                }
+            }
         }
     });
 
@@ -254,13 +268,18 @@ void BgmListWindow::showEvent(QShowEvent *)
                 scriptActions << sAct;
                 ++i;
             }
-            if (sIndex == -1)
+            if (calendarScripts.empty())
+            {
+                Logger::logger()->log(Logger::Script, tr("Bangumi Calendar script not found"));
+            }
+            else if (sIndex == -1)
             {
                 Logger::logger()->log(Logger::Script, tr("Bangumi Calendar Lost: %1").arg(curScriptId));
-                if(!calendarScripts.empty())
-                {
-                    sIndex = 0;
-                }
+                QAction *defaultAct = scriptActions.first();
+                defaultAct->setChecked(true);
+                const QString scriptId = defaultAct->data().toString();
+                bgmList->setScriptId(scriptId);
+                GlobalObjects::appSetting->setValue("BgmCalendar/DefaultScriptId", scriptId);
             }
             else
             {
@@ -291,6 +310,5 @@ void BgmListWindow::resizeEvent(QResizeEvent *)
     bgmListView->header()->resizeSection(2, 3*oneWidth);
     bgmListView->header()->resizeSection(3, 1*oneWidth);
 }
-
 
 

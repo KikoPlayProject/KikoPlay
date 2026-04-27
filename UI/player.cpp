@@ -1510,7 +1510,11 @@ void PlayerWindow::updateTopStatus(int option)
     {
     case 0:
         onTopWhilePlaying = true;
+#ifdef Q_OS_MACOS
+        emit setStayOnTop(!GlobalObjects::mpvplayer->getCurrentFile().isEmpty());
+#else
         emit setStayOnTop(GlobalObjects::mpvplayer->getState()==MPVPlayer::Play && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty());
+#endif
         break;
     case 1:
         onTopWhilePlaying = false;
@@ -1891,8 +1895,14 @@ void PlayerWindow::initSignals()
         else
             unsetAwakeRequired();
 
-        if(onTopWhilePlaying)
+        if (onTopWhilePlaying)
+        {
+#ifdef Q_OS_MACOS
+            emit setStayOnTop(has_video && state != MPVPlayer::Stop);
+#else
             emit setStayOnTop(is_playing);
+#endif
+        }
 
         switch(state)
         {
@@ -1900,7 +1910,7 @@ void PlayerWindow::initSignals()
             if (has_video)
             {
                 this->playPause->setText(QChar(0xe632));
-                playerContent->hide();
+                playerContent->setContentVisible(false);
             }
             break;
         case MPVPlayer::Pause:
@@ -1948,7 +1958,7 @@ void PlayerWindow::initSignals()
             GlobalObjects::danmuRender->cleanup();
             //QTimer::singleShot(100, GlobalObjects::mpvplayer, "update");
             playerContent->raise();
-            playerContent->show();
+            playerContent->setContentVisible(true);
             liveDanmuList->hide();
             danmuStatisBar->hide();
             PlayContext::context()->clear();
@@ -2314,6 +2324,13 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
     fullscreen->setToolTip(tr("FullScreen"));
     fullscreen->setObjectName(QStringLiteral("PlayControlButton"));
     fullscreen->setFocusPolicy(Qt::NoFocus);
+
+    const int controlButtonSize = 40 * logicalDpiY() / 96;
+    const QVector<QPushButton *> controlButtons = { playPause, prev, next, stop, mute, setting, danmu, fullscreen };
+    for (QPushButton *button : controlButtons)
+    {
+        button->setFixedSize(controlButtonSize, controlButtonSize);
+    }
 
 
     launchDanmuEdit = new KLineEdit(playControlPanel);
@@ -3241,6 +3258,17 @@ void PlayerContent::refreshItems()
     logo->setVisible(recent.empty() || !GlobalObjects::mpvplayer->getShowRecent());
     recentTip->setVisible(!recent.empty() && GlobalObjects::mpvplayer->getShowRecent());
     recentItemsContainer->setVisible(!recent.empty() && GlobalObjects::mpvplayer->getShowRecent());
+}
+
+void PlayerContent::setContentVisible(bool on)
+{
+    const auto childWidgets = findChildren<QWidget *>(QString(), Qt::FindDirectChildrenOnly);
+    for (QWidget *child : childWidgets)
+    {
+        child->setVisible(on);
+    }
+    setAttribute(Qt::WA_TransparentForMouseEvents, !on);
+    if (on) raise();
 }
 
 bool PlayerContent::eventFilter(QObject *watched, QEvent *event)

@@ -4,6 +4,7 @@
 #include <QLocalSocket>
 #include <QLocalServer>
 #include <QElapsedTimer>
+#include <QSurfaceFormat>
 #include "globalobjects.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/playcontext.h"
@@ -105,6 +106,17 @@ int main(int argc, char *argv[])
 #else
     qputenv("QT_SCALE_FACTOR", "1.5");
 #endif
+#endif
+#ifdef Q_OS_MACOS
+    QSurfaceFormat format;
+    format.setRenderableType(QSurfaceFormat::OpenGL);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setVersion(4, 1);
+    format.setDepthBufferSize(24);
+    format.setStencilBufferSize(8);
+    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+    format.setSwapInterval(1);
+    QSurfaceFormat::setDefaultFormat(format);
 #endif
     QElapsedTimer timer;
     timer.start();
