@@ -54,6 +54,7 @@ SOURCES += \
     Common/notifier.cpp \
     Common/taskpool.cpp \
     Common/threadtask.cpp \
+    Common/qrcodegen.cpp \
     Download/aria2jsonrpc.cpp \
     Download/autodownloadmanager.cpp \
     Download/BgmList/bgmlist.cpp \
@@ -361,6 +362,7 @@ HEADERS += \
     Common/threadtask.h \
     Common/zconf.h \
     Common/zlib.h \
+    Common/qrcodegen.hpp \
     Download/aria2jsonrpc.h \
     Download/autodownloadmanager.h \
     Download/BgmList/bgmlist.h \
