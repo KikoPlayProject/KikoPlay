@@ -1712,6 +1712,14 @@ void PlayList::dumpJsonPlaylist(QJsonDocument &jsonDoc)
     d->needRefresh=false;
 }
 
+void PlayList::dumpJsonRecent(QJsonDocument &jsonDoc)
+{
+    Q_D(PlayList);
+    QJsonArray rootArray;
+    d->dumpRecentItems(rootArray);
+    jsonDoc.setArray(rootArray);
+}
+
 QString PlayList::getPathByHash(const QString &hash)
 {
     Q_D(PlayList);

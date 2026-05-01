@@ -34,6 +34,7 @@ public:
     void saveRecentlist();
     void updateRecentlist(PlayListItem *item);
     void updateRecentItemInfo(const PlayListItem *item, const QImage &cover);
+    void dumpRecentItems(QJsonArray &array);
 
     PlayListItem *getPrevOrNextItem(bool prev);
     bool addSubFolder(QString folderStr, PlayListItem *parent, int &itemCount);

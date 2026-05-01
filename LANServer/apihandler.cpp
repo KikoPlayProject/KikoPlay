@@ -54,6 +54,7 @@ void APIHandler::service(stefanfrings::HttpRequest &request, stefanfrings::HttpR
     using Func = void(APIHandler::*)(stefanfrings::HttpRequest &, stefanfrings::HttpResponse &);
     static QMap<QString, Func> routeTable = {
         {"playlist", &APIHandler::apiPlaylist},
+        {"recent", &APIHandler::apiRecentlist},
         {"playstate", &APIHandler::apiPlaystate},
         {"updateTime", &APIHandler::apiUpdateTime},
         {"subtitle", &APIHandler::apiSubtitle},
@@ -82,6 +83,22 @@ void APIHandler::apiPlaylist(stefanfrings::HttpRequest &request, stefanfrings::H
     Logger::logger()->log(Logger::LANServer, QString("[%1]Playlist").arg(request.getPeerAddress().toString()));
 
     QByteArray data = playlistDoc.toJson();
+    QByteArray compressedBytes;
+    Network::gzipCompress(data,compressedBytes);
+    response.setHeader("Content-Type", "application/json");
+    response.setHeader("Content-Encoding", "gzip");
+    response.write(compressedBytes, true);
+}
+
+void APIHandler::apiRecentlist(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
+{
+    QJsonDocument recentDoc;
+    QMetaObject::invokeMethod(GlobalObjects::playlist, [&](){
+        GlobalObjects::playlist->dumpJsonRecent(recentDoc);
+    },Qt::BlockingQueuedConnection);
+    Logger::logger()->log(Logger::LANServer, QString("[%1]RecentList").arg(request.getPeerAddress().toString()));
+
+    QByteArray data = recentDoc.toJson();
     QByteArray compressedBytes;
     Network::gzipCompress(data,compressedBytes);
     response.setHeader("Content-Type", "application/json");

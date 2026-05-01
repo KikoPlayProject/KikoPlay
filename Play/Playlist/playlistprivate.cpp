@@ -293,6 +293,38 @@ void PlayListPrivate::updateRecentItemInfo(const PlayListItem *item, const QImag
     }
 }
 
+void PlayListPrivate::dumpRecentItems(QJsonArray &array)
+{
+    for (const RecentlyPlayedItem &r : recentList)
+    {
+        PlayListItem *item = fileItems.value(r.path, nullptr);
+        if (item)
+        {
+            QJsonObject itemObj;
+            itemObj.insert("text", item->title);
+            itemObj.insert("mediaId", item->pathHash);
+            itemObj.insert("danmuPool", item->poolID);
+            itemObj.insert("playTime", item->playTime);
+            itemObj.insert("playTimeState",item->playTimeState);
+            itemObj.insert("animeName", item->animeTitle);
+            itemObj.insert("itemType", item->type);
+            if (item->type == PlayListItem::ItemType::WEB_URL)
+            {
+                itemObj.insert("url", item->path);
+            }
+            if (!r.stopFrame.isNull())
+            {
+                QByteArray data;
+                QBuffer buffer(&data);
+                buffer.open(QIODevice::WriteOnly);
+                r.stopFrame.save(&buffer, "PNG");
+                itemObj.insert("cover", QString(data.toBase64()));
+            }
+            array.append(itemObj);
+        }
+    }
+}
+
 PlayListItem *PlayListPrivate::getPrevOrNextItem(bool prev)
 {
     if(!currentItem)return nullptr;
