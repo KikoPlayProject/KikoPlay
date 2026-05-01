@@ -125,6 +125,19 @@ QSharedPointer<Anime> AnimeWorker::getSingleAnime(const QString &name)
     return nullptr;
 }
 
+bool AnimeWorker::hasFile(const QString &path)
+{
+    QSqlQuery query(DBManager::instance()->getDB(DBManager::Bangumi));
+    query.prepare("select Anime, Name, EpIndex, Type from episode where LocalFile=?");
+    query.bindValue(0, path);
+    query.exec();
+    if(query.first())
+    {
+        return true;
+    }
+    return false;
+}
+
 AnimeWorker::AnimeWorker(QObject *parent):QObject(parent)
 {
     qRegisterMetaType<EpInfo>("EpInfo");

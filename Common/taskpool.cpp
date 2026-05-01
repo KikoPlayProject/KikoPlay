@@ -131,7 +131,13 @@ void KTask::run()
 {
     setStatus(TaskStatus::Running);
     TaskStatus runStatus = runTask();
-    if (_cancelFlag) runStatus = TaskStatus::Cancelled;
+    if (_cancelFlag)
+    {
+        if (runStatus != TaskStatus::Cancelled && runStatus != TaskStatus::PartiallyFinished)
+        {
+            runStatus = TaskStatus::Cancelled;
+        }
+    }
     setStatus(runStatus);
 }
 

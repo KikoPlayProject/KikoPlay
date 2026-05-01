@@ -124,6 +124,7 @@ SOURCES += \
     Extension/Script/scriptmodel.cpp \
     Download/util.cpp \
     MediaLibrary/animescrapingtask.cpp \
+    MediaLibrary/animescantask.cpp \
     Play/Playlist/webdav/qwebdav.cpp \
     Play/Playlist/webdav/qwebdavdirparser.cpp \
     Play/Playlist/webdav/qwebdavitem.cpp \
@@ -295,6 +296,7 @@ SOURCES += \
     UI/animedetailinfopage.cpp \
     UI/animeinfoeditor.cpp \
     UI/animesearch.cpp \
+    UI/animescandialog.cpp \
     UI/appbar.cpp \
     UI/appmenu.cpp \
     UI/autodownloadwindow.cpp \
@@ -433,6 +435,7 @@ HEADERS += \
     Extension/Script/scriptmodel.h \
     Download/util.h \
     MediaLibrary/animescrapingtask.h \
+    MediaLibrary/animescantask.h \
     Play/Playlist/webdav/qwebdav.h \
     Play/Playlist/webdav/qwebdavdirparser.h \
     Play/Playlist/webdav/qwebdavitem.h \
@@ -610,6 +613,7 @@ HEADERS += \
     UI/animedetailinfopage.h \
     UI/animeinfoeditor.h \
     UI/animesearch.h \
+    UI/animescandialog.h \
     UI/appbar.h \
     UI/appmenu.h \
     UI/autodownloadwindow.h \

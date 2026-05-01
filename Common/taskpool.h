@@ -12,7 +12,8 @@ enum class TaskStatus
     Running,
     Finished,
     Failed,
-    Cancelled
+    Cancelled,
+    PartiallyFinished,
 };
 
 class KTask : public QObject

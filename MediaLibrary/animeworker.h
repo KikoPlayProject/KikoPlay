@@ -31,6 +31,7 @@ public:
     bool hasAnime(const QString &name);
     QSharedPointer<Anime> getSingleAnime(const QString &name);
 
+    bool hasFile(const QString &path);
     void addEp(const QString &animeName, const EpInfo &ep);
     void removeEp(const QString &animeName, const QString &path);
     void updateEpTime(const QString &animeName, const QString &path, bool finished = false, qint64 epTime=0);

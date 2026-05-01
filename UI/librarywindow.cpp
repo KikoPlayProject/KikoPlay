@@ -33,6 +33,8 @@
 #include "widgets/fonticonbutton.h"
 #include "animedetailinfopage.h"
 #include "animebatchaction.h"
+#include "animescandialog.h"
+#include <QFileDialog>
 #include "Extension/Script/scriptmanager.h"
 #include "Extension/Script/libraryscript.h"
 #include "MediaLibrary/animeworker.h"
@@ -180,6 +182,13 @@ QLayout *LibraryWindow::initLibrarayBtns(QWidget *parent)
         {
             AnimeWorker::instance()->addAnime(input.text);
         }
+    });
+    QAction *actScanFolder = addSubMenu->addAction(tr("Scan Folder"));
+    QObject::connect(actScanFolder, &QAction::triggered, this, [this](){
+        QString dir = QFileDialog::getExistingDirectory(this, tr("Select Directory"), "");
+        if (dir.isEmpty()) return;
+        AnimeScanDialog scanDialog(dir, this);
+        scanDialog.exec();
     });
     addBtn->setMenu(addSubMenu);
 

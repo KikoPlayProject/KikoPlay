@@ -47,8 +47,17 @@ bool MPVMediaInfo::loadFile(const QString &path)
         return false;
     }
     mpv::qt::set_property(mpv, "pause", true);
-    previewCache.clear();
-    posSet.clear();
+
+    {
+        previewLock.lockForWrite();
+        previewCache.clear();
+        previewLock.unlock();
+    }
+
+    {
+        QMutexLocker l(&posSetLock);
+        posSet.clear();
+    }
 
     auto status = fileLoadedFuture.wait_for(std::chrono::seconds(10));
     if (status == std::future_status::ready)
@@ -163,11 +172,14 @@ void MPVMediaInfo::update()
     mpv_render_context_render(mpv_gl, params);
 
     int ptime = mpv::qt::get_property(mpv, "playback-time").toInt();
-    if(!posSet.contains(ptime))
     {
-        posSet.insert(ptime);
-        ctx->doneCurrent();
-        return;
+        QMutexLocker l(&posSetLock);
+        if(!posSet.contains(ptime))
+        {
+            posSet.insert(ptime);
+            ctx->doneCurrent();
+            return;
+        }
     }
     previewLock.lockForWrite();
     previewCache[ptime] = QPixmap::fromImage(pFbo->toImage().scaled(previewSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));

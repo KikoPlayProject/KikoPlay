@@ -49,6 +49,7 @@ private:
     QHash<int, QPixmap> previewCache;
     QMutex locker;
     QReadWriteLock previewLock;
+    QMutex posSetLock;
 
     QScopedPointer<std::promise<bool>> filePromise;
 
