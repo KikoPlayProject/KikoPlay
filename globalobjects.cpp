@@ -20,6 +20,7 @@
 #include "Common/logger.h"
 #include "Common/keyactionmodel.h"
 #include "Common/dbmanager.h"
+#include "Common/network.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -55,6 +56,7 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
 
     registerCustomSettingType();
     appSetting = new QSettings(context()->dataPath + "settings.ini", QSettings::IniFormat);
+    Network::applyProxySetting();
     Logger::logger();
 
     normalFont = appSetting->value("UI/Font", "Microsoft YaHei UI").toString();

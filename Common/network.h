@@ -53,6 +53,7 @@ namespace Network
         void abort();
     };
     ReqAbortFlagObj *getAbortFlag();
+    void applyProxySetting();
 
     static constexpr const char *kKikoAppId = APP_ID_KIKO;
     static constexpr const char *kKikoAppSecret = APP_SECRET_KIKO;

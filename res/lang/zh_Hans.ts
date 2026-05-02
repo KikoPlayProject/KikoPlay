@@ -4,12 +4,12 @@
 <context>
     <name>APIHandler</name>
     <message>
-        <location filename="../../LANServer/apihandler.cpp" line="372"/>
+        <location filename="../../LANServer/apihandler.cpp" line="389"/>
         <source>Start FFmpeg Failed</source>
         <translation>启动FFmpeg失败</translation>
     </message>
     <message>
-        <location filename="../../LANServer/apihandler.cpp" line="381"/>
+        <location filename="../../LANServer/apihandler.cpp" line="398"/>
         <source>Generate Failed, FFmpeg exit code: %1</source>
         <translation>生成失败，FFmpeg返回值： %1</translation>
     </message>
@@ -5987,24 +5987,24 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">第%0话 %1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1818"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1857"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1826"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1865"/>
         <source>Match Start</source>
         <translation>开始识别...</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1829"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1837"/>
         <source>Skip Match: %1</source>
         <translation>跳过识别：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1837"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1845"/>
         <source>Failed: %1</source>
         <translation>失败：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1844"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1863"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1852"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1871"/>
         <source>Success: %1</source>
         <translation>成功：%1</translation>
     </message>
@@ -6013,8 +6013,8 @@ Set shortcuts through MPV Parameter input-conf</source>
         <translation type="vanished">需要手动关联：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1849"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1881"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1857"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1889"/>
         <source>Match Done</source>
         <translation>识别完成</translation>
     </message>
@@ -6150,6 +6150,71 @@ Set shortcuts through MPV Parameter input-conf</source>
         <location filename="../../UI/mediainfo.cpp" line="114"/>
         <source>Editions</source>
         <translation>版本</translation>
+    </message>
+</context>
+<context>
+    <name>NetworkPage</name>
+    <message>
+        <location filename="../../UI/settings/networkpage.cpp" line="18"/>
+        <source>Proxy</source>
+        <translation>代理</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/networkpage.cpp" line="21"/>
+        <source>No Proxy</source>
+        <translation>无代理</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/networkpage.cpp" line="22"/>
+        <source>System Proxy</source>
+        <translation>系统代理</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/networkpage.cpp" line="23"/>
+        <source>HTTP Proxy</source>
+        <translation>HTTP代理</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/networkpage.cpp" line="24"/>
+        <source>SOCKS5 Proxy</source>
+        <translation>SOCKS5代理</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/networkpage.cpp" line="26"/>
+        <source>Proxy Type</source>
+        <translation>代理类型</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/networkpage.cpp" line="28"/>
+        <source>Proxy Server</source>
+        <translation>代理服务器</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/networkpage.cpp" line="32"/>
+        <location filename="../../UI/settings/networkpage.cpp" line="33"/>
+        <source>Host</source>
+        <translation>主机</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/networkpage.cpp" line="38"/>
+        <source>Port</source>
+        <translation>端口</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/networkpage.cpp" line="42"/>
+        <location filename="../../UI/settings/networkpage.cpp" line="48"/>
+        <source>Optional</source>
+        <translation>可选</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/networkpage.cpp" line="43"/>
+        <source>Username</source>
+        <translation>用户名</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/networkpage.cpp" line="49"/>
+        <source>Password</source>
+        <translation>密码</translation>
     </message>
 </context>
 <context>
@@ -7876,7 +7941,7 @@ KikoPlay在关联过程中会跳过路径被规则匹配到的条目</translatio
         <translation type="vanished">错误：%1</translation>
     </message>
     <message>
-        <location filename="../../Common/network.cpp" line="145"/>
+        <location filename="../../Common/network.cpp" line="147"/>
         <source>Decode JSON Failed</source>
         <translation>解析JSON失败</translation>
     </message>
@@ -7885,10 +7950,10 @@ KikoPlay在关联过程中会跳过路径被规则匹配到的条目</translatio
         <translation type="vanished">解析JSON出现错误</translation>
     </message>
     <message>
-        <location filename="../../Common/network.cpp" line="75"/>
-        <location filename="../../Common/network.cpp" line="133"/>
-        <location filename="../../Common/network.cpp" line="226"/>
-        <location filename="../../Common/network.cpp" line="423"/>
+        <location filename="../../Common/network.cpp" line="77"/>
+        <location filename="../../Common/network.cpp" line="135"/>
+        <location filename="../../Common/network.cpp" line="228"/>
+        <location filename="../../Common/network.cpp" line="425"/>
         <location filename="../../Play/Subtitle/subtitletranslator.cpp" line="82"/>
         <source>Replay Timeout</source>
         <translation>超时</translation>
@@ -8019,7 +8084,7 @@ Date: %2
         <translation type="vanished">全部：%1 最大：%2</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlistprivate.cpp" line="471"/>
+        <location filename="../../Play/Playlist/playlistprivate.cpp" line="503"/>
         <location filename="../../UI/list.cpp" line="544"/>
         <source>new collection</source>
         <translation>新合集</translation>
@@ -8680,7 +8745,7 @@ Eps: %2
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../../UI/settings.cpp" line="20"/>
+        <location filename="../../UI/settings.cpp" line="21"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
@@ -8697,47 +8762,52 @@ Eps: %2
         <translation type="vanished">MPV快捷键</translation>
     </message>
     <message>
-        <location filename="../../UI/settings.cpp" line="31"/>
+        <location filename="../../UI/settings.cpp" line="32"/>
         <source>General</source>
         <translation>常规</translation>
     </message>
     <message>
-        <location filename="../../UI/settings.cpp" line="32"/>
+        <location filename="../../UI/settings.cpp" line="33"/>
         <source>Danmu</source>
         <translation>弹幕</translation>
     </message>
     <message>
-        <location filename="../../UI/settings.cpp" line="33"/>
+        <location filename="../../UI/settings.cpp" line="34"/>
         <source>Player</source>
         <translation>播放器</translation>
     </message>
     <message>
-        <location filename="../../UI/settings.cpp" line="34"/>
+        <location filename="../../UI/settings.cpp" line="35"/>
         <source>Playlist</source>
         <translation>播放列表</translation>
     </message>
     <message>
-        <location filename="../../UI/settings.cpp" line="35"/>
+        <location filename="../../UI/settings.cpp" line="36"/>
         <source>Shortcut Key</source>
         <translation>快捷键</translation>
     </message>
     <message>
-        <location filename="../../UI/settings.cpp" line="36"/>
+        <location filename="../../UI/settings.cpp" line="37"/>
+        <source>Network</source>
+        <translation>网络</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings.cpp" line="38"/>
         <source>Download</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location filename="../../UI/settings.cpp" line="37"/>
+        <location filename="../../UI/settings.cpp" line="39"/>
         <source>LAN Server</source>
         <translation>局域网服务</translation>
     </message>
     <message>
-        <location filename="../../UI/settings.cpp" line="38"/>
+        <location filename="../../UI/settings.cpp" line="40"/>
         <source>Script</source>
         <translation>脚本</translation>
     </message>
     <message>
-        <location filename="../../UI/settings.cpp" line="39"/>
+        <location filename="../../UI/settings.cpp" line="41"/>
         <source>Extension App</source>
         <translation>扩展App</translation>
     </message>
@@ -9630,14 +9700,14 @@ Eps: %2
 <context>
     <name>WebDAVWorker</name>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1914"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1920"/>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1943"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1922"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1928"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1951"/>
         <source>Fetch Done</source>
         <translation>获取完成</translation>
     </message>
     <message>
-        <location filename="../../Play/Playlist/playlist.cpp" line="1936"/>
+        <location filename="../../Play/Playlist/playlist.cpp" line="1944"/>
         <source>Fetching Directiory Info...</source>
         <translation>获取目录信息...</translation>
     </message>

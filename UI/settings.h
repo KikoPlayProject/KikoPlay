@@ -14,6 +14,7 @@ public:
         PAGE_PLAYER,
         PAGE_PLAYLIST,
         PAGE_KEYACTION,
+        PAGE_NETWORK,
         PAGE_DOWN,
         PAGE_LAN,
         PAGE_SCRIPT,

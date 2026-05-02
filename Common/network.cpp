@@ -1,7 +1,9 @@
 #include "network.h"
+#include "globalobjects.h"
 #include "Common/zlib.h"
 #include <QNetworkCookie>
 #include <QNetworkCookieJar>
+#include <QNetworkProxy>
 #include <QThreadStorage>
 #include <QSharedPointer>
 namespace
@@ -438,4 +440,41 @@ Network::ReqAbortFlagObj *Network::getAbortFlag()
 void Network::ReqAbortFlagObj::abortRequest()
 {
     emit abort();
+}
+
+void Network::applyProxySetting()
+{
+    const int type = GlobalObjects::appSetting->value("Network/ProxyType", 1).toInt();
+    QNetworkProxy proxy;
+    switch (type)
+    {
+    case 0:
+        proxy.setType(QNetworkProxy::NoProxy);
+        break;
+    case 1:
+        proxy.setType(QNetworkProxy::DefaultProxy);
+        break;
+    case 2:
+        proxy.setType(QNetworkProxy::HttpProxy);
+        break;
+    case 3:
+        proxy.setType(QNetworkProxy::Socks5Proxy);
+        break;
+    default:
+        proxy.setType(QNetworkProxy::DefaultProxy);
+        break;
+    }
+    if (type >= 2)
+    {
+        proxy.setHostName(GlobalObjects::appSetting->value("Network/ProxyHost").toString());
+        proxy.setPort(GlobalObjects::appSetting->value("Network/ProxyPort", 0).toUInt());
+        const QString user = GlobalObjects::appSetting->value("Network/ProxyUser").toString();
+        const QString password = GlobalObjects::appSetting->value("Network/ProxyPassword").toString();
+        if (!user.isEmpty())
+        {
+            proxy.setUser(user);
+            proxy.setPassword(password);
+        }
+    }
+    QNetworkProxy::setApplicationProxy(proxy);
 }

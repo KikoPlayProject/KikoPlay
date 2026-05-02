@@ -326,6 +326,7 @@ SOURCES += \
     UI/settings.cpp \
     UI/settings/downloadpage.cpp \
     UI/settings/lanserverpage.cpp \
+    UI/settings/networkpage.cpp \
     UI/settings/scriptpage.cpp \
     UI/settings/settingpage.cpp \
     UI/snippetcapture.cpp \
@@ -643,6 +644,7 @@ HEADERS += \
     UI/settings.h \
     UI/settings/downloadpage.h \
     UI/settings/lanserverpage.h \
+    UI/settings/networkpage.h \
     UI/settings/scriptpage.h \
     UI/settings/settingpage.h \
     UI/snippetcapture.h \
