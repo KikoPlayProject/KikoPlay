@@ -29,6 +29,7 @@
 #define SERVICE_KEY_ACCESS_TOKEN "Profile/AccessToken"
 #define SERVICE_KEY_REFRESH_TOKEN "Profile/RefreshToken"
 #define SERVICE_KEY_ENABLE_K_MATCH "KService/EnableMatch"
+#define SERVICE_KEY_ENABLE_UPDATE_SRC "KService/EnableUpdateSrc"
 #define SERVICE_KEY_LIBRARAY_SOURCE_INDEX "KService/LibrarySourceIndex"
 #define SERVICE_KEY_LIBRARAY_SELECT_SOURCE "KService/LibrarySourceSelected"
 
@@ -39,6 +40,20 @@ namespace
     static const QMap<QString, int> matchScriptTypeMap = {
         {"Kikyou.l.Bangumi", kservice::InfoSourceType::BGM},
         {"Kikyou.l.Douban", kservice::InfoSourceType::DOUBAN},
+    };
+
+    static const QMap<QString, int> scriptTypeMap = {
+        {KService::kSrc, kservice::DanmuSourceType::KIKO},
+        {"Kikyou.d.Bilibili", kservice::DanmuSourceType::BILIBILI},
+        {"Kikyou.d.Gamer", kservice::DanmuSourceType::GAMER},
+        {"Kikyou.d.Iqiyi", kservice::DanmuSourceType::IQIYI},
+        {"Kikyou.d.Tencent", kservice::DanmuSourceType::TENCENT},
+        {"Kikyou.d.youku", kservice::DanmuSourceType::YOUKU},
+        {"Kikyou.d.mgtv", kservice::DanmuSourceType::MGTV},
+        {"Kikyou.d.Tucao", kservice::DanmuSourceType::TUCAO},
+        {"Kikyou.d.AcFun", kservice::DanmuSourceType::ACFUN},
+        {"Kikyou.d.ysjdm", kservice::DanmuSourceType::YSJ},
+        {"Kikyou.d.5dm", kservice::DanmuSourceType::DM5},
     };
 }
 
@@ -52,6 +67,7 @@ KService::KService() : QObject{nullptr}, baseURL("https://www.kstat.top")
     new EventListener(EventBus::getEventBus(), EventBus::EVENT_FILE_MATCH_DOWN, std::bind(&KService::listenMatchDown, this, std::placeholders::_1), this);
     new EventListener(EventBus::getEventBus(), EventBus::EVENT_DANMU_SRC_ADDED, std::bind(&KService::listenDanmuAdded, this, std::placeholders::_1), this);
     new EventListener(EventBus::getEventBus(), EventBus::EVENT_KAPP_LOADED, std::bind(&KService::listenCommonEvents, this, std::placeholders::_1), this);
+    new EventListener(EventBus::getEventBus(), EventBus::EVENT_DANMU_SRC_REMOVED, std::bind(&KService::listenDanmuSrcRemoved, this, std::placeholders::_1), this);
     moveToThread(serviceThread.data());
     QMetaObject::invokeMethod(this, [=](){
         eventTimer.start(std::chrono::milliseconds(5 * 60 * 1000), this);
@@ -132,6 +148,13 @@ void KService::getDanmu(const DanmuSource &kSrc)
     int duration = -1;
     if (obj.contains("duration")) duration = obj.value("duration").toInt();
     getDanmu(poolId, duration);
+}
+
+void KService::getDanmuSource(const QString &poolId, const QString &path)
+{
+    QMetaObject::invokeMethod(this, [=](){
+        this->kGetSource(poolId, path);
+    });
 }
 
 void KService::timerEvent(QTimerEvent *event)
@@ -305,20 +328,6 @@ void KService::listenDanmuAdded(const EventParam *p)
     const QVariantList poolSrcs = p->param.toList();
     if (poolSrcs.empty()) return;
 
-    static const QMap<QString, int> scriptTypeMap = {
-        {kSrc, kservice::DanmuSourceType::KIKO},
-        {"Kikyou.d.Bilibili", kservice::DanmuSourceType::BILIBILI},
-        {"Kikyou.d.Gamer", kservice::DanmuSourceType::GAMER},
-        {"Kikyou.d.Iqiyi", kservice::DanmuSourceType::IQIYI},
-        {"Kikyou.d.Tencent", kservice::DanmuSourceType::TENCENT},
-        {"Kikyou.d.youku", kservice::DanmuSourceType::YOUKU},
-        {"Kikyou.d.mgtv", kservice::DanmuSourceType::MGTV},
-        {"Kikyou.d.Tucao", kservice::DanmuSourceType::TUCAO},
-        {"Kikyou.d.AcFun", kservice::DanmuSourceType::ACFUN},
-        {"Kikyou.d.ysjdm", kservice::DanmuSourceType::YSJ},
-        {"Kikyou.d.5dm", kservice::DanmuSourceType::DM5},
-    };
-
     QHash<QString, kservice::AddDanmuSourceEvent::DanmuPoolSource *> kSrcMap;
     QStringList pSrc;
     static QHash<QString, int> poolSrcTimes;
@@ -400,6 +409,35 @@ void KService::listenCommonEvents(const EventParam *p)
         post(pathCommonEvent, QByteArray(msgContent.c_str(), msgContent.size()));
         Logger::logger()->log(Logger::APP, QString("[KService]common event: %1").arg(QString::fromStdString(event.header().event())));
     }
+}
+
+void KService::listenDanmuSrcRemoved(const EventParam *p)
+{
+    if (!p || p->eventType != EventBus::EVENT_DANMU_SRC_REMOVED) return;
+    kservice::RemoveSourceEvent rmSrcEvent;
+    setEventHeader(*rmSrcEvent.mutable_header(), "rm_src");
+
+    const QVariantMap rmPoolSrc = p->param.toMap();
+    if (!scriptTypeMap.contains(rmPoolSrc.value("scriptId").toString())) return;
+
+    kservice::Pool *pool = rmSrcEvent.mutable_poolinfo();
+    pool->set_name(rmPoolSrc.value("name").toString().toStdString());
+    pool->set_eptype(kservice::EpType(rmPoolSrc.value("epType").toInt()));
+    pool->set_epindex(rmPoolSrc.value("epIndex").toDouble());
+    pool->set_epname(rmPoolSrc.value("epName").toString().toStdString());
+    pool->set_poolid(rmPoolSrc.value("id").toString().toStdString());
+
+    kservice::DanmuSource *rmSrc = rmSrcEvent.mutable_src() ;
+    rmSrc->set_title(rmPoolSrc.value("srcTitle").toString().toStdString());
+    rmSrc->set_scriptid(rmPoolSrc.value("scriptId").toString().toStdString());
+    rmSrc->set_scriptdata(rmPoolSrc.value("scriptData").toString().toStdString());
+    rmSrc->set_durationseconds(rmPoolSrc.value("duration").toInt());
+    rmSrc->set_type(kservice::DanmuSourceType(scriptTypeMap.value(rmPoolSrc.value("scriptId").toString())));
+
+    std::string msgContent;
+    rmSrcEvent.SerializeToString(&msgContent);
+    post(pathKRMSrcEvent, QByteArray(msgContent.c_str(), msgContent.size()));
+    Logger::logger()->log(Logger::APP, QString("[KService]rm src event: %1-%2, %3").arg(rmPoolSrc.value("name").toString()).arg(rmPoolSrc.value("epIndex").toDouble()).arg(rmPoolSrc.value("srcTitle").toString()));
 }
 
 void KService::refreshToken()
@@ -499,6 +537,16 @@ void KService::setEnableKServiceMatch(bool on)
     serviceData->setValue(SERVICE_KEY_ENABLE_K_MATCH, on);
 }
 
+bool KService::enableKServiceUpdatSrc() const
+{
+    return serviceData->value(SERVICE_KEY_ENABLE_UPDATE_SRC, false).toBool();
+}
+
+void KService::setEnableKServiceUpdateSrc(bool on)
+{
+    serviceData->setValue(SERVICE_KEY_ENABLE_UPDATE_SRC, on);
+}
+
 QList<QPair<QString, QPair<int, bool>> > KService::getLibrarySource() const
 {
     static const QMap<int, QString> srcTypeMap = {
@@ -555,6 +603,7 @@ void KService::kStatsUV(bool isStartup)
     {
         uvEvent.set_isstartup(true);
         uvEvent.set_startupts(GlobalObjects::context()->startupTime);
+        uvEvent.set_hasstartupargs(GlobalObjects::context()->hasStartupArgs);
 
         for (auto &p : GlobalObjects::context()->stepTime)
         {
@@ -732,6 +781,42 @@ void KService::kGetDanmu(const QString &poolId, int duration)
     Logger::logger()->log(Logger::APP, QString("[KService]get_danmu: %1 %2").arg(pool->animeTitle(), ep.toString()));
 }
 
+void KService::kGetSource(const QString &poolId, const QString &path)
+{
+    Pool *pool = GlobalObjects::danmuManager->getPool(poolId, false);
+    if (!pool)
+    {
+        Logger::logger()->log(Logger::APP, "[KService]get src failed, get pool failed: " + poolId);
+        return;
+    }
+
+    qint64 ts = QDateTime::currentSecsSinceEpoch();
+    if (getSrcTs.contains(poolId) && ts - getSrcTs[poolId] < 60*60*2)
+    {
+        Logger::logger()->log(Logger::APP, "[KService]get src in time_window, skip: " + poolId);
+        return;
+    }
+    getSrcTs[poolId] = ts;
+
+    kservice::GetSourceRequest req;
+    setEventHeader(*req.mutable_header(), "get_src");
+
+    kservice::Pool *servicePool = req.mutable_poolinfo();
+    servicePool->set_poolid(poolId.toStdString());
+    servicePool->set_name(pool->animeTitle().toStdString());
+    EpInfo ep = pool->toEp();
+    servicePool->set_epname(ep.name.toStdString());
+    servicePool->set_eptype(kservice::EpType((int)ep.type));
+    servicePool->set_epindex(ep.index);
+
+    if (!path.isEmpty()) setFileInfo(*req.mutable_fileinfo(), path);
+
+    std::string msgContent;
+    req.SerializeToString(&msgContent);
+    post(pathGetSource, QByteArray(msgContent.c_str(), msgContent.size()), std::bind(&KService::handleGetSource, this, std::placeholders::_1));
+    Logger::logger()->log(Logger::APP, QString("[KService]get_src: %1 %2").arg(pool->animeTitle(), ep.toString()));
+}
+
 void KService::handleUV(QNetworkReply *reply)
 {
     QByteArray pbData = reply->readAll();
@@ -796,7 +881,7 @@ void KService::handleFileReco(const QString &path, QNetworkReply *reply)
     for (int i = 0; i < rsp.danmusources_size(); ++i)
     {
         auto &dm_src = rsp.danmusources(i);
-        MatchResult::MatchDanmuSource src;
+        MatchDanmuSource src;
         src.name = QString::fromStdString(dm_src.title());
         src.type = dm_src.type();
         src.durationSeconds = dm_src.durationseconds();
@@ -969,6 +1054,49 @@ void KService::handleGetDanmu(QNetworkReply *reply)
         pool->addSource(kSrc, comments, true);
         Logger::logger()->log(Logger::APP, QString("[KService]pool[%1] add source: %2").arg(pool->epTitle(), kSrc.title));
     }
+}
+
+void KService::handleGetSource(QNetworkReply *reply)
+{
+    QByteArray pbData = reply->readAll();
+    kservice::GetSourceResponse rsp;
+    if (!rsp.ParseFromArray(pbData.constData(), pbData.size()))
+    {
+        Logger::logger()->log(Logger::APP, "[KService]get src rsp parse error");
+        return;
+    }
+    const QString poolId{QString::fromStdString(rsp.poolinfo().poolid())};
+    Pool *pool = GlobalObjects::danmuManager->getPool(poolId, false);
+    if (!pool)
+    {
+        Logger::logger()->log(Logger::APP, "[KService]get src pool id not found: " + poolId);
+        return;
+    }
+    QVector<int> nSrcIds;
+    for (int i = 0; i < rsp.danmusources_size(); ++i)
+    {
+        auto &dm_src = rsp.danmusources(i);
+        DanmuSource kSrc;
+        kSrc.scriptId = QString::fromStdString(dm_src.scriptid());
+        kSrc.scriptData = QString::fromStdString(dm_src.scriptdata());
+        kSrc.title = QString::fromStdString(dm_src.title());
+        kSrc.duration = dm_src.durationseconds();
+
+        if (pool->hasSource(kSrc)) continue;
+
+        QList<DanmuComment *> emptyComments;
+        int srcId = pool->addSource(kSrc, emptyComments, true);
+        if (srcId != -1) nSrcIds.append(srcId);
+        Logger::logger()->log(Logger::APP, QString("[KService]pool[%1] add source: %2").arg(pool->epTitle(), kSrc.title));
+    }
+    if (!nSrcIds.empty())
+    {
+        for (int id : nSrcIds)
+        {
+            pool->update(id);
+        }
+    }
+    Logger::logger()->log(Logger::APP, QString("[KService]pool[%1] add %2 new srcs").arg(pool->epTitle()).arg(nSrcIds.size()));
 }
 
 bool KServiceProfile::accessTokenValid() const

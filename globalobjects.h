@@ -41,6 +41,8 @@ struct GlobalContext
     QVector<QPair<QString, qint64>> stepTime;
     qint64 tick(QElapsedTimer *timer, const QString &step);
 
+    bool hasStartupArgs{false};
+
     QIcon getFontIcon(QChar iconChar, QColor fontColor);
 };
 

@@ -339,6 +339,22 @@ void DanmuManager::sendDanmuAddedEvent(const QList<QPair<Pool *, QPair<DanmuSour
     EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_DANMU_SRC_ADDED, sourceList});
 }
 
+void DanmuManager::sendDanmuSrcRemoveEvent(Pool *pool, DanmuSource *src)
+{
+    QVariantMap poolSrcInfo = {
+        { "name",          pool->animeTitle() },
+        { "epType",        int(pool->epType) },
+        { "epIndex",       pool->epIndex },
+        { "epName",        pool->epTitle() },
+        { "id",            pool->id() },
+        { "scriptId",      src->scriptId },
+        { "scriptData",    src->scriptData },
+        { "srcTitle",      src->title },
+        { "duration",      src->duration },
+    };
+    EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_DANMU_SRC_REMOVED, poolSrcInfo});
+}
+
 void DanmuManager::localSearch(const QString &keyword, QList<AnimeLite> &results)
 {
     results.clear();

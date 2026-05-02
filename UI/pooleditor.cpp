@@ -12,6 +12,7 @@
 #include <QStackedLayout>
 #include "Extension/Script/danmuscript.h"
 #include "Extension/Script/scriptmanager.h"
+#include "Play/playcontext.h"
 #include "UI/widgets/ktagpanel.h"
 #include "widgets/danmusourcetip.h"
 #include "UI/ela/ElaCheckBox.h"
@@ -27,6 +28,9 @@
 #include "dialogs/danmuview.h"
 #include "dialogs/cliprangeedit.h"
 #include "UI/widgets/fonticonbutton.h"
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#endif
 
 #define SETTING_KEY_EXPORT_DIALOG_PATH "FileDialogPath/PoolEditorExport"
 
@@ -76,6 +80,7 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"), pare
 
     QObject::connect(GlobalObjects::danmuPool, &DanmuPool::poolIdChanged, this, &PoolEditor::refreshItems);
 
+    QPushButton *refreshButton = new KPushButton(tr("Refresh"), this);
     QPushButton *shareCodeButton = new KPushButton(tr("Share Pool Code"), this);
     QPushButton *addCodeButton = new KPushButton(tr("Add Pool Code"), this);
     QPushButton *exportButton = new KPushButton(tr("Export"), this);
@@ -83,6 +88,7 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"), pare
     QWidget *btnContainer = new QWidget(this);
     QHBoxLayout *btnHLayout = new QHBoxLayout(btnContainer);
     btnHLayout->setContentsMargins(0, 0, 0, 0);
+    btnHLayout->addWidget(refreshButton);
     btnHLayout->addWidget(shareCodeButton);
     btnHLayout->addWidget(addCodeButton);
     btnHLayout->addWidget(exportButton);
@@ -114,6 +120,29 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"), pare
 
     setMinimumSize(320, 160);
     setSizeSettingKey("DialogSize/PoolEdit",QSize(600, 360));
+
+    QObject::connect(refreshButton, &QPushButton::clicked, this, [=](){
+        const auto &sources = GlobalObjects::danmuPool->getPool()->sources();
+        int count = 0;
+        QObject ctx(this);
+        bool cancelFlag = false;
+        PoolSignalBlock block;
+        QObject::connect(this, &CFramelessDialog::cancelClicked, &ctx, [&](){cancelFlag = true; });
+#ifdef KSERVICE
+        if (KService::instance()->enableKServiceUpdatSrc() && GlobalObjects::danmuPool->hasPool())
+        {
+            KService::instance()->getDanmuSource(GlobalObjects::danmuPool->getPool()->id(), PlayContext::context()->path);
+        }
+#endif
+        for (auto iter=sources.cbegin();iter!=sources.cend();++iter)
+        {
+            if (cancelFlag) break;
+            showMessage(tr("Updating: %1").arg(iter.value().title), NotifyMessageFlag::NM_PROCESS | NotifyMessageFlag::NM_SHOWCANCEL | NotifyMessageFlag::NM_DARKNESS_BACK);
+            count += GlobalObjects::danmuPool->getPool()->update(iter.key());
+        }
+        if (count > 0) refreshItems();
+        showMessage(tr("Add %1 Danmu").arg(count), NotifyMessageFlag::NM_HIDE);
+    });
 
 
     QObject::connect(shareCodeButton, &QPushButton::clicked, this, [this](){

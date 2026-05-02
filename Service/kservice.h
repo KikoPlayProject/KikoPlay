@@ -71,11 +71,13 @@ public:
     void registerU(const QString &email, const QString &password, const QString &userName, const QString &verificationCode);
     void getDanmu(const QString &poolId, int duration = -1);
     void getDanmu(const DanmuSource &kSrc);
+    void getDanmuSource(const QString &poolId, const QString &path = "");
 
 signals:
     void recognized(int status, const QString &errMsg, const QString &path, MatchResult result);
     void loginFinished(int status, const QString &errMsg);
     void registerFinished(int status, const QString &errMsg);
+    void sourceDown(int status, const QString &errMsg, const QString &poolId, QVector<MatchDanmuSource> srcs);
 
 public:
     QString isValidUserName(const QString &userName) const;
@@ -83,6 +85,8 @@ public:
     QString isValidPassword(const QString &password) const;
     bool enableKServiceMatch() const;
     void setEnableKServiceMatch(bool on);
+    bool enableKServiceUpdatSrc() const;
+    void setEnableKServiceUpdateSrc(bool on);
     QList<QPair<QString, QPair<int, bool> > > getLibrarySource() const;
     void setLibrarySourceIndex(const QList<QPair<int, bool> > &indexSelected);
 
@@ -96,12 +100,14 @@ private:
     QScopedPointer<QSettings> serviceData;
     MPVMediaInfo *mediaInfo{nullptr};
     KServiceProfile profile;
+    QMap<QString, qint64> getSrcTs;
 
 private:
     const QString pathKStatsUV{"/api/stats"};
     const QString pathFileReco{"/api/reco"};
     const QString pathKMatchEvent{"/api/match_ev"};
     const QString pathKDanmuSrcEvent{"/api/dm_src_ev"};
+    const QString pathKRMSrcEvent{"/api/rm_src_ev"};
     const QString pathCommonEvent{"/api/c_ev"};
     const QString pathLaunch{"/api/launch"};
     const QString pathLogin{"/api/login"};
@@ -109,6 +115,7 @@ private:
     const QString pathSendVerification{"/api/send_verify"};
     const QString pathRefreshToken{"/api/token_refresh"};
     const QString pathGetDanmu{"/api/get_danmu"};
+    const QString pathGetSource{"/api/get_src"};
 
 private:
     using PostCallBack = std::function<void(QNetworkReply *)>;
@@ -120,6 +127,7 @@ private:
     void listenMatchDown(const EventParam *p);
     void listenDanmuAdded(const EventParam *p);
     void listenCommonEvents(const EventParam *p);
+    void listenDanmuSrcRemoved(const EventParam *p);
 
     void refreshToken();
     void resendStashedComments();
@@ -133,6 +141,7 @@ private:
     void kRegister(const QString &email, const QString &password, const QString &userName, const QString &verificationCode);
     void kSendVerification(const QString &email);
     void kGetDanmu(const QString &poolId, int duration = -1);
+    void kGetSource(const QString &poolId, const QString &path = "");
 
     void handleUV(QNetworkReply *reply);
     void handleFileReco(const QString &path, QNetworkReply *reply);
@@ -141,6 +150,7 @@ private:
     void handleRefreshToken(QNetworkReply *reply);
     void handleRegister(QNetworkReply *reply);
     void handleGetDanmu(QNetworkReply *reply);
+    void handleGetSource(QNetworkReply *reply);
 };
 
 #endif // KSERVICE_H

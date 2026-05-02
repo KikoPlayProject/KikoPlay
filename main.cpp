@@ -38,9 +38,9 @@ LONG AppCrashHandler(EXCEPTION_POINTERS *pException)
 }
 #endif
 
-void decodeParam(const QStringList &args, bool passMode = false)
+bool decodeParam(const QStringList &args, bool passMode = false)
 {
-    if (args.empty()) return;
+    if (args.empty()) return false;
     QCommandLineParser parser;
     QCommandLineOption titleOption("title", "Playlist Item titles", "title");
     parser.addOption(titleOption);
@@ -73,7 +73,9 @@ void decodeParam(const QStringList &args, bool passMode = false)
         {
             PlayContext::context()->playURL(urlList.last());
         }
+        return true;
     }
+    return false;
 }
 bool isRunning()
 {
@@ -147,7 +149,7 @@ int main(int argc, char *argv[])
     w.activateWindow();
     w.show();
     GlobalObjects::context()->tick(&timer, "ui");
-    decodeParam(QCoreApplication::arguments());
+    if (decodeParam(QCoreApplication::arguments())) GlobalObjects::context()->hasStartupArgs = true;
     QTimer::singleShot(100, [](){
         GlobalObjects::appManager->autoStart();
     });

@@ -41,6 +41,9 @@
 #include "widgets/lazycontainer.h"
 #include "dialogs/subrecognizedialog.h"
 #include "Common/eventbus.h"
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#endif
 
 namespace
 {
@@ -1754,8 +1757,14 @@ int ListWindow::updateCurrentPool()
     act_autoMatch->setEnabled(false);
     act_addOnlineDanmu->setEnabled(false);
     act_addLocalDanmu->setEnabled(false);
-    const auto &sources =  GlobalObjects::danmuPool->getPool()->sources();
-    int count=0;
+    const auto &sources = GlobalObjects::danmuPool->getPool()->sources();
+    int count = 0;
+#ifdef KSERVICE
+    if (KService::instance()->enableKServiceUpdatSrc() && GlobalObjects::danmuPool->hasPool())
+    {
+        KService::instance()->getDanmuSource(GlobalObjects::danmuPool->getPool()->id(), PlayContext::context()->path);
+    }
+#endif
     for(auto iter=sources.cbegin();iter!=sources.cend();++iter)
     {
         showMessage(tr("Updating: %1").arg(iter.value().title),NotifyMessageFlag::NM_PROCESS);

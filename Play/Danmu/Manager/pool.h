@@ -22,6 +22,7 @@ public:
 public:
     int update(int sourceId=-1, QVector<QSharedPointer<DanmuComment> > *incList=nullptr, bool *srcChanged = nullptr);
     int addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool reset=false, bool save = true);
+    bool hasSource(const DanmuSource &sourceInfo) const;
     bool deleteSource(int sourceId, bool applyDB=true);
     bool deleteDanmu(int pos);
     bool setTimeline(int sourceId, const QVector<QPair<int, int> > &timelineInfo);

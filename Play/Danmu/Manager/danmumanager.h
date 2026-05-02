@@ -32,6 +32,7 @@ public:
     QString renamePool(const QString &pid, const QString &nAnimeTitle, EpType nType, double nIndex, const QString &nEpTitle);
     QString getFileHash(const QString &fileName);
     void sendDanmuAddedEvent(const QList<QPair<Pool *, QPair<DanmuSource, QString> > > &poolSrcs);
+    void sendDanmuSrcRemoveEvent(Pool *pool, DanmuSource *src);
 public:
     void localSearch(const QString &keyword,  QList<AnimeLite> &results);
     void localMatch(const QString &path, MatchResult &result);

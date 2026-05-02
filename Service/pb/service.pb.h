@@ -61,6 +61,12 @@ extern DanmuSourceDefaultTypeInternal _DanmuSource_default_instance_;
 class EventHeader;
 struct EventHeaderDefaultTypeInternal;
 extern EventHeaderDefaultTypeInternal _EventHeader_default_instance_;
+class GetSourceRequest;
+struct GetSourceRequestDefaultTypeInternal;
+extern GetSourceRequestDefaultTypeInternal _GetSourceRequest_default_instance_;
+class GetSourceResponse;
+struct GetSourceResponseDefaultTypeInternal;
+extern GetSourceResponseDefaultTypeInternal _GetSourceResponse_default_instance_;
 class InfoSource;
 struct InfoSourceDefaultTypeInternal;
 extern InfoSourceDefaultTypeInternal _InfoSource_default_instance_;
@@ -115,6 +121,9 @@ extern RegisterRequestDefaultTypeInternal _RegisterRequest_default_instance_;
 class RegisterResponse;
 struct RegisterResponseDefaultTypeInternal;
 extern RegisterResponseDefaultTypeInternal _RegisterResponse_default_instance_;
+class RemoveSourceEvent;
+struct RemoveSourceEventDefaultTypeInternal;
+extern RemoveSourceEventDefaultTypeInternal _RemoveSourceEvent_default_instance_;
 class ResponseHeader;
 struct ResponseHeaderDefaultTypeInternal;
 extern ResponseHeaderDefaultTypeInternal _ResponseHeader_default_instance_;
@@ -144,6 +153,8 @@ template<> ::kservice::CommonEvent* Arena::CreateMaybeMessage<::kservice::Common
 template<> ::kservice::DanmuComment* Arena::CreateMaybeMessage<::kservice::DanmuComment>(Arena*);
 template<> ::kservice::DanmuSource* Arena::CreateMaybeMessage<::kservice::DanmuSource>(Arena*);
 template<> ::kservice::EventHeader* Arena::CreateMaybeMessage<::kservice::EventHeader>(Arena*);
+template<> ::kservice::GetSourceRequest* Arena::CreateMaybeMessage<::kservice::GetSourceRequest>(Arena*);
+template<> ::kservice::GetSourceResponse* Arena::CreateMaybeMessage<::kservice::GetSourceResponse>(Arena*);
 template<> ::kservice::InfoSource* Arena::CreateMaybeMessage<::kservice::InfoSource>(Arena*);
 template<> ::kservice::KFileInfo* Arena::CreateMaybeMessage<::kservice::KFileInfo>(Arena*);
 template<> ::kservice::KikoDanmuRequest* Arena::CreateMaybeMessage<::kservice::KikoDanmuRequest>(Arena*);
@@ -162,6 +173,7 @@ template<> ::kservice::RefreshRequest* Arena::CreateMaybeMessage<::kservice::Ref
 template<> ::kservice::RefreshResponse* Arena::CreateMaybeMessage<::kservice::RefreshResponse>(Arena*);
 template<> ::kservice::RegisterRequest* Arena::CreateMaybeMessage<::kservice::RegisterRequest>(Arena*);
 template<> ::kservice::RegisterResponse* Arena::CreateMaybeMessage<::kservice::RegisterResponse>(Arena*);
+template<> ::kservice::RemoveSourceEvent* Arena::CreateMaybeMessage<::kservice::RemoveSourceEvent>(Arena*);
 template<> ::kservice::ResponseHeader* Arena::CreateMaybeMessage<::kservice::ResponseHeader>(Arena*);
 template<> ::kservice::SendVerificationRequest* Arena::CreateMaybeMessage<::kservice::SendVerificationRequest>(Arena*);
 template<> ::kservice::SendVerificationResponse* Arena::CreateMaybeMessage<::kservice::SendVerificationResponse>(Arena*);
@@ -2422,6 +2434,7 @@ class UVEvent final :
     kHeaderFieldNumber = 1,
     kStartupTsFieldNumber = 3,
     kIsStartupFieldNumber = 2,
+    kHasStartupArgsFieldNumber = 5,
   };
   // repeated .kservice.UVEvent.StepTime stepTimes = 4;
   int steptimes_size() const;
@@ -2477,6 +2490,15 @@ class UVEvent final :
   void _internal_set_isstartup(bool value);
   public:
 
+  // bool hasStartupArgs = 5;
+  void clear_hasstartupargs();
+  bool hasstartupargs() const;
+  void set_hasstartupargs(bool value);
+  private:
+  bool _internal_hasstartupargs() const;
+  void _internal_set_hasstartupargs(bool value);
+  public:
+
   // @@protoc_insertion_point(class_scope:kservice.UVEvent)
  private:
   class _Internal;
@@ -2489,6 +2511,7 @@ class UVEvent final :
     ::kservice::EventHeader* header_;
     int64_t startupts_;
     bool isstartup_;
+    bool hasstartupargs_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -5768,6 +5791,543 @@ class KikoDanmuResponse final :
   union { Impl_ _impl_; };
   friend struct ::TableStruct_Service_2fpb_2fservice_2eproto;
 };
+// -------------------------------------------------------------------
+
+class GetSourceRequest final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:kservice.GetSourceRequest) */ {
+ public:
+  inline GetSourceRequest() : GetSourceRequest(nullptr) {}
+  ~GetSourceRequest() override;
+  explicit PROTOBUF_CONSTEXPR GetSourceRequest(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  GetSourceRequest(const GetSourceRequest& from);
+  GetSourceRequest(GetSourceRequest&& from) noexcept
+    : GetSourceRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline GetSourceRequest& operator=(const GetSourceRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline GetSourceRequest& operator=(GetSourceRequest&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const GetSourceRequest& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const GetSourceRequest* internal_default_instance() {
+    return reinterpret_cast<const GetSourceRequest*>(
+               &_GetSourceRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    31;
+
+  friend void swap(GetSourceRequest& a, GetSourceRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(GetSourceRequest* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(GetSourceRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  GetSourceRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<GetSourceRequest>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const GetSourceRequest& from);
+  void MergeFrom(const GetSourceRequest& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(GetSourceRequest* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "kservice.GetSourceRequest";
+  }
+  protected:
+  explicit GetSourceRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kHeaderFieldNumber = 1,
+    kPoolInfoFieldNumber = 2,
+    kFileInfoFieldNumber = 3,
+  };
+  // .kservice.EventHeader header = 1;
+  bool has_header() const;
+  private:
+  bool _internal_has_header() const;
+  public:
+  void clear_header();
+  const ::kservice::EventHeader& header() const;
+  PROTOBUF_NODISCARD ::kservice::EventHeader* release_header();
+  ::kservice::EventHeader* mutable_header();
+  void set_allocated_header(::kservice::EventHeader* header);
+  private:
+  const ::kservice::EventHeader& _internal_header() const;
+  ::kservice::EventHeader* _internal_mutable_header();
+  public:
+  void unsafe_arena_set_allocated_header(
+      ::kservice::EventHeader* header);
+  ::kservice::EventHeader* unsafe_arena_release_header();
+
+  // .kservice.Pool poolInfo = 2;
+  bool has_poolinfo() const;
+  private:
+  bool _internal_has_poolinfo() const;
+  public:
+  void clear_poolinfo();
+  const ::kservice::Pool& poolinfo() const;
+  PROTOBUF_NODISCARD ::kservice::Pool* release_poolinfo();
+  ::kservice::Pool* mutable_poolinfo();
+  void set_allocated_poolinfo(::kservice::Pool* poolinfo);
+  private:
+  const ::kservice::Pool& _internal_poolinfo() const;
+  ::kservice::Pool* _internal_mutable_poolinfo();
+  public:
+  void unsafe_arena_set_allocated_poolinfo(
+      ::kservice::Pool* poolinfo);
+  ::kservice::Pool* unsafe_arena_release_poolinfo();
+
+  // .kservice.KFileInfo fileInfo = 3;
+  bool has_fileinfo() const;
+  private:
+  bool _internal_has_fileinfo() const;
+  public:
+  void clear_fileinfo();
+  const ::kservice::KFileInfo& fileinfo() const;
+  PROTOBUF_NODISCARD ::kservice::KFileInfo* release_fileinfo();
+  ::kservice::KFileInfo* mutable_fileinfo();
+  void set_allocated_fileinfo(::kservice::KFileInfo* fileinfo);
+  private:
+  const ::kservice::KFileInfo& _internal_fileinfo() const;
+  ::kservice::KFileInfo* _internal_mutable_fileinfo();
+  public:
+  void unsafe_arena_set_allocated_fileinfo(
+      ::kservice::KFileInfo* fileinfo);
+  ::kservice::KFileInfo* unsafe_arena_release_fileinfo();
+
+  // @@protoc_insertion_point(class_scope:kservice.GetSourceRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::kservice::EventHeader* header_;
+    ::kservice::Pool* poolinfo_;
+    ::kservice::KFileInfo* fileinfo_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Service_2fpb_2fservice_2eproto;
+};
+// -------------------------------------------------------------------
+
+class GetSourceResponse final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:kservice.GetSourceResponse) */ {
+ public:
+  inline GetSourceResponse() : GetSourceResponse(nullptr) {}
+  ~GetSourceResponse() override;
+  explicit PROTOBUF_CONSTEXPR GetSourceResponse(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  GetSourceResponse(const GetSourceResponse& from);
+  GetSourceResponse(GetSourceResponse&& from) noexcept
+    : GetSourceResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline GetSourceResponse& operator=(const GetSourceResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline GetSourceResponse& operator=(GetSourceResponse&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const GetSourceResponse& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const GetSourceResponse* internal_default_instance() {
+    return reinterpret_cast<const GetSourceResponse*>(
+               &_GetSourceResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    32;
+
+  friend void swap(GetSourceResponse& a, GetSourceResponse& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(GetSourceResponse* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(GetSourceResponse* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  GetSourceResponse* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<GetSourceResponse>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const GetSourceResponse& from);
+  void MergeFrom(const GetSourceResponse& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(GetSourceResponse* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "kservice.GetSourceResponse";
+  }
+  protected:
+  explicit GetSourceResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kDanmuSourcesFieldNumber = 3,
+    kHeaderFieldNumber = 1,
+    kPoolInfoFieldNumber = 2,
+  };
+  // repeated .kservice.DanmuSource danmuSources = 3;
+  int danmusources_size() const;
+  private:
+  int _internal_danmusources_size() const;
+  public:
+  void clear_danmusources();
+  ::kservice::DanmuSource* mutable_danmusources(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DanmuSource >*
+      mutable_danmusources();
+  private:
+  const ::kservice::DanmuSource& _internal_danmusources(int index) const;
+  ::kservice::DanmuSource* _internal_add_danmusources();
+  public:
+  const ::kservice::DanmuSource& danmusources(int index) const;
+  ::kservice::DanmuSource* add_danmusources();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DanmuSource >&
+      danmusources() const;
+
+  // .kservice.ResponseHeader header = 1;
+  bool has_header() const;
+  private:
+  bool _internal_has_header() const;
+  public:
+  void clear_header();
+  const ::kservice::ResponseHeader& header() const;
+  PROTOBUF_NODISCARD ::kservice::ResponseHeader* release_header();
+  ::kservice::ResponseHeader* mutable_header();
+  void set_allocated_header(::kservice::ResponseHeader* header);
+  private:
+  const ::kservice::ResponseHeader& _internal_header() const;
+  ::kservice::ResponseHeader* _internal_mutable_header();
+  public:
+  void unsafe_arena_set_allocated_header(
+      ::kservice::ResponseHeader* header);
+  ::kservice::ResponseHeader* unsafe_arena_release_header();
+
+  // .kservice.Pool poolInfo = 2;
+  bool has_poolinfo() const;
+  private:
+  bool _internal_has_poolinfo() const;
+  public:
+  void clear_poolinfo();
+  const ::kservice::Pool& poolinfo() const;
+  PROTOBUF_NODISCARD ::kservice::Pool* release_poolinfo();
+  ::kservice::Pool* mutable_poolinfo();
+  void set_allocated_poolinfo(::kservice::Pool* poolinfo);
+  private:
+  const ::kservice::Pool& _internal_poolinfo() const;
+  ::kservice::Pool* _internal_mutable_poolinfo();
+  public:
+  void unsafe_arena_set_allocated_poolinfo(
+      ::kservice::Pool* poolinfo);
+  ::kservice::Pool* unsafe_arena_release_poolinfo();
+
+  // @@protoc_insertion_point(class_scope:kservice.GetSourceResponse)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DanmuSource > danmusources_;
+    ::kservice::ResponseHeader* header_;
+    ::kservice::Pool* poolinfo_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Service_2fpb_2fservice_2eproto;
+};
+// -------------------------------------------------------------------
+
+class RemoveSourceEvent final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:kservice.RemoveSourceEvent) */ {
+ public:
+  inline RemoveSourceEvent() : RemoveSourceEvent(nullptr) {}
+  ~RemoveSourceEvent() override;
+  explicit PROTOBUF_CONSTEXPR RemoveSourceEvent(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  RemoveSourceEvent(const RemoveSourceEvent& from);
+  RemoveSourceEvent(RemoveSourceEvent&& from) noexcept
+    : RemoveSourceEvent() {
+    *this = ::std::move(from);
+  }
+
+  inline RemoveSourceEvent& operator=(const RemoveSourceEvent& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline RemoveSourceEvent& operator=(RemoveSourceEvent&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const RemoveSourceEvent& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const RemoveSourceEvent* internal_default_instance() {
+    return reinterpret_cast<const RemoveSourceEvent*>(
+               &_RemoveSourceEvent_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    33;
+
+  friend void swap(RemoveSourceEvent& a, RemoveSourceEvent& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(RemoveSourceEvent* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(RemoveSourceEvent* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  RemoveSourceEvent* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<RemoveSourceEvent>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const RemoveSourceEvent& from);
+  void MergeFrom(const RemoveSourceEvent& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(RemoveSourceEvent* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "kservice.RemoveSourceEvent";
+  }
+  protected:
+  explicit RemoveSourceEvent(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kHeaderFieldNumber = 1,
+    kPoolInfoFieldNumber = 2,
+    kSrcFieldNumber = 3,
+  };
+  // .kservice.EventHeader header = 1;
+  bool has_header() const;
+  private:
+  bool _internal_has_header() const;
+  public:
+  void clear_header();
+  const ::kservice::EventHeader& header() const;
+  PROTOBUF_NODISCARD ::kservice::EventHeader* release_header();
+  ::kservice::EventHeader* mutable_header();
+  void set_allocated_header(::kservice::EventHeader* header);
+  private:
+  const ::kservice::EventHeader& _internal_header() const;
+  ::kservice::EventHeader* _internal_mutable_header();
+  public:
+  void unsafe_arena_set_allocated_header(
+      ::kservice::EventHeader* header);
+  ::kservice::EventHeader* unsafe_arena_release_header();
+
+  // .kservice.Pool poolInfo = 2;
+  bool has_poolinfo() const;
+  private:
+  bool _internal_has_poolinfo() const;
+  public:
+  void clear_poolinfo();
+  const ::kservice::Pool& poolinfo() const;
+  PROTOBUF_NODISCARD ::kservice::Pool* release_poolinfo();
+  ::kservice::Pool* mutable_poolinfo();
+  void set_allocated_poolinfo(::kservice::Pool* poolinfo);
+  private:
+  const ::kservice::Pool& _internal_poolinfo() const;
+  ::kservice::Pool* _internal_mutable_poolinfo();
+  public:
+  void unsafe_arena_set_allocated_poolinfo(
+      ::kservice::Pool* poolinfo);
+  ::kservice::Pool* unsafe_arena_release_poolinfo();
+
+  // .kservice.DanmuSource src = 3;
+  bool has_src() const;
+  private:
+  bool _internal_has_src() const;
+  public:
+  void clear_src();
+  const ::kservice::DanmuSource& src() const;
+  PROTOBUF_NODISCARD ::kservice::DanmuSource* release_src();
+  ::kservice::DanmuSource* mutable_src();
+  void set_allocated_src(::kservice::DanmuSource* src);
+  private:
+  const ::kservice::DanmuSource& _internal_src() const;
+  ::kservice::DanmuSource* _internal_mutable_src();
+  public:
+  void unsafe_arena_set_allocated_src(
+      ::kservice::DanmuSource* src);
+  ::kservice::DanmuSource* unsafe_arena_release_src();
+
+  // @@protoc_insertion_point(class_scope:kservice.RemoveSourceEvent)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::kservice::EventHeader* header_;
+    ::kservice::Pool* poolinfo_;
+    ::kservice::DanmuSource* src_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Service_2fpb_2fservice_2eproto;
+};
 // ===================================================================
 
 
@@ -8085,6 +8645,26 @@ inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::UVEvent_Step
 UVEvent::steptimes() const {
   // @@protoc_insertion_point(field_list:kservice.UVEvent.stepTimes)
   return _impl_.steptimes_;
+}
+
+// bool hasStartupArgs = 5;
+inline void UVEvent::clear_hasstartupargs() {
+  _impl_.hasstartupargs_ = false;
+}
+inline bool UVEvent::_internal_hasstartupargs() const {
+  return _impl_.hasstartupargs_;
+}
+inline bool UVEvent::hasstartupargs() const {
+  // @@protoc_insertion_point(field_get:kservice.UVEvent.hasStartupArgs)
+  return _internal_hasstartupargs();
+}
+inline void UVEvent::_internal_set_hasstartupargs(bool value) {
+  
+  _impl_.hasstartupargs_ = value;
+}
+inline void UVEvent::set_hasstartupargs(bool value) {
+  _internal_set_hasstartupargs(value);
+  // @@protoc_insertion_point(field_set:kservice.UVEvent.hasStartupArgs)
 }
 
 // -------------------------------------------------------------------
@@ -11899,9 +12479,787 @@ KikoDanmuResponse::danmusources() const {
   return _impl_.danmusources_;
 }
 
+// -------------------------------------------------------------------
+
+// GetSourceRequest
+
+// .kservice.EventHeader header = 1;
+inline bool GetSourceRequest::_internal_has_header() const {
+  return this != internal_default_instance() && _impl_.header_ != nullptr;
+}
+inline bool GetSourceRequest::has_header() const {
+  return _internal_has_header();
+}
+inline void GetSourceRequest::clear_header() {
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
+}
+inline const ::kservice::EventHeader& GetSourceRequest::_internal_header() const {
+  const ::kservice::EventHeader* p = _impl_.header_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::EventHeader&>(
+      ::kservice::_EventHeader_default_instance_);
+}
+inline const ::kservice::EventHeader& GetSourceRequest::header() const {
+  // @@protoc_insertion_point(field_get:kservice.GetSourceRequest.header)
+  return _internal_header();
+}
+inline void GetSourceRequest::unsafe_arena_set_allocated_header(
+    ::kservice::EventHeader* header) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
+  }
+  _impl_.header_ = header;
+  if (header) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.GetSourceRequest.header)
+}
+inline ::kservice::EventHeader* GetSourceRequest::release_header() {
+  
+  ::kservice::EventHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::EventHeader* GetSourceRequest::unsafe_arena_release_header() {
+  // @@protoc_insertion_point(field_release:kservice.GetSourceRequest.header)
+  
+  ::kservice::EventHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+  return temp;
+}
+inline ::kservice::EventHeader* GetSourceRequest::_internal_mutable_header() {
+  
+  if (_impl_.header_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::EventHeader>(GetArenaForAllocation());
+    _impl_.header_ = p;
+  }
+  return _impl_.header_;
+}
+inline ::kservice::EventHeader* GetSourceRequest::mutable_header() {
+  ::kservice::EventHeader* _msg = _internal_mutable_header();
+  // @@protoc_insertion_point(field_mutable:kservice.GetSourceRequest.header)
+  return _msg;
+}
+inline void GetSourceRequest::set_allocated_header(::kservice::EventHeader* header) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.header_;
+  }
+  if (header) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(header);
+    if (message_arena != submessage_arena) {
+      header = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, header, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.header_ = header;
+  // @@protoc_insertion_point(field_set_allocated:kservice.GetSourceRequest.header)
+}
+
+// .kservice.Pool poolInfo = 2;
+inline bool GetSourceRequest::_internal_has_poolinfo() const {
+  return this != internal_default_instance() && _impl_.poolinfo_ != nullptr;
+}
+inline bool GetSourceRequest::has_poolinfo() const {
+  return _internal_has_poolinfo();
+}
+inline void GetSourceRequest::clear_poolinfo() {
+  if (GetArenaForAllocation() == nullptr && _impl_.poolinfo_ != nullptr) {
+    delete _impl_.poolinfo_;
+  }
+  _impl_.poolinfo_ = nullptr;
+}
+inline const ::kservice::Pool& GetSourceRequest::_internal_poolinfo() const {
+  const ::kservice::Pool* p = _impl_.poolinfo_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::Pool&>(
+      ::kservice::_Pool_default_instance_);
+}
+inline const ::kservice::Pool& GetSourceRequest::poolinfo() const {
+  // @@protoc_insertion_point(field_get:kservice.GetSourceRequest.poolInfo)
+  return _internal_poolinfo();
+}
+inline void GetSourceRequest::unsafe_arena_set_allocated_poolinfo(
+    ::kservice::Pool* poolinfo) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.poolinfo_);
+  }
+  _impl_.poolinfo_ = poolinfo;
+  if (poolinfo) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.GetSourceRequest.poolInfo)
+}
+inline ::kservice::Pool* GetSourceRequest::release_poolinfo() {
+  
+  ::kservice::Pool* temp = _impl_.poolinfo_;
+  _impl_.poolinfo_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::Pool* GetSourceRequest::unsafe_arena_release_poolinfo() {
+  // @@protoc_insertion_point(field_release:kservice.GetSourceRequest.poolInfo)
+  
+  ::kservice::Pool* temp = _impl_.poolinfo_;
+  _impl_.poolinfo_ = nullptr;
+  return temp;
+}
+inline ::kservice::Pool* GetSourceRequest::_internal_mutable_poolinfo() {
+  
+  if (_impl_.poolinfo_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::Pool>(GetArenaForAllocation());
+    _impl_.poolinfo_ = p;
+  }
+  return _impl_.poolinfo_;
+}
+inline ::kservice::Pool* GetSourceRequest::mutable_poolinfo() {
+  ::kservice::Pool* _msg = _internal_mutable_poolinfo();
+  // @@protoc_insertion_point(field_mutable:kservice.GetSourceRequest.poolInfo)
+  return _msg;
+}
+inline void GetSourceRequest::set_allocated_poolinfo(::kservice::Pool* poolinfo) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.poolinfo_;
+  }
+  if (poolinfo) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(poolinfo);
+    if (message_arena != submessage_arena) {
+      poolinfo = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, poolinfo, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.poolinfo_ = poolinfo;
+  // @@protoc_insertion_point(field_set_allocated:kservice.GetSourceRequest.poolInfo)
+}
+
+// .kservice.KFileInfo fileInfo = 3;
+inline bool GetSourceRequest::_internal_has_fileinfo() const {
+  return this != internal_default_instance() && _impl_.fileinfo_ != nullptr;
+}
+inline bool GetSourceRequest::has_fileinfo() const {
+  return _internal_has_fileinfo();
+}
+inline void GetSourceRequest::clear_fileinfo() {
+  if (GetArenaForAllocation() == nullptr && _impl_.fileinfo_ != nullptr) {
+    delete _impl_.fileinfo_;
+  }
+  _impl_.fileinfo_ = nullptr;
+}
+inline const ::kservice::KFileInfo& GetSourceRequest::_internal_fileinfo() const {
+  const ::kservice::KFileInfo* p = _impl_.fileinfo_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::KFileInfo&>(
+      ::kservice::_KFileInfo_default_instance_);
+}
+inline const ::kservice::KFileInfo& GetSourceRequest::fileinfo() const {
+  // @@protoc_insertion_point(field_get:kservice.GetSourceRequest.fileInfo)
+  return _internal_fileinfo();
+}
+inline void GetSourceRequest::unsafe_arena_set_allocated_fileinfo(
+    ::kservice::KFileInfo* fileinfo) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.fileinfo_);
+  }
+  _impl_.fileinfo_ = fileinfo;
+  if (fileinfo) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.GetSourceRequest.fileInfo)
+}
+inline ::kservice::KFileInfo* GetSourceRequest::release_fileinfo() {
+  
+  ::kservice::KFileInfo* temp = _impl_.fileinfo_;
+  _impl_.fileinfo_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::KFileInfo* GetSourceRequest::unsafe_arena_release_fileinfo() {
+  // @@protoc_insertion_point(field_release:kservice.GetSourceRequest.fileInfo)
+  
+  ::kservice::KFileInfo* temp = _impl_.fileinfo_;
+  _impl_.fileinfo_ = nullptr;
+  return temp;
+}
+inline ::kservice::KFileInfo* GetSourceRequest::_internal_mutable_fileinfo() {
+  
+  if (_impl_.fileinfo_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::KFileInfo>(GetArenaForAllocation());
+    _impl_.fileinfo_ = p;
+  }
+  return _impl_.fileinfo_;
+}
+inline ::kservice::KFileInfo* GetSourceRequest::mutable_fileinfo() {
+  ::kservice::KFileInfo* _msg = _internal_mutable_fileinfo();
+  // @@protoc_insertion_point(field_mutable:kservice.GetSourceRequest.fileInfo)
+  return _msg;
+}
+inline void GetSourceRequest::set_allocated_fileinfo(::kservice::KFileInfo* fileinfo) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.fileinfo_;
+  }
+  if (fileinfo) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(fileinfo);
+    if (message_arena != submessage_arena) {
+      fileinfo = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, fileinfo, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.fileinfo_ = fileinfo;
+  // @@protoc_insertion_point(field_set_allocated:kservice.GetSourceRequest.fileInfo)
+}
+
+// -------------------------------------------------------------------
+
+// GetSourceResponse
+
+// .kservice.ResponseHeader header = 1;
+inline bool GetSourceResponse::_internal_has_header() const {
+  return this != internal_default_instance() && _impl_.header_ != nullptr;
+}
+inline bool GetSourceResponse::has_header() const {
+  return _internal_has_header();
+}
+inline void GetSourceResponse::clear_header() {
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
+}
+inline const ::kservice::ResponseHeader& GetSourceResponse::_internal_header() const {
+  const ::kservice::ResponseHeader* p = _impl_.header_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::ResponseHeader&>(
+      ::kservice::_ResponseHeader_default_instance_);
+}
+inline const ::kservice::ResponseHeader& GetSourceResponse::header() const {
+  // @@protoc_insertion_point(field_get:kservice.GetSourceResponse.header)
+  return _internal_header();
+}
+inline void GetSourceResponse::unsafe_arena_set_allocated_header(
+    ::kservice::ResponseHeader* header) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
+  }
+  _impl_.header_ = header;
+  if (header) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.GetSourceResponse.header)
+}
+inline ::kservice::ResponseHeader* GetSourceResponse::release_header() {
+  
+  ::kservice::ResponseHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::ResponseHeader* GetSourceResponse::unsafe_arena_release_header() {
+  // @@protoc_insertion_point(field_release:kservice.GetSourceResponse.header)
+  
+  ::kservice::ResponseHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+  return temp;
+}
+inline ::kservice::ResponseHeader* GetSourceResponse::_internal_mutable_header() {
+  
+  if (_impl_.header_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::ResponseHeader>(GetArenaForAllocation());
+    _impl_.header_ = p;
+  }
+  return _impl_.header_;
+}
+inline ::kservice::ResponseHeader* GetSourceResponse::mutable_header() {
+  ::kservice::ResponseHeader* _msg = _internal_mutable_header();
+  // @@protoc_insertion_point(field_mutable:kservice.GetSourceResponse.header)
+  return _msg;
+}
+inline void GetSourceResponse::set_allocated_header(::kservice::ResponseHeader* header) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.header_;
+  }
+  if (header) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(header);
+    if (message_arena != submessage_arena) {
+      header = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, header, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.header_ = header;
+  // @@protoc_insertion_point(field_set_allocated:kservice.GetSourceResponse.header)
+}
+
+// .kservice.Pool poolInfo = 2;
+inline bool GetSourceResponse::_internal_has_poolinfo() const {
+  return this != internal_default_instance() && _impl_.poolinfo_ != nullptr;
+}
+inline bool GetSourceResponse::has_poolinfo() const {
+  return _internal_has_poolinfo();
+}
+inline void GetSourceResponse::clear_poolinfo() {
+  if (GetArenaForAllocation() == nullptr && _impl_.poolinfo_ != nullptr) {
+    delete _impl_.poolinfo_;
+  }
+  _impl_.poolinfo_ = nullptr;
+}
+inline const ::kservice::Pool& GetSourceResponse::_internal_poolinfo() const {
+  const ::kservice::Pool* p = _impl_.poolinfo_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::Pool&>(
+      ::kservice::_Pool_default_instance_);
+}
+inline const ::kservice::Pool& GetSourceResponse::poolinfo() const {
+  // @@protoc_insertion_point(field_get:kservice.GetSourceResponse.poolInfo)
+  return _internal_poolinfo();
+}
+inline void GetSourceResponse::unsafe_arena_set_allocated_poolinfo(
+    ::kservice::Pool* poolinfo) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.poolinfo_);
+  }
+  _impl_.poolinfo_ = poolinfo;
+  if (poolinfo) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.GetSourceResponse.poolInfo)
+}
+inline ::kservice::Pool* GetSourceResponse::release_poolinfo() {
+  
+  ::kservice::Pool* temp = _impl_.poolinfo_;
+  _impl_.poolinfo_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::Pool* GetSourceResponse::unsafe_arena_release_poolinfo() {
+  // @@protoc_insertion_point(field_release:kservice.GetSourceResponse.poolInfo)
+  
+  ::kservice::Pool* temp = _impl_.poolinfo_;
+  _impl_.poolinfo_ = nullptr;
+  return temp;
+}
+inline ::kservice::Pool* GetSourceResponse::_internal_mutable_poolinfo() {
+  
+  if (_impl_.poolinfo_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::Pool>(GetArenaForAllocation());
+    _impl_.poolinfo_ = p;
+  }
+  return _impl_.poolinfo_;
+}
+inline ::kservice::Pool* GetSourceResponse::mutable_poolinfo() {
+  ::kservice::Pool* _msg = _internal_mutable_poolinfo();
+  // @@protoc_insertion_point(field_mutable:kservice.GetSourceResponse.poolInfo)
+  return _msg;
+}
+inline void GetSourceResponse::set_allocated_poolinfo(::kservice::Pool* poolinfo) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.poolinfo_;
+  }
+  if (poolinfo) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(poolinfo);
+    if (message_arena != submessage_arena) {
+      poolinfo = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, poolinfo, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.poolinfo_ = poolinfo;
+  // @@protoc_insertion_point(field_set_allocated:kservice.GetSourceResponse.poolInfo)
+}
+
+// repeated .kservice.DanmuSource danmuSources = 3;
+inline int GetSourceResponse::_internal_danmusources_size() const {
+  return _impl_.danmusources_.size();
+}
+inline int GetSourceResponse::danmusources_size() const {
+  return _internal_danmusources_size();
+}
+inline void GetSourceResponse::clear_danmusources() {
+  _impl_.danmusources_.Clear();
+}
+inline ::kservice::DanmuSource* GetSourceResponse::mutable_danmusources(int index) {
+  // @@protoc_insertion_point(field_mutable:kservice.GetSourceResponse.danmuSources)
+  return _impl_.danmusources_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DanmuSource >*
+GetSourceResponse::mutable_danmusources() {
+  // @@protoc_insertion_point(field_mutable_list:kservice.GetSourceResponse.danmuSources)
+  return &_impl_.danmusources_;
+}
+inline const ::kservice::DanmuSource& GetSourceResponse::_internal_danmusources(int index) const {
+  return _impl_.danmusources_.Get(index);
+}
+inline const ::kservice::DanmuSource& GetSourceResponse::danmusources(int index) const {
+  // @@protoc_insertion_point(field_get:kservice.GetSourceResponse.danmuSources)
+  return _internal_danmusources(index);
+}
+inline ::kservice::DanmuSource* GetSourceResponse::_internal_add_danmusources() {
+  return _impl_.danmusources_.Add();
+}
+inline ::kservice::DanmuSource* GetSourceResponse::add_danmusources() {
+  ::kservice::DanmuSource* _add = _internal_add_danmusources();
+  // @@protoc_insertion_point(field_add:kservice.GetSourceResponse.danmuSources)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DanmuSource >&
+GetSourceResponse::danmusources() const {
+  // @@protoc_insertion_point(field_list:kservice.GetSourceResponse.danmuSources)
+  return _impl_.danmusources_;
+}
+
+// -------------------------------------------------------------------
+
+// RemoveSourceEvent
+
+// .kservice.EventHeader header = 1;
+inline bool RemoveSourceEvent::_internal_has_header() const {
+  return this != internal_default_instance() && _impl_.header_ != nullptr;
+}
+inline bool RemoveSourceEvent::has_header() const {
+  return _internal_has_header();
+}
+inline void RemoveSourceEvent::clear_header() {
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
+}
+inline const ::kservice::EventHeader& RemoveSourceEvent::_internal_header() const {
+  const ::kservice::EventHeader* p = _impl_.header_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::EventHeader&>(
+      ::kservice::_EventHeader_default_instance_);
+}
+inline const ::kservice::EventHeader& RemoveSourceEvent::header() const {
+  // @@protoc_insertion_point(field_get:kservice.RemoveSourceEvent.header)
+  return _internal_header();
+}
+inline void RemoveSourceEvent::unsafe_arena_set_allocated_header(
+    ::kservice::EventHeader* header) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
+  }
+  _impl_.header_ = header;
+  if (header) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.RemoveSourceEvent.header)
+}
+inline ::kservice::EventHeader* RemoveSourceEvent::release_header() {
+  
+  ::kservice::EventHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::EventHeader* RemoveSourceEvent::unsafe_arena_release_header() {
+  // @@protoc_insertion_point(field_release:kservice.RemoveSourceEvent.header)
+  
+  ::kservice::EventHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+  return temp;
+}
+inline ::kservice::EventHeader* RemoveSourceEvent::_internal_mutable_header() {
+  
+  if (_impl_.header_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::EventHeader>(GetArenaForAllocation());
+    _impl_.header_ = p;
+  }
+  return _impl_.header_;
+}
+inline ::kservice::EventHeader* RemoveSourceEvent::mutable_header() {
+  ::kservice::EventHeader* _msg = _internal_mutable_header();
+  // @@protoc_insertion_point(field_mutable:kservice.RemoveSourceEvent.header)
+  return _msg;
+}
+inline void RemoveSourceEvent::set_allocated_header(::kservice::EventHeader* header) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.header_;
+  }
+  if (header) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(header);
+    if (message_arena != submessage_arena) {
+      header = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, header, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.header_ = header;
+  // @@protoc_insertion_point(field_set_allocated:kservice.RemoveSourceEvent.header)
+}
+
+// .kservice.Pool poolInfo = 2;
+inline bool RemoveSourceEvent::_internal_has_poolinfo() const {
+  return this != internal_default_instance() && _impl_.poolinfo_ != nullptr;
+}
+inline bool RemoveSourceEvent::has_poolinfo() const {
+  return _internal_has_poolinfo();
+}
+inline void RemoveSourceEvent::clear_poolinfo() {
+  if (GetArenaForAllocation() == nullptr && _impl_.poolinfo_ != nullptr) {
+    delete _impl_.poolinfo_;
+  }
+  _impl_.poolinfo_ = nullptr;
+}
+inline const ::kservice::Pool& RemoveSourceEvent::_internal_poolinfo() const {
+  const ::kservice::Pool* p = _impl_.poolinfo_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::Pool&>(
+      ::kservice::_Pool_default_instance_);
+}
+inline const ::kservice::Pool& RemoveSourceEvent::poolinfo() const {
+  // @@protoc_insertion_point(field_get:kservice.RemoveSourceEvent.poolInfo)
+  return _internal_poolinfo();
+}
+inline void RemoveSourceEvent::unsafe_arena_set_allocated_poolinfo(
+    ::kservice::Pool* poolinfo) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.poolinfo_);
+  }
+  _impl_.poolinfo_ = poolinfo;
+  if (poolinfo) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.RemoveSourceEvent.poolInfo)
+}
+inline ::kservice::Pool* RemoveSourceEvent::release_poolinfo() {
+  
+  ::kservice::Pool* temp = _impl_.poolinfo_;
+  _impl_.poolinfo_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::Pool* RemoveSourceEvent::unsafe_arena_release_poolinfo() {
+  // @@protoc_insertion_point(field_release:kservice.RemoveSourceEvent.poolInfo)
+  
+  ::kservice::Pool* temp = _impl_.poolinfo_;
+  _impl_.poolinfo_ = nullptr;
+  return temp;
+}
+inline ::kservice::Pool* RemoveSourceEvent::_internal_mutable_poolinfo() {
+  
+  if (_impl_.poolinfo_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::Pool>(GetArenaForAllocation());
+    _impl_.poolinfo_ = p;
+  }
+  return _impl_.poolinfo_;
+}
+inline ::kservice::Pool* RemoveSourceEvent::mutable_poolinfo() {
+  ::kservice::Pool* _msg = _internal_mutable_poolinfo();
+  // @@protoc_insertion_point(field_mutable:kservice.RemoveSourceEvent.poolInfo)
+  return _msg;
+}
+inline void RemoveSourceEvent::set_allocated_poolinfo(::kservice::Pool* poolinfo) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.poolinfo_;
+  }
+  if (poolinfo) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(poolinfo);
+    if (message_arena != submessage_arena) {
+      poolinfo = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, poolinfo, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.poolinfo_ = poolinfo;
+  // @@protoc_insertion_point(field_set_allocated:kservice.RemoveSourceEvent.poolInfo)
+}
+
+// .kservice.DanmuSource src = 3;
+inline bool RemoveSourceEvent::_internal_has_src() const {
+  return this != internal_default_instance() && _impl_.src_ != nullptr;
+}
+inline bool RemoveSourceEvent::has_src() const {
+  return _internal_has_src();
+}
+inline void RemoveSourceEvent::clear_src() {
+  if (GetArenaForAllocation() == nullptr && _impl_.src_ != nullptr) {
+    delete _impl_.src_;
+  }
+  _impl_.src_ = nullptr;
+}
+inline const ::kservice::DanmuSource& RemoveSourceEvent::_internal_src() const {
+  const ::kservice::DanmuSource* p = _impl_.src_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::DanmuSource&>(
+      ::kservice::_DanmuSource_default_instance_);
+}
+inline const ::kservice::DanmuSource& RemoveSourceEvent::src() const {
+  // @@protoc_insertion_point(field_get:kservice.RemoveSourceEvent.src)
+  return _internal_src();
+}
+inline void RemoveSourceEvent::unsafe_arena_set_allocated_src(
+    ::kservice::DanmuSource* src) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.src_);
+  }
+  _impl_.src_ = src;
+  if (src) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.RemoveSourceEvent.src)
+}
+inline ::kservice::DanmuSource* RemoveSourceEvent::release_src() {
+  
+  ::kservice::DanmuSource* temp = _impl_.src_;
+  _impl_.src_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::DanmuSource* RemoveSourceEvent::unsafe_arena_release_src() {
+  // @@protoc_insertion_point(field_release:kservice.RemoveSourceEvent.src)
+  
+  ::kservice::DanmuSource* temp = _impl_.src_;
+  _impl_.src_ = nullptr;
+  return temp;
+}
+inline ::kservice::DanmuSource* RemoveSourceEvent::_internal_mutable_src() {
+  
+  if (_impl_.src_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::DanmuSource>(GetArenaForAllocation());
+    _impl_.src_ = p;
+  }
+  return _impl_.src_;
+}
+inline ::kservice::DanmuSource* RemoveSourceEvent::mutable_src() {
+  ::kservice::DanmuSource* _msg = _internal_mutable_src();
+  // @@protoc_insertion_point(field_mutable:kservice.RemoveSourceEvent.src)
+  return _msg;
+}
+inline void RemoveSourceEvent::set_allocated_src(::kservice::DanmuSource* src) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.src_;
+  }
+  if (src) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(src);
+    if (message_arena != submessage_arena) {
+      src = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, src, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.src_ = src;
+  // @@protoc_insertion_point(field_set_allocated:kservice.RemoveSourceEvent.src)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

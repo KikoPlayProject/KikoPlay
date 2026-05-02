@@ -80,6 +80,7 @@ message UVEvent {
         int64 time = 2;
     }
     repeated StepTime stepTimes = 4;
+    bool hasStartupArgs = 5;
 }
 
 message UVEventResponse {
@@ -237,4 +238,22 @@ message KikoDanmuResponse {
         repeated DanmuComment danmuComments = 2;
     }
     repeated DanmuSourceComments danmuSources = 3;
+}
+
+message GetSourceRequest {
+    EventHeader header = 1;
+    Pool poolInfo = 2;
+    KFileInfo fileInfo = 3;
+}
+
+message GetSourceResponse {
+    ResponseHeader header = 1;
+    Pool poolInfo = 2;
+    repeated DanmuSource danmuSources = 3;
+}
+
+message RemoveSourceEvent {
+    EventHeader header = 1;
+    Pool poolInfo = 2;
+    DanmuSource src = 3;
 }

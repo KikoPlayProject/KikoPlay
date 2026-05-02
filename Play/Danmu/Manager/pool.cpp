@@ -216,11 +216,28 @@ int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danm
     return source->id;
 }
 
+bool Pool::hasSource(const DanmuSource &sourceInfo) const
+{
+    for (auto iter = sourcesTable.begin(); iter!=sourcesTable.end(); ++iter)
+    {
+        if (iter->scriptId == sourceInfo.scriptId && iter.value().scriptData == sourceInfo.scriptData)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool Pool::deleteSource(int sourceId, bool applyDB)
 {
     if(!sourcesTable.contains(sourceId)) return false;
     PoolStateLock locker;
     if(!locker.tryLock(pid)) return false;
+    if (sourcesTable.contains(sourceId) && !pid.isEmpty())
+    {
+        DanmuSource rmSrc = sourcesTable[sourceId];
+        GlobalObjects::danmuManager->sendDanmuSrcRemoveEvent(this, &rmSrc);
+    }
     sourcesTable.remove(sourceId);
     for(auto iter=commentList.begin();iter!=commentList.end();)
     {

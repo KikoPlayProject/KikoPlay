@@ -53,6 +53,7 @@ public:
         EVENT_DANMU_SRC_ADDED,
         EVENT_REQUIRE_LOGIN,
         EVENT_KAPP_LOADED,
+        EVENT_DANMU_SRC_REMOVED,
         EVENT_UNKNOWN
     };
 public:

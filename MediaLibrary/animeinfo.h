@@ -88,6 +88,16 @@ struct AnimeLite
 };
 Q_DECLARE_METATYPE(AnimeLite)
 
+struct MatchDanmuSource
+{
+    int type;
+    int durationSeconds;
+    QString name;
+    QString scriptId;
+    QString scriptData;
+};
+Q_DECLARE_METATYPE(MatchDanmuSource)
+
 struct MatchResult
 {
     bool success{false};
@@ -98,14 +108,6 @@ struct MatchResult
 
     bool kServiceMatch{false};
     int infoSrcType;
-    struct MatchDanmuSource
-    {
-        int type;
-        int durationSeconds;
-        QString name;
-        QString scriptId;
-        QString scriptData;
-    };
     QList<MatchDanmuSource> danmuSources;
 };
 Q_DECLARE_METATYPE(MatchResult)

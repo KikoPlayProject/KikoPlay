@@ -13,7 +13,9 @@
 #include "UI/ela/ElaSpinBox.h"
 #include "Play/Danmu/Render/cacheworker.h"
 #include "Play/Video/mpvplayer.h"
-
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#endif
 
 DanmuPage::DanmuPage(QWidget *parent)
 {
@@ -262,6 +264,16 @@ SettingItemArea *DanmuPage::initOtherArea()
 
     KPushButton *blockEditBtn = new KPushButton(tr("Edit"), this);
     otherArea->addItem(tr("Block Rules"), blockEditBtn);
+
+#ifdef KSERVICE
+    ElaToggleSwitch *autoUpdateSrcSwitch = new ElaToggleSwitch(this);
+    autoUpdateSrcSwitch->setIsToggled(KService::instance()->enableKServiceUpdatSrc());
+    otherArea->addItem(tr("Refresh Source From KService When Updating Pool"), autoUpdateSrcSwitch);
+
+    QObject::connect(autoUpdateSrcSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked){
+        KService::instance()->setEnableKServiceUpdateSrc(checked);
+    });
+#endif
 
     QObject::connect(analyzeSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked){
         GlobalObjects::danmuPool->setAnalyzeEnable(checked);
