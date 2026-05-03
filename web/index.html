@@ -1,39 +1,86 @@
-﻿<!DOCTYPE html>
-<html>
-
+<!DOCTYPE html>
+<html lang="zh">
 <head>
-    <title>KikoPlay LAN Server</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>KikoPlay</title>
     <link rel="stylesheet" href="css/DPlayer.min.css">
-    <link rel="stylesheet" href="css/bootstrap-treeview.min.css">
-    <script src="js/jquery.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/DPlayer.min.js"></script>
-    <script src="js/bootstrap-treeview.min.js"></script>
-    <style type="text/css">
-        html, body {
-            height: 100%;
-            margin: 0px;
-            padding: 0px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/app.css">
 </head>
-
 <body>
+    <div id="app">
+        <header class="app-header">
+            <span class="app-title">KikoPlay</span>
+            <div class="header-actions">
+                <button id="theme-toggle" class="btn-icon" aria-label="Toggle theme">
+                    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+                <div class="theme-color-wrap">
+                    <button id="color-toggle" class="btn-icon" aria-label="Theme color">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c1.1 0 2-.9 2-2 0-.53-.21-1.01-.54-1.37-.33-.35-.54-.82-.54-1.33 0-1.1.9-2 2-2h2.36c3.08 0 5.58-2.5 5.58-5.58C22.94 5.94 18.05 2 12 2z"/><circle cx="7.5" cy="11.5" r="1.5"/><circle cx="10.5" cy="7.5" r="1.5"/><circle cx="16.5" cy="9.5" r="1.5"/></svg>
+                    </button>
+                    <div id="color-popup" class="color-picker-popup">
+                        <span class="color-dot" data-color="#4fc3f7" style="background:#4fc3f7"></span>
+                        <span class="color-dot" data-color="#66bb6a" style="background:#66bb6a"></span>
+                        <span class="color-dot" data-color="#ffa726" style="background:#ffa726"></span>
+                        <span class="color-dot" data-color="#f06292" style="background:#f06292"></span>
+                        <span class="color-dot" data-color="#ab47bc" style="background:#ab47bc"></span>
+                        <span class="color-dot" data-color="#ef5350" style="background:#ef5350"></span>
+                        <div class="color-input-wrap"><input type="color" id="custom-color" value="#4fc3f7"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
 
-    <div class="container" style="height: 100%; padding-left:0px; padding-right:0px;">
-        <div class="row" style="height: 100%; margin:0;">
-            <div class="col-sm-12 col-md-9" style="padding:0;">
-                <div id="dplayer" ></div>
-            </div>
-            <div class="col-sm-12 col-md-3" style="overflow-y: auto;padding:0;height: 100%;border: 1px solid #afb2b5;">
-                <div id="playlist"></div>
-            </div>
-        </div>
+        <main class="app-main">
+            <section class="player-section">
+                <div id="dplayer"></div>
+                <div id="recent-plays" class="recent-plays">
+                    <div class="recent-plays-spacer"></div>
+                    <div class="recent-plays-header">最近播放</div>
+                    <div class="recent-plays-grid"></div>
+                </div>
+                <div id="now-playing" class="now-playing">
+                    <svg class="now-playing-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                    <div class="now-playing-info">
+                        <span class="now-playing-anime"></span>
+                        <span class="now-playing-title"></span>
+                    </div>
+                </div>
+            </section>
+
+            <aside id="sidebar" class="sidebar">
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab active" data-tab="playlist">播放列表</button>
+                    <button class="sidebar-tab" data-tab="danmaku">弹幕</button>
+                    <div class="sidebar-tabs-actions">
+                        <button id="playlist-refresh" class="btn-icon" aria-label="Refresh playlist">
+                            <svg viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                        </button>
+                        <button id="danmaku-refresh" class="btn-icon" aria-label="Refresh danmaku" style="display:none">
+                            <svg viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sidebar-panel active" id="panel-playlist">
+                    <div id="playlist-tree" class="playlist-tree"></div>
+                </div>
+
+                <div class="sidebar-panel" id="panel-danmaku">
+                    <div id="danmaku-total" class="danmaku-total"></div>
+                    <div id="danmaku-list" class="danmaku-list"></div>
+                </div>
+            </aside>
+        </main>
+
     </div>
-    <script src="js/KikoPlay.js"></script>
-</body>
 
+    <script src="js/DPlayer.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/tree.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/app.js"></script>
+</body>
 </html>

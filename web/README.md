@@ -1,5 +1,5 @@
 # <img src="../res/images/kikoplay-4.png" width=24 /> KikoPlay Web接口参考 
-2023.12 By Kikyou，本文档适用于KikoPlay 1.0.1及以上版本
+2026.05 By Kikyou，本文档适用于KikoPlay 2.1及以上版本
 
 KikoPlay局域网服务功能提供了一些Web接口供其他客户端（包括网页端，Android端等）使用。
 
@@ -31,6 +31,10 @@ Node:
     "nodes"(Array[Node]): 子节点列表，如果包含子节点，则不会包含除了text和marker以外的项目
 }
 ```
+## [Get] /api/recent
+获取PC端最近播放的条目，2.1版本新增  
+返回类型：JSON, Array[Node]  
+Node结构和`/api/playlist`中的定义一致，但不包括这些字段：`marker`，`nodes`，`color`；可能包含`cover`字段，其值为缩略图的base64编码字符串
 ## [Post] /api/updateTime
 更新播放时间，只有用户在局域网服务中开启“同步播放时间”才有效  
 JSON数据格式：
@@ -122,7 +126,7 @@ PlayerState:
 }
 ```
 ## [Get] /api/danmu/full/
-获取完整的弹幕池。KikoPlay会使用屏蔽规则过滤，但不会应用延迟和时间轴修改，这些信息包含在source中，首先对弹幕原始时间应用时间轴偏移(timeline)，之后应用整体延迟(delay)，才能得到最终弹幕的时间。如果`update=true`，则不会返回`source`和`launchScripts`。  
+获取完整的弹幕池。KikoPlay会使用屏蔽规则过滤，但不会应用裁剪、延迟和时间轴修改，这些信息包含在source中。客户端需要先按裁剪信息(clip)移除范围外弹幕并将范围内弹幕减去裁剪起点，再应用时间轴偏移(timeline)，最后应用整体延迟(delay)，才能得到最终弹幕的时间。如果`update=true`，则不会返回`source`和`launchScripts`。（裁剪功能2.1新增）
 参数：  
 > id:  弹幕池ID  
 > update: boolean， true/false，是否更新弹幕池，如果为true则只会返回新添加的弹幕
@@ -157,7 +161,8 @@ Source:
     "scriptData"(string): 脚本数据,
     "scriptId"(string): 脚本ID,
     "scriptName"(string): 脚本名称,
-    "timeline"(string): 时间轴信息，格式为"时间点1(ms) 偏移1(ms);时间点2 偏移2(ms);..."，时间点对应的偏移会影响时间点之后的全部弹幕
+    "timeline"(string): 时间轴信息，格式为"时间点1(ms) 偏移1(ms);时间点2 偏移2(ms);..."，时间点对应的偏移会影响时间点之后的全部弹幕,
+    "clip"(string): 裁剪信息，格式为"clip_start(ms):clip_duration(ms)"，只保留裁剪时间范围内的弹幕，移除时间范围外的弹幕，同时调整裁剪范围内弹幕的时间轴，减去clip_start
 }
 ```
 ## [Post] /api/updateDelay
@@ -198,12 +203,13 @@ JSON数据格式：
 ```json
 {
     "danmuPool"(string): 弹幕池ID,
+    "mediaId"(string): 媒体文件ID,可选
     "text"(string): 弹幕文本,
     "time"(number): 弹幕时间(ms)，如果小于0且弹幕池ID和KikoPlay当前播放文件的弹幕池ID相同，直接将弹幕显示到当前位置(如果弹幕池ID相同，且时间和KikoPlay当前播放时间差距小于3s，也会显示弹幕), 
     "color"(number): 弹幕颜色,
     "fontsize"(number): 文字大小，0: 正常，1: 大，2: 小,
     "date"(string): unix时间戳(s),
     "type"(number):  0: 滚动, 1: 顶部, 2: 底部, 
-    "launchScripts"(Array[string]): 发送脚本ID列表
+    "launchScripts"(Array[string]): 发送脚本ID列表，可选
 }
 ```
