@@ -55,6 +55,14 @@ QVariant ScriptModel::data(const QModelIndex &index, int role) const
             break;
         }
     }
+    else if (role == Qt::DecorationRole)
+    {
+        if (col == Columns::NAME)
+        {
+            if (!script.icon.isNull()) return script.icon;
+        }
+        return QVariant();
+    }
     else if (role == ScriptTypeRole)
     {
         return script.type;
@@ -89,7 +97,7 @@ void ScriptModel::refresh()
         auto type = ScriptType(i);
         for(const auto &s: GlobalObjects::scriptManager->scripts(type))
         {
-            scriptList.append({type, s->id(), s->name(), s->version(), s->desc(), s->getValue("path"), !s->settings().empty(), !s->getScriptMenuItems().empty()});
+            scriptList.append({type, s->id(), s->name(), s->version(), s->desc(), s->getValue("path"), s->scriptIcon(), !s->settings().empty(), !s->getScriptMenuItems().empty()});
         }
     }
     endResetModel();

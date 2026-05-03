@@ -155,11 +155,13 @@ bool DanmuScript::parseDanmuSource(DanmuSource *src, const QVariantMap &itemObj)
 {
     QString title(itemObj.value("title").toString());
     QString data(itemObj.value("data").toString());
-    if (title.isEmpty() || data.isEmpty()) return false;
+    QString srcId{itemObj.value("srcid").toString().trimmed()};
+    if (title.isEmpty() || data.isEmpty() || srcId.size() > 64) return false;
     src->title = title;
     src->desc = itemObj.value("desc", src->desc).toString();
     src->scriptData = data;
     src->scriptId = id();
+    src->scriptSrcId = srcId;
     src->url = itemObj.value("url").toString();
     src->delay = itemObj.value("delay", 0).toInt();
     src->duration = itemObj.value("duration", 0).toInt();

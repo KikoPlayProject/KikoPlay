@@ -330,6 +330,7 @@ void DanmuManager::sendDanmuAddedEvent(const QList<QPair<Pool *, QPair<DanmuSour
             { "id",            p.first->id() },
             { "scriptId",      p.second.first.scriptId },
             { "scriptData",    p.second.first.scriptData },
+            { "scriptSrcId",   p.second.first.scriptSrcId },
             { "srcTitle",      p.second.first.title },
             { "duration",      p.second.first.duration },
             { "filePath",      p.second.second },
@@ -341,6 +342,7 @@ void DanmuManager::sendDanmuAddedEvent(const QList<QPair<Pool *, QPair<DanmuSour
 
 void DanmuManager::sendDanmuSrcRemoveEvent(Pool *pool, DanmuSource *src)
 {
+    if (!EventBus::getEventBus()->hasListener(EventBus::EVENT_DANMU_SRC_REMOVED)) return;
     QVariantMap poolSrcInfo = {
         { "name",          pool->animeTitle() },
         { "epType",        int(pool->epType) },
@@ -348,6 +350,7 @@ void DanmuManager::sendDanmuSrcRemoveEvent(Pool *pool, DanmuSource *src)
         { "epName",        pool->epTitle() },
         { "id",            pool->id() },
         { "scriptId",      src->scriptId },
+        { "scriptSrcId",   src->scriptSrcId },
         { "scriptData",    src->scriptData },
         { "srcTitle",      src->title },
         { "duration",      src->duration },
@@ -859,6 +862,7 @@ void DanmuManager::loadAllPool()
         s_titleNo = query.record().indexOf("Title"),
         s_descNo = query.record().indexOf("Desc"),
         s_scriptIdNo = query.record().indexOf("ScriptId"),
+        s_scriptSrcIdNo = query.record().indexOf("ScriptSrcId"),
         s_scriptDataNo = query.record().indexOf("ScriptData"),
         s_delayNo = query.record().indexOf("Delay"),
         s_durationNo = query.record().indexOf("Duration"),
@@ -877,6 +881,7 @@ void DanmuManager::loadAllPool()
         srcInfo.desc = query.value(s_descNo).toString();
         srcInfo.scriptId = query.value(s_scriptIdNo).toString();
         srcInfo.scriptData = query.value(s_scriptDataNo).toString();
+        srcInfo.scriptSrcId = query.value(s_scriptSrcIdNo).toString();
         srcInfo.delay = query.value(s_delayNo).toInt();
         srcInfo.duration = query.value(s_durationNo).toInt();
         srcInfo.count = 0;
@@ -998,20 +1003,21 @@ void DanmuManager::saveSource(const QString &pid, const DanmuSource *source, con
         db.transaction();
         if(source)
         {
-            query.prepare("insert into source(PoolID,ID,Title,Desc,ScriptId,ScriptData,Delay,Duration,TimeLine,Valid,Clip,URL,Tags) values(?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            query.prepare("insert into source(PoolID,ID,Title,Desc,ScriptId,ScriptSrcId,ScriptData,Delay,Duration,TimeLine,Valid,Clip,URL,Tags) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             query.bindValue(0,pid);
             query.bindValue(1,src.id);
             query.bindValue(2,src.title);
             query.bindValue(3,src.desc);
             query.bindValue(4,src.scriptId);
-            query.bindValue(5,src.scriptData);
-            query.bindValue(6,src.delay);
-            query.bindValue(7,src.duration);
-            query.bindValue(8,src.timelineStr());
-            query.bindValue(9,static_cast<int>(src.sourceValid));
-            query.bindValue(10,src.clipStr());
-            query.bindValue(11,src.url);
-            query.bindValue(12,src.tagsJson());
+            query.bindValue(5,src.scriptSrcId);
+            query.bindValue(6,src.scriptData);
+            query.bindValue(7,src.delay);
+            query.bindValue(8,src.duration);
+            query.bindValue(9,src.timelineStr());
+            query.bindValue(10,static_cast<int>(src.sourceValid));
+            query.bindValue(11,src.clipStr());
+            query.bindValue(12,src.url);
+            query.bindValue(13,src.tagsJson());
             query.exec();
         }
         int tableId=DanmuPoolNode::idHash(pid);

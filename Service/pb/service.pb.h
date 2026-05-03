@@ -3339,6 +3339,7 @@ class DanmuSource final :
     kTitleFieldNumber = 2,
     kScriptIdFieldNumber = 3,
     kScriptDataFieldNumber = 4,
+    kSrcIdFieldNumber = 6,
     kTypeFieldNumber = 1,
     kDurationSecondsFieldNumber = 5,
   };
@@ -3384,6 +3385,20 @@ class DanmuSource final :
   std::string* _internal_mutable_scriptdata();
   public:
 
+  // string srcId = 6;
+  void clear_srcid();
+  const std::string& srcid() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_srcid(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_srcid();
+  PROTOBUF_NODISCARD std::string* release_srcid();
+  void set_allocated_srcid(std::string* srcid);
+  private:
+  const std::string& _internal_srcid() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_srcid(const std::string& value);
+  std::string* _internal_mutable_srcid();
+  public:
+
   // .kservice.DanmuSourceType type = 1;
   void clear_type();
   ::kservice::DanmuSourceType type() const;
@@ -3413,6 +3428,7 @@ class DanmuSource final :
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr title_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr scriptid_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr scriptdata_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr srcid_;
     int type_;
     int32_t durationseconds_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
@@ -9665,6 +9681,56 @@ inline void DanmuSource::_internal_set_durationseconds(int32_t value) {
 inline void DanmuSource::set_durationseconds(int32_t value) {
   _internal_set_durationseconds(value);
   // @@protoc_insertion_point(field_set:kservice.DanmuSource.durationSeconds)
+}
+
+// string srcId = 6;
+inline void DanmuSource::clear_srcid() {
+  _impl_.srcid_.ClearToEmpty();
+}
+inline const std::string& DanmuSource::srcid() const {
+  // @@protoc_insertion_point(field_get:kservice.DanmuSource.srcId)
+  return _internal_srcid();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void DanmuSource::set_srcid(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.srcid_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:kservice.DanmuSource.srcId)
+}
+inline std::string* DanmuSource::mutable_srcid() {
+  std::string* _s = _internal_mutable_srcid();
+  // @@protoc_insertion_point(field_mutable:kservice.DanmuSource.srcId)
+  return _s;
+}
+inline const std::string& DanmuSource::_internal_srcid() const {
+  return _impl_.srcid_.Get();
+}
+inline void DanmuSource::_internal_set_srcid(const std::string& value) {
+  
+  _impl_.srcid_.Set(value, GetArenaForAllocation());
+}
+inline std::string* DanmuSource::_internal_mutable_srcid() {
+  
+  return _impl_.srcid_.Mutable(GetArenaForAllocation());
+}
+inline std::string* DanmuSource::release_srcid() {
+  // @@protoc_insertion_point(field_release:kservice.DanmuSource.srcId)
+  return _impl_.srcid_.Release();
+}
+inline void DanmuSource::set_allocated_srcid(std::string* srcid) {
+  if (srcid != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.srcid_.SetAllocated(srcid, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.srcid_.IsDefault()) {
+    _impl_.srcid_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:kservice.DanmuSource.srcId)
 }
 
 // -------------------------------------------------------------------

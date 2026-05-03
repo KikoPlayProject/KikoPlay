@@ -38,6 +38,7 @@ private:
         QString version;
         QString desc;
         QString path;
+        QIcon icon;
         bool hasSetting;
         bool hasMenu;
     };

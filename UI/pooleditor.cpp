@@ -128,12 +128,6 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"), pare
         bool cancelFlag = false;
         PoolSignalBlock block;
         QObject::connect(this, &CFramelessDialog::cancelClicked, &ctx, [&](){cancelFlag = true; });
-#ifdef KSERVICE
-        if (KService::instance()->enableKServiceUpdatSrc() && GlobalObjects::danmuPool->hasPool())
-        {
-            KService::instance()->getDanmuSource(GlobalObjects::danmuPool->getPool()->id(), PlayContext::context()->path);
-        }
-#endif
         for (auto iter=sources.cbegin();iter!=sources.cend();++iter)
         {
             if (cancelFlag) break;
@@ -141,6 +135,12 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"), pare
             count += GlobalObjects::danmuPool->getPool()->update(iter.key());
         }
         if (count > 0) refreshItems();
+#ifdef KSERVICE
+        if (KService::instance()->enableKServiceUpdatSrc() && GlobalObjects::danmuPool->hasPool())
+        {
+            KService::instance()->getDanmuSource(GlobalObjects::danmuPool->getPool()->id(), PlayContext::context()->path);
+        }
+#endif
         showMessage(tr("Add %1 Danmu").arg(count), NotifyMessageFlag::NM_HIDE);
     });
 

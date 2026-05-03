@@ -153,16 +153,28 @@ int Pool::update(int sourceId, QVector<QSharedPointer<DanmuComment> > *incList, 
 int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool reset, bool save)
 {
     PoolStateLock locker;
-    if(!locker.tryLock(pid)) return -1;
+    if(!locker.tryLock(pid)) return -2;
     DanmuSource *source(nullptr);
     bool containSource=false;
-    for(auto iter=sourcesTable.begin();iter!=sourcesTable.end();++iter)
+    for (auto iter = sourcesTable.begin(); iter!=sourcesTable.end(); ++iter)
     {
-        if(iter->scriptId == sourceInfo.scriptId && iter.value().scriptData==sourceInfo.scriptData)
+        if (iter->scriptId == sourceInfo.scriptId)
         {
-            source=&iter.value();
-            containSource=true;
-            break;
+            if (!iter->scriptSrcId.isEmpty() && !sourceInfo.scriptSrcId.isEmpty())
+            {
+                if (iter->scriptSrcId == sourceInfo.scriptSrcId)
+                {
+                    source = &iter.value();
+                    containSource = true;
+                    break;
+                }
+            }
+            else if (iter->scriptData == sourceInfo.scriptData)
+            {
+                source = &iter.value();
+                containSource = true;
+                break;
+            }
         }
     }
     if(source)
@@ -220,9 +232,19 @@ bool Pool::hasSource(const DanmuSource &sourceInfo) const
 {
     for (auto iter = sourcesTable.begin(); iter!=sourcesTable.end(); ++iter)
     {
-        if (iter->scriptId == sourceInfo.scriptId && iter.value().scriptData == sourceInfo.scriptData)
+        if (iter->scriptId == sourceInfo.scriptId)
         {
-            return true;
+            if (!iter->scriptSrcId.isEmpty() && !sourceInfo.scriptSrcId.isEmpty())
+            {
+                if (iter->scriptSrcId == sourceInfo.scriptSrcId)
+                {
+                    return true;
+                }
+            }
+            else if (iter->scriptData == sourceInfo.scriptData)
+            {
+                return true;
+            }
         }
     }
     return false;

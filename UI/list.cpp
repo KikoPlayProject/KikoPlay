@@ -1759,18 +1759,18 @@ int ListWindow::updateCurrentPool()
     act_addLocalDanmu->setEnabled(false);
     const auto &sources = GlobalObjects::danmuPool->getPool()->sources();
     int count = 0;
-#ifdef KSERVICE
-    if (KService::instance()->enableKServiceUpdatSrc() && GlobalObjects::danmuPool->hasPool())
-    {
-        KService::instance()->getDanmuSource(GlobalObjects::danmuPool->getPool()->id(), PlayContext::context()->path);
-    }
-#endif
     for(auto iter=sources.cbegin();iter!=sources.cend();++iter)
     {
         showMessage(tr("Updating: %1").arg(iter.value().title),NotifyMessageFlag::NM_PROCESS);
         count+=GlobalObjects::danmuPool->getPool()->update(iter.key());
     }
     showMessage(tr("Add %1 Danmu").arg(count), NotifyMessageFlag::NM_HIDE);
+#ifdef KSERVICE
+    if (KService::instance()->enableKServiceUpdatSrc() && GlobalObjects::danmuPool->hasPool())
+    {
+        KService::instance()->getDanmuSource(GlobalObjects::danmuPool->getPool()->id(), PlayContext::context()->path);
+    }
+#endif
     act_autoMatch->setEnabled(true);
     act_addOnlineDanmu->setEnabled(true);
     act_addLocalDanmu->setEnabled(true);

@@ -373,6 +373,7 @@ void KService::listenDanmuAdded(const EventParam *p)
         kdSrc->set_title(srcMap.value("srcTitle").toString().toStdString());
         kdSrc->set_scriptid(srcMap.value("scriptId").toString().toStdString());
         kdSrc->set_scriptdata(srcMap.value("scriptData").toString().toStdString());
+        kdSrc->set_srcid(srcMap.value("scriptSrcId").toString().toStdString());
         kdSrc->set_durationseconds(srcMap.value("duration").toInt());
         kdSrc->set_type(kservice::DanmuSourceType(scriptTypeMap.value(srcMap.value("scriptId").toString())));
 
@@ -431,6 +432,7 @@ void KService::listenDanmuSrcRemoved(const EventParam *p)
     rmSrc->set_title(rmPoolSrc.value("srcTitle").toString().toStdString());
     rmSrc->set_scriptid(rmPoolSrc.value("scriptId").toString().toStdString());
     rmSrc->set_scriptdata(rmPoolSrc.value("scriptData").toString().toStdString());
+    rmSrc->set_srcid(rmPoolSrc.value("scriptSrcId").toString().toStdString());
     rmSrc->set_durationseconds(rmPoolSrc.value("duration").toInt());
     rmSrc->set_type(kservice::DanmuSourceType(scriptTypeMap.value(rmPoolSrc.value("scriptId").toString())));
 
@@ -793,7 +795,7 @@ void KService::kGetSource(const QString &poolId, const QString &path)
     qint64 ts = QDateTime::currentSecsSinceEpoch();
     if (getSrcTs.contains(poolId) && ts - getSrcTs[poolId] < 60*60*2)
     {
-        Logger::logger()->log(Logger::APP, "[KService]get src in time_window, skip: " + poolId);
+        Logger::logger()->log(Logger::APP, QString("[KService]get src in time_window, skip: %1 %2").arg(pool->animeTitle(), pool->epTitle()));
         return;
     }
     getSrcTs[poolId] = ts;
@@ -1085,9 +1087,26 @@ void KService::handleGetSource(QNetworkReply *reply)
         if (pool->hasSource(kSrc)) continue;
 
         QList<DanmuComment *> emptyComments;
-        int srcId = pool->addSource(kSrc, emptyComments, true);
-        if (srcId != -1) nSrcIds.append(srcId);
-        Logger::logger()->log(Logger::APP, QString("[KService]pool[%1] add source: %2").arg(pool->epTitle(), kSrc.title));
+        int lockFailedTimes = 0;
+        do {
+            int srcId = pool->addSource(kSrc, emptyComments, true);
+            Logger::logger()->log(Logger::APP, QString("[KService]pool[%1] add source: %2, ret=%3").arg(pool->epTitle(), kSrc.title).arg(srcId));
+            if (srcId >= 0)
+            {
+                nSrcIds.append(srcId);
+                break;
+            }
+            else if (srcId == -2)  // pool lock
+            {
+                if (lockFailedTimes > 5) break;
+                ++lockFailedTimes;
+                QThread::msleep(100*lockFailedTimes);
+            }
+            else
+            {
+                break;
+            }
+        } while(true);
     }
     if (!nSrcIds.empty())
     {

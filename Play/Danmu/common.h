@@ -173,6 +173,7 @@ struct DanmuSource
     QString desc;
     QString scriptData;
     QString scriptId;
+    QString scriptSrcId;
     QString url;
     bool sourceValid = true;
     QVector<DanmuSourceTag> tags;
@@ -207,6 +208,7 @@ struct DanmuSource
             {"scriptId", scriptId},
             {"data", scriptData},
             {"scriptData", scriptData},
+            {"srcid", scriptSrcId},
             {"url", url},
             {"valid", sourceValid},
             {"duration", duration},

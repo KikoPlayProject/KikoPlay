@@ -90,6 +90,7 @@ CREATE TABLE "source" (
 "Title"  TEXT,
 "Desc"  TEXT,
 "ScriptId"  TEXT,
+"ScriptSrcId" TEXT,
 "ScriptData"  TEXT,
 "Delay"  INTEGER,
 "Duration"  INTEGER,

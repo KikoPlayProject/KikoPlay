@@ -142,6 +142,7 @@ message DanmuSource {
     string scriptId = 3;
     string scriptData = 4;
     int32 durationSeconds = 5;
+    string srcId = 6;
 }
 
 enum InfoSourceType {

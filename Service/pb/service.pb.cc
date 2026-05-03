@@ -284,6 +284,7 @@ PROTOBUF_CONSTEXPR DanmuSource::DanmuSource(
     /*decltype(_impl_.title_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.scriptid_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.scriptdata_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.srcid_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.type_)*/0
   , /*decltype(_impl_.durationseconds_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
@@ -5959,6 +5960,7 @@ DanmuSource::DanmuSource(const DanmuSource& from)
       decltype(_impl_.title_){}
     , decltype(_impl_.scriptid_){}
     , decltype(_impl_.scriptdata_){}
+    , decltype(_impl_.srcid_){}
     , decltype(_impl_.type_){}
     , decltype(_impl_.durationseconds_){}
     , /*decltype(_impl_._cached_size_)*/{}};
@@ -5988,6 +5990,14 @@ DanmuSource::DanmuSource(const DanmuSource& from)
     _this->_impl_.scriptdata_.Set(from._internal_scriptdata(), 
       _this->GetArenaForAllocation());
   }
+  _impl_.srcid_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.srcid_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_srcid().empty()) {
+    _this->_impl_.srcid_.Set(from._internal_srcid(), 
+      _this->GetArenaForAllocation());
+  }
   ::memcpy(&_impl_.type_, &from._impl_.type_,
     static_cast<size_t>(reinterpret_cast<char*>(&_impl_.durationseconds_) -
     reinterpret_cast<char*>(&_impl_.type_)) + sizeof(_impl_.durationseconds_));
@@ -6002,6 +6012,7 @@ inline void DanmuSource::SharedCtor(
       decltype(_impl_.title_){}
     , decltype(_impl_.scriptid_){}
     , decltype(_impl_.scriptdata_){}
+    , decltype(_impl_.srcid_){}
     , decltype(_impl_.type_){0}
     , decltype(_impl_.durationseconds_){0}
     , /*decltype(_impl_._cached_size_)*/{}
@@ -6017,6 +6028,10 @@ inline void DanmuSource::SharedCtor(
   _impl_.scriptdata_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
     _impl_.scriptdata_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.srcid_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.srcid_.Set("", GetArenaForAllocation());
   #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
@@ -6034,6 +6049,7 @@ inline void DanmuSource::SharedDtor() {
   _impl_.title_.Destroy();
   _impl_.scriptid_.Destroy();
   _impl_.scriptdata_.Destroy();
+  _impl_.srcid_.Destroy();
 }
 
 void DanmuSource::SetCachedSize(int size) const {
@@ -6049,6 +6065,7 @@ void DanmuSource::Clear() {
   _impl_.title_.ClearToEmpty();
   _impl_.scriptid_.ClearToEmpty();
   _impl_.scriptdata_.ClearToEmpty();
+  _impl_.srcid_.ClearToEmpty();
   ::memset(&_impl_.type_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&_impl_.durationseconds_) -
       reinterpret_cast<char*>(&_impl_.type_)) + sizeof(_impl_.durationseconds_));
@@ -6105,6 +6122,16 @@ const char* DanmuSource::_InternalParse(const char* ptr, ::_pbi::ParseContext* c
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
           _impl_.durationseconds_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // string srcId = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
+          auto str = _internal_mutable_srcid();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
         } else
           goto handle_unusual;
         continue;
@@ -6180,6 +6207,16 @@ uint8_t* DanmuSource::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt32ToArray(5, this->_internal_durationseconds(), target);
   }
 
+  // string srcId = 6;
+  if (!this->_internal_srcid().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_srcid().data(), static_cast<int>(this->_internal_srcid().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.DanmuSource.srcId");
+    target = stream->WriteStringMaybeAliased(
+        6, this->_internal_srcid(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
@@ -6215,6 +6252,13 @@ size_t DanmuSource::ByteSizeLong() const {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_scriptdata());
+  }
+
+  // string srcId = 6;
+  if (!this->_internal_srcid().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_srcid());
   }
 
   // .kservice.DanmuSourceType type = 1;
@@ -6258,6 +6302,9 @@ void DanmuSource::MergeFrom(const DanmuSource& from) {
   if (!from._internal_scriptdata().empty()) {
     _this->_internal_set_scriptdata(from._internal_scriptdata());
   }
+  if (!from._internal_srcid().empty()) {
+    _this->_internal_set_srcid(from._internal_srcid());
+  }
   if (from._internal_type() != 0) {
     _this->_internal_set_type(from._internal_type());
   }
@@ -6294,6 +6341,10 @@ void DanmuSource::InternalSwap(DanmuSource* other) {
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
       &_impl_.scriptdata_, lhs_arena,
       &other->_impl_.scriptdata_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.srcid_, lhs_arena,
+      &other->_impl_.srcid_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
       PROTOBUF_FIELD_OFFSET(DanmuSource, _impl_.durationseconds_)
