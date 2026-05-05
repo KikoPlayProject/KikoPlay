@@ -99,10 +99,11 @@ int Pool::update(int sourceId, QVector<QSharedPointer<DanmuComment> > *incList, 
             GlobalObjects::danmuManager->updateSourceTags(pid, &oldSrc);
             changed = true;
         }
-        if (oldSrc.title != nSrc->title || oldSrc.desc != nSrc->desc || oldSrc.scriptData != nSrc->scriptData || oldSrc.url != nSrc->url) {
+        if (oldSrc.title != nSrc->title || oldSrc.desc != nSrc->desc || oldSrc.scriptData != nSrc->scriptData || oldSrc.url != nSrc->url || oldSrc.scriptSrcId != nSrc->scriptSrcId) {
             oldSrc.title = nSrc->title;
             oldSrc.desc = nSrc->desc;
             oldSrc.scriptData = nSrc->scriptData;
+            oldSrc.scriptSrcId = nSrc->scriptSrcId;
             oldSrc.url = nSrc->url;
             GlobalObjects::danmuManager->updateSourceScriptInfo(pid, &oldSrc);
             changed = true;
@@ -124,9 +125,12 @@ int Pool::update(int sourceId, QVector<QSharedPointer<DanmuComment> > *incList, 
     }
     else
     {
+        for (auto &src : sourcesTable)
+        {
+            if (checkUpdateSource(src)) sourceChanged = true;
+        }
         for (auto &comment : tList)
         {
-            if (checkUpdateSource(sourcesTable[sourceId])) sourceChanged = true;
             QSharedPointer<DanmuComment> sp(comment);
             commentList.append(sp);
             spList.append(sp);

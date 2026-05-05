@@ -785,15 +785,17 @@ void DanmuManager::updateSourceScriptInfo(const QString &pid, const DanmuSource 
     const QString desc = sourceInfo->desc;
     const QString url = sourceInfo->url;
     const QString data = sourceInfo->scriptData;
+    const QString scriptSrcId = sourceInfo->scriptSrcId;
     task.RunOnce([=](){
         QSqlQuery query(DBManager::instance()->getDB(DBManager::Comment));
-        query.prepare("update source set Title=?,Desc=?,ScriptData=?,URL=? where PoolID=? and ID=?");
+        query.prepare("update source set Title=?,Desc=?,ScriptData=?,URL=?,ScriptSrcId=? where PoolID=? and ID=?");
         query.bindValue(0, title);
         query.bindValue(1, desc);
         query.bindValue(2, data);
         query.bindValue(3, url);
-        query.bindValue(4, pid);
-        query.bindValue(5, id);
+        query.bindValue(4, scriptSrcId);
+        query.bindValue(5, pid);
+        query.bindValue(6, id);
         query.exec();
     });
 }

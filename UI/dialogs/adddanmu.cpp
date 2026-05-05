@@ -433,7 +433,7 @@ QWidget *AddDanmu::setupSelectedPage()
                 DanmuItemWidget *itemWidget = new DanmuItemWidget(danmuInfoList, danmuInfoList.size() - 1, danmuPools);
                 QListWidgetItem *listItem = new QListWidgetItem(selectedDanmuView);
                 selectedDanmuView->setItemWidget(listItem, itemWidget);
-                //listItem->setSizeHint(itemWidget->sizeHint());
+                listItem->setSizeHint(itemWidget->sizeHint());
                 QObject::connect(itemWidget, &DanmuItemWidget::setPoolIndexFrom, this, [=](int poolIndex){
                     int row = selectedDanmuView->row(listItem);
                     setPoolIdInSequence(row, poolIndex);

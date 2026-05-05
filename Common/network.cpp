@@ -449,10 +449,13 @@ void Network::applyProxySetting()
     switch (type)
     {
     case 0:
+        QNetworkProxyFactory::setUseSystemConfiguration(false);
         proxy.setType(QNetworkProxy::NoProxy);
+        QNetworkProxy::setApplicationProxy(proxy);
         break;
     case 1:
-        proxy.setType(QNetworkProxy::DefaultProxy);
+        QNetworkProxy::setApplicationProxy(QNetworkProxy::DefaultProxy);
+        QNetworkProxyFactory::setUseSystemConfiguration(true);
         break;
     case 2:
         proxy.setType(QNetworkProxy::HttpProxy);
@@ -461,11 +464,11 @@ void Network::applyProxySetting()
         proxy.setType(QNetworkProxy::Socks5Proxy);
         break;
     default:
-        proxy.setType(QNetworkProxy::DefaultProxy);
         break;
     }
     if (type >= 2)
     {
+        QNetworkProxyFactory::setUseSystemConfiguration(false);
         proxy.setHostName(GlobalObjects::appSetting->value("Network/ProxyHost").toString());
         proxy.setPort(GlobalObjects::appSetting->value("Network/ProxyPort", 0).toUInt());
         const QString user = GlobalObjects::appSetting->value("Network/ProxyUser").toString();
@@ -475,6 +478,6 @@ void Network::applyProxySetting()
             proxy.setUser(user);
             proxy.setPassword(password);
         }
+        QNetworkProxy::setApplicationProxy(proxy);
     }
-    QNetworkProxy::setApplicationProxy(proxy);
 }
