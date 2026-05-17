@@ -1,6 +1,7 @@
 #ifndef NODEINFO_H
 #define NODEINFO_H
 #include <QtCore>
+#include <QColor>
 #include "../common.h"
 #include "MediaLibrary/animeinfo.h"
 struct DanmuPoolNode
@@ -38,28 +39,32 @@ struct DanmuPoolEpNode : public DanmuPoolNode
     EpType epType;
     double epIndex;
 };
+
+struct DanmuPoolSourceNodeTag
+{
+    QString text;
+    QColor bgColor;
+    QColor textColor;
+    QIcon icon;
+    QString tooltip;
+    QString link;
+};
+
 struct DanmuPoolSourceNode : public DanmuPoolNode
 {
     DanmuPoolSourceNode(DanmuPoolNode *pNode = nullptr):DanmuPoolNode(DanmuPoolNode::SourecNode,pNode){}
-    DanmuPoolSourceNode(const DanmuSource &src, DanmuPoolNode *pNode = nullptr):DanmuPoolNode(DanmuPoolNode::SourecNode,pNode)
-    {
-        title=src.title;
-        idInfo=src.scriptId;
-        if (src.isKikoSource()) idInfo = "Kiko";
-        srcId=src.id;
-        delay=src.delay;
-        scriptData=src.scriptData;
-        danmuCount = src.count;
-        hasTimeline = !src.timelineInfo.isEmpty();
-        hasClip = src.hasClip();
-        valid = src.sourceValid;
+    DanmuPoolSourceNode(const DanmuSource &src, DanmuPoolNode *pNode = nullptr);
+    bool isSameSource(const DanmuSource &src) const;
+    bool isKikoSource() const;
 
-    }
-    bool isSameSource(const DanmuSource &src) const { return idInfo==src.scriptId && scriptData==src.scriptData; }
     int srcId, delay;
     bool hasTimeline{false};
     bool hasClip{false};
     bool valid{true};
+    bool isKikoSrc{false};
     QString scriptData;
+    QString scriptSrcId;
+    QString url;
+    QVector<DanmuPoolSourceNodeTag> tags;
 };
 #endif // NODEINFO_H

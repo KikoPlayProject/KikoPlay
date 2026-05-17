@@ -216,6 +216,7 @@ SOURCES += \
     UI/widgets/colorpreview.cpp \
     UI/widgets/component/flowlayout.cpp \
     UI/widgets/component/ktreeviewitemdelegate.cpp \
+    UI/widgets/component/poolitemdelegate.cpp \
     UI/widgets/danmurangeselector.cpp \
     UI/widgets/danmusourcetip.cpp \
     UI/widgets/elidedlabel.cpp \
@@ -533,6 +534,7 @@ HEADERS += \
     UI/widgets/colorpreview.h \
     UI/widgets/component/flowlayout.h \
     UI/widgets/component/ktreeviewitemdelegate.h \
+    UI/widgets/component/poolitemdelegate.h \
     UI/widgets/danmurangeselector.h \
     UI/widgets/danmusourcetip.h \
     UI/widgets/elidedlabel.h \

@@ -20,49 +20,45 @@ DanmuView::DanmuView(const QVector<DanmuComment *> *danmuList, QWidget *parent, 
 {
     initView();
     DanmuViewModel<DanmuComment *> *model=new DanmuViewModel<DanmuComment *>(danmuList,this);
-    DanmuViewProxyModel *proxyModel = new DanmuViewProxyModel(this);
+    proxyModel = new DanmuViewProxyModel(this);
     proxyModel->setSourceId(sourceId);
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     proxyModel->setSourceModel(model);
     danmuView->setModel(proxyModel);
 
-    int validCount = 0;
-    for (auto comment : *danmuList)
+    int originCount = danmuList->size();
+    if (sourceId != -1)
     {
-        if (!comment->clipped) validCount++;
+        originCount = 0;
+        for (auto &comment : *danmuList)
+        {
+            if (comment->source == sourceId) originCount++;
+        }
     }
-
-    tipLabel->setText(tr("Danmu Count: %1, Display Count: %2").arg(proxyModel->rowCount()).arg(validCount));
-    QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[proxyModel,validCount,this](int type, const QString &keyword){
-        proxyModel->setFilterKeyColumn(type);
-        proxyModel->setFilterFixedString(keyword);
-        tipLabel->setText(tr("Danmu Count: %1, Display Count: %2").arg(proxyModel->rowCount()).arg(validCount));
-    });
+    initStats(originCount);
 }
 
 DanmuView::DanmuView(const QVector<QSharedPointer<DanmuComment> > *danmuList, QWidget *parent, int sourceId):CFramelessDialog (tr("View Danmu"),parent)
 {
     initView();
     DanmuViewModel<QSharedPointer<DanmuComment> > *model=new DanmuViewModel<QSharedPointer<DanmuComment> >(danmuList,this);
-    DanmuViewProxyModel *proxyModel = new DanmuViewProxyModel(this);
+    proxyModel = new DanmuViewProxyModel(this);
     proxyModel->setSourceId(sourceId);
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     proxyModel->setFilterKeyColumn(4);
     proxyModel->setSourceModel(model);
     danmuView->setModel(proxyModel);
 
-    int validCount = 0;
-    for (auto comment : *danmuList)
+    int originCount = danmuList->size();
+    if (sourceId != -1)
     {
-        if (!comment->clipped) validCount++;
+        originCount = 0;
+        for (auto &comment : *danmuList)
+        {
+            if (comment->source == sourceId) originCount++;
+        }
     }
-
-    tipLabel->setText(tr("Danmu Count: %1, Display Count: %2").arg(proxyModel->rowCount()).arg(validCount));
-    QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[proxyModel,validCount,this](int type, const QString &keyword){
-        proxyModel->setFilterKeyColumn(type);
-        proxyModel->setFilterFixedString(keyword);
-        tipLabel->setText(tr("Danmu Count: %1, Display Count: %2").arg(proxyModel->rowCount()).arg(validCount));
-    });
+    initStats(originCount);
 }
 
 void DanmuView::initView()
@@ -102,6 +98,30 @@ void DanmuView::initView()
     viewGLayout->setRowStretch(1,1);
     viewGLayout->setColumnStretch(1,1);
     setSizeSettingKey("DialogSize/DanmuView",QSize(600, 400));
+}
+
+void DanmuView::initStats(int originCount)
+{
+    auto updateStats = [=](){
+        const int rowCount = proxyModel->rowCount();
+        QSet<QString> senders;
+        int typeCounter[] = {0, 0, 0};
+        for (int i = 0; i < rowCount; ++i)
+        {
+            QModelIndex senderIndex = proxyModel->index(i, DanmuViewModel<DanmuComment *>::Columns::SENDER);
+            senders << proxyModel->data(senderIndex).toString();
+            int type = proxyModel->data(senderIndex, DanmuViewModel<DanmuComment *>::Roles::TypeRole).toInt();
+            typeCounter[type]++;
+        }
+        tipLabel->setText(tr("Danmu Count: %1/%2, Sender: %3, Roll: %4, Top: %5, Bottom: %6").arg(proxyModel->rowCount()).arg(originCount).arg(senders.size()).arg(typeCounter[0]).arg(typeCounter[1]).arg(typeCounter[2]));
+    };
+    updateStats();
+
+    QObject::connect(filterEdit,&DanmuFilterBox::filterChanged,[=](int type, const QString &keyword){
+        proxyModel->setFilterKeyColumn(type);
+        proxyModel->setFilterFixedString(keyword);
+        updateStats();
+    });
 }
 
 DanmuFilterBox::DanmuFilterBox(QWidget *parent): KLineEdit(parent)

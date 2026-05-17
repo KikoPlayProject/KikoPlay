@@ -486,7 +486,7 @@ void DanmuPool::mediaTimeElapsed(int newTime)
         if(curTime<newTime)
         {
             auto &dm=finalPool.at(currentPosition);
-            if (dm->blockBy == -1 && curPool->sources()[dm->source].show)
+            if (dm->blockBy == -1 && curPool->sourceVisible(dm->source))
 			{
                 prepareList->append({ dm,nullptr,true });
                 if(prepareList->size()>=bundleSize)

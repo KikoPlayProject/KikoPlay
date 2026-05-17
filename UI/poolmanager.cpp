@@ -23,7 +23,7 @@
 #include "UI/ela/ElaLineEdit.h"
 #include "UI/ela/ElaMenu.h"
 #include "UI/ela/ElaSpinBox.h"
-#include "UI/widgets/component/ktreeviewitemdelegate.h"
+#include "UI/widgets/component/poolitemdelegate.h"
 #include "UI/widgets/kpushbutton.h"
 #include "dialogs/timelineedit.h"
 #include "dialogs/adddanmu.h"
@@ -40,7 +40,8 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     comparer.setNumericMode(true);
     setFont(QFont(GlobalObjects::normalFont, 10));
     QTreeView *poolView=new QTreeView(this);
-    poolView->setItemDelegate(new KTreeviewItemDelegate(poolView));
+    PoolItemDelegate *delegate = new PoolItemDelegate(poolView);
+    poolView->setItemDelegate(delegate);
     poolView->setSelectionMode(QAbstractItemView::SingleSelection);
     poolView->setFont(QFont(GlobalObjects::normalFont, 11));
     poolView->setAnimated(true);
@@ -68,44 +69,51 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     QAction *act_editTimeLine=new QAction(tr("Edit TimeLine"),this);
     QObject::connect(act_editTimeLine,&QAction::triggered,this,[this,managerModel,poolView,proxyModel](){
         QModelIndexList indexList = poolView->selectionModel()->selectedRows();
-        if(indexList.size()==0)return;
-        DanmuPoolSourceNode *srcNode=managerModel->getSourceNode(proxyModel->mapToSource(indexList.first()));
+        if (indexList.size()==0) return;
+        QModelIndex index = proxyModel->mapToSource(indexList.first());
+        DanmuPoolSourceNode *srcNode=managerModel->getSourceNode(index);
         if (!srcNode) return;
         QVector<SimpleDanmuInfo> simpleDanmuList;
         Pool *pool=GlobalObjects::danmuManager->getPool(srcNode->parent->idInfo);
-        if(pool)
+        if (pool && pool->sources().contains(srcNode->srcId))
         {
             pool->exportSimpleInfo(srcNode->srcId,simpleDanmuList);
-            DanmuSource srcInfo(pool->sources()[srcNode->srcId]);
+            const DanmuSource &srcInfo{pool->source(srcNode->srcId)};
             TimelineEdit timeLineEdit(&srcInfo,simpleDanmuList,this);
-            if(QDialog::Accepted==timeLineEdit.exec())
+            if (QDialog::Accepted==timeLineEdit.exec())
             {
                 pool->setTimeline(srcNode->srcId,timeLineEdit.timelineInfo);
-                srcNode->hasTimeline = !pool->sources()[srcNode->srcId].timelineInfo.isEmpty();
+                srcNode->hasTimeline = !srcInfo.timelineInfo.isEmpty();
+                QModelIndex delayIndex = index.siblingAtColumn((int)DanmuManagerModel::Columns::DELAY);
+                emit managerModel->dataChanged(delayIndex, delayIndex);
             }
         }
-
     });
+    QObject::connect(delegate, &PoolItemDelegate::delayTimelineClicked, act_editTimeLine, &QAction::trigger);
 
     QAction *act_editClip = new QAction(tr("Edit Clip"), this);
     QObject::connect(act_editClip, &QAction::triggered, this, [=](){
         QModelIndexList indexList = poolView->selectionModel()->selectedRows();
         if (indexList.empty()) return;
-        DanmuPoolSourceNode *srcNode=managerModel->getSourceNode(proxyModel->mapToSource(indexList.first()));
+        QModelIndex index = proxyModel->mapToSource(indexList.first());
+        DanmuPoolSourceNode *srcNode=managerModel->getSourceNode(index);
         if (!srcNode) return;
 
         Pool *pool = GlobalObjects::danmuManager->getPool(srcNode->parent->idInfo);
-        if (!pool) return;
+        if (!pool || !pool->sources().contains(srcNode->srcId)) return;
         QVector<SimpleDanmuInfo> list;
         pool->exportSimpleInfo(srcNode->srcId, list, false);
-        DanmuSource srcInfo(pool->sources()[srcNode->srcId]);
+        const DanmuSource &srcInfo = pool->source(srcNode->srcId);
         ClipRangeEdit clipEdit(&srcInfo, &list, this);
         if (QDialog::Accepted == clipEdit.exec())
         {
             pool->setClip(srcNode->srcId, clipEdit.clipStart, clipEdit.clipDuration);
             srcNode->hasClip = srcInfo.hasClip();
+            QModelIndex delayIndex = index.siblingAtColumn((int)DanmuManagerModel::Columns::DELAY);
+            emit managerModel->dataChanged(delayIndex, delayIndex);
         }
     });
+    QObject::connect(delegate, &PoolItemDelegate::delayClipClicked, act_editClip, &QAction::trigger);
 
     QAction *act_addWebSource=new QAction(tr("Add Web Source"),this);
     QObject::connect(act_addWebSource,&QAction::triggered,this,[this,stateLabel,managerModel,poolView,proxyModel](){
@@ -415,26 +423,31 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     QWidget *updatePage=new QWidget(this);
     QHBoxLayout *updateHLayout=new QHBoxLayout(updatePage);
     updateHLayout->setContentsMargins(0,0,0,0);
-    QLabel *updateTipLabel=new QLabel(tr("Check the items to update danmu"),updatePage);
+    QLabel *updateTipLabel=new QLabel(tr("Check the items to update danmu"), updatePage);
+    QCheckBox *skipInvalidSrc = new ElaCheckBox(tr("Skip Invalid Source"), updatePage);
     KPushButton *updateConfirm=new KPushButton(tr("Update"),updatePage);
     updateHLayout->addWidget(updateTipLabel);
     updateHLayout->addStretch(1);
+    updateHLayout->addWidget(skipInvalidSrc);
     updateHLayout->addWidget(updateConfirm);
-    QObject::connect(updateConfirm,&KPushButton::clicked,[this,stateLabel,poolView,managerModel,updateConfirm,cancel](){
+    QObject::connect(updateConfirm,&KPushButton::clicked,[=](){
         if(!managerModel->hasSelected())return;
 
         TaskContext ctx(this);
         takeCancel = true;
         QObject::connect(cancel, &KPushButton::clicked, &ctx, &TaskContext::cancel);
+        if (skipInvalidSrc->isChecked()) ctx.env["skip_invalid_src"] = true;
 
         this->showBusyState(true);
         updateConfirm->setText(tr("Updating..."));
         poolView->setEnabled(false);
+        skipInvalidSrc->setEnabled(false);
         updateConfirm->setEnabled(false);
         managerModel->updatePool(&ctx);
         this->showBusyState(false);
         updateConfirm->setText(tr("Update"));
         poolView->setEnabled(true);
+        skipInvalidSrc->setEnabled(true);
         updateConfirm->setEnabled(true);
         takeCancel = false;
         stateLabel->setText(tr("Pool: %1 Danmu: %2").arg(managerModel->totalPoolCount()).arg(managerModel->totalDanmuCount()));
@@ -580,7 +593,7 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
     QHeaderView *poolHeader = poolView->header();
     poolHeader->setFont(this->font());
     poolHeader->resizeSection(0, 260); //Pool
-    poolHeader->resizeSection(1, 150); //Source
+    poolHeader->resizeSection(1, 240); //Source
     poolHeader->resizeSection(2, 50); //Delay
     poolHeader->resizeSection(3, 120); //Count
 

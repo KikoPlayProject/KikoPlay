@@ -7,6 +7,7 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QTimeEdit>
+#include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 
 
@@ -24,12 +25,14 @@ ClipRangeEdit::ClipRangeEdit(const DanmuSource *src, QVector<SimpleDanmuInfo> *d
     endSpin->setDisplayFormat("mm:ss");
     endSpin->setTimeRange(QTime(0, 0), QTime(0, 0).addMSecs(durationMs));
     endSpin->setTime(QTime(0, 0).addMSecs(durationMs));
+    KPushButton *clearBtn = new KPushButton(tr("Reset"), this);
     QHBoxLayout *spinHLayout = new QHBoxLayout(spinContainer);
     spinHLayout->setContentsMargins(0, 0, 0, 0);
     spinHLayout->addWidget(new QLabel(tr("Start Time(s)"), spinContainer));
     spinHLayout->addWidget(startSpin);
     spinHLayout->addWidget(new QLabel(tr("End Time(s)"), spinContainer));
     spinHLayout->addWidget(endSpin);
+    spinHLayout->addWidget(clearBtn);
     spinHLayout->addStretch();
 
     DanmuRangeSelector *rangeSelector = new DanmuRangeSelector(this);
@@ -87,6 +90,10 @@ ClipRangeEdit::ClipRangeEdit(const DanmuSource *src, QVector<SimpleDanmuInfo> *d
             return;
         }
         rangeSelector->setEndTime(time.msecsSinceStartOfDay());
+    });
+    QObject::connect(clearBtn, &KPushButton::clicked, this, [=](){
+        rangeSelector->setStartTime(0);
+        rangeSelector->setEndTime(durationMs);
     });
 
     if (src->hasClip())

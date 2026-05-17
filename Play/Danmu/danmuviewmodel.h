@@ -1,10 +1,10 @@
 #ifndef DANMUVIEWMODEL_H
 #define DANMUVIEWMODEL_H
 
+#include <QSortFilterProxyModel>
 #include <QAbstractItemModel>
 #include "common.h"
-#include "UI/stylemanager.h"
-static const int SourceRole = Qt::UserRole+1;
+
 template<typename T>
 class DanmuViewModel : public QAbstractItemModel
 {
@@ -13,6 +13,16 @@ public:
     {
         this->danmuList=danmuList;
     }
+    enum Columns
+    {
+        TIME, TYPE, SENDER, DATETIME, TEXT,
+    };
+    enum Roles
+    {
+        SourceRole = Qt::UserRole+1,
+        TypeRole, ClippedRole
+    };
+
 private:
     const QVector<T> *danmuList;
 public:
@@ -76,6 +86,10 @@ public:
         }
         case SourceRole:
             return comment->source;
+        case TypeRole:
+            return comment->type;
+        case ClippedRole:
+            return comment->clipped;
         default:
             return QVariant();
         }
@@ -97,8 +111,9 @@ public:
     virtual bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
     {
         QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
-        int sid = index.data(SourceRole).toInt();
+        int sid = index.data(DanmuViewModel<DanmuComment *>::Roles::SourceRole).toInt();
         if(sourceId !=-1 && sid != sourceId) return false;
+        if (index.data(DanmuViewModel<DanmuComment *>::Roles::ClippedRole).toBool()) return false;
         return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
     }
 private:

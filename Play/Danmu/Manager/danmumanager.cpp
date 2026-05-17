@@ -650,13 +650,15 @@ void DanmuManager::updatePool(QList<DanmuPoolNode *> &updateList, TaskContext *c
 {
     ThreadTask task(GlobalObjects::workThread);
     bool cancelFlag = false;
+    bool skipInvalidSrc = false;
     if (ctx)
     {
         QObject::connect(ctx, &TaskContext::cancelRequested, this, [&](){
             cancelFlag = true;
         });
+        skipInvalidSrc = ctx->env.value("skip_invalid_src", false).toBool();
     }
-    task.Run([this, &updateList, &cancelFlag](){
+    task.Run([this, &updateList, &cancelFlag, skipInvalidSrc](){
         QHash<QString, qint64> srcTimeCost;
         QElapsedTimer timer;
         timer.start();
@@ -670,13 +672,17 @@ void DanmuManager::updatePool(QList<DanmuPoolNode *> &updateList, TaskContext *c
                 for(DanmuPoolNode *sourceNode:*epNode->children)
                 {
                     if (cancelFlag) goto cancel;
-                    if(sourceNode->checkStatus==Qt::Unchecked)continue;
+                    if (sourceNode->checkStatus==Qt::Unchecked) continue;
                     emit workerStateMessage(tr("Updating: %1 %2 %3").arg(animeNode->title, epNode->title, sourceNode->idInfo));
                     DanmuPoolSourceNode *srcNode(static_cast<DanmuPoolSourceNode *>(sourceNode));
-                    pool->update(srcNode->srcId);
-                    srcNode->danmuCount=pool->sources()[srcNode->srcId].count;
-                    srcNode->valid = pool->sources()[srcNode->srcId].sourceValid;
-                    srcTimeCost[srcNode->idInfo] += timer.restart();
+                    if (!srcNode->valid && skipInvalidSrc) continue;
+                    if (pool->sources().contains(srcNode->srcId))
+                    {
+                        pool->update(srcNode->srcId);
+                        srcNode->danmuCount = pool->source(srcNode->srcId).count;
+                        srcNode->valid = pool->source(srcNode->srcId).sourceValid;
+                        srcTimeCost[srcNode->idInfo] += timer.restart();
+                    }
                 }
             }
         }
@@ -877,8 +883,9 @@ void DanmuManager::loadAllPool()
     {
         Pool* pool = pools.value(query.value(s_pidNo).toString(), nullptr);
         Q_ASSERT(pool);
-        DanmuSource srcInfo;
-        srcInfo.id = query.value(s_idNo).toInt();
+        int srcId = query.value(s_idNo).toInt();
+        DanmuSource &srcInfo = pool->sourcesTable[srcId];
+        srcInfo.id = srcId;
         srcInfo.title = query.value(s_titleNo).toString();
         srcInfo.desc = query.value(s_descNo).toString();
         srcInfo.scriptId = query.value(s_scriptIdNo).toString();
@@ -893,7 +900,6 @@ void DanmuManager::loadAllPool()
         srcInfo.url = query.value(s_urlNo).toString();
         srcInfo.setClip(query.value(s_clipNo).toString());
         srcInfo.setTags(query.value(s_tagsNo).toString());
-        pool->sourcesTable.insert(srcInfo.id, srcInfo);
     }
 }
 

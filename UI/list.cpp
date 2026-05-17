@@ -10,6 +10,7 @@
 #include <QMessageBox>
 #include <QStyle>
 
+#include "Common/threadtask.h"
 #include "Extension/Script/scriptmanager.h"
 #include "Play/Subtitle/subitemdelegate.h"
 #include "UI/ela/ElaCheckBox.h"
@@ -1765,12 +1766,6 @@ int ListWindow::updateCurrentPool()
         count+=GlobalObjects::danmuPool->getPool()->update(iter.key());
     }
     showMessage(tr("Add %1 Danmu").arg(count), NotifyMessageFlag::NM_HIDE);
-#ifdef KSERVICE
-    if (KService::instance()->enableKServiceUpdatSrc() && GlobalObjects::danmuPool->hasPool())
-    {
-        KService::instance()->getDanmuSource(GlobalObjects::danmuPool->getPool()->id(), PlayContext::context()->path);
-    }
-#endif
     act_autoMatch->setEnabled(true);
     act_addOnlineDanmu->setEnabled(true);
     act_addLocalDanmu->setEnabled(true);

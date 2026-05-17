@@ -31,6 +31,11 @@ public:
         TITLE, SOURCE, DELAY, COUNT
     };
 
+    enum DataRole
+    {
+        PoolNodeRole = Qt::UserRole + 1,
+    };
+
 private:
     QList<DanmuPoolNode *> animeNodeList;
     bool nodeCheckAble{false};

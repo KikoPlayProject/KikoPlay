@@ -63,6 +63,7 @@ private:
     void removeItem(DownloadTask *task, bool deleteFile);
     bool containTask(const QString &taskId);
     QString processKikoPlayCode(const QString &code);
+    QString getTaskId(const QString &url);
 signals:
     void magnetDone(const QString &path, const QString &magnet, bool directlyDownload);
     void removeTask(const QString &gid);

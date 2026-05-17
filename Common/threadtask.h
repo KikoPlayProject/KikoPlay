@@ -13,6 +13,9 @@ public:
 signals:
     void cancelRequested();
 
+public:
+    QVariantMap env;
+
 private:
     std::atomic_bool _cancelRequested{false};
 };

@@ -502,70 +502,145 @@ QJsonObject Pool::exportFullJson()
     return poolObj;
 }
 
+
 QString Pool::getPoolCode(const QStringList &addition) const
 {
-    if(sourcesTable.isEmpty() && addition.isEmpty()) return QString();
-    QJsonArray poolArray;
-    //addition: magnet,animeName,epName,file16MBHash
-    for(const QString &item:addition)
-        poolArray.append(QJsonValue(item));
-    for(const auto &src:sourcesTable)
-    {
-        QFileInfo fi(src.scriptData);
-        if(fi.exists()) continue;
-        QJsonArray pA{src.title, src.scriptId, src.scriptData, src.delay, src.timelineStr()};
-        if (src.hasClip()) pA.append(src.clipStr());
-        poolArray.append(pA);
+    if (sourcesTable.isEmpty() && addition.isEmpty()) {
+        return QString();
     }
-    if(poolArray.isEmpty()) return QString();
+
+    QJsonObject rootObj;
+    rootObj["v"] = GlobalObjects::kikoVersionNum;
+
+    if (!addition.isEmpty() && addition.size() == 6)
+    {
+        //addition: magnet,animeName,epName,epType,epIndex,file16MBHash
+        QJsonObject resObj;
+        resObj["l"] = addition[0];
+        resObj["a"] = addition[1];
+        resObj["e"] = addition[2];
+        resObj["t"] = addition[3];
+        resObj["i"] = addition[4];
+        resObj["h"] = addition[5];
+        rootObj["r"] = resObj;
+    }
+
+    QJsonArray sourcesArray;
+    for (const auto &src : sourcesTable)
+    {
+        if (QFileInfo::exists(src.scriptData) || src.isKikoSource()) {
+            continue;
+        }
+
+        QJsonObject srcObj;
+        srcObj["t"] = src.title;
+        srcObj["i"] = src.scriptId;
+        srcObj["d"] = src.scriptData;
+
+        if (!src.scriptSrcId.isEmpty()) srcObj["si"] = src.scriptSrcId;
+        if (src.delay != 0) srcObj["de"] = src.delay;
+        if (src.hasClip()) srcObj["cl"] = src.clipStr();
+        if (!src.timelineInfo.isEmpty()) srcObj["tl"] = src.timelineStr();
+        sourcesArray.append(srcObj);
+    }
+
+    if (sourcesArray.isEmpty() && addition.isEmpty())
+    {
+        return QString();
+    }
+
+    rootObj["s"] = sourcesArray;
+
     QByteArray compressedBytes;
-    Network::gzipCompress(QJsonDocument(poolArray).toJson(QJsonDocument::Compact),compressedBytes);
+    QJsonDocument doc(rootObj);
+    Network::gzipCompress(doc.toJson(QJsonDocument::Compact), compressedBytes);
     return compressedBytes.toBase64();
 }
 
 bool Pool::addPoolCode(const QString &code, bool hasAddition)
 {
-    QJsonArray poolArray(getPoolCodeInfo(code));
-    if(poolArray.isEmpty()) return false;
-    if(hasAddition && poolArray.count()<4) return false;
-    int i=hasAddition?4:0;
-    QList<DanmuComment *> emptyList;
-    for(;i<poolArray.count();++i)
-    {
-        addSourceJson(poolArray[i].toArray());
-    }
-    if(used)
-    {
-        emit poolChanged(true);
-    }
-    return true;
-}
-
-bool Pool::addPoolCode(const QJsonArray &infoArray)
-{
-    if(infoArray.isEmpty()) return false;
-    for(int i=0;i<infoArray.count();++i)
-    {
-        addSourceJson(infoArray[i].toArray());
-    }
-    if(used)
-    {
-        emit poolChanged(true);
-    }
-    return true;
-}
-
-QJsonArray Pool::getPoolCodeInfo(const QString &code)
-{
     QByteArray base64Src(QByteArray::fromBase64(code.toUtf8()));
     QByteArray jsonBytes;
-    if(Network::gzipDecompress(base64Src,jsonBytes)!=0) return QJsonArray();
+    if (Network::gzipDecompress(base64Src,jsonBytes)!=0) return false;
     try
     {
-        return Network::toJson(jsonBytes).array();
+        QJsonDocument doc = Network::toJson(jsonBytes);
+        if (doc.isArray())
+        {
+            QJsonArray poolArray = doc.array();
+            if (hasAddition)
+            {
+                if (poolArray.size() < 6) return false;
+                QJsonArray result;
+                std::copy(poolArray.begin() + 6, poolArray.end(), std::back_inserter(result));
+                poolArray = result;
+            }
+            return addPoolCodeArray(poolArray);
+        }
+        else if (doc.isObject())
+        {
+            return addPoolCodeObject(doc.object());
+        }
     } catch (Network::NetworkError &) {
-        return QJsonArray();
+        return false;
     }
+    return false;
+}
+
+bool Pool::addPoolCodeArray(const QJsonArray &infoArray)
+{
+    if (infoArray.isEmpty()) return false;
+    bool hasNewSrc = false;
+    for (int i = 0; i < infoArray.count(); ++i)
+    {
+        auto array = infoArray[i].toArray();
+        if (array.count() < 5) continue;
+        DanmuSource srcInfo;
+        srcInfo.title = array[0].toString();
+        srcInfo.scriptId = array[1].toString();
+        srcInfo.scriptData = array[2].toString();
+        srcInfo.delay = array[3].toInt();
+        srcInfo.setTimeline(array[4].toString());
+        if (array.size() > 5) srcInfo.setClip(array[5].toString());
+        QVector<DanmuComment *> emptyList;
+        if (addSource(srcInfo,emptyList) >= 0) hasNewSrc = true;
+    }
+    if (hasNewSrc)
+    {
+        if (used) emit poolChanged(true);
+    }
+    return true;
+}
+
+bool Pool::addPoolCodeObject(const QJsonObject &infoObj)
+{
+    if (!infoObj.contains("s") || !infoObj["s"].isArray()) return false;
+    QJsonArray sourcesArray = infoObj["s"].toArray();
+
+    bool hasNewSrc = false;
+    for (const QJsonValue &val : sourcesArray)
+    {
+        if (!val.isObject()) continue;
+        QJsonObject srcObj = val.toObject();
+
+        DanmuSource newSrc;
+        newSrc.title = srcObj.value("t").toString();
+        newSrc.scriptId = srcObj.value("i").toString();
+        newSrc.scriptData = srcObj.value("d").toString();
+
+        if (srcObj.contains("si")) newSrc.scriptSrcId = srcObj["si"].toString();
+        if (srcObj.contains("de")) newSrc.delay = srcObj["de"].toInt();
+        if (srcObj.contains("cl")) newSrc.setClip(srcObj["cl"].toString());
+        if (srcObj.contains("tl")) newSrc.setTimeline(srcObj["tl"].toString());
+
+        QVector<DanmuComment *> emptyList;
+        if (addSource(newSrc,emptyList) >= 0) hasNewSrc = true;
+    }
+    if (hasNewSrc)
+    {
+        if (used) emit poolChanged(true);
+    }
+    return true;
 }
 
 
@@ -582,21 +657,6 @@ QSet<QString> Pool::getDanmuHashSet(int sourceId)
         }
     }
     return hashSet;
-}
-
-void Pool::addSourceJson(const QJsonArray &array)
-{
-    if (array.count() < 5) return;
-    DanmuSource srcInfo;
-    srcInfo.title=array[0].toString();
-    srcInfo.scriptId = array[1].toString();
-    srcInfo.scriptData = array[2].toString();
-    srcInfo.delay=array[3].toInt();
-    srcInfo.count=0;
-    srcInfo.setTimeline(array[4].toString());
-    if (array.size() > 5) srcInfo.setClip(array[5].toString());
-    QVector<DanmuComment *> emptyList;
-    addSource(srcInfo,emptyList);
 }
 
 void Pool::setRealTime(DanmuComment *danmu)

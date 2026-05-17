@@ -48,12 +48,12 @@ void DownloadModel::addTask(DownloadTask *task)
 
 QString DownloadModel::addUriTask(const QString &uri, const QString &dir, bool directlyDownload)
 {
-    QString taskID(QCryptographicHash::hash(uri.toUtf8(),QCryptographicHash::Sha1).toHex());
-    if(containTask(taskID))
-        return QString(tr("The task already exists: \n%1").arg(uri));
-    QString nUri(uri);
-    if(nUri.startsWith("kikoplay:anime="))
-        nUri = processKikoPlayCode(uri.mid(15));
+    QString nUri{uri};
+    if (nUri.startsWith("kikoplay:anime=")) nUri = processKikoPlayCode(uri.mid(15));
+    if (nUri.isEmpty()) return QString(tr("Invalid URL"));
+    const QString taskID{getTaskId(nUri)};
+    if(containTask(taskID)) return QString(tr("The task already exists: \n%1").arg(nUri));
+
     QJsonObject options;
     options.insert("dir", dir);
     options.insert("bt-metadata-only","true");
@@ -152,20 +152,68 @@ QString DownloadModel::processKikoPlayCode(const QString &code)
     if(Network::gzipDecompress(base64Src,jsonBytes)!=0) return QString();
     try
     {
-        QJsonArray array(Network::toJson(jsonBytes).array());
-        QString uri(array.takeAt(0).toString());
-        QString animeTitle(array.takeAt(1).toString());
-        QString epTitle(array.takeAt(2).toString());
-        EpType epType((EpType)array.takeAt(3).toInt());
-        double epIndex(array.takeAt(4).toDouble());
-        QString file16MD5(array.takeAt(5).toString());
-        QString pid = GlobalObjects::danmuManager->createPool(animeTitle,epType, epIndex, epTitle,file16MD5);
-        Pool *pool=GlobalObjects::danmuManager->getPool(pid,false);
-        pool->addPoolCode(array);
-        return uri;
+        QJsonDocument doc = Network::toJson(jsonBytes);
+        if (doc.isArray())
+        {
+            QJsonArray array = doc.array();
+            if (array.size() > 6)
+            {
+                const QString url = array.takeAt(0).toString();
+                if (url.isEmpty()) return url;
+                const QString anime = array.takeAt(0).toString();
+                const QString epName = array.takeAt(0).toString();
+                if (anime.isEmpty() || epName.isEmpty()) return url;
+
+                EpType epType = (EpType)array.takeAt(0).toInt();
+                double epIndex = array.takeAt(0).toDouble();
+                const QString file16MD5 = array.takeAt(0).toString();
+                if (file16MD5.isEmpty()) return url;
+
+                const QString pid = GlobalObjects::danmuManager->createPool(anime, epType, epIndex, epName, file16MD5);
+                Pool *pool = GlobalObjects::danmuManager->getPool(pid, false);
+                pool->addPoolCodeArray(array);
+                return url;
+            }
+        }
+        else if (doc.isObject())
+        {
+            QJsonObject obj = doc.object();
+            if (obj.contains("r") && obj["r"].isObject())
+            {
+                QJsonObject resObj = obj["r"].toObject();
+                const QString url = resObj.value("l").toString();
+                if (url.isEmpty()) return url;
+                const QString anime = resObj.value("a").toString();
+                const QString epName = resObj.value("e").toString();
+                if (anime.isEmpty() || epName.isEmpty()) return url;
+
+                EpType epType = (EpType)resObj.value("t").toInt();
+                double epIndex = resObj.value("i").toDouble();
+                const QString file16MD5 = resObj.value("h").toString();
+                if (file16MD5.isEmpty()) return url;
+
+                const QString pid = GlobalObjects::danmuManager->createPool(anime, epType, epIndex, epName, file16MD5);
+                Pool *pool = GlobalObjects::danmuManager->getPool(pid, false);
+                pool->addPoolCodeObject(obj);
+                return url;
+            }
+        }
+        return "";
     } catch (Network::NetworkError &) {
         return QString();
     }
+}
+
+QString DownloadModel::getTaskId(const QString &url)
+{
+    static const QRegularExpression re("magnet:\\?xt=urn:btih:([0-9a-fA-F]{40})(?=&|$)");
+    auto match = re.match(url);
+    if (match.hasMatch())
+    {
+        auto captured = match.capturedTexts();
+        return captured[1].toLower();
+    }
+    return QCryptographicHash::hash(url.toUtf8(),QCryptographicHash::Sha1).toHex().toLower();
 }
 
 void DownloadModel::removeItem(QModelIndexList &removeIndexes, bool deleteFile)

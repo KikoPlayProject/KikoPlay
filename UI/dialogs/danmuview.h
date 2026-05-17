@@ -6,6 +6,7 @@
 class QTreeView;
 class QActionGroup;
 class QLabel;
+class DanmuViewProxyModel;
 class DanmuFilterBox : public KLineEdit
 {
     Q_OBJECT
@@ -36,9 +37,11 @@ public:
 
 private:
     QTreeView *danmuView;
+    DanmuViewProxyModel *proxyModel;
     DanmuFilterBox *filterEdit;
     QLabel *tipLabel;
     void initView();
+    void initStats(int originCount);
 };
 
 

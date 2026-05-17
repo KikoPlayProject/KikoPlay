@@ -43,6 +43,7 @@ build
 
 # AI
 CLAUDE.md
+.claude/
 
 *.AppImage
 *.deb

@@ -10,8 +10,11 @@
 #include <QAction>
 #include <QApplication>
 #include <QStackedLayout>
+#include "Common/threadtask.h"
 #include "Extension/Script/danmuscript.h"
 #include "Extension/Script/scriptmanager.h"
+#include "Play/Danmu/blocker.h"
+#include "Play/Danmu/danmuprovider.h"
 #include "Play/playcontext.h"
 #include "UI/widgets/ktagpanel.h"
 #include "widgets/danmusourcetip.h"
@@ -134,13 +137,39 @@ PoolEditor::PoolEditor(QWidget *parent) : CFramelessDialog(tr("Edit Pool"), pare
             showMessage(tr("Updating: %1").arg(iter.value().title), NotifyMessageFlag::NM_PROCESS | NotifyMessageFlag::NM_SHOWCANCEL | NotifyMessageFlag::NM_DARKNESS_BACK);
             count += GlobalObjects::danmuPool->getPool()->update(iter.key());
         }
-        if (count > 0) refreshItems();
 #ifdef KSERVICE
         if (KService::instance()->enableKServiceUpdatSrc() && GlobalObjects::danmuPool->hasPool())
         {
-            KService::instance()->getDanmuSource(GlobalObjects::danmuPool->getPool()->id(), PlayContext::context()->path);
+            QList<DanmuSource> srcs;
+            auto pool = GlobalObjects::danmuPool->getPool();
+            showMessage(tr("Fetching Sources From KService..."), NotifyMessageFlag::NM_PROCESS);
+            KService::instance()->getDanmuSourceSync(pool->id(), srcs, PlayContext::context()->path);
+            for (auto &src : srcs)
+            {
+                if (pool->hasSource(src)) continue;
+                DanmuSource *nSrc = nullptr;
+                QList<DanmuComment *> danmus;
+                TaskContext ctx(this);
+                bool cancelFlag = false;
+                QObject::connect(this, &CFramelessDialog::cancelClicked, &ctx, [&](){ctx.cancel(); cancelFlag = true;});
+                showMessage(tr("Fetching Danmu[%1]...").arg(src.title), NotifyMessageFlag::NM_PROCESS | NotifyMessageFlag::NM_SHOWCANCEL | NotifyMessageFlag::NM_DARKNESS_BACK);
+                if (GlobalObjects::danmuProvider->downloadDanmu(&src, danmus, &nSrc, &ctx))
+                {
+                    GlobalObjects::blocker->preFilter(danmus);
+                    src = nSrc? *nSrc : src;
+                    src.count = danmus.count();
+                    if (src.sourceValid)
+                    {
+                        pool->addSource(src, danmus, true);
+                        count += src.count;
+                    }
+                }
+                if (nSrc) delete nSrc;
+                if (cancelFlag) break;
+            }
         }
 #endif
+        if (count > 0) refreshItems();
         showMessage(tr("Add %1 Danmu").arg(count), NotifyMessageFlag::NM_HIDE);
     });
 

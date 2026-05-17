@@ -157,6 +157,28 @@ void KService::getDanmuSource(const QString &poolId, const QString &path)
     });
 }
 
+bool KService::getDanmuSourceSync(const QString &poolId, QList<DanmuSource> &sources, const QString &path)
+{
+    QEventLoop eventLoop;
+    bool ret = false;
+    auto cb = [&](QNetworkReply *reply){
+        QString pid;
+        if (parseGetSourceRsp(sources, pid, reply))
+        {
+            if (poolId == pid)
+            {
+                ret = true;
+            }
+        }
+        QMetaObject::invokeMethod(&eventLoop, "quit", Qt::QueuedConnection);
+    };
+    QMetaObject::invokeMethod(this, [&](){
+        this->kGetSource(poolId, path, cb);
+    });
+    eventLoop.exec();
+    return true;
+}
+
 void KService::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() == eventTimer.timerId())
@@ -484,6 +506,31 @@ void KService::resendStashedComments()
     }
 }
 
+bool KService::parseGetSourceRsp(QList<DanmuSource> &srcs, QString &poolId, QNetworkReply *reply)
+{
+    QByteArray pbData = reply->readAll();
+    kservice::GetSourceResponse rsp;
+    if (!rsp.ParseFromArray(pbData.constData(), pbData.size()))
+    {
+        Logger::logger()->log(Logger::APP, "[KService]get src rsp parse error");
+        return false;
+    }
+    poolId = QString::fromStdString(rsp.poolinfo().poolid());
+    for (int i = 0; i < rsp.danmusources_size(); ++i)
+    {
+        auto &dm_src = rsp.danmusources(i);
+        DanmuSource kSrc;
+        kSrc.scriptId = QString::fromStdString(dm_src.scriptid());
+        kSrc.scriptData = QString::fromStdString(dm_src.scriptdata());
+        kSrc.title = QString::fromStdString(dm_src.title());
+        kSrc.duration = dm_src.durationseconds();
+        kSrc.scriptSrcId = QString::fromStdString(dm_src.srcid());
+        srcs.emplaceBack(kSrc);
+    }
+    Logger::logger()->log(Logger::APP, QString("[KService]parse %1 srcs").arg(srcs.size()));
+    return true;
+}
+
 QString KService::isValidUserName(const QString &userName) const
 {
     static const QRegularExpression regex("^[\u4e00-\u9fa5a-zA-Z0-9_]+$");
@@ -541,7 +588,7 @@ void KService::setEnableKServiceMatch(bool on)
 
 bool KService::enableKServiceUpdatSrc() const
 {
-    return serviceData->value(SERVICE_KEY_ENABLE_UPDATE_SRC, false).toBool();
+    return serviceData->value(SERVICE_KEY_ENABLE_UPDATE_SRC, true).toBool();
 }
 
 void KService::setEnableKServiceUpdateSrc(bool on)
@@ -783,7 +830,7 @@ void KService::kGetDanmu(const QString &poolId, int duration)
     Logger::logger()->log(Logger::APP, QString("[KService]get_danmu: %1 %2").arg(pool->animeTitle(), ep.toString()));
 }
 
-void KService::kGetSource(const QString &poolId, const QString &path)
+void KService::kGetSource(const QString &poolId, const QString &path, PostCallBack cb)
 {
     Pool *pool = GlobalObjects::danmuManager->getPool(poolId, false);
     if (!pool)
@@ -815,7 +862,14 @@ void KService::kGetSource(const QString &poolId, const QString &path)
 
     std::string msgContent;
     req.SerializeToString(&msgContent);
-    post(pathGetSource, QByteArray(msgContent.c_str(), msgContent.size()), std::bind(&KService::handleGetSource, this, std::placeholders::_1));
+    if (cb)
+    {
+        post(pathGetSource, QByteArray(msgContent.c_str(), msgContent.size()), cb);
+    }
+    else
+    {
+        post(pathGetSource, QByteArray(msgContent.c_str(), msgContent.size()), std::bind(&KService::handleGetSource, this, std::placeholders::_1));
+    }
     Logger::logger()->log(Logger::APP, QString("[KService]get_src: %1 %2").arg(pool->animeTitle(), ep.toString()));
 }
 
@@ -1060,14 +1114,12 @@ void KService::handleGetDanmu(QNetworkReply *reply)
 
 void KService::handleGetSource(QNetworkReply *reply)
 {
-    QByteArray pbData = reply->readAll();
-    kservice::GetSourceResponse rsp;
-    if (!rsp.ParseFromArray(pbData.constData(), pbData.size()))
+    QString poolId;
+    QList<DanmuSource> srcs;
+    if (!parseGetSourceRsp(srcs, poolId, reply))
     {
-        Logger::logger()->log(Logger::APP, "[KService]get src rsp parse error");
         return;
     }
-    const QString poolId{QString::fromStdString(rsp.poolinfo().poolid())};
     Pool *pool = GlobalObjects::danmuManager->getPool(poolId, false);
     if (!pool)
     {
@@ -1075,15 +1127,8 @@ void KService::handleGetSource(QNetworkReply *reply)
         return;
     }
     QVector<int> nSrcIds;
-    for (int i = 0; i < rsp.danmusources_size(); ++i)
+    for (auto &kSrc : srcs)
     {
-        auto &dm_src = rsp.danmusources(i);
-        DanmuSource kSrc;
-        kSrc.scriptId = QString::fromStdString(dm_src.scriptid());
-        kSrc.scriptData = QString::fromStdString(dm_src.scriptdata());
-        kSrc.title = QString::fromStdString(dm_src.title());
-        kSrc.duration = dm_src.durationseconds();
-
         if (pool->hasSource(kSrc)) continue;
 
         QList<DanmuComment *> emptyComments;

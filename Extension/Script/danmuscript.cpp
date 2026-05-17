@@ -1,5 +1,8 @@
 #include "danmuscript.h"
 #include <QRegularExpression>
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#endif
 
 DanmuScript::DanmuScript() : ScriptBase()
 {
@@ -13,6 +16,10 @@ ScriptState DanmuScript::loadScript(const QString &scriptPath)
     if(!locker.tryLock()) return ScriptState(ScriptState::S_BUSY);
     QString errInfo = ScriptBase::loadScript(scriptPath);
     if(!errInfo.isEmpty()) return ScriptState(ScriptState::S_ERROR, errInfo);
+    if (id().toLower() == "local") return ScriptState(ScriptState::S_ERROR, "Invalid ScriptId");
+#ifdef KSERVICE
+    if (id().toLower() == QString(KService::kSrc).toLower()) return ScriptState(ScriptState::S_ERROR, "Invalid ScriptId");
+#endif
     canSearch = checkType("search", LUA_TFUNCTION);
     QVariant res = get(urlReTable);
     if(res.canConvert(QVariant::StringList))

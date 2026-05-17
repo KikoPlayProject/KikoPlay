@@ -1,4 +1,8 @@
 #include "nodeinfo.h"
+#include "Extension/Script/scriptmanager.h"
+#include "Extension/Script/danmuscript.h"
+#include "globalobjects.h"
+#include <QSvgRenderer>
 
 DanmuPoolNode::DanmuPoolNode(DanmuPoolNode::NodeType nodeType,DanmuPoolNode *pNode):type(nodeType),danmuCount(0),
     checkStatus(Qt::Unchecked),parent(pNode),children(nullptr)
@@ -71,3 +75,75 @@ int DanmuPoolNode::idHash(const QString &str)
     }
     return hash % 5;
 }
+
+DanmuPoolSourceNode::DanmuPoolSourceNode(const DanmuSource &src, DanmuPoolNode *pNode)
+    : DanmuPoolNode(DanmuPoolNode::SourecNode, pNode)
+{
+    title = src.title;
+    idInfo = src.scriptId;
+    if (src.isKikoSource())
+    {
+        isKikoSrc = true;
+        idInfo = "Kiko";
+    }
+    srcId = src.id;
+    delay = src.delay;
+    scriptData = src.scriptData;
+    scriptSrcId = src.scriptSrcId;
+    url = src.url;
+    danmuCount = src.count;
+    hasTimeline = !src.timelineInfo.isEmpty();
+    hasClip = src.hasClip();
+    valid = src.sourceValid;
+
+    if (src.tags.isEmpty()) return;
+
+
+    QColor tagBgColor{43, 106, 176};
+    if (src.isKikoSource())
+    {
+        tagBgColor = QColor(19, 165, 200);
+    }
+    else if (!src.scriptId.isEmpty())
+    {
+        auto script = GlobalObjects::scriptManager->getScript(src.scriptId).dynamicCast<DanmuScript>();
+        tagBgColor = script ? script->labelColor() : tagBgColor;
+    }
+    for (const DanmuSourceTag &tag : src.tags)
+    {
+        DanmuPoolSourceNodeTag srcTag;
+        srcTag.textColor = tag.textColor == -1 ? QColor(Qt::white) : QColor(tag.textColor);
+        srcTag.bgColor = tag.bgColor == -1 ? tagBgColor : QColor(tag.bgColor);
+        srcTag.text = tag.text;
+        srcTag.link = tag.link;
+        srcTag.tooltip = tag.tooltip;
+        if (!tag.iconSVG.isEmpty())
+        {
+            QSvgRenderer renderer(tag.iconSVG.toUtf8());
+            if (renderer.isValid())
+            {
+                QPixmap pixmap(QSize(64, 64));
+                pixmap.fill(Qt::transparent);
+
+                QPainter painter(&pixmap);
+                painter.setRenderHint(QPainter::Antialiasing);
+                renderer.render(&painter);
+                painter.end();
+
+                srcTag.icon = QIcon(pixmap);
+            }
+        }
+        tags.append(srcTag);
+    }
+}
+
+bool DanmuPoolSourceNode::isSameSource(const DanmuSource &src) const
+{
+    if (src.scriptId != idInfo) return false;
+    if (!src.scriptSrcId.isEmpty() && !scriptSrcId.isEmpty())
+    {
+        return src.scriptSrcId == scriptSrcId;
+    }
+    return scriptData == src.scriptData;
+}
+

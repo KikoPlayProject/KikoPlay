@@ -315,7 +315,7 @@ void TorrentDecoder::decodeTorrent()
     }
 
     QByteArray infoField(rawContent.mid(infoStartPos,infoEndPos-infoStartPos+1));
-    infoHash=QString(QCryptographicHash::hash(infoField,QCryptographicHash::Sha1).toHex());
+    infoHash=QString(QCryptographicHash::hash(infoField,QCryptographicHash::Sha1).toHex().toLower());
     delete rootBEItem;
 }
 

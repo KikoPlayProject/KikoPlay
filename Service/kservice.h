@@ -72,6 +72,7 @@ public:
     void getDanmu(const QString &poolId, int duration = -1);
     void getDanmu(const DanmuSource &kSrc);
     void getDanmuSource(const QString &poolId, const QString &path = "");
+    bool getDanmuSourceSync(const QString &poolId, QList<DanmuSource> &sources, const QString &path = "");
 
 signals:
     void recognized(int status, const QString &errMsg, const QString &path, MatchResult result);
@@ -132,6 +133,8 @@ private:
     void refreshToken();
     void resendStashedComments();
 
+    bool parseGetSourceRsp(QList<DanmuSource> &srcs, QString &poolId, QNetworkReply *reply);
+
 
 private:
     void kStatsUV(bool isStartup);
@@ -141,7 +144,7 @@ private:
     void kRegister(const QString &email, const QString &password, const QString &userName, const QString &verificationCode);
     void kSendVerification(const QString &email);
     void kGetDanmu(const QString &poolId, int duration = -1);
-    void kGetSource(const QString &poolId, const QString &path = "");
+    void kGetSource(const QString &poolId, const QString &path = "", PostCallBack cb = nullptr);
 
     void handleUV(QNetworkReply *reply);
     void handleFileReco(const QString &path, QNetworkReply *reply);

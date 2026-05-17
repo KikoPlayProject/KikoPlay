@@ -12,6 +12,8 @@ public:
     Pool(const QString &id, const QString &animeTitle, const QString &epTitle, EpType type, double index, QObject *parent = nullptr);
     inline const QVector<QSharedPointer<DanmuComment> > &comments(){return commentList;}
     inline const QMap<int,DanmuSource> &sources(){return sourcesTable;}
+    inline const DanmuSource &source(int id) const { return sourcesTable.find(id).value(); }
+    inline bool sourceVisible(int id) const { auto iter = sourcesTable.find(id); return iter == sourcesTable.constEnd() ? false : iter->show; }
     inline const QString &id() const {return pid;}
     inline bool isUsed() const {return used;}
     inline const QString &animeTitle() const {return anime;}
@@ -56,8 +58,8 @@ public:
     }
     QString getPoolCode(const QStringList &addition=QStringList()) const;
     bool addPoolCode(const QString &code, bool hasAddition=false);
-    bool addPoolCode(const QJsonArray &infoArray);
-    static QJsonArray getPoolCodeInfo(const QString &code);
+    bool addPoolCodeArray(const QJsonArray &infoArray);
+    bool addPoolCodeObject(const QJsonObject &infoObj);
     void setRefreshFlag(bool flag) { _refreshFlag = flag; }
 private:
     QString pid;
@@ -75,7 +77,6 @@ private:
     bool clean();
     void setRealTime(DanmuComment *danmu);
     QSet<QString> getDanmuHashSet(int sourceId=-1);
-    void addSourceJson(const QJsonArray &array);
 
     friend class DanmuManager;
 signals:

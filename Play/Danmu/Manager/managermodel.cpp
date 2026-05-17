@@ -383,10 +383,6 @@ QVariant DanmuManagerModel::data(const QModelIndex &index, int role) const
     {
         if (col == Columns::TITLE)
             return item->title;
-        else if (col == Columns::SOURCE && item->type == DanmuPoolNode::SourecNode)
-            return item->idInfo;
-        else if (col == Columns::DELAY && item->type == DanmuPoolNode::SourecNode)
-            return static_cast<DanmuPoolSourceNode *>(item)->delay/1000;
         else if (col == Columns::COUNT)
             return item->danmuCount;
         break;
@@ -419,14 +415,6 @@ QVariant DanmuManagerModel::data(const QModelIndex &index, int role) const
     }
     case Qt::DecorationRole:
     {
-        if (col == Columns::DELAY && item->type == DanmuPoolNode::SourecNode)
-        {
-            if (static_cast<DanmuPoolSourceNode *>(item)->hasTimeline)
-            {
-                static QIcon timeLineTip = GlobalObjects::context()->getFontIcon(QChar(0xe6b5), QColor(19, 165, 200));
-                return timeLineTip;
-            }
-        }
         if (col == Columns::TITLE && item->type == DanmuPoolNode::SourecNode)
         {
             if (!static_cast<DanmuPoolSourceNode *>(item)->valid)
@@ -442,6 +430,10 @@ QVariant DanmuManagerModel::data(const QModelIndex &index, int role) const
         if (col == Columns::TITLE && nodeCheckAble)
             return item->checkStatus;
         break;
+    }
+    case DataRole::PoolNodeRole:
+    {
+        return QVariant::fromValue((void *)item);
     }
     }
     return QVariant();
