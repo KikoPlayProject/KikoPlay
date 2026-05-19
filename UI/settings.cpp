@@ -12,7 +12,6 @@
 #include "settings/playerpage.h"
 #include "settings/playlistpage.h"
 #include "settings/downloadpage.h"
-#include "settings/lanserverpage.h"
 #include "settings/scriptpage.h"
 #include "settings/keyactionpage.h"
 #include "settings/networkpage.h"
@@ -36,7 +35,6 @@ Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings")
         tr("Shortcut Key"),
         tr("Network"),
         tr("Download"),
-        tr("LAN Server"),
         tr("Script"),
         tr("Extension App"),
     };
@@ -102,9 +100,6 @@ SettingPage *Settings::getOrCreatePage(Page p)
             break;
         case PAGE_DOWN:
             pages[p] = new DownloadPage(this);
-            break;
-        case PAGE_LAN:
-            pages[p] = new LANServerPage(this);
             break;
         case PAGE_SCRIPT:
             pages[p] = new ScriptPage(this);

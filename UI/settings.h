@@ -16,7 +16,6 @@ public:
         PAGE_KEYACTION,
         PAGE_NETWORK,
         PAGE_DOWN,
-        PAGE_LAN,
         PAGE_SCRIPT,
         PAGE_APP,
         PAGE_STOP

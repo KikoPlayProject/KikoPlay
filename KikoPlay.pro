@@ -326,7 +326,6 @@ SOURCES += \
     UI/selecttorrentfile.cpp \
     UI/settings.cpp \
     UI/settings/downloadpage.cpp \
-    UI/settings/lanserverpage.cpp \
     UI/settings/networkpage.cpp \
     UI/settings/scriptpage.cpp \
     UI/settings/settingpage.cpp \
@@ -645,7 +644,6 @@ HEADERS += \
     UI/selecttorrentfile.h \
     UI/settings.h \
     UI/settings/downloadpage.h \
-    UI/settings/lanserverpage.h \
     UI/settings/networkpage.h \
     UI/settings/scriptpage.h \
     UI/settings/settingpage.h \
