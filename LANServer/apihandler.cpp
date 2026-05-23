@@ -87,6 +87,7 @@ void APIHandler::apiPlaylist(stefanfrings::HttpRequest &request, stefanfrings::H
     Network::gzipCompress(data,compressedBytes);
     response.setHeader("Content-Type", "application/json");
     response.setHeader("Content-Encoding", "gzip");
+    response.setHeader("X-Kiko", GlobalObjects::kikoVersionNum);
     response.write(compressedBytes, true);
 }
 
@@ -103,6 +104,7 @@ void APIHandler::apiRecentlist(stefanfrings::HttpRequest &request, stefanfrings:
     Network::gzipCompress(data,compressedBytes);
     response.setHeader("Content-Type", "application/json");
     response.setHeader("Content-Encoding", "gzip");
+    response.setHeader("X-Kiko", GlobalObjects::kikoVersionNum);
     response.write(compressedBytes, true);
 }
 
@@ -150,6 +152,7 @@ void APIHandler::apiPlaystate(stefanfrings::HttpRequest &request, stefanfrings::
     Network::gzipCompress(data, compressedBytes);
     response.setHeader("Content-Type", "application/json");
     response.setHeader("Content-Encoding", "gzip");
+    response.setHeader("X-Kiko", GlobalObjects::kikoVersionNum);
     response.write(compressedBytes, true);
 }
 
@@ -169,8 +172,14 @@ void APIHandler::apiUpdateTime(stefanfrings::HttpRequest &request, stefanfrings:
             {
                 int playTime=data.value("playTime").toInt();
                 PlayListItem::PlayState playTimeState=PlayListItem::PlayState(data.value("playTimeState").toInt());
-                QMetaObject::invokeMethod(GlobalObjects::playlist,[mediaPath,playTime,playTimeState](){
-                    GlobalObjects::playlist->updatePlayTime(mediaPath,playTime,playTimeState);
+                const QByteArray coverBase64 = data.value("preview", "").toString().toLatin1();
+                QImage coverImg;
+                if (!coverBase64.isEmpty())
+                {
+                    coverImg.loadFromData(QByteArray::fromBase64(coverBase64));
+                }
+                QMetaObject::invokeMethod(GlobalObjects::playlist,[mediaPath,playTime,playTimeState,coverImg](){
+                    GlobalObjects::playlist->updatePlayTime(mediaPath,playTime,playTimeState,coverImg);
                 },Qt::QueuedConnection);
             }
         }
@@ -211,6 +220,7 @@ void APIHandler::apiDanmu(stefanfrings::HttpRequest &request, stefanfrings::Http
     Network::gzipCompress(data,compressedBytes);
     response.setHeader("Content-Type", "application/json");
     response.setHeader("Content-Encoding", "gzip");
+    response.setHeader("X-Kiko", GlobalObjects::kikoVersionNum);
     response.write(compressedBytes, true);
 }
 
@@ -250,6 +260,7 @@ void APIHandler::apiDanmuFull(stefanfrings::HttpRequest &request, stefanfrings::
     Network::gzipCompress(data,compressedBytes);
     response.setHeader("Content-Type", "application/json");
     response.setHeader("Content-Encoding", "gzip");
+    response.setHeader("X-Kiko", GlobalObjects::kikoVersionNum);
     response.write(compressedBytes, true);
 }
 
@@ -284,6 +295,7 @@ void APIHandler::apiLocalDanmu(stefanfrings::HttpRequest &request, stefanfrings:
     Network::gzipCompress(data,compressedBytes);
     response.setHeader("Content-Type", "application/json");
     response.setHeader("Content-Encoding", "gzip");
+    response.setHeader("X-Kiko", GlobalObjects::kikoVersionNum);
     response.write(compressedBytes, true);
 
 }
@@ -348,6 +360,7 @@ void APIHandler::apiSubtitle(stefanfrings::HttpRequest &request, stefanfrings::H
     };
     QByteArray data = QJsonDocument(resposeObj).toJson();
     response.setHeader("Content-Type", "application/json");
+    response.setHeader("X-Kiko", GlobalObjects::kikoVersionNum);
     response.write(data, true);
 }
 

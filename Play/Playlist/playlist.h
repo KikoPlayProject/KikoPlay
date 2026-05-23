@@ -145,7 +145,7 @@ public slots :
     void dumpJsonRecent(QJsonDocument &jsonDoc);
     QString getPathByHash(const QString &hash);
     const PlayListItem *getPathItem(const QString &pathId);
-    void updatePlayTime(const QString &path, int time, PlayListItem::PlayState state);
+    void updatePlayTime(const QString &path, int time, PlayListItem::PlayState state, const QImage &cover=QImage());
     void renameItemPoolId(const QString &opid, const QString &npid);
 
     // QAbstractItemModel interface

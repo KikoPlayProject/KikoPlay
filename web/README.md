@@ -43,6 +43,7 @@ JSON数据格式：
     "mediaId"(string): 媒体文件ID,
     "playTime"(number): 播放时长(s),
     "playTimeState"(number): 播放状态(0=未播放，1=未看完，2=已看完),
+    "preview"(string): png缩略图base64字符串，可选，2.1开始支持,
 }
 ```
 ## [Get] /api/danmu/v3/

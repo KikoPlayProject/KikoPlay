@@ -168,6 +168,32 @@ void PlayListPrivate::saveItem(QXmlStreamWriter &writer, PlayListItem *item)
     writer.writeEndElement();
 }
 
+QImage PlayListPrivate::clipCover(const QImage &cover)
+{
+    const int w = 160, h = 90;
+    double cw = cover.width(), ch = cover.height();
+    double dw = w, dh = h;
+    if (cw * h / w < ch) {
+        dw = dh * cw / ch;
+    } else {
+        dh = dw * ch / cw;
+    }
+    QImage coverDest = cover.scaled(dw*2, dh*2, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+    QImage dest(w * GlobalObjects::context()->devicePixelRatioF, h * GlobalObjects::context()->devicePixelRatioF, QImage::Format_ARGB32_Premultiplied);
+    dest.setDevicePixelRatio(GlobalObjects::context()->devicePixelRatioF);
+    dest.fill(Qt::transparent);
+    QPainter painter(&dest);
+    painter.setRenderHints(QPainter::Antialiasing, true);
+    painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
+    QPainterPath path;
+    path.addRoundedRect(0, 0, w, h, 8, 8);
+    painter.fillPath(path, Qt::black);
+    painter.setClipPath(path);
+    painter.drawImage(QRect(dw < w ? (w - dw) / 2 : 0, dh < h ? (h - dh) / 2 : 0, dw, dh), coverDest);
+
+    return dest;
+}
+
 void PlayListPrivate::loadRecentlist()
 {
     QFile recentlistFile(rectPath);
@@ -223,7 +249,7 @@ void PlayListPrivate::saveRecentlist()
     writer.writeEndDocument();
 }
 
-void PlayListPrivate::updateRecentlist(PlayListItem *item)
+void PlayListPrivate::updateRecentlist(PlayListItem *item, const QImage &cover)
 {
     Q_Q(PlayList);
     if (!item) return;
@@ -244,6 +270,7 @@ void PlayListPrivate::updateRecentlist(PlayListItem *item)
     recentItem.playtime = item->playTime;
     recentItem.playTimeState = item->playTimeState;
     recentItem.title = item->animeTitle.isEmpty() ? item->title : QString("%1\n%2").arg(item->animeTitle, item->title);
+    if (!cover.isNull()) recentItem.stopFrame = clipCover(cover);
     recentList.push_front(recentItem);
     if (recentList.count() > q->maxRecentItems) recentList.pop_back();
     emit q->recentItemsUpdated();
@@ -263,27 +290,7 @@ void PlayListPrivate::updateRecentItemInfo(const PlayListItem *item, const QImag
 
             if (!cover.isNull())
             {
-                const int w = 160, h = 90;
-                double cw = cover.width(), ch = cover.height();
-                double dw = w, dh = h;
-                if (cw * h / w < ch) {
-                    dw = dh * cw / ch;
-                } else {
-                    dh = dw * ch / cw;
-                }
-                QImage coverDest = cover.scaled(dw*2, dh*2, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
-                QImage dest(w * GlobalObjects::context()->devicePixelRatioF, h * GlobalObjects::context()->devicePixelRatioF, QImage::Format_ARGB32_Premultiplied);
-                dest.setDevicePixelRatio(GlobalObjects::context()->devicePixelRatioF);
-                dest.fill(Qt::transparent);
-                QPainter painter(&dest);
-                painter.setRenderHints(QPainter::Antialiasing, true);
-                painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
-                QPainterPath path;
-                path.addRoundedRect(0, 0, w, h, 8, 8);
-                painter.fillPath(path, Qt::black);
-                painter.setClipPath(path);
-                painter.drawImage(QRect(dw < w ? (w - dw) / 2 : 0, dh < h ? (h - dh) / 2 : 0, dw, dh), coverDest);
-                recentItem.stopFrame = dest;
+                recentItem.stopFrame = clipCover(cover);
             }
             emit q->recentItemInfoUpdated(index);
 

@@ -32,7 +32,7 @@ public:
 
     void loadRecentlist();
     void saveRecentlist();
-    void updateRecentlist(PlayListItem *item);
+    void updateRecentlist(PlayListItem *item, const QImage &cover = QImage());
     void updateRecentItemInfo(const PlayListItem *item, const QImage &cover);
     void dumpRecentItems(QJsonArray &array);
 
@@ -48,6 +48,7 @@ public:
     void pushEpFinishEvent(PlayListItem *item);
 private:
     void saveItem(QXmlStreamWriter &writer,PlayListItem *item);
+    QImage clipCover(const QImage &cover);
 private:
     PlayList *const q_ptr;
     Q_DECLARE_PUBLIC(PlayList)

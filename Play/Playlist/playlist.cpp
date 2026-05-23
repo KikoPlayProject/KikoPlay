@@ -398,10 +398,12 @@ int PlayList::addURL(const QStringList &urls, QModelIndex parent, bool decodeTit
     {
         const QString urlTrimmed = url.trimmed();
         if(urlTrimmed.isEmpty()) continue;
-        if (d->fileItems.contains(urlTrimmed)) continue;
-        if(QFileInfo::exists(urlTrimmed))
+        QFileInfo fi(urlTrimmed);
+        const QString fullPath = fi.absoluteFilePath();
+        if (d->fileItems.contains(fullPath)) continue;
+        if(fi.isFile() && fi.exists())
         {
-            localItems.append(urlTrimmed);
+            localItems.append(fullPath);
         }
         else
         {
@@ -1192,7 +1194,7 @@ const PlayListItem *PlayList::setCurrentItem(const QModelIndex &index,bool playC
 const PlayListItem *PlayList::setCurrentItem(const QString &path)
 {
     Q_D(PlayList);
-    PlayListItem *curItem = d->fileItems.value(path, nullptr);
+    PlayListItem *curItem = d->fileItems.value(QFileInfo(path).absoluteFilePath(), nullptr);
     if (curItem && d->currentItem != curItem)
     {
         PlayListItem *tmp = d->currentItem;
@@ -1756,7 +1758,7 @@ const PlayListItem *PlayList::getPathItem(const QString &pathId)
     return nullptr;
 }
 
-void PlayList::updatePlayTime(const QString &path, int time, PlayListItem::PlayState state)
+void PlayList::updatePlayTime(const QString &path, int time, PlayListItem::PlayState state, const QImage &cover)
 {
     Q_D(PlayList);
     PlayListItem *item=d->fileItems.value(path,nullptr);
@@ -1784,7 +1786,7 @@ void PlayList::updatePlayTime(const QString &path, int time, PlayListItem::PlayS
                 AnimeWorker::instance()->updateEpTime(item->animeTitle, item->path);
             }
         }
-        d->updateRecentlist(item);
+        d->updateRecentlist(item, cover);
         d->incModifyCounter();
     }
 }

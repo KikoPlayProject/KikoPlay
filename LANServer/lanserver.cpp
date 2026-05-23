@@ -18,13 +18,14 @@ LANServer::LANServer(QObject *parent) : QObject(parent)
     bool settingFileExists = QFile::exists(settingFile);
 
     serverSettings = new QSettings(settingFile, QSettings::IniFormat);
+    serverSettings->setValue("maxRequestSize","256000");
     if (!settingFileExists)
     {
         serverSettings->setValue("minThreads","4");
         serverSettings->setValue("maxThreads","100");
         serverSettings->setValue("cleanupInterval","60000");
         serverSettings->setValue("readTimeout","60000");
-        serverSettings->setValue("maxRequestSize","16000");
+        serverSettings->setValue("maxRequestSize","256000");
         serverSettings->setValue("maxMultiPartSize","10000000");
     }
 
