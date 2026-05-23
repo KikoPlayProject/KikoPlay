@@ -312,15 +312,16 @@ void MPVPlayer::drawTexture(QVector<const DanmuObject *> &objList, float alpha)
     QOpenGLFunctions *glFuns=context()->functions();
     GLfloat h = 2.f / (width()*devicePixelRatioF()), v = 2.f / (height()*devicePixelRatioF());
     int allowTexCount=oldOpenGLVersion?0:15;
-    while(!objList.isEmpty())
+    int objIndex = 0;
+    while(objIndex < objList.size())
     {
         texHash.clear();
         int i=0;
         int textureId=0;
-        while(!objList.isEmpty())
+        while(objIndex < objList.size())
         {
             if(textureId>allowTexCount) break;
-            const DanmuObject *obj=objList.takeFirst();
+            const DanmuObject *obj = objList[objIndex++];
 
             GLfloat l = obj->x*h - 1,r = (obj->x+obj->drawInfo->width)*h - 1,
                     t = 1 - obj->y*v,b = 1 - (obj->y+obj->drawInfo->height)*v;
@@ -384,6 +385,7 @@ void MPVPlayer::drawTexture(QVector<const DanmuObject *> &objList, float alpha)
         glFuns->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         glFuns->glDrawArrays(GL_TRIANGLES, 0, i/2);
     }
+    objList.clear();
 }
 
 void MPVPlayer::setMedia(const QString &file)

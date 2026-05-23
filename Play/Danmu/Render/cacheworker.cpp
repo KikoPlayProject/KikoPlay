@@ -407,25 +407,20 @@ void CacheWorker::beginCache(QVector<DrawTask> *danmus)
     timer.start();
     stepTimer.start();
 #endif
-    QStringList hashList;
-    QSet<QString> tmpHash;
+    QVector<CacheKey> hashList;
+    QSet<CacheKey> tmpHash;
     QVector<CacheMiddleInfo> mInfoList;
     for (auto& dm : *danmus)
     {
-        QString hash_str(QCryptographicHash::hash(QString("%1%2%3%4")
-            .arg(dm.comment->text
-                , QString::number(dm.comment->color)
-                , QString::number(danmuStyle->fontSizeTable[dm.comment->fontSizeLevel])
-                , dm.comment->mergedList ? QString::number(dm.comment->mergedList->count()) : "0").toUtf8()
-            , QCryptographicHash::Md5).toHex());
-        hashList << hash_str;
-        if (!danmuCache.contains(hash_str) && !tmpHash.contains(hash_str))
+        CacheKey key{dm.comment->text, dm.comment->color, danmuStyle->fontSizeTable[dm.comment->fontSizeLevel], dm.comment->mergedList ? (int)dm.comment->mergedList->count() : 0};
+        hashList << key;
+        if (!danmuCache.contains(key) && !tmpHash.contains(key))
         {
             CacheMiddleInfo mInfo;
-            mInfo.hash = hash_str;
+            mInfo.key = key;
             mInfo.comment = dm.comment.data();
             mInfoList.append(mInfo);
-            tmpHash.insert(hash_str);
+            tmpHash.insert(key);
         }
     }
 #ifdef QT_DEBUG
@@ -446,8 +441,8 @@ void CacheWorker::beginCache(QVector<DrawTask> *danmus)
 #endif
 		for (auto &mInfo : mInfoList)
 		{
-			Q_ASSERT(!danmuCache.contains(mInfo.hash));
-			danmuCache.insert(mInfo.hash, mInfo.drawInfo);
+            Q_ASSERT(!danmuCache.contains(mInfo.key));
+            danmuCache.insert(mInfo.key, mInfo.drawInfo);
 		}
 	}
     int i=0;

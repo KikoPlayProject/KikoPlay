@@ -508,7 +508,11 @@ void DanmuPool::mediaTimeElapsed(int newTime)
 #endif
         while(prepareList->size()<bundleSize*2 && extendPos<finalPool.size())
         {
-            prepareList->append({ finalPool.at(extendPos++),nullptr,false });
+            auto &dm = finalPool.at(extendPos++);
+            if (dm->blockBy == -1 && curPool->sourceVisible(dm->source))
+            {
+                prepareList->append({ dm, nullptr, false });
+            }
         }
     }
     prepareList->size()>0? GlobalObjects::danmuRender->prepareDanmu(prepareList) : recyclePrepareList(prepareList);
