@@ -4,6 +4,7 @@
 #include <QOpenGLWidget>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
+#include <QOpenGLVertexArrayObject>
 #include <QtCore>
 #include <QtGui>
 #include <mpv/client.h>
@@ -219,6 +220,7 @@ private:
     QString currentFile;
 
     QOpenGLShaderProgram danmuShader;
+    QOpenGLVertexArrayObject danmuVAO;
     QOpenGLBuffer vtxVBO{QOpenGLBuffer::VertexBuffer};
     QOpenGLBuffer texVBO{QOpenGLBuffer::VertexBuffer};
     QOpenGLBuffer texIdVBO{QOpenGLBuffer::VertexBuffer};

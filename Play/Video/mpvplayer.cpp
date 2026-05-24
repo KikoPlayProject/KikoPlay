@@ -319,6 +319,8 @@ void MPVPlayer::drawTexture(QVector<const DanmuObject *> &objList, float alpha)
     glFuns->glEnable(GL_BLEND);
     glFuns->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
+    const bool useVAO = danmuVAO.isCreated();
+    if (useVAO) danmuVAO.bind();
     auto uploadAttrib = [&](QOpenGLBuffer &vbo, int &cap, const GLfloat *data, int num, int loc, int comps){
         const int bytes = num * sizeof(GLfloat);
         vbo.bind();
@@ -329,13 +331,20 @@ void MPVPlayer::drawTexture(QVector<const DanmuObject *> &objList, float alpha)
         }
         else
         {
+            vbo.allocate(nullptr, cap);
             vbo.write(0, data, bytes);
         }
-        danmuShader.enableAttributeArray(loc);
-        danmuShader.setAttributeBuffer(loc, GL_FLOAT, 0, comps);
+        if (!useVAO)
+        {
+            danmuShader.enableAttributeArray(loc);
+            danmuShader.setAttributeBuffer(loc, GL_FLOAT, 0, comps);
+        }
     };
     int objIndex = 0;
     GLuint bound[16];
+#ifdef QT_DEBUG
+    int drawCount = 0;
+#endif
     while (objIndex < objList.size())
     {
         int i = 0;
@@ -393,6 +402,7 @@ void MPVPlayer::drawTexture(QVector<const DanmuObject *> &objList, float alpha)
         }
 #ifdef QT_DEBUG
         Counter::instance()->countValue("texture.frame", textureId);
+        ++drawCount;
 #endif
         uploadAttrib(vtxVBO, vtxVBOCap, vtx.constData(), i, 0, 2);
         uploadAttrib(texVBO, texVBOCap, tex.constData(), i, 1, 2);
@@ -407,9 +417,19 @@ void MPVPlayer::drawTexture(QVector<const DanmuObject *> &objList, float alpha)
         }
         glFuns->glDrawArrays(GL_TRIANGLES, 0, i/2);
     }
-    danmuShader.disableAttributeArray(0);
-    danmuShader.disableAttributeArray(1);
-    if (!oldOpenGLVersion) danmuShader.disableAttributeArray(2);
+#ifdef QT_DEBUG
+    Counter::instance()->countValue("draw.frame", drawCount);
+#endif
+    if (useVAO)
+    {
+        danmuVAO.release();
+    }
+    else
+    {
+        danmuShader.disableAttributeArray(0);
+        danmuShader.disableAttributeArray(1);
+        if (!oldOpenGLVersion) danmuShader.disableAttributeArray(2);
+    }
     QOpenGLBuffer::release(QOpenGLBuffer::VertexBuffer);
 
     objList.clear();
@@ -795,6 +815,24 @@ void MPVPlayer::initializeGL()
         texIdVBO.create();
         texIdVBO.setUsagePattern(QOpenGLBuffer::StreamDraw);
     }
+    if (danmuVAO.create())
+    {
+        danmuVAO.bind();
+        vtxVBO.bind();
+        danmuShader.enableAttributeArray(0);
+        danmuShader.setAttributeBuffer(0, GL_FLOAT, 0, 2);
+        texVBO.bind();
+        danmuShader.enableAttributeArray(1);
+        danmuShader.setAttributeBuffer(1, GL_FLOAT, 0, 2);
+        if (!oldOpenGLVersion)
+        {
+            texIdVBO.bind();
+            danmuShader.enableAttributeArray(2);
+            danmuShader.setAttributeBuffer(2, GL_FLOAT, 0, 1);
+        }
+        danmuVAO.release();
+        QOpenGLBuffer::release(QOpenGLBuffer::VertexBuffer);
+    }
     doneCurrent();
     emit initContext();
 }
@@ -822,11 +860,7 @@ void MPVPlayer::paintGL()
     if (!danmuHide)
     {
         QOpenGLFramebufferObject::bindDefault();
-        QOpenGLPaintDevice fboPaintDevice(width()*devicePixelRatioF(), height()*devicePixelRatioF());
-        QPainter painter(&fboPaintDevice);
-        painter.beginNativePainting();
         GlobalObjects::danmuRender->drawDanmu();
-        painter.endNativePainting();
     }
 }
 
