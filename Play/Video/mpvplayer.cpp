@@ -296,13 +296,13 @@ void MPVPlayer::setIccProfileOption()
 
 void MPVPlayer::drawTexture(QVector<const DanmuObject *> &objList, float alpha)
 {
+    if (objList.empty()) return;
     static QVector<GLfloat> vtx(6*2*64),tex(6*2*64),texId(6*64);
-    static int Textures[] ={GL_TEXTURE0,GL_TEXTURE1,GL_TEXTURE2,GL_TEXTURE3,
+    static const int Textures[] ={GL_TEXTURE0,GL_TEXTURE1,GL_TEXTURE2,GL_TEXTURE3,
                             GL_TEXTURE4,GL_TEXTURE5,GL_TEXTURE6,GL_TEXTURE7,
                            GL_TEXTURE8,GL_TEXTURE9,GL_TEXTURE10,GL_TEXTURE11,
                            GL_TEXTURE12,GL_TEXTURE13,GL_TEXTURE14,GL_TEXTURE15};
     static GLuint u_SamplerD[16]={0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
-    static QHash<GLuint, int> texHash;
     if(objList.size()>vtx.size()/12)
     {
         vtx.resize(objList.size()*12);
@@ -310,21 +310,44 @@ void MPVPlayer::drawTexture(QVector<const DanmuObject *> &objList, float alpha)
         texId.resize(objList.size()*6);
     }
     QOpenGLFunctions *glFuns=context()->functions();
-    GLfloat h = 2.f / (width()*devicePixelRatioF()), v = 2.f / (height()*devicePixelRatioF());
-    int allowTexCount=oldOpenGLVersion?0:15;
-    int objIndex = 0;
-    while(objIndex < objList.size())
-    {
-        texHash.clear();
-        int i=0;
-        int textureId=0;
-        while(objIndex < objList.size())
-        {
-            if(textureId>allowTexCount) break;
-            const DanmuObject *obj = objList[objIndex++];
+    const GLfloat h = 2.f / (width()*devicePixelRatioF());
+    const GLfloat v = 2.f / (height()*devicePixelRatioF());
+    const int allowTexCount=oldOpenGLVersion ? 0 : 15;
 
-            GLfloat l = obj->x*h - 1,r = (obj->x+obj->drawInfo->width)*h - 1,
-                    t = 1 - obj->y*v,b = 1 - (obj->y+obj->drawInfo->height)*v;
+    danmuShader.bind();
+    danmuShader.setUniformValue("alpha", alpha);
+    glFuns->glEnable(GL_BLEND);
+    glFuns->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    auto uploadAttrib = [&](QOpenGLBuffer &vbo, int &cap, const GLfloat *data, int num, int loc, int comps){
+        const int bytes = num * sizeof(GLfloat);
+        vbo.bind();
+        if (bytes > cap)
+        {
+            vbo.allocate(data, bytes);
+            cap = bytes;
+        }
+        else
+        {
+            vbo.write(0, data, bytes);
+        }
+        danmuShader.enableAttributeArray(loc);
+        danmuShader.setAttributeBuffer(loc, GL_FLOAT, 0, comps);
+    };
+    int objIndex = 0;
+    GLuint bound[16];
+    while (objIndex < objList.size())
+    {
+        int i = 0;
+        int textureId = 0;
+        while (objIndex < objList.size())
+        {
+            if (textureId > allowTexCount) break;
+            const DanmuObject *obj = objList[objIndex++];
+            const DanmuDrawInfo *di = obj->drawInfo;
+
+            const GLfloat l = obj->x*h - 1,r = (obj->x+di->width)*h - 1,
+                    t = 1 - obj->y*v,b = 1 - (obj->y+di->height)*v;
 
             vtx[i]=l;     vtx[i+1]=t;
             vtx[i+2] = r; vtx[i+3] = t;
@@ -334,24 +357,31 @@ void MPVPlayer::drawTexture(QVector<const DanmuObject *> &objList, float alpha)
             vtx[i+8] = l;  vtx[i+9] = b;
             vtx[i+10] = r; vtx[i+11] = b;
 
-            tex[i]=obj->drawInfo->l;     tex[i+1]=obj->drawInfo->t;
-            tex[i+2] = obj->drawInfo->r; tex[i+3] = obj->drawInfo->t;
-            tex[i+4] = obj->drawInfo->l; tex[i+5] = obj->drawInfo->b;
+            const GLfloat dl = di->l, dr = di->r, dt = di->t, db = di->b;
+            tex[i]=dl;     tex[i+1]=dt;
+            tex[i+2] = dr; tex[i+3] = dt;
+            tex[i+4] = dl; tex[i+5] = db;
 
-            tex[i+6] = obj->drawInfo->r;  tex[i+7] = obj->drawInfo->t;
-            tex[i+8] = obj->drawInfo->l;  tex[i+9] = obj->drawInfo->b;
-            tex[i+10] = obj->drawInfo->r; tex[i+11] = obj->drawInfo->b;
+            tex[i+6] = dr;  tex[i+7] = dt;
+            tex[i+8] = dl;  tex[i+9] = db;
+            tex[i+10] = dr; tex[i+11] = db;
 
-
-            int texIndex=texHash.value(obj->drawInfo->texture,-1);
-            if(texIndex<0)
+            int texIndex = -1;
+            for (int k = 0; k < textureId; ++k)
+            {
+                if (bound[k] == di->texture)
+                {
+                    texIndex = k;
+                    break;
+                }
+            }
+            if (texIndex < 0)
             {
                 texIndex=textureId++;
+                bound[texIndex] = di->texture;
                 glFuns->glActiveTexture(Textures[texIndex]);
                 glFuns->glBindTexture(GL_TEXTURE_2D, obj->drawInfo->texture);
-                texHash.insert(obj->drawInfo->texture, texIndex);
             }
-
             texId[i/2]=texIndex;
             texId[i/2+1]=texIndex;
             texId[i/2+2]=texIndex;
@@ -364,27 +394,24 @@ void MPVPlayer::drawTexture(QVector<const DanmuObject *> &objList, float alpha)
 #ifdef QT_DEBUG
         Counter::instance()->countValue("texture.frame", textureId);
 #endif
-        danmuShader.bind();
-        danmuShader.setUniformValue("alpha", alpha);
-        danmuShader.setAttributeArray(0, vtx.constData(), 2);
-        danmuShader.setAttributeArray(1, tex.constData(), 2);
-        danmuShader.enableAttributeArray(0);
-        danmuShader.enableAttributeArray(1);
-        if(oldOpenGLVersion)
+        uploadAttrib(vtxVBO, vtxVBOCap, vtx.constData(), i, 0, 2);
+        uploadAttrib(texVBO, texVBOCap, tex.constData(), i, 1, 2);
+        if (oldOpenGLVersion)
         {
             danmuShader.setUniformValue("u_SamplerD", 0);
         }
         else
         {
             danmuShader.setUniformValueArray("u_SamplerD", u_SamplerD,16);
-            danmuShader.setAttributeArray(2,texId.constData(),1);
-            danmuShader.enableAttributeArray(2);
+            uploadAttrib(texIdVBO, texIdVBOCap, texId.constData(), i/2, 2, 1);
         }
-
-        glFuns->glEnable(GL_BLEND);
-        glFuns->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         glFuns->glDrawArrays(GL_TRIANGLES, 0, i/2);
     }
+    danmuShader.disableAttributeArray(0);
+    danmuShader.disableAttributeArray(1);
+    if (!oldOpenGLVersion) danmuShader.disableAttributeArray(2);
+    QOpenGLBuffer::release(QOpenGLBuffer::VertexBuffer);
+
     objList.clear();
 }
 
@@ -744,20 +771,29 @@ void MPVPlayer::initializeGL()
     {
         danmuShader.addShaderFromSourceCode(QOpenGLShader::Vertex, vShaderDanmu_Old);
         danmuShader.addShaderFromSourceCode(QOpenGLShader::Fragment, fShaderDanmu_Old);
-        danmuShader.link();
-        danmuShader.bind();
         danmuShader.bindAttributeLocation("a_VtxCoord", 0);
         danmuShader.bindAttributeLocation("a_TexCoord", 1);
+        danmuShader.link();
+        danmuShader.bind();
     }
     else
     {
         danmuShader.addShaderFromSourceCode(QOpenGLShader::Vertex, vShaderDanmu);
         danmuShader.addShaderFromSourceCode(QOpenGLShader::Fragment, fShaderDanmu);
-        danmuShader.link();
-        danmuShader.bind();
         danmuShader.bindAttributeLocation("a_VtxCoord", 0);
         danmuShader.bindAttributeLocation("a_TexCoord", 1);
         danmuShader.bindAttributeLocation("a_Tex", 2);
+        danmuShader.link();
+        danmuShader.bind();
+    }
+    vtxVBO.create();
+    vtxVBO.setUsagePattern(QOpenGLBuffer::StreamDraw);
+    texVBO.create();
+    texVBO.setUsagePattern(QOpenGLBuffer::StreamDraw);
+    if (!oldOpenGLVersion)
+    {
+        texIdVBO.create();
+        texIdVBO.setUsagePattern(QOpenGLBuffer::StreamDraw);
     }
     doneCurrent();
     emit initContext();

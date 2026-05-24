@@ -263,6 +263,7 @@ void PoolItemDelegate::drawDelayInfo(QPainter *painter, const DanmuPoolSourceNod
     }
     const QString delayStr = QString::number(srcNode->delay / 1000);
     QRect textRect(x, y, fm.horizontalAdvance(delayStr), iconHeight);
+    painter->setPen(Qt::white);
     painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, delayStr);
     painter->restore();
 }

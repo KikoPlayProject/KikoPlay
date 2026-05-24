@@ -3,6 +3,7 @@
 
 #include <QOpenGLWidget>
 #include <QOpenGLShaderProgram>
+#include <QOpenGLBuffer>
 #include <QtCore>
 #include <QtGui>
 #include <mpv/client.h>
@@ -216,7 +217,15 @@ private:
     int hue;
     int sharpen;
     QString currentFile;
+
     QOpenGLShaderProgram danmuShader;
+    QOpenGLBuffer vtxVBO{QOpenGLBuffer::VertexBuffer};
+    QOpenGLBuffer texVBO{QOpenGLBuffer::VertexBuffer};
+    QOpenGLBuffer texIdVBO{QOpenGLBuffer::VertexBuffer};
+    int vtxVBOCap{0};
+    int texVBOCap{0};
+    int texIdVBOCap{0};
+
     QTimer refreshTimer;
     qint64 refreshTimestamp;
     QElapsedTimer elapsedTimer;
