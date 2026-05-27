@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  QT_VERSION: "6.8.3"
+  QT_VERSION: "6.10.3"
   BUILD_TYPE: "Release"
 
 jobs:
@@ -48,15 +48,15 @@ jobs:
       run: |
         # Download and install ONNX Runtime from GitHub releases
         if [ "${{ matrix.arch }}" = "amd64" ]; then
-          wget https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-x64-1.22.0.tgz
-          tar -xzf onnxruntime-linux-x64-1.22.0.tgz
-          sudo cp -r onnxruntime-linux-x64-1.22.0/lib/* /usr/lib/
-          sudo cp -r onnxruntime-linux-x64-1.22.0/include/* /usr/include/
+          wget https://github.com/microsoft/onnxruntime/releases/download/v1.26.0/onnxruntime-linux-x64-1.26.0.tgz
+          tar -xzf onnxruntime-linux-x64-1.26.0.tgz
+          sudo cp -r onnxruntime-linux-x64-1.26.0/lib/* /usr/lib/
+          sudo cp -r onnxruntime-linux-x64-1.26.0/include/* /usr/include/
         else
-          wget https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-aarch64-1.22.0.tgz
-          tar -xzf onnxruntime-linux-aarch64-1.22.0.tgz
-          sudo cp -r onnxruntime-linux-aarch64-1.22.0/lib/* /usr/lib/
-          sudo cp -r onnxruntime-linux-aarch64-1.22.0/include/* /usr/include/
+          wget https://github.com/microsoft/onnxruntime/releases/download/v1.26.0/onnxruntime-linux-aarch64-1.26.0.tgz
+          tar -xzf onnxruntime-linux-aarch64-1.26.0.tgz
+          sudo cp -r onnxruntime-linux-aarch64-1.26.0/lib/* /usr/lib/
+          sudo cp -r onnxruntime-linux-aarch64-1.26.0/include/* /usr/include/
         fi
 
     - name: Setup Qt
@@ -124,7 +124,7 @@ jobs:
           debian/usr/share/applications/io.github.KikoPlayProject.KikoPlay.desktop \
           -appimage \
           -unsupported-allow-new-glibc \
-          -exclude-libs=libqsqlmimer,libmysqlclient,libqsqlmysql,libqsqlpsql,libqsqlodbc,libqtposition_nmea
+          -exclude-libs=libqsqlmimer,libmysqlclient,libqsqlmysql,libqsqlpsql,libqsqlodbc,libqtposition_nmea,libqsqloci
 
         if [ "${{ matrix.arch }}" = "amd64" ]; then
           mv KikoPlay-*x86_64.AppImage kikoplay-${{ matrix.arch }}-full.AppImage
