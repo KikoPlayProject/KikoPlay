@@ -24,7 +24,7 @@ SubtitleTranslator::SubtitleTranslator(const TranslatorConfig &config, const QSt
 
 }
 
-Network::Reply SubtitleTranslator::post(const QString& url, const QByteArray& data, const QStringList& header)
+Network::Reply SubtitleTranslator::post(const QString& url, const QByteArray& data, const QStringList& header, int timeout)
 {
     QUrl queryUrl(url);
     QNetworkRequest request;
@@ -41,7 +41,7 @@ Network::Reply SubtitleTranslator::post(const QString& url, const QByteArray& da
     manager->setCookieJar(nullptr);
 
     QTimer timer;
-    timer.setInterval(Network::timeout);
+    timer.setInterval(timeout);
     timer.setSingleShot(true);
     QNetworkReply* reply = manager->post(request, data);
 
@@ -113,14 +113,14 @@ TaskStatus SubtitleTranslator::runTask()
             { "messages", curMsgList },
         };
         const QByteArray payloadData = QJsonDocument::fromVariant(payLoad).toJson(QJsonDocument::Compact);
-        auto reply = post(_config.url, payloadData, headers);
+        auto reply = post(_config.url, payloadData, headers, _config.timeout);
         if (reply.hasError)
         {
             if (_cancelFlag) break;
             setInfo(tr("An error occurred, retry after sleeping for 5 seconds..."), NM_ERROR | NM_HIDE);
             Logger::logger()->log(Logger::APP, QString("An error occurred: %1").arg(reply.errInfo));
             QThread::sleep(5);
-            reply = post(_config.url, payloadData, headers);
+            reply = post(_config.url, payloadData, headers, _config.timeout);
         }
         if (reply.hasError)
         {
@@ -234,6 +234,8 @@ QVariant TranslatorConfigManager::data(const QModelIndex &index, int role) const
             return item.postHistorySub;
         case Columns::TIP:
             return item.tip;
+        case Columns::TIMEOUT:
+            return item.timeout;
         }
         break;
     }
@@ -267,6 +269,9 @@ bool TranslatorConfigManager::setData(const QModelIndex &index, const QVariant &
     case Columns::POST_HISTORY:
         item.postHistorySub = value.toBool();
         break;
+    case Columns::TIMEOUT:
+        item.timeout = value.toInt();
+        break;
     default:
         return false;
     }
@@ -278,9 +283,10 @@ QDataStream &operator<<(QDataStream &out, const QList<TranslatorConfig> &l)
 {
     int s = l.size();
     out << s;
+    out << GlobalObjects::kikoVersionNum;
     for (const auto &item : l)
     {
-        out << item.name << item.url << item.apiKey << item.model << item.prompt << item.batchSize << item.postHistorySub << item.tip;
+        out << item.name << item.url << item.apiKey << item.model << item.prompt << item.batchSize << item.postHistorySub << item.tip << item.timeout;
     }
     return out;
 }
@@ -289,11 +295,13 @@ QDataStream &operator>>(QDataStream &in, QList<TranslatorConfig> &l)
 {
     int lSize = 0;
     in >> lSize;
+    int kv = 0;
+    in >> kv;
     for (int i = 0; i < lSize; ++i)
     {
         l.emplaceBack("");
         TranslatorConfig &config = l.back();
-        in >> config.name >> config.url >> config.apiKey >> config.model >> config.prompt >> config.batchSize >> config.postHistorySub >> config.tip;
+        in >> config.name >> config.url >> config.apiKey >> config.model >> config.prompt >> config.batchSize >> config.postHistorySub >> config.tip >> config.timeout;
     }
     return in;
 }

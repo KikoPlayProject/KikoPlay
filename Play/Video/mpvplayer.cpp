@@ -201,14 +201,6 @@ MPVPlayer::MPVPlayer(QWidget *parent) : QOpenGLWidget(parent),state(PlayState::S
         }
     });
 
-    if (isShowPreview)
-    {
-        mpvPreview = new MPVPreview(QSize(220*logicalDpiX()/96,124*logicalDpiY()/96));
-        previewThread = new QThread();
-        previewThread->start();
-        mpvPreview->moveToThread(previewThread);
-        QObject::connect(mpvPreview, &MPVPreview::previewDown, this, &MPVPlayer::refreshPreview);
-    }
 }
 
 MPVPlayer::~MPVPlayer()
@@ -246,6 +238,16 @@ int MPVPlayer::getExternalTrackCount(MPVPlayer::TrackType type) const
     int c = 0;
     for(const TrackInfo &t : tracks) c += t.isExternal?1:0;
     return c;
+}
+
+QPixmap *MPVPlayer::getPreview(int timePos, bool refresh)
+{
+    if (isShowPreview && refresh && !mpvPreview)
+    {
+        ensurePreviewReady();
+    }
+    if(!mpvPreview || !curIsLocalFile) return nullptr;
+    return mpvPreview->getPreview(timePos, refresh);
 }
 
 QString MPVPlayer::getMPVProperty(const QString &property, int &errCode)
@@ -665,6 +667,11 @@ void MPVPlayer::setDbClickBehavior(int val)
 
 void MPVPlayer::setShowPreview(bool on)
 {
+    isShowPreview = on;
+    if (isShowPreview)
+    {
+        ensurePreviewReady();
+    }
     GlobalObjects::appSetting->setValue(SETTING_KEY_SHOW_PREVIEW, on);
 }
 
@@ -748,6 +755,20 @@ void MPVPlayer::setEmbeddedWindow(bool on)
 {
     enableEmbeddedWindow = on;
     GlobalObjects::appSetting->setValue(SETTING_KEY_ENABLE_EMBEDDED_WINDOW, enableEmbeddedWindow);
+}
+
+void MPVPlayer::ensurePreviewReady()
+{
+    if (!isShowPreview || mpvPreview) return;
+    mpvPreview = new MPVPreview(QSize(220 * logicalDpiX() / 96, 124 * logicalDpiY() / 96));
+    previewThread = new QThread();
+    previewThread->start();
+    mpvPreview->moveToThread(previewThread);
+    QObject::connect(mpvPreview, &MPVPreview::previewDown, this, &MPVPlayer::refreshPreview);
+    if (curIsLocalFile && !currentFile.isEmpty())
+    {
+        mpvPreview->reset(currentFile);
+    }
 }
 
 void MPVPlayer::initializeGL()

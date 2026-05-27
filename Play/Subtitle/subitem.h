@@ -9,7 +9,7 @@ struct SubItem
     qint64 endTime = 0;    // ms
     QString text;
 
-    static QString encodeTime(qint64 time, QChar msSplit = '.');
+    static QString encodeTime(qint64 time, QChar msSplit = ',');
     static qint64 timeStringToMs(const QString &timeStr, int msUnit = 1);
 };
 

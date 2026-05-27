@@ -120,4 +120,5 @@ void BackgroundMainWindow::resizeEvent(QResizeEvent *event)
         bgCacheSrc = (img.scaled(width(), height(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
         setBgCache();
     }
+    QMainWindow::resizeEvent(event);
 }

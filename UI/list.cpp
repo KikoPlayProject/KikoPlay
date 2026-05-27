@@ -303,8 +303,6 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
     comparer.setNumericMode(true);
 
     initActions();
-    initListUI();
-    updatePlaylistActions();
     setFocusPolicy(Qt::StrongFocus);
     setAcceptDrops(true);
 
@@ -333,6 +331,15 @@ ListWindow::ListWindow(QWidget *parent) : QWidget(parent),actionDisable(false),m
             playlistView->setDragEnabled(false);
         }
     });
+}
+
+void ListWindow::ensureUiInit()
+{
+    if (uiInited) return;
+    uiInited = true;
+    initListUI();
+    setCurrentList(pendingListType);
+    updatePlaylistActions();
 }
 
 void ListWindow::initActions()
@@ -1325,6 +1332,7 @@ QWidget *ListWindow::initPlaylistPage()
     playlistView->setAcceptDrops(true);
     playlistView->setDragDropMode(QAbstractItemView::InternalMove);
     playlistView->setDropIndicatorShown(true);
+    playlistView->setUniformRowHeights(true);
     playlistView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
     playlistView->header()->hide();
     playlistView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -1782,9 +1790,16 @@ void ListWindow::infoCancelClicked()
 
 void ListWindow::resizeEvent(QResizeEvent *)
 {
+    if (!uiInited) return;
     QTreeView *refView = danmulistView && danmulistView->isVisible() ? danmulistView : playlistView;
     infoTip->setGeometry(0, titleContainer->height() + refView->height() - infoTipHeight, width(), infoTipHeight);
     infoTip->raise();
+}
+
+void ListWindow::showEvent(QShowEvent *event)
+{
+    ensureUiInit();
+    QWidget::showEvent(event);
 }
 
 void ListWindow::dragEnterEvent(QDragEnterEvent *event)
@@ -1873,6 +1888,8 @@ void ListWindow::dropEvent(QDropEvent *event)
 
 void ListWindow::setCurrentList(int listType)
 {
+    pendingListType = listType;
+    if (!uiInited) return;
     filterEdit->clear();
     const QVector<QSortFilterProxyModel *> models{playlistProxyModel, danmulistProxyModel, sublistProxyModel, nullptr};
     currentProxyModel = nullptr;
@@ -1889,6 +1906,7 @@ void ListWindow::setCurrentList(int listType)
 
 int ListWindow::currentList() const
 {
+    if (!uiInited) return pendingListType;
     return contentStackLayout->currentIndex();
 }
 
@@ -1928,6 +1946,7 @@ void ListWindow::playItem(const QModelIndex &index, bool playChild)
 
 void ListWindow::showMessage(const QString &msg, int flag, const QVariant &)
 {
+    ensureUiInit();
     infoTip->show();
     infoTip->raise();
     QWidget *views[] = { playlistView, danmulistView, sublistView };

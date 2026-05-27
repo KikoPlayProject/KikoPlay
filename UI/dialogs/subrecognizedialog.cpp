@@ -492,6 +492,10 @@ TranslatorConfigEditDialog::TranslatorConfigEditDialog(QWidget *parent) : CFrame
     QLabel *batchSizeTip = new QLabel(tr("Number of Subtitle Entries per Translation"), this);
     ElaSpinBox *batchSizeSpin = new ElaSpinBox(this);
 
+    QLabel *timeoutTip = new QLabel(tr("Timeout(ms)"), this);
+    ElaSpinBox *timeoutSpin = new ElaSpinBox(this);
+    timeoutSpin->setRange(1000, INT_MAX);
+
     ElaCheckBox *postHistCheck = new ElaCheckBox(tr("Include previous messages when requesting translation"), this);
 
     QLabel *promptTip = new QLabel(tr("Prompt"), this);
@@ -502,8 +506,9 @@ TranslatorConfigEditDialog::TranslatorConfigEditDialog(QWidget *parent) : CFrame
     confBtnLayout->addWidget(addConfBtn);
     confBtnLayout->addWidget(removeConfBtn);
 
+
     QGridLayout *tGLayout = new QGridLayout(this);
-    tGLayout->addLayout(confBtnLayout, 11, 0);
+    tGLayout->addLayout(confBtnLayout, 12, 0);
     tGLayout->addWidget(confView, 0, 0, 9, 1);
     tGLayout->addWidget(configTip, 0, 1, 1, 2);
     tGLayout->addWidget(urlTip, 1, 1);
@@ -514,10 +519,12 @@ TranslatorConfigEditDialog::TranslatorConfigEditDialog(QWidget *parent) : CFrame
     tGLayout->addWidget(modelEdit, 6, 1, 1, 2);
     tGLayout->addWidget(batchSizeTip, 7, 1);
     tGLayout->addWidget(batchSizeSpin, 7, 2);
-    tGLayout->addWidget(postHistCheck, 8, 1, 1, 2);
-    tGLayout->addWidget(promptTip, 9, 1, 1, 2);
-    tGLayout->addWidget(promptEdit, 10, 1, 2, 2);
-    tGLayout->setRowStretch(10, 1);
+    tGLayout->addWidget(timeoutTip, 8, 1);
+    tGLayout->addWidget(timeoutSpin, 8, 2);
+    tGLayout->addWidget(postHistCheck, 9, 1, 1, 2);
+    tGLayout->addWidget(promptTip, 10, 1, 1, 2);
+    tGLayout->addWidget(promptEdit, 11, 1, 2, 2);
+    tGLayout->setRowStretch(11, 1);
     tGLayout->setColumnStretch(2, 1);
     setSizeSettingKey("DialogSize/TranslatorConfigEditDialog", QSize(600, 600));
 
@@ -552,17 +559,20 @@ TranslatorConfigEditDialog::TranslatorConfigEditDialog(QWidget *parent) : CFrame
 
         batchSizeSpin->blockSignals(true);
         promptEdit->blockSignals(true);
+        timeoutSpin->blockSignals(true);
 
         configTip->setText(manager->data(index.siblingAtColumn((int)TranslatorConfigManager::Columns::TIP), Qt::DisplayRole).toString());
         urlEdit->setText(manager->data(index.siblingAtColumn((int)TranslatorConfigManager::Columns::URL), Qt::DisplayRole).toString());
         apiKeyEdit->setText(manager->data(index.siblingAtColumn((int)TranslatorConfigManager::Columns::API_KEY), Qt::DisplayRole).toString());
         modelEdit->setText(manager->data(index.siblingAtColumn((int)TranslatorConfigManager::Columns::MODEL), Qt::DisplayRole).toString());
         batchSizeSpin->setValue(manager->data(index.siblingAtColumn((int)TranslatorConfigManager::Columns::BATCH_SIZE), Qt::DisplayRole).toInt());
+        timeoutSpin->setValue(manager->data(index.siblingAtColumn((int)TranslatorConfigManager::Columns::TIMEOUT), Qt::DisplayRole).toInt());
         postHistCheck->setChecked(manager->data(index.siblingAtColumn((int)TranslatorConfigManager::Columns::POST_HISTORY), Qt::DisplayRole).toBool());
         promptEdit->setPlainText(manager->data(index.siblingAtColumn((int)TranslatorConfigManager::Columns::PROMPT), Qt::DisplayRole).toString());
 
         batchSizeSpin->blockSignals(false);
         promptEdit->blockSignals(false);
+        timeoutSpin->blockSignals(false);
     });
 
     QObject::connect(urlEdit, &ElaLineEdit::textEdited, this, [=](const QString &text){
@@ -593,6 +603,12 @@ TranslatorConfigEditDialog::TranslatorConfigEditDialog(QWidget *parent) : CFrame
         TranslatorConfigManager *manager = TranslatorConfigManager::instance();
         QModelIndex index = confView->currentIndex();
         manager->setData(index.siblingAtColumn((int)TranslatorConfigManager::Columns::POST_HISTORY), checked, Qt::EditRole);
+    });
+
+    QObject::connect(timeoutSpin, &ElaSpinBox::valueChanged, this, [=](int value){
+        TranslatorConfigManager *manager = TranslatorConfigManager::instance();
+        QModelIndex index = confView->currentIndex();
+        manager->setData(index.siblingAtColumn((int)TranslatorConfigManager::Columns::TIMEOUT), value, Qt::EditRole);
     });
 
     QObject::connect(promptEdit, &KPlainTextEdit::textChanged, this, [=](){

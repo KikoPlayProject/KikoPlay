@@ -16,6 +16,7 @@ struct TranslatorConfig
     QString prompt;
     int batchSize{20};
     bool postHistorySub{true};
+    int timeout{10000};
     QString tip;
 
     bool isValid() const { return !url.isEmpty() && !model.isEmpty() && !apiKey.isEmpty() && !prompt.isEmpty() && batchSize > 0; }
@@ -54,6 +55,7 @@ public:
         BATCH_SIZE,
         POST_HISTORY,
         TIP,
+        TIMEOUT,
     };
 
     inline virtual int columnCount(const QModelIndex &) const { return 7;}
@@ -75,7 +77,7 @@ private:
     TranslatorConfig _config;
     QStringList _subItems;
 
-    Network::Reply post(const QString &url, const QByteArray &data, const QStringList &header);
+    Network::Reply post(const QString &url, const QByteArray &data, const QStringList &header, int timeout);
 
 protected:
     virtual TaskStatus runTask() override;

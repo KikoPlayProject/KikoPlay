@@ -26,7 +26,6 @@ AppMenu::AppMenu(QWidget *p, QWidget *parent)
     appView->setContentsMargins(0,0,0,0);
     appView->setObjectName(QStringLiteral("AppView"));
     appView->setViewMode(QListView::IconMode);
-    appView->setProperty("cScrollStyle", true);
     appView->setUniformItemSizes(true);
     appView->setResizeMode(QListView::ResizeMode::Adjust);
     appView->setModel(GlobalObjects::appManager);

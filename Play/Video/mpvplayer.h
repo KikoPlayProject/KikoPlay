@@ -71,7 +71,7 @@ public:
     inline int getDuration() const{return currentDuration;}
     inline QString getMediaTitle() const {return mpv::qt::get_property(mpv,"media-title").toString();}
     inline const QVector<ChapterInfo> &getChapters() const {return chapters;}
-    inline QPixmap *getPreview(int timePos, bool refresh=true) { if(!mpvPreview || !curIsLocalFile) return nullptr; return mpvPreview->getPreview(timePos, refresh);}
+    QPixmap *getPreview(int timePos, bool refresh=true);
     inline const QString &getCurrentFile() const {return currentFile;}
     inline int getVolume() const {return volume;}
     inline qint64 getCacheSpeed() const { return cacheSpeed; }
@@ -264,6 +264,7 @@ private:
 
     int setMPVCommand(const QVariant& params);
     void setMPVProperty(const QString& name, const QVariant& value);
+    void ensurePreviewReady();
 };
 
 #endif // MPVPLAYER_H

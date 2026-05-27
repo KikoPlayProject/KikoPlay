@@ -96,6 +96,10 @@ void MainWindow::setDefaultBlur(double val)
 
 void MainWindow::initUI()
 {
+    defaultBlurRadius = GlobalObjects::appSetting->value(SETTING_KEY_MAIN_DEFAULT_BLUR, 0.0).toDouble();
+    setBackground(GlobalObjects::appSetting->value(SETTING_KEY_MAIN_BACKGROUND, "").toString(), false, true);
+    StyleManager::getStyleManager()->initStyle(hasBackground);
+
     windowTip = new WindowTip(this);
 
     elaAppBar = new ElaAppBar(this);
@@ -181,8 +185,19 @@ void MainWindow::initUI()
     titleControlHLayout->addWidget(buttonPage_Downlaod, 0, Qt::AlignVCenter);
 
     appBar = new AppBar(pageBtnContainer);
-    elaAppBar->appButton()->setProperty("hideMenuIndicator", true);
-    elaAppBar->appButton()->setMenu(new AppMenu(elaAppBar->appButton(), this));
+
+    ElaToolButton *menuButton = elaAppBar->appButton();
+    menuButton->setProperty("hideMenuIndicator", true);
+    menuButton->setPopupMode(QToolButton::DelayedPopup);
+    menuButton->style()->unpolish(menuButton);
+    menuButton->style()->polish(menuButton);
+    QObject::connect(menuButton, &ElaToolButton::clicked, this, [this, menuButton]() {
+        if (!menuButton->menu())
+        {
+            menuButton->setMenu(new AppMenu(menuButton, this));
+        }
+        menuButton->showMenu();
+    });
 
     elaAppBar->setCustomWidget(ElaAppBarType::LeftArea, pageBtnContainer);
     elaAppBar->setCustomWidget(ElaAppBarType::RightArea, appBar);
@@ -200,6 +215,7 @@ void MainWindow::initUI()
     });
 
     QWidget *centralWidget = new QWidget(this);
+    setCentralWidget(centralWidget);
     QVBoxLayout *verticalLayout = new QVBoxLayout(centralWidget);
     verticalLayout->setContentsMargins(0, 0, 0, 0);
     verticalLayout->setSpacing(0);
@@ -209,17 +225,10 @@ void MainWindow::initUI()
     contentStackLayout->addWidget(setupPlayPage());
     contentStackLayout->addWidget(new LazyContainer(this, contentStackLayout, [this](){return this->setupLibraryPage();}));
     contentStackLayout->addWidget(new LazyContainer(this, contentStackLayout, [this](){return this->setupDownloadPage();}));
-    listWindow->show();
 
     verticalLayout->addLayout(contentStackLayout);
-    setCentralWidget(centralWidget);
 
     initIconAction();
-
-    defaultBlurRadius = GlobalObjects::appSetting->value(SETTING_KEY_MAIN_DEFAULT_BLUR, 0.0).toDouble();
-    setBackground(GlobalObjects::appSetting->value(SETTING_KEY_MAIN_BACKGROUND, "").toString(), false, true);
-    StyleManager::getStyleManager()->initStyle(hasBackground);
-
 }
 
 void MainWindow::initIconAction()
@@ -266,8 +275,8 @@ void MainWindow::initIconAction()
         CheckUpdate checkUpdate(this);
         checkUpdate.exec();
     });
-    if (KUpdater::instance()->needCheck())
-    {
+    QTimer::singleShot(1500, this, [this, actCheckUpdate](){
+        if (!KUpdater::instance()->needCheck()) return;
         actCheckUpdate->setEnabled(false);
         actCheckUpdate->setText(tr("Checking..."));
         QObject::connect(KUpdater::instance(), &KUpdater::checkDone, this, [=](){
@@ -283,7 +292,7 @@ void MainWindow::initIconAction()
             actCheckUpdate->setEnabled(true);
         });
         KUpdater::instance()->check();
-    }
+    });
 
     QAction *actUseTip = iconMenu->addAction(tr("Usage Tip"));
     QObject::connect(actUseTip, &QAction::triggered, this, [this](){
@@ -297,7 +306,6 @@ void MainWindow::initIconAction()
         QDesktopServices::openUrl(QUrl("https://afdian.com/a/KikoPlay"));
     });
 
-
     QAction *actAbout = iconMenu->addAction(tr("About"));
     QObject::connect(actAbout,&QAction::triggered, this, [this](){
         About about(this);
@@ -309,7 +317,6 @@ void MainWindow::initIconAction()
 
     QAction *actExit = iconMenu->addAction(tr("Exit"));
     QObject::connect(actExit, &QAction::triggered, this, [=](){ this->onClose(true); });
-
 }
 
 void MainWindow::initTray()
@@ -337,6 +344,10 @@ void MainWindow::initSignals()
 {
     QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::stateChanged, this, [=](MPVPlayer::PlayState state){
 #ifdef Q_OS_WIN
+        if (state == MPVPlayer::Play && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+        {
+            ensureTaskbarProgressReady();
+        }
         if (winTaskbarProgress && state == MPVPlayer::Play && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
         {
             winTaskbarProgress->show();
@@ -369,12 +380,17 @@ void MainWindow::initSignals()
     });
 #ifdef Q_OS_WIN
     QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::positionChanged, this, [this](int val) {
+        if (!GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
+        {
+            ensureTaskbarProgressReady();
+        }
         if (winTaskbarProgress && !GlobalObjects::mpvplayer->getCurrentFile().isEmpty())
         {
             winTaskbarProgress->setValue(val);
         }
     });
     QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::durationChanged, this, [this](int duration){
+        ensureTaskbarProgressReady();
         if (winTaskbarProgress)
         {
             winTaskbarProgress->setRange(0, duration);
@@ -413,8 +429,39 @@ void MainWindow::restoreSize()
     if (!GlobalObjects::appSetting->value("MainWindow/ListVisibility", true).toBool())
     {
         listWindow->hide();
+        listShowState = false;
     }
-    listShowState = !listWindow->isHidden();
+    else
+    {
+        listShowState = true;
+        pendingShowListOnStartup = true;
+    }
+}
+
+void MainWindow::runDeferredStartupUiTasks()
+{
+    if (pendingShowListOnStartup)
+    {
+        pendingShowListOnStartup = false;
+        QTimer::singleShot(0, this, [this](){
+            if (listShowState && listWindow && !listWindow->isVisible())
+            {
+                listWindow->show();
+            }
+        });
+    }
+}
+
+void MainWindow::ensureTaskbarProgressReady()
+{
+#ifdef Q_OS_WIN
+    if (winTaskbarProgress) return;
+    QWindow *wh = windowHandle();
+    if (!wh) return;
+    winTaskbarButton = new QWinTaskbarButton(this);
+    winTaskbarButton->setWindow(wh);
+    winTaskbarProgress = winTaskbarButton->progress();
+#endif
 }
 
 void MainWindow::onClose(bool forceExit)
@@ -514,7 +561,6 @@ QWidget *MainWindow::setupPlayPage()
     {
         playerWindowWidget = playerWindow;
         playerWindowWidget->setParent(playSplitter);
-        playerWindow->show();
     }
 
     listWindow = new ListWindow(playSplitter);
@@ -693,7 +739,6 @@ QWidget *MainWindow::setupPlayPage()
     playSplitter->setCollapsible(0, false);
     playSplitter->setCollapsible(1, false);
     listWindow->hide();
-
 
     return page_play;
 
@@ -877,17 +922,12 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
 void MainWindow::showEvent(QShowEvent *)
 {
-#ifdef Q_OS_WIN
-    static bool taskProgressInit = false;
-    if(!taskProgressInit)
+    static bool firstShow = true;
+    if (firstShow)
     {
-        winTaskbarButton = new QWinTaskbarButton(this);
-        QWindow *wh = windowHandle();
-        winTaskbarButton->setWindow(wh);
-        winTaskbarProgress = winTaskbarButton->progress();
-        taskProgressInit = true;
+        firstShow = false;
+        runDeferredStartupUiTasks();
     }
-#endif
 }
 
 #ifndef Q_OS_WIN
