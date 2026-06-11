@@ -148,6 +148,11 @@ void ElaComboBox::showPopup()
             int contentHeight = popupContentHeight(view(), count(), maxVisibleItems());
             int containerHeight = contentHeight + kPopupExtraHeight;
             view()->resize(view()->width(), contentHeight);
+            const QModelIndex currentModelIndex = model()->index(currentIndex(), modelColumn(), rootModelIndex());
+            if (currentModelIndex.isValid())
+            {
+                view()->scrollTo(currentModelIndex, QAbstractItemView::EnsureVisible);
+            }
             container->move(container->x(), container->y() + 3);
             QLayout* layout = container->layout();
             while (layout->count())

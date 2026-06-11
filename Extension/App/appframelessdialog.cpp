@@ -11,7 +11,7 @@ Q_TAKEOVER_NATIVEEVENT_CPP(AppFramelessDialog, elaAppBar);
 
 
 AppFramelessDialog::AppFramelessDialog(const QString &titleStr, QWidget *parent)
-    : QDialog(parent), isBusy(false), isPin(false)
+    : QDialog(parent), isBusy(false), isPin(false), storeW(-1), storeH(-1)
 {
     setObjectName(QStringLiteral("framelessDialog"));
     elaAppBar = new ElaAppBar(this, ElaAppBarControlType::AppDialog);
@@ -68,6 +68,19 @@ void AppFramelessDialog::setPin(bool pin)
     onPin();
 }
 
+void AppFramelessDialog::adjustSize(int w, int h)
+{
+    if (!isHidden())
+    {
+        resize(w, h);
+    }
+    else
+    {
+        if (w > 0) storeW = w;
+        if (h > 0) storeH = h;
+    }
+}
+
 void AppFramelessDialog::resizeEvent(QResizeEvent *)
 {
     dialogTip->move((width()-dialogTip->width())/2, dialogTip->y());
@@ -78,6 +91,17 @@ void AppFramelessDialog::keyPressEvent(QKeyEvent *event)
     if(event->key() == Qt::Key_Escape)
         return;
     QDialog::keyPressEvent(event);
+}
+
+void AppFramelessDialog::showEvent(QShowEvent *event)
+{
+    if (storeH > 0 || storeW > 0)
+    {
+        int h = storeH > 0 ? storeH : height();
+        int w = storeW > 0 ? storeW : width();
+        resize(w, h);
+    }
+    QDialog::showEvent(event);
 }
 
 

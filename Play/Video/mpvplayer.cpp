@@ -881,7 +881,11 @@ void MPVPlayer::paintGL()
     if (!danmuHide)
     {
         QOpenGLFramebufferObject::bindDefault();
+        QOpenGLPaintDevice fboPaintDevice(width()*devicePixelRatioF(), height()*devicePixelRatioF());
+        QPainter painter(&fboPaintDevice);
+        painter.beginNativePainting();
         GlobalObjects::danmuRender->drawDanmu();
+        painter.endNativePainting();
     }
 }
 

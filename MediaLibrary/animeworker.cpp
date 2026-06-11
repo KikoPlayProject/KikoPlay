@@ -1107,7 +1107,7 @@ bool AnimeWorker::checkEpExist(const QString &animeName, const EpInfo &ep)
     int animeNo=query.record().indexOf("Anime"),
         nameNo=query.record().indexOf("Name"),
         epIndexNo=query.record().indexOf("EpIndex"),
-        typeNo=query.record().indexOf("EpIndex");
+        typeNo=query.record().indexOf("Type");
     if(query.first())
     {
         QString aName(query.value(animeNo).toString());

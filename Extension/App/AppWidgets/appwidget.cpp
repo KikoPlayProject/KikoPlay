@@ -786,7 +786,7 @@ bool AppWidget::setWidgetOption(AppWidgetOption option, const QVariant &val)
         int w = val.toInt(&ok);
         if (ok)
         {
-            this->widget->resize(w * widget->logicalDpiX() / 96, this->widget->height());
+            this->widget->resize(w, this->widget->height());
         }
         break;
     }
@@ -796,7 +796,7 @@ bool AppWidget::setWidgetOption(AppWidgetOption option, const QVariant &val)
         int h = val.toInt(&ok);
         if (ok)
         {
-            this->widget->resize(this->widget->width(), h * widget->logicalDpiY() / 96);
+            this->widget->resize(this->widget->width(), h);
         }
         break;
     }

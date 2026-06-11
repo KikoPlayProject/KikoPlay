@@ -125,6 +125,26 @@ bool AppWindow::setWidgetOption(AppWidgetOption option, const QVariant &val)
         }
         break;
     }
+    case AppWidgetOption::OPTION_WIDTH:
+    {
+        bool ok = false;
+        int width = val.toInt(&ok);
+        if (ok)
+        {
+            w->adjustSize(width, -1);
+        }
+        break;
+    }
+    case AppWidgetOption::OPTION_HEIGHT:
+    {
+        bool ok = false;
+        int h = val.toInt(&ok);
+        if (ok)
+        {
+            w->adjustSize(-1, h);
+        }
+        break;
+    }
     default:
         return AppWidget::setWidgetOption(option, val);
     }

@@ -26,11 +26,14 @@ protected:
 public:
     void setPin(bool pin);
     bool isPinned() const { return isPin; }
+    void adjustSize(int w, int h);
 private:
     ElaAppBar *elaAppBar;
 
     bool isBusy;
     bool isPin;
+
+    int storeW, storeH;
 
     DialogTip *dialogTip;
     std::function<bool()> onCloseCallback, onHideCallback;
@@ -39,6 +42,7 @@ private:
 protected:
     virtual void resizeEvent(QResizeEvent *event) override;
     void keyPressEvent(QKeyEvent *) override;
+    void showEvent(QShowEvent *event) override;
 
 public:
     void showBusyState(bool busy);
@@ -46,6 +50,7 @@ public:
     void showMessage(const QString &msg, int type=1);
     void setCloseCallback(const std::function<bool()> &func);
     void setHideCallback(const std::function<bool()> &func);
+
 };
 
 #endif // APPFRAMELESSDIALOG_H

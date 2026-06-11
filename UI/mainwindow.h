@@ -75,7 +75,6 @@ private:
     bool listShowState;
     bool isMini;
     QPoint miniPressPos;
-    bool pendingShowListOnStartup{false};
     QSystemTrayIcon *trayIcon;
     HideToTrayType hideToTrayType;
     QProgressBar *downloadToolProgress;
@@ -90,7 +89,6 @@ private:
     void initSignals();
     void restoreSize();
     void onClose(bool forceExit = false);
-    void runDeferredStartupUiTasks();
     void ensureTaskbarProgressReady();
 
     void switchToPlay(const QString &fileToPlay);

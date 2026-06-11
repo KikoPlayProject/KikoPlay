@@ -251,7 +251,7 @@ int Network::gzipCompress(const QByteArray &input, QByteArray &output)
     ret = deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
                             MAX_WBITS + 16, 8, Z_DEFAULT_STRATEGY);
     if (ret != Z_OK) return ret;
-	static QVector<unsigned char> inBuf(chunkSize), outBuf(chunkSize);
+    static thread_local QVector<unsigned char> inBuf(chunkSize), outBuf(chunkSize);
     QDataStream inStream(input);
     int flush;
     while(!inStream.atEnd())
@@ -286,7 +286,7 @@ int Network::gzipDecompress(const QByteArray &input, QByteArray &output)
     stream.next_in = Z_NULL;
     ret = inflateInit2(&stream, MAX_WBITS + 16);
     if (ret != Z_OK) return ret;
-	static QVector<unsigned char> inBuf(chunkSize), outBuf(chunkSize);
+    static thread_local QVector<unsigned char> inBuf(chunkSize), outBuf(chunkSize);
     static char dummy_head[2] = {
             0x8 + 0x7 * 0x10,
             (((0x8 + 0x7 * 0x10) * 0x100 + 30) / 31 * 31) & 0xFF,
@@ -339,7 +339,7 @@ int Network::decompress(const QByteArray &input, QByteArray &output)
     stream.next_in = Z_NULL;
     ret = inflateInit(&stream);
     if (ret != Z_OK) return ret;
-	static QVector<unsigned char> inBuf(chunkSize), outBuf(chunkSize);
+    static thread_local QVector<unsigned char> inBuf(chunkSize), outBuf(chunkSize);
     QDataStream inStream(input);
     while(!inStream.atEnd())
     {

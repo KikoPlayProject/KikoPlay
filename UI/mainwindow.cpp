@@ -225,6 +225,7 @@ void MainWindow::initUI()
     contentStackLayout->addWidget(setupPlayPage());
     contentStackLayout->addWidget(new LazyContainer(this, contentStackLayout, [this](){return this->setupLibraryPage();}));
     contentStackLayout->addWidget(new LazyContainer(this, contentStackLayout, [this](){return this->setupDownloadPage();}));
+    listWindow->show();
 
     verticalLayout->addLayout(contentStackLayout);
 
@@ -429,27 +430,8 @@ void MainWindow::restoreSize()
     if (!GlobalObjects::appSetting->value("MainWindow/ListVisibility", true).toBool())
     {
         listWindow->hide();
-        listShowState = false;
     }
-    else
-    {
-        listShowState = true;
-        pendingShowListOnStartup = true;
-    }
-}
-
-void MainWindow::runDeferredStartupUiTasks()
-{
-    if (pendingShowListOnStartup)
-    {
-        pendingShowListOnStartup = false;
-        QTimer::singleShot(0, this, [this](){
-            if (listShowState && listWindow && !listWindow->isVisible())
-            {
-                listWindow->show();
-            }
-        });
-    }
+    listShowState = !listWindow->isHidden();
 }
 
 void MainWindow::ensureTaskbarProgressReady()
@@ -922,12 +904,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
 void MainWindow::showEvent(QShowEvent *)
 {
-    static bool firstShow = true;
-    if (firstShow)
-    {
-        firstShow = false;
-        runDeferredStartupUiTasks();
-    }
+
 }
 
 #ifndef Q_OS_WIN

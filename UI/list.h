@@ -30,7 +30,6 @@ public:
     explicit ListWindow(QWidget *parent = nullptr);    
 private:
     void initActions();
-    void ensureUiInit();
     inline QModelIndex getPSParentIndex();
     inline QSharedPointer<DanmuComment> getSelectedDanmu();
     void matchPool(const QString &scriptId = "");
@@ -61,8 +60,6 @@ private:
     bool actionDisable;
     QActionGroup *loopModeGroup;
     int matchStatus;
-    bool uiInited{false};
-    int pendingListType{0};
     QWidget *initPlaylistPage();
 
     QTreeView *danmulistView = nullptr;
@@ -78,7 +75,6 @@ private:
     QWidget *initSublistPage();
 
 protected:
-    virtual void showEvent(QShowEvent *event) override;
     virtual void resizeEvent(QResizeEvent *event);
     virtual void dragEnterEvent(QDragEnterEvent *event);
     virtual void dropEvent(QDropEvent *event);
