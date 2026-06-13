@@ -29,12 +29,15 @@
 #include "Play/Video/mpvplayer.h"
 
 
-#define SETTING_KEY_SUB_RECOGNIZE_MODEL       "SubRecogize/Model"
-#define SETTING_KEY_SUB_RECOGNIZE_LANG        "SubRecogize/Lang"
-#define SETTING_KEY_SUB_RECOGNIZE_USE_CUDA    "SubRecogize/UseCuda"
-#define SETTING_KEY_SUB_RECOGNIZE_USE_VAD     "SubRecogize/UseVAD"
-#define SETTING_KEY_SUB_RECOGNIZE_VAD_THRES   "SubRecogize/VADThres"
-#define SETTING_KEY_SUB_TRANSLATOR_DEFAULT    "SubRecogize/DefaultTranslator"
+#define SETTING_KEY_SUB_RECOGNIZE_MODEL        "SubRecogize/Model"
+#define SETTING_KEY_SUB_RECOGNIZE_LANG          "SubRecogize/Lang"
+#define SETTING_KEY_SUB_RECOGNIZE_USE_CUDA      "SubRecogize/UseCuda"
+#define SETTING_KEY_SUB_RECOGNIZE_USE_VAD       "SubRecogize/UseVAD"
+#define SETTING_KEY_SUB_RECOGNIZE_VAD_THRES     "SubRecogize/VADThres"
+#define SETTING_KEY_SUB_TRANSLATOR_DEFAULT      "SubRecogize/DefaultTranslator"
+#define SETTING_KEY_SUB_RECOGNIZE_WHISPER_WC    "SubRecogize/Whisper_WC"
+#define SETTING_KEY_SUB_RECOGNIZE_WHISPER_ML    "SubRecogize/Whisper_WL"
+#define SETTING_KEY_SUB_RECOGNIZE_VAD_DURATION  "SubRecogize/VADDuration"
 
 SubRecognizeDialog::SubRecognizeDialog(const QString &videoFile, QWidget *parent) : CFramelessDialog(tr("Subtitle Recognition"), parent)
 {
@@ -155,6 +158,9 @@ SubRecognizeDialog::SubRecognizeDialog(const QString &videoFile, QWidget *parent
         options.vadMode = vadCheck->isChecked() ? 1 : 0;
         options.whisperUseCuda = cudaCheck->isChecked();
         options.vadThres = vadThresSlider->value() / 100.0;
+        options.whisperMaxContext = GlobalObjects::appSetting->value(SETTING_KEY_SUB_RECOGNIZE_WHISPER_WC, 32).toInt();
+        options.whisperMaxLen = GlobalObjects::appSetting->value(SETTING_KEY_SUB_RECOGNIZE_WHISPER_ML, 80).toInt();
+        options.vadChunkMaxDuration = GlobalObjects::appSetting->value(SETTING_KEY_SUB_RECOGNIZE_VAD_DURATION, 45000).toInt();
 
         modelCombo->setEnabled(false);
         langCombo->setEnabled(false);

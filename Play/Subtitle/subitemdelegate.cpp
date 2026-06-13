@@ -108,7 +108,7 @@ double SubItemDelegate::setTimeLayout(const QModelIndex &index, QTextLayout &lay
     layout.setTextOption(textOption);
 
     QString timeStart = index.siblingAtColumn((int)SubtitleModel::Columns::START).data(Qt::DisplayRole).toString();
-    QString timeEnd = index.siblingAtColumn((int)SubtitleModel::Columns::START).data(Qt::DisplayRole).toString();
+    QString timeEnd = index.siblingAtColumn((int)SubtitleModel::Columns::END).data(Qt::DisplayRole).toString();
     QString subTime = QString("%1 -> %2").arg(timeStart, timeEnd);
 
     QTextLayout::FormatRange timeFormat;

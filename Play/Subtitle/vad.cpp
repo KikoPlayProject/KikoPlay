@@ -1,4 +1,5 @@
 #include "vad.h"
+#include <algorithm>
 
 
 void VadIterator::init_engine_threads(int inter_threads, int intra_threads)
@@ -35,6 +36,32 @@ void VadIterator::reset_states()
     current_speech = timestamp_t();
     QList<float> tmp(64, 0);
     context.swap(tmp);
+}
+
+void VadIterator::apply_speech_pad()
+{
+    if (speeches.empty() || speech_pad_samples <= 0) return;
+
+    for (timestamp_t &speech : speeches)
+    {
+        speech.start = std::max(0, speech.start - speech_pad_samples);
+        speech.end = std::min(audio_length_samples, speech.end + speech_pad_samples);
+    }
+
+    QList<timestamp_t> merged_speeches;
+    for (const timestamp_t &speech : speeches)
+    {
+        if (speech.end <= speech.start) continue;
+        if (!merged_speeches.empty() && speech.start <= merged_speeches.back().end)
+        {
+            merged_speeches.back().end = std::max(merged_speeches.back().end, speech.end);
+        }
+        else
+        {
+            merged_speeches.append(speech);
+        }
+    }
+    speeches.swap(merged_speeches);
 }
 
 void VadIterator::predict(const QList<float> &data)
@@ -216,6 +243,7 @@ void VadIterator::process(const QList<float> &input_wav, bool *cancelFlag)
         temp_end = 0;
         triggered = false;
     }
+    apply_speech_pad();
 }
 
 void VadIterator::process(const QList<float> &input_wav, QList<float> &output_wav, bool *cancelFlag)
@@ -229,11 +257,10 @@ void VadIterator::collect_chunks(const QList<float> &input_wav, QList<float> &ou
 {
     output_wav.clear();
     for (int i = 0; i < speeches.size(); i++) {
-        int start = std::min<int>(speeches[i].start, input_wav.size() - 1);
-        int end = std::min<int>(speeches[i].end, input_wav.size() - 1);
+        int start = std::max(0, std::min<int>(speeches[i].start, input_wav.size()));
+        int end = std::max(0, std::min<int>(speeches[i].end, input_wav.size()));
         if (start >= end) continue;
-        QList<float> slice(&input_wav[start], &input_wav[end]);
-        output_wav += slice;
+        output_wav += input_wav.mid(start, end - start);
     }
 }
 
@@ -242,13 +269,18 @@ void VadIterator::drop_chunks(const QList<float> &input_wav, QList<float> &outpu
     output_wav.clear();
     int current_start = 0;
     for (int i = 0; i < speeches.size(); i++) {
-        QList<float> slice(&input_wav[current_start], &input_wav[speeches[i].start]);
-        output_wav += slice;
-        current_start = speeches[i].end;
+        const int start = std::max(0, std::min<int>(speeches[i].start, input_wav.size()));
+        if (current_start < start)
+        {
+            output_wav += input_wav.mid(current_start, start - current_start);
+        }
+        current_start = std::max(0, std::min<int>(speeches[i].end, input_wav.size()));
     }
 
-    QList<float> slice(&input_wav[current_start], &input_wav[input_wav.size()]);
-    output_wav += slice;
+    if (current_start < input_wav.size())
+    {
+        output_wav += input_wav.mid(current_start);
+    }
 }
 
 VadIterator::VadIterator(const QString &model, int Sample_rate, int windows_frame_size,

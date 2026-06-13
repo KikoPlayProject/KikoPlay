@@ -3,11 +3,13 @@
 #include "globalobjects.h"
 #include <QSettings>
 #include <QFileInfo>
+#include <QFile>
 #include <QProcess>
 #include <QEventLoop>
 #include <QRegularExpression>
 #include <QCoreApplication>
 #include <QDir>
+#include <algorithm>
 #include "Common/logger.h"
 #include "vad.h"
 #include "wav.h"
@@ -16,9 +18,34 @@
 #include <windows.h>
 #endif
 
+namespace
+{
+    constexpr qint64 MIN_SUB_DURATION = 300;
+    constexpr qint64 DUPLICATE_MERGE_GAP = 1500;
+
+    qint64 samplesToMs(qint64 samples, int sampleRate)
+    {
+        return sampleRate > 0 ? samples * 1000 / sampleRate : 0;
+    }
+
+    int msToSamples(qint64 ms, int sampleRate)
+    {
+        return sampleRate > 0 ? static_cast<int>(ms * sampleRate / 1000) : 0;
+    }
+
+    qint64 maxSubDurationForText(const QString &text)
+    {
+        const int textLength = qMax(1, text.simplified().size());
+        return qBound(4000, textLength * 350, 10000);
+    }
+}
+
 SubtitleRecognizer::SubtitleRecognizer(const SubRecognizeOptions &options) : KTask{"sub_recognizer"}, _options(options)
 {
-
+    QString baseName = QFileInfo(options.videoPath).fileName();
+    if (baseName.isEmpty()) baseName = "sub_recognizer";
+    _tmpBaseName = QString("%1_%2").arg(baseName, QString::number(reinterpret_cast<quintptr>(this), 16));
+    _tmpBaseName.replace(QRegularExpression("[\\\\/:*?\"<>|]"), "_");
 }
 
 SubtitleRecognizer::~SubtitleRecognizer()
@@ -47,65 +74,73 @@ QString SubtitleRecognizer::recognize()
 
     QString modelInput = wavExtracted;
     WAVInfo wavInfo;
-    bool loadWAVSuccess = false;
-    QList<QPair<qint64, qint64>> hasVoiceSegments;
+    bool loadWAVSuccess = loadWAV(modelInput, wavInfo, _options.vadMode == 0);
+    QList<QPair<qint64, qint64>> voiceSegments;
     bool useVAD = false;
 
-    if (_options.vadMode == 0)
-    {
-        loadWAVSuccess = loadWAV(modelInput, wavInfo, true);
-        if (loadWAVSuccess)
-        {
-            setInfo(tr("Processing...Duration: %1").arg(SubItem::encodeTime(static_cast<double>(wavInfo.samples) / wavInfo.sampleRate * 1000)), 0);
-        }
-    }
-    else
-    {
-        do
-        {
-            loadWAVSuccess = loadWAV(modelInput, wavInfo);
-            if (!loadWAVSuccess) break;
-            setInfo(tr("Processing...Duration: %1").arg(SubItem::encodeTime(static_cast<double>(wavInfo.samples) / wavInfo.sampleRate * 1000)), 0);
-
-            QString vadSplitFile = runVAD(wavInfo, hasVoiceSegments);
-            if (vadSplitFile.isEmpty()) break;
-            tmpFiles.append(vadSplitFile);
-
-            WAVInfo splitWAVInfo;
-            loadWAVSuccess = loadWAV(vadSplitFile, splitWAVInfo);
-            if (!loadWAVSuccess) break;
-
-            if (_options.vadMode == 1 || static_cast<float>(splitWAVInfo.samples) / wavInfo.samples < _options.autoVADThres)
-            {
-                useVAD = true;
-                modelInput = vadSplitFile;
-                wavInfo = splitWAVInfo;
-                setInfo(tr("Processing...VAD Duration: %1").arg(SubItem::encodeTime(static_cast<double>(wavInfo.samples) / wavInfo.sampleRate * 1000)), 0);
-            }
-        } while(false);
-    }
-    if (_cancelFlag)
-    {
-        setInfo(tr("Task Canceled"), NM_ERROR | NM_HIDE);
-        return "";
-    }
     if (!loadWAVSuccess || modelInput.isEmpty())
     {
         setInfo(tr("Load WAV Failed"), NM_ERROR | NM_HIDE);
         Logger::logger()->log(Logger::APP, QString("Load WAV Failed: %1").arg(wavExtracted));
         return "";
     }
-    QString subFile = runRecognize(wavInfo);
+
+    const qint64 audioDuration = samplesToMs(wavInfo.samples, wavInfo.sampleRate);
+    setInfo(tr("Processing...Duration: %1").arg(SubItem::encodeTime(audioDuration)), 0);
+
+    if (_options.vadMode != 0)
+    {
+        if (!runVAD(wavInfo, voiceSegments))
+        {
+            return "";
+        }
+
+        qint64 vadDuration = 0;
+        for (const auto &segment : voiceSegments)
+        {
+            vadDuration += segment.second - segment.first;
+        }
+        useVAD = _options.vadMode == 1 || (audioDuration > 0 && vadDuration / static_cast<double>(audioDuration) < _options.autoVADThres);
+        if (useVAD)
+        {
+            setInfo(tr("Processing...VAD Duration: %1").arg(SubItem::encodeTime(vadDuration)), 0);
+        }
+    }
+    if (_cancelFlag)
+    {
+        setInfo(tr("Task Canceled"), NM_ERROR | NM_HIDE);
+        return "";
+    }
+
+    QString subFile;
+    if (useVAD)
+    {
+        QList<AudioChunk> chunks;
+        if (!buildAudioChunks(wavInfo, voiceSegments, chunks))
+        {
+            setInfo(tr("Build VAD Chunks Failed"), NM_ERROR | NM_HIDE);
+            return "";
+        }
+        subFile = runChunkedRecognize(chunks, audioDuration);
+    }
+    else
+    {
+        subFile = runRecognize(wavInfo);
+    }
     if (_cancelFlag)
     {
         setInfo(tr("Task Canceled"), NM_ERROR | NM_HIDE);
         if (!subFile.isEmpty()) tmpFiles.append(subFile);
         return "";
     }
-    if (useVAD)
+    if (_options.cleanupRepeat && !subFile.isEmpty())
     {
-        tmpFiles.append(subFile);
-        subFile = adjustSub(subFile, hasVoiceSegments);
+        QString cleanedSubFile = cleanupSub(subFile);
+        if (!cleanedSubFile.isEmpty() && cleanedSubFile != subFile)
+        {
+            tmpFiles.append(subFile);
+            subFile = cleanedSubFile;
+        }
     }
     if (_options.language == "zh" || _options.langDetected == "zh")
     {
@@ -126,7 +161,7 @@ QString SubtitleRecognizer::extractAudio(const QString &video)
     arguments <<"-ac" << "1" << "-c:a" << "pcm_s16le";
     arguments << "-f" << "wav";
 
-    const QString outputPath = QString("%1/%2_wav_tmp").arg(GlobalObjects::context()->tmpPath, QFileInfo(video).fileName());
+    const QString outputPath = makeTempPath("wav_tmp");
     arguments << outputPath;
 
     if (QFile::exists(outputPath)) QFile::remove(outputPath);
@@ -172,9 +207,9 @@ QString SubtitleRecognizer::extractAudio(const QString &video)
     return success ? outputPath : "";
 }
 
-QString SubtitleRecognizer::runVAD(const WAVInfo &audio, QList<QPair<qint64, qint64>> &segments)
+bool SubtitleRecognizer::runVAD(const WAVInfo &audio, QList<QPair<qint64, qint64>> &segments)
 {
-    if (audio.data.empty()) return "";
+    if (audio.data.empty()) return false;
 
     bool cancelFlag = false;
     auto conn = QObject::connect(this, &SubtitleRecognizer::taskCancel, this, [&](){
@@ -182,35 +217,125 @@ QString SubtitleRecognizer::runVAD(const WAVInfo &audio, QList<QPair<qint64, qin
     });
     VadIterator vad(_options.vadModelPath, audio.sampleRate, 32, _options.vadThres, _options.vadMinSilence, _options.vadSpeechPad, _options.vadMinSpeech);
     vad.process(audio.data, &cancelFlag);
-    if (cancelFlag) return "";
     QObject::disconnect(conn);
+    if (cancelFlag) return false;
 
     const QList<timestamp_t> &stamps = vad.get_speech_timestamps();
-    segments.resize(stamps.size());
-    for (int i = 0; i < stamps.size(); i++)
+    if (stamps.empty())
     {
-        segments[i].first = stamps[i].start / (double)audio.sampleRate * 1000;
-        segments[i].second = stamps[i].end / (double)audio.sampleRate * 1000;
+        setInfo(tr("No speech detected"), NM_ERROR | NM_HIDE);
+        return false;
     }
 
-    QList<float> output_wav;
-    vad.collect_chunks(audio.data, output_wav);
-    wav::WavWriter writer(output_wav.data(), output_wav.size(), 1, audio.sampleRate, 16);
-    const QString outputPath = QString("%1/%2_vad_wav_tmp").arg(GlobalObjects::context()->tmpPath, QFileInfo(audio.srcFile).fileName());
-    writer.Write(outputPath);
+    const qint64 audioDuration = samplesToMs(audio.samples, audio.sampleRate);
+    const int mergeGap = qMax(0, _options.vadChunkMergeGap);
+    QList<QPair<qint64, qint64>> paddedSegments;
+    paddedSegments.reserve(stamps.size());
+    for (const timestamp_t &stamp : stamps)
+    {
+        qint64 start = qMax<qint64>(0, samplesToMs(stamp.start, audio.sampleRate));
+        qint64 end = qMin<qint64>(audioDuration, samplesToMs(stamp.end, audio.sampleRate));
+        if (end - start < _options.vadMinSpeech) continue;
 
-    return outputPath;
+        if (!paddedSegments.empty() && start - paddedSegments.back().second <= mergeGap)
+        {
+            paddedSegments.back().second = qMax(paddedSegments.back().second, end);
+        }
+        else
+        {
+            paddedSegments.append({start, end});
+        }
+    }
+
+    if (paddedSegments.empty())
+    {
+        setInfo(tr("No speech detected"), NM_ERROR | NM_HIDE);
+        return false;
+    }
+
+    segments.swap(paddedSegments);
+    return true;
 }
 
-QString SubtitleRecognizer::runRecognize(const WAVInfo &audio)
+bool SubtitleRecognizer::buildAudioChunks(const WAVInfo &audio, const QList<QPair<qint64, qint64>> &voiceSegments, QList<AudioChunk> &chunks)
+{
+    chunks.clear();
+    if (audio.data.empty() || voiceSegments.empty()) return false;
+
+    const qint64 maxDuration = qMax<qint64>(10000, _options.vadChunkMaxDuration);
+    const int silenceSamples = msToSamples(qMax(0, _options.vadChunkSilence), audio.sampleRate);
+    QList<float> chunkData;
+    AudioChunk chunk;
+
+    auto flushChunk = [&]() -> bool {
+        if (chunkData.empty() || chunk.segments.empty()) return true;
+
+        chunk.duration = samplesToMs(chunkData.size(), audio.sampleRate);
+        const QString outputPath = makeTempPath(QString("vad_chunk_%1_wav_tmp").arg(chunks.size()));
+        wav::WavWriter writer(chunkData.data(), chunkData.size(), 1, audio.sampleRate, 16);
+        writer.Write(outputPath);
+        if (!QFile::exists(outputPath)) return false;
+
+        chunk.srcFile = outputPath;
+        chunks.append(chunk);
+        tmpFiles.append(outputPath);
+        chunkData.clear();
+        chunk = AudioChunk();
+        return true;
+    };
+
+    for (const auto &segment : voiceSegments)
+    {
+        int startSample = qBound(0, msToSamples(segment.first, audio.sampleRate), audio.data.size());
+        int endSample = qBound(0, msToSamples(segment.second, audio.sampleRate), audio.data.size());
+        if (startSample >= endSample) continue;
+
+        const int segmentSamples = endSample - startSample;
+        const qint64 nextDuration = samplesToMs(chunkData.size() + (chunkData.empty() ? 0 : silenceSamples) + segmentSamples, audio.sampleRate);
+        if (!chunkData.empty() && nextDuration > maxDuration)
+        {
+            if (!flushChunk()) return false;
+        }
+
+        if (!chunkData.empty() && silenceSamples > 0)
+        {
+            const int oldSize = chunkData.size();
+            chunkData.resize(oldSize + silenceSamples);
+        }
+
+        ChunkSegment chunkSegment;
+        chunkSegment.chunkStartTime = samplesToMs(chunkData.size(), audio.sampleRate);
+        chunkSegment.sourceStartTime = segment.first;
+        chunkSegment.sourceEndTime = segment.second;
+
+        chunkData += audio.data.mid(startSample, segmentSamples);
+
+        chunkSegment.chunkEndTime = samplesToMs(chunkData.size(), audio.sampleRate);
+        chunk.segments.append(chunkSegment);
+    }
+
+    if (!flushChunk()) return false;
+    return !chunks.empty();
+}
+
+QString SubtitleRecognizer::runRecognize(const WAVInfo &audio, double progressStart, double progressSpan, bool emitPreview)
 {
     QStringList arguments;
     arguments << "-m" << _options.modelPath;
-    arguments << "-l" << _options.language;
+    const QString language = _options.language == "auto" && !_options.langDetected.isEmpty() ? _options.langDetected : _options.language;
+    arguments << "-l" << language;
     arguments <<"-f" << audio.srcFile;
     arguments << "-osrt";
+    if (_options.whisperMaxContext >= 0)
+    {
+        arguments << "-mc" << QString::number(_options.whisperMaxContext);
+    }
+    if (_options.whisperMaxLen > 0)
+    {
+        arguments << "-ml" << QString::number(_options.whisperMaxLen);
+    }
 
-    const QString outputPath = QString("%1/%2_srt_tmp").arg(GlobalObjects::context()->tmpPath, QFileInfo(audio.srcFile).fileName());
+    const QString outputPath = makeTempPath(QString("%1_srt_tmp").arg(QFileInfo(audio.srcFile).baseName()));
     arguments << "-of" << outputPath;
 
     QProcess whisperProcess;
@@ -252,8 +377,12 @@ QString SubtitleRecognizer::runRecognize(const WAVInfo &audio)
         if (!subItems.empty())
         {
             double duration = static_cast<double>(audio.samples) / audio.sampleRate * 1000;
-            emit progreeUpdated(qMin(subItems.back().endTime / duration * 100, 100.0));
-            emit newSubRecognized(subItems);
+            double localProgress = duration > 0 ? subItems.back().endTime / duration : 0;
+            emit progreeUpdated(qMin(progressStart + localProgress * progressSpan, 100.0));
+            if (emitPreview)
+            {
+                emit newSubRecognized(subItems);
+            }
         }
     }, Qt::QueuedConnection);
     QObject::connect(&whisperProcess, &QProcess::readyReadStandardError, &eventLoop, [&]() {
@@ -285,39 +414,111 @@ QString SubtitleRecognizer::runRecognize(const WAVInfo &audio)
         whisperProcess.start(_options.whisperUseCuda ? _options.whisperCudaPath : _options.whisperPath, arguments);
     });
     eventLoop.exec();
-    return success ? outputPath + ".srt" : "";
+    const QString srtPath = outputPath + ".srt";
+    if (!success || !QFile::exists(srtPath))
+    {
+        if (success)
+        {
+            Logger::logger()->log(Logger::APP, tr("Whisper output file missing: %1").arg(srtPath));
+        }
+        return "";
+    }
+    return srtPath;
 }
 
-QString SubtitleRecognizer::adjustSub(const QString &subFilePath, const QList<QPair<qint64, qint64>> &voiceSegments)
+QString SubtitleRecognizer::runChunkedRecognize(const QList<AudioChunk> &chunks, qint64 audioDuration)
 {
-    QList<QPair<qint64, qint64>> targetSegments;
-    targetSegments.reserve(voiceSegments.size());
-    qint64 offset = 0;
-    for (auto &p : voiceSegments)
-    {
-        qint64 nextStart = offset + p.second - p.first;
-        targetSegments.append({offset, nextStart});
-        offset = nextStart;
-    }
+    if (chunks.empty()) return "";
 
     SubtitleLoader loader;
-    SubFile subFile(loader.loadSubFile(subFilePath));
-
-    for (SubItem &sub : subFile.items)
+    QList<SubItem> allItems;
+    for (int i = 0; i < chunks.size(); ++i)
     {
-        for (int i = targetSegments.size() - 1; i >= 0; --i)
+        if (_cancelFlag) return "";
+
+        WAVInfo chunkInfo;
+        if (!loadWAV(chunks[i].srcFile, chunkInfo, true))
         {
-            if (sub.startTime >= targetSegments[i].first)
+            Logger::logger()->log(Logger::APP, QString("Load chunk WAV Failed: %1").arg(chunks[i].srcFile));
+            return "";
+        }
+
+        const double progressStart = i * 100.0 / chunks.size();
+        const double progressSpan = 100.0 / chunks.size();
+        QString chunkSubFile = runRecognize(chunkInfo, progressStart, progressSpan, false);
+        if (chunkSubFile.isEmpty()) return "";
+        tmpFiles.append(chunkSubFile);
+
+        SubFile chunkSub(loader.loadSubFile(chunkSubFile));
+        QList<SubItem> mappedItems;
+        mappedItems.reserve(chunkSub.items.size());
+        for (SubItem sub : chunkSub.items)
+        {
+            const MappedChunkTime mappedStart = mapChunkTime(sub.startTime, chunks[i].segments);
+            const MappedChunkTime mappedEnd = mapChunkTime(sub.endTime, chunks[i].segments);
+            sub.startTime = qBound<qint64>(0, mappedStart.time, audioDuration);
+            sub.endTime = qBound<qint64>(0, mappedEnd.time, audioDuration);
+            if (mappedStart.segmentIndex >= 0 && mappedEnd.segmentIndex >= 0 && mappedStart.segmentIndex != mappedEnd.segmentIndex &&
+                sub.endTime - sub.startTime > maxSubDurationForText(sub.text))
             {
-                sub.startTime = voiceSegments[i].first + sub.startTime - targetSegments[i].first;
-                sub.endTime = voiceSegments[i].first + sub.endTime - targetSegments[i].first;
-                break;
+                sub.endTime = qMin(sub.endTime, chunks[i].segments[mappedStart.segmentIndex].sourceEndTime);
             }
+            if (sub.endTime <= sub.startTime)
+            {
+                sub.endTime = qMin(audioDuration, sub.startTime + MIN_SUB_DURATION);
+            }
+            if (sub.endTime > sub.startTime && !sub.text.trimmed().isEmpty())
+            {
+                mappedItems.append(sub);
+            }
+        }
+        if (!mappedItems.empty())
+        {
+            allItems += mappedItems;
+            emit newSubRecognized(mappedItems);
         }
     }
 
-    const QString outputPath = QString("%1/%2_srt_adjust_tmp.srt").arg(GlobalObjects::context()->tmpPath, QFileInfo(subFilePath).baseName());
+    if (allItems.empty())
+    {
+        setInfo(tr("No subtitle recognized"), NM_ERROR | NM_HIDE);
+        return "";
+    }
+
+    cleanupSubItems(allItems);
+    SubFile subFile;
+    subFile.format = SubFileFormat::F_SRT;
+    subFile.items = allItems;
+
+    const QString outputPath = makeTempPath("srt_chunked_tmp.srt");
     return subFile.saveSRT(outputPath) ? outputPath : "";
+}
+
+SubtitleRecognizer::MappedChunkTime SubtitleRecognizer::mapChunkTime(qint64 chunkTime, const QList<ChunkSegment> &segments) const
+{
+    if (segments.empty()) return {chunkTime, -1};
+
+    for (int i = 0; i < segments.size(); ++i)
+    {
+        const ChunkSegment &segment = segments[i];
+        if (chunkTime < segment.chunkStartTime)
+        {
+            return {segment.sourceStartTime, i};
+        }
+        if (chunkTime <= segment.chunkEndTime)
+        {
+            return {segment.sourceStartTime + chunkTime - segment.chunkStartTime, i};
+        }
+        if (i + 1 < segments.size() && chunkTime < segments[i + 1].chunkStartTime)
+        {
+            const qint64 prevDistance = chunkTime - segment.chunkEndTime;
+            const qint64 nextDistance = segments[i + 1].chunkStartTime - chunkTime;
+            return prevDistance <= nextDistance ? MappedChunkTime{segment.sourceEndTime, i} :
+                                                  MappedChunkTime{segments[i + 1].sourceStartTime, i + 1};
+        }
+    }
+
+    return MappedChunkTime(segments.back().sourceEndTime, segments.size() - 1);
 }
 
 QString SubtitleRecognizer::simplifySub(const QString &subFilePath)
@@ -330,8 +531,112 @@ QString SubtitleRecognizer::simplifySub(const QString &subFilePath)
         sub.text = toSimplified(sub.text);
     }
 
-    const QString outputPath = QString("%1/%2_srt_simp_tmp.srt").arg(GlobalObjects::context()->tmpPath, QFileInfo(subFilePath).baseName());
+    const QString outputPath = makeTempPath(QString("%1_srt_simp_tmp.srt").arg(QFileInfo(subFilePath).baseName()));
     return subFile.saveSRT(outputPath) ? outputPath : "";
+}
+
+QString SubtitleRecognizer::cleanupSub(const QString &subFilePath)
+{
+    SubtitleLoader loader;
+    SubFile subFile(loader.loadSubFile(subFilePath));
+    if (subFile.items.empty()) return subFilePath;
+
+    cleanupSubItems(subFile.items);
+
+    const QString outputPath = makeTempPath(QString("%1_srt_cleanup_tmp.srt").arg(QFileInfo(subFilePath).baseName()));
+    return subFile.saveSRT(outputPath) ? outputPath : subFilePath;
+}
+
+QString SubtitleRecognizer::makeTempPath(const QString &suffix) const
+{
+    QString safeSuffix = suffix;
+    static const QRegularExpression re("[\\\\/:*?\"<>|]");
+    safeSuffix.replace(re, "_");
+    return QString("%1/%2_%3").arg(GlobalObjects::context()->tmpPath, _tmpBaseName, safeSuffix);
+}
+
+void SubtitleRecognizer::cleanupSubItems(QList<SubItem> &items) const
+{
+    QList<SubItem> normalizedItems;
+    normalizedItems.reserve(items.size());
+    for (SubItem item : items)
+    {
+        item.text = cleanupSubText(item.text);
+        if (item.text.isEmpty()) continue;
+        if (item.endTime <= item.startTime)
+        {
+            item.endTime = item.startTime + MIN_SUB_DURATION;
+        }
+        normalizedItems.append(item);
+    }
+
+    std::stable_sort(normalizedItems.begin(), normalizedItems.end(), [](const SubItem &item1, const SubItem &item2){
+        return item1.startTime < item2.startTime;
+    });
+
+    QList<SubItem> cleanedItems;
+    for (const SubItem &item : normalizedItems)
+    {
+        if (!cleanedItems.empty())
+        {
+            SubItem &last = cleanedItems.back();
+            if (normalizedSubText(last.text) == normalizedSubText(item.text) && item.startTime - last.endTime <= DUPLICATE_MERGE_GAP)
+            {
+                last.endTime = qMax(last.endTime, item.endTime);
+                continue;
+            }
+        }
+        cleanedItems.append(item);
+    }
+    items.swap(cleanedItems);
+}
+
+QString SubtitleRecognizer::cleanupSubText(const QString &text) const
+{
+    QStringList cleanedLines;
+    const QStringList lines = text.split('\n', Qt::SkipEmptyParts);
+    for (const QString &line : lines)
+    {
+        QString cleanedLine = line.simplified();
+        if (cleanedLine.isEmpty()) continue;
+        if (!cleanedLines.empty() && normalizedSubText(cleanedLines.back()) == normalizedSubText(cleanedLine)) continue;
+        cleanedLines.append(cleanedLine);
+    }
+    QString cleaned = cleanedLines.join('\n');
+    if (cleaned.size() < 6) return cleaned;
+
+    const int maxUnit = qMin(20, cleaned.size() / 3);
+    for (int unitLength = 2; unitLength <= maxUnit; ++unitLength)
+    {
+        if (cleaned.size() % unitLength != 0) continue;
+
+        const QString unit = cleaned.left(unitLength);
+        if (unit.trimmed().isEmpty()) continue;
+
+        bool repeated = true;
+        for (int pos = unitLength; pos < cleaned.size(); pos += unitLength)
+        {
+            if (cleaned.mid(pos, unitLength) != unit)
+            {
+                repeated = false;
+                break;
+            }
+        }
+        if (repeated)
+        {
+            return unit.trimmed();
+        }
+    }
+
+    return cleaned;
+}
+
+QString SubtitleRecognizer::normalizedSubText(const QString &text) const
+{
+    QString normalized = text.simplified().toLower();
+    static const QRegularExpression reg("\\s+");
+    normalized.remove(reg);
+    return normalized;
 }
 
 QString SubtitleRecognizer::toSimplified(const QString &text)

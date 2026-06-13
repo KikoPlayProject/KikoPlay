@@ -61,6 +61,7 @@ private:
     void init_onnx_model(const QString &model_path);
     void reset_states();
     void predict(const QList<float> &data);
+    void apply_speech_pad();
 
 private:
     // model config
