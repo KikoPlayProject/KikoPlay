@@ -47,6 +47,7 @@ private:
     QVBoxLayout *poolItemVLayout;
     Pool *curPool;
     QVector<PoolItem *> poolItems;
+    void refreshCount();
 
 };
 

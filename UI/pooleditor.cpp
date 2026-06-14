@@ -293,7 +293,20 @@ void PoolEditor::refreshItems()
         poolItemVLayout->insertWidget(0, poolItem);
     }
     pageBtnSLayout->setCurrentIndex(0);
+    refreshCount();
     QObject::connect(curPool, &Pool::poolChanged, this, &PoolEditor::refreshItems);
+}
+
+void PoolEditor::refreshCount()
+{
+    if (!curPool) return;
+    const auto &sources = curPool->sources();
+    int totalCount = 0;
+    for (auto iter = sources.begin(); iter != sources.end(); ++iter)
+    {
+        totalCount += iter.value().count;
+    }
+    setTitle(totalCount > 0 ? tr("Edit Pool - %1").arg(totalCount) : tr("Edit Pool"));
 }
 
 PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent) : QWidget(parent), src(sourceInfo)
@@ -474,6 +487,7 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent) : QWidget(par
         GlobalObjects::danmuPool->getPool()->deleteSource(sourceInfo->id);
         items->removeOne(this);
         this->deleteLater();
+        editor->refreshCount();
     });
 
     QObject::connect(refreshBtn, &QPushButton::clicked, this, [=](){
@@ -491,6 +505,7 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent) : QWidget(par
         {
             editor->showMessage(tr("Add %1 New Danmu").arg(addCount));
             danmuCountTip->setText(tr("Danmu Count: %1").arg(formatFixedDanmuCount(sourceInfo->count, danmuCountTip->fontMetrics())));
+            editor->refreshCount();
         }
         if (srcChanged)
         {

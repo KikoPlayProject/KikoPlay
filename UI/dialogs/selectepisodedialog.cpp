@@ -1,5 +1,6 @@
 #include "selectepisodedialog.h"
 #include "UI/ela/ElaCheckBox.h"
+#include "UI/ela/ElaSpinBox.h"
 #include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/kpushbutton.h"
 #include <QGridLayout>
@@ -7,6 +8,7 @@
 #include <QLabel>
 #include <QAction>
 #include <QHeaderView>
+#include <climits>
 SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent)
     :CFramelessDialog(tr("Select Episode"),parent,true), episodeResult(epResults)
 {
@@ -61,6 +63,28 @@ SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent)
             episodeWidget->topLevelItem(i++)->setData(2,0,QString("0"));
         }
     });
+    QPushButton *fixedDelay = new KPushButton(tr("Fixed Delay"),this);
+    QObject::connect(fixedDelay,&QPushButton::clicked,[this](){
+        CFramelessDialog fixedDelayDialog(tr("Fixed Delay"), this, true);
+        QLabel *delayLabel = new QLabel(tr("Delay(s)") + ":", &fixedDelayDialog);
+        ElaSpinBox *delaySpin = new ElaSpinBox(&fixedDelayDialog);
+        delaySpin->setRange(INT_MIN / 1000, INT_MAX / 1000);
+        delaySpin->setValue(0);
+        QGridLayout *delayGLayout = new QGridLayout(&fixedDelayDialog);
+        delayGLayout->addWidget(delayLabel, 0, 0);
+        delayGLayout->addWidget(delaySpin, 0, 1);
+        delayGLayout->setColumnStretch(1, 1);
+        fixedDelayDialog.resize(260, 80);
+        if (QDialog::Accepted != fixedDelayDialog.exec()) return;
+
+        const int delay = delaySpin->value();
+        int i = 0;
+        for(auto &item:episodeResult)
+        {
+            item.delay=delay*1000;
+            episodeWidget->topLevelItem(i++)->setData(2,0,QString::number(delay));
+        }
+    });
 
     QAction *checkSelection = new QAction(tr("Check Selection Episodes"), this);
     episodeWidget->addAction(checkSelection);
@@ -89,8 +113,9 @@ SelectEpisode::SelectEpisode(QList<DanmuSource> &epResults, QWidget *parent)
     QGridLayout *episodeGLayout=new QGridLayout(this);
     episodeGLayout->addWidget(selectAllCheck,0,0);
     episodeGLayout->addWidget(setDelayButton,0,1);
-    episodeGLayout->addWidget(resetDelay,0,2);
-    episodeGLayout->addWidget(episodeWidget,1,0,1,3);
+    episodeGLayout->addWidget(fixedDelay,0,2);
+    episodeGLayout->addWidget(resetDelay,0,3);
+    episodeGLayout->addWidget(episodeWidget,1,0,1,4);
     episodeGLayout->setColumnStretch(0,1);
     episodeGLayout->setRowStretch(1,1);
 
