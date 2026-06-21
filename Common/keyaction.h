@@ -34,6 +34,7 @@ struct KeyAction
     {
         PARAM_INT,
         PARAM_STR,
+        PARAM_BOOL,
     };
 
     struct ActionParam
@@ -57,7 +58,7 @@ struct KeyAction
     virtual void trigger() { }
 
     virtual void serialize(QDataStream &out);
-    virtual void deserialize(QDataStream &in);
+    virtual void deserialize(QDataStream &in, int kikoVersion);
 
 };
 
@@ -81,6 +82,8 @@ struct KeyActionSeekForward : public KeyAction
     bool isValid(QObject *env) override { return env && env->inherits("PlayerWindow"); }
     void trigger() override;
     QString getDesc() const override;
+
+    virtual void deserialize(QDataStream &in, int kikoVersion) override;
 };
 
 struct KeyActionSeekBackward : public KeyAction
@@ -89,6 +92,8 @@ struct KeyActionSeekBackward : public KeyAction
     bool isValid(QObject *env) override { return env && env->inherits("PlayerWindow"); }
     void trigger() override;
     QString getDesc() const override;
+
+    virtual void deserialize(QDataStream &in, int kikoVersion) override;
 };
 
 struct KeyActionFrameForward : public KeyAction
@@ -185,6 +190,8 @@ struct KeyActionMPVCommand : public KeyAction
     QVector<QStringList> runCommands;
     bool descHasVariable;
     void parseCommand();
+
+    virtual void deserialize(QDataStream &in, int kikoVersion) override;
 };
 
 #endif // KEYACTION_H

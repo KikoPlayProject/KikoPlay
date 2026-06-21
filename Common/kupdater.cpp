@@ -1,6 +1,9 @@
 #include "kupdater.h"
 #include "globalobjects.h"
 #include "Common/network.h"
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#endif
 
 KUpdater::KUpdater(QObject *parent)
     : QObject{parent}, hasNVer(false)
@@ -14,10 +17,29 @@ KUpdater *KUpdater::instance()
     return &updater;
 }
 
-void KUpdater::check()
+void KUpdater::check(bool isStartup)
 {
     const qint64 curTs = QDateTime::currentSecsSinceEpoch();
     GlobalObjects::appSetting->setValue("KikoPlay/LastCheckUpdate", curTs);
+
+#ifdef KSERVICE
+    if (isStartup)
+    {
+        const auto &versionInfo = KService::instance()->getVersionInfo();
+        if (versionInfo.version > 0)
+        {
+            if (versionInfo.version > GlobalObjects::kikoVersionNum)
+            {
+                hasNVer = true;
+                nVer = versionInfo.versionName;
+                nVerURL = versionInfo.url;
+                nVerDesc = versionInfo.info;
+            }
+            emit checkDone();
+            return;
+        }
+    }
+#endif
 
     QNetworkRequest req(QUrl("https://raw.githubusercontent.com/KikoPlayProject/KikoPlay/master/newVersion/version.json"));
     QNetworkAccessManager *manager = Network::getManager();

@@ -148,7 +148,7 @@ signals:
 public slots:   
     void setMedia(const QString &file);
     void setState(PlayState newState);
-    void seek(int pos,bool relative=false);
+    void seek(int pos, bool relative=false, bool precise=false);
 	void frameStep(bool forward = true);
     void setVolume(int volume);
     void setMute(bool mute);

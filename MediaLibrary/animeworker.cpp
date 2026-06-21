@@ -5,6 +5,10 @@
 #include "Common/threadtask.h"
 #include "Common/lrucache.h"
 #include "Common/dbmanager.h"
+#include "Common/eventbus.h"
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#endif
 
 #include <QSqlQuery>
 #include <QSqlRecord>
@@ -1087,6 +1091,49 @@ const QStringList AnimeWorker::getAlias(const QString &animeName)
 {
     loadAlias();
     return animeAlias.values(animeName);
+}
+
+void AnimeWorker::pushAnimeEvent(Anime *anime, const QStringList &tags)
+{
+#ifndef KSERVICE
+    return;
+#endif
+    if (anime && EventBus::getEventBus()->hasListener(EventBus::EVENT_ANIME_INFO_FETCHED))
+    {
+#ifdef KSERVICE
+        if (!KService::instance()->isInterestLibrarySource(anime->scriptId())) return;
+#endif
+        QVariantMap staffs;
+        for (auto &p : anime->staff)
+        {
+            staffs[p.first] = p.second;
+        }
+        QVariantList characters;
+        for (auto &c : anime->characters)
+        {
+            characters << QVariantMap{
+                { "name", c.name },
+                { "link", c.link },
+                { "actor", c.actor },
+                { "img", c.imgURL },
+            };
+        }
+        QVariantMap param = {
+            { "name", anime->_name },
+            { "date", anime->_airDate  },
+            { "desc", anime->_desc },
+            { "url",  anime->_url },
+            { "coverURL", anime->_coverURL },
+            { "scriptId", anime->_scriptId },
+            { "scriptData", anime->_scriptData },
+            { "eps", anime->_epCount },
+            { "tags", tags },
+            { "staff", staffs },
+            { "characters", characters },
+        };
+
+        EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_ANIME_INFO_FETCHED, param});
+    }
 }
 
 bool AnimeWorker::checkAnimeExist(const QString &name)

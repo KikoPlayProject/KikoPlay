@@ -220,6 +220,7 @@ PROTOBUF_CONSTEXPR UVEventResponse_LatestVersion::UVEventResponse_LatestVersion(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.url_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.info_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.versionname_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.version_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct UVEventResponse_LatestVersionDefaultTypeInternal {
@@ -545,6 +546,158 @@ struct RemoveSourceEventDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 RemoveSourceEventDefaultTypeInternal _RemoveSourceEvent_default_instance_;
+PROTOBUF_CONSTEXPR AnimeCharacter::AnimeCharacter(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.link_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.actor_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.imgurl_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct AnimeCharacterDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR AnimeCharacterDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~AnimeCharacterDefaultTypeInternal() {}
+  union {
+    AnimeCharacter _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 AnimeCharacterDefaultTypeInternal _AnimeCharacter_default_instance_;
+PROTOBUF_CONSTEXPR Anime_StaffEntry_DoNotUse::Anime_StaffEntry_DoNotUse(
+    ::_pbi::ConstantInitialized) {}
+struct Anime_StaffEntry_DoNotUseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR Anime_StaffEntry_DoNotUseDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~Anime_StaffEntry_DoNotUseDefaultTypeInternal() {}
+  union {
+    Anime_StaffEntry_DoNotUse _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 Anime_StaffEntry_DoNotUseDefaultTypeInternal _Anime_StaffEntry_DoNotUse_default_instance_;
+PROTOBUF_CONSTEXPR Anime::Anime(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.staff_)*/{}
+  , /*decltype(_impl_.characters_)*/{}
+  , /*decltype(_impl_.tags_)*/{}
+  , /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.id_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.airdate_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.desc_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.url_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.coverurl_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.source_)*/nullptr
+  , /*decltype(_impl_.epnum_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct AnimeDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR AnimeDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~AnimeDefaultTypeInternal() {}
+  union {
+    Anime _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 AnimeDefaultTypeInternal _Anime_default_instance_;
+PROTOBUF_CONSTEXPR AnimeProfileEvent::AnimeProfileEvent(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.header_)*/nullptr
+  , /*decltype(_impl_.animeinfo_)*/nullptr
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct AnimeProfileEventDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR AnimeProfileEventDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~AnimeProfileEventDefaultTypeInternal() {}
+  union {
+    AnimeProfileEvent _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 AnimeProfileEventDefaultTypeInternal _AnimeProfileEvent_default_instance_;
+PROTOBUF_CONSTEXPR ImageUploadTask::ImageUploadTask(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.srcid_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.animename_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.charactername_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.url_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.srctype_)*/0
+  , /*decltype(_impl_.imgtype_)*/0
+  , /*decltype(_impl_.minwidth_)*/0
+  , /*decltype(_impl_.minheight_)*/0
+  , /*decltype(_impl_.preferredwidth_)*/0
+  , /*decltype(_impl_.preferredheight_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct ImageUploadTaskDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ImageUploadTaskDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ImageUploadTaskDefaultTypeInternal() {}
+  union {
+    ImageUploadTask _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ImageUploadTaskDefaultTypeInternal _ImageUploadTask_default_instance_;
+PROTOBUF_CONSTEXPR AnimeProfileResponse::AnimeProfileResponse(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.uploadtasks_)*/{}
+  , /*decltype(_impl_.header_)*/nullptr
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct AnimeProfileResponseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR AnimeProfileResponseDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~AnimeProfileResponseDefaultTypeInternal() {}
+  union {
+    AnimeProfileResponse _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 AnimeProfileResponseDefaultTypeInternal _AnimeProfileResponse_default_instance_;
+PROTOBUF_CONSTEXPR AnimeImageUploadRequest::AnimeImageUploadRequest(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.srcid_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.animename_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.charactername_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.imageurl_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.imagedata_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.header_)*/nullptr
+  , /*decltype(_impl_.srctype_)*/0
+  , /*decltype(_impl_.imgtype_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct AnimeImageUploadRequestDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR AnimeImageUploadRequestDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~AnimeImageUploadRequestDefaultTypeInternal() {}
+  union {
+    AnimeImageUploadRequest _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 AnimeImageUploadRequestDefaultTypeInternal _AnimeImageUploadRequest_default_instance_;
+PROTOBUF_CONSTEXPR AnimeImageRequest::AnimeImageRequest(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.srcid_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.animename_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.charactername_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.header_)*/nullptr
+  , /*decltype(_impl_.srctype_)*/0
+  , /*decltype(_impl_.imgtype_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct AnimeImageRequestDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR AnimeImageRequestDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~AnimeImageRequestDefaultTypeInternal() {}
+  union {
+    AnimeImageRequest _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 AnimeImageRequestDefaultTypeInternal _AnimeImageRequest_default_instance_;
+PROTOBUF_CONSTEXPR AnimeImageUploadResponse::AnimeImageUploadResponse(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.imageid_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.header_)*/nullptr
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct AnimeImageUploadResponseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR AnimeImageUploadResponseDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~AnimeImageUploadResponseDefaultTypeInternal() {}
+  union {
+    AnimeImageUploadResponse _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 AnimeImageUploadResponseDefaultTypeInternal _AnimeImageUploadResponse_default_instance_;
 }  // namespace kservice
 namespace kservice {
 bool EpType_IsValid(int value) {
@@ -824,6 +977,61 @@ bool RecoBy_Parse(
       RecoBy_entries, 4, name, &int_value);
   if (success) {
     *value = static_cast<RecoBy>(int_value);
+  }
+  return success;
+}
+bool AnimeImageType_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
+    case 2:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> AnimeImageType_strings[3] = {};
+
+static const char AnimeImageType_names[] =
+  "ANIME_CHARACTER"
+  "ANIME_COVER"
+  "UNKNOWN_ANIME_IMAGE";
+
+static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry AnimeImageType_entries[] = {
+  { {AnimeImageType_names + 0, 15}, 2 },
+  { {AnimeImageType_names + 15, 11}, 1 },
+  { {AnimeImageType_names + 26, 19}, 0 },
+};
+
+static const int AnimeImageType_entries_by_number[] = {
+  2, // 0 -> UNKNOWN_ANIME_IMAGE
+  1, // 1 -> ANIME_COVER
+  0, // 2 -> ANIME_CHARACTER
+};
+
+const std::string& AnimeImageType_Name(
+    AnimeImageType value) {
+  static const bool dummy =
+      ::PROTOBUF_NAMESPACE_ID::internal::InitializeEnumStrings(
+          AnimeImageType_entries,
+          AnimeImageType_entries_by_number,
+          3, AnimeImageType_strings);
+  (void) dummy;
+  int idx = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumName(
+      AnimeImageType_entries,
+      AnimeImageType_entries_by_number,
+      3, value);
+  return idx == -1 ? ::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString() :
+                     AnimeImageType_strings[idx].get();
+}
+bool AnimeImageType_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, AnimeImageType* value) {
+  int int_value;
+  bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
+      AnimeImageType_entries, 3, name, &int_value);
+  if (success) {
+    *value = static_cast<AnimeImageType>(int_value);
   }
   return success;
 }
@@ -4706,6 +4914,7 @@ UVEventResponse_LatestVersion::UVEventResponse_LatestVersion(const UVEventRespon
   new (&_impl_) Impl_{
       decltype(_impl_.url_){}
     , decltype(_impl_.info_){}
+    , decltype(_impl_.versionname_){}
     , decltype(_impl_.version_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
@@ -4726,6 +4935,14 @@ UVEventResponse_LatestVersion::UVEventResponse_LatestVersion(const UVEventRespon
     _this->_impl_.info_.Set(from._internal_info(), 
       _this->GetArenaForAllocation());
   }
+  _impl_.versionname_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.versionname_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_versionname().empty()) {
+    _this->_impl_.versionname_.Set(from._internal_versionname(), 
+      _this->GetArenaForAllocation());
+  }
   _this->_impl_.version_ = from._impl_.version_;
   // @@protoc_insertion_point(copy_constructor:kservice.UVEventResponse.LatestVersion)
 }
@@ -4737,6 +4954,7 @@ inline void UVEventResponse_LatestVersion::SharedCtor(
   new (&_impl_) Impl_{
       decltype(_impl_.url_){}
     , decltype(_impl_.info_){}
+    , decltype(_impl_.versionname_){}
     , decltype(_impl_.version_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
@@ -4747,6 +4965,10 @@ inline void UVEventResponse_LatestVersion::SharedCtor(
   _impl_.info_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
     _impl_.info_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.versionname_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.versionname_.Set("", GetArenaForAllocation());
   #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
@@ -4763,6 +4985,7 @@ inline void UVEventResponse_LatestVersion::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
   _impl_.url_.Destroy();
   _impl_.info_.Destroy();
+  _impl_.versionname_.Destroy();
 }
 
 void UVEventResponse_LatestVersion::SetCachedSize(int size) const {
@@ -4777,6 +5000,7 @@ void UVEventResponse_LatestVersion::Clear() {
 
   _impl_.url_.ClearToEmpty();
   _impl_.info_.ClearToEmpty();
+  _impl_.versionname_.ClearToEmpty();
   _impl_.version_ = 0;
   _internal_metadata_.Clear<std::string>();
 }
@@ -4809,6 +5033,16 @@ const char* UVEventResponse_LatestVersion::_InternalParse(const char* ptr, ::_pb
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           auto str = _internal_mutable_info();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // string versionName = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
+          auto str = _internal_mutable_versionname();
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
           CHK_(::_pbi::VerifyUTF8(str, nullptr));
@@ -4870,6 +5104,16 @@ uint8_t* UVEventResponse_LatestVersion::_InternalSerialize(
         3, this->_internal_info(), target);
   }
 
+  // string versionName = 4;
+  if (!this->_internal_versionname().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_versionname().data(), static_cast<int>(this->_internal_versionname().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.UVEventResponse.LatestVersion.versionName");
+    target = stream->WriteStringMaybeAliased(
+        4, this->_internal_versionname(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
@@ -4898,6 +5142,13 @@ size_t UVEventResponse_LatestVersion::ByteSizeLong() const {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_info());
+  }
+
+  // string versionName = 4;
+  if (!this->_internal_versionname().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_versionname());
   }
 
   // int32 version = 1;
@@ -4932,6 +5183,9 @@ void UVEventResponse_LatestVersion::MergeFrom(const UVEventResponse_LatestVersio
   if (!from._internal_info().empty()) {
     _this->_internal_set_info(from._internal_info());
   }
+  if (!from._internal_versionname().empty()) {
+    _this->_internal_set_versionname(from._internal_versionname());
+  }
   if (from._internal_version() != 0) {
     _this->_internal_set_version(from._internal_version());
   }
@@ -4961,6 +5215,10 @@ void UVEventResponse_LatestVersion::InternalSwap(UVEventResponse_LatestVersion* 
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
       &_impl_.info_, lhs_arena,
       &other->_impl_.info_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.versionname_, lhs_arena,
+      &other->_impl_.versionname_, rhs_arena
   );
   swap(_impl_.version_, other->_impl_.version_);
 }
@@ -11058,6 +11316,3184 @@ std::string RemoveSourceEvent::GetTypeName() const {
 }
 
 
+// ===================================================================
+
+class AnimeCharacter::_Internal {
+ public:
+};
+
+AnimeCharacter::AnimeCharacter(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:kservice.AnimeCharacter)
+}
+AnimeCharacter::AnimeCharacter(const AnimeCharacter& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  AnimeCharacter* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.name_){}
+    , decltype(_impl_.link_){}
+    , decltype(_impl_.actor_){}
+    , decltype(_impl_.imgurl_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_name().empty()) {
+    _this->_impl_.name_.Set(from._internal_name(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.link_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.link_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_link().empty()) {
+    _this->_impl_.link_.Set(from._internal_link(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.actor_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.actor_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_actor().empty()) {
+    _this->_impl_.actor_.Set(from._internal_actor(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.imgurl_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.imgurl_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_imgurl().empty()) {
+    _this->_impl_.imgurl_.Set(from._internal_imgurl(), 
+      _this->GetArenaForAllocation());
+  }
+  // @@protoc_insertion_point(copy_constructor:kservice.AnimeCharacter)
+}
+
+inline void AnimeCharacter::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.name_){}
+    , decltype(_impl_.link_){}
+    , decltype(_impl_.actor_){}
+    , decltype(_impl_.imgurl_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.link_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.link_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.actor_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.actor_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.imgurl_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.imgurl_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+AnimeCharacter::~AnimeCharacter() {
+  // @@protoc_insertion_point(destructor:kservice.AnimeCharacter)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void AnimeCharacter::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.name_.Destroy();
+  _impl_.link_.Destroy();
+  _impl_.actor_.Destroy();
+  _impl_.imgurl_.Destroy();
+}
+
+void AnimeCharacter::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void AnimeCharacter::Clear() {
+// @@protoc_insertion_point(message_clear_start:kservice.AnimeCharacter)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.name_.ClearToEmpty();
+  _impl_.link_.ClearToEmpty();
+  _impl_.actor_.ClearToEmpty();
+  _impl_.imgurl_.ClearToEmpty();
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* AnimeCharacter::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // string name = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          auto str = _internal_mutable_name();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // string link = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          auto str = _internal_mutable_link();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // string actor = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
+          auto str = _internal_mutable_actor();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // string imgURL = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
+          auto str = _internal_mutable_imgurl();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* AnimeCharacter::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:kservice.AnimeCharacter)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // string name = 1;
+  if (!this->_internal_name().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.AnimeCharacter.name");
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_name(), target);
+  }
+
+  // string link = 2;
+  if (!this->_internal_link().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_link().data(), static_cast<int>(this->_internal_link().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.AnimeCharacter.link");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_link(), target);
+  }
+
+  // string actor = 3;
+  if (!this->_internal_actor().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_actor().data(), static_cast<int>(this->_internal_actor().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.AnimeCharacter.actor");
+    target = stream->WriteStringMaybeAliased(
+        3, this->_internal_actor(), target);
+  }
+
+  // string imgURL = 4;
+  if (!this->_internal_imgurl().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_imgurl().data(), static_cast<int>(this->_internal_imgurl().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.AnimeCharacter.imgURL");
+    target = stream->WriteStringMaybeAliased(
+        4, this->_internal_imgurl(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:kservice.AnimeCharacter)
+  return target;
+}
+
+size_t AnimeCharacter::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:kservice.AnimeCharacter)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string name = 1;
+  if (!this->_internal_name().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_name());
+  }
+
+  // string link = 2;
+  if (!this->_internal_link().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_link());
+  }
+
+  // string actor = 3;
+  if (!this->_internal_actor().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_actor());
+  }
+
+  // string imgURL = 4;
+  if (!this->_internal_imgurl().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_imgurl());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void AnimeCharacter::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const AnimeCharacter*>(
+      &from));
+}
+
+void AnimeCharacter::MergeFrom(const AnimeCharacter& from) {
+  AnimeCharacter* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:kservice.AnimeCharacter)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_name().empty()) {
+    _this->_internal_set_name(from._internal_name());
+  }
+  if (!from._internal_link().empty()) {
+    _this->_internal_set_link(from._internal_link());
+  }
+  if (!from._internal_actor().empty()) {
+    _this->_internal_set_actor(from._internal_actor());
+  }
+  if (!from._internal_imgurl().empty()) {
+    _this->_internal_set_imgurl(from._internal_imgurl());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void AnimeCharacter::CopyFrom(const AnimeCharacter& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:kservice.AnimeCharacter)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool AnimeCharacter::IsInitialized() const {
+  return true;
+}
+
+void AnimeCharacter::InternalSwap(AnimeCharacter* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.name_, lhs_arena,
+      &other->_impl_.name_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.link_, lhs_arena,
+      &other->_impl_.link_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.actor_, lhs_arena,
+      &other->_impl_.actor_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.imgurl_, lhs_arena,
+      &other->_impl_.imgurl_, rhs_arena
+  );
+}
+
+std::string AnimeCharacter::GetTypeName() const {
+  return "kservice.AnimeCharacter";
+}
+
+
+// ===================================================================
+
+Anime_StaffEntry_DoNotUse::Anime_StaffEntry_DoNotUse() {}
+Anime_StaffEntry_DoNotUse::Anime_StaffEntry_DoNotUse(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+    : SuperType(arena) {}
+void Anime_StaffEntry_DoNotUse::MergeFrom(const Anime_StaffEntry_DoNotUse& other) {
+  MergeFromInternal(other);
+}
+
+// ===================================================================
+
+class Anime::_Internal {
+ public:
+  static const ::kservice::InfoSource& source(const Anime* msg);
+};
+
+const ::kservice::InfoSource&
+Anime::_Internal::source(const Anime* msg) {
+  return *msg->_impl_.source_;
+}
+Anime::Anime(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:kservice.Anime)
+}
+Anime::Anime(const Anime& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  Anime* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      /*decltype(_impl_.staff_)*/{}
+    , decltype(_impl_.characters_){from._impl_.characters_}
+    , decltype(_impl_.tags_){from._impl_.tags_}
+    , decltype(_impl_.name_){}
+    , decltype(_impl_.id_){}
+    , decltype(_impl_.airdate_){}
+    , decltype(_impl_.desc_){}
+    , decltype(_impl_.url_){}
+    , decltype(_impl_.coverurl_){}
+    , decltype(_impl_.source_){nullptr}
+    , decltype(_impl_.epnum_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _this->_impl_.staff_.MergeFrom(from._impl_.staff_);
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_name().empty()) {
+    _this->_impl_.name_.Set(from._internal_name(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.id_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.id_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_id().empty()) {
+    _this->_impl_.id_.Set(from._internal_id(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.airdate_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.airdate_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_airdate().empty()) {
+    _this->_impl_.airdate_.Set(from._internal_airdate(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.desc_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.desc_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_desc().empty()) {
+    _this->_impl_.desc_.Set(from._internal_desc(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.url_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.url_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_url().empty()) {
+    _this->_impl_.url_.Set(from._internal_url(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.coverurl_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.coverurl_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_coverurl().empty()) {
+    _this->_impl_.coverurl_.Set(from._internal_coverurl(), 
+      _this->GetArenaForAllocation());
+  }
+  if (from._internal_has_source()) {
+    _this->_impl_.source_ = new ::kservice::InfoSource(*from._impl_.source_);
+  }
+  _this->_impl_.epnum_ = from._impl_.epnum_;
+  // @@protoc_insertion_point(copy_constructor:kservice.Anime)
+}
+
+inline void Anime::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      /*decltype(_impl_.staff_)*/{::_pbi::ArenaInitialized(), arena}
+    , decltype(_impl_.characters_){arena}
+    , decltype(_impl_.tags_){arena}
+    , decltype(_impl_.name_){}
+    , decltype(_impl_.id_){}
+    , decltype(_impl_.airdate_){}
+    , decltype(_impl_.desc_){}
+    , decltype(_impl_.url_){}
+    , decltype(_impl_.coverurl_){}
+    , decltype(_impl_.source_){nullptr}
+    , decltype(_impl_.epnum_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.id_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.id_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.airdate_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.airdate_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.desc_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.desc_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.url_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.url_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.coverurl_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.coverurl_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+Anime::~Anime() {
+  // @@protoc_insertion_point(destructor:kservice.Anime)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void Anime::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.staff_.Destruct();
+  _impl_.staff_.~MapFieldLite();
+  _impl_.characters_.~RepeatedPtrField();
+  _impl_.tags_.~RepeatedPtrField();
+  _impl_.name_.Destroy();
+  _impl_.id_.Destroy();
+  _impl_.airdate_.Destroy();
+  _impl_.desc_.Destroy();
+  _impl_.url_.Destroy();
+  _impl_.coverurl_.Destroy();
+  if (this != internal_default_instance()) delete _impl_.source_;
+}
+
+void Anime::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void Anime::Clear() {
+// @@protoc_insertion_point(message_clear_start:kservice.Anime)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.staff_.Clear();
+  _impl_.characters_.Clear();
+  _impl_.tags_.Clear();
+  _impl_.name_.ClearToEmpty();
+  _impl_.id_.ClearToEmpty();
+  _impl_.airdate_.ClearToEmpty();
+  _impl_.desc_.ClearToEmpty();
+  _impl_.url_.ClearToEmpty();
+  _impl_.coverurl_.ClearToEmpty();
+  if (GetArenaForAllocation() == nullptr && _impl_.source_ != nullptr) {
+    delete _impl_.source_;
+  }
+  _impl_.source_ = nullptr;
+  _impl_.epnum_ = 0;
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* Anime::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // string name = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          auto str = _internal_mutable_name();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // string id = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          auto str = _internal_mutable_id();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // string airDate = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
+          auto str = _internal_mutable_airdate();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // string desc = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
+          auto str = _internal_mutable_desc();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // string url = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
+          auto str = _internal_mutable_url();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // .kservice.InfoSource source = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
+          ptr = ctx->ParseMessage(_internal_mutable_source(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 epNum = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 56)) {
+          _impl_.epnum_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // map<string, string> staff = 8;
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 66)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(&_impl_.staff_, ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<66>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // string coverURL = 9;
+      case 9:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 74)) {
+          auto str = _internal_mutable_coverurl();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated .kservice.AnimeCharacter characters = 10;
+      case 10:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 82)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_characters(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<82>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated string tags = 11;
+      case 11:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 90)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            auto str = _internal_add_tags();
+            ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+            CHK_(ptr);
+            CHK_(::_pbi::VerifyUTF8(str, nullptr));
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<90>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* Anime::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:kservice.Anime)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // string name = 1;
+  if (!this->_internal_name().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.Anime.name");
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_name(), target);
+  }
+
+  // string id = 2;
+  if (!this->_internal_id().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_id().data(), static_cast<int>(this->_internal_id().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.Anime.id");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_id(), target);
+  }
+
+  // string airDate = 3;
+  if (!this->_internal_airdate().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_airdate().data(), static_cast<int>(this->_internal_airdate().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.Anime.airDate");
+    target = stream->WriteStringMaybeAliased(
+        3, this->_internal_airdate(), target);
+  }
+
+  // string desc = 4;
+  if (!this->_internal_desc().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_desc().data(), static_cast<int>(this->_internal_desc().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.Anime.desc");
+    target = stream->WriteStringMaybeAliased(
+        4, this->_internal_desc(), target);
+  }
+
+  // string url = 5;
+  if (!this->_internal_url().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_url().data(), static_cast<int>(this->_internal_url().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.Anime.url");
+    target = stream->WriteStringMaybeAliased(
+        5, this->_internal_url(), target);
+  }
+
+  // .kservice.InfoSource source = 6;
+  if (this->_internal_has_source()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(6, _Internal::source(this),
+        _Internal::source(this).GetCachedSize(), target, stream);
+  }
+
+  // int32 epNum = 7;
+  if (this->_internal_epnum() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(7, this->_internal_epnum(), target);
+  }
+
+  // map<string, string> staff = 8;
+  if (!this->_internal_staff().empty()) {
+    using MapType = ::_pb::Map<std::string, std::string>;
+    using WireHelper = Anime_StaffEntry_DoNotUse::Funcs;
+    const auto& map_field = this->_internal_staff();
+    auto check_utf8 = [](const MapType::value_type& entry) {
+      (void)entry;
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+        entry.first.data(), static_cast<int>(entry.first.length()),
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+        "kservice.Anime.StaffEntry.key");
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+        entry.second.data(), static_cast<int>(entry.second.length()),
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+        "kservice.Anime.StaffEntry.value");
+    };
+
+    if (stream->IsSerializationDeterministic() && map_field.size() > 1) {
+      for (const auto& entry : ::_pbi::MapSorterPtr<MapType>(map_field)) {
+        target = WireHelper::InternalSerialize(8, entry.first, entry.second, target, stream);
+        check_utf8(entry);
+      }
+    } else {
+      for (const auto& entry : map_field) {
+        target = WireHelper::InternalSerialize(8, entry.first, entry.second, target, stream);
+        check_utf8(entry);
+      }
+    }
+  }
+
+  // string coverURL = 9;
+  if (!this->_internal_coverurl().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_coverurl().data(), static_cast<int>(this->_internal_coverurl().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.Anime.coverURL");
+    target = stream->WriteStringMaybeAliased(
+        9, this->_internal_coverurl(), target);
+  }
+
+  // repeated .kservice.AnimeCharacter characters = 10;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_characters_size()); i < n; i++) {
+    const auto& repfield = this->_internal_characters(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(10, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
+  // repeated string tags = 11;
+  for (int i = 0, n = this->_internal_tags_size(); i < n; i++) {
+    const auto& s = this->_internal_tags(i);
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      s.data(), static_cast<int>(s.length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.Anime.tags");
+    target = stream->WriteString(11, s, target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:kservice.Anime)
+  return target;
+}
+
+size_t Anime::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:kservice.Anime)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // map<string, string> staff = 8;
+  total_size += 1 *
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_staff_size());
+  for (::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_iterator
+      it = this->_internal_staff().begin();
+      it != this->_internal_staff().end(); ++it) {
+    total_size += Anime_StaffEntry_DoNotUse::Funcs::ByteSizeLong(it->first, it->second);
+  }
+
+  // repeated .kservice.AnimeCharacter characters = 10;
+  total_size += 1UL * this->_internal_characters_size();
+  for (const auto& msg : this->_impl_.characters_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  // repeated string tags = 11;
+  total_size += 1 *
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(_impl_.tags_.size());
+  for (int i = 0, n = _impl_.tags_.size(); i < n; i++) {
+    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+      _impl_.tags_.Get(i));
+  }
+
+  // string name = 1;
+  if (!this->_internal_name().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_name());
+  }
+
+  // string id = 2;
+  if (!this->_internal_id().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_id());
+  }
+
+  // string airDate = 3;
+  if (!this->_internal_airdate().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_airdate());
+  }
+
+  // string desc = 4;
+  if (!this->_internal_desc().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_desc());
+  }
+
+  // string url = 5;
+  if (!this->_internal_url().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_url());
+  }
+
+  // string coverURL = 9;
+  if (!this->_internal_coverurl().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_coverurl());
+  }
+
+  // .kservice.InfoSource source = 6;
+  if (this->_internal_has_source()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.source_);
+  }
+
+  // int32 epNum = 7;
+  if (this->_internal_epnum() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_epnum());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void Anime::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const Anime*>(
+      &from));
+}
+
+void Anime::MergeFrom(const Anime& from) {
+  Anime* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:kservice.Anime)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  _this->_impl_.staff_.MergeFrom(from._impl_.staff_);
+  _this->_impl_.characters_.MergeFrom(from._impl_.characters_);
+  _this->_impl_.tags_.MergeFrom(from._impl_.tags_);
+  if (!from._internal_name().empty()) {
+    _this->_internal_set_name(from._internal_name());
+  }
+  if (!from._internal_id().empty()) {
+    _this->_internal_set_id(from._internal_id());
+  }
+  if (!from._internal_airdate().empty()) {
+    _this->_internal_set_airdate(from._internal_airdate());
+  }
+  if (!from._internal_desc().empty()) {
+    _this->_internal_set_desc(from._internal_desc());
+  }
+  if (!from._internal_url().empty()) {
+    _this->_internal_set_url(from._internal_url());
+  }
+  if (!from._internal_coverurl().empty()) {
+    _this->_internal_set_coverurl(from._internal_coverurl());
+  }
+  if (from._internal_has_source()) {
+    _this->_internal_mutable_source()->::kservice::InfoSource::MergeFrom(
+        from._internal_source());
+  }
+  if (from._internal_epnum() != 0) {
+    _this->_internal_set_epnum(from._internal_epnum());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void Anime::CopyFrom(const Anime& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:kservice.Anime)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Anime::IsInitialized() const {
+  return true;
+}
+
+void Anime::InternalSwap(Anime* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.staff_.InternalSwap(&other->_impl_.staff_);
+  _impl_.characters_.InternalSwap(&other->_impl_.characters_);
+  _impl_.tags_.InternalSwap(&other->_impl_.tags_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.name_, lhs_arena,
+      &other->_impl_.name_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.id_, lhs_arena,
+      &other->_impl_.id_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.airdate_, lhs_arena,
+      &other->_impl_.airdate_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.desc_, lhs_arena,
+      &other->_impl_.desc_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.url_, lhs_arena,
+      &other->_impl_.url_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.coverurl_, lhs_arena,
+      &other->_impl_.coverurl_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(Anime, _impl_.epnum_)
+      + sizeof(Anime::_impl_.epnum_)
+      - PROTOBUF_FIELD_OFFSET(Anime, _impl_.source_)>(
+          reinterpret_cast<char*>(&_impl_.source_),
+          reinterpret_cast<char*>(&other->_impl_.source_));
+}
+
+std::string Anime::GetTypeName() const {
+  return "kservice.Anime";
+}
+
+
+// ===================================================================
+
+class AnimeProfileEvent::_Internal {
+ public:
+  static const ::kservice::EventHeader& header(const AnimeProfileEvent* msg);
+  static const ::kservice::Anime& animeinfo(const AnimeProfileEvent* msg);
+};
+
+const ::kservice::EventHeader&
+AnimeProfileEvent::_Internal::header(const AnimeProfileEvent* msg) {
+  return *msg->_impl_.header_;
+}
+const ::kservice::Anime&
+AnimeProfileEvent::_Internal::animeinfo(const AnimeProfileEvent* msg) {
+  return *msg->_impl_.animeinfo_;
+}
+AnimeProfileEvent::AnimeProfileEvent(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:kservice.AnimeProfileEvent)
+}
+AnimeProfileEvent::AnimeProfileEvent(const AnimeProfileEvent& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  AnimeProfileEvent* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.header_){nullptr}
+    , decltype(_impl_.animeinfo_){nullptr}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  if (from._internal_has_header()) {
+    _this->_impl_.header_ = new ::kservice::EventHeader(*from._impl_.header_);
+  }
+  if (from._internal_has_animeinfo()) {
+    _this->_impl_.animeinfo_ = new ::kservice::Anime(*from._impl_.animeinfo_);
+  }
+  // @@protoc_insertion_point(copy_constructor:kservice.AnimeProfileEvent)
+}
+
+inline void AnimeProfileEvent::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.header_){nullptr}
+    , decltype(_impl_.animeinfo_){nullptr}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+AnimeProfileEvent::~AnimeProfileEvent() {
+  // @@protoc_insertion_point(destructor:kservice.AnimeProfileEvent)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void AnimeProfileEvent::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  if (this != internal_default_instance()) delete _impl_.header_;
+  if (this != internal_default_instance()) delete _impl_.animeinfo_;
+}
+
+void AnimeProfileEvent::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void AnimeProfileEvent::Clear() {
+// @@protoc_insertion_point(message_clear_start:kservice.AnimeProfileEvent)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
+  if (GetArenaForAllocation() == nullptr && _impl_.animeinfo_ != nullptr) {
+    delete _impl_.animeinfo_;
+  }
+  _impl_.animeinfo_ = nullptr;
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* AnimeProfileEvent::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // .kservice.EventHeader header = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          ptr = ctx->ParseMessage(_internal_mutable_header(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .kservice.Anime animeInfo = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          ptr = ctx->ParseMessage(_internal_mutable_animeinfo(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* AnimeProfileEvent::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:kservice.AnimeProfileEvent)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .kservice.EventHeader header = 1;
+  if (this->_internal_has_header()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(1, _Internal::header(this),
+        _Internal::header(this).GetCachedSize(), target, stream);
+  }
+
+  // .kservice.Anime animeInfo = 2;
+  if (this->_internal_has_animeinfo()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(2, _Internal::animeinfo(this),
+        _Internal::animeinfo(this).GetCachedSize(), target, stream);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:kservice.AnimeProfileEvent)
+  return target;
+}
+
+size_t AnimeProfileEvent::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:kservice.AnimeProfileEvent)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // .kservice.EventHeader header = 1;
+  if (this->_internal_has_header()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.header_);
+  }
+
+  // .kservice.Anime animeInfo = 2;
+  if (this->_internal_has_animeinfo()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.animeinfo_);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void AnimeProfileEvent::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const AnimeProfileEvent*>(
+      &from));
+}
+
+void AnimeProfileEvent::MergeFrom(const AnimeProfileEvent& from) {
+  AnimeProfileEvent* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:kservice.AnimeProfileEvent)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_has_header()) {
+    _this->_internal_mutable_header()->::kservice::EventHeader::MergeFrom(
+        from._internal_header());
+  }
+  if (from._internal_has_animeinfo()) {
+    _this->_internal_mutable_animeinfo()->::kservice::Anime::MergeFrom(
+        from._internal_animeinfo());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void AnimeProfileEvent::CopyFrom(const AnimeProfileEvent& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:kservice.AnimeProfileEvent)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool AnimeProfileEvent::IsInitialized() const {
+  return true;
+}
+
+void AnimeProfileEvent::InternalSwap(AnimeProfileEvent* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(AnimeProfileEvent, _impl_.animeinfo_)
+      + sizeof(AnimeProfileEvent::_impl_.animeinfo_)
+      - PROTOBUF_FIELD_OFFSET(AnimeProfileEvent, _impl_.header_)>(
+          reinterpret_cast<char*>(&_impl_.header_),
+          reinterpret_cast<char*>(&other->_impl_.header_));
+}
+
+std::string AnimeProfileEvent::GetTypeName() const {
+  return "kservice.AnimeProfileEvent";
+}
+
+
+// ===================================================================
+
+class ImageUploadTask::_Internal {
+ public:
+};
+
+ImageUploadTask::ImageUploadTask(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:kservice.ImageUploadTask)
+}
+ImageUploadTask::ImageUploadTask(const ImageUploadTask& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ImageUploadTask* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.srcid_){}
+    , decltype(_impl_.animename_){}
+    , decltype(_impl_.charactername_){}
+    , decltype(_impl_.url_){}
+    , decltype(_impl_.srctype_){}
+    , decltype(_impl_.imgtype_){}
+    , decltype(_impl_.minwidth_){}
+    , decltype(_impl_.minheight_){}
+    , decltype(_impl_.preferredwidth_){}
+    , decltype(_impl_.preferredheight_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.srcid_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.srcid_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_srcid().empty()) {
+    _this->_impl_.srcid_.Set(from._internal_srcid(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.animename_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.animename_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_animename().empty()) {
+    _this->_impl_.animename_.Set(from._internal_animename(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.charactername_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.charactername_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_charactername().empty()) {
+    _this->_impl_.charactername_.Set(from._internal_charactername(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.url_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.url_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_url().empty()) {
+    _this->_impl_.url_.Set(from._internal_url(), 
+      _this->GetArenaForAllocation());
+  }
+  ::memcpy(&_impl_.srctype_, &from._impl_.srctype_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.preferredheight_) -
+    reinterpret_cast<char*>(&_impl_.srctype_)) + sizeof(_impl_.preferredheight_));
+  // @@protoc_insertion_point(copy_constructor:kservice.ImageUploadTask)
+}
+
+inline void ImageUploadTask::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.srcid_){}
+    , decltype(_impl_.animename_){}
+    , decltype(_impl_.charactername_){}
+    , decltype(_impl_.url_){}
+    , decltype(_impl_.srctype_){0}
+    , decltype(_impl_.imgtype_){0}
+    , decltype(_impl_.minwidth_){0}
+    , decltype(_impl_.minheight_){0}
+    , decltype(_impl_.preferredwidth_){0}
+    , decltype(_impl_.preferredheight_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.srcid_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.srcid_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.animename_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.animename_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.charactername_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.charactername_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.url_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.url_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+ImageUploadTask::~ImageUploadTask() {
+  // @@protoc_insertion_point(destructor:kservice.ImageUploadTask)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void ImageUploadTask::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.srcid_.Destroy();
+  _impl_.animename_.Destroy();
+  _impl_.charactername_.Destroy();
+  _impl_.url_.Destroy();
+}
+
+void ImageUploadTask::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void ImageUploadTask::Clear() {
+// @@protoc_insertion_point(message_clear_start:kservice.ImageUploadTask)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.srcid_.ClearToEmpty();
+  _impl_.animename_.ClearToEmpty();
+  _impl_.charactername_.ClearToEmpty();
+  _impl_.url_.ClearToEmpty();
+  ::memset(&_impl_.srctype_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.preferredheight_) -
+      reinterpret_cast<char*>(&_impl_.srctype_)) + sizeof(_impl_.preferredheight_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* ImageUploadTask::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // .kservice.InfoSourceType srcType = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_srctype(static_cast<::kservice::InfoSourceType>(val));
+        } else
+          goto handle_unusual;
+        continue;
+      // string srcId = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          auto str = _internal_mutable_srcid();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // .kservice.AnimeImageType imgType = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_imgtype(static_cast<::kservice::AnimeImageType>(val));
+        } else
+          goto handle_unusual;
+        continue;
+      // string animeName = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
+          auto str = _internal_mutable_animename();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // string characterName = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
+          auto str = _internal_mutable_charactername();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // string url = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
+          auto str = _internal_mutable_url();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 minWidth = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 56)) {
+          _impl_.minwidth_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 minHeight = 8;
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 64)) {
+          _impl_.minheight_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 preferredWidth = 9;
+      case 9:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 72)) {
+          _impl_.preferredwidth_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 preferredHeight = 10;
+      case 10:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 80)) {
+          _impl_.preferredheight_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* ImageUploadTask::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:kservice.ImageUploadTask)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .kservice.InfoSourceType srcType = 1;
+  if (this->_internal_srctype() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
+      1, this->_internal_srctype(), target);
+  }
+
+  // string srcId = 2;
+  if (!this->_internal_srcid().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_srcid().data(), static_cast<int>(this->_internal_srcid().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.ImageUploadTask.srcId");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_srcid(), target);
+  }
+
+  // .kservice.AnimeImageType imgType = 3;
+  if (this->_internal_imgtype() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
+      3, this->_internal_imgtype(), target);
+  }
+
+  // string animeName = 4;
+  if (!this->_internal_animename().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_animename().data(), static_cast<int>(this->_internal_animename().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.ImageUploadTask.animeName");
+    target = stream->WriteStringMaybeAliased(
+        4, this->_internal_animename(), target);
+  }
+
+  // string characterName = 5;
+  if (!this->_internal_charactername().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_charactername().data(), static_cast<int>(this->_internal_charactername().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.ImageUploadTask.characterName");
+    target = stream->WriteStringMaybeAliased(
+        5, this->_internal_charactername(), target);
+  }
+
+  // string url = 6;
+  if (!this->_internal_url().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_url().data(), static_cast<int>(this->_internal_url().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.ImageUploadTask.url");
+    target = stream->WriteStringMaybeAliased(
+        6, this->_internal_url(), target);
+  }
+
+  // int32 minWidth = 7;
+  if (this->_internal_minwidth() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(7, this->_internal_minwidth(), target);
+  }
+
+  // int32 minHeight = 8;
+  if (this->_internal_minheight() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(8, this->_internal_minheight(), target);
+  }
+
+  // int32 preferredWidth = 9;
+  if (this->_internal_preferredwidth() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(9, this->_internal_preferredwidth(), target);
+  }
+
+  // int32 preferredHeight = 10;
+  if (this->_internal_preferredheight() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(10, this->_internal_preferredheight(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:kservice.ImageUploadTask)
+  return target;
+}
+
+size_t ImageUploadTask::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:kservice.ImageUploadTask)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string srcId = 2;
+  if (!this->_internal_srcid().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_srcid());
+  }
+
+  // string animeName = 4;
+  if (!this->_internal_animename().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_animename());
+  }
+
+  // string characterName = 5;
+  if (!this->_internal_charactername().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_charactername());
+  }
+
+  // string url = 6;
+  if (!this->_internal_url().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_url());
+  }
+
+  // .kservice.InfoSourceType srcType = 1;
+  if (this->_internal_srctype() != 0) {
+    total_size += 1 +
+      ::_pbi::WireFormatLite::EnumSize(this->_internal_srctype());
+  }
+
+  // .kservice.AnimeImageType imgType = 3;
+  if (this->_internal_imgtype() != 0) {
+    total_size += 1 +
+      ::_pbi::WireFormatLite::EnumSize(this->_internal_imgtype());
+  }
+
+  // int32 minWidth = 7;
+  if (this->_internal_minwidth() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_minwidth());
+  }
+
+  // int32 minHeight = 8;
+  if (this->_internal_minheight() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_minheight());
+  }
+
+  // int32 preferredWidth = 9;
+  if (this->_internal_preferredwidth() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_preferredwidth());
+  }
+
+  // int32 preferredHeight = 10;
+  if (this->_internal_preferredheight() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_preferredheight());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void ImageUploadTask::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const ImageUploadTask*>(
+      &from));
+}
+
+void ImageUploadTask::MergeFrom(const ImageUploadTask& from) {
+  ImageUploadTask* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:kservice.ImageUploadTask)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_srcid().empty()) {
+    _this->_internal_set_srcid(from._internal_srcid());
+  }
+  if (!from._internal_animename().empty()) {
+    _this->_internal_set_animename(from._internal_animename());
+  }
+  if (!from._internal_charactername().empty()) {
+    _this->_internal_set_charactername(from._internal_charactername());
+  }
+  if (!from._internal_url().empty()) {
+    _this->_internal_set_url(from._internal_url());
+  }
+  if (from._internal_srctype() != 0) {
+    _this->_internal_set_srctype(from._internal_srctype());
+  }
+  if (from._internal_imgtype() != 0) {
+    _this->_internal_set_imgtype(from._internal_imgtype());
+  }
+  if (from._internal_minwidth() != 0) {
+    _this->_internal_set_minwidth(from._internal_minwidth());
+  }
+  if (from._internal_minheight() != 0) {
+    _this->_internal_set_minheight(from._internal_minheight());
+  }
+  if (from._internal_preferredwidth() != 0) {
+    _this->_internal_set_preferredwidth(from._internal_preferredwidth());
+  }
+  if (from._internal_preferredheight() != 0) {
+    _this->_internal_set_preferredheight(from._internal_preferredheight());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void ImageUploadTask::CopyFrom(const ImageUploadTask& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:kservice.ImageUploadTask)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ImageUploadTask::IsInitialized() const {
+  return true;
+}
+
+void ImageUploadTask::InternalSwap(ImageUploadTask* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.srcid_, lhs_arena,
+      &other->_impl_.srcid_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.animename_, lhs_arena,
+      &other->_impl_.animename_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.charactername_, lhs_arena,
+      &other->_impl_.charactername_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.url_, lhs_arena,
+      &other->_impl_.url_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(ImageUploadTask, _impl_.preferredheight_)
+      + sizeof(ImageUploadTask::_impl_.preferredheight_)
+      - PROTOBUF_FIELD_OFFSET(ImageUploadTask, _impl_.srctype_)>(
+          reinterpret_cast<char*>(&_impl_.srctype_),
+          reinterpret_cast<char*>(&other->_impl_.srctype_));
+}
+
+std::string ImageUploadTask::GetTypeName() const {
+  return "kservice.ImageUploadTask";
+}
+
+
+// ===================================================================
+
+class AnimeProfileResponse::_Internal {
+ public:
+  static const ::kservice::ResponseHeader& header(const AnimeProfileResponse* msg);
+};
+
+const ::kservice::ResponseHeader&
+AnimeProfileResponse::_Internal::header(const AnimeProfileResponse* msg) {
+  return *msg->_impl_.header_;
+}
+AnimeProfileResponse::AnimeProfileResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:kservice.AnimeProfileResponse)
+}
+AnimeProfileResponse::AnimeProfileResponse(const AnimeProfileResponse& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  AnimeProfileResponse* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.uploadtasks_){from._impl_.uploadtasks_}
+    , decltype(_impl_.header_){nullptr}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  if (from._internal_has_header()) {
+    _this->_impl_.header_ = new ::kservice::ResponseHeader(*from._impl_.header_);
+  }
+  // @@protoc_insertion_point(copy_constructor:kservice.AnimeProfileResponse)
+}
+
+inline void AnimeProfileResponse::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.uploadtasks_){arena}
+    , decltype(_impl_.header_){nullptr}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+AnimeProfileResponse::~AnimeProfileResponse() {
+  // @@protoc_insertion_point(destructor:kservice.AnimeProfileResponse)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void AnimeProfileResponse::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.uploadtasks_.~RepeatedPtrField();
+  if (this != internal_default_instance()) delete _impl_.header_;
+}
+
+void AnimeProfileResponse::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void AnimeProfileResponse::Clear() {
+// @@protoc_insertion_point(message_clear_start:kservice.AnimeProfileResponse)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.uploadtasks_.Clear();
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* AnimeProfileResponse::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // .kservice.ResponseHeader header = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          ptr = ctx->ParseMessage(_internal_mutable_header(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated .kservice.ImageUploadTask uploadTasks = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_uploadtasks(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<18>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* AnimeProfileResponse::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:kservice.AnimeProfileResponse)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .kservice.ResponseHeader header = 1;
+  if (this->_internal_has_header()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(1, _Internal::header(this),
+        _Internal::header(this).GetCachedSize(), target, stream);
+  }
+
+  // repeated .kservice.ImageUploadTask uploadTasks = 2;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_uploadtasks_size()); i < n; i++) {
+    const auto& repfield = this->_internal_uploadtasks(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(2, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:kservice.AnimeProfileResponse)
+  return target;
+}
+
+size_t AnimeProfileResponse::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:kservice.AnimeProfileResponse)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // repeated .kservice.ImageUploadTask uploadTasks = 2;
+  total_size += 1UL * this->_internal_uploadtasks_size();
+  for (const auto& msg : this->_impl_.uploadtasks_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  // .kservice.ResponseHeader header = 1;
+  if (this->_internal_has_header()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.header_);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void AnimeProfileResponse::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const AnimeProfileResponse*>(
+      &from));
+}
+
+void AnimeProfileResponse::MergeFrom(const AnimeProfileResponse& from) {
+  AnimeProfileResponse* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:kservice.AnimeProfileResponse)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  _this->_impl_.uploadtasks_.MergeFrom(from._impl_.uploadtasks_);
+  if (from._internal_has_header()) {
+    _this->_internal_mutable_header()->::kservice::ResponseHeader::MergeFrom(
+        from._internal_header());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void AnimeProfileResponse::CopyFrom(const AnimeProfileResponse& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:kservice.AnimeProfileResponse)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool AnimeProfileResponse::IsInitialized() const {
+  return true;
+}
+
+void AnimeProfileResponse::InternalSwap(AnimeProfileResponse* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.uploadtasks_.InternalSwap(&other->_impl_.uploadtasks_);
+  swap(_impl_.header_, other->_impl_.header_);
+}
+
+std::string AnimeProfileResponse::GetTypeName() const {
+  return "kservice.AnimeProfileResponse";
+}
+
+
+// ===================================================================
+
+class AnimeImageUploadRequest::_Internal {
+ public:
+  static const ::kservice::EventHeader& header(const AnimeImageUploadRequest* msg);
+};
+
+const ::kservice::EventHeader&
+AnimeImageUploadRequest::_Internal::header(const AnimeImageUploadRequest* msg) {
+  return *msg->_impl_.header_;
+}
+AnimeImageUploadRequest::AnimeImageUploadRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:kservice.AnimeImageUploadRequest)
+}
+AnimeImageUploadRequest::AnimeImageUploadRequest(const AnimeImageUploadRequest& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  AnimeImageUploadRequest* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.srcid_){}
+    , decltype(_impl_.animename_){}
+    , decltype(_impl_.charactername_){}
+    , decltype(_impl_.imageurl_){}
+    , decltype(_impl_.imagedata_){}
+    , decltype(_impl_.header_){nullptr}
+    , decltype(_impl_.srctype_){}
+    , decltype(_impl_.imgtype_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.srcid_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.srcid_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_srcid().empty()) {
+    _this->_impl_.srcid_.Set(from._internal_srcid(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.animename_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.animename_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_animename().empty()) {
+    _this->_impl_.animename_.Set(from._internal_animename(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.charactername_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.charactername_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_charactername().empty()) {
+    _this->_impl_.charactername_.Set(from._internal_charactername(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.imageurl_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.imageurl_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_imageurl().empty()) {
+    _this->_impl_.imageurl_.Set(from._internal_imageurl(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.imagedata_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.imagedata_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_imagedata().empty()) {
+    _this->_impl_.imagedata_.Set(from._internal_imagedata(), 
+      _this->GetArenaForAllocation());
+  }
+  if (from._internal_has_header()) {
+    _this->_impl_.header_ = new ::kservice::EventHeader(*from._impl_.header_);
+  }
+  ::memcpy(&_impl_.srctype_, &from._impl_.srctype_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.imgtype_) -
+    reinterpret_cast<char*>(&_impl_.srctype_)) + sizeof(_impl_.imgtype_));
+  // @@protoc_insertion_point(copy_constructor:kservice.AnimeImageUploadRequest)
+}
+
+inline void AnimeImageUploadRequest::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.srcid_){}
+    , decltype(_impl_.animename_){}
+    , decltype(_impl_.charactername_){}
+    , decltype(_impl_.imageurl_){}
+    , decltype(_impl_.imagedata_){}
+    , decltype(_impl_.header_){nullptr}
+    , decltype(_impl_.srctype_){0}
+    , decltype(_impl_.imgtype_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.srcid_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.srcid_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.animename_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.animename_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.charactername_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.charactername_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.imageurl_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.imageurl_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.imagedata_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.imagedata_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+AnimeImageUploadRequest::~AnimeImageUploadRequest() {
+  // @@protoc_insertion_point(destructor:kservice.AnimeImageUploadRequest)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void AnimeImageUploadRequest::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.srcid_.Destroy();
+  _impl_.animename_.Destroy();
+  _impl_.charactername_.Destroy();
+  _impl_.imageurl_.Destroy();
+  _impl_.imagedata_.Destroy();
+  if (this != internal_default_instance()) delete _impl_.header_;
+}
+
+void AnimeImageUploadRequest::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void AnimeImageUploadRequest::Clear() {
+// @@protoc_insertion_point(message_clear_start:kservice.AnimeImageUploadRequest)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.srcid_.ClearToEmpty();
+  _impl_.animename_.ClearToEmpty();
+  _impl_.charactername_.ClearToEmpty();
+  _impl_.imageurl_.ClearToEmpty();
+  _impl_.imagedata_.ClearToEmpty();
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
+  ::memset(&_impl_.srctype_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.imgtype_) -
+      reinterpret_cast<char*>(&_impl_.srctype_)) + sizeof(_impl_.imgtype_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* AnimeImageUploadRequest::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // .kservice.EventHeader header = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          ptr = ctx->ParseMessage(_internal_mutable_header(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .kservice.InfoSourceType srcType = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_srctype(static_cast<::kservice::InfoSourceType>(val));
+        } else
+          goto handle_unusual;
+        continue;
+      // string srcId = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
+          auto str = _internal_mutable_srcid();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // .kservice.AnimeImageType imgType = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_imgtype(static_cast<::kservice::AnimeImageType>(val));
+        } else
+          goto handle_unusual;
+        continue;
+      // string animeName = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
+          auto str = _internal_mutable_animename();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // string characterName = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
+          auto str = _internal_mutable_charactername();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // string imageURL = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 58)) {
+          auto str = _internal_mutable_imageurl();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // bytes imageData = 8;
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 66)) {
+          auto str = _internal_mutable_imagedata();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* AnimeImageUploadRequest::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:kservice.AnimeImageUploadRequest)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .kservice.EventHeader header = 1;
+  if (this->_internal_has_header()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(1, _Internal::header(this),
+        _Internal::header(this).GetCachedSize(), target, stream);
+  }
+
+  // .kservice.InfoSourceType srcType = 2;
+  if (this->_internal_srctype() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
+      2, this->_internal_srctype(), target);
+  }
+
+  // string srcId = 3;
+  if (!this->_internal_srcid().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_srcid().data(), static_cast<int>(this->_internal_srcid().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.AnimeImageUploadRequest.srcId");
+    target = stream->WriteStringMaybeAliased(
+        3, this->_internal_srcid(), target);
+  }
+
+  // .kservice.AnimeImageType imgType = 4;
+  if (this->_internal_imgtype() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
+      4, this->_internal_imgtype(), target);
+  }
+
+  // string animeName = 5;
+  if (!this->_internal_animename().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_animename().data(), static_cast<int>(this->_internal_animename().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.AnimeImageUploadRequest.animeName");
+    target = stream->WriteStringMaybeAliased(
+        5, this->_internal_animename(), target);
+  }
+
+  // string characterName = 6;
+  if (!this->_internal_charactername().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_charactername().data(), static_cast<int>(this->_internal_charactername().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.AnimeImageUploadRequest.characterName");
+    target = stream->WriteStringMaybeAliased(
+        6, this->_internal_charactername(), target);
+  }
+
+  // string imageURL = 7;
+  if (!this->_internal_imageurl().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_imageurl().data(), static_cast<int>(this->_internal_imageurl().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.AnimeImageUploadRequest.imageURL");
+    target = stream->WriteStringMaybeAliased(
+        7, this->_internal_imageurl(), target);
+  }
+
+  // bytes imageData = 8;
+  if (!this->_internal_imagedata().empty()) {
+    target = stream->WriteBytesMaybeAliased(
+        8, this->_internal_imagedata(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:kservice.AnimeImageUploadRequest)
+  return target;
+}
+
+size_t AnimeImageUploadRequest::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:kservice.AnimeImageUploadRequest)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string srcId = 3;
+  if (!this->_internal_srcid().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_srcid());
+  }
+
+  // string animeName = 5;
+  if (!this->_internal_animename().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_animename());
+  }
+
+  // string characterName = 6;
+  if (!this->_internal_charactername().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_charactername());
+  }
+
+  // string imageURL = 7;
+  if (!this->_internal_imageurl().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_imageurl());
+  }
+
+  // bytes imageData = 8;
+  if (!this->_internal_imagedata().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
+        this->_internal_imagedata());
+  }
+
+  // .kservice.EventHeader header = 1;
+  if (this->_internal_has_header()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.header_);
+  }
+
+  // .kservice.InfoSourceType srcType = 2;
+  if (this->_internal_srctype() != 0) {
+    total_size += 1 +
+      ::_pbi::WireFormatLite::EnumSize(this->_internal_srctype());
+  }
+
+  // .kservice.AnimeImageType imgType = 4;
+  if (this->_internal_imgtype() != 0) {
+    total_size += 1 +
+      ::_pbi::WireFormatLite::EnumSize(this->_internal_imgtype());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void AnimeImageUploadRequest::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const AnimeImageUploadRequest*>(
+      &from));
+}
+
+void AnimeImageUploadRequest::MergeFrom(const AnimeImageUploadRequest& from) {
+  AnimeImageUploadRequest* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:kservice.AnimeImageUploadRequest)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_srcid().empty()) {
+    _this->_internal_set_srcid(from._internal_srcid());
+  }
+  if (!from._internal_animename().empty()) {
+    _this->_internal_set_animename(from._internal_animename());
+  }
+  if (!from._internal_charactername().empty()) {
+    _this->_internal_set_charactername(from._internal_charactername());
+  }
+  if (!from._internal_imageurl().empty()) {
+    _this->_internal_set_imageurl(from._internal_imageurl());
+  }
+  if (!from._internal_imagedata().empty()) {
+    _this->_internal_set_imagedata(from._internal_imagedata());
+  }
+  if (from._internal_has_header()) {
+    _this->_internal_mutable_header()->::kservice::EventHeader::MergeFrom(
+        from._internal_header());
+  }
+  if (from._internal_srctype() != 0) {
+    _this->_internal_set_srctype(from._internal_srctype());
+  }
+  if (from._internal_imgtype() != 0) {
+    _this->_internal_set_imgtype(from._internal_imgtype());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void AnimeImageUploadRequest::CopyFrom(const AnimeImageUploadRequest& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:kservice.AnimeImageUploadRequest)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool AnimeImageUploadRequest::IsInitialized() const {
+  return true;
+}
+
+void AnimeImageUploadRequest::InternalSwap(AnimeImageUploadRequest* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.srcid_, lhs_arena,
+      &other->_impl_.srcid_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.animename_, lhs_arena,
+      &other->_impl_.animename_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.charactername_, lhs_arena,
+      &other->_impl_.charactername_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.imageurl_, lhs_arena,
+      &other->_impl_.imageurl_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.imagedata_, lhs_arena,
+      &other->_impl_.imagedata_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(AnimeImageUploadRequest, _impl_.imgtype_)
+      + sizeof(AnimeImageUploadRequest::_impl_.imgtype_)
+      - PROTOBUF_FIELD_OFFSET(AnimeImageUploadRequest, _impl_.header_)>(
+          reinterpret_cast<char*>(&_impl_.header_),
+          reinterpret_cast<char*>(&other->_impl_.header_));
+}
+
+std::string AnimeImageUploadRequest::GetTypeName() const {
+  return "kservice.AnimeImageUploadRequest";
+}
+
+
+// ===================================================================
+
+class AnimeImageRequest::_Internal {
+ public:
+  static const ::kservice::EventHeader& header(const AnimeImageRequest* msg);
+};
+
+const ::kservice::EventHeader&
+AnimeImageRequest::_Internal::header(const AnimeImageRequest* msg) {
+  return *msg->_impl_.header_;
+}
+AnimeImageRequest::AnimeImageRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:kservice.AnimeImageRequest)
+}
+AnimeImageRequest::AnimeImageRequest(const AnimeImageRequest& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  AnimeImageRequest* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.srcid_){}
+    , decltype(_impl_.animename_){}
+    , decltype(_impl_.charactername_){}
+    , decltype(_impl_.header_){nullptr}
+    , decltype(_impl_.srctype_){}
+    , decltype(_impl_.imgtype_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.srcid_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.srcid_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_srcid().empty()) {
+    _this->_impl_.srcid_.Set(from._internal_srcid(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.animename_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.animename_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_animename().empty()) {
+    _this->_impl_.animename_.Set(from._internal_animename(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.charactername_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.charactername_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_charactername().empty()) {
+    _this->_impl_.charactername_.Set(from._internal_charactername(), 
+      _this->GetArenaForAllocation());
+  }
+  if (from._internal_has_header()) {
+    _this->_impl_.header_ = new ::kservice::EventHeader(*from._impl_.header_);
+  }
+  ::memcpy(&_impl_.srctype_, &from._impl_.srctype_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.imgtype_) -
+    reinterpret_cast<char*>(&_impl_.srctype_)) + sizeof(_impl_.imgtype_));
+  // @@protoc_insertion_point(copy_constructor:kservice.AnimeImageRequest)
+}
+
+inline void AnimeImageRequest::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.srcid_){}
+    , decltype(_impl_.animename_){}
+    , decltype(_impl_.charactername_){}
+    , decltype(_impl_.header_){nullptr}
+    , decltype(_impl_.srctype_){0}
+    , decltype(_impl_.imgtype_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.srcid_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.srcid_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.animename_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.animename_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.charactername_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.charactername_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+AnimeImageRequest::~AnimeImageRequest() {
+  // @@protoc_insertion_point(destructor:kservice.AnimeImageRequest)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void AnimeImageRequest::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.srcid_.Destroy();
+  _impl_.animename_.Destroy();
+  _impl_.charactername_.Destroy();
+  if (this != internal_default_instance()) delete _impl_.header_;
+}
+
+void AnimeImageRequest::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void AnimeImageRequest::Clear() {
+// @@protoc_insertion_point(message_clear_start:kservice.AnimeImageRequest)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.srcid_.ClearToEmpty();
+  _impl_.animename_.ClearToEmpty();
+  _impl_.charactername_.ClearToEmpty();
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
+  ::memset(&_impl_.srctype_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.imgtype_) -
+      reinterpret_cast<char*>(&_impl_.srctype_)) + sizeof(_impl_.imgtype_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* AnimeImageRequest::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // .kservice.EventHeader header = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          ptr = ctx->ParseMessage(_internal_mutable_header(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .kservice.InfoSourceType srcType = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_srctype(static_cast<::kservice::InfoSourceType>(val));
+        } else
+          goto handle_unusual;
+        continue;
+      // string srcId = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
+          auto str = _internal_mutable_srcid();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // .kservice.AnimeImageType imgType = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_imgtype(static_cast<::kservice::AnimeImageType>(val));
+        } else
+          goto handle_unusual;
+        continue;
+      // string animeName = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
+          auto str = _internal_mutable_animename();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // string characterName = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
+          auto str = _internal_mutable_charactername();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* AnimeImageRequest::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:kservice.AnimeImageRequest)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .kservice.EventHeader header = 1;
+  if (this->_internal_has_header()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(1, _Internal::header(this),
+        _Internal::header(this).GetCachedSize(), target, stream);
+  }
+
+  // .kservice.InfoSourceType srcType = 2;
+  if (this->_internal_srctype() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
+      2, this->_internal_srctype(), target);
+  }
+
+  // string srcId = 3;
+  if (!this->_internal_srcid().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_srcid().data(), static_cast<int>(this->_internal_srcid().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.AnimeImageRequest.srcId");
+    target = stream->WriteStringMaybeAliased(
+        3, this->_internal_srcid(), target);
+  }
+
+  // .kservice.AnimeImageType imgType = 4;
+  if (this->_internal_imgtype() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
+      4, this->_internal_imgtype(), target);
+  }
+
+  // string animeName = 5;
+  if (!this->_internal_animename().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_animename().data(), static_cast<int>(this->_internal_animename().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.AnimeImageRequest.animeName");
+    target = stream->WriteStringMaybeAliased(
+        5, this->_internal_animename(), target);
+  }
+
+  // string characterName = 6;
+  if (!this->_internal_charactername().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_charactername().data(), static_cast<int>(this->_internal_charactername().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.AnimeImageRequest.characterName");
+    target = stream->WriteStringMaybeAliased(
+        6, this->_internal_charactername(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:kservice.AnimeImageRequest)
+  return target;
+}
+
+size_t AnimeImageRequest::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:kservice.AnimeImageRequest)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string srcId = 3;
+  if (!this->_internal_srcid().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_srcid());
+  }
+
+  // string animeName = 5;
+  if (!this->_internal_animename().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_animename());
+  }
+
+  // string characterName = 6;
+  if (!this->_internal_charactername().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_charactername());
+  }
+
+  // .kservice.EventHeader header = 1;
+  if (this->_internal_has_header()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.header_);
+  }
+
+  // .kservice.InfoSourceType srcType = 2;
+  if (this->_internal_srctype() != 0) {
+    total_size += 1 +
+      ::_pbi::WireFormatLite::EnumSize(this->_internal_srctype());
+  }
+
+  // .kservice.AnimeImageType imgType = 4;
+  if (this->_internal_imgtype() != 0) {
+    total_size += 1 +
+      ::_pbi::WireFormatLite::EnumSize(this->_internal_imgtype());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void AnimeImageRequest::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const AnimeImageRequest*>(
+      &from));
+}
+
+void AnimeImageRequest::MergeFrom(const AnimeImageRequest& from) {
+  AnimeImageRequest* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:kservice.AnimeImageRequest)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_srcid().empty()) {
+    _this->_internal_set_srcid(from._internal_srcid());
+  }
+  if (!from._internal_animename().empty()) {
+    _this->_internal_set_animename(from._internal_animename());
+  }
+  if (!from._internal_charactername().empty()) {
+    _this->_internal_set_charactername(from._internal_charactername());
+  }
+  if (from._internal_has_header()) {
+    _this->_internal_mutable_header()->::kservice::EventHeader::MergeFrom(
+        from._internal_header());
+  }
+  if (from._internal_srctype() != 0) {
+    _this->_internal_set_srctype(from._internal_srctype());
+  }
+  if (from._internal_imgtype() != 0) {
+    _this->_internal_set_imgtype(from._internal_imgtype());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void AnimeImageRequest::CopyFrom(const AnimeImageRequest& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:kservice.AnimeImageRequest)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool AnimeImageRequest::IsInitialized() const {
+  return true;
+}
+
+void AnimeImageRequest::InternalSwap(AnimeImageRequest* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.srcid_, lhs_arena,
+      &other->_impl_.srcid_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.animename_, lhs_arena,
+      &other->_impl_.animename_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.charactername_, lhs_arena,
+      &other->_impl_.charactername_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(AnimeImageRequest, _impl_.imgtype_)
+      + sizeof(AnimeImageRequest::_impl_.imgtype_)
+      - PROTOBUF_FIELD_OFFSET(AnimeImageRequest, _impl_.header_)>(
+          reinterpret_cast<char*>(&_impl_.header_),
+          reinterpret_cast<char*>(&other->_impl_.header_));
+}
+
+std::string AnimeImageRequest::GetTypeName() const {
+  return "kservice.AnimeImageRequest";
+}
+
+
+// ===================================================================
+
+class AnimeImageUploadResponse::_Internal {
+ public:
+  static const ::kservice::ResponseHeader& header(const AnimeImageUploadResponse* msg);
+};
+
+const ::kservice::ResponseHeader&
+AnimeImageUploadResponse::_Internal::header(const AnimeImageUploadResponse* msg) {
+  return *msg->_impl_.header_;
+}
+AnimeImageUploadResponse::AnimeImageUploadResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:kservice.AnimeImageUploadResponse)
+}
+AnimeImageUploadResponse::AnimeImageUploadResponse(const AnimeImageUploadResponse& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  AnimeImageUploadResponse* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.imageid_){}
+    , decltype(_impl_.header_){nullptr}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.imageid_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.imageid_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_imageid().empty()) {
+    _this->_impl_.imageid_.Set(from._internal_imageid(), 
+      _this->GetArenaForAllocation());
+  }
+  if (from._internal_has_header()) {
+    _this->_impl_.header_ = new ::kservice::ResponseHeader(*from._impl_.header_);
+  }
+  // @@protoc_insertion_point(copy_constructor:kservice.AnimeImageUploadResponse)
+}
+
+inline void AnimeImageUploadResponse::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.imageid_){}
+    , decltype(_impl_.header_){nullptr}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.imageid_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.imageid_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+AnimeImageUploadResponse::~AnimeImageUploadResponse() {
+  // @@protoc_insertion_point(destructor:kservice.AnimeImageUploadResponse)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void AnimeImageUploadResponse::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.imageid_.Destroy();
+  if (this != internal_default_instance()) delete _impl_.header_;
+}
+
+void AnimeImageUploadResponse::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void AnimeImageUploadResponse::Clear() {
+// @@protoc_insertion_point(message_clear_start:kservice.AnimeImageUploadResponse)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.imageid_.ClearToEmpty();
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* AnimeImageUploadResponse::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // .kservice.ResponseHeader header = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          ptr = ctx->ParseMessage(_internal_mutable_header(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // string imageId = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          auto str = _internal_mutable_imageid();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* AnimeImageUploadResponse::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:kservice.AnimeImageUploadResponse)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .kservice.ResponseHeader header = 1;
+  if (this->_internal_has_header()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(1, _Internal::header(this),
+        _Internal::header(this).GetCachedSize(), target, stream);
+  }
+
+  // string imageId = 2;
+  if (!this->_internal_imageid().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_imageid().data(), static_cast<int>(this->_internal_imageid().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "kservice.AnimeImageUploadResponse.imageId");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_imageid(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:kservice.AnimeImageUploadResponse)
+  return target;
+}
+
+size_t AnimeImageUploadResponse::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:kservice.AnimeImageUploadResponse)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string imageId = 2;
+  if (!this->_internal_imageid().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_imageid());
+  }
+
+  // .kservice.ResponseHeader header = 1;
+  if (this->_internal_has_header()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.header_);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void AnimeImageUploadResponse::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const AnimeImageUploadResponse*>(
+      &from));
+}
+
+void AnimeImageUploadResponse::MergeFrom(const AnimeImageUploadResponse& from) {
+  AnimeImageUploadResponse* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:kservice.AnimeImageUploadResponse)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_imageid().empty()) {
+    _this->_internal_set_imageid(from._internal_imageid());
+  }
+  if (from._internal_has_header()) {
+    _this->_internal_mutable_header()->::kservice::ResponseHeader::MergeFrom(
+        from._internal_header());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void AnimeImageUploadResponse::CopyFrom(const AnimeImageUploadResponse& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:kservice.AnimeImageUploadResponse)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool AnimeImageUploadResponse::IsInitialized() const {
+  return true;
+}
+
+void AnimeImageUploadResponse::InternalSwap(AnimeImageUploadResponse* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.imageid_, lhs_arena,
+      &other->_impl_.imageid_, rhs_arena
+  );
+  swap(_impl_.header_, other->_impl_.header_);
+}
+
+std::string AnimeImageUploadResponse::GetTypeName() const {
+  return "kservice.AnimeImageUploadResponse";
+}
+
+
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace kservice
 PROTOBUF_NAMESPACE_OPEN
@@ -11196,6 +14632,42 @@ Arena::CreateMaybeMessage< ::kservice::GetSourceResponse >(Arena* arena) {
 template<> PROTOBUF_NOINLINE ::kservice::RemoveSourceEvent*
 Arena::CreateMaybeMessage< ::kservice::RemoveSourceEvent >(Arena* arena) {
   return Arena::CreateMessageInternal< ::kservice::RemoveSourceEvent >(arena);
+}
+template<> PROTOBUF_NOINLINE ::kservice::AnimeCharacter*
+Arena::CreateMaybeMessage< ::kservice::AnimeCharacter >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::kservice::AnimeCharacter >(arena);
+}
+template<> PROTOBUF_NOINLINE ::kservice::Anime_StaffEntry_DoNotUse*
+Arena::CreateMaybeMessage< ::kservice::Anime_StaffEntry_DoNotUse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::kservice::Anime_StaffEntry_DoNotUse >(arena);
+}
+template<> PROTOBUF_NOINLINE ::kservice::Anime*
+Arena::CreateMaybeMessage< ::kservice::Anime >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::kservice::Anime >(arena);
+}
+template<> PROTOBUF_NOINLINE ::kservice::AnimeProfileEvent*
+Arena::CreateMaybeMessage< ::kservice::AnimeProfileEvent >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::kservice::AnimeProfileEvent >(arena);
+}
+template<> PROTOBUF_NOINLINE ::kservice::ImageUploadTask*
+Arena::CreateMaybeMessage< ::kservice::ImageUploadTask >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::kservice::ImageUploadTask >(arena);
+}
+template<> PROTOBUF_NOINLINE ::kservice::AnimeProfileResponse*
+Arena::CreateMaybeMessage< ::kservice::AnimeProfileResponse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::kservice::AnimeProfileResponse >(arena);
+}
+template<> PROTOBUF_NOINLINE ::kservice::AnimeImageUploadRequest*
+Arena::CreateMaybeMessage< ::kservice::AnimeImageUploadRequest >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::kservice::AnimeImageUploadRequest >(arena);
+}
+template<> PROTOBUF_NOINLINE ::kservice::AnimeImageRequest*
+Arena::CreateMaybeMessage< ::kservice::AnimeImageRequest >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::kservice::AnimeImageRequest >(arena);
+}
+template<> PROTOBUF_NOINLINE ::kservice::AnimeImageUploadResponse*
+Arena::CreateMaybeMessage< ::kservice::AnimeImageUploadResponse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::kservice::AnimeImageUploadResponse >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

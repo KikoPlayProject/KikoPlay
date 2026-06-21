@@ -57,6 +57,55 @@ namespace
     };
 }
 
+namespace KServiceAux
+{
+    class KImageUploadTask : public QObject
+    {
+    public:
+        KImageUploadTask(QObject *parent = nullptr) : QObject(parent) {}
+        void addTask(const kservice::ImageUploadTask &task, const QImage &img)
+        {
+            tasks.emplaceBack(task, img);
+        }
+        void run()
+        {
+            if (tasks.isEmpty())
+            {
+                this->deleteLater();
+                return;
+            }
+            auto task = tasks.takeFirst();
+            kservice::AnimeImageUploadRequest req;
+            buildReq(req, task.first, task.second);
+
+            std::string msgContent;
+            req.SerializeToString(&msgContent);
+            KService::instance()->post(KService::instance()->pathAnimeImageUpload, QByteArray(msgContent.c_str(), msgContent.size()), [this](QNetworkReply *){this->run();});
+            Logger::logger()->log(Logger::APP, QString("[KService]anime img upload: %1 %2").arg(QString::fromStdString(task.first.animename()), task.first.imgtype() == kservice::AnimeImageType::ANIME_CHARACTER ? QString::fromStdString(task.first.charactername()) : ""));
+            QThread::msleep(100);
+        }
+        void buildReq(kservice::AnimeImageUploadRequest &req, const kservice::ImageUploadTask &task, const QImage &img)
+        {
+            auto k = KService::instance();
+            k->setEventHeader(*req.mutable_header(), "anime_img_upload");
+
+            req.set_srctype(task.srctype());
+            req.set_srcid(task.srcid());
+            req.set_imgtype(task.imgtype());
+            req.set_animename(task.animename());
+            req.set_charactername(task.charactername());
+            req.set_imageurl(task.url());
+
+            QByteArray imgBytes;
+            QBuffer bufferThumb(&imgBytes);
+            bufferThumb.open(QIODevice::WriteOnly);
+            img.save(&bufferThumb, "jpg");
+            req.set_imagedata(std::string(imgBytes.data(), imgBytes.size()));
+        }
+        QVector<QPair<kservice::ImageUploadTask, QImage>> tasks;
+    };
+}
+
 KService::KService() : QObject{nullptr}, baseURL("https://www.kstat.top")
 {
     serviceThread.reset(new QThread());
@@ -68,6 +117,7 @@ KService::KService() : QObject{nullptr}, baseURL("https://www.kstat.top")
     new EventListener(EventBus::getEventBus(), EventBus::EVENT_DANMU_SRC_ADDED, std::bind(&KService::listenDanmuAdded, this, std::placeholders::_1), this);
     new EventListener(EventBus::getEventBus(), EventBus::EVENT_KAPP_LOADED, std::bind(&KService::listenCommonEvents, this, std::placeholders::_1), this);
     new EventListener(EventBus::getEventBus(), EventBus::EVENT_DANMU_SRC_REMOVED, std::bind(&KService::listenDanmuSrcRemoved, this, std::placeholders::_1), this);
+    new EventListener(EventBus::getEventBus(), EventBus::EVENT_ANIME_INFO_FETCHED, std::bind(&KService::listenAnimeFetched, this, std::placeholders::_1), this);
     moveToThread(serviceThread.data());
     QMetaObject::invokeMethod(this, [=](){
         eventTimer.start(std::chrono::milliseconds(5 * 60 * 1000), this);
@@ -464,6 +514,79 @@ void KService::listenDanmuSrcRemoved(const EventParam *p)
     Logger::logger()->log(Logger::APP, QString("[KService]rm src event: %1-%2, %3").arg(rmPoolSrc.value("name").toString()).arg(rmPoolSrc.value("epIndex").toDouble()).arg(rmPoolSrc.value("srcTitle").toString()));
 }
 
+void KService::listenAnimeFetched(const EventParam *p)
+{
+    if (!p || p->eventType != EventBus::EVENT_ANIME_INFO_FETCHED) return;
+    const QVariantMap params = p->param.toMap();
+    const QString scriptId = params["scriptId"].toString();
+    if (!isInterestLibrarySource(scriptId)) return;
+
+    const QString animeName = params["name"].toString().trimmed();
+    if (animeName.isEmpty()) return;
+
+    const QString airDate = params["date"].toString().trimmed();
+    static const QRegularExpression datePattern("^\\d{4}-\\d{2}-\\d{2}$");
+    if (!datePattern.match(airDate).hasMatch()) return;
+
+    qint64 ts = QDateTime::currentSecsSinceEpoch();
+    if (animeUploadTs.contains(animeName) && ts - animeUploadTs[animeName] < 60*60*2)
+    {
+        Logger::logger()->log(Logger::APP, QString("[KService]anime info upload in time_window, skip: %1").arg(animeName));
+        return;
+    }
+    animeUploadTs[animeName] = ts;
+
+    kservice::AnimeProfileEvent animeEvent;
+    setEventHeader(*animeEvent.mutable_header(), "anime_profile");
+
+    kservice::Anime *animeInfo = animeEvent.mutable_animeinfo();
+    animeInfo->mutable_source()->set_type(kservice::InfoSourceType(matchScriptTypeMap.value(scriptId)));
+    animeInfo->mutable_source()->set_scriptid(scriptId.toStdString());
+    animeInfo->mutable_source()->set_scriptdata(params["scriptData"].toString().toStdString());
+
+    animeInfo->set_name(animeName.toStdString());
+    animeInfo->set_airdate(airDate.toStdString());
+    animeInfo->set_desc(params["desc"].toString().toStdString());
+    animeInfo->set_url(params["url"].toString().toStdString());
+    animeInfo->set_coverurl(params["coverURL"].toString().toStdString());
+    animeInfo->set_epnum(params["eps"].toInt());
+
+    const QVariantMap staffs = params["staff"].toMap();
+    auto staffMap = animeInfo->mutable_staff();
+    for (auto iter = staffs.begin(); iter != staffs.end(); ++iter)
+    {
+        (*staffMap)[iter.key().toStdString()] = iter.value().toString().toStdString();
+    }
+
+    const QVariantList characters = params["characters"].toList();
+    for (auto &c : characters)
+    {
+        const QVariantMap cMap = c.toMap();
+        kservice::AnimeCharacter *ch = animeInfo->add_characters();
+        ch->set_name(cMap["name"].toString().toStdString());
+        ch->set_link(cMap["link"].toString().toStdString());
+        ch->set_actor(cMap["actor"].toString().toStdString());
+        ch->set_imgurl(cMap["img"].toString().toStdString());
+    }
+
+    const QStringList tags = params["tags"].toStringList();
+    static const QRegularExpression simplePattern("^[A-Za-z0-9]+$");
+    static const QRegularExpression kanaPattern(QStringLiteral("[\u3040-\u30ff\uff66-\uff9f]"));
+    for (auto &tag : tags)
+    {
+        if (tag.size() < 2 || tag.size() > 3) continue;
+        if (simplePattern.match(tag).hasMatch()) continue;
+        if (kanaPattern.match(tag).hasMatch()) continue;
+        animeInfo->add_tags(tag.toStdString());
+        if (animeInfo->tags_size() > 5) break;
+    }
+
+    std::string msgContent;
+    animeEvent.SerializeToString(&msgContent);
+    post(pathAnimeProfileEvent, QByteArray(msgContent.c_str(), msgContent.size()), std::bind(&KService::handleAnimeProfileEv, this, std::placeholders::_1));
+    Logger::logger()->log(Logger::APP, QString("[KService]anime profile event: %1").arg(animeName));
+}
+
 void KService::refreshToken()
 {
     if (!profile.refreshTokenValid())
@@ -634,6 +757,11 @@ void KService::setLibrarySourceIndex(const QList<QPair<int, bool>> &indexSelecte
     }
     serviceData->setValue(SERVICE_KEY_LIBRARAY_SOURCE_INDEX, QVariant::fromValue<QList<int>>(indexs));
     if (!selected.empty()) serviceData->setValue(SERVICE_KEY_LIBRARAY_SELECT_SOURCE, QVariant::fromValue<QSet<int>>(selected));
+}
+
+bool KService::isInterestLibrarySource(const QString &scriptId) const
+{
+    return matchScriptTypeMap.contains(scriptId);
 }
 
 void KService::kStatsUV(bool isStartup)
@@ -881,6 +1009,18 @@ void KService::handleUV(QNetworkReply *reply)
     {
         Logger::logger()->log(Logger::APP, "[KService]uv rsp parse error");
         return;
+    }
+    const kservice::UVEventResponse::LatestVersion &latestVersion = rsp.latestversioninfo();
+    if (latestVersion.version() > 0)
+    {
+        KLatestVersionInfo versionInfo;
+        versionInfo.version = latestVersion.version();
+        versionInfo.info = QString::fromStdString(latestVersion.info());
+        versionInfo.versionName = QString::fromStdString(latestVersion.versionname());
+        versionInfo.url = QString::fromStdString(latestVersion.url());
+        QMetaObject::invokeMethod(QCoreApplication::instance(), [=](){
+            this->versionInfo = versionInfo;
+        }, Qt::QueuedConnection);
     }
 }
 
@@ -1161,6 +1301,52 @@ void KService::handleGetSource(QNetworkReply *reply)
         }
     }
     Logger::logger()->log(Logger::APP, QString("[KService]pool[%1] add %2 new srcs").arg(pool->epTitle()).arg(nSrcIds.size()));
+}
+
+void KService::handleAnimeProfileEv(QNetworkReply *reply)
+{
+    QByteArray pbData = reply->readAll();
+    kservice::AnimeProfileResponse rsp;
+    if (!rsp.ParseFromArray(pbData.constData(), pbData.size()))
+    {
+        Logger::logger()->log(Logger::APP, "[KService]anime profile rsp parse error");
+        return;
+    }
+
+    KServiceAux::KImageUploadTask *uploadTask = new KServiceAux::KImageUploadTask(this);
+
+    for (int i = 0; i < rsp.uploadtasks_size(); ++i)
+    {
+        const kservice::ImageUploadTask &task = rsp.uploadtasks(i);
+        if (task.imgtype() == kservice::AnimeImageType::UNKNOWN_ANIME_IMAGE) continue;
+        Anime *anime = AnimeWorker::instance()->getAnime(QString::fromStdString(task.animename()));
+        if (!anime || task.srctype() != matchScriptTypeMap.value(anime->_scriptId, -1)) continue;
+        if (task.imgtype() == kservice::AnimeImageType::ANIME_COVER)
+        {
+            if (anime->_coverData.isEmpty()) continue;
+            QImage img;
+            img.loadFromData(anime->_coverData);
+            if (img.width() < task.minwidth() || img.height() < task.minheight()) continue;
+            QImage scaledImg = img.scaledToWidth(qMin(img.width(), task.preferredwidth()), Qt::SmoothTransformation);
+            uploadTask->addTask(task, scaledImg);
+        }
+        else
+        {
+            const QString cName = QString::fromStdString(task.charactername());
+            for (auto &c : anime->characters)
+            {
+                if (c.name == cName)
+                {
+                    if (c.image.isNull()) break;
+                    if (c.image.width() < task.minwidth() || c.image.height() < task.minheight()) break;
+                    QImage scaledImg = c.image.scaledToWidth(qMin(c.image.width(), task.preferredwidth()), Qt::SmoothTransformation).toImage();
+                    uploadTask->addTask(task, scaledImg);
+                    break;
+                }
+            }
+        }
+    }
+    uploadTask->run();
 }
 
 bool KServiceProfile::accessTokenValid() const

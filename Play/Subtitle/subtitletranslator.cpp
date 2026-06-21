@@ -297,6 +297,7 @@ QDataStream &operator>>(QDataStream &in, QList<TranslatorConfig> &l)
     in >> lSize;
     int kv = 0;
     in >> kv;
+    if (!GlobalObjects::isValidKikoVersion(kv)) return in;
     for (int i = 0; i < lSize; ++i)
     {
         l.emplaceBack("");

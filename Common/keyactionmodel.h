@@ -54,8 +54,6 @@ public:
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 
-public:
-
 private:
     QHash<QString, QSharedPointer<KeyActionItem>> keyActionHash;
     QList<QSharedPointer<KeyActionItem>> keyActionList;

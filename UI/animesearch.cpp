@@ -42,6 +42,7 @@ AnimeSearch::AnimeSearch(Anime *anime, QWidget *parent) : CFramelessDialog(tr("B
 	}
 
     searchWordEdit = new ElaLineEdit(anime?anime->name():"",this);
+    QObject::connect(searchWordEdit, &ElaLineEdit::returnPressed, this, &AnimeSearch::search);
     searchButton = new KPushButton(tr("Search"), this);
     QObject::connect(searchButton, &QPushButton::clicked, this, &AnimeSearch::search);
 

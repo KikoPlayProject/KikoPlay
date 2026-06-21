@@ -76,6 +76,7 @@ public:
 
     static constexpr const char *kikoVersion = "2.1.0";
     static constexpr const int kikoVersionNum = 200100;
+    static bool isValidKikoVersion(int kv);
 
 
     static void registerCustomSettingType();

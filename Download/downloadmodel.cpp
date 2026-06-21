@@ -51,7 +51,7 @@ QString DownloadModel::addUriTask(const QString &uri, const QString &dir, bool d
     QString nUri{uri};
     if (nUri.startsWith("kikoplay:anime=")) nUri = processKikoPlayCode(uri.mid(15));
     if (nUri.isEmpty()) return QString(tr("Invalid URL"));
-    const QString taskID{getTaskId(nUri)};
+    const QString taskID{getTaskId(nUri, false)};
     if(containTask(taskID)) return QString(tr("The task already exists: \n%1").arg(nUri));
 
     QJsonObject options;
@@ -204,14 +204,17 @@ QString DownloadModel::processKikoPlayCode(const QString &code)
     }
 }
 
-QString DownloadModel::getTaskId(const QString &url)
+QString DownloadModel::getTaskId(const QString &url, bool extractInfoHash)
 {
-    static const QRegularExpression re("magnet:\\?xt=urn:btih:([0-9a-fA-F]{40})(?=&|$)");
-    auto match = re.match(url);
-    if (match.hasMatch())
+    if (extractInfoHash)
     {
-        auto captured = match.capturedTexts();
-        return captured[1].toLower();
+        static const QRegularExpression re("magnet:\\?xt=urn:btih:([0-9a-fA-F]{40})(?=&|$)");
+        auto match = re.match(url);
+        if (match.hasMatch())
+        {
+            auto captured = match.capturedTexts();
+            return captured[1].toLower();
+        }
     }
     return QCryptographicHash::hash(url.toUtf8(),QCryptographicHash::Sha1).toHex().toLower();
 }

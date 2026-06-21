@@ -581,6 +581,7 @@ void LibraryWindow::searchAddAnime(Anime *srcAnime)
                     {
                         LabelModel::instance()->addCustomTags(tAnime->name(), tags);
                     }
+                    AnimeWorker::pushAnimeEvent(tAnime, tags);
                 }
             }
             else
@@ -593,6 +594,7 @@ void LibraryWindow::searchAddAnime(Anime *srcAnime)
                     {
                         LabelModel::instance()->addCustomTags(nAnime->name(), tags);
                     }
+                    AnimeWorker::pushAnimeEvent(nAnime, tags);
                 }
             }
             showMessage(tr("Fetch Down"), NotifyMessageFlag::NM_HIDE);

@@ -54,6 +54,7 @@ public:
         EVENT_REQUIRE_LOGIN,
         EVENT_KAPP_LOADED,
         EVENT_DANMU_SRC_REMOVED,
+        EVENT_ANIME_INFO_FETCHED,
         EVENT_UNKNOWN
     };
 public:

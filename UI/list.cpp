@@ -1887,6 +1887,7 @@ void ListWindow::setCurrentList(int listType)
         subModel->setBlocked(listType != 2);
     }
     contentStackLayout->setCurrentIndex(listType);
+    if (!infoTip->isHidden()) infoTip->raise();
 }
 
 int ListWindow::currentList() const

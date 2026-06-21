@@ -89,6 +89,7 @@ message UVEventResponse {
         int32 version = 1;
         string url = 2;
         string info = 3;
+        string versionName = 4;
     }
     LatestVersion latestVersionInfo = 2;
 }
@@ -258,3 +259,78 @@ message RemoveSourceEvent {
     Pool poolInfo = 2;
     DanmuSource src = 3;
 }
+
+message AnimeCharacter {
+    string name = 1;
+    string link = 2;
+    string actor = 3;
+    string imgURL = 4;
+}
+
+message Anime {
+    string name = 1;
+    string id = 2;
+    string airDate = 3;  // yyyy-mm-dd
+    string desc = 4;
+    string url = 5;
+    InfoSource source = 6;
+    int32 epNum = 7;
+    map<string, string> staff = 8;  // role -> name
+    string coverURL = 9;
+    repeated AnimeCharacter characters = 10;
+    repeated string tags = 11;
+}
+
+message AnimeProfileEvent {
+    EventHeader header = 1;
+    Anime animeInfo = 2;
+}
+
+enum AnimeImageType {
+    UNKNOWN_ANIME_IMAGE = 0;
+    ANIME_COVER = 1;
+    ANIME_CHARACTER = 2;
+}
+
+message ImageUploadTask {
+    InfoSourceType srcType = 1;
+    string srcId = 2;
+    AnimeImageType imgType = 3;
+    string animeName = 4;
+    string characterName = 5;  // Only for ANIME_CHARACTER type
+    string url = 6;
+    int32 minWidth = 7;
+    int32 minHeight = 8;
+    int32 preferredWidth = 9;
+    int32 preferredHeight = 10;
+}
+message AnimeProfileResponse {
+    ResponseHeader header = 1;
+    repeated ImageUploadTask uploadTasks = 2;
+}
+message AnimeImageUploadRequest {
+    EventHeader header = 1;
+    InfoSourceType srcType = 2;
+    string srcId = 3;
+    AnimeImageType imgType = 4;
+    string animeName = 5;
+    string characterName = 6;  // Only for ANIME_CHARACTER type
+    string imageURL = 7;
+    bytes imageData = 8;
+}
+
+message AnimeImageRequest {
+    EventHeader header = 1;
+    InfoSourceType srcType = 2;
+    string srcId = 3;
+    AnimeImageType imgType = 4;
+    string animeName = 5;
+    string characterName = 6;  // Only for ANIME_CHARACTER type
+}
+
+message AnimeImageUploadResponse {
+    ResponseHeader header = 1;
+    string imageId = 2;
+}
+
+

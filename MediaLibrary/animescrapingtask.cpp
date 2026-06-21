@@ -103,6 +103,7 @@ TaskStatus AnimeScrapingTask::runTask()
         QMetaObject::invokeMethod(LabelModel::instance(), [=](){
             LabelModel::instance()->addCustomTags(animeName, tags);
         });
+        AnimeWorker::pushAnimeEvent(tAnime, tags);
     }
     return TaskStatus::Finished;
 }

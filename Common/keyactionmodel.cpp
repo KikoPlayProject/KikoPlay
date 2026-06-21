@@ -7,6 +7,11 @@
 #define SETTING_KEY_KEY_INITED "Key/KeyInited"
 #define SETTING_KEY_KEY_ACTIONS "Key/KeyActions"
 
+namespace
+{
+    static bool settingsKvValid = true;
+}
+
 KeyActionModel *KeyActionModel::instance()
 {
     static KeyActionModel model;
@@ -24,9 +29,17 @@ KeyActionModel::KeyActionModel(QObject *parent)
     else
     {
         keyActionList = GlobalObjects::appSetting->value(SETTING_KEY_KEY_ACTIONS).value<QList<QSharedPointer<KeyActionItem>>>();
-        for(auto &k : keyActionList)
+        if (!settingsKvValid)
         {
-            keyActionHash.insert(k->key, k);
+            initKeys();
+            settingsKvValid = true;
+        }
+        else
+        {
+            for(auto &k : keyActionList)
+            {
+                keyActionHash.insert(k->key, k);
+            }
         }
     }
 }
@@ -186,6 +199,7 @@ void KeyActionModel::updateSettings()
 
 QDataStream &operator<<(QDataStream &out, const QList<QSharedPointer<KeyActionItem>> &l)
 {
+    out << GlobalObjects::kikoVersionNum;
     int s = l.size();
     out << s;
     for (const auto &item : l)
@@ -198,8 +212,18 @@ QDataStream &operator<<(QDataStream &out, const QList<QSharedPointer<KeyActionIt
 
 QDataStream &operator>>(QDataStream &in, QList<QSharedPointer<KeyActionItem>> &l)
 {
+    int kv = 0;
     int lSize = 0;
-    in >> lSize;
+    in >> kv;
+    if (!GlobalObjects::isValidKikoVersion(kv))
+    {
+        lSize = kv;
+        kv = -1;
+    }
+    else
+    {
+        in >> lSize;
+    }
     for (int i = 0; i < lSize; ++i)
     {
         QSharedPointer<KeyActionItem> item = QSharedPointer<KeyActionItem>::create();
@@ -209,7 +233,7 @@ QDataStream &operator>>(QDataStream &in, QList<QSharedPointer<KeyActionItem>> &l
         item->action.reset(KeyAction::createAction(actType));
         if (item->action)
         {
-            item->action->deserialize(in);
+            item->action->deserialize(in, kv);
             l.append(item);
         }
     }

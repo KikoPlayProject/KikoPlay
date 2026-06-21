@@ -11,6 +11,7 @@
 #include "Common/keyactionmodel.h"
 #include "Common/keyaction.h"
 #include "Common/notifier.h"
+#include "UI/ela/ElaCheckBox.h"
 #include "UI/ela/ElaLineEdit.h"
 #include "UI/ela/ElaMenu.h"
 #include "UI/ela/ElaComboBox.h"
@@ -224,12 +225,12 @@ void KeyActionEditDialog::resetActionWidgets(int type)
     for (int i = 0; i < action->actParams.size(); ++i)
     {
         KeyAction::ActionParam &param = action->actParams[i];
-        QLabel *tip = new QLabel(param.desc, this);
         if (useRefParam) param.val = refItem->action->actParams[i].val;
         switch(param.type)
         {
         case KeyAction::ParamType::PARAM_INT:
         {
+            QLabel *tip = new QLabel(param.desc, this);
             ElaSpinBox *spin = new ElaSpinBox(this);
             spin->setValue(param.val.toInt());
             layout->addWidget(tip, curRow, 0);
@@ -242,6 +243,7 @@ void KeyActionEditDialog::resetActionWidgets(int type)
         }
         case KeyAction::PARAM_STR:
         {
+            QLabel *tip = new QLabel(param.desc, this);
             ElaLineEdit *edit = new ElaLineEdit(this);
             edit->setText(param.val.toString());
             layout->addWidget(tip, curRow, 0);
@@ -249,6 +251,17 @@ void KeyActionEditDialog::resetActionWidgets(int type)
             actionParamWidgets << tip << edit;
             QObject::connect(edit, &QLineEdit::textChanged, this, [i, this](const QString &val){
                 this->action->actParams[i].val = val.trimmed();
+            });
+            break;
+        }
+        case KeyAction::ParamType::PARAM_BOOL:
+        {
+            ElaCheckBox *check = new ElaCheckBox(param.desc, this);
+            check->setChecked(param.val.toBool());
+            layout->addWidget(check, curRow, 0, 1, 6);
+            actionParamWidgets << check;
+            QObject::connect(check, &ElaCheckBox::stateChanged, this, [i, this](int state){
+                this->action->actParams[i].val = (state == Qt::CheckState::Checked);
             });
             break;
         }

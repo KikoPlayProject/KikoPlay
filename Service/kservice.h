@@ -17,6 +17,11 @@ namespace kservice
 {
     class EventHeader;
     class KFileInfo;
+    class ImageUploadTask;
+}
+namespace KServiceAux
+{
+    class KImageUploadTask;
 }
 struct KServiceProfile
 {
@@ -49,10 +54,19 @@ struct KServiceProfile
     QString generateDeviceId() const;
 };
 
+struct KLatestVersionInfo
+{
+    int version = 0;
+    QString url;
+    QString info;
+    QString versionName;
+};
+
 class KService : public QObject
 {
     Q_OBJECT
     Q_DISABLE_COPY(KService)
+    friend class KServiceAux::KImageUploadTask;
 
     explicit KService();
 
@@ -90,6 +104,8 @@ public:
     void setEnableKServiceUpdateSrc(bool on);
     QList<QPair<QString, QPair<int, bool> > > getLibrarySource() const;
     void setLibrarySourceIndex(const QList<QPair<int, bool> > &indexSelected);
+    const KLatestVersionInfo &getVersionInfo() const { return versionInfo; }
+    bool isInterestLibrarySource(const QString &scriptId) const;
 
 protected:
     void timerEvent(QTimerEvent* event);
@@ -102,6 +118,9 @@ private:
     MPVMediaInfo *mediaInfo{nullptr};
     KServiceProfile profile;
     QMap<QString, qint64> getSrcTs;
+    QMap<QString, qint64> animeUploadTs;
+
+    KLatestVersionInfo versionInfo;
 
 private:
     const QString pathKStatsUV{"/api/stats"};
@@ -117,6 +136,8 @@ private:
     const QString pathRefreshToken{"/api/token_refresh"};
     const QString pathGetDanmu{"/api/get_danmu"};
     const QString pathGetSource{"/api/get_src"};
+    const QString pathAnimeProfileEvent{"/api/anime_profile_ev"};
+    const QString pathAnimeImageUpload{"/api/anime_image_upload"};
 
 private:
     using PostCallBack = std::function<void(QNetworkReply *)>;
@@ -129,6 +150,7 @@ private:
     void listenDanmuAdded(const EventParam *p);
     void listenCommonEvents(const EventParam *p);
     void listenDanmuSrcRemoved(const EventParam *p);
+    void listenAnimeFetched(const EventParam *p);
 
     void refreshToken();
     void resendStashedComments();
@@ -154,6 +176,7 @@ private:
     void handleRegister(QNetworkReply *reply);
     void handleGetDanmu(QNetworkReply *reply);
     void handleGetSource(QNetworkReply *reply);
+    void handleAnimeProfileEv(QNetworkReply *reply);
 };
 
 #endif // KSERVICE_H

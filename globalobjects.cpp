@@ -170,6 +170,12 @@ void GlobalObjects::setFont(const QString &font)
     appSetting->setValue("UI/Font", font);
 }
 
+bool GlobalObjects::isValidKikoVersion(int kv)
+{
+    static const QSet<int> kvs = {200000, 200100};
+    return kvs.contains(kv);
+}
+
 void GlobalObjects::registerCustomSettingType()
 {
     qRegisterMetaType<QVector<QPair<QString, QString>>>("QVector<QPair<QString, QString>>");

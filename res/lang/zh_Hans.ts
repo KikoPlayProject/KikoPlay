@@ -402,7 +402,7 @@
 <context>
     <name>AddUrlDialog</name>
     <message>
-        <location filename="../../UI/list.cpp" line="1942"/>
+        <location filename="../../UI/list.cpp" line="1943"/>
         <source>Add URL</source>
         <translation>添加URL</translation>
     </message>
@@ -411,32 +411,32 @@
         <translation type="vanished">输入URL(http, https, smb)</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1944"/>
+        <location filename="../../UI/list.cpp" line="1945"/>
         <source>Enter URL(http, https, smb), separate multiple urls with line breaks</source>
         <translation>输入URL(http, https, smb)，多条URL用换行分隔</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1946"/>
+        <location filename="../../UI/list.cpp" line="1947"/>
         <source>Add to new collection</source>
         <translation>添加到新合集</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1948"/>
+        <location filename="../../UI/list.cpp" line="1949"/>
         <source>Input Collection Name</source>
         <translation>输入合集名</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1951"/>
+        <location filename="../../UI/list.cpp" line="1952"/>
         <source>Decode Title From URL</source>
         <translation>从URL解析标题</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1970"/>
+        <location filename="../../UI/list.cpp" line="1971"/>
         <source>URL can&apos;t be empty</source>
         <translation>URL不能为空</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1978"/>
+        <location filename="../../UI/list.cpp" line="1979"/>
         <source>Collection Title can&apos;t be empty</source>
         <translation>合集标题不能为空</translation>
     </message>
@@ -444,52 +444,52 @@
 <context>
     <name>AddWebDAVCollectionDialog</name>
     <message>
-        <location filename="../../UI/list.cpp" line="1986"/>
+        <location filename="../../UI/list.cpp" line="1987"/>
         <source>Add WebDAV Collection</source>
         <translation>添加WebDAV合集</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1988"/>
+        <location filename="../../UI/list.cpp" line="1989"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1990"/>
+        <location filename="../../UI/list.cpp" line="1991"/>
         <source>URL</source>
         <translation>URL</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1992"/>
+        <location filename="../../UI/list.cpp" line="1993"/>
         <source>Port</source>
         <translation>端口</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1994"/>
+        <location filename="../../UI/list.cpp" line="1995"/>
         <source>Path</source>
         <translation>路径</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1996"/>
+        <location filename="../../UI/list.cpp" line="1997"/>
         <source>User</source>
         <translation>用户</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="1998"/>
+        <location filename="../../UI/list.cpp" line="1999"/>
         <source>Password</source>
         <translation>密码</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="2033"/>
+        <location filename="../../UI/list.cpp" line="2034"/>
         <source>Title/URL can&apos;t be empty</source>
         <translation>标题/URL不能为空</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="2038"/>
+        <location filename="../../UI/list.cpp" line="2039"/>
         <source>URL must end with /</source>
         <translation>URL必须以&quot;/&quot;结尾</translation>
     </message>
     <message>
-        <location filename="../../UI/list.cpp" line="2056"/>
+        <location filename="../../UI/list.cpp" line="2057"/>
         <source>Path must end with /</source>
         <translation>路径必须以&quot;/&quot;结尾</translation>
     </message>
@@ -999,22 +999,22 @@
         <translation type="vanished">动画标题</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="654"/>
+        <location filename="../../UI/librarywindow.cpp" line="656"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="660"/>
+        <location filename="../../UI/librarywindow.cpp" line="662"/>
         <source>Summary</source>
         <translation>简介</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="665"/>
+        <location filename="../../UI/librarywindow.cpp" line="667"/>
         <source>Staff</source>
         <translation>Staff</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="670"/>
+        <location filename="../../UI/librarywindow.cpp" line="672"/>
         <source>Character</source>
         <translation>角色</translation>
     </message>
@@ -1431,17 +1431,17 @@
         <translation>番剧搜索</translation>
     </message>
     <message>
-        <location filename="../../UI/animesearch.cpp" line="45"/>
+        <location filename="../../UI/animesearch.cpp" line="46"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../UI/animesearch.cpp" line="90"/>
+        <location filename="../../UI/animesearch.cpp" line="91"/>
         <source>Searching...</source>
         <translation>搜索中...</translation>
     </message>
     <message>
-        <location filename="../../UI/animesearch.cpp" line="96"/>
+        <location filename="../../UI/animesearch.cpp" line="97"/>
         <source>Down</source>
         <translation>完成</translation>
     </message>
@@ -1454,7 +1454,7 @@
         <translation type="vanished">附加信息</translation>
     </message>
     <message>
-        <location filename="../../UI/animesearch.cpp" line="110"/>
+        <location filename="../../UI/animesearch.cpp" line="111"/>
         <source>You need to choose one</source>
         <translation>需要选择一个</translation>
     </message>
@@ -1490,8 +1490,8 @@
         <translation type="vanished">未知</translation>
     </message>
     <message>
-        <location filename="../../MediaLibrary/animeworker.cpp" line="753"/>
-        <location filename="../../MediaLibrary/animeworker.cpp" line="758"/>
+        <location filename="../../MediaLibrary/animeworker.cpp" line="757"/>
+        <location filename="../../MediaLibrary/animeworker.cpp" line="762"/>
         <source>Snippet</source>
         <translation>片段</translation>
     </message>
@@ -1832,12 +1832,12 @@
 <context>
     <name>BgmListModel</name>
     <message>
-        <location filename="../../UI/animesearch.cpp" line="162"/>
+        <location filename="../../UI/animesearch.cpp" line="163"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../UI/animesearch.cpp" line="162"/>
+        <location filename="../../UI/animesearch.cpp" line="163"/>
         <source>Extra</source>
         <translation>附加信息</translation>
     </message>
@@ -4380,48 +4380,48 @@ Finish Time: ----</source>
         <translation type="vanished">用户名无效：只允许英文字母，数字和下划线</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="540"/>
+        <location filename="../../Service/kservice.cpp" line="662"/>
         <source>Invalid UserName: Only Chinese characters, English letters, numbers, and underscores are allowed</source>
         <translation>用户名无效：只允许中文字符，英文字母，数字和下划线</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="545"/>
+        <location filename="../../Service/kservice.cpp" line="667"/>
         <source>Length invalid</source>
         <translation>长度无效</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="555"/>
-        <location filename="../../Service/kservice.cpp" line="561"/>
+        <location filename="../../Service/kservice.cpp" line="677"/>
+        <location filename="../../Service/kservice.cpp" line="683"/>
         <source>Invalid email format</source>
         <translation>Email格式无效</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="565"/>
+        <location filename="../../Service/kservice.cpp" line="687"/>
         <source>Email length lnvalid</source>
         <translation>Email长度无效</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="574"/>
+        <location filename="../../Service/kservice.cpp" line="696"/>
         <source>Password length invalid, must be greater than 6</source>
         <translation>密码无效，长度应大于6</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="602"/>
+        <location filename="../../Service/kservice.cpp" line="724"/>
         <source>Bangumi</source>
         <translation>Bangumi</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="603"/>
+        <location filename="../../Service/kservice.cpp" line="725"/>
         <source>Douban</source>
         <translation>豆瓣</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="999"/>
+        <location filename="../../Service/kservice.cpp" line="1138"/>
         <source>Login Response Parse Error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="1054"/>
+        <location filename="../../Service/kservice.cpp" line="1193"/>
         <source>Register rsp parse error</source>
         <translation></translation>
     </message>
@@ -4467,47 +4467,47 @@ Finish Time: ----</source>
 <context>
     <name>KeyActionEditDialog</name>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="144"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="145"/>
         <source>Edit Key Action</source>
         <translation>编辑按键动作</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="146"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="147"/>
         <source>Shortcut Key</source>
         <translation>快捷键</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="148"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="149"/>
         <source>Action</source>
         <translation>动作</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="150"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="151"/>
         <source>Trigger</source>
         <translation>触发</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="172"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="173"/>
         <source>Press</source>
         <translation>按下</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="173"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="174"/>
         <source>Release</source>
         <translation>松开</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="265"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="278"/>
         <source>Key should not be empty</source>
         <translation>按键不能为空</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="272"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="285"/>
         <source>Shortcut key conflicts with &quot;%1&quot;</source>
         <translation>快捷键冲突：&quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="281"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="294"/>
         <source>Action Param should not be empty</source>
         <translation>动作参数不能为空</translation>
     </message>
@@ -4528,32 +4528,32 @@ Finish Time: ----</source>
 <context>
     <name>KeyActionPage</name>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="36"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="37"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="37"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="38"/>
         <source>Import input.conf</source>
         <translation>导入input.conf</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="51"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="52"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="63"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="64"/>
         <source>Modify</source>
         <translation>修改</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="91"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="92"/>
         <source>Select Input Conf</source>
         <translation>选择Input Conf文件</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/keyactionpage.cpp" line="140"/>
+        <location filename="../../UI/settings/keyactionpage.cpp" line="141"/>
         <source>Add %1 Key Action(s)</source>
         <translation>添加了%1个按键动作</translation>
     </message>
@@ -4779,13 +4779,13 @@ Finish Time: ----</source>
     <message>
         <location filename="../../UI/librarywindow.cpp" line="388"/>
         <location filename="../../UI/librarywindow.cpp" line="578"/>
-        <location filename="../../UI/librarywindow.cpp" line="590"/>
+        <location filename="../../UI/librarywindow.cpp" line="591"/>
         <source>Fetching Tags from %1</source>
         <translation>正在从 %1 获取标签...</translation>
     </message>
     <message>
         <location filename="../../UI/librarywindow.cpp" line="396"/>
-        <location filename="../../UI/librarywindow.cpp" line="598"/>
+        <location filename="../../UI/librarywindow.cpp" line="600"/>
         <source>Fetch Down</source>
         <translation>获取完成</translation>
     </message>
@@ -5719,12 +5719,12 @@ The changes will take effect when KikoPlay is restarted</source>
         <translation>自动</translation>
     </message>
     <message>
-        <location filename="../../Play/Video/mpvplayer.cpp" line="1191"/>
+        <location filename="../../Play/Video/mpvplayer.cpp" line="1193"/>
         <source>Opening: %1</source>
         <translation>正在打开：%1</translation>
     </message>
     <message>
-        <location filename="../../Play/Video/mpvplayer.cpp" line="1204"/>
+        <location filename="../../Play/Video/mpvplayer.cpp" line="1206"/>
         <source>Open Failed: %1</source>
         <translation>打开失败：%1</translation>
     </message>
@@ -8321,141 +8321,152 @@ Eps: %2
         <translation>文件不存在：%0</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="130"/>
+        <location filename="../../Common/keyaction.cpp" line="140"/>
         <source>Play/Pause</source>
         <translation>播放/暂停</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="131"/>
+        <location filename="../../Common/keyaction.cpp" line="141"/>
         <source>Stop</source>
         <translation>停止</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="132"/>
+        <location filename="../../Common/keyaction.cpp" line="142"/>
         <source>Seek Forward</source>
         <translation>快进</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="133"/>
+        <location filename="../../Common/keyaction.cpp" line="143"/>
         <source>Seek Backward</source>
         <translation>快退</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="134"/>
+        <location filename="../../Common/keyaction.cpp" line="144"/>
         <source>Frame Step Forward</source>
         <translation>逐帧向前</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="135"/>
+        <location filename="../../Common/keyaction.cpp" line="145"/>
         <source>Frame Step Backward</source>
         <translation>逐帧向后</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="136"/>
+        <location filename="../../Common/keyaction.cpp" line="146"/>
         <source>Play Previous Item</source>
         <translation>播放上一个</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="137"/>
+        <location filename="../../Common/keyaction.cpp" line="147"/>
         <source>Play Next Item</source>
         <translation>播放下一个</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="138"/>
+        <location filename="../../Common/keyaction.cpp" line="148"/>
         <source>Increase Volume</source>
         <translation>增加音量</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="139"/>
+        <location filename="../../Common/keyaction.cpp" line="149"/>
         <source>Decrease Volume</source>
         <translation>减小音量</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="140"/>
+        <location filename="../../Common/keyaction.cpp" line="150"/>
         <source>Toggle Fullscreen</source>
         <translation>全屏切换</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="141"/>
+        <location filename="../../Common/keyaction.cpp" line="151"/>
         <source>Toggle Mini Mode</source>
         <translation>迷你模式切换</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="142"/>
+        <location filename="../../Common/keyaction.cpp" line="152"/>
         <source>Refresh Danmu Pool</source>
         <translation>更新弹幕池</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="143"/>
+        <location filename="../../Common/keyaction.cpp" line="153"/>
         <source>Add Danmu</source>
         <translation>添加弹幕</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="144"/>
+        <location filename="../../Common/keyaction.cpp" line="154"/>
         <source>Edit Danmu Pool</source>
         <translation>编辑弹幕池</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="145"/>
+        <location filename="../../Common/keyaction.cpp" line="155"/>
         <source>Edit Block Rules</source>
         <translation>编辑屏蔽规则</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="146"/>
+        <location filename="../../Common/keyaction.cpp" line="156"/>
         <source>MPV Command</source>
         <translation>MPV命令</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="181"/>
-        <location filename="../../Common/keyaction.cpp" line="202"/>
+        <location filename="../../Common/keyaction.cpp" line="191"/>
+        <location filename="../../Common/keyaction.cpp" line="229"/>
         <source>Seek Step(s)</source>
         <translation>时长(s)</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="196"/>
+        <location filename="../../Common/keyaction.cpp" line="197"/>
+        <location filename="../../Common/keyaction.cpp" line="235"/>
+        <source>Precise Seek</source>
+        <translation>精确跳转</translation>
+    </message>
+    <message>
+        <location filename="../../Common/keyaction.cpp" line="212"/>
         <source>Seek Forward %1s</source>
         <translation>快进%1s</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="217"/>
+        <location filename="../../Common/keyaction.cpp" line="250"/>
         <source>Seek Backward %1s</source>
         <translation>快退%1s</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="223"/>
+        <location filename="../../Common/keyaction.cpp" line="267"/>
         <source>Frame Step: Forward</source>
         <translation>逐帧播放：向前</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="229"/>
+        <location filename="../../Common/keyaction.cpp" line="273"/>
         <source>Frame Step: Backward</source>
         <translation>逐帧播放：向后</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="234"/>
+        <location filename="../../Common/keyaction.cpp" line="278"/>
         <source>No Previous Item</source>
         <translation>已经是第一个了</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="239"/>
+        <location filename="../../Common/keyaction.cpp" line="283"/>
         <source>No Next Item</source>
         <translation>已经是最后一个了</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="245"/>
-        <location filename="../../Common/keyaction.cpp" line="251"/>
+        <location filename="../../Common/keyaction.cpp" line="289"/>
+        <location filename="../../Common/keyaction.cpp" line="295"/>
         <source>Volume: %0</source>
         <translation>音量：%0</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="327"/>
+        <location filename="../../Common/keyaction.cpp" line="371"/>
         <source>Command</source>
         <translation>命令</translation>
     </message>
     <message>
-        <location filename="../../Common/keyaction.cpp" line="332"/>
+        <location filename="../../Common/keyaction.cpp" line="376"/>
         <source>Description</source>
         <translation>描述</translation>
+    </message>
+    <message>
+        <location filename="../../Common/keyaction.cpp" line="381"/>
+        <source>Display Key Hints</source>
+        <translation>显示按键提示</translation>
     </message>
     <message>
         <location filename="../../UI/player.cpp" line="3330"/>

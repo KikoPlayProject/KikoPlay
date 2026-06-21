@@ -40,5 +40,8 @@ CheckUpdate::CheckUpdate(QWidget *parent) : CFramelessDialog(tr("Check For Updat
         }
         showBusyState(false);
     });
-    KUpdater::instance()->check();
+
+    static bool startup = true;
+    KUpdater::instance()->check(startup);
+    if (startup) startup = false;
 }

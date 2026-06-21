@@ -276,7 +276,7 @@ void MainWindow::initIconAction()
         CheckUpdate checkUpdate(this);
         checkUpdate.exec();
     });
-    QTimer::singleShot(1500, this, [this, actCheckUpdate](){
+    QTimer::singleShot(2500, this, [this, actCheckUpdate](){
         if (!KUpdater::instance()->needCheck()) return;
         actCheckUpdate->setEnabled(false);
         actCheckUpdate->setText(tr("Checking..."));
@@ -292,7 +292,7 @@ void MainWindow::initIconAction()
             }
             actCheckUpdate->setEnabled(true);
         });
-        KUpdater::instance()->check();
+        KUpdater::instance()->check(true);
     });
 
     QAction *actUseTip = iconMenu->addAction(tr("Usage Tip"));

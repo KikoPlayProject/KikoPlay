@@ -69,6 +69,8 @@ public:
     void removeAlias(const QString &name, const QString &alias = "", bool updateDB=false);
     const QStringList getAlias(const QString &animeName);
 
+    static void pushAnimeEvent(Anime *anime, const QStringList &tags);
+
 private:
     QMap<QString,Anime *> animesMap;
     QReadWriteLock animeMapLock;

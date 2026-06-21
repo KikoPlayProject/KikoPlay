@@ -486,12 +486,14 @@ void MPVPlayer::setState(MPVPlayer::PlayState newState)
     }
 }
 
-void MPVPlayer::seek(int pos,bool relative)
+void MPVPlayer::seek(int pos,bool relative, bool precise)
 {
     QCoreApplication::instance()->processEvents();
 	if (relative)
-	{
-		setMPVCommand(QVariantList() << "seek" << pos);
+    {
+        QVariantList cmd{"seek", pos};
+        if (precise) cmd << "exact";
+        setMPVCommand(cmd);
 		double curTime = mpv::qt::get_property(mpv, "playback-time").toDouble();
 		emit positionJumped(curTime * 1000);
 	}

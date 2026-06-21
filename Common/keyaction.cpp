@@ -47,13 +47,16 @@ void KeyAction::serialize(QDataStream &out)
         case ParamType::PARAM_STR:
             out << param.val.toString();
             break;
+        case ParamType::PARAM_BOOL:
+            out << param.val.toBool();
+            break;
         default:
             break;
         }
     }
 }
 
-void KeyAction::deserialize(QDataStream &in)
+void KeyAction::deserialize(QDataStream &in, int kikoVersion)
 {
     for (ActionParam &param : actParams)
     {
@@ -69,6 +72,13 @@ void KeyAction::deserialize(QDataStream &in)
         case ParamType::PARAM_STR:
         {
             QString val;
+            in >> val;
+            param.val = val;
+            break;
+        }
+        case ParamType::PARAM_BOOL:
+        {
+            bool val;
             in >> val;
             param.val = val;
             break;
@@ -182,18 +192,35 @@ KeyActionSeekForward::KeyActionSeekForward(int seekStep) : KeyAction(KeyAction::
     param.type = ParamType::PARAM_INT;
     param.val = seekStep;
     actParams.append(param);
+
+    ActionParam param2;
+    param2.desc = QObject::tr("Precise Seek");
+    param2.type = ParamType::PARAM_BOOL;
+    param2.val = false;
+    actParams.append(param2);
 }
 
 void KeyActionSeekForward::trigger()
 {
     const int seekStep = actParams[0].val.toInt();
-    GlobalObjects::mpvplayer->seek(seekStep, true);
+    GlobalObjects::mpvplayer->seek(seekStep, true, actParams[1].val.toBool());
 }
 
 QString KeyActionSeekForward::getDesc() const
 {
     const int seekStep = actParams[0].val.toInt();
     return QObject::tr("Seek Forward %1s").arg(seekStep);
+}
+
+void KeyActionSeekForward::deserialize(QDataStream &in, int kikoVersion)
+{
+    if (kikoVersion > 200000)
+    {
+        return KeyAction::deserialize(in, kikoVersion);
+    }
+    int step = 0;
+    in >> step;
+    actParams[0].val = step;
 }
 
 KeyActionSeekBackward::KeyActionSeekBackward(int seekStep) : KeyAction(KeyAction::ACT_SEEK_BACKWARD)
@@ -203,18 +230,35 @@ KeyActionSeekBackward::KeyActionSeekBackward(int seekStep) : KeyAction(KeyAction
     param.type = ParamType::PARAM_INT;
     param.val = seekStep;
     actParams.append(param);
+
+    ActionParam param2;
+    param2.desc = QObject::tr("Precise Seek");
+    param2.type = ParamType::PARAM_BOOL;
+    param2.val = false;
+    actParams.append(param2);
 }
 
 void KeyActionSeekBackward::trigger()
 {
     const int seekStep = actParams[0].val.toInt();
-    GlobalObjects::mpvplayer->seek(-seekStep, true);
+    GlobalObjects::mpvplayer->seek(-seekStep, true, actParams[1].val.toBool());
 }
 
 QString KeyActionSeekBackward::getDesc() const
 {
     const int seekStep = actParams[0].val.toInt();
     return QObject::tr("Seek Backward %1s").arg(seekStep);
+}
+
+void KeyActionSeekBackward::deserialize(QDataStream &in, int kikoVersion)
+{
+    if (kikoVersion > 200000)
+    {
+        return KeyAction::deserialize(in, kikoVersion);
+    }
+    int step = 0;
+    in >> step;
+    actParams[0].val = step;
 }
 
 void KeyActionFrameForward::trigger()
@@ -332,6 +376,12 @@ KeyActionMPVCommand::KeyActionMPVCommand() : KeyAction(KeyAction::ACT_MPV_COMMAN
     param2.desc = QObject::tr("Description");
     param2.type = ParamType::PARAM_STR;
     actParams.append(param2);
+
+    ActionParam param3;
+    param3.desc = QObject::tr("Display Key Hints");
+    param3.type = ParamType::PARAM_BOOL;
+    param3.val = true;
+    actParams.append(param3);
 }
 
 void KeyActionMPVCommand::trigger()
@@ -346,10 +396,13 @@ void KeyActionMPVCommand::trigger()
     {
         ret = GlobalObjects::mpvplayer->runCommand(command);
     }
-    QString desc = getDesc();
-    if (descHasVariable) desc = GlobalObjects::mpvplayer->expandMediaInfo(desc);
-    const QString tip = ret == 0 ? desc : QString("%1: %2").arg(desc).arg(ret);
-    Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tip, 0, QVariantMap({{"type", "playerInfo"}}));
+    if (actParams[2].val.toBool())
+    {
+        QString desc = getDesc();
+        if (descHasVariable) desc = GlobalObjects::mpvplayer->expandMediaInfo(desc);
+        const QString tip = ret == 0 ? desc : QString("%1: %2").arg(desc).arg(ret);
+        Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tip, 0, QVariantMap({{"type", "playerInfo"}}));
+    }
 }
 
 QString KeyActionMPVCommand::getDesc() const
@@ -422,4 +475,19 @@ void KeyActionMPVCommand::parseCommand()
         if (!curPart.isEmpty()) commandParts.append(curPart);
         runCommands.append(commandParts);
     }
+}
+
+void KeyActionMPVCommand::deserialize(QDataStream &in, int kikoVersion)
+{
+    if (kikoVersion > 200000)
+    {
+        return KeyAction::deserialize(in, kikoVersion);
+    }
+    QString cmd;
+    in >> cmd;
+    actParams[0].val = cmd;
+
+    QString desc;
+    in >> desc;
+    actParams[1].val = desc;
 }

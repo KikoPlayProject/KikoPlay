@@ -154,6 +154,7 @@ class Anime
     friend class AnimeScrapingTask;
     friend class Extension::LibraryInterface;
     friend class AnimeModel;
+    friend class KService;
 
     QString _name;
     QString _desc;

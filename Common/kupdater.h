@@ -11,7 +11,7 @@ class KUpdater : public QObject
 public:
     static KUpdater *instance();
 
-    void check();
+    void check(bool isStartup = false);
     bool needCheck();
     bool hasNewVersion() const { return hasNVer; }
     const QString &version() const { return nVer; }
