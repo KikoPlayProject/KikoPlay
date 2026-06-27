@@ -550,6 +550,8 @@ void KService::listenAnimeFetched(const EventParam *p)
     animeInfo->set_url(params["url"].toString().toStdString());
     animeInfo->set_coverurl(params["coverURL"].toString().toStdString());
     animeInfo->set_epnum(params["eps"].toInt());
+    animeInfo->set_coverwidth(params.value("coverWidth", 0).toInt());
+    animeInfo->set_coverheight(params.value("coverHeight", 0).toInt());
 
     const QVariantMap staffs = params["staff"].toMap();
     auto staffMap = animeInfo->mutable_staff();

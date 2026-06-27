@@ -6737,8 +6737,8 @@ class Anime final :
 
   enum : int {
     kStaffFieldNumber = 8,
-    kCharactersFieldNumber = 10,
-    kTagsFieldNumber = 11,
+    kCharactersFieldNumber = 12,
+    kTagsFieldNumber = 13,
     kNameFieldNumber = 1,
     kIdFieldNumber = 2,
     kAirDateFieldNumber = 3,
@@ -6747,6 +6747,8 @@ class Anime final :
     kCoverURLFieldNumber = 9,
     kSourceFieldNumber = 6,
     kEpNumFieldNumber = 7,
+    kCoverWidthFieldNumber = 10,
+    kCoverHeightFieldNumber = 11,
   };
   // map<string, string> staff = 8;
   int staff_size() const;
@@ -6765,7 +6767,7 @@ class Anime final :
   ::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >*
       mutable_staff();
 
-  // repeated .kservice.AnimeCharacter characters = 10;
+  // repeated .kservice.AnimeCharacter characters = 12;
   int characters_size() const;
   private:
   int _internal_characters_size() const;
@@ -6783,7 +6785,7 @@ class Anime final :
   const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::AnimeCharacter >&
       characters() const;
 
-  // repeated string tags = 11;
+  // repeated string tags = 13;
   int tags_size() const;
   private:
   int _internal_tags_size() const;
@@ -6918,6 +6920,24 @@ class Anime final :
   void _internal_set_epnum(int32_t value);
   public:
 
+  // int32 coverWidth = 10;
+  void clear_coverwidth();
+  int32_t coverwidth() const;
+  void set_coverwidth(int32_t value);
+  private:
+  int32_t _internal_coverwidth() const;
+  void _internal_set_coverwidth(int32_t value);
+  public:
+
+  // int32 coverHeight = 11;
+  void clear_coverheight();
+  int32_t coverheight() const;
+  void set_coverheight(int32_t value);
+  private:
+  int32_t _internal_coverheight() const;
+  void _internal_set_coverheight(int32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:kservice.Anime)
  private:
   class _Internal;
@@ -6941,6 +6961,8 @@ class Anime final :
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr coverurl_;
     ::kservice::InfoSource* source_;
     int32_t epnum_;
+    int32_t coverwidth_;
+    int32_t coverheight_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -15790,7 +15812,47 @@ inline void Anime::set_allocated_coverurl(std::string* coverurl) {
   // @@protoc_insertion_point(field_set_allocated:kservice.Anime.coverURL)
 }
 
-// repeated .kservice.AnimeCharacter characters = 10;
+// int32 coverWidth = 10;
+inline void Anime::clear_coverwidth() {
+  _impl_.coverwidth_ = 0;
+}
+inline int32_t Anime::_internal_coverwidth() const {
+  return _impl_.coverwidth_;
+}
+inline int32_t Anime::coverwidth() const {
+  // @@protoc_insertion_point(field_get:kservice.Anime.coverWidth)
+  return _internal_coverwidth();
+}
+inline void Anime::_internal_set_coverwidth(int32_t value) {
+  
+  _impl_.coverwidth_ = value;
+}
+inline void Anime::set_coverwidth(int32_t value) {
+  _internal_set_coverwidth(value);
+  // @@protoc_insertion_point(field_set:kservice.Anime.coverWidth)
+}
+
+// int32 coverHeight = 11;
+inline void Anime::clear_coverheight() {
+  _impl_.coverheight_ = 0;
+}
+inline int32_t Anime::_internal_coverheight() const {
+  return _impl_.coverheight_;
+}
+inline int32_t Anime::coverheight() const {
+  // @@protoc_insertion_point(field_get:kservice.Anime.coverHeight)
+  return _internal_coverheight();
+}
+inline void Anime::_internal_set_coverheight(int32_t value) {
+  
+  _impl_.coverheight_ = value;
+}
+inline void Anime::set_coverheight(int32_t value) {
+  _internal_set_coverheight(value);
+  // @@protoc_insertion_point(field_set:kservice.Anime.coverHeight)
+}
+
+// repeated .kservice.AnimeCharacter characters = 12;
 inline int Anime::_internal_characters_size() const {
   return _impl_.characters_.size();
 }
@@ -15830,7 +15892,7 @@ Anime::characters() const {
   return _impl_.characters_;
 }
 
-// repeated string tags = 11;
+// repeated string tags = 13;
 inline int Anime::_internal_tags_size() const {
   return _impl_.tags_.size();
 }

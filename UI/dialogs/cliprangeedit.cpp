@@ -6,7 +6,7 @@
 #include <QTreeView>
 #include <QHeaderView>
 #include <QLabel>
-#include <QTimeEdit>
+#include "UI/widgets/ktimespinbox.h"
 #include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
 
@@ -18,10 +18,10 @@ ClipRangeEdit::ClipRangeEdit(const DanmuSource *src, QVector<SimpleDanmuInfo> *d
     const int durationMs = duration > 0 ? duration * 1000 : (src->duration > 0 ? src->duration * 1000 : ( dmList->isEmpty() ? 1000 : dmList->last().originTime + 1000));
 
     QWidget *spinContainer = new QWidget(this);
-    QTimeEdit *startSpin = new QTimeEdit(spinContainer);
+    KTimeComboBox *startSpin = new KTimeComboBox(spinContainer);
     startSpin->setDisplayFormat("mm:ss");
     startSpin->setTimeRange(QTime(0, 0), QTime(0, 0).addMSecs(durationMs));
-    QTimeEdit *endSpin = new QTimeEdit(spinContainer);
+    KTimeComboBox *endSpin = new KTimeComboBox(spinContainer);
     endSpin->setDisplayFormat("mm:ss");
     endSpin->setTimeRange(QTime(0, 0), QTime(0, 0).addMSecs(durationMs));
     endSpin->setTime(QTime(0, 0).addMSecs(durationMs));
@@ -63,8 +63,9 @@ ClipRangeEdit::ClipRangeEdit(const DanmuSource *src, QVector<SimpleDanmuInfo> *d
         endSpin->setTime(QTime(0, 0).addSecs(e / 1000));
         startSpin->blockSignals(false);
         endSpin->blockSignals(false);
+        int viewTime = s == clipStart ? e : s;
         model->setClipRange(s, e);
-        dmView->scrollTo(model->getIndex(s),QAbstractItemView::PositionAtCenter);
+        dmView->scrollTo(model->getIndex(viewTime),QAbstractItemView::PositionAtCenter);
         this->clipStart = s;
         this->clipDuration = e - s;
         if (this->clipDuration / 1000 >= durationMs / 1000)
@@ -75,7 +76,7 @@ ClipRangeEdit::ClipRangeEdit(const DanmuSource *src, QVector<SimpleDanmuInfo> *d
     });
     rangeSelector->setData(dmList, durationMs);
 
-    QObject::connect(startSpin, &QTimeEdit::userTimeChanged, this, [=](QTime time){
+    QObject::connect(startSpin, &KTimeComboBox::userTimeChanged, this, [=](QTime time){
         if (time > endSpin->time())
         {
             startSpin->setTime(endSpin->time());
@@ -83,7 +84,7 @@ ClipRangeEdit::ClipRangeEdit(const DanmuSource *src, QVector<SimpleDanmuInfo> *d
         }
         rangeSelector->setStartTime(time.msecsSinceStartOfDay());
     });
-    QObject::connect(endSpin, &QTimeEdit::userTimeChanged, this, [=](QTime time){
+    QObject::connect(endSpin, &KTimeComboBox::userTimeChanged, this, [=](QTime time){
         if (time < startSpin->time())
         {
             endSpin->setTime(startSpin->time());

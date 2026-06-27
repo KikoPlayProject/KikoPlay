@@ -4,6 +4,7 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QMessageBox>
+#include "Common/threadtask.h"
 #include "eventanalyzer.h"
 #include "Render/danmurender.h"
 #include "globalobjects.h"
@@ -330,7 +331,14 @@ void DanmuPool::setConnect(Pool *pool)
     {
         curPool->setRefreshFlag(false);
         QMetaObject::invokeMethod(this, [=](){
-            pool->update();
+            auto notifier = Notifier::getNotifier();
+            notifier->showMessage(Notifier::LIST_NOTIFY, tr("Updating: %1").arg(pool->epTitle()),NotifyMessageFlag::NM_PROCESS);
+            ThreadTask task(GlobalObjects::workThread);
+            task.RunOnce([=](){
+                int incNum = pool->update();
+                notifier->showMessage(Notifier::LIST_NOTIFY, tr("Add %1 Danmus").arg(incNum),NotifyMessageFlag::NM_HIDE);
+            });
+
         });
     }
 }

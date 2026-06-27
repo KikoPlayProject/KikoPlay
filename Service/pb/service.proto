@@ -277,8 +277,10 @@ message Anime {
     int32 epNum = 7;
     map<string, string> staff = 8;  // role -> name
     string coverURL = 9;
-    repeated AnimeCharacter characters = 10;
-    repeated string tags = 11;
+    int32 coverWidth = 10;
+    int32 coverHeight = 11;
+    repeated AnimeCharacter characters = 12;
+    repeated string tags = 13;
 }
 
 message AnimeProfileEvent {

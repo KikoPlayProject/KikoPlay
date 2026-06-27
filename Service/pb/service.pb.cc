@@ -586,6 +586,8 @@ PROTOBUF_CONSTEXPR Anime::Anime(
   , /*decltype(_impl_.coverurl_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.source_)*/nullptr
   , /*decltype(_impl_.epnum_)*/0
+  , /*decltype(_impl_.coverwidth_)*/0
+  , /*decltype(_impl_.coverheight_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct AnimeDefaultTypeInternal {
   PROTOBUF_CONSTEXPR AnimeDefaultTypeInternal()
@@ -11712,6 +11714,8 @@ Anime::Anime(const Anime& from)
     , decltype(_impl_.coverurl_){}
     , decltype(_impl_.source_){nullptr}
     , decltype(_impl_.epnum_){}
+    , decltype(_impl_.coverwidth_){}
+    , decltype(_impl_.coverheight_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
@@ -11767,7 +11771,9 @@ Anime::Anime(const Anime& from)
   if (from._internal_has_source()) {
     _this->_impl_.source_ = new ::kservice::InfoSource(*from._impl_.source_);
   }
-  _this->_impl_.epnum_ = from._impl_.epnum_;
+  ::memcpy(&_impl_.epnum_, &from._impl_.epnum_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.coverheight_) -
+    reinterpret_cast<char*>(&_impl_.epnum_)) + sizeof(_impl_.coverheight_));
   // @@protoc_insertion_point(copy_constructor:kservice.Anime)
 }
 
@@ -11787,6 +11793,8 @@ inline void Anime::SharedCtor(
     , decltype(_impl_.coverurl_){}
     , decltype(_impl_.source_){nullptr}
     , decltype(_impl_.epnum_){0}
+    , decltype(_impl_.coverwidth_){0}
+    , decltype(_impl_.coverheight_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.name_.InitDefault();
@@ -11862,7 +11870,9 @@ void Anime::Clear() {
     delete _impl_.source_;
   }
   _impl_.source_ = nullptr;
-  _impl_.epnum_ = 0;
+  ::memset(&_impl_.epnum_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.coverheight_) -
+      reinterpret_cast<char*>(&_impl_.epnum_)) + sizeof(_impl_.coverheight_));
   _internal_metadata_.Clear<std::string>();
 }
 
@@ -11961,22 +11971,38 @@ const char* Anime::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
         } else
           goto handle_unusual;
         continue;
-      // repeated .kservice.AnimeCharacter characters = 10;
+      // int32 coverWidth = 10;
       case 10:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 82)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 80)) {
+          _impl_.coverwidth_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 coverHeight = 11;
+      case 11:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 88)) {
+          _impl_.coverheight_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated .kservice.AnimeCharacter characters = 12;
+      case 12:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 98)) {
           ptr -= 1;
           do {
             ptr += 1;
             ptr = ctx->ParseMessage(_internal_add_characters(), ptr);
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
-          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<82>(ptr));
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<98>(ptr));
         } else
           goto handle_unusual;
         continue;
-      // repeated string tags = 11;
-      case 11:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 90)) {
+      // repeated string tags = 13;
+      case 13:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 106)) {
           ptr -= 1;
           do {
             ptr += 1;
@@ -11985,7 +12011,7 @@ const char* Anime::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
             CHK_(ptr);
             CHK_(::_pbi::VerifyUTF8(str, nullptr));
             if (!ctx->DataAvailable(ptr)) break;
-          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<90>(ptr));
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<106>(ptr));
         } else
           goto handle_unusual;
         continue;
@@ -12121,22 +12147,34 @@ uint8_t* Anime::_InternalSerialize(
         9, this->_internal_coverurl(), target);
   }
 
-  // repeated .kservice.AnimeCharacter characters = 10;
+  // int32 coverWidth = 10;
+  if (this->_internal_coverwidth() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(10, this->_internal_coverwidth(), target);
+  }
+
+  // int32 coverHeight = 11;
+  if (this->_internal_coverheight() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(11, this->_internal_coverheight(), target);
+  }
+
+  // repeated .kservice.AnimeCharacter characters = 12;
   for (unsigned i = 0,
       n = static_cast<unsigned>(this->_internal_characters_size()); i < n; i++) {
     const auto& repfield = this->_internal_characters(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-        InternalWriteMessage(10, repfield, repfield.GetCachedSize(), target, stream);
+        InternalWriteMessage(12, repfield, repfield.GetCachedSize(), target, stream);
   }
 
-  // repeated string tags = 11;
+  // repeated string tags = 13;
   for (int i = 0, n = this->_internal_tags_size(); i < n; i++) {
     const auto& s = this->_internal_tags(i);
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
       s.data(), static_cast<int>(s.length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "kservice.Anime.tags");
-    target = stream->WriteString(11, s, target);
+    target = stream->WriteString(13, s, target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -12164,14 +12202,14 @@ size_t Anime::ByteSizeLong() const {
     total_size += Anime_StaffEntry_DoNotUse::Funcs::ByteSizeLong(it->first, it->second);
   }
 
-  // repeated .kservice.AnimeCharacter characters = 10;
+  // repeated .kservice.AnimeCharacter characters = 12;
   total_size += 1UL * this->_internal_characters_size();
   for (const auto& msg : this->_impl_.characters_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
-  // repeated string tags = 11;
+  // repeated string tags = 13;
   total_size += 1 *
       ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(_impl_.tags_.size());
   for (int i = 0, n = _impl_.tags_.size(); i < n; i++) {
@@ -12233,6 +12271,16 @@ size_t Anime::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_epnum());
   }
 
+  // int32 coverWidth = 10;
+  if (this->_internal_coverwidth() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_coverwidth());
+  }
+
+  // int32 coverHeight = 11;
+  if (this->_internal_coverheight() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_coverheight());
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
@@ -12282,6 +12330,12 @@ void Anime::MergeFrom(const Anime& from) {
   if (from._internal_epnum() != 0) {
     _this->_internal_set_epnum(from._internal_epnum());
   }
+  if (from._internal_coverwidth() != 0) {
+    _this->_internal_set_coverwidth(from._internal_coverwidth());
+  }
+  if (from._internal_coverheight() != 0) {
+    _this->_internal_set_coverheight(from._internal_coverheight());
+  }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
@@ -12329,8 +12383,8 @@ void Anime::InternalSwap(Anime* other) {
       &other->_impl_.coverurl_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(Anime, _impl_.epnum_)
-      + sizeof(Anime::_impl_.epnum_)
+      PROTOBUF_FIELD_OFFSET(Anime, _impl_.coverheight_)
+      + sizeof(Anime::_impl_.coverheight_)
       - PROTOBUF_FIELD_OFFSET(Anime, _impl_.source_)>(
           reinterpret_cast<char*>(&_impl_.source_),
           reinterpret_cast<char*>(&other->_impl_.source_));

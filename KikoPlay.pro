@@ -224,6 +224,7 @@ SOURCES += \
     UI/widgets/klineedit.cpp \
     UI/widgets/kplaintextedit.cpp \
     UI/widgets/kpushbutton.cpp \
+    UI/widgets/ktimespinbox.cpp \
     UI/widgets/ktagpanel.cpp \
     UI/widgets/lazycontainer.cpp \
     UI/widgets/optionmenu.cpp \
@@ -541,6 +542,7 @@ HEADERS += \
     UI/widgets/klineedit.h \
     UI/widgets/kplaintextedit.h \
     UI/widgets/kpushbutton.h \
+    UI/widgets/ktimespinbox.h \
     UI/widgets/ktagpanel.h \
     UI/widgets/lazycontainer.h \
     UI/widgets/optionmenu.h \

@@ -14,6 +14,7 @@
 #include <QSqlRecord>
 #include <QSqlError>
 #include <QPainter>
+#include <QImageReader>
 
 namespace
 {
@@ -1117,7 +1118,7 @@ void AnimeWorker::pushAnimeEvent(Anime *anime, const QStringList &tags)
                 { "actor", c.actor },
                 { "img", c.imgURL },
             };
-        }
+        }        
         QVariantMap param = {
             { "name", anime->_name },
             { "date", anime->_airDate  },
@@ -1131,7 +1132,18 @@ void AnimeWorker::pushAnimeEvent(Anime *anime, const QStringList &tags)
             { "staff", staffs },
             { "characters", characters },
         };
-
+        if (!anime->_coverData.isEmpty())
+        {
+            QBuffer buffer(&anime->_coverData);
+            buffer.open(QIODevice::ReadOnly);
+            QImageReader reader(&buffer);
+            QSize coverSize = reader.size();
+            if (coverSize.isValid())
+            {
+                param["coverWidth"] = coverSize.width();
+                param["coverHeight"] = coverSize.height();
+            }
+        }
         EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_ANIME_INFO_FETCHED, param});
     }
 }
