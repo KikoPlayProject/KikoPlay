@@ -2189,6 +2189,12 @@ void PlayerWindow::initSignals()
 
 void PlayerWindow::adjustPlayerSize(int percent)
 {
+    // 全屏下不允许重设窗口尺寸：emit resizePlayer 会触发主窗口 setGeometry，
+    // 而全屏时 Qt 的 isFullScreen 标志可能已被平台层清除（Qt6.6.3 isFullScreen_sys
+    // 因 NCCALCSIZE 1px 边距恒为 false），主窗口侧的守卫会失效，导致换集时
+    // 窗口几何被破坏（退出全屏、任务栏出现、双击失同步）。用自身的
+    // isFullscreen 标志在源头拦下。参见 MainWindow 的 resizePlayer 处理器。
+    if (isFullscreen) return;
     MPVPlayer::VideoSizeInfo videoSize=GlobalObjects::mpvplayer->getVideoSizeInfo();
     if(videoSize.width == 0 || videoSize.height == 0)return;
     double aspectRatio;
