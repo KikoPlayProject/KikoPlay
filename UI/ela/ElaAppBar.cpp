@@ -364,6 +364,14 @@ int ElaAppBar::takeOverNativeEvent(const QByteArray& eventType, void* message, l
         WINDOWPOS* wp = reinterpret_cast<WINDOWPOS*>(lParam);
         if (wp != nullptr && (wp->flags & SWP_NOSIZE) == 0)
         {
+            // 全屏时跳过 DefWindowProcW 透传：全屏期间窗口残留的粗边框样式
+            // 会让透传按边框内缩调整落位（偏移 +11,-11、缩窄 22px），破坏
+            // 全屏几何（换集时窗口损坏 bug 的直接执行者）。此时交由 Qt
+            // 按原样应用几何即可。
+            if (d->_isFullScreen)
+            {
+                return 0;
+            }
             wp->flags |= SWP_NOCOPYBITS;
             *result = ::DefWindowProcW(hwnd, uMsg, wParam, lParam);
             return 1;
