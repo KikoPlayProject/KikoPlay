@@ -77,12 +77,16 @@ PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Mana
         Pool *pool=GlobalObjects::danmuManager->getPool(srcNode->parent->idInfo);
         if (pool && pool->sources().contains(srcNode->srcId))
         {
-            pool->exportSimpleInfo(srcNode->srcId,simpleDanmuList);
+            pool->exportSimpleInfo(srcNode->srcId, simpleDanmuList, false);
             const DanmuSource &srcInfo{pool->source(srcNode->srcId)};
             TimelineEdit timeLineEdit(&srcInfo,simpleDanmuList,this);
             if (QDialog::Accepted==timeLineEdit.exec())
             {
-                pool->setTimeline(srcNode->srcId,timeLineEdit.timelineInfo);
+                if (!pool->setTimeline(srcNode->srcId, timeLineEdit.timelineInfo))
+                {
+                    showMessage(tr("Failed to save timeline"), NM_ERROR | NM_HIDE);
+                    return;
+                }
                 srcNode->hasTimeline = !srcInfo.timelineInfo.isEmpty();
                 QModelIndex delayIndex = index.siblingAtColumn((int)DanmuManagerModel::Columns::DELAY);
                 emit managerModel->dataChanged(delayIndex, delayIndex);

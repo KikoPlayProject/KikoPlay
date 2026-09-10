@@ -457,14 +457,17 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent) : QWidget(par
     });
 
     QObject::connect(timelineBtn, &QPushButton::clicked, this, [=](){
-        int curTime=GlobalObjects::mpvplayer->getTime();
         QVector<SimpleDanmuInfo> list;
-        GlobalObjects::danmuPool->getPool()->exportSimpleInfo(sourceInfo->id,list);
-        TimelineEdit timelineEdit(sourceInfo,list,this,curTime);
+        GlobalObjects::danmuPool->getPool()->exportSimpleInfo(sourceInfo->id, list, false);
+        TimelineEdit timelineEdit(sourceInfo, list, this, int(GlobalObjects::mpvplayer->getTime()));
         if(QDialog::Accepted==timelineEdit.exec())
         {
             PoolSignalBlock block;
-            GlobalObjects::danmuPool->getPool()->setTimeline(sourceInfo->id, timelineEdit.timelineInfo);
+            if (!GlobalObjects::danmuPool->getPool()->setTimeline(sourceInfo->id, timelineEdit.timelineInfo))
+            {
+                editor->showMessage(tr("Failed to save timeline"), NM_ERROR | NM_HIDE);
+                return;
+            }
             timelineBtn->setText(sourceInfo->timelineInfo.isEmpty()? "" : QString::number(sourceInfo->timelineInfo.size()));
         }
     });

@@ -1,479 +1,481 @@
 #include "timelineedit.h"
 #include "UI/ela/ElaLineEdit.h"
-#include "UI/ela/ElaMenu.h"
 #include "UI/widgets/component/ktreeviewitemdelegate.h"
 #include "UI/widgets/kpushbutton.h"
-#include <QTreeView>
-#include <QLabel>
-#include <QSplitter>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QAction>
-#include <QHeaderView>
-#include <QVBoxLayout>
+#include "Common/notifier.h"
 #include "globalobjects.h"
+#include <QHeaderView>
+#include <QGridLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QRegularExpression>
+#include <QSignalBlocker>
+#include <QSplitter>
+#include <QTreeView>
+#include <QVBoxLayout>
+#include <algorithm>
+#include <limits>
 
-
-TimelineEdit::TimelineEdit(const DanmuSource *source, const QVector<SimpleDanmuInfo> &simpleDanmuList, QWidget *parent, int curTime):
-    CFramelessDialog(tr("Timeline Edit"),parent,true)
+namespace {
+QString timeText(qint64 ms)
 {
-    timelineInfo = source->timelineInfo;
-    timelineModel=new TimeLineInfoModel(&timelineInfo, this);
-    SimpleDanumPool *simpleDanmuPool=new SimpleDanumPool(simpleDanmuList,this);
-    simpleDanmuPool->refreshTimeline(*timelineModel->getTimeLine());
-    TimeLineBar *timelineBar=new TimeLineBar(simpleDanmuPool->getDanmuList(),timelineModel,this);
-    timelineBar->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
-
-    QTreeView *timelineView=new QTreeView(this);
-    timelineView->setRootIsDecorated(false);
-    timelineView->setSelectionMode(QAbstractItemView::SingleSelection);
-    timelineView->setFont(QFont(GlobalObjects::normalFont, 11));
-    timelineView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
-    timelineView->setAlternatingRowColors(true);
-    timelineView->setModel(timelineModel);
-    timelineView->setItemDelegate(new KTreeviewItemDelegate(timelineView));
-    timelineView->setContextMenuPolicy(Qt::CustomContextMenu);
-    timelineView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
-
-    QLineEdit *startEdit = new ElaLineEdit(this);
-    startEdit->setClearButtonEnabled(true);
-    startEdit->setPlaceholderText(tr("Start Time(mm:ss)"));
-    QRegularExpressionValidator *startValidator = new QRegularExpressionValidator(QRegularExpression("\\d+:?(\\d+)?"), this);
-    startEdit->setValidator(startValidator);
-    if(curTime!=-1) startEdit->setText(formatTime(curTime*1000));
-
-    QLineEdit *durationEdit = new ElaLineEdit(this);
-    durationEdit->setClearButtonEnabled(true);
-    durationEdit->setPlaceholderText(tr("Duration(s)"));
-    QIntValidator *durationValidator=new QIntValidator(this);
-    durationEdit->setValidator(durationValidator);
-
-    QPushButton *addTimeSpace = new KPushButton(tr("Add"), this);
-    addTimeSpace->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
-    QObject::connect(addTimeSpace, &QPushButton::clicked, this, [=](){
-        int duration=durationEdit->text().toInt()*1000;
-        if(duration==0) return;
-        QStringList startList=startEdit->text().split(':');
-        if(startList.count()==0) return;
-        int start=startList.last().toInt();
-        if(startList.count()==2) start+=startList.first().toInt()*60;
-        start*=1000;
-        timelineModel->addSpace(start,duration);
-        simpleDanmuPool->refreshTimeline(timelineInfo);
-        timelineBar->updateInfo();
-    });
-
-    QHBoxLayout *editHLayout=new QHBoxLayout;
-    editHLayout->setContentsMargins(0,0,0,0);
-    editHLayout->addWidget(startEdit);
-    editHLayout->addWidget(durationEdit);
-    editHLayout->addWidget(addTimeSpace);
-
-    QWidget *timelineViewContainer=new QWidget(this);
-    QVBoxLayout *containerVLayout=new QVBoxLayout(timelineViewContainer);
-    containerVLayout->setContentsMargins(0,0,0,0);
-    containerVLayout->addWidget(timelineView);
-    containerVLayout->addLayout(editHLayout);
-
-    QTreeView *simpleDPView = new QTreeView(this);
-    simpleDPView->setRootIsDecorated(false);
-    simpleDPView->setFont(QFont(GlobalObjects::normalFont, 11));
-    simpleDPView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
-    simpleDPView->setAlternatingRowColors(true);
-    simpleDPView->setItemDelegate(new KTreeviewItemDelegate(simpleDPView));
-    simpleDPView->setModel(simpleDanmuPool);
-    simpleDPView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
-    // simpleDPView->header()->setStretchLastSection(false);
-
-    QLabel *tipLabel=new QLabel(tr("Double Click: Begin/End Insert Space  Right Click: Cancel"),this);
-    tipLabel->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
-    QLabel *timeTipLabel=new QLabel(this);
-    timeTipLabel->setObjectName(QStringLiteral("TimeInfoTip"));
-    timeTipLabel->hide();
-
-    QSplitter *viewSplitter=new QSplitter(this);
-    viewSplitter->setObjectName(QStringLiteral("NormalSplitter"));
-    viewSplitter->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
-    viewSplitter->addWidget(timelineViewContainer);
-    viewSplitter->addWidget(simpleDPView);
-    viewSplitter->setStretchFactor(0,1);
-    viewSplitter->setStretchFactor(1,1);
-    viewSplitter->setCollapsible(0,false);
-    viewSplitter->setCollapsible(1,false);
-
-    QObject::connect(timelineBar,&TimeLineBar::mouseMove,[timeTipLabel,timelineBar,this](int x,int time,bool isStart){
-
-        if(isStart)
-        {
-            tmpStartTime=time;
-            timeTipLabel->setText(formatTime(time));
-        }
-        else
-        {
-            timeTipLabel->setText(tr("End: %1, Duration: %2").arg(formatTime(time)).arg(formatTime(time-tmpStartTime)));
-        }
-        timeTipLabel->adjustSize();
-        timeTipLabel->move(x-timeTipLabel->width()/3,timelineBar->y()-timeTipLabel->height()-2*logicalDpiY()/96);
-        timeTipLabel->show();
-        timeTipLabel->raise();
-    });
-    QObject::connect(timelineBar,&TimeLineBar::mouseLeave,[timeTipLabel](){
-        timeTipLabel->hide();
-    });
-    QObject::connect(timelineBar,&TimeLineBar::mousePress,[simpleDanmuPool,simpleDPView](int time){
-        simpleDPView->scrollTo(simpleDanmuPool->getIndex(time),QAbstractItemView::PositionAtCenter);
-    });
-    QObject::connect(timelineBar,&TimeLineBar::addSpace,[this,simpleDanmuPool,timelineBar](int start,int duration){
-        timelineModel->addSpace(start,duration);
-        simpleDanmuPool->refreshTimeline(timelineInfo);
-        timelineBar->updateInfo();
-    });
-
-    ElaMenu *actionMenu = new ElaMenu(timelineView);
-    QAction *deleteAction = actionMenu->addAction(tr("Delete"));
-    QObject::connect(deleteAction,&QAction::triggered,[timelineView,simpleDanmuPool,timelineBar,this](){
-        QItemSelection selection=timelineView->selectionModel()->selection();
-        if(selection.size()==0)return;
-        timelineModel->removeSpace(selection.indexes().first());
-        simpleDanmuPool->refreshTimeline(timelineInfo);
-        timelineBar->updateInfo();
-    });
-
-    QObject::connect(timelineView, &QTreeView::customContextMenuRequested, this, [=](){
-        if (!timelineView->selectionModel()->hasSelection()) return;
-        actionMenu->exec(QCursor::pos());
-    });
-
-    QVBoxLayout *dialogVLayout=new QVBoxLayout(this);
-    //dialogVLayout->addSpacing(10*logicalDpiY()/96);
-    dialogVLayout->addWidget(timelineBar);
-    dialogVLayout->addWidget(viewSplitter);
-    dialogVLayout->addWidget(tipLabel);
-    resize(800, 420);
-    viewSplitter->setSizes(QList<int>()<<timelineBar->width()/2<<timelineBar->width()/2);
+    const qint64 value = qAbs(ms);
+    QString text = QStringLiteral("%1%2:%3").arg(ms < 0 ? "-" : "")
+        .arg(value / 60000, 2, 10, QLatin1Char('0')).arg(value / 1000 % 60, 2, 10, QLatin1Char('0'));
+    if (value % 1000) text += QStringLiteral(".%1").arg(value % 1000, 3, 10, QLatin1Char('0'));
+    return text;
 }
 
-TimeLineBar::TimeLineBar(const QVector<SimpleDanmuInfo> *sDanmuList, TimeLineInfoModel *timelineModel, QWidget *parent):QWidget(parent),simpleDanmuList(sDanmuList)
+QString secondsText(qint64 ms)
 {
-    setMouseTracking(true);
-    currentState=-1;
-    this->timelineModel=timelineModel;
-    refreshStatisInfo();
-    updateInfo();
-    setMinimumSize(200*logicalDpiX()/96,60*logicalDpiY()/96);
-    setFocusPolicy(Qt::StrongFocus);
+    QString text = QString::number(qAbs(ms) / 1000.0, 'f', 3);
+    while (text.endsWith('0')) text.chop(1);
+    if (text.endsWith('.')) text.chop(1);
+    return (ms < 0 ? QStringLiteral("-") : QStringLiteral("+")) + text;
 }
 
-void TimeLineBar::updateInfo()
+bool parseTime(const QString &text, int &ms, bool secondsOnly = false)
 {
-    if(simpleDanmuList->count()==0)
-        duration=24*60;
-    else
-        duration=simpleDanmuList->last().originTime/1000+10;
-    update();
+    static const QRegularExpression seconds(QStringLiteral("^([+-]?)(\\d+)(?:\\.(\\d{1,3}))?$"));
+    static const QRegularExpression minutes(QStringLiteral("^([+-]?)(\\d+):([0-5]\\d)(?:\\.(\\d{1,3}))?$"));
+    const bool hasMinutes = !secondsOnly && text.contains(':');
+    const auto match = (hasMinutes ? minutes : seconds).match(text.trimmed());
+    if (!match.hasMatch()) return false;
+    bool ok;
+    const qint64 whole = match.captured(2).toLongLong(&ok);
+    if (!ok || whole > std::numeric_limits<int>::max()) return false;
+    qint64 value = whole * (hasMinutes ? 60000 : 1000);
+    if (hasMinutes) value += match.captured(3).toInt() * 1000;
+    value += match.captured(hasMinutes ? 4 : 3).leftJustified(3, '0').toInt();
+    if (match.captured(1) == "-") value = -value;
+    if (value < std::numeric_limits<int>::min() || value > std::numeric_limits<int>::max()) return false;
+    ms = int(value);
+    return true;
 }
 
-void TimeLineBar::refreshStatisInfo()
+void sortRules(QVector<TimelineMarker> &rules, int delay)
 {
-    statisInfo.countOfSecond.clear();
-    statisInfo.maxCountOfMinute=0;
-    int curMinuteCount=0;
-    int startTime=0;
-    for(auto iter=simpleDanmuList->cbegin();iter!=simpleDanmuList->cend();++iter)
+    std::stable_sort(rules.begin(), rules.end(), [](const TimelineMarker &a, const TimelineMarker &b) { return a.start < b.start; });
+    qint64 offset = delay;
+    for (int i = 0; i < rules.size();)
     {
-        if(iter==simpleDanmuList->cbegin())
-        {
-            startTime=(*iter).originTime;
-        }
-        if((*iter).originTime-startTime<1000)
-            curMinuteCount++;
-        else
-        {
-            statisInfo.countOfSecond.append(QPair<int,int>(startTime/1000,curMinuteCount));
-            if(curMinuteCount>statisInfo.maxCountOfMinute)
-                statisInfo.maxCountOfMinute=curMinuteCount;
-            curMinuteCount=1;
-            startTime=(*iter).originTime;
-        }
-    }
-    statisInfo.countOfSecond.append(QPair<int, int>(startTime / 1000, curMinuteCount));
-    if (curMinuteCount>statisInfo.maxCountOfMinute)
-        statisInfo.maxCountOfMinute = curMinuteCount;
-}
-
-void TimeLineBar::paintEvent(QPaintEvent *event)
-{
-    QRect bRect(event->rect());
-    QPainter painter(this);
-    painter.setRenderHints(QPainter::Antialiasing, true);
-    painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
-    painter.setRenderHints(QPainter::TextAntialiasing, true);
-    QPainterPath path;
-    path.addRoundedRect(bRect, 8, 8);
-    painter.setClipPath(path);
-
-    painter.fillRect(bRect,QColor(0,0,0,150));
-    if (duration == 0) return;
-    bRect.adjust(1, 0, -1, 0);
-    float hRatio=(float)bRect.height()/statisInfo.maxCountOfMinute;
-    //float margin=8*logicalDpiX()/96;
-    float wRatio=(float)(bRect.width())/duration;
-    float bHeight=bRect.height();
-
-    static QColor barColor(51,168,255,200);
-    if (wRatio >= 1)
-    {
-        for (auto iter=statisInfo.countOfSecond.cbegin(); iter!=statisInfo.countOfSecond.cend(); ++iter)
-        {
-            float l((*iter).first*wRatio);
-            float h(floor((*iter).second*hRatio));
-            painter.fillRect(l, bHeight-h, wRatio < 1.f ? 1.f : wRatio, h, barColor);
-        }
-    }
-    else
-    {
-        static QVector<int> bins;
-        bins.resize(bRect.width());
-        for (int i=0; i < bins.size(); ++i) bins[i]=0;
-        float percent = 1.0/duration;
-        for(const auto &p : statisInfo.countOfSecond)
-        {
-            int pos = qMin(int(percent*p.first*bins.size()), bins.size()-1);
-            bins[pos] = qMax(bins[pos], p.second);
-        }
-        for(int i = 0; i<bins.size(); ++i)
-        {
-            if (bins[i] > 0)
-            {
-                float h(floor(bins[i] * hRatio));
-                painter.fillRect(i, bHeight - h, 1, h, barColor);
-            }
-        }
-    }
-
-    static QColor pSpaceColor(255,255,255,200);
-    auto timelineInfo=timelineModel->getTimeLine();
-    for (auto &spaceItem:*timelineInfo)
-    {
-        float l(spaceItem.first/1000*wRatio);
-        painter.fillRect(l, 0, 1, bHeight,pSpaceColor);
-    }
-
-    if (currentState != -1)
-    {
-        QColor lineColor(255,255,0);
-        painter.fillRect(mouseTimeStartPos/1000*wRatio, 0, 1, bHeight, lineColor);
-        if (currentState == 1)
-        {
-            painter.fillRect(mouseTimeEndPos/1000*wRatio, 0, 1, bHeight, lineColor);
-        }
-    }
-    painter.setPen(QColor(255,255,255));
-    painter.drawText(bRect.adjusted(8, 1, 0, 0), Qt::AlignLeft|Qt::AlignTop, tr("Total:%1 Max:%2").arg(QString::number(simpleDanmuList->count())).arg(statisInfo.maxCountOfMinute));
-}
-
-void TimeLineBar::mousePressEvent(QMouseEvent *event)
-{
-    emit mousePress(currentState==0?mouseTimeStartPos:mouseTimeEndPos);
-    if(event->button()==Qt::RightButton)
-    {
-        currentState=0;
-        update();
+        int end = i;
+        // for legacy rules, may share a start
+        while (end < rules.size() && rules[end].start == rules[i].start) offset += rules[end++].delta;
+        // Legacy rules may share a start; they all take effect together.
+        while (i < end) rules[i++].offset = offset;
     }
 }
-
-void TimeLineBar::mouseMoveEvent(QMouseEvent *event)
-{
-    if(currentState==-1)return;
-    xPos=qBound(0,event->x(),width());
-    if(currentState==0)
-    {
-        mouseTimeStartPos=(float)xPos/(float)width()*duration*1000;
-        emit mouseMove(xPos,mouseTimeStartPos,true);
-    }
-    else
-    {
-        mouseTimeEndPos=(float)xPos/(float)width()*duration*1000;
-        emit mouseMove(xPos,mouseTimeEndPos,false);
-    }
-    update();
 }
 
-void TimeLineBar::mouseDoubleClickEvent(QMouseEvent *event)
+TimeLineInfoModel::TimeLineInfoModel(int delay, QObject *parent) : QAbstractTableModel(parent), baseDelay(delay) {}
+
+void TimeLineInfoModel::setRules(QVector<TimelineMarker> rules)
 {
-    if(event->button()!=Qt::LeftButton || currentState==-1)return;
-    if(currentState==0)
-    {
-        currentState=1;
-    }
-    else
-    {
-        currentState=0;
-        emit addSpace(mouseTimeStartPos,mouseTimeEndPos-mouseTimeStartPos);
-    }
-    update();
+    beginResetModel();
+    sortRules(rules, baseDelay);
+    items = std::move(rules);
+    endResetModel();
 }
 
-void TimeLineBar::enterEvent(QEnterEvent *)
+void TimeLineInfoModel::setPendingOffset(int start, int delta)
 {
-    if(currentState==-1)currentState=0;
-}
-
-void TimeLineBar::leaveEvent(QEvent *)
-{
-    emit mouseLeave();
-    if(currentState==0)currentState=-1;
-    update();
-}
-
-void TimeLineBar::keyPressEvent(QKeyEvent *event)
-{
-    if(currentState==-1)return;
-    int key = event->key();
-    switch (key)
-    {
-    case Qt::Key_Right:
-        xPos++;
-        break;
-    case Qt::Key_Left:
-        xPos--;
-        break;
-    default:
-        QWidget::keyPressEvent(event);
-        return;
-    }
-    xPos=qBound(0,xPos,width());
-    if(currentState==0)
-    {
-        mouseTimeStartPos=(float)xPos/(float)width()*duration*1000;
-        emit mouseMove(xPos,mouseTimeStartPos,true);
-    }
-    else
-    {
-        mouseTimeEndPos=(float)xPos/(float)width()*duration*1000;
-        emit mouseMove(xPos,mouseTimeEndPos,false);
-    }
-    update();
-}
-
-TimeLineInfoModel::TimeLineInfoModel(QVector<QPair<int, int>> *timelines, QObject *parent):QAbstractItemModel(parent), timelineInfo(timelines)
-{
-
-}
-
-void TimeLineInfoModel::addSpace(int start, int duration)
-{
-    int i=0;
-    while(i<timelineInfo->count() && timelineInfo->at(i).first<start) i++;
-    if(i<timelineInfo->count() && timelineInfo->at(i).first==start)return;
-    beginInsertRows(QModelIndex(),i,i);
-    timelineInfo->insert(i,QPair<int,int>(start,duration));
-    endInsertRows();
-}
-
-void TimeLineInfoModel::removeSpace(const QModelIndex &index)
-{
-    if(!index.isValid())return;
-    beginRemoveRows(QModelIndex(),index.row(),index.row());
-    timelineInfo->removeAt(index.row());
-    endRemoveRows();
+    pendingStart = start;
+    pendingDelta = delta;
+    if (!items.isEmpty()) emit dataChanged(index(0, 2), index(items.size() - 1, 2), {Qt::DisplayRole});
 }
 
 QVariant TimeLineInfoModel::data(const QModelIndex &index, int role) const
 {
-    if(!index.isValid()) return QVariant();
-    auto &space=timelineInfo->at(index.row());
-    int col=index.column();
-    if(role==Qt::DisplayRole && col<3)
-    {
-        return formatTime((col==2?0:space.first)+(col==0?0:space.second));
-    }
-    return QVariant();
+    if (!index.isValid() || index.row() >= items.size()) return {};
+    const auto &rule = items[index.row()];
+    if (role == Qt::UserRole) return rule.id;
+    if (role == Qt::ToolTipRole && index.column() == 2) return tr("Offset after this point, including the source delay.");
+    if (role != Qt::DisplayRole) return {};
+    if (index.column() == 0) return QStringLiteral("%1  %2").arg(index.row() + 1).arg(timeText(rule.start));
+    const qint64 offset = rule.offset + (pendingStart <= rule.start ? pendingDelta : 0);
+    return tr("%1 s").arg(secondsText(index.column() == 1 ? rule.delta : offset));
 }
 
 QVariant TimeLineInfoModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    static QString headers[]={tr("Start"),tr("End"),tr("Duration")};
-    if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
-    {
-        if(section<3)return headers[section];
-    }
-    return QVariant();
+    if (orientation != Qt::Horizontal || role != Qt::DisplayRole) return {};
+    const QString headers[] = {tr("Original point"), tr("Adjustment"), tr("Total offset")};
+    return section >= 0 && section < 3 ? headers[section] : QVariant();
 }
 
-SimpleDanumPool::SimpleDanumPool(const QVector<SimpleDanmuInfo> &sDanmuList, QObject *parent):QAbstractItemModel(parent),simpleDanmuList(sDanmuList)
-{
-    std::sort(simpleDanmuList.begin(),simpleDanmuList.end(),
-                 [](const SimpleDanmuInfo &danmu1,const SimpleDanmuInfo &danmu2){return danmu1.originTime<danmu2.originTime;});
-}
-
-QModelIndex SimpleDanumPool::getIndex(int time)
-{
-    int pos=std::lower_bound(simpleDanmuList.begin(),simpleDanmuList.end(),time,
-                             [](const SimpleDanmuInfo &danmu,int time){return danmu.originTime<time;})-simpleDanmuList.begin();
-    return createIndex(pos,0);
-}
-
-void SimpleDanumPool::refreshTimeline(const QVector<QPair<int, int>> &timelineInfo)
+void NearbyDanmuModel::refresh(const QVector<SimpleDanmuInfo> &comments, const QVector<DanmuTimeResult> &times, qint64 focus)
 {
     beginResetModel();
-    int timelinePos=0,currentDelay=0;
-    for(auto iter=simpleDanmuList.begin();iter!=simpleDanmuList.end();++iter)
+    rows.clear();
+    int right = std::upper_bound(times.cbegin(), times.cend(), focus,
+        [](qint64 value, const DanmuTimeResult &time) { return value < time.sourceTimeMs; }) - times.cbegin();
+    int left = right - 1;
+    QVector<int> nearest;
+    // Keep both sides of the strict threshold visible, even in a dense burst.
+    for (int i = 0; i < 5; ++i)
     {
-        SimpleDanmuInfo &sdi=*iter;
-        while(timelinePos<timelineInfo.count())
-        {
-            if(timelineInfo.at(timelinePos).first<sdi.originTime)
-            {
-                currentDelay+=timelineInfo.at(timelinePos).second;
-                timelinePos++;
-            }
-            else
-            {
-                break;
-            }
-        }
-        sdi.time=sdi.originTime+currentDelay<0?sdi.originTime:sdi.originTime+currentDelay;
+        if (left >= 0 && focus - times[left].sourceTimeMs <= 10000) nearest.append(left--);
+        if (right < times.size() && times[right].sourceTimeMs - focus <= 10000) nearest.append(right++);
     }
-    //std::sort(simpleDanmuList.begin(),simpleDanmuList.end(),
-    //          [](const SimpleDanmuInfo &danmu1,const SimpleDanmuInfo &danmu2){return danmu1.ori<danmu2.time;});
+    while (nearest.size() < 10)
+    {
+        const qint64 before = left >= 0 ? qAbs(times[left].sourceTimeMs - focus) : 10001;
+        const qint64 after = right < times.size() ? qAbs(times[right].sourceTimeMs - focus) : 10001;
+        if (qMin(before, after) > 10000) break;
+        nearest.append(before <= after ? left-- : right++);
+    }
+    std::sort(nearest.begin(), nearest.end());
+    for (int i : nearest) rows.append({times[i], comments[i].text});
     endResetModel();
 }
 
-QVariant SimpleDanumPool::data(const QModelIndex &index, int role) const
+QVariant NearbyDanmuModel::data(const QModelIndex &index, int role) const
 {
-    if(!index.isValid()) return QVariant();
-    auto &danmu=simpleDanmuList.at(index.row());
-    int col=index.column();
-    switch (role)
-    {
-    case Qt::DisplayRole:
-    {
-        if(col==0)
-        {
-            return formatTime(danmu.originTime);
-        }
-        else if(col==1)
-        {
-            return formatTime(danmu.time);
-        }
-        else if(col==2)
-        {
-            return danmu.text;
-        }
-    }
-    default:
-        return QVariant();
-    }
-    return QVariant();
+    if (!index.isValid() || index.row() >= rows.size()) return {};
+    const auto &row = rows[index.row()];
+    if (role == Qt::ToolTipRole) return row.text;
+    if (role != Qt::DisplayRole) return {};
+    if (index.column() == 0) return timeText(row.time.sourceTimeMs);
+    if (index.column() == 1) return row.time.status == DanmuTimeStatus::Visible ? timeText(row.time.finalTimeMs) : tr("Not played");
+    return row.text;
 }
 
-QVariant SimpleDanumPool::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant NearbyDanmuModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    static QString headers[]={tr("Original"),tr("Adjusted"),tr("Content")};
-    if (role == Qt::DisplayRole&&orientation == Qt::Horizontal)
+    if (orientation != Qt::Horizontal || role != Qt::DisplayRole) return {};
+    const QString headers[] = {tr("Original time"), tr("Final time"), tr("Content")};
+    return section >= 0 && section < 3 ? headers[section] : QVariant();
+}
+
+TimelineEdit::TimelineEdit(const DanmuSource *source, const QVector<SimpleDanmuInfo> &simpleComments, QWidget *parent, int curTime)
+    : CFramelessDialog(tr("Timeline Edit"), parent, true), draft(*source)
+{
+    timelineInfo = source->timelineInfo;
+    for (const auto &comment : simpleComments)
     {
-        if(section<3)return headers[section];
+        if (source->mapTime(comment.originTime).status != DanmuTimeStatus::OutsideClip) comments.append(comment);
     }
-    return QVariant();
+    std::sort(comments.begin(), comments.end(), [](const SimpleDanmuInfo &a, const SimpleDanmuInfo &b) { return a.originTime < b.originTime; });
+    for (const auto &comment : comments)
+    {
+        originalTimes.append(source->mapTime(comment.originTime).sourceTimeMs);
+    }
+    sourceEnd = source->hasClip() ? source->clipDuration : qint64(source->duration) * 1000;
+    if (!originalTimes.isEmpty()) sourceEnd = qMax(sourceEnd, originalTimes.last() + (sourceEnd > 0 ? 0 : 10000));
+
+    timelineModel = new TimeLineInfoModel(source->delay, this);
+    QVector<TimelineMarker> rules;
+    for (const auto &rule : timelineInfo) rules.append({nextId++, rule.first, rule.second, 0});
+    timelineModel->setRules(rules);
+
+    nearbyModel = new NearbyDanmuModel(this);
+    timelineBar = new TimeLineBar(this);
+
+    auto makeView = [this](QAbstractItemModel *model) {
+        auto *view = new QTreeView(this);
+        view->setRootIsDecorated(false);
+        view->setSelectionMode(QAbstractItemView::SingleSelection);
+        view->setSelectionBehavior(QAbstractItemView::SelectRows);
+        view->setAlternatingRowColors(true);
+        view->setUniformRowHeights(true);
+        view->setFont(QFont(GlobalObjects::normalFont, 10));
+        view->setItemDelegate(new KTreeviewItemDelegate(view));
+        view->setModel(model);
+        view->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+        view->header()->setStretchLastSection(true);
+        return view;
+    };
+    timelineView = makeView(timelineModel);
+    timelineView->setObjectName(QStringLiteral("TimelineRules"));
+    timelineView->setMinimumHeight(timelineView->header()->sizeHint().height() + 3 * (timelineView->fontMetrics().height() + 12));
+    QTreeView *nearbyView = makeView(nearbyModel);
+    nearbyView->setObjectName(QStringLiteral("TimelineNearby"));
+    nearbyView->setSelectionMode(QAbstractItemView::NoSelection);
+
+    KPushButton *newButton = new KPushButton(tr("Add adjustment"), this);
+    auto *left = new QWidget(this);
+    QVBoxLayout *leftVLayout = new QVBoxLayout(left);
+    leftVLayout->setContentsMargins(0, 0, 0, 0);
+
+    QHBoxLayout *headingHLayout = new QHBoxLayout;
+    headingHLayout->addWidget(new QLabel(tr("Adjustments"), this));
+    headingHLayout->addStretch();
+    headingHLayout->addWidget(newButton);
+    leftVLayout->addLayout(headingHLayout);
+    leftVLayout->addWidget(timelineView, 1);
+    editTitle = new QLabel(this);
+    leftVLayout->addWidget(editTitle);
+
+    QGridLayout *fieldsGLayout = new QGridLayout;
+    fieldsGLayout->setContentsMargins(0, 0, 0, 0);
+
+    startEdit = new ElaLineEdit(this);
+    deltaEdit = new ElaLineEdit(this);
+    startEdit->setPlaceholderText(tr("e.g. 12:00.200"));
+    deltaEdit->setPlaceholderText(tr("e.g. +20 or -8"));
+    QLabel *startLabel = new QLabel(tr("Original time point"), this);
+    QLabel *deltaLabel = new QLabel(tr("Adjustment (s)"), this);
+    startLabel->setBuddy(startEdit);
+    deltaLabel->setBuddy(deltaEdit);
+    fieldsGLayout->addWidget(startLabel, 0, 0);
+    fieldsGLayout->addWidget(deltaLabel, 0, 1);
+    fieldsGLayout->addWidget(startEdit, 1, 0);
+    fieldsGLayout->addWidget(deltaEdit, 1, 1);
+    fieldsGLayout->setColumnStretch(0, 1);
+    fieldsGLayout->setColumnStretch(1, 1);
+    leftVLayout->addLayout(fieldsGLayout);
+
+    QLabel *hint = new QLabel(tr("Positive: later; negative: earlier."), this);
+    hint->setToolTip(tr("Only comments after the original point are affected."));
+    hint->setWordWrap(true);
+    leftVLayout->addWidget(hint);
+
+    errorLabel = new QLabel(this);
+    errorLabel->setWordWrap(true);
+    leftVLayout->addWidget(errorLabel);
+
+    QHBoxLayout *actionsHLayout = new QHBoxLayout;
+    actionsHLayout->addStretch();
+
+    deleteButton = new KPushButton(tr("Delete adjustment"), this);
+    addButton = new KPushButton(tr("Add"), this);
+    actionsHLayout->addWidget(deleteButton);
+    actionsHLayout->addWidget(addButton);
+    leftVLayout->addLayout(actionsHLayout);
+
+    QWidget *right = new QWidget(this);
+    QVBoxLayout *rightVLayout = new QVBoxLayout(right);
+    rightVLayout->setContentsMargins(0, 0, 0, 0);
+    rightVLayout->addWidget(new QLabel(tr("Nearby comments"), this));
+    nearbyLabel = new QLabel(this);
+    rightVLayout->addWidget(nearbyLabel);
+    rightVLayout->addWidget(nearbyView, 1);
+    emptyLabel = new QLabel(tr("No nearby comments. You can still adjust the timeline."), this);
+    emptyLabel->setWordWrap(true);
+    rightVLayout->addWidget(emptyLabel);
+
+    QSplitter *splitter = new QSplitter(this);
+    splitter->setObjectName(QStringLiteral("NormalSplitter"));
+    splitter->addWidget(left);
+    splitter->addWidget(right);
+    splitter->setChildrenCollapsible(false);
+    splitter->setSizes({440, 500});
+
+    QVBoxLayout *dialogVLayout = new QVBoxLayout(this);
+    if (source->hasClip()) dialogVLayout->addWidget(new QLabel(tr("Original times are relative to the source clip start."), this));
+    dialogVLayout->addWidget(timelineBar);
+    dialogVLayout->addWidget(splitter, 1);
+
+    for (auto *button : findChildren<QPushButton *>()) button->setAutoDefault(false);
+    QObject::connect(newButton, &QPushButton::clicked, this, [this] { beginNew(); });
+    QObject::connect(addButton, &QPushButton::clicked, this, &TimelineEdit::addRule);
+    QObject::connect(deleteButton, &QPushButton::clicked, this, &TimelineEdit::deleteRule);
+    QObject::connect(startEdit, &QLineEdit::textEdited, this, &TimelineEdit::edit);
+    QObject::connect(deltaEdit, &QLineEdit::textEdited, this, &TimelineEdit::edit);
+    QObject::connect(timelineView->selectionModel(), &QItemSelectionModel::currentRowChanged, this, [this](const QModelIndex &index) {
+        if (index.isValid()) selectRule(index.data(Qt::UserRole).toInt());
+    });
+    QObject::connect(timelineBar, &TimeLineBar::ruleSelected, this, [this](int id) { if (id >= 0) selectRule(id); });
+    QObject::connect(timelineBar, &TimeLineBar::addRequested, this, [this](int start) {
+        for (const auto &rule : timelineModel->rules()) if (rule.start == start) { selectRule(rule.id); return; }
+        beginNew(start);
+    });
+
+    if (curTime >= 0)
+    {
+        const int start = int(qMin(qint64(curTime) * 1000, qint64(std::numeric_limits<int>::max())));
+        auto existing = std::find_if(rules.cbegin(), rules.cend(), [start](const TimelineMarker &rule) { return rule.start == start; });
+        if (existing != rules.cend()) selectRule(existing->id);
+        else beginNew(start);
+    }
+    else if (rules.isEmpty()) beginNew();
+    else selectRule(rules.first().id);
+
+    setSizeSettingKey(QStringLiteral("DialogSize/TimelineEdit"), QSize(800, 720));
+}
+
+void TimelineEdit::setError(const QString &message)
+{
+    errorLabel->setText(message);
+    errorLabel->setVisible(!message.isEmpty());
+}
+
+void TimelineEdit::selectRule(int id)
+{
+    const auto &rules = timelineModel->rules();
+    for (int i = 0; i < rules.size(); ++i)
+    {
+        if (rules[i].id != id) continue;
+        selectedId = id;
+        adding = pendingValid = false;
+        focus = rules[i].start;
+        startEdit->setText(timeText(rules[i].start));
+        deltaEdit->setText(secondsText(rules[i].delta));
+        editTitle->setText(tr("Edit adjustment"));
+        deleteButton->show();
+        addButton->hide();
+        const QSignalBlocker blocker(timelineView->selectionModel());
+        timelineView->setCurrentIndex(timelineModel->index(i, 0));
+        timelineView->scrollTo(timelineModel->index(i, 0));
+        setError({});
+        refreshPreview();
+        return;
+    }
+}
+
+void TimelineEdit::beginNew(int start)
+{
+    adding = true;
+    selectedId = -1;
+    pendingValid = false;
+    const QSignalBlocker blocker(timelineView->selectionModel());
+    timelineView->setCurrentIndex({});
+    timelineView->clearSelection();
+    startEdit->setText(start >= 0 ? timeText(start) : QString());
+    deltaEdit->setText(QStringLiteral("+0"));
+    editTitle->setText(tr("New adjustment"));
+    deleteButton->hide();
+    addButton->show();
+    addButton->setText(tr("Add"));
+    addButton->setEnabled(start >= 0);
+    if (start >= 0) { focus = start; edit(); }
+    else { setError({}); refreshPreview(); }
+    startEdit->setFocus();
+}
+
+void TimelineEdit::edit()
+{
+    int start, delta;
+    if (!parseTime(startEdit->text(), start))
+    {
+        setError(tr("Enter an original time such as 12:00 or 12:00.200. The last valid preview is kept."));
+        addButton->setEnabled(false);
+        return;
+    }
+    if (!parseTime(deltaEdit->text(), delta, true))
+    {
+        setError(tr("Enter seconds such as +20 or -8. The last valid preview is kept."));
+        addButton->setEnabled(false);
+        return;
+    }
+    auto rules = timelineModel->rules();
+    auto current = std::find_if(rules.begin(), rules.end(), [this](const TimelineMarker &rule) { return rule.id == selectedId; });
+    const bool moving = current != rules.end() && current->start != start;
+    const auto duplicate = std::find_if(rules.begin(), rules.end(), [=](const TimelineMarker &rule) { return rule.start == start && rule.id != selectedId; });
+    if (moving && duplicate != rules.end())
+    {
+        setError(tr("An adjustment already exists at this original time."));
+        return;
+    }
+    setError({});
+    focus = start;
+    if (adding)
+    {
+        pendingValid = duplicate == rules.end();
+        pending = {-2, start, delta, 0};
+        addButton->setEnabled(true);
+        addButton->setText(pendingValid ? tr("Add") : tr("Edit existing adjustment"));
+    }
+    else if (current != rules.end())
+    {
+        current->start = start;
+        current->delta = delta;
+        const QSignalBlocker blocker(timelineView->selectionModel());
+        timelineModel->setRules(rules);
+        const auto &sorted = timelineModel->rules();
+        for (int i = 0; i < sorted.size(); ++i) if (sorted[i].id == selectedId) timelineView->setCurrentIndex(timelineModel->index(i, 0));
+    }
+    refreshPreview();
+}
+
+void TimelineEdit::addRule()
+{
+    edit();
+    if (!errorLabel->text().isEmpty()) return;
+    if (!pendingValid)
+    {
+        int start;
+        if (parseTime(startEdit->text(), start)) for (const auto &rule : timelineModel->rules()) {
+            if (rule.start == start) { selectRule(rule.id); return; }
+        }
+        return;
+    }
+    auto rules = timelineModel->rules();
+    pending.id = nextId++;
+    rules.append(pending);
+    {
+        const QSignalBlocker blocker(timelineView->selectionModel());
+        timelineModel->setRules(rules);
+    }
+    selectRule(pending.id);
+}
+
+void TimelineEdit::deleteRule()
+{
+    auto rules = timelineModel->rules();
+    int row = 0;
+    while (row < rules.size() && rules[row].id != selectedId) ++row;
+    if (row == rules.size()) return;
+    rules.removeAt(row);
+    {
+        const QSignalBlocker blocker(timelineView->selectionModel());
+        timelineModel->setRules(rules);
+    }
+    if (rules.isEmpty()) beginNew();
+    else selectRule(rules[qMin(row, int(rules.size()) - 1)].id);
+}
+
+void TimelineEdit::refreshPreview()
+{
+    auto rules = timelineModel->rules();
+    if (adding && pendingValid) rules.append(pending);
+    timelineModel->setPendingOffset(pending.start, adding && pendingValid ? pending.delta : 0);
+    sortRules(rules, draft.delay);
+    draft.timelineInfo.clear();
+    qint64 end = sourceEnd;
+    for (const auto &rule : rules)
+    {
+        draft.timelineInfo.append({rule.start, rule.delta});
+        if (!draft.hasClip() && draft.duration <= 0) end = qMax(end, qint64(rule.start) + 10000);
+    }
+    times.clear();
+    times.reserve(comments.size());
+    QVector<qint64> adjusted;
+    adjusted.reserve(comments.size());
+    for (const auto &comment : comments)
+    {
+        const auto time = draft.mapTime(comment.originTime);
+        times.append(time);
+        if (time.status == DanmuTimeStatus::Visible) adjusted.append(time.finalTimeMs);
+    }
+    nearbyModel->refresh(comments, times, focus);
+    nearbyLabel->setText(tr("Original %1 ±10 s · %2 shown").arg(timeText(focus)).arg(nearbyModel->rowCount()));
+    emptyLabel->setVisible(nearbyModel->rowCount() == 0);
+    timelineBar->setData(originalTimes, adjusted, rules, qMax(qint64(1000), end), draft.delay);
+    timelineBar->setSelection(adding && pendingValid ? -2 : selectedId, focus);
+}
+
+void TimelineEdit::onAccept()
+{
+    int delta;
+    if (adding && startEdit->text().trimmed().isEmpty() && parseTime(deltaEdit->text(), delta, true) && delta == 0)
+        beginNew();
+    else
+        edit();
+    if (!errorLabel->text().isEmpty())
+    {
+        showMessage(errorLabel->text(), NM_ERROR | NM_HIDE);
+        return;
+    }
+    if (adding && !pendingValid && !startEdit->text().isEmpty())
+    {
+        addRule();
+        showMessage(tr("An adjustment already exists at this original time."), NM_ERROR | NM_HIDE);
+        return;
+    }
+    if (adding && pendingValid && pending.delta != 0) addRule();
+    timelineInfo.clear();
+    for (const auto &rule : timelineModel->rules()) timelineInfo.append({rule.start, rule.delta});
+    CFramelessDialog::onAccept();
 }

@@ -226,6 +226,7 @@ SOURCES += \
     UI/widgets/component/ktreeviewitemdelegate.cpp \
     UI/widgets/component/poolitemdelegate.cpp \
     UI/widgets/danmurangeselector.cpp \
+    UI/widgets/timelinebar.cpp \
     UI/widgets/danmusourcetip.cpp \
     UI/widgets/elidedlabel.cpp \
     UI/widgets/floatscrollbar.cpp \
@@ -544,6 +545,7 @@ HEADERS += \
     UI/widgets/component/ktreeviewitemdelegate.h \
     UI/widgets/component/poolitemdelegate.h \
     UI/widgets/danmurangeselector.h \
+    UI/widgets/timelinebar.h \
     UI/widgets/danmusourcetip.h \
     UI/widgets/elidedlabel.h \
     UI/widgets/floatscrollbar.h \

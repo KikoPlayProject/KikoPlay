@@ -166,6 +166,15 @@ struct DanmuSourceTag
     }
 };
 
+enum class DanmuTimeStatus { Visible, OutsideClip, BeforeZero, OutOfRange };
+
+struct DanmuTimeResult
+{
+    qint64 sourceTimeMs;
+    qint64 finalTimeMs;  // Not mapped when status is OutsideClip.
+    DanmuTimeStatus status;
+};
+
 struct DanmuSource
 {
     // from script----
@@ -189,6 +198,7 @@ struct DanmuSource
 
     void setTimeline(const QString &timelineStr);
     QString timelineStr() const;
+    DanmuTimeResult mapTime(int rawOriginTimeMs) const;
     bool hasClip() const;
     void setClip(const QString &clipStr);
     void setClip(int start, int duration);

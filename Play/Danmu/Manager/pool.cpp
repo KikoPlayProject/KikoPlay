@@ -663,29 +663,7 @@ QSet<QString> Pool::getDanmuHashSet(int sourceId)
 
 void Pool::setRealTime(DanmuComment *danmu)
 {
-    danmu->clipped = false;
-    auto srcInfo = &sourcesTable[danmu->source];
-    int delay = 0;
-    int originTime = danmu->originTime;
-    if (srcInfo->hasClip())
-    {
-        if (originTime < srcInfo->clipStart || originTime > srcInfo->clipStart + srcInfo->clipDuration)
-        {
-            danmu->clipped = true;
-            return;
-        }
-        originTime -= srcInfo->clipStart;
-    }
-    for (auto &spaceItem : srcInfo->timelineInfo)
-    {
-        if (originTime > spaceItem.first) delay += spaceItem.second;
-        else break;
-    }
-    delay += srcInfo->delay;
-    if (originTime + delay < 0)
-    {
-        danmu->clipped = true;
-        return;
-    }
-    danmu->time = originTime + delay;
+    const auto mapped = sourcesTable[danmu->source].mapTime(danmu->originTime);
+    danmu->clipped = mapped.status != DanmuTimeStatus::Visible;
+    if (!danmu->clipped) danmu->time = int(mapped.finalTimeMs);
 }

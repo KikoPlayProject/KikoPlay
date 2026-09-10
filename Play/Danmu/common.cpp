@@ -1,6 +1,7 @@
 #include "common.h"
 #include "globalobjects.h"
 #include "Render/danmurender.h"
+#include <limits>
 #ifdef KSERVICE
 #include "Service/kservice.h"
 #endif
@@ -169,6 +170,32 @@ QString DanmuSource::timelineStr() const
     }
     ts.flush();
     return timelineStr;
+}
+
+DanmuTimeResult DanmuSource::mapTime(int rawOriginTimeMs) const
+{
+    const bool clipped = hasClip();
+    const qint64 sourceTime = qint64(rawOriginTimeMs) - (clipped ? clipStart : 0);
+    DanmuTimeResult result{sourceTime, sourceTime, DanmuTimeStatus::Visible};
+    if (clipped && (rawOriginTimeMs < clipStart ||
+                    qint64(rawOriginTimeMs) > qint64(clipStart) + clipDuration))
+    {
+        result.status = DanmuTimeStatus::OutsideClip;
+        return result;
+    }
+
+    qint64 offset = delay;
+    // Sorted rules apply strictly after their threshold, including equal and negative thresholds.
+    for (const auto &rule : timelineInfo)
+    {
+        if (sourceTime <= rule.first) break;
+        offset += rule.second;
+    }
+    result.finalTimeMs = sourceTime + offset;
+    if (result.finalTimeMs < 0) result.status = DanmuTimeStatus::BeforeZero;
+    else if (result.finalTimeMs > std::numeric_limits<int>::max())
+        result.status = DanmuTimeStatus::OutOfRange;
+    return result;
 }
 
 bool DanmuSource::hasClip() const
