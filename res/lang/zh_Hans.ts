@@ -2365,6 +2365,26 @@
 <context>
     <name>DanmuFilterBox</name>
     <message>
+        <source>Search Field</source>
+        <translation>搜索字段</translation>
+    </message>
+    <message>
+        <source>Search comments...</source>
+        <translation>搜索弹幕内容…</translation>
+    </message>
+    <message>
+        <source>Search users...</source>
+        <translation>搜索发送用户…</translation>
+    </message>
+    <message>
+        <source>Search types...</source>
+        <translation>搜索弹幕类型…</translation>
+    </message>
+    <message>
+        <source>Search time...</source>
+        <translation>搜索播放时间…</translation>
+    </message>
+    <message>
         <location filename="../../UI/dialogs/danmuview.cpp" line="138"/>
         <source>Content</source>
         <translation>内容</translation>
@@ -2843,6 +2863,38 @@ Merged Count: %1</source>
 </context>
 <context>
     <name>DanmuView</name>
+    <message>
+        <source>Danmu</source>
+        <translation>弹幕数量</translation>
+    </message>
+    <message>
+        <source>Senders</source>
+        <translation>发送用户</translation>
+    </message>
+    <message>
+        <source>Danmu Type</source>
+        <translation>弹幕类型</translation>
+    </message>
+    <message>
+        <source>All Types</source>
+        <translation>全部类型</translation>
+    </message>
+    <message>
+        <source>Copy Cell</source>
+        <translation>复制单元格</translation>
+    </message>
+    <message>
+        <source>Showing %1 of %2 comments</source>
+        <translation>显示 %1 / %2 条弹幕</translation>
+    </message>
+    <message>
+        <source>No comments to display</source>
+        <translation>暂无可显示的弹幕</translation>
+    </message>
+    <message>
+        <source>No matching comments</source>
+        <translation>没有匹配的弹幕</translation>
+    </message>
     <message>
         <location filename="../../UI/dialogs/danmuview.cpp" line="19"/>
         <location filename="../../UI/dialogs/danmuview.cpp" line="41"/>

@@ -5,6 +5,8 @@
 #include "UI/widgets/klineedit.h"
 class QTreeView;
 class QActionGroup;
+class QToolButton;
+class QComboBox;
 class QLabel;
 class DanmuViewProxyModel;
 class DanmuFilterBox : public KLineEdit
@@ -23,8 +25,13 @@ public:
 
 signals:
     void filterChanged(int type,const QString &filterStr);
+protected:
+    void resizeEvent(QResizeEvent *event) override;
 private:
     QActionGroup *filterTypeGroup;
+    QToolButton *optionsButton = nullptr;
+    void updateFilterField();
+    void layoutFieldButton();
 };
 class DanmuView : public CFramelessDialog
 {
@@ -39,9 +46,18 @@ private:
     QTreeView *danmuView;
     DanmuViewProxyModel *proxyModel;
     DanmuFilterBox *filterEdit;
-    QLabel *tipLabel;
+    QComboBox *typeCombo;
+    QLabel *countLabel;
+    QLabel *totalLabel;
+    QLabel *senderLabel;
+    QLabel *typeLabels[3];
+    QLabel *emptyLabel;
+    QLabel *detailLabel;
+    QLabel *detailMetaLabel;
+    QWidget *detailPanel;
     void initView();
     void initStats(int originCount);
+    void updateDetails();
 };
 
 

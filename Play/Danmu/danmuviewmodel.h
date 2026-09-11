@@ -20,7 +20,7 @@ public:
     enum Roles
     {
         SourceRole = Qt::UserRole+1,
-        TypeRole, ClippedRole
+        TypeRole, ClippedRole, SortRole
     };
 
 private:
@@ -61,7 +61,8 @@ public:
             case 1:
             {
                 static QString typeStr[]={QObject::tr("Roll"),QObject::tr("Top"),QObject::tr("Bottom")};
-                return typeStr[comment->type];
+                return comment->type >= DanmuComment::Rolling && comment->type <= DanmuComment::Bottom
+                        ? typeStr[comment->type] : QString();
             }
             case 2:
             {
@@ -69,7 +70,9 @@ public:
             }
             case 3:
             {
-                return QDateTime::fromSecsSinceEpoch(comment->date).toString("yyyy-MM-dd hh:mm:ss");
+                if (comment->date <= 0) return QStringLiteral("—");
+                return QDateTime::fromSecsSinceEpoch(comment->date).toString(
+                            role == Qt::ToolTipRole ? "yyyy-MM-dd hh:mm:ss" : "yyyy-MM-dd");
             }
             case 4:
             {
@@ -81,9 +84,15 @@ public:
         }
         case Qt::ForegroundRole:
         {
+            if (col != TEXT) return QVariant();
             int c = comment->color;
             return QColor((c>>16)&0xff,(c>>8)&0xff,c&0xff);
         }
+        case SortRole:
+            if (col == TIME) return comment->time;
+            if (col == DATETIME) return comment->date;
+            if (col == TYPE) return int(comment->type);
+            return data(index, Qt::DisplayRole);
         case SourceRole:
             return comment->source;
         case TypeRole:
@@ -100,12 +109,23 @@ public:
 class DanmuViewProxyModel : public QSortFilterProxyModel
 {
 public:
-    explicit DanmuViewProxyModel(QObject *parent=nullptr):QSortFilterProxyModel(parent), sourceId(-1){}
+    explicit DanmuViewProxyModel(QObject *parent=nullptr):QSortFilterProxyModel(parent), sourceId(-1), typeFilter(-1)
+    {
+        setFilterCaseSensitivity(Qt::CaseInsensitive);
+        setFilterKeyColumn(DanmuViewModel<DanmuComment *>::TEXT);
+        setSortRole(DanmuViewModel<DanmuComment *>::SortRole);
+    }
 
 public:
     void setSourceId(int sid)
     {
         sourceId = sid;
+        invalidateFilter();
+    }
+    void setTypeFilter(int type)
+    {
+        if (typeFilter == type) return;
+        typeFilter = type;
         invalidateFilter();
     }
     virtual bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
@@ -114,9 +134,11 @@ public:
         int sid = index.data(DanmuViewModel<DanmuComment *>::Roles::SourceRole).toInt();
         if(sourceId !=-1 && sid != sourceId) return false;
         if (index.data(DanmuViewModel<DanmuComment *>::Roles::ClippedRole).toBool()) return false;
+        if (typeFilter != -1 && index.data(DanmuViewModel<DanmuComment *>::TypeRole).toInt() != typeFilter) return false;
         return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
     }
 private:
     int sourceId;
+    int typeFilter;
 };
 #endif // DANMUVIEWMODEL_H
