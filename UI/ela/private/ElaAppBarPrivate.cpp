@@ -34,11 +34,6 @@ void ElaAppBarPrivate::onMaxButtonClicked()
     Q_Q(ElaAppBar);
     bool isMaximized = q->window()->isMaximized();
     isMaximized ? q->window()->showNormal() : q->window()->showMaximized();
-#ifndef Q_OS_WIN
-    // 非 Windows 下没有 WM_SIZE 兜底，窗口状态变化统一由
-    // ElaAppBar::eventFilter 的 WindowStateChange 分支更新按钮图标，
-    // 这里无需再手动调用。
-#endif
 }
 
 void ElaAppBarPrivate::onCloseButtonClicked()

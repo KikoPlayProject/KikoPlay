@@ -7,6 +7,9 @@
 #include "ElaToolButton.h"
 #include "ElaWinShadowHelper.h"
 #include "UI/widgets/loadingicon.h"
+#ifdef Q_OS_WIN
+#include <shellapi.h>
+#endif
 #ifndef Q_OS_WIN
 #include <QDateTime>
 #include <QWindow>
@@ -26,6 +29,58 @@
 #include "ElaTheme.h"
 #include "private/ElaAppBarPrivate.h"
 #include "globalobjects.h"
+
+#ifdef Q_OS_WIN
+namespace
+{
+bool maximizedClientRect(HWND hwnd, RECT& rect)
+{
+    const HMONITOR monitor = ::MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO monitorInfo{};
+    monitorInfo.cbSize = sizeof(monitorInfo);
+    if (!::GetMonitorInfoW(monitor, &monitorInfo))
+    {
+        return false;
+    }
+
+    // WM_NCCALCSIZE uses native screen coordinates, not QScreen's logical pixels.
+    rect = monitorInfo.rcWork;
+    for (UINT edge : {ABE_LEFT, ABE_TOP, ABE_RIGHT, ABE_BOTTOM})
+    {
+        APPBARDATA appBarData{};
+        appBarData.cbSize = sizeof(appBarData);
+        appBarData.uEdge = edge;
+        appBarData.rc = monitorInfo.rcMonitor;
+        if (!::SHAppBarMessage(ABM_GETAUTOHIDEBAREX, &appBarData))
+        {
+            continue;
+        }
+
+        // Keep the taskbar activation edge accessible and prevent Qt from
+        // mistaking a maximized client area covering the monitor for fullscreen.
+        // rcWork may already reserve this space, so do not subtract it twice.
+        constexpr LONG taskbarInset = 2;
+        switch (edge)
+        {
+        case ABE_LEFT:
+            rect.left = qMax(rect.left, monitorInfo.rcMonitor.left + taskbarInset);
+            break;
+        case ABE_TOP:
+            rect.top = qMax(rect.top, monitorInfo.rcMonitor.top + taskbarInset);
+            break;
+        case ABE_RIGHT:
+            rect.right = qMin(rect.right, monitorInfo.rcMonitor.right - taskbarInset);
+            break;
+        case ABE_BOTTOM:
+            rect.bottom = qMin(rect.bottom, monitorInfo.rcMonitor.bottom - taskbarInset);
+            break;
+        }
+    }
+    return true;
+}
+}
+#endif
+
 Q_PROPERTY_CREATE_Q_CPP(ElaAppBar, bool, IsStayTop)
 Q_PROPERTY_CREATE_Q_CPP(ElaAppBar, bool, IsDefaultClosed)
 Q_PROPERTY_CREATE_Q_CPP(ElaAppBar, bool, IsOnlyAllowMinAndClose)
@@ -384,25 +439,19 @@ int ElaAppBar::takeOverNativeEvent(const QByteArray& eventType, void* message, l
         }
         return 0;
     }
-    case WM_SIZE:
-    {
-        if (wParam == SIZE_RESTORED)
-        {
-            d->_changeMaxButtonAwesome(false);
-        }
-        else if (wParam == SIZE_MAXIMIZED)
-        {
-            d->_changeMaxButtonAwesome(true);
-        }
-        return 0;
-    }
     case WM_NCCALCSIZE:
     {
-#if (QT_VERSION >= QT_VERSION_CHECK(6, 5, 3) && QT_VERSION <= QT_VERSION_CHECK(6, 6, 1))
         if (wParam == FALSE)
         {
             return 0;
         }
+        if (d->_isFullScreen)
+        {
+            // Explicit player fullscreen must keep the entire native client area.
+            *result = 0;
+            return 1;
+        }
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 5, 3) && QT_VERSION <= QT_VERSION_CHECK(6, 6, 1))
         if (::IsZoomed(hwnd))
         {
             this->move(7, 7);
@@ -416,16 +465,11 @@ int ElaAppBar::takeOverNativeEvent(const QByteArray& eventType, void* message, l
         *result = 0;
         return 1;
 #else
-        if (wParam == FALSE)
-        {
-            return 0;
-        }
         RECT* clientRect = &((NCCALCSIZE_PARAMS*)(lParam))->rgrc[0];
         if (!::IsZoomed(hwnd))
         {
             clientRect->top -= 1;
-            if (!d->_isFullScreen)
-                clientRect->bottom -= 1;
+            clientRect->bottom -= 1;
         }
         else
         {
@@ -435,18 +479,7 @@ int ElaAppBar::takeOverNativeEvent(const QByteArray& eventType, void* message, l
                 *result = static_cast<long>(hitTestResult);
                 return 1;
             }
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-            auto geometry = window()->screen()->geometry();
-#else
-            QScreen* screen = qApp->screenAt(window()->geometry().center());
-            QRect geometry;
-            if (!screen)
-            {
-                screen = qApp->screenAt(QCursor::pos());
-            }
-            geometry = screen->geometry();
-#endif
-            clientRect->top = geometry.top();
+            maximizedClientRect(hwnd, *clientRect);
         }
         *result = WVR_REDRAW;
         return 1;
@@ -552,13 +585,11 @@ int ElaAppBar::takeOverNativeEvent(const QByteArray& eventType, void* message, l
     case WM_GETMINMAXINFO:
     {
         MINMAXINFO* minmaxInfo = reinterpret_cast<MINMAXINFO*>(lParam);
-        RECT rect;
-        SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
         d->_lastMinTrackWidth = d->_calculateMinimumWidth();
         minmaxInfo->ptMinTrackSize.x = d->_lastMinTrackWidth * qApp->devicePixelRatio();
         minmaxInfo->ptMinTrackSize.y = parentWidget()->minimumHeight() * qApp->devicePixelRatio();
-        minmaxInfo->ptMaxPosition.x = rect.left;
-        minmaxInfo->ptMaxPosition.y = rect.top;
+        // Preserve Windows' monitor-relative maximized position and size.
+        *result = 0;
         return 1;
     }
     case WM_LBUTTONDBLCLK:
@@ -694,14 +725,13 @@ bool ElaAppBar::eventFilter(QObject* obj, QEvent* event)
         }
         return true;
     }
-#ifndef Q_OS_WIN
     case QEvent::WindowStateChange:
     {
-        // 非 Windows 下窗口最大化/还原（双击标题栏、系统按钮、快捷键等
-        // 任意途径）统一在此更新最大化按钮图标。
+        // Update after Qt processes native state changes, including taskbar restore.
         d->_changeMaxButtonAwesome(window()->isMaximized());
         break;
     }
+#ifndef Q_OS_WIN
     case QEvent::MouseButtonPress:
     {
         if (d->_edges != 0)
