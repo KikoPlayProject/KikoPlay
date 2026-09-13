@@ -38,12 +38,16 @@ namespace
 PoolManager::PoolManager(QWidget *parent) : CFramelessDialog(tr("Danmu Pool Manager"),parent)
 {
     comparer.setNumericMode(true);
-    setFont(QFont(GlobalObjects::normalFont, 10));
+    QFont widgetFont(GlobalObjects::normalFont);
+    widgetFont.setPointSizeF(GlobalObjects::fontSize(10));
+    setFont(widgetFont);
     QTreeView *poolView=new QTreeView(this);
     PoolItemDelegate *delegate = new PoolItemDelegate(poolView);
     poolView->setItemDelegate(delegate);
     poolView->setSelectionMode(QAbstractItemView::SingleSelection);
-    poolView->setFont(QFont(GlobalObjects::normalFont, 11));
+    QFont poolViewFont(GlobalObjects::normalFont);
+    poolViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    poolView->setFont(poolViewFont);
     poolView->setAnimated(true);
     poolView->setAlternatingRowColors(true);
     poolView->header()->setSortIndicator(0, Qt::SortOrder::AscendingOrder);

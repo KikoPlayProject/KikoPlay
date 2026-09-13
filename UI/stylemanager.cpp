@@ -231,9 +231,15 @@ void StyleManager::pushEvent()
 
 void StyleManager::updateAppFont()
 {
-    QFont font = qApp->font();
-    font.setPixelSize(13);
-    font.setFamily(GlobalObjects::normalFont);
+    QFont font(GlobalObjects::normalFont);
+#ifdef Q_OS_MAC
+    font.setPixelSize(qRound(GlobalObjects::fontSize(16)));
+#else
+    font.setPixelSize(qRound(GlobalObjects::fontSize(13)));
+#endif
     font.setHintingPreference(QFont::PreferNoHinting);
     qApp->setFont(font);
+    QFont headerFont(GlobalObjects::normalFont);
+    headerFont.setPixelSize(qRound(GlobalObjects::fontSize(16)));
+    qApp->setFont(headerFont, "QHeaderView");
 }

@@ -250,7 +250,9 @@ QLayout *LibraryWindow::initLibrarayBtns(QWidget *parent)
     });
 
     QLabel *totalCountLabel = new QLabel(parent);
-    totalCountLabel->setFont(QFont(GlobalObjects::normalFont, 10));
+    QFont totalCountLabelFont(GlobalObjects::normalFont);
+    totalCountLabelFont.setPointSizeF(GlobalObjects::fontSize(10));
+    totalCountLabel->setFont(totalCountLabelFont);
     totalCountLabel->setObjectName(QStringLiteral("LibraryCountTip"));
     QObject::connect(proxyModel, &AnimeFilterProxyModel::animeMessage, this, [=](const QString &msg, bool hasMore){
         totalCountLabel->setText(msg);
@@ -472,7 +474,9 @@ void LibraryWindow::initLabelView()
     labelView->header()->hide();
     labelView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     labelView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    labelView->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont labelViewFont(GlobalObjects::normalFont);
+    labelViewFont.setPointSizeF(GlobalObjects::fontSize(12));
+    labelView->setFont(labelViewFont);
     labelView->setIndentation(16);
     new FloatScrollBar(labelView->verticalScrollBar(), labelView);
     LabelItemDelegate *labelItemDelegate = new LabelItemDelegate(this);
@@ -654,7 +658,9 @@ AnimeFilterBox::AnimeFilterBox(QWidget *parent)
 {
     setObjectName(QStringLiteral("FilterEdit"));
     setClearButtonEnabled(true);
-    setFont(QFont(GlobalObjects::normalFont, 14));
+    QFont widgetFont(GlobalObjects::normalFont);
+    widgetFont.setPointSizeF(GlobalObjects::fontSize(14));
+    setFont(widgetFont);
 
     QMenu *menu = new ElaMenu(this);
 

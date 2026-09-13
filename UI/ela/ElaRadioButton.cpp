@@ -1,4 +1,5 @@
 #include "ElaRadioButton.h"
+#include "globalobjects.h"
 
 #include "DeveloperComponents/ElaRadioButtonStyle.h"
 #include "ElaTheme.h"
@@ -9,9 +10,9 @@ ElaRadioButton::ElaRadioButton(QWidget* parent)
     Q_D(ElaRadioButton);
     d->q_ptr = this;
     setFixedHeight(20);
-    QFont font = this->font();
-    font.setPixelSize(15);
-    setFont(font);
+    QFont widgetFont(GlobalObjects::normalFont);
+    widgetFont.setPixelSize(qRound(GlobalObjects::fontSize(15)));
+    setFont(widgetFont);
     setStyle(new ElaRadioButtonStyle(style()));
     d->onThemeChanged(eTheme->getThemeMode());
     connect(eTheme, &ElaTheme::themeModeChanged, d, &ElaRadioButtonPrivate::onThemeChanged);

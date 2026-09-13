@@ -150,7 +150,9 @@ TipWindowWidget::TipWindowWidget(const TipParams &param, QWidget *parent) : QWid
     timeout = param.timeout;
     titleLabel = new QLabel(param.title, this);
     titleLabel->setOpenExternalLinks(true);
-    titleLabel->setFont(QFont(GlobalObjects::normalFont, 8));
+    QFont titleLabelFont(GlobalObjects::normalFont);
+    titleLabelFont.setPointSizeF(GlobalObjects::fontSize(8));
+    titleLabel->setFont(titleLabelFont);
     titleLabel->setObjectName(QStringLiteral("WindowTipTitleLabel"));
     titleLabel->setMaximumHeight(titleLabel->fontMetrics().height() * 2);
 

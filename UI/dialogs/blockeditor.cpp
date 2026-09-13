@@ -24,7 +24,9 @@ BlockEditor::BlockEditor(QWidget *parent) : CFramelessDialog(tr("Block Rules"), 
     blockView->setRootIsDecorated(false);
     blockView->setSelectionMode(QAbstractItemView::ExtendedSelection);
 	blockView->setItemDelegate(new ComboBoxDelegate(this));
-    blockView->setFont(QFont(GlobalObjects::normalFont, 11));
+    QFont blockViewFont(GlobalObjects::normalFont);
+    blockViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    blockView->setFont(blockViewFont);
     blockView->setModel(proxyModel);
     blockView->setAlternatingRowColors(true);
     blockView->setContextMenuPolicy(Qt::CustomContextMenu);

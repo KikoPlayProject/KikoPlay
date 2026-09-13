@@ -1,4 +1,5 @@
 #include "ElaComboBox.h"
+#include "globalobjects.h"
 
 #include <QAbstractItemView>
 #include <QApplication>
@@ -60,7 +61,8 @@ ElaComboBox::ElaComboBox(QWidget* parent)
     d->_pBorderRadius = 3;
     d->_themeMode = eTheme->getThemeMode();
     setObjectName("ElaComboBox");
-    setFixedHeight(35);
+    setMinimumHeight(qMax(35, fontMetrics().height() + 12));
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     d->_comboBoxStyle = new ElaComboBoxStyle(style());
     setStyle(d->_comboBoxStyle);
 

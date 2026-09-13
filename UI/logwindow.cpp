@@ -19,7 +19,8 @@ LogWindow::LogWindow(QWidget *parent) : CFramelessDialog(tr("Log"),parent,false,
     logTypeCombo->addItems(Logger::logger()->LogTypeNames);
 
     QVector<QPlainTextEdit *> logEdits((int)Logger::LogType::UNKNOWN);
-    QFont logFont("Consolas", 10);
+    QFont logFont(QStringLiteral("Consolas"));
+    logFont.setPointSizeF(GlobalObjects::fontSize(10));
     for(int i = 0; i < Logger::LogType::UNKNOWN; ++i)
     {
         logEdits[i] = new KPlainTextEdit(this);
@@ -88,7 +89,9 @@ MPVPropertyViewer::MPVPropertyViewer(QWidget *parent) : CFramelessDialog("MPV Pr
     QLineEdit *propertyEdit = new ElaLineEdit(this);
     QPlainTextEdit *propertyContent = new KPlainTextEdit(this);
     propertyContent->setReadOnly(true);
-    propertyContent->setFont(QFont("Consolas", 10));
+    QFont propertyContentFont(QStringLiteral("Consolas"));
+    propertyContentFont.setPointSizeF(GlobalObjects::fontSize(10));
+    propertyContent->setFont(propertyContentFont);
 
     QGridLayout *viewGLayout = new QGridLayout(this);
     viewGLayout->addWidget(propertyEdit, 0, 0);

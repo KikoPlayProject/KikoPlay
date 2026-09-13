@@ -1,4 +1,5 @@
 #include "ktagpanel.h"
+#include "globalobjects.h"
 #include <QPainter>
 #include <QMouseEvent>
 #include <QResizeEvent>
@@ -10,7 +11,7 @@ KTagPanel::KTagPanel(QWidget *parent, int fontSize) : QWidget(parent)
 {
     setMouseTracking(true);
     QFont f = font();
-    f.setPointSize(fontSize);
+    f.setPointSizeF(GlobalObjects::fontSize(fontSize));
     setFont(f);
 
     QSizePolicy policy(QSizePolicy::Preferred, QSizePolicy::Minimum);

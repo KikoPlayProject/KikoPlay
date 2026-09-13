@@ -74,6 +74,10 @@ public:
     static QString normalFont;
     static void setFont(const QString &font);
 
+    // Scale an unscaled base size using the level selected at startup; preserve its pt/px unit.
+    static qreal fontSize(qreal baseSize);
+    static void setFontSizeLevel(int level);
+
     static constexpr const char *kikoVersion = "2.1.0";
     static constexpr const int kikoVersionNum = 200100;
     static bool isValidKikoVersion(int kv);

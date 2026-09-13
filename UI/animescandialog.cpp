@@ -1,4 +1,5 @@
 #include "animescandialog.h"
+#include "globalobjects.h"
 #include <QVBoxLayout>
 #include <QStackedLayout>
 #include <QLabel>
@@ -18,8 +19,8 @@
 AnimeScanDialog::AnimeScanDialog(const QString &initialDir, QWidget *parent)
     : CFramelessDialog(tr("Scan Folder"), parent)
 {
-    QFont f = font();
-    f.setPointSize(12);
+    QFont f(GlobalObjects::normalFont);
+    f.setPointSizeF(GlobalObjects::fontSize(12));
 
     QLabel *dirTip = new QLabel(tr("Directories"), this);
     dirListWidget = new QListWidget(this);
@@ -245,7 +246,8 @@ void AnimeScanDialog::showResults(const AnimeScanResult &result)
     }
 
     QString html;
-    html += "<p style='color:#e0e0e0; font-size:13pt;'>"
+    html += QString("<p style='color:#e0e0e0; font-size:%1pt;'>")
+                .arg(GlobalObjects::fontSize(13))
             + tr("Scan complete: <b>%1</b> total, <span style='color:#4cd964;'>%2</span> matched, "
                  "<span style='color:#ff6b6b;'>%3</span> failed, %4 filtered")
                   .arg(result.totalFiles).arg(result.matchedFiles)

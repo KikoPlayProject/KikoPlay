@@ -7,7 +7,9 @@ class KPushButton : public QPushButton
 {
     Q_OBJECT
 public:
-    using QPushButton::QPushButton;
+    explicit KPushButton(QWidget *parent = nullptr);
+    explicit KPushButton(const QString &text, QWidget *parent = nullptr);
+    KPushButton(const QIcon &icon, const QString &text, QWidget *parent = nullptr);
 
 protected:
     virtual void paintEvent(QPaintEvent* event) override;

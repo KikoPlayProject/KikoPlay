@@ -1,4 +1,5 @@
 #include "ElaPivot.h"
+#include "globalobjects.h"
 
 #include <QPainter>
 #include <QScroller>
@@ -32,7 +33,7 @@ ElaPivot::ElaPivot(QWidget* parent)
 
     QFont textFont = this->font();
     textFont.setLetterSpacing(QFont::AbsoluteSpacing, 0.5);
-    textFont.setPixelSize(d->_pTextPixelSize);
+    textFont.setPixelSize(qRound(GlobalObjects::fontSize(d->_pTextPixelSize)));
     d->_listView->setFont(textFont);
 
     QScroller::grabGesture(d->_listView->viewport(), QScroller::LeftMouseButtonGesture);
@@ -106,7 +107,7 @@ void ElaPivot::setTextPixelSize(int textPixelSize)
         d->_pTextPixelSize = textPixelSize;
         QFont textFont = this->font();
         textFont.setLetterSpacing(QFont::AbsoluteSpacing, 0.5);
-        textFont.setPixelSize(d->_pTextPixelSize);
+        textFont.setPixelSize(qRound(GlobalObjects::fontSize(d->_pTextPixelSize)));
         d->_listView->setFont(textFont);
         Q_EMIT pTextPixelSizeChanged();
     }

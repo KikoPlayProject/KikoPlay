@@ -624,8 +624,10 @@ QVariant DanmuPool::data(const QModelIndex &index, int role) const
     }
 	case Qt::FontRole:
     {
-        static QFont blockFont(GlobalObjects::normalFont, 11, -1, true);
-        static QFont mergeFont(GlobalObjects::normalFont, 11, QFont::DemiBold);
+        static QFont blockFont(GlobalObjects::normalFont, -1, -1, true);
+        blockFont.setPointSizeF(GlobalObjects::fontSize(11));
+        static QFont mergeFont(GlobalObjects::normalFont, -1, QFont::DemiBold);
+        mergeFont.setPointSizeF(GlobalObjects::fontSize(11));
 		if (comment->blockBy != -1 && col==1)    
             return blockFont;
         if(comment->mergedList && comment->mergedList->count()>0)

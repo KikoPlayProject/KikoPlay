@@ -154,7 +154,9 @@ namespace
 AddPool::AddPool(QWidget *parent, const QString &srcAnime, const EpInfo &ep) : CFramelessDialog(tr("Add Danmu Pool"),parent,true)
 {
 
-    setFont(QFont(GlobalObjects::normalFont,12));
+    QFont widgetFont(GlobalObjects::normalFont);
+    widgetFont.setPointSizeF(GlobalObjects::fontSize(12));
+    setFont(widgetFont);
 
     ElaPivot *tab = new ElaPivot(this);
     tab->appendPivot(tr("Search"));
@@ -189,7 +191,8 @@ AddPool::AddPool(QWidget *parent, const QString &srcAnime, const EpInfo &ep) : C
 
 QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
 {
-    QFont normalFont(GlobalObjects::normalFont,10);
+    QFont normalFont(GlobalObjects::normalFont);
+    normalFont.setPointSizeF(GlobalObjects::fontSize(10));
     QWidget *pageContainer=new QWidget(this);
     pageContainer->setFont(normalFont);
 
@@ -377,7 +380,8 @@ QWidget *AddPool::setupSearchPage(const QString &srcAnime, const EpInfo &)
 QWidget *AddPool::setupCustomPage(const QString &srcAnime, const EpInfo &ep)
 {
     QWidget *customPage = new QWidget(this);
-    QFont normalFont(GlobalObjects::normalFont,10);
+    QFont normalFont(GlobalObjects::normalFont);
+    normalFont.setPointSizeF(GlobalObjects::fontSize(10));
     customPage->setFont(normalFont);
 
     QLabel *animeTip = new QLabel(tr("Anime Title"),customPage);

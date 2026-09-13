@@ -25,7 +25,9 @@ KeyActionPage::KeyActionPage(QWidget *parent) : SettingPage(parent)
 {
     QTreeView *shortcutView = new QTreeView(this);
     shortcutView->setRootIsDecorated(false);
-    shortcutView->setFont(QFont(GlobalObjects::normalFont, 11));
+    QFont shortcutViewFont(GlobalObjects::normalFont);
+    shortcutViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    shortcutView->setFont(shortcutViewFont);
     shortcutView->setItemDelegate(new KTreeviewItemDelegate(shortcutView));
     shortcutView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     shortcutView->setModel(KeyActionModel::instance());
@@ -163,7 +165,9 @@ KeyActionEditDialog::KeyActionEditDialog(const KeyActionItem *item, QWidget *par
 
     keyEdit->setObjectName(QStringLiteral("KeyEdit"));
     keyEdit->setFixedHeight(36);
-    keyEdit->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont keyEditFont(GlobalObjects::normalFont);
+    keyEditFont.setPointSizeF(GlobalObjects::fontSize(12));
+    keyEdit->setFont(keyEditFont);
 
 
     for (int i = 0; i < KeyAction::ActionType::ACT_NONE; ++i)

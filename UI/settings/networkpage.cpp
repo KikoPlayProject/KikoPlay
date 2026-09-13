@@ -159,7 +159,8 @@ void NetworkPage::initLANServerArea(QVBoxLayout *vLayout)
             if (address.protocol() == QAbstractSocket::IPv4Protocol)
             {
                 QString addr = address.toString();
-                tips << QString("<p style='color: rgb(220,220,220); font-size: 16px;'><a style='color: rgb(96, 208, 252);' href=\"http://%1:%2/\">%1</a></p>").arg(addr, portEdit->text());
+                tips << QString("<p style='color: rgb(220,220,220); font-size: %3px;'><a style='color: rgb(96, 208, 252);' href=\"http://%1:%2/\">%1</a></p>")
+                    .arg(addr, portEdit->text()).arg(qRound(GlobalObjects::fontSize(16)));
                 if (address != QHostAddress::LocalHost)
                 {
                     qrAddresses << QString("http://%1:%2/").arg(addr, portEdit->text());

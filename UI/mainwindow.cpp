@@ -119,7 +119,8 @@ void MainWindow::initUI()
     elaAppBar->setIcon(QIcon(":/res/images/kikoplay.svg"));
 
     QWidget *pageBtnContainer = new QWidget(this);
-    QFont normalFont(GlobalObjects::normalFont, 12);
+    QFont normalFont(GlobalObjects::normalFont);
+    normalFont.setPointSizeF(GlobalObjects::fontSize(12));
     QStringList pageButtonTexts = {
         tr("Player"),
         tr("Library"),

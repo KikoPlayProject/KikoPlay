@@ -1,7 +1,24 @@
 #include "kpushbutton.h"
 #include "UI/ela/ElaTheme.h"
 #include <QPainter>
+#include "globalobjects.h"
 
+KPushButton::KPushButton(QWidget *parent) : QPushButton(parent)
+{
+    QFont widgetFont(GlobalObjects::normalFont);
+    widgetFont.setPixelSize(qRound(GlobalObjects::fontSize(15)));
+    setFont(widgetFont);
+}
+
+KPushButton::KPushButton(const QString &text, QWidget *parent) : KPushButton(parent)
+{
+    setText(text);
+}
+
+KPushButton::KPushButton(const QIcon &icon, const QString &text, QWidget *parent) : KPushButton(text, parent)
+{
+    setIcon(icon);
+}
 
 void KPushButton::paintEvent(QPaintEvent *event)
 {

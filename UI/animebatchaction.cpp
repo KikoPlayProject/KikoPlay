@@ -23,7 +23,9 @@ AnimeBatchAction::AnimeBatchAction(AnimeModel *animeModel, QWidget *parent) :
     animeView->setContextMenuPolicy(Qt::CustomContextMenu);
     animeView->setItemDelegate(new KTreeviewItemDelegate(animeView));
     animeView->setSortingEnabled(true);
-    animeView->setFont(QFont(GlobalObjects::normalFont, 11));
+    QFont animeViewFont(GlobalObjects::normalFont);
+    animeViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    animeView->setFont(animeViewFont);
 
     AnimeListModel *animeListModel = new AnimeListModel(animeModel, this);
     AnimeListProxyModel *proxyModel= new AnimeListProxyModel(this);

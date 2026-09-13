@@ -63,10 +63,19 @@ GeneralPage::GeneralPage(QWidget *parent) : SettingPage(parent)
     generalArea->addItem(tr("Hide To Tray"), hideToTrayCombo);
 
     ElaComboBox *fontCombo = new ElaComboBox(this);
+    fontCombo->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+    fontCombo->setMinimumContentsLength(16);
     const QStringList fontFamilies = QFontDatabase::families();
     fontCombo->addItems(fontFamilies);
     fontCombo->setCurrentIndex(fontFamilies.indexOf(GlobalObjects::normalFont));
     generalArea->addItem(tr("UI Font(Restart required)"), fontCombo);
+
+    ElaComboBox *fontSizeCombo = new ElaComboBox(this);
+    fontSizeCombo->addItems({tr("Small (90%)"), tr("Standard (100%)"), tr("Large (115%)"), tr("Extra Large (130%)")});
+    bool validFontLevel = false;
+    const int fontLevel = GlobalObjects::appSetting->value("UI/FontSizeLevel", 1).toInt(&validFontLevel);
+    fontSizeCombo->setCurrentIndex(validFontLevel && fontLevel >= 0 && fontLevel < fontSizeCombo->count() ? fontLevel : 1);
+    generalArea->addItem(tr("UI Font Size(Restart required)"), fontSizeCombo);
 
     ElaToggleSwitch *menuAnimeSwitch = new ElaToggleSwitch(this);
     menuAnimeSwitch->setIsToggled(ElaMenu::_showMenuAnimation);
@@ -130,6 +139,10 @@ GeneralPage::GeneralPage(QWidget *parent) : SettingPage(parent)
 
     QObject::connect(fontCombo, &ElaComboBox::currentTextChanged, this, [=](const QString &fontFamily){
         GlobalObjects::setFont(fontFamily);
+    });
+
+    QObject::connect(fontSizeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [=](int index) {
+        GlobalObjects::setFontSizeLevel(index);
     });
 
     QObject::connect(menuAnimeSwitch, &ElaToggleSwitch::toggled, this, [=](bool toggled){

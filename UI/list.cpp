@@ -56,8 +56,8 @@ namespace
         QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override
         {
             KLineEdit *editor = new KLineEdit(parent);
-            QFont f(parent->font());
-            f.setPointSize(11);
+            QFont f(GlobalObjects::normalFont);
+            f.setPointSizeF(GlobalObjects::fontSize(11));
             editor->setFont(f);
             return editor;
         }
@@ -173,7 +173,8 @@ namespace
             if (!viewOption.text.isEmpty())
             {
                 textRect.adjust(4, 0, -4, 0);
-                static QFont textFont(GlobalObjects::normalFont, 11);
+                static QFont textFont(GlobalObjects::normalFont);
+                textFont.setPointSizeF(GlobalObjects::fontSize(11));
                 painter->setFont(textFont);
                 if (painter->fontMetrics().horizontalAdvance(viewOption.text) > textRect.width())
                 {
@@ -254,7 +255,9 @@ namespace
 
             infoText=new QLabel(this);
             infoText->setObjectName(QStringLiteral("labelListInfo"));
-            infoText->setFont(QFont(GlobalObjects::normalFont,10));
+            QFont infoTextFont(GlobalObjects::normalFont);
+            infoTextFont.setPointSizeF(GlobalObjects::fontSize(10));
+            infoText->setFont(infoTextFont);
             infoText->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
             cancelBtn = new KPushButton(QObject::tr("Cancel"), this);
             QHBoxLayout *infoBarHLayout=new QHBoxLayout(this);
@@ -1247,9 +1250,8 @@ void ListWindow::initListUI()
     QLabel *listTitleLabel = new QLabel(tr("PlayList"), titleContainer);
     listTitleLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     listTitleLabel->setObjectName(QStringLiteral("ListTitleLabel"));
-    QFont titleFont;
-    titleFont.setFamily(GlobalObjects::normalFont);
-    titleFont.setPointSize(12);
+    QFont titleFont(GlobalObjects::normalFont);
+    titleFont.setPointSizeF(GlobalObjects::fontSize(12));
     listTitleLabel->setFont(titleFont);
 
     QPushButton *searchButton = new QPushButton(titleContainer);
@@ -1270,7 +1272,9 @@ void ListWindow::initListUI()
 
     filterEdit = new KLineEdit(filterContainer);
     filterHLayout->addWidget(filterEdit);
-    filterEdit->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont filterEditFont(GlobalObjects::normalFont);
+    filterEditFont.setPointSizeF(GlobalObjects::fontSize(12));
+    filterEdit->setFont(filterEditFont);
     filterEdit->setObjectName(QStringLiteral("ListFilterLineEdit"));
     QMargins textMargins = filterEdit->textMargins();
     textMargins.setLeft(6);
@@ -1400,7 +1404,9 @@ QWidget *ListWindow::initPlaylistPage()
     playlistView->header()->hide();
     playlistView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     playlistView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    playlistView->setFont(QFont(GlobalObjects::normalFont, 16));
+    QFont playlistViewFont(GlobalObjects::normalFont);
+    playlistViewFont.setPointSizeF(GlobalObjects::fontSize(16));
+    playlistView->setFont(playlistViewFont);
     playlistView->setContextMenuPolicy(Qt::CustomContextMenu);
     playlistView->setIndentation(12);
     playlistView->setItemDelegate(new PlayListItemDelegate(this));
@@ -1602,7 +1608,8 @@ QWidget *ListWindow::initDanmulistPage()
     danmulistPageVLayout->setContentsMargins(0,0,0,0);
     danmulistPageVLayout->setSpacing(0);
 
-    QFont normalFont(GlobalObjects::normalFont,11);
+    QFont normalFont(GlobalObjects::normalFont);
+    normalFont.setPointSizeF(GlobalObjects::fontSize(11));
 
     danmulistView=new QTreeView(danmulistPage);
     danmulistView->setObjectName(QStringLiteral("danmulist"));
@@ -1721,7 +1728,8 @@ QWidget *ListWindow::initSublistPage()
     sublistPageVLayout->setContentsMargins(0, 0, 0, 0);
     sublistPageVLayout->setSpacing(0);
 
-    QFont normalFont(GlobalObjects::normalFont,11);
+    QFont normalFont(GlobalObjects::normalFont);
+    normalFont.setPointSizeF(GlobalObjects::fontSize(11));
 
     sublistView = new QListView(sublistPage);
     sublistView->setObjectName(QStringLiteral("sublist"));

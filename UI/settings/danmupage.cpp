@@ -260,6 +260,9 @@ SettingItemArea *DanmuPage::initOtherArea()
     otherArea->addItem(tr("Disable Sample2DArray(Restart required)"), disableSample2DArraySwitch);
     QLabel *descLabel = new QLabel(tr("If danmu display is abnormal on some AMD graphics cards, try enabling"), otherArea);
     descLabel->setObjectName(QStringLiteral("SettingDescLabel"));
+    QFont descLabelFont(GlobalObjects::normalFont);
+    descLabelFont.setPixelSize(qRound(GlobalObjects::fontSize(11)));
+    descLabel->setFont(descLabelFont);
     otherArea->addItem(descLabel, Qt::AlignLeft);
 
     KPushButton *blockEditBtn = new KPushButton(tr("Edit"), this);

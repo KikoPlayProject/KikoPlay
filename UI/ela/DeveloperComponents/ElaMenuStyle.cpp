@@ -136,7 +136,7 @@ void ElaMenuStyle::drawControl(ControlElement element, const QStyleOption* optio
                 if (!mopt->text.isEmpty())
                 {
                     QStringList textList = mopt->text.split("\t");
-                    painter->setFont(qApp->font());
+                    painter->setFont(widget ? widget->font() : mopt->font);
                     painter->setPen(!mopt->state.testFlag(QStyle::State_Enabled) ? Qt::gray : _themeMode == ElaThemeType::Light ? Qt::black
                                                                                                                                 : Qt::white);
 
@@ -219,7 +219,7 @@ QSize ElaMenuStyle::sizeFromContents(ContentsType type, const QStyleOption* opti
             // 绘制时文字用的是 widget 的字体（mac 下为 15px），而基类测量用的是
             // option 携带的字体，两者可能不一致导致文字被截断。这里用同一字体的
             // QFontMetrics 实测文字宽度，保证测量与绘制一致。
-            QFontMetrics fm(qApp->font());
+            QFontMetrics fm(widget ? widget->font() : mopt->font);
             QStringList textList = mopt->text.split("\t");
             int textWidth = fm.horizontalAdvance(textList.value(0));
             qreal contentPadding = menuItemSize.width() * 0.055;
@@ -239,11 +239,11 @@ QSize ElaMenuStyle::sizeFromContents(ContentsType type, const QStyleOption* opti
             menuItemWidth = qMax(menuItemWidth, menuItemSize.width());
             if (menu->isHasChildMenu())
             {
-                return QSize(menuItemWidth + 20, _pMenuItemHeight);
+                return QSize(menuItemWidth + 20, qMax(_pMenuItemHeight, fm.height() + 12));
             }
             else
             {
-                return QSize(menuItemWidth, _pMenuItemHeight);
+                return QSize(menuItemWidth, qMax(_pMenuItemHeight, fm.height() + 12));
             }
         }
     }

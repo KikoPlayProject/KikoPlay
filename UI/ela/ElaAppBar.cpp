@@ -871,7 +871,9 @@ void ElaAppBar::initMainControls()
     });
 
     d->_titleLabel = new QLabel(this);
-    d->_titleLabel->setFont(QFont(d->_titleLabel->font().family(), 13));
+    QFont titleFont(GlobalObjects::normalFont);
+    titleFont.setPointSizeF(GlobalObjects::fontSize(13));
+    d->_titleLabel->setFont(titleFont);
     if (parent->windowTitle().isEmpty())
     {
         d->_titleLabel->setVisible(false);
@@ -939,7 +941,9 @@ void ElaAppBar::initDialogControls()
     QWidget *parent = this->parentWidget();
 
     d->_titleLabel = new QLabel(this);
-    d->_titleLabel->setFont(QFont(d->_titleLabel->font().family(), 13));
+    QFont titleFont(GlobalObjects::normalFont);
+    titleFont.setPointSizeF(GlobalObjects::fontSize(13));
+    d->_titleLabel->setFont(titleFont);
     d->_titleLabel->setText(parent->windowTitle());
     d->_titleLabel->setOpenExternalLinks(true);
 
@@ -998,7 +1002,9 @@ void ElaAppBar::initAppDialogControls()
     QWidget *parent = this->parentWidget();
 
     d->_titleLabel = new QLabel(this);
-    d->_titleLabel->setFont(QFont(d->_titleLabel->font().family(), 13));
+    QFont titleFont(GlobalObjects::normalFont);
+    titleFont.setPointSizeF(GlobalObjects::fontSize(13));
+    d->_titleLabel->setFont(titleFont);
     d->_titleLabel->setText(parent->windowTitle());
     d->_titleLabel->setOpenExternalLinks(true);
 

@@ -50,8 +50,12 @@ ScriptPage::ScriptPage(QWidget *parent) : SettingPage(parent)
     scriptView->setRootIsDecorated(false);
     scriptView->setSelectionMode(QAbstractItemView::SingleSelection);
     scriptView->setModel(proxyModel);
-    scriptView->setFont(QFont(GlobalObjects::normalFont, 11));
-    scriptView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont scriptViewFont(GlobalObjects::normalFont);
+    scriptViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    scriptView->setFont(scriptViewFont);
+    QFont scriptViewHeaderFont(GlobalObjects::normalFont);
+    scriptViewHeaderFont.setPointSizeF(GlobalObjects::fontSize(12));
+    scriptView->header()->setFont(scriptViewHeaderFont);
     scriptView->setAlternatingRowColors(true);
     scriptView->setItemDelegate(delegate);
     new FloatScrollBar(scriptView->verticalScrollBar(), scriptView);
@@ -243,6 +247,9 @@ ScriptSettingDialog::ScriptSettingDialog(QSharedPointer<ScriptBase> script, QWid
             {
                 QLabel *descLabel = new QLabel(p.first->description, itemArea);
                 descLabel->setObjectName(QStringLiteral("SettingDescLabel"));
+                QFont descLabelFont(GlobalObjects::normalFont);
+                descLabelFont.setPixelSize(qRound(GlobalObjects::fontSize(11)));
+                descLabel->setFont(descLabelFont);
                 itemArea->addItem(descLabel, Qt::AlignLeft);
             }
         }

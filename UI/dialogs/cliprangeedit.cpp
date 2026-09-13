@@ -42,8 +42,12 @@ ClipRangeEdit::ClipRangeEdit(const DanmuSource *src, QVector<SimpleDanmuInfo> *d
 
     QTreeView *dmView = new QTreeView(this);
     dmView->setRootIsDecorated(false);
-    dmView->setFont(QFont(GlobalObjects::normalFont, 11));
-    dmView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont dmViewFont(GlobalObjects::normalFont);
+    dmViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    dmView->setFont(dmViewFont);
+    QFont dmViewHeaderFont(GlobalObjects::normalFont);
+    dmViewHeaderFont.setPointSizeF(GlobalObjects::fontSize(12));
+    dmView->header()->setFont(dmViewHeaderFont);
     dmView->setAlternatingRowColors(true);
     dmView->setItemDelegate(new KTreeviewItemDelegate(dmView));
     dmView->header()->setStretchLastSection(true);

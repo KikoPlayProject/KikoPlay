@@ -35,13 +35,15 @@ void SettingItemArea::addItem(const QString &name, QWidget *item, const QString 
 void SettingItemArea::addItem(const QString &name, const QVector<QWidget *> &items, const QString &nameTip)
 {
     QLabel *nameLabel = new QLabel(name, this);
-    nameLabel->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont nameLabelFont(GlobalObjects::normalFont);
+    nameLabelFont.setPointSizeF(GlobalObjects::fontSize(12));
+    nameLabel->setFont(nameLabelFont);
+    nameLabel->setWordWrap(true);
     nameLabel->setMinimumHeight(36);
     nameLabel->setToolTip(nameTip);
     QHBoxLayout *hLayout = new QHBoxLayout;
     hLayout->setContentsMargins(0, 0, 0, 0);
-    hLayout->addWidget(nameLabel);
-    hLayout->addStretch(1);
+    hLayout->addWidget(nameLabel, 1);
     hLayout->setSpacing(8);
     for (auto item : items)
     {

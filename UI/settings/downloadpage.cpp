@@ -215,7 +215,9 @@ void TrackerEditDialog::onAccept()
 Aria2OptionEditDialog::Aria2OptionEditDialog(QWidget *parent) : CFramelessDialog(tr("Aria2 Startup Args"), parent, true)
 {
     argEdit = new QTextEdit(this);
-    argEdit->setFont(QFont("Consolas", 12));
+    QFont argEditFont(QStringLiteral("Consolas"));
+    argEditFont.setPointSizeF(GlobalObjects::fontSize(12));
+    argEdit->setFont(argEditFont);
     new OptionHighLighter(argEdit->document());
     argEdit->setPlainText(GlobalObjects::appSetting->value(SETTING_KEY_ARIA2_ARGS, "").toString());
     QObject::connect(argEdit, &QTextEdit::textChanged, this, [this](){

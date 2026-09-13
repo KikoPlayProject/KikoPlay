@@ -20,10 +20,13 @@
 Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings"), parent)
 {    
     QListWidget *pageList = new QListWidget(this);
-    pageList->setFont(QFont(GlobalObjects::normalFont, 11));
+    QFont pageListFont(GlobalObjects::normalFont);
+    pageListFont.setPointSizeF(GlobalObjects::fontSize(11));
+    pageList->setFont(pageListFont);
     pageList->setObjectName(QStringLiteral("SettingPageList"));
     pageList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    pageList->setFixedWidth(180);
+    const qreal fontScale = qMax(qreal(1), pageListFont.pointSizeF() / 11);
+    pageList->setFixedWidth(qRound(180 * fontScale));
 
     pageSLayout = new QStackedLayout;
 
@@ -62,7 +65,7 @@ Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings")
     gLayout->addLayout(pageSLayout, 0, 1);
     gLayout->setColumnStretch(1, 1);
 
-    setSizeSettingKey("DialogSize/Setting",QSize(680, 500));
+    setSizeSettingKey("DialogSize/Setting", QSize(qRound(680 * fontScale), qRound(500 * fontScale)));
 }
 
 void Settings::onClose()
@@ -114,7 +117,7 @@ SettingPage *Settings::getOrCreatePage(Page p)
         QObject::connect(pages[p], &SettingPage::showMessage, this, &Settings::showMessage);
 
         QScrollArea *pageScrollArea = new QScrollArea(this);
-        pageScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        pageScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         pageScrollArea->setWidget(pages[p]);
         pageScrollArea->setWidgetResizable(true);
         new FloatScrollBar(pageScrollArea->verticalScrollBar(), pageScrollArea);

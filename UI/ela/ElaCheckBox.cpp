@@ -1,4 +1,5 @@
 #include "ElaCheckBox.h"
+#include "globalobjects.h"
 
 #include "DeveloperComponents/ElaCheckBoxStyle.h"
 ElaCheckBox::ElaCheckBox(QWidget* parent)
@@ -8,9 +9,9 @@ ElaCheckBox::ElaCheckBox(QWidget* parent)
     setMouseTracking(true);
     setObjectName("ElaCheckBox");
     setStyle(new ElaCheckBoxStyle(style()));
-    QFont font = this->font();
-    font.setPixelSize(15);
-    setFont(font);
+    QFont widgetFont(GlobalObjects::normalFont);
+    widgetFont.setPixelSize(qRound(GlobalObjects::fontSize(15)));
+    setFont(widgetFont);
 }
 
 ElaCheckBox::ElaCheckBox(const QString& text, QWidget* parent)

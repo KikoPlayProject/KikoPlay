@@ -318,7 +318,9 @@ PoolItem::PoolItem(const DanmuSource *sourceInfo, QWidget *parent) : QWidget(par
     initSrcTags(srcTags);
 
     ElidedLabel *name = new ElidedLabel(sourceInfo->title, this);
-    name->setFont(QFont(GlobalObjects::normalFont,16));
+    QFont nameFont(GlobalObjects::normalFont);
+    nameFont.setPointSizeF(GlobalObjects::fontSize(16));
+    name->setFont(nameFont);
     name->setFontColor(QColor(214, 214, 214));
     QString sourceName = QString("%1(%2)").arg(sourceInfo->title).arg(sourceInfo->count);
     name->setToolTip(sourceInfo->title);

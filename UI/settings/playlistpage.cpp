@@ -127,8 +127,8 @@ KLibraryOrderDialog::KLibraryOrderDialog(QWidget *parent) : CFramelessDialog(tr(
     QLabel *tipLabel = new QLabel(tr("When multiple data sources are obtained from KService, set the download priority:\n(Drag to change the order)"), this);
     sourecOrderView = new QListWidget(this);
     sourecOrderView->setObjectName(QStringLiteral("SourceOrderView"));
-    QFont f = font();
-    f.setPointSize(12);
+    QFont f(GlobalObjects::normalFont);
+    f.setPointSizeF(GlobalObjects::fontSize(12));
     sourecOrderView->setFont(f);
     sourecOrderView->setDragEnabled(true);
     sourecOrderView->setAcceptDrops(true);

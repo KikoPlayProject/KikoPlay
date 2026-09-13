@@ -130,7 +130,9 @@ AddDanmu::AddDanmu(const PlayListItem *item,QWidget *parent,bool autoPauseVideo,
 
     QString itemInfo(item?(item->animeTitle.isEmpty()?item->title:QString("%1-%2").arg(item->animeTitle).arg(item->title)):"");
     QLabel *itemInfoLabel=new QLabel(itemInfo,this);
-    itemInfoLabel->setFont(QFont(GlobalObjects::normalFont,10,QFont::Bold));
+    QFont itemInfoLabelFont(GlobalObjects::normalFont, -1, QFont::Bold);
+    itemInfoLabelFont.setPointSizeF(GlobalObjects::fontSize(10));
+    itemInfoLabel->setFont(itemInfoLabelFont);
     itemInfoLabel->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Minimum);
     danmuVLayout->addWidget(itemInfoLabel);
     if (!item) itemInfoLabel->hide();
@@ -298,7 +300,9 @@ void AddDanmu::addURL()
 QWidget *AddDanmu::setupSearchPage()
 {
     QWidget *searchPage=new QWidget(this);
-    searchPage->setFont(QFont(GlobalObjects::normalFont,10));
+    QFont searchPageFont(GlobalObjects::normalFont);
+    searchPageFont.setPointSizeF(GlobalObjects::fontSize(10));
+    searchPage->setFont(searchPageFont);
     sourceCombo=new ElaComboBox(searchPage);
     scriptOptionPanel = new ScriptSearchOptionPanel(searchPage);
     QObject::connect(sourceCombo, &QComboBox::currentTextChanged, this, [=](const QString &){
@@ -347,7 +351,9 @@ QWidget *AddDanmu::setupSearchPage()
 QWidget *AddDanmu::setupURLPage()
 {
     QWidget *urlPage=new QWidget(this);
-    urlPage->setFont(QFont(GlobalObjects::normalFont,10));
+    QFont urlPageFont(GlobalObjects::normalFont);
+    urlPageFont.setPointSizeF(GlobalObjects::fontSize(10));
+    urlPage->setFont(urlPageFont);
 
     urlEdit = new KPlainTextEdit(urlPage);
     urlEdit->setPlaceholderText(tr("One URL per line"));
@@ -359,7 +365,9 @@ QWidget *AddDanmu::setupURLPage()
 
     QLabel *urlTipLabel=new QLabel(tr("Supported URL:"),urlPage);
     QTextEdit *supportUrlInfo=new QTextEdit(urlPage);
-    supportUrlInfo->setFont(QFont(GlobalObjects::normalFont,10));
+    QFont supportUrlInfoFont(GlobalObjects::normalFont);
+    supportUrlInfoFont.setPointSizeF(GlobalObjects::fontSize(10));
+    supportUrlInfo->setFont(supportUrlInfoFont);
     const QList<QPair<QString, QStringList>> scriptSampleURLS = GlobalObjects::danmuProvider->getSampleURLs();
     for(const auto &pair : scriptSampleURLS)
     {
@@ -388,7 +396,9 @@ QWidget *AddDanmu::setupSelectedPage()
 {
     QWidget *selectedPage = new QWidget(this);
     QPushButton *addLocalSrcBtn = new KPushButton(tr("Add Local Danmu File"), selectedPage);
-    selectedPage->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont selectedPageFont(GlobalObjects::normalFont);
+    selectedPageFont.setPointSizeF(GlobalObjects::fontSize(12));
+    selectedPage->setFont(selectedPageFont);
     QLabel *tipLabel = new QLabel(tr("Select danmu you want to add:"), selectedPage);
     selectedDanmuView = new QListWidget(selectedPage);
     selectedDanmuView->setObjectName(QStringLiteral("SelectedDanmuView"));
@@ -608,7 +618,9 @@ DanmuItemWidget::DanmuItemWidget(QList<SearchDanmuInfo> &danmuList, int index, c
     SearchDanmuInfo &info = danmuList[index];
 
     ElidedLabel *titleLabel = new ElidedLabel(info.src.title, this);
-    titleLabel->setFont(QFont(GlobalObjects::normalFont, 14));
+    QFont titleLabelFont(GlobalObjects::normalFont);
+    titleLabelFont.setPointSizeF(GlobalObjects::fontSize(14));
+    titleLabel->setFont(titleLabelFont);
     titleLabel->setFontColor(QColor(240, 240, 240));
     titleLabel->setToolTip(info.src.title);
     KTagPanel *srcTags = new KTagPanel(this, 10);
@@ -629,6 +641,7 @@ DanmuItemWidget::DanmuItemWidget(QList<SearchDanmuInfo> &danmuList, int index, c
     QPushButton *autoSetPoolBtn = new KPushButton(this);
     autoSetPoolBtn->setToolTip(tr("Set PoolId in Sequence"));
     autoSetPoolBtn->setObjectName(QStringLiteral("AutoSetPoolBtn"));
+    GlobalObjects::iconfont->setPixelSize(18);
     autoSetPoolBtn->setFont(*GlobalObjects::iconfont);
     autoSetPoolBtn->setText(QChar(0xe6ed));
     QHBoxLayout *poolHLayout = new QHBoxLayout;

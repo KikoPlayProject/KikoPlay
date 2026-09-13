@@ -25,6 +25,7 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QApplication>
+#include <QFont>
 #include <QSqlError>
 #include <QFileInfo> 
 #include <QElapsedTimer>
@@ -50,6 +51,10 @@ QFont* GlobalObjects::iconfont;
 
 QString GlobalObjects::normalFont;
 constexpr const char *GlobalObjects::kikoVersion;
+
+namespace {
+qreal activeUiFontScale = 1.0;
+}
 
 void GlobalObjects::init(QElapsedTimer *elapsedTimer)
 {
@@ -80,6 +85,23 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
 #else
     normalFont = appSetting->value("UI/Font", "Microsoft YaHei UI").toString();
 #endif
+    // Keep the active size unchanged when preferences are saved until the next startup.
+    const qreal fontScales[] = {0.9, 1.0, 1.15, 1.3};
+    bool validFontLevel = false;
+    const int fontLevel = appSetting->value("UI/FontSizeLevel", 1).toInt(&validFontLevel);
+    activeUiFontScale = fontScales[validFontLevel && fontLevel >= 0 && fontLevel < 4 ? fontLevel : 1];
+
+    QFont font(normalFont);
+#ifdef Q_OS_MAC
+    font.setPixelSize(qRound(fontSize(16)));
+#else
+    font.setPixelSize(qRound(fontSize(13)));
+#endif
+    font.setHintingPreference(QFont::PreferNoHinting);
+    qApp->setFont(font);
+    QFont headerFont(normalFont);
+    headerFont.setPixelSize(qRound(fontSize(16)));
+    qApp->setFont(headerFont, "QHeaderView");
 
     QThread::currentThread()->setObjectName(QStringLiteral("mainThread"));
     workThread = new QThread();
@@ -152,14 +174,6 @@ void GlobalObjects::init(QElapsedTimer *elapsedTimer)
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
     iconfont->setFamily(fontFamilies.at(0));
 
-    QFont font = qApp->font();
-    font.setPixelSize(13);
-#ifdef Q_OS_MAC
-    font.setPixelSize(16);
-#endif
-    font.setFamily(normalFont);
-    font.setHintingPreference(QFont::PreferNoHinting);
-    qApp->setFont(font);
 }
 
 void GlobalObjects::clear()
@@ -191,6 +205,16 @@ GlobalContext *GlobalObjects::context()
 void GlobalObjects::setFont(const QString &font)
 {
     appSetting->setValue("UI/Font", font);
+}
+
+qreal GlobalObjects::fontSize(qreal baseSize)
+{
+    return qMax(qreal(1), baseSize * activeUiFontScale);
+}
+
+void GlobalObjects::setFontSizeLevel(int level)
+{
+    appSetting->setValue("UI/FontSizeLevel", qBound(0, level, 3));
 }
 
 bool GlobalObjects::isValidKikoVersion(int kv)

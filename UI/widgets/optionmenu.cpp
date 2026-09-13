@@ -1,4 +1,5 @@
 #include "optionmenu.h"
+#include "globalobjects.h"
 #include <QVBoxLayout>
 #include <QEvent>
 #include <QMouseEvent>
@@ -232,11 +233,11 @@ void OptionMenuPanel::removeFlag(const QString &flag)
 
 OptionMenuItem::OptionMenuItem(OptionMenu *menu, OptionMenuPanel *panel) : QWidget(panel), _menu(menu), _panel(panel)
 {
-    setFixHeight(40);
     setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
-    QFont menuFont = font();
-    menuFont.setPointSize(12);
+    QFont menuFont(GlobalObjects::normalFont);
+    menuFont.setPointSizeF(GlobalObjects::fontSize(12));
     setFont(menuFont);
+    setFixHeight(qMax(40, fontMetrics().height() + 12));
 }
 
 QSize OptionMenuItem::sizeHint() const
@@ -420,8 +421,8 @@ void OptionMenuItem::paintEvent(QPaintEvent *event)
         infoTextRect.setRight(right);
 
         painter.save();
-        QFont infoFont = font();
-        infoFont.setPointSize(10);
+        QFont infoFont(GlobalObjects::normalFont);
+        infoFont.setPointSizeF(GlobalObjects::fontSize(10));
         painter.setFont(infoFont);
         QString drawText = _infoText;
         if (painter.fontMetrics().horizontalAdvance(drawText) > _maxInfoTextWidth)

@@ -337,22 +337,17 @@ QLabel#AliasItem:hover{
 }
 QLabel#SettingDescLabel {
     color: rgb(180, 180, 180);
-    font-size: 11px;
 }
 QLabel#DanmuStatValue {
     color: rgb(235, 239, 243);
-    font-size: 22px;
-    font-weight: 500;
     background: transparent;
 }
 QLabel#DanmuTypeValue {
     color: rgb(216, 223, 230);
-    font-size: 18px;
     background: transparent;
 }
 QLabel#DanmuSecondaryLabel {
     color: rgb(168, 178, 188);
-    font-size: 12px;
     background: transparent;
 }
 QLabel#DanmuEmptyLabel {
@@ -702,7 +697,6 @@ QHeaderView::section {
         border-right: 0px solid #6c6c6c;
     @endif
     color: white;
-    font-size: 16px;
     padding-left: 4px;
     padding-top: 2px;
     padding-bottom: 2px;
@@ -766,12 +760,10 @@ QHeaderView#BgmListHeader::section {
 }
 QHeaderView#DanmuCommentHeader {
     background-color: rgb(48, 52, 56);
-    font-size: 13px;
 }
 QHeaderView#DanmuCommentHeader::section {
     background-color: rgb(48, 52, 56);
     color: rgb(170, 180, 190);
-    font-size: 13px;
     border: none;
     border-bottom: 1px solid rgb(57, 62, 67);
     padding: 8px 10px;
@@ -1391,7 +1383,6 @@ KPushButton {
     border-radius: 4px;
     border-color: rgb(75, 75, 75);
     color: rgb(240, 240, 240);
-    font-size: 15px;
     padding-left: 6px;
     padding-right: 6px;
     padding-top: 6px;
@@ -1406,12 +1397,6 @@ KPushButton:checked {
 KPushButton:disabled {
     color: rgb(167, 167, 167);
     background-color: rgb(42, 42, 42);
-}
-KPushButton#TranslatorSetting {
-    font-size: 18px;
-}
-KPushButton#AutoSetPoolBtn {
-    font-size: 18px;
 }
 
 

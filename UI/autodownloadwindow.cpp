@@ -40,7 +40,9 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     ruleView->setRootIsDecorated(false);
     ruleView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ruleView->setAlternatingRowColors(true);
-    ruleView->setFont(QFont(GlobalObjects::normalFont,11));
+    QFont ruleViewFont(GlobalObjects::normalFont);
+    ruleViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    ruleView->setFont(ruleViewFont);
     ruleView->setItemDelegate(new KTreeviewItemDelegate(ruleView));
     ruleView->setModel(GlobalObjects::autoDownloadManager);
     new FloatScrollBar(ruleView->verticalScrollBar(), ruleView);
@@ -57,14 +59,18 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     logView->setSelectionMode(QAbstractItemView::SingleSelection);
     logView->setAlternatingRowColors(true);
     logView->setItemDelegate(new KTreeviewItemDelegate(logView));
-    logView->setFont(QFont(GlobalObjects::normalFont, 11));
+    QFont logViewFont(GlobalObjects::normalFont);
+    logViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    logView->setFont(logViewFont);
     new FloatScrollBar(logView->verticalScrollBar(), logView);
     LogFilterProxyModel *logProxyModel=new LogFilterProxyModel(this);
     logProxyModel->setSourceModel(GlobalObjects::autoDownloadManager->logModel);
     logView->setModel(logProxyModel);
     logView->header()->resizeSection(0, 200);
     logView->header()->resizeSection(1, 240);
-    logView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont logViewHeaderFont(GlobalObjects::normalFont);
+    logViewHeaderFont.setPointSizeF(GlobalObjects::fontSize(12));
+    logView->header()->setFont(logViewHeaderFont);
     logView->setContextMenuPolicy(Qt::CustomContextMenu);
     QObject::connect(GlobalObjects::autoDownloadManager->logModel, &LogModel::rowsInserted,logView, &QTreeView::scrollToBottom);
 
@@ -74,10 +80,14 @@ AutoDownloadWindow::AutoDownloadWindow(QWidget *parent) : QWidget(parent)
     urlView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     urlView->setAlternatingRowColors(true);
     new FloatScrollBar(urlView->verticalScrollBar(), urlView);
-    urlView->setFont(QFont(GlobalObjects::normalFont,10));
+    QFont urlViewFont(GlobalObjects::normalFont);
+    urlViewFont.setPointSizeF(GlobalObjects::fontSize(10));
+    urlView->setFont(urlViewFont);
     urlView->setModel(GlobalObjects::autoDownloadManager->urlModel);
     urlView->header()->resizeSection(0, 500);
-    urlView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont urlViewHeaderFont(GlobalObjects::normalFont);
+    urlViewHeaderFont.setPointSizeF(GlobalObjects::fontSize(12));
+    urlView->header()->setFont(urlViewHeaderFont);
     urlView->setContextMenuPolicy(Qt::CustomContextMenu);
     QObject::connect(GlobalObjects::autoDownloadManager->urlModel, &URLModel::rowsInserted, urlView, &QTreeView::scrollToBottom);
 

@@ -49,7 +49,9 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
 
     searchEdit = new KLineEdit(this);
     searchEdit->setObjectName(QStringLiteral("FilterEdit"));
-    searchEdit->setFont(QFont(GlobalObjects::normalFont, 14));
+    QFont searchEditFont(GlobalObjects::normalFont);
+    searchEditFont.setPointSizeF(GlobalObjects::fontSize(14));
+    searchEdit->setFont(searchEditFont);
     searchEdit->setClearButtonEnabled(true);
     searchEdit->setPlaceholderText(tr("Search"));
     searchEdit->setMinimumHeight(30);
@@ -123,7 +125,9 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     KLineEdit *filterEdit = new KLineEdit(this);
     filterEdit->setPlaceholderText(tr("Filter"));
     filterEdit->setObjectName(QStringLiteral("FilterEdit"));
-    filterEdit->setFont(QFont(GlobalObjects::normalFont, 14));
+    QFont filterEditFont(GlobalObjects::normalFont);
+    filterEditFont.setPointSizeF(GlobalObjects::fontSize(14));
+    filterEdit->setFont(filterEditFont);
     filterEdit->setClearButtonEnabled(true);
     QMargins textMargins = filterEdit->textMargins();
     textMargins.setLeft(6);
@@ -184,7 +188,9 @@ ResSearchWindow::ResSearchWindow(QWidget *parent) : QWidget(parent),totalPage(0)
     searchListView->setItemDelegate(new KTreeviewItemDelegate(searchListView));
     searchListView->setRootIsDecorated(false);
     searchListView->setAlternatingRowColors(true);
-    searchListView->setFont(QFont(GlobalObjects::normalFont,11));
+    QFont searchListViewFont(GlobalObjects::normalFont);
+    searchListViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    searchListView->setFont(searchListViewFont);
     searchListView->setIndentation(0);
     searchListView->setContextMenuPolicy(Qt::CustomContextMenu);
     searchListView->setSortingEnabled(true);

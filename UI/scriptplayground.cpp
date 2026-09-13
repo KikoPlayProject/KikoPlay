@@ -1,4 +1,5 @@
 #include "scriptplayground.h"
+#include "globalobjects.h"
 #include "UI/widgets/kpushbutton.h"
 #include <QTextBlock>
 #include <QFile>
@@ -474,7 +475,9 @@ ScriptPlayground::ScriptPlayground(QWidget *parent) :
 {
     KPushButton *run = new KPushButton(tr("Run"), this);
     CodeEditor *editor = new CodeEditor(this);
-    editor->setFont(QFont("Consolas", 12));
+    QFont editorFont(QStringLiteral("Consolas"));
+    editorFont.setPointSizeF(GlobalObjects::fontSize(12));
+    editor->setFont(editorFont);
 
     LuaHighLighter *highlighter = new LuaHighLighter();
     highlighter->setDocument(editor->document());

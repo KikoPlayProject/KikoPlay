@@ -1,4 +1,5 @@
 #include "ElaSpinBox.h"
+#include "globalobjects.h"
 
 #include <QContextMenuEvent>
 #include <QLineEdit>
@@ -13,7 +14,8 @@ ElaSpinBox::ElaSpinBox(QWidget* parent)
 {
     Q_D(ElaSpinBox);
     d->q_ptr = this;
-    setFixedSize(120, 30);
+    setMinimumSize(120, qMax(30, fontMetrics().height() + 12));
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     d->_spinStyle = new ElaSpinBoxStyle(style());
     setStyle(d->_spinStyle);
     lineEdit()->setAlignment(Qt::AlignCenter);

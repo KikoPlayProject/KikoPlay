@@ -59,7 +59,9 @@ QSize FontIconButton::sizeHint() const
 {
     if(sHint.isValid()) return sHint;
     ensurePolished();
-    QFontMetrics fmIcon(font()), fmText(QFont(GlobalObjects::normalFont, textFontSize));
+    QFont textFont(GlobalObjects::normalFont);
+    textFont.setPointSizeF(GlobalObjects::fontSize(textFontSize));
+    QFontMetrics fmIcon(font()), fmText(textFont);
     QSize iconSize = fmIcon.size(Qt::TextShowMnemonic, icon);
     QSize textSize = fmText.size(Qt::TextShowMnemonic, text);
     int w = 0, h = 0;
@@ -100,7 +102,9 @@ void FontIconButton::paintEvent(QPaintEvent *event)
 
     painter.setPen(penColor);
 
-    painter.setFont(QFont(GlobalObjects::normalFont, textFontSize));
+    QFont textFont(GlobalObjects::normalFont);
+    textFont.setPointSizeF(GlobalObjects::fontSize(textFontSize));
+    painter.setFont(textFont);
     QSize textSize(painter.fontMetrics().size(Qt::TextShowMnemonic, text));
     painter.setFont(font());
     QSize fontIconSize(painter.fontMetrics().size(Qt::TextShowMnemonic, icon));
@@ -119,7 +123,7 @@ void FontIconButton::paintEvent(QPaintEvent *event)
 
         x += fontIconSize.width() + iconSpace;
         textRect.setRect(x, 0, width() - x, height());
-        painter.setFont(QFont(GlobalObjects::normalFont, textFontSize));
+        painter.setFont(textFont);
         painter.drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, text);
     }
 

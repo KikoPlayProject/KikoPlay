@@ -93,7 +93,9 @@ void AnimeDetailInfoPage::initPageUI()
     QWidget *titleContainer = new QWidget(this);
     titleLabel = new QLabel(titleContainer);
     titleLabel->setObjectName(QStringLiteral("AnimeDetailTitle"));
-    titleLabel->setFont(QFont(GlobalObjects::normalFont, 20));
+    QFont titleLabelFont(GlobalObjects::normalFont);
+    titleLabelFont.setPointSizeF(GlobalObjects::fontSize(20));
+    titleLabel->setFont(titleLabelFont);
     titleLabel->setOpenExternalLinks(true);
 
     GlobalObjects::iconfont->setPointSize(16);
@@ -229,7 +231,9 @@ QWidget *AnimeDetailInfoPage::initInfoPage()
 
     viewInfoLabel = new QLabel(pageContainer);
     viewInfoLabel->setObjectName(QStringLiteral("AnimeDetailViewInfo"));
-    viewInfoLabel->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont viewInfoLabelFont(GlobalObjects::normalFont);
+    viewInfoLabelFont.setPointSizeF(GlobalObjects::fontSize(12));
+    viewInfoLabel->setFont(viewInfoLabelFont);
     viewInfoLabel->setWordWrap(true);
     viewInfoLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
     viewInfoLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
@@ -308,8 +312,12 @@ QWidget *AnimeDetailInfoPage::initEpisodePage()
     episodeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     epDelegate = new EpItemDelegate(this);
     episodeView->setItemDelegate(epDelegate);
-    episodeView->setFont(QFont(GlobalObjects::normalFont, 11));
-    episodeView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont episodeViewFont(GlobalObjects::normalFont);
+    episodeViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    episodeView->setFont(episodeViewFont);
+    QFont episodeViewHeaderFont(GlobalObjects::normalFont);
+    episodeViewHeaderFont.setPointSizeF(GlobalObjects::fontSize(12));
+    episodeView->header()->setFont(episodeViewHeaderFont);
     epModel = new EpisodesModel(nullptr, this);
     episodeView->setModel(epModel);
     episodeView->setAlternatingRowColors(true);
@@ -597,7 +605,9 @@ QWidget *AnimeDetailInfoPage::initInfoPageCharcters()
     crtVLayout->setContentsMargins(0, 0, 16, 0);
 
     QLabel *crtTip = new QLabel(tr("Charcters"), crtContainer);
-    crtTip->setFont(QFont(GlobalObjects::normalFont, 16));
+    QFont crtTipFont(GlobalObjects::normalFont);
+    crtTipFont.setPointSizeF(GlobalObjects::fontSize(16));
+    crtTip->setFont(crtTipFont);
     crtTip->setObjectName(QStringLiteral("AnimeDetailInfoTitle"));
 
     characterList = new QListWidget(crtContainer);
@@ -626,7 +636,9 @@ QWidget *AnimeDetailInfoPage::initInfoPageTags()
     infoVLayout->setContentsMargins(0, 0, 16, 0);
 
     QLabel *tagTip = new QLabel(tr("Tag"), tagContainer);
-    tagTip->setFont(QFont(GlobalObjects::normalFont, 16));
+    QFont tagTipFont(GlobalObjects::normalFont);
+    tagTipFont.setPointSizeF(GlobalObjects::fontSize(16));
+    tagTip->setFont(tagTipFont);
     tagTip->setObjectName(QStringLiteral("AnimeDetailInfoTitle"));
 
     QWidget *container = new QWidget(tagContainer);
@@ -711,12 +723,16 @@ QWidget *AnimeDetailInfoPage::initInfoPageStaffs()
     infoVLayout->setContentsMargins(0, 0, 16, 0);
 
     QLabel *staffTip = new QLabel(tr("Staff"), staffContainer);
-    staffTip->setFont(QFont(GlobalObjects::normalFont, 16));
+    QFont staffTipFont(GlobalObjects::normalFont);
+    staffTipFont.setPointSizeF(GlobalObjects::fontSize(16));
+    staffTip->setFont(staffTipFont);
     staffTip->setObjectName(QStringLiteral("AnimeDetailInfoTitle"));
 
     staffInfoLabel = new QLabel(staffContainer);
     staffInfoLabel->setObjectName(QStringLiteral("AnimeDetailStaffInfo"));
-    staffInfoLabel->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont staffInfoLabelFont(GlobalObjects::normalFont);
+    staffInfoLabelFont.setPointSizeF(GlobalObjects::fontSize(12));
+    staffInfoLabel->setFont(staffInfoLabelFont);
     staffInfoLabel->setWordWrap(true);
     staffInfoLabel->setOpenExternalLinks(true);
     staffInfoLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
@@ -1112,7 +1128,9 @@ CharacterWidget::CharacterWidget(const Character &character, QWidget *parent) : 
     });
 
     nameLabel = new QLabel(this);
-    nameLabel->setFont(QFont(GlobalObjects::normalFont, 13));
+    QFont nameLabelFont(GlobalObjects::normalFont);
+    nameLabelFont.setPointSizeF(GlobalObjects::fontSize(13));
+    nameLabel->setFont(nameLabelFont);
     nameLabel->setOpenExternalLinks(true);
 
     infoLabel=new QLabel(this);
@@ -1243,7 +1261,9 @@ void TagPanel::addTag(const QStringList &tags)
         QPushButton *tagButton=new QPushButton(tag,this);
         tagButton->setObjectName(QStringLiteral("TagButton"));
         tagButton->setCheckable(allowCheck);
-        tagButton->setFont(QFont(GlobalObjects::normalFont, 12));
+        QFont tagButtonFont(GlobalObjects::normalFont);
+        tagButtonFont.setPointSizeF(GlobalObjects::fontSize(12));
+        tagButton->setFont(tagButtonFont);
         tagButton->setContextMenuPolicy(Qt::CustomContextMenu);
         tagButton->setMinimumWidth(40);
         tagButton->setMinimumHeight(32);
@@ -1311,7 +1331,9 @@ CharacterPlaceholderWidget::CharacterPlaceholderWidget(QWidget *parent) : QWidge
     iconLabel->setAlignment(Qt::AlignCenter);
 
     QLabel *infoLabel=new QLabel(tr("Add Character"), this);
-    infoLabel->setFont(QFont(GlobalObjects::normalFont, 10));
+    QFont infoLabelFont(GlobalObjects::normalFont);
+    infoLabelFont.setPointSizeF(GlobalObjects::fontSize(10));
+    infoLabel->setFont(infoLabelFont);
     infoLabel->setObjectName(QStringLiteral("AnimeDetailCharactorTitle"));
 
     QHBoxLayout *itemHLayout=new QHBoxLayout(this);

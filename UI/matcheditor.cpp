@@ -154,7 +154,9 @@ MatchEditor::MatchEditor(const PlayListItem *item, QList<const PlayListItem *> *
 {
     comparer.setNumericMode(true);
 	this->batchItems = batchItems;
-    setFont(QFont(GlobalObjects::normalFont,12));
+    QFont widgetFont(GlobalObjects::normalFont);
+    widgetFont.setPointSizeF(GlobalObjects::fontSize(12));
+    setFont(widgetFont);
 
     QString animeTitle;
     EpInfo ep;
@@ -181,7 +183,9 @@ MatchEditor::MatchEditor(const PlayListItem *item, QList<const PlayListItem *> *
     });
 
     QLabel *matchInfoLabel = new QLabel(ep.type==EpType::UNKNOWN ? tr("No Match Info") : ep.toString(), this);
-    matchInfoLabel->setFont(QFont(GlobalObjects::normalFont, 10, QFont::Bold));
+    QFont matchInfoLabelFont(GlobalObjects::normalFont, -1, QFont::Bold);
+    matchInfoLabelFont.setPointSizeF(GlobalObjects::fontSize(10));
+    matchInfoLabel->setFont(matchInfoLabelFont);
     matchInfoLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
 
     QVBoxLayout *matchVLayout=new QVBoxLayout(this);
@@ -201,7 +205,8 @@ MatchEditor::MatchEditor(const PlayListItem *item, QList<const PlayListItem *> *
 QWidget *MatchEditor::setupCustomPage(const QString &srcAnime, const EpInfo &ep)
 {
     QWidget *customPage = new QWidget(this);
-    QFont normalFont(GlobalObjects::normalFont,10);
+    QFont normalFont(GlobalObjects::normalFont);
+    normalFont.setPointSizeF(GlobalObjects::fontSize(10));
     customPage->setFont(normalFont);
 
     QLabel *animeTip = new QLabel(tr("Anime Title"),customPage);
@@ -374,7 +379,8 @@ void MatchEditor::refreshEpList()
 QWidget *MatchEditor::setupSearchPage(const QString &srcAnime, const QString &searchScriptId)
 {
     QWidget *pageContainer = new QWidget(this);
-    QFont normalFont(GlobalObjects::normalFont,10);
+    QFont normalFont(GlobalObjects::normalFont);
+    normalFont.setPointSizeF(GlobalObjects::fontSize(10));
     pageContainer->setFont(normalFont);
 
     QWidget *searchSubPage = new QWidget(pageContainer);
@@ -412,8 +418,12 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime, const QString &se
 
     animeModel = new AnimeListModel(this);
     animeView->setRootIsDecorated(false);
-    animeView->setFont(QFont(GlobalObjects::normalFont, 11));
-    animeView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont animeViewFont(GlobalObjects::normalFont);
+    animeViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    animeView->setFont(animeViewFont);
+    QFont animeViewHeaderFont(GlobalObjects::normalFont);
+    animeViewHeaderFont.setPointSizeF(GlobalObjects::fontSize(12));
+    animeView->header()->setFont(animeViewHeaderFont);
     animeView->setSelectionMode(QAbstractItemView::SingleSelection);
     animeView->setModel(animeModel);
     animeView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -503,10 +513,14 @@ QWidget *MatchEditor::setupSearchPage(const QString &srcAnime, const QString &se
     QPushButton *backBtn = new KPushButton(tr("Back"), matchSubPage);
     QPushButton *selectAllBtn = new KPushButton(tr("Select All/Cancel"), matchSubPage);
     QLabel *animeLabel = new QLabel(matchSubPage);
-    animeLabel->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont animeLabelFont(GlobalObjects::normalFont);
+    animeLabelFont.setPointSizeF(GlobalObjects::fontSize(12));
+    animeLabel->setFont(animeLabelFont);
 
     epListView = new QListWidget(matchSubPage);
-    epListView->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont epListViewFont(GlobalObjects::normalFont);
+    epListViewFont.setPointSizeF(GlobalObjects::fontSize(12));
+    epListView->setFont(epListViewFont);
     epListView->setDragEnabled(true);
     epListView->setObjectName(QStringLiteral("MatchEpListView"));
     epListView->setAcceptDrops(true);
@@ -641,7 +655,9 @@ EpItemWidget::EpItemWidget(QList<MatchEpInfo> &matchList, int index, const QList
     const QString fileName = info.ep.localFile.mid(pathPos);
 
     ElidedLabel *titleLabel = new ElidedLabel(info.displayTitle, this);
-    titleLabel->setFont(QFont(GlobalObjects::normalFont, 13));
+    QFont titleLabelFont(GlobalObjects::normalFont);
+    titleLabelFont.setPointSizeF(GlobalObjects::fontSize(13));
+    titleLabel->setFont(titleLabelFont);
     titleLabel->setFontColor(QColor(240, 240, 240));
     titleLabel->setToolTip(fileName);
 
@@ -655,6 +671,7 @@ EpItemWidget::EpItemWidget(QList<MatchEpInfo> &matchList, int index, const QList
     QPushButton *autoSetEpBtn = new KPushButton(this);
     autoSetEpBtn->setToolTip(tr("Set Episode in Sequence"));
     autoSetEpBtn->setObjectName(QStringLiteral("AutoSetPoolBtn"));
+    GlobalObjects::iconfont->setPixelSize(18);
     autoSetEpBtn->setFont(*GlobalObjects::iconfont);
     autoSetEpBtn->setText(QChar(0xe6ed));
     QHBoxLayout *poolHLayout = new QHBoxLayout;

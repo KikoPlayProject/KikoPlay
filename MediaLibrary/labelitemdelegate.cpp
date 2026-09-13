@@ -70,7 +70,8 @@ void LabelItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     }
     if (tag->tagType == TagNode::TAG_CUSTOM && tag->subNodes) return;
 
-    static QFont decorationFont(GlobalObjects::normalFont, 9);
+    static QFont decorationFont(GlobalObjects::normalFont);
+    decorationFont.setPointSizeF(GlobalObjects::fontSize(9));
     painter->save();
     painter->setFont(decorationFont);
 

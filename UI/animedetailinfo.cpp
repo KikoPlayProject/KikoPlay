@@ -129,14 +129,18 @@ QWidget *AnimeDetailInfo::setupOverviewPage()
     }
 
     QLabel *titleLabel=new QLabel(pageWidget);
-    titleLabel->setFont(QFont(GlobalObjects::normalFont,16));
+    QFont titleLabelFont(GlobalObjects::normalFont);
+    titleLabelFont.setPointSizeF(GlobalObjects::fontSize(16));
+    titleLabel->setFont(titleLabelFont);
     titleLabel->setWordWrap(true);
     titleLabel->setOpenExternalLinks(true);
     titleLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
     titleLabel->setText(QString("<a href = \"http://bgm.tv/subject/%1\">%2</a>").arg(currentAnime->id).arg(currentAnime->name));
 
     QLabel *dateStaffLabel=new QLabel(pageWidget);
-    dateStaffLabel->setFont(QFont(GlobalObjects::normalFont,12));
+    QFont dateStaffLabelFont(GlobalObjects::normalFont);
+    dateStaffLabelFont.setPointSizeF(GlobalObjects::fontSize(12));
+    dateStaffLabel->setFont(dateStaffLabelFont);
     dateStaffLabel->setWordWrap(true);
     dateStaffLabel->setAlignment(Qt::AlignTop|Qt::AlignLeft);
     dateStaffLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);

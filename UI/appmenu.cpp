@@ -29,7 +29,9 @@ AppMenu::AppMenu(QWidget *p, QWidget *parent)
     appView->setUniformItemSizes(true);
     appView->setResizeMode(QListView::ResizeMode::Adjust);
     appView->setModel(GlobalObjects::appManager);
-    appView->setFont(QFont(GlobalObjects::normalFont, 8, QFont::Light));
+    QFont appViewFont(GlobalObjects::normalFont, -1, QFont::Light);
+    appViewFont.setPointSizeF(GlobalObjects::fontSize(8));
+    appView->setFont(appViewFont);
 
     const int appItemWidth = 64*logicalDpiX()/96;
     const int appItemHeight = 64*logicalDpiY()/96 + appView->fontMetrics().height();

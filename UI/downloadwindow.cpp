@@ -315,7 +315,9 @@ QWidget *DownloadWindow::initDownloadPage()
     sortBtn->setContentsMargins(2, 2, 2, 2);
 
     KLineEdit *searchEdit = new KLineEdit(downloadContainer);
-    searchEdit->setFont(QFont(GlobalObjects::normalFont, 14));
+    QFont searchEditFont(GlobalObjects::normalFont);
+    searchEditFont.setPointSizeF(GlobalObjects::fontSize(14));
+    searchEdit->setFont(searchEditFont);
     searchEdit->setMinimumHeight(30);
     searchEdit->setObjectName(QStringLiteral("DownloadSearchEdit"));
     searchEdit->setPlaceholderText(tr("Search Task"));
@@ -336,7 +338,9 @@ QWidget *DownloadWindow::initDownloadPage()
 
     downloadView = new QListView(downloadContainer);
     downloadView->setObjectName(QStringLiteral("DownloadView"));
-    downloadView->setFont(QFont(GlobalObjects::normalFont, 10));
+    QFont downloadViewFont(GlobalObjects::normalFont);
+    downloadViewFont.setPointSizeF(GlobalObjects::fontSize(10));
+    downloadView->setFont(downloadViewFont);
     downloadView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     downloadView->setMinimumWidth(220);
     downloadView->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -555,7 +559,9 @@ QWidget *DownloadWindow::setupGeneralInfoPage(QWidget *parent)
     QWidget *content = new QWidget(parent);
     QGridLayout *gInfoGLayout=new QGridLayout(content);
     taskTitleLabel=new QLabel(content);
-    taskTitleLabel->setFont(QFont(GlobalObjects::normalFont,12));
+    QFont taskTitleLabelFont(GlobalObjects::normalFont);
+    taskTitleLabelFont.setPointSizeF(GlobalObjects::fontSize(12));
+    taskTitleLabel->setFont(taskTitleLabelFont);
     taskTitleLabel->setObjectName(QStringLiteral("TaskTitleLabel"));
     taskTitleLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
     taskTimeLabel=new QLabel(content);
@@ -579,7 +585,9 @@ QWidget *DownloadWindow::setupFileInfoPage(QWidget *parent)
     new FloatScrollBar(fileInfoView->verticalScrollBar(), fileInfoView);
     new FloatScrollBar(fileInfoView->horizontalScrollBar(), fileInfoView);
     fileInfoView->header()->resizeSection(0, 300);
-    fileInfoView->setFont(QFont(GlobalObjects::normalFont, 10));
+    QFont fileInfoViewFont(GlobalObjects::normalFont);
+    fileInfoViewFont.setPointSizeF(GlobalObjects::fontSize(10));
+    fileInfoView->setFont(fileInfoViewFont);
     QObject::connect(fileInfoView, &TorrentTreeView::ignoreColorChanged, selectedTFModel, &CTorrentFileModel::setIgnoreColor);
     QObject::connect(fileInfoView, &TorrentTreeView::normColorChanged, selectedTFModel, &CTorrentFileModel::setNormColor);
 
@@ -649,7 +657,9 @@ QWidget *DownloadWindow::setupConnectionPage(QWidget *parent)
     peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::PROGRESS), 280);
     peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::CLIENT), 180);
     peerView->header()->resizeSection(static_cast<int>(PeerModel::Columns::IP), 160);
-    peerView->setFont(QFont(GlobalObjects::normalFont,10));
+    QFont peerViewFont(GlobalObjects::normalFont);
+    peerViewFont.setPointSizeF(GlobalObjects::fontSize(10));
+    peerView->setFont(peerViewFont);
     PeerDelegate *peerDelegate = new PeerDelegate(this);
     QObject::connect(peerView, &PeerTreeView::barColorChanged, [=](const QColor &c){peerDelegate->barColor=c;});
     QObject::connect(peerView, &PeerTreeView::borderColorChanged, [=](const QColor &c){peerDelegate->borderColor=c;});

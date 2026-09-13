@@ -80,6 +80,9 @@ SettingItemArea *PlayerPage::initMpvArea()
     mpvArea->addItem(tr("Enable Player Independent Embedded Window(Restart required)"), embWindowSwitch);
     QLabel *descLabel = new QLabel(tr("The Windows system enables it by default to prevent abnormal display of the main window"), mpvArea);
     descLabel->setObjectName(QStringLiteral("SettingDescLabel"));
+    QFont descLabelFont(GlobalObjects::normalFont);
+    descLabelFont.setPixelSize(qRound(GlobalObjects::fontSize(11)));
+    descLabel->setFont(descLabelFont);
     mpvArea->addItem(descLabel, Qt::AlignLeft);
 
 
@@ -106,6 +109,9 @@ SettingItemArea *PlayerPage::initSubArea()
     subArea->addItem(tr("Load Subtitle Files"), subAutoCombo);
     QLabel *descLabel = new QLabel(tr("  no: \tDon't automatically load external subtitle files\n  exact: \tLoad the media filename with subtitle file extension and possibly language suffixes\n  fuzzy: \tLoad all subs containing the media filename\n  all: \tLoad all subs in the current and --sub-file-paths directories"), subArea);
     descLabel->setObjectName(QStringLiteral("SettingDescLabel"));
+    QFont descLabelFont(GlobalObjects::normalFont);
+    descLabelFont.setPixelSize(qRound(GlobalObjects::fontSize(11)));
+    descLabel->setFont(descLabelFont);
     subArea->addItem(descLabel, Qt::AlignLeft);
 
     ElaComboBox *fontCombo = new ElaComboBox(this);

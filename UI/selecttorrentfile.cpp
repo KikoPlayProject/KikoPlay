@@ -19,7 +19,9 @@ SelectTorrentFile::SelectTorrentFile(TorrentFile *torrentFileTree, QWidget *pare
     torrentFileView->setObjectName(QStringLiteral("TaskFileInfoView"));
     torrentFileView->setAlternatingRowColors(true);
     torrentFileView->setModel(model);
-    torrentFileView->setFont(QFont(GlobalObjects::normalFont, 11));
+    QFont torrentFileViewFont(GlobalObjects::normalFont);
+    torrentFileViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    torrentFileView->setFont(torrentFileViewFont);
     torrentFileView->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
     torrentFileView->setItemDelegate(new KTreeviewItemDelegate(torrentFileView));
     torrentFileView->header()->resizeSection(0,240*logicalDpiX()/96);

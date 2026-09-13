@@ -71,7 +71,9 @@ MPVConfEdiror::MPVConfEdiror(QWidget *parent) : CFramelessDialog(tr("MPV Configu
                                      "Some options take effect after restart"), this);
     tab = new QTabWidget(this);
     tab->setTabsClosable(true);
-    tab->setFont(QFont(GlobalObjects::normalFont, 11));
+    QFont tabFont(GlobalObjects::normalFont);
+    tabFont.setPointSizeF(GlobalObjects::fontSize(11));
+    tab->setFont(tabFont);
 
     FontIconButton *addGroup = new FontIconButton(QChar(0xe6f3), "", 14, 10, 2, this);
     addGroup->setObjectName(QStringLiteral("FontIconToolButton"));
@@ -101,7 +103,9 @@ MPVConfEdiror::MPVConfEdiror(QWidget *parent) : CFramelessDialog(tr("MPV Configu
             group.editor->setObjectName(QStringLiteral("MPVConfEditor"));
             group.groupKey = input.text;
             int index = tab->addTab(group.editor, group.groupKey);
-            group.editor->setFont(QFont("Consolas", 12));
+            QFont editorFont(QStringLiteral("Consolas"));
+            editorFont.setPointSizeF(GlobalObjects::fontSize(12));
+            group.editor->setFont(editorFont);
             new OptionHighLighter(group.editor->document());
             int i = optionGroups.size() - 1;
             QObject::connect(group.editor, &QPlainTextEdit::textChanged, [this, i](){
@@ -194,7 +198,8 @@ void MPVConfEdiror::loadOptions()
         optionsGroupList.resize(optionGroupKeys.size());
     }
     optionGroups.resize(optionGroupKeys.size());
-    QFont font("Consolas", 12);
+    QFont font(QStringLiteral("Consolas"));
+    font.setPointSizeF(GlobalObjects::fontSize(12));
     for(int i = 0; i < optionGroupKeys.size(); ++i)
     {
         OptionGroup &group = optionGroups[i];

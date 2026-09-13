@@ -1,4 +1,5 @@
 #include "ElaCalendarDelegate.h"
+#include "globalobjects.h"
 
 #include <QPainter>
 #include <QPainterPath>
@@ -111,7 +112,7 @@ void ElaCalendarDelegate::_drawYearOrMonth(QPainter* painter, const QStyleOption
     {
         itemRect.adjust(0, 10, 0, 0);
         QFont font = painter->font();
-        font.setPixelSize(9);
+        font.setPixelSize(qRound(GlobalObjects::fontSize(9)));
         painter->setFont(font);
         painter->drawText(itemRect, Qt::AlignTop | Qt::AlignHCenter, desText);
     }
@@ -179,7 +180,7 @@ void ElaCalendarDelegate::_drawDays(QPainter* painter, const QStyleOptionViewIte
         {
             itemRect.adjust(0, 2 * penWidth, 0, 0);
             QFont font = painter->font();
-            font.setPixelSize(9);
+            font.setPixelSize(qRound(GlobalObjects::fontSize(9)));
             painter->setFont(font);
             painter->drawText(itemRect, Qt::AlignTop | Qt::AlignHCenter, desText);
         }

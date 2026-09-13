@@ -233,6 +233,7 @@ void SubRecognizeEditDialog::init(const SubFile &_subFile, const QString &videoF
 {
     QPushButton *translatorSettingBtn = new KPushButton("", this);
     translatorSettingBtn->setObjectName(QStringLiteral("TranslatorSetting"));
+    GlobalObjects::iconfont->setPixelSize(18);
     translatorSettingBtn->setFont(*GlobalObjects::iconfont);
     translatorSettingBtn->setText(QChar(0xe607));
     ElaComboBox *translatorConfigCombo = new ElaComboBox(this);
@@ -481,7 +482,9 @@ TranslatorConfigEditDialog::TranslatorConfigEditDialog(QWidget *parent) : CFrame
     confView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     confView->setViewMode(QListView::ListMode);
     confView->setObjectName(QStringLiteral("TranslatorConfView"));
-    confView->setFont(QFont(GlobalObjects::normalFont, 11));
+    QFont confViewFont(GlobalObjects::normalFont);
+    confViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    confView->setFont(confViewFont);
     confView->setFixedWidth(160);
 
     QLabel *configTip = new QLabel(this);

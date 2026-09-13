@@ -1,4 +1,5 @@
 #include "ElaLineEdit.h"
+#include "globalobjects.h"
 
 #include <QClipboard>
 #include <QContextMenuEvent>
@@ -40,7 +41,8 @@ ElaLineEdit::ElaLineEdit(QWidget* parent)
     setTextMargins(textMargins);
     d->onThemeChanged(eTheme->getThemeMode());
     connect(eTheme, &ElaTheme::themeModeChanged, d, &ElaLineEditPrivate::onThemeChanged);
-    setFixedHeight(34);
+    setMinimumHeight(qMax(34, fontMetrics().height() + 12));
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     QPalette palette = this->palette();
     palette.setColor(QPalette::PlaceholderText, ElaThemeColor(d->_themeMode, BasicTextNoFocus));

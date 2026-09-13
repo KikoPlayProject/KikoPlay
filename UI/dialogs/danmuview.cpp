@@ -125,12 +125,16 @@ void DanmuView::initView()
     danmuView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     danmuView->setItemDelegate(new DanmuViewDelegate(danmuView));
     danmuView->setSortingEnabled(true);
-    danmuView->setFont(QFont(GlobalObjects::normalFont, 11));
+    QFont danmuViewFont(GlobalObjects::normalFont);
+    danmuViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    danmuView->setFont(danmuViewFont);
     danmuView->header()->setSortIndicator(0, Qt::SortOrder::AscendingOrder);
     danmuView->setObjectName(QStringLiteral("DanmuCommentView"));
     danmuView->setTextElideMode(Qt::ElideRight);
     danmuView->header()->setObjectName(QStringLiteral("DanmuCommentHeader"));
-    danmuView->header()->setFont(QFont(GlobalObjects::normalFont, 10));
+    QFont danmuViewHeaderFont(GlobalObjects::normalFont);
+    danmuViewHeaderFont.setPixelSize(qRound(GlobalObjects::fontSize(13)));
+    danmuView->header()->setFont(danmuViewHeaderFont);
 
     QAction *copy = new QAction(tr("Copy"), this);
     copy->setShortcut(QKeySequence::Copy);
@@ -168,16 +172,23 @@ void DanmuView::initView()
         layout->setSpacing(3);
         QLabel *label = new QLabel(title, summaryPanel);
         label->setObjectName(QStringLiteral("DanmuSecondaryLabel"));
+        QFont labelFont(GlobalObjects::normalFont);
+        labelFont.setPixelSize(qRound(GlobalObjects::fontSize(12)));
+        label->setFont(labelFont);
         layout->addWidget(label);
         QHBoxLayout *values = new QHBoxLayout;
         values->setSpacing(5);
         QLabel *value = new QLabel(summaryPanel);
         value->setObjectName(primary ? QStringLiteral("DanmuStatValue") : QStringLiteral("DanmuTypeValue"));
+        QFont valueFont(GlobalObjects::normalFont, -1, primary ? QFont::Medium : QFont::Normal);
+        valueFont.setPixelSize(qRound(GlobalObjects::fontSize(primary ? 22 : 18)));
+        value->setFont(valueFont);
         values->addWidget(value);
         if (!countLabel)
         {
             totalLabel = new QLabel(summaryPanel);
             totalLabel->setObjectName(QStringLiteral("DanmuSecondaryLabel"));
+            totalLabel->setFont(labelFont);
             values->addWidget(totalLabel, 0, Qt::AlignBottom);
         }
         values->addStretch();
@@ -226,6 +237,9 @@ void DanmuView::initView()
     detailLabel->setMaximumHeight(detailLabel->fontMetrics().lineSpacing() * 3);
     detailMetaLabel = new QLabel(detailPanel);
     detailMetaLabel->setObjectName(QStringLiteral("DanmuSecondaryLabel"));
+    QFont detailMetaLabelFont(GlobalObjects::normalFont);
+    detailMetaLabelFont.setPixelSize(qRound(GlobalObjects::fontSize(12)));
+    detailMetaLabel->setFont(detailMetaLabelFont);
     detailMetaLabel->setTextFormat(Qt::PlainText);
     detailMetaLabel->setWordWrap(true);
     detailMetaLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
@@ -317,7 +331,9 @@ DanmuFilterBox::DanmuFilterBox(QWidget *parent): KLineEdit(parent)
 {
     setObjectName(QStringLiteral("DanmuSearchEdit"));
     setClearButtonEnabled(true);
-    setFont(QFont(GlobalObjects::normalFont, 10));
+    QFont widgetFont(GlobalObjects::normalFont);
+    widgetFont.setPointSizeF(GlobalObjects::fontSize(10));
+    setFont(widgetFont);
     setMinimumHeight(36);
 
     QMenu *menu = new ElaMenu(this);

@@ -1,4 +1,5 @@
 #include "ElaDoubleSpinBox.h"
+#include "globalobjects.h"
 
 #include "DeveloperComponents/ElaSpinBoxStyle.h"
 #include "private/ElaDoubleSpinBoxPrivate.h"
@@ -12,7 +13,8 @@ ElaDoubleSpinBox::ElaDoubleSpinBox(QWidget* parent)
 {
     Q_D(ElaDoubleSpinBox);
     d->q_ptr = this;
-    setFixedSize(120, 30);
+    setMinimumSize(120, qMax(30, fontMetrics().height() + 12));
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     setStyle(new ElaSpinBoxStyle(style()));
     lineEdit()->setAlignment(Qt::AlignCenter);
     lineEdit()->setStyleSheet("background-color:transparent");

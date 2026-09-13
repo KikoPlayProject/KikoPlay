@@ -31,10 +31,13 @@ static QString getTimeLeft(const DownloadTask *task)
 
 DownloadItemDelegate::DownloadItemDelegate(QObject *parent) : QStyledItemDelegate(parent)
 {
+    QFont textFont(GlobalObjects::normalFont);
+    textFont.setPointSizeF(GlobalObjects::fontSize(titleFontSize));
     itemHeight = marginTop;
-    itemHeight += QFontMetrics(QFont(GlobalObjects::normalFont, titleFontSize)).height();   // title
+    itemHeight += QFontMetrics(textFont).height();   // title
     itemHeight += textSpacing;
-    itemHeight += QFontMetrics(QFont(GlobalObjects::normalFont, statusFontSize)).height();  // status
+    textFont.setPointSizeF(GlobalObjects::fontSize(statusFontSize));
+    itemHeight += QFontMetrics(textFont).height();  // status
     itemHeight += textSpacing;
     itemHeight += progressHeight;  // progress
     itemHeight += marginBottom;
@@ -82,8 +85,8 @@ void DownloadItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &
     QRect textRect = viewOption.rect;
     textRect.setX(marginLeft);
     textRect.setY(y);
-    static QFont textFont(GlobalObjects::normalFont);
-    textFont.setPointSize(titleFontSize);
+    QFont textFont(GlobalObjects::normalFont);
+    textFont.setPointSizeF(GlobalObjects::fontSize(titleFontSize));
     painter->setFont(textFont);
     QFontMetrics fm = painter->fontMetrics();
     textRect.setHeight(fm.height());
@@ -105,7 +108,7 @@ void DownloadItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &
     QString statusText{"%1/%2, %3 file(s)"};
     statusText = statusText.arg(formatSize(false, task->completedLength), formatSize(false, task->totalLength));
     statusText = statusText.arg(task->selectedIndexes.isEmpty() ? 1 : task->selectedIndexes.count(",") + 1);
-    textFont.setPointSize(statusFontSize);
+    textFont.setPointSizeF(GlobalObjects::fontSize(statusFontSize));
     painter->setFont(textFont);
     fm = painter->fontMetrics();
     QRect statusTextRect(marginLeft, y, fm.horizontalAdvance(statusText) + 2, fm.height());

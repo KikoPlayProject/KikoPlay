@@ -104,6 +104,7 @@ void AppFramelessDialog::showEvent(QShowEvent *event)
         int w = storeW > 0 ? storeW : width();
         resize(w, h);
     }
+    if (isPin) elaAppBar->setOnTop(true);
     QDialog::showEvent(event);
 #ifdef Q_OS_MAC
     if (!roundedCornersApplied)

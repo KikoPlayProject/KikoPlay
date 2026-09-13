@@ -77,7 +77,9 @@ public:
         setObjectName(QStringLiteral("PlayInfoBar"));
         infoText=new QLabel(this);
         infoText->setObjectName(QStringLiteral("labelPlayInfo"));
-        infoText->setFont(QFont(GlobalObjects::normalFont,10));
+        QFont infoTextFont(GlobalObjects::normalFont);
+        infoTextFont.setPointSizeF(GlobalObjects::fontSize(10));
+        infoText->setFont(infoTextFont);
         infoText->setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Minimum);
         QHBoxLayout *infoBarHLayout=new QHBoxLayout(this);
         infoBarHLayout->addWidget(infoText);
@@ -2258,7 +2260,7 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
     timeLabel = new QLabel("00:00/00:00",playControlPanel);
     timeLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     timeLabel->setObjectName(QStringLiteral("labelTime"));
-    normalFont.setPointSize(10);
+    normalFont.setPointSizeF(GlobalObjects::fontSize(10));
     timeLabel->setFont(normalFont);
 
     playPause = new QPushButton(playControlPanel);
@@ -2329,7 +2331,7 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
     QMargins textMargins = launchDanmuEdit->textMargins();
     textMargins.setRight(6);
     launchDanmuEdit->setTextMargins(textMargins);
-    normalFont.setPointSize(12);
+    normalFont.setPointSizeF(GlobalObjects::fontSize(12));
     launchDanmuEdit->setFont(normalFont);
     launchDanmuEdit->setObjectName(QStringLiteral("LaunchDanmuEdit"));
     QPalette palette = launchDanmuEdit->palette();
@@ -2384,15 +2386,16 @@ QLayout *PlayerWindow::initPlayControl(QWidget *playControlPanel)
 
 void PlayerWindow::initPlayInfo(QWidget *playInfoPanel)
 {
-    QFont normalFont;
-    normalFont.setFamily(GlobalObjects::normalFont);
-    normalFont.setPointSize(12);
+    QFont normalFont(GlobalObjects::normalFont);
+    normalFont.setPointSizeF(GlobalObjects::fontSize(12));
 
     titleLabel = new ElidedLabel("", playInfoPanel);
     titleLabel->setFontColor(QColor(255, 255, 255));
-    // titleLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     titleLabel->setObjectName(QStringLiteral("labelTitle"));
     titleLabel->setFont(normalFont);
+    // ElidedLabel has no size hint; reserve a full line even when it is taller than the icons.
+    const QFontMetrics titleMetrics(titleLabel->fontMetrics());
+    titleLabel->setMinimumHeight(qMax(titleMetrics.height(), titleMetrics.lineSpacing()));
 
     constexpr const int infoBtnCount = 3;
     QPair<QChar, QString> infoButtonTexts[infoBtnCount] = {
@@ -3331,9 +3334,11 @@ RecentItem::RecentItem(QWidget *parent):QWidget(parent)
     coverLabel->setScaledContents(true);
 
     titleLabel = new QLabel(this);
-    titleLabel->setFont(QFont(GlobalObjects::normalFont, 9));
+    QFont recentFont(GlobalObjects::normalFont);
+    recentFont.setPointSizeF(GlobalObjects::fontSize(9));
+    titleLabel->setFont(recentFont);
     timeLabel = new QLabel(this);
-    timeLabel->setFont(QFont(GlobalObjects::normalFont, 9));
+    timeLabel->setFont(recentFont);
     titleLabel->setObjectName(QStringLiteral("RecentItemLabel"));
     timeLabel->setObjectName(QStringLiteral("RecentItemTimeLabel"));
     deleteItem = new QPushButton(this);
@@ -3344,6 +3349,10 @@ RecentItem::RecentItem(QWidget *parent):QWidget(parent)
     GlobalObjects::iconfont->setPointSize(10);
     deleteItem->setFont(*GlobalObjects::iconfont);
     deleteItem->setText(QChar(0xe60b));
+    // Keep the layout stable when the delete button appears on hover.
+    QSizePolicy deleteSizePolicy = deleteItem->sizePolicy();
+    deleteSizePolicy.setRetainSizeWhenHidden(true);
+    deleteItem->setSizePolicy(deleteSizePolicy);
     deleteItem->hide();
 
     QWidget *textContainer = new QWidget(this);

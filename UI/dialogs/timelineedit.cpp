@@ -179,7 +179,9 @@ TimelineEdit::TimelineEdit(const DanmuSource *source, const QVector<SimpleDanmuI
         view->setSelectionBehavior(QAbstractItemView::SelectRows);
         view->setAlternatingRowColors(true);
         view->setUniformRowHeights(true);
-        view->setFont(QFont(GlobalObjects::normalFont, 10));
+        QFont viewFont(GlobalObjects::normalFont);
+        viewFont.setPointSizeF(GlobalObjects::fontSize(10));
+        view->setFont(viewFont);
         view->setItemDelegate(new KTreeviewItemDelegate(view));
         view->setModel(model);
         view->header()->setSectionResizeMode(QHeaderView::ResizeToContents);

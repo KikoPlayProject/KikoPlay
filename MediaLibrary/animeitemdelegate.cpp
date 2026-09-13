@@ -20,7 +20,7 @@ AnimeItemDelegate::AnimeItemDelegate(QObject *parent):QStyledItemDelegate(parent
     AnimeItemDelegate::CoverWidth = 153;
     AnimeItemDelegate::CoverHeight = 208;
     titleFont.setFamily(GlobalObjects::normalFont);
-    titleFont.setPointSize(11);
+    titleFont.setPointSizeF(GlobalObjects::fontSize(11));
     AnimeItemDelegate::TitleHeight = QFontMetrics(titleFont).height() + 4;
 
     const float pxR = GlobalObjects::context()->devicePixelRatioF;

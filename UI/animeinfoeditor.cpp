@@ -82,8 +82,12 @@ AnimeInfoEditor::AnimeInfoEditor(Anime *anime, QWidget *parent) :
     staffView->setContextMenuPolicy(Qt::CustomContextMenu);
     staffView->setEditTriggers(QAbstractItemView::DoubleClicked);
     staffView->setRootIsDecorated(false);
-    staffView->setFont(QFont(GlobalObjects::normalFont, 11));
-    staffView->header()->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont staffViewFont(GlobalObjects::normalFont);
+    staffViewFont.setPointSizeF(GlobalObjects::fontSize(11));
+    staffView->setFont(staffViewFont);
+    QFont staffViewHeaderFont(GlobalObjects::normalFont);
+    staffViewHeaderFont.setPointSizeF(GlobalObjects::fontSize(12));
+    staffView->header()->setFont(staffViewHeaderFont);
     staffView->setItemDelegate(new StaffItemDelegate(staffView));
     staffView->setAlternatingRowColors(true);
     staffModel = new StaffModel(anime, this);
@@ -369,7 +373,9 @@ void AliasPanel::addAlias(const QString &alias)
     this->layout()->addWidget(aliasItem);
     setVisible(true);
     aliasItem->setContextMenuPolicy(Qt::CustomContextMenu);
-    aliasItem->setFont(QFont(GlobalObjects::normalFont, 12));
+    QFont aliasItemFont(GlobalObjects::normalFont);
+    aliasItemFont.setPointSizeF(GlobalObjects::fontSize(12));
+    aliasItem->setFont(aliasItemFont);
     aliasItem->setMinimumHeight(32);
 
     ElaMenu *actionMenu = new ElaMenu(aliasItem);

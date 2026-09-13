@@ -142,7 +142,9 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     bgmListView->header()->setDefaultAlignment(Qt::AlignCenter);
     bgmListView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     new FloatScrollBar(bgmListView->verticalScrollBar(), bgmListView);
-    bgmListView->setFont(QFont(GlobalObjects::normalFont,12));
+    QFont bgmListViewFont(GlobalObjects::normalFont);
+    bgmListViewFont.setPointSizeF(GlobalObjects::fontSize(12));
+    bgmListView->setFont(bgmListViewFont);
     bgmListView->setIndentation(0);
     bgmListView->setContextMenuPolicy(Qt::CustomContextMenu);
     QObject::connect(bgmListView, &QTreeView::doubleClicked, this, [=](const QModelIndex &index){

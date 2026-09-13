@@ -1,4 +1,5 @@
 #include "ktimespinbox.h"
+#include "globalobjects.h"
 #include "UI/ela/ElaTheme.h"
 #include "UI/ela/Def.h"
 #include <QApplication>
@@ -243,8 +244,8 @@ void KTimeWheelColumn::paintEvent(QPaintEvent *)
     int h = height();
     int centerY = h / 2;
 
-    QFont f = font();
-    f.setPixelSize(16);
+    QFont f(GlobalObjects::normalFont);
+    f.setPixelSize(qRound(GlobalObjects::fontSize(16)));
     painter.setFont(f);
 
     int centerIndex = qBound(0, qRound(m_offset / (qreal)m_itemHeight), m_maxValue);

@@ -4129,6 +4129,26 @@ Finish Time: ----</source>
         <translation>UI字体(需要重启)</translation>
     </message>
     <message>
+        <source>UI Font Size(Restart required)</source>
+        <translation>UI字体大小(需要重启)</translation>
+    </message>
+    <message>
+        <source>Small (90%)</source>
+        <translation>小 (90%)</translation>
+    </message>
+    <message>
+        <source>Standard (100%)</source>
+        <translation>标准 (100%)</translation>
+    </message>
+    <message>
+        <source>Large (115%)</source>
+        <translation>大 (115%)</translation>
+    </message>
+    <message>
+        <source>Extra Large (130%)</source>
+        <translation>特大 (130%)</translation>
+    </message>
+    <message>
         <location filename="../../UI/settings/generalpage.cpp" line="73"/>
         <source>Show Menu Animation</source>
         <translation>显示菜单动画</translation>
