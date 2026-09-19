@@ -198,6 +198,36 @@ DanmuTimeResult DanmuSource::mapTime(int rawOriginTimeMs) const
     return result;
 }
 
+QVector<int> DanmuSource::unmapTime(int finalTimeMs) const
+{
+    QVector<int> result;
+    const bool clipped = hasClip();
+    const qint64 clipOffset = clipped ? clipStart : 0;
+    qint64 intervalStart = clipped ? 0 : std::numeric_limits<int>::min();
+    const qint64 sourceEnd = clipped ? qMin(qint64(clipDuration), qint64(std::numeric_limits<int>::max()) - clipOffset) : std::numeric_limits<int>::max();
+    qint64 offset = delay;
+
+    const auto appendCandidate = [&](qint64 intervalEnd) {
+        const qint64 sourceTime = qint64(finalTimeMs) - offset;
+        if (sourceTime >= intervalStart && sourceTime <= intervalEnd)
+        {
+            result.append(int(sourceTime + clipOffset));
+        }
+    };
+
+    for (const auto &rule : timelineInfo)
+    {
+        // The threshold itself still belongs to the interval before this rule.
+        appendCandidate(qMin(qint64(rule.first), sourceEnd));
+        if (rule.first >= sourceEnd) return result;
+        // Equal thresholds leave an empty interval while their offsets accumulate.
+        intervalStart = qMax(intervalStart, qint64(rule.first) + 1);
+        offset += rule.second;
+    }
+    appendCandidate(sourceEnd);
+    return result;
+}
+
 bool DanmuSource::hasClip() const
 {
     return clipStart >= 0 && clipDuration > 0;
@@ -265,11 +295,14 @@ QString DanmuSource::tagsJson() const
 
 QDataStream &operator<<(QDataStream &stream, const DanmuSource &src)
 {
-    return stream << src.title
+    return stream << 200200
+                  << src.title
                   << src.desc
                   << src.scriptId
                   << src.scriptData
+                  << src.scriptSrcId
                   << src.id
+                  << src.url
                   << src.duration
                   << src.delay
                   << src.timelineStr()
@@ -279,12 +312,16 @@ QDataStream &operator<<(QDataStream &stream, const DanmuSource &src)
 
 QDataStream &operator>>(QDataStream &stream, DanmuSource &src)
 {
+    int kv = 0;
     QString timeline, clip, tagJson;
-    stream >> src.title
+    stream >> kv
+           >> src.title
            >> src.desc
            >> src.scriptId
            >> src.scriptData
+           >> src.scriptSrcId
            >> src.id
+           >> src.url
            >> src.duration
            >> src.delay
            >> timeline

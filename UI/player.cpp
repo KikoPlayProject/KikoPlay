@@ -3006,20 +3006,22 @@ void PlayerWindow::dropEvent(QDropEvent *event)
                 }
                 else if("xml"==fi.suffix())
                 {
-					QVector<DanmuComment *> tmplist;
-                    LocalProvider::LoadXmlDanmuFile(fi.filePath(),tmplist);
-                    DanmuSource sourceInfo;
-                    sourceInfo.scriptData = fi.filePath();
-                    sourceInfo.title=fi.fileName();
-                    sourceInfo.count=tmplist.count();
-                    Pool *pool=GlobalObjects::danmuPool->getPool();
-                    if(pool->addSource(sourceInfo,tmplist,true)>=0)
-                        showMessage(tr("Danmu has been added"));
-                    else
+                    QVector<QPair<DanmuSource, QVector<DanmuComment *>>> srcDanmus;
+                    LocalProvider::LoadXmlDanmuFile(fi.filePath(), srcDanmus);
+                    int addCnt = 0;
+                    for (auto &p : srcDanmus)
                     {
-                        qDeleteAll(tmplist);
-                        showMessage(tr("Add Faied: Pool is busy"));
+                        if (GlobalObjects::danmuPool->getPool()->addSource(p.first, p.second, true) == -1)
+                        {
+                            qDeleteAll(p.second);
+                            showMessage(tr("Add Src[%1] Failed: Pool is busy").arg(p.first.title), NotifyMessageFlag::NM_HIDE);
+                        }
+                        else
+                        {
+                            ++addCnt;
+                        }
                     }
+                    if (addCnt == srcDanmus.size()) showMessage(tr("Danmu has been added"));
                 }
             }
             else

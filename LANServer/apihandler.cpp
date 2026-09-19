@@ -271,7 +271,7 @@ void APIHandler::apiLocalDanmu(stefanfrings::HttpRequest &request, stefanfrings:
     Logger::logger()->log(Logger::LANServer,
                           QString("[%1]Danmu(Local) %2").arg(request.getPeerAddress().toString(),
                           mediaPath));
-    if(mediaPath.isEmpty())
+    if (mediaPath.isEmpty())
     {
         response.setStatus(stefanfrings::HttpResponse::NotFound);
         return;
@@ -279,14 +279,19 @@ void APIHandler::apiLocalDanmu(stefanfrings::HttpRequest &request, stefanfrings:
     QString danmuFile(mediaPath.mid(0, mediaPath.lastIndexOf('.'))+".xml");
     QFileInfo fi(danmuFile);
     QJsonObject resposeObj;
-    if(fi.exists())
+    if (fi.exists())
     {
-        QVector<DanmuComment *> tmplist;
-        LocalProvider::LoadXmlDanmuFile(danmuFile, tmplist);
-        GlobalObjects::blocker->checkDanmu(tmplist.begin(), tmplist.end(), false);
+        QVector<QPair<DanmuSource, QVector<DanmuComment *>>> srcDanmus;
+        LocalProvider::LoadXmlDanmuFile(danmuFile, srcDanmus, true);
+        if (srcDanmus.empty())
+        {
+            response.setStatus(stefanfrings::HttpResponse::NotFound);
+            return;
+        }
+        GlobalObjects::blocker->checkDanmu(srcDanmus.front().second.begin(), srcDanmus.front().second.end(), false);
         resposeObj=
         {
-            {"comment", Pool::exportJson(tmplist, false)},
+            {"comment", Pool::exportJson(srcDanmus.front().second, false)},
             {"local", danmuFile}
         };
     }

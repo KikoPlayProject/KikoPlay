@@ -199,7 +199,7 @@ void KeyActionModel::updateSettings()
 
 QDataStream &operator<<(QDataStream &out, const QList<QSharedPointer<KeyActionItem>> &l)
 {
-    out << GlobalObjects::kikoVersionNum;
+    out << 200100;
     int s = l.size();
     out << s;
     for (const auto &item : l)

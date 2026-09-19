@@ -283,7 +283,7 @@ QDataStream &operator<<(QDataStream &out, const QList<TranslatorConfig> &l)
 {
     int s = l.size();
     out << s;
-    out << GlobalObjects::kikoVersionNum;
+    out << 200100;
     for (const auto &item : l)
     {
         out << item.name << item.url << item.apiKey << item.model << item.prompt << item.batchSize << item.postHistorySub << item.tip << item.timeout;

@@ -426,30 +426,33 @@ QWidget *AddDanmu::setupSelectedPage()
         {
             for (auto &file: files)
             {
-                SearchDanmuInfo danmuInfo;
-                danmuInfo.pool = defaultPool;
+                QVector<QPair<DanmuSource, QVector<DanmuComment *>>> srcDanmus;
+                LocalProvider::LoadXmlDanmuFile(file, srcDanmus);
+                int totalFilterCount = 0;
+                for (auto &p : srcDanmus)
+                {
+                    SearchDanmuInfo danmuInfo;
+                    danmuInfo.pool = defaultPool;
+                    danmuInfo.src = p.first;
+                    danmuInfo.danmus = p.second;
 
-                LocalProvider::LoadXmlDanmuFile(file, danmuInfo.danmus);
-                int srcCount = danmuInfo.danmus.count();
-                GlobalObjects::blocker->preFilter(danmuInfo.danmus);
-                int filterCount = srcCount - danmuInfo.danmus.count();
-                if (filterCount > 0) showMessage(tr("Pre-filter %1 Danmu").arg(filterCount));
+                    int srcCount = danmuInfo.danmus.count();
+                    GlobalObjects::blocker->preFilter(danmuInfo.danmus);
+                    totalFilterCount += srcCount - danmuInfo.danmus.count();
+                    danmuInfo.src.count = danmuInfo.danmus.count();
 
-                danmuInfo.src.scriptData = file;
-                danmuInfo.src.title = file.mid(file.lastIndexOf('/')+1);
-                danmuInfo.src.count = danmuInfo.danmus.count();
+                    danmuInfoList.append(danmuInfo);
 
-                danmuInfoList.append(danmuInfo);
-
-                DanmuItemWidget *itemWidget = new DanmuItemWidget(danmuInfoList, danmuInfoList.size() - 1, danmuPools);
-                QListWidgetItem *listItem = new QListWidgetItem(selectedDanmuView);
-                selectedDanmuView->setItemWidget(listItem, itemWidget);
-                listItem->setSizeHint(itemWidget->sizeHint());
-                QObject::connect(itemWidget, &DanmuItemWidget::setPoolIndexFrom, this, [=](int poolIndex){
-                    int row = selectedDanmuView->row(listItem);
-                    setPoolIdInSequence(row, poolIndex);
-                });
-
+                    DanmuItemWidget *itemWidget = new DanmuItemWidget(danmuInfoList, danmuInfoList.size() - 1, danmuPools);
+                    QListWidgetItem *listItem = new QListWidgetItem(selectedDanmuView);
+                    selectedDanmuView->setItemWidget(listItem, itemWidget);
+                    listItem->setSizeHint(itemWidget->sizeHint());
+                    QObject::connect(itemWidget, &DanmuItemWidget::setPoolIndexFrom, this, [=](int poolIndex){
+                        int row = selectedDanmuView->row(listItem);
+                        setPoolIdInSequence(row, poolIndex);
+                    });
+                }
+                if (totalFilterCount > 0) showMessage(tr("Pre-filter %1 Danmu").arg(totalFilterCount));
                 tab->setPivotText(2, tr("Staging(%1)").arg(danmuInfoList.count()));
             }
         }

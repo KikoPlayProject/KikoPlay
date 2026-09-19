@@ -4,6 +4,8 @@
 #include <QVBoxLayout>
 #include "Play/Danmu/Render/danmurender.h"
 #include "Play/Danmu/danmupool.h"
+#include "Play/Danmu/Manager/pool.h"
+#include "Play/Danmu/Provider/localprovider.h"
 #include "UI/dialogs/blockeditor.h"
 #include "UI/widgets/kpushbutton.h"
 #include "globalobjects.h"
@@ -23,6 +25,7 @@ DanmuPage::DanmuPage(QWidget *parent)
     itemVLayout->setSpacing(8);
     itemVLayout->addWidget(initStyleArea());
     itemVLayout->addWidget(initMergeArea());
+    itemVLayout->addWidget(initImportExportArea());
     itemVLayout->addWidget(initOtherArea());
     itemVLayout->addStretch(1);
 }
@@ -242,6 +245,37 @@ SettingItemArea *DanmuPage::initMergeArea()
     return mergeArea;
 }
 
+SettingItemArea *DanmuPage::initImportExportArea()
+{
+    SettingItemArea *importExportArea = new SettingItemArea(tr("Import/Export"), this);
+
+    ElaToggleSwitch *autoLoadLocalDanmuSwitch = new ElaToggleSwitch(this);
+    autoLoadLocalDanmuSwitch->setIsToggled(GlobalObjects::danmuPool->isLoadLocalDanmu());
+    importExportArea->addItem(tr("Auto Load Local Danmu"), autoLoadLocalDanmuSwitch);
+
+    ElaToggleSwitch *importSrcInfoSwitch = new ElaToggleSwitch(this);
+    importSrcInfoSwitch->setIsToggled(LocalProvider::loadSrcInfo());
+    importExportArea->addItem(tr("Auto Split Sources on XML Import (If Available)"), importSrcInfoSwitch);
+
+    ElaToggleSwitch *exportSrcInfoSwitch = new ElaToggleSwitch(this);
+    exportSrcInfoSwitch->setIsToggled(Pool::exportWithSrcInfo());
+    importExportArea->addItem(tr("Include Source Information on Export"), exportSrcInfoSwitch);
+
+    QObject::connect(autoLoadLocalDanmuSwitch, &ElaToggleSwitch::toggled, this, [](bool checked){
+        GlobalObjects::danmuPool->setLoadLocalDanmu(checked);
+    });
+
+    QObject::connect(importSrcInfoSwitch, &ElaToggleSwitch::toggled, this, [](bool checked){
+        LocalProvider::setLoadSrcInfo(checked);
+    });
+
+    QObject::connect(exportSrcInfoSwitch, &ElaToggleSwitch::toggled, this, [](bool checked){
+        Pool::setExportWithSrcInfo(checked);
+    });
+
+    return importExportArea;
+}
+
 SettingItemArea *DanmuPage::initOtherArea()
 {
     SettingItemArea *otherArea = new SettingItemArea(tr("Other"), this);
@@ -250,10 +284,6 @@ SettingItemArea *DanmuPage::initOtherArea()
     ElaToggleSwitch *analyzeSwitch = new ElaToggleSwitch(this);
     analyzeSwitch->setIsToggled(GlobalObjects::danmuPool->isEnableAnalyze());
     otherArea->addItem(tr("Enable Danmu Event Analyze"), analyzeSwitch);
-
-    ElaToggleSwitch *autoLoadLocalDanmuSwitch = new ElaToggleSwitch(this);
-    autoLoadLocalDanmuSwitch->setIsToggled(GlobalObjects::danmuPool->isLoadLocalDanmu());
-    otherArea->addItem(tr("Auto Load Local Danmu"), autoLoadLocalDanmuSwitch);
 
     ElaToggleSwitch *disableSample2DArraySwitch = new ElaToggleSwitch(this);
     disableSample2DArraySwitch->setIsToggled(!GlobalObjects::mpvplayer->getUseSample2DArray());
@@ -280,10 +310,6 @@ SettingItemArea *DanmuPage::initOtherArea()
 
     QObject::connect(analyzeSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked){
         GlobalObjects::danmuPool->setAnalyzeEnable(checked);
-    });
-
-    QObject::connect(autoLoadLocalDanmuSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked){
-        GlobalObjects::danmuPool->setLoadLocalDanmu(checked);
     });
 
     QObject::connect(disableSample2DArraySwitch, &ElaToggleSwitch::toggled, this, [=](bool checked){

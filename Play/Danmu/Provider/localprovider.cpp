@@ -1,10 +1,89 @@
 #include "localprovider.h"
 #include "Common/htmlparsersax.h"
+#include "Common/network.h"
 #include "Play/Subtitle/subtitleloader.h"
+#include "globalobjects.h"
 #include <QRegularExpression>
+#include <limits>
+
+#define SETTING_KEY_IMPORT_SRC_INFO "Play/XMLImportSrcInfo"
+
 
 namespace
 {
+    bool splitXmlDanmuSources(const QByteArray &content, const QVector<DanmuComment *> &list,
+                             QVector<QPair<DanmuSource, QVector<DanmuComment *>>> &sources)
+    {
+        // HTMLParserSax does not support underscores in element names.
+        QXmlStreamReader reader(content);
+        QByteArray sourceData;
+        while (!reader.atEnd())
+        {
+            reader.readNext();
+            if (reader.isStartElement() && reader.name() == QLatin1String("kikoplay_src"))
+            {
+                sourceData = reader.readElementText().toLatin1();
+                break;
+            }
+        }
+        if (reader.hasError() || sourceData.isEmpty()) return false;
+
+        QByteArray data;
+        if (Network::gzipDecompress(QByteArray::fromBase64(sourceData), data) != 0) return false;
+        QDataStream stream(data);
+        int version = 0;
+        stream >> version;
+        if (stream.status() != QDataStream::Ok || !GlobalObjects::isValidKikoVersion(version)) return false;
+
+        decltype(list.size()) nextComment = 0;
+        while (!stream.atEnd())
+        {
+            int marker = 0, start = 0;
+            // Match the QVector::size() type written by Pool::exportPool.
+            decltype(list.size()) count = 0;
+            bool useTimeline = false;
+            stream >> marker >> start >> count >> useTimeline;
+            if (stream.status() != QDataStream::Ok || marker != 0x23 || start != nextComment ||
+                count < 0 || count > list.size() - nextComment)
+            {
+                return false;
+            }
+
+            QPair<DanmuSource, QVector<DanmuComment *>> sourceDanmus;
+            stream >> sourceDanmus.first;
+            if (stream.status() != QDataStream::Ok) return false;
+            sourceDanmus.second.reserve(count);
+            for (auto i = nextComment; i < nextComment + count; ++i)
+            {
+                DanmuComment *danmu = list[i];
+                if (!danmu) continue;
+                if (useTimeline)
+                {
+                    QVector<int> originTimes = sourceDanmus.first.unmapTime(danmu->time);
+                    // XML export rounds to 0.01 s, possibly into a timeline gap or outside the clip.
+                    for (int delta = 1; originTimes.isEmpty() && delta <= 5; ++delta)
+                    {
+                        const qint64 before = qint64(danmu->time) - delta;
+                        const qint64 after = qint64(danmu->time) + delta;
+                        if (before >= std::numeric_limits<int>::min())
+                            originTimes = sourceDanmus.first.unmapTime(int(before));
+                        if (originTimes.isEmpty() && after <= std::numeric_limits<int>::max())
+                            originTimes = sourceDanmus.first.unmapTime(int(after));
+                    }
+                    if (originTimes.isEmpty()) return false;
+                    // A negative timeline offset can have multiple inverses; keep one comment.
+                    danmu->originTime = originTimes.first();
+                }
+                danmu->source = sourceDanmus.first.id;
+                sourceDanmus.second.append(danmu);
+            }
+            sourceDanmus.first.count = sourceDanmus.second.size();
+            sources.append(sourceDanmus);
+            nextComment += count;
+        }
+        return !sources.isEmpty() && nextComment == list.size();
+    }
+
     // ASS color "&H[AA]BBGGRR&" -> RGB int (0xBBGGRR as DanmuComment::color).
     // ASS stores color in BGR order; DanmuComment::color is 0xRRGGBB, so reorder.
     int assColorToRGB(const QString &colorStr)
@@ -60,7 +139,7 @@ namespace
     }
 }
 
-void LocalProvider::LoadXmlDanmuFile(QString filePath, QVector<DanmuComment *> &list)
+void LocalProvider::LoadXmlDanmuFile(QString filePath, QVector<QPair<DanmuSource, QVector<DanmuComment *>>> &srcDanmus, bool forceIgnoreSrc)
 {
     QFile xmlFile(filePath);
     bool ret = xmlFile.open(QIODevice::ReadOnly|QIODevice::Text);
@@ -68,11 +147,14 @@ void LocalProvider::LoadXmlDanmuFile(QString filePath, QVector<DanmuComment *> &
 
     const QByteArray content = xmlFile.readAll();
 
+    QVector<DanmuComment *> list;
     HTMLParserSax parser(content);
     while (!parser.atEnd())
     {
         if (parser.isStartNode() && parser.currentNode() == "d")
         {
+            // Source ranges count every <d>, including empty or invalid comments.
+            list.append(nullptr);
             const QByteArray attr = parser.currentNodeProperty("p");
             if (!attr.isEmpty())
             {
@@ -95,7 +177,7 @@ void LocalProvider::LoadXmlDanmuFile(QString filePath, QVector<DanmuComment *> &
 
                     DanmuComment *danmu=new DanmuComment();
                     danmu->text = danmuText;
-                    danmu->time = attrList[0].toFloat() * 1000;
+                    danmu->time = qRound(attrList[0].toDouble() * 1000);
                     danmu->originTime=danmu->time;
                     int mode = attrList[1].toInt();
                     DanmuComment::DanmuType type = DanmuComment::Rolling;
@@ -122,13 +204,38 @@ void LocalProvider::LoadXmlDanmuFile(QString filePath, QVector<DanmuComment *> &
                         danmu->fontSizeLevel=DanmuComment::Normal;
                         break;
                     }
-                    list.append(danmu);
+                    list.last() = danmu;
                 }
             }
         }
         parser.readNext();
     }
     xmlFile.close();
+
+    QVector<QPair<DanmuSource, QVector<DanmuComment *>>> sources;
+    bool loadSrc = LocalProvider::loadSrcInfo();
+    if (forceIgnoreSrc) loadSrc = false;
+    if (loadSrc && splitXmlDanmuSources(content, list, sources))
+    {
+        srcDanmus = std::move(sources);
+        return;
+    }
+
+    QPair<DanmuSource, QVector<DanmuComment *>> fileDanmus;
+    const QFileInfo fileInfo(filePath);
+    fileDanmus.first.title = fileInfo.fileName();
+    fileDanmus.first.scriptData = fileInfo.filePath();
+    fileDanmus.second.reserve(list.size());
+    for (DanmuComment *danmu : list)
+    {
+        if (!danmu) continue;
+        // Also undo any partial restoration if the embedded source data was invalid.
+        danmu->originTime = danmu->time;
+        danmu->source = fileDanmus.first.id;
+        fileDanmus.second.append(danmu);
+    }
+    fileDanmus.first.count = fileDanmus.second.size();
+    srcDanmus.append(fileDanmus);
 }
 
 void LocalProvider::LoadSubFile(QString filePath, QVector<DanmuComment *> &list)
@@ -361,4 +468,14 @@ void LocalProvider::LoadSubFile(QString filePath, QVector<DanmuComment *> &list)
         }
     }
     file.close();
+}
+
+bool LocalProvider::loadSrcInfo()
+{
+    return GlobalObjects::appSetting->value(SETTING_KEY_IMPORT_SRC_INFO, true).toBool();
+}
+
+void LocalProvider::setLoadSrcInfo(bool on)
+{
+    GlobalObjects::appSetting->setValue(SETTING_KEY_IMPORT_SRC_INFO, on);
 }

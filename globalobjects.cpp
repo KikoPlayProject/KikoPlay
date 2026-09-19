@@ -219,7 +219,7 @@ void GlobalObjects::setFontSizeLevel(int level)
 
 bool GlobalObjects::isValidKikoVersion(int kv)
 {
-    static const QSet<int> kvs = {200000, 200100};
+    static const QSet<int> kvs = {200000, 200100, 200200};
     return kvs.contains(kv);
 }
 

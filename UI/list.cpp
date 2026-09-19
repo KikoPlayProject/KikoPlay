@@ -422,16 +422,15 @@ void ListWindow::initActions()
         {
             for(auto &file: files)
             {
-                QVector<DanmuComment *> tmplist;
-                LocalProvider::LoadXmlDanmuFile(file,tmplist);
-                DanmuSource sourceInfo;
-                sourceInfo.scriptData = file;
-                sourceInfo.title=file.mid(file.lastIndexOf('/')+1);
-                sourceInfo.count=tmplist.count();
-                if(GlobalObjects::danmuManager->getPool(item->poolID)->addSource(sourceInfo,tmplist,true)==-1)
+                QVector<QPair<DanmuSource, QVector<DanmuComment *>>> srcDanmus;
+                LocalProvider::LoadXmlDanmuFile(file, srcDanmus);
+                for (auto &p : srcDanmus)
                 {
-                    qDeleteAll(tmplist);
-                    showMessage(tr("Add Failed: Pool is busy"), NotifyMessageFlag::NM_HIDE);
+                    if (GlobalObjects::danmuManager->getPool(item->poolID)->addSource(p.first, p.second, true) == -1)
+                    {
+                        qDeleteAll(p.second);
+                        showMessage(tr("Add Src[%1] Failed: Pool is busy").arg(p.first.title), NotifyMessageFlag::NM_HIDE);
+                    }
                 }
             }
         }
@@ -843,17 +842,15 @@ void ListWindow::initActions()
         {
             for(auto &file: files)
             {
-                QVector<DanmuComment *> tmplist;
-                LocalProvider::LoadXmlDanmuFile(file,tmplist);
-                DanmuSource sourceInfo;
-                sourceInfo.scriptData = file;
-                sourceInfo.title=file.mid(file.lastIndexOf('/')+1);
-                sourceInfo.show=true;
-                sourceInfo.count=tmplist.count();
-                if(GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true)==-1)
+                QVector<QPair<DanmuSource, QVector<DanmuComment *>>> srcDanmus;
+                LocalProvider::LoadXmlDanmuFile(file, srcDanmus);
+                for (auto &p : srcDanmus)
                 {
-                    qDeleteAll(tmplist);
-                    showMessage(tr("Add Failed: Pool is busy"), NotifyMessageFlag::NM_HIDE);
+                    if (GlobalObjects::danmuPool->getPool()->addSource(p.first, p.second, true) == -1)
+                    {
+                        qDeleteAll(p.second);
+                        showMessage(tr("Add Src[%1] Failed: Pool is busy").arg(p.first.title), NotifyMessageFlag::NM_HIDE);
+                    }
                 }
             }
         }
@@ -1923,16 +1920,15 @@ void ListWindow::dropEvent(QDropEvent *event)
                 QFileInfo fi(url.toLocalFile());
                 if (fi.isFile() && "xml" == fi.suffix())
                 {
-                    QVector<DanmuComment *> tmplist;
-                    LocalProvider::LoadXmlDanmuFile(fi.filePath(),tmplist);
-                    DanmuSource sourceInfo;
-                    sourceInfo.scriptData = fi.filePath();
-                    sourceInfo.title=fi.fileName();
-                    sourceInfo.count=tmplist.count();
-                    if(GlobalObjects::danmuPool->getPool()->addSource(sourceInfo,tmplist,true)==-1)
+                    QVector<QPair<DanmuSource, QVector<DanmuComment *>>> srcDanmus;
+                    LocalProvider::LoadXmlDanmuFile(fi.filePath(), srcDanmus);
+                    for (auto &p : srcDanmus)
                     {
-                        qDeleteAll(tmplist);
-                        showMessage(tr("Add Failed: Pool is busy"), NotifyMessageFlag::NM_HIDE);
+                        if (GlobalObjects::danmuPool->getPool()->addSource(p.first, p.second, true) == -1)
+                        {
+                            qDeleteAll(p.second);
+                            showMessage(tr("Add Src[%1] Failed: Pool is busy").arg(p.first.title), NotifyMessageFlag::NM_HIDE);
+                        }
                     }
                 }
             }

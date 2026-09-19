@@ -4,6 +4,9 @@
 #include "globalobjects.h"
 #include "../blocker.h"
 #include "Common/network.h"
+
+#define SETTING_KEY_EXPORT_SRC_INFO "Play/PoolExportSrcInfo"
+
 namespace
 {
     struct
@@ -385,9 +388,66 @@ void Pool::exportPool(const QString &fileName, bool useTimeline, bool applyBlock
     writer.setAutoFormatting(true);
     writer.writeStartDocument();
     writer.writeStartElement("i");
+
+    QVector<QSharedPointer<DanmuComment>> *finalCommentList = &commentList;
+    QVector<QSharedPointer<DanmuComment>> adjustCommentList;
+    if (exportWithSrcInfo())
+    {
+        QHash<int, QVector<QSharedPointer<DanmuComment>>> srcDanmus;
+        adjustCommentList.reserve(commentList.size());
+        if (ids.isEmpty())
+        {
+            for (auto &src : sourcesTable)
+            {
+                srcDanmus[src.id].reserve(commentList.size());
+            }
+        }
+        else
+        {
+            for (int id : ids)
+            {
+                if (sourcesTable.contains(id))
+                {
+                    srcDanmus[id].reserve(commentList.size());
+                }
+            }
+        }
+        for (const auto &danmu : commentList)
+        {
+            if (applyBlockRule && danmu->blockBy != -1) continue;
+            if (!ids.isEmpty() && !ids.contains(danmu->source)) continue;
+            if (useTimeline && danmu->clipped) continue;
+            srcDanmus[danmu->source].append(danmu);
+        }
+
+        QByteArray content;
+        QBuffer buffer(&content);
+        buffer.open(QIODevice::WriteOnly);
+        QDataStream ds(&buffer);
+        ds << GlobalObjects::kikoVersionNum;
+
+        int commentStart = 0;
+        for (auto iter = srcDanmus.begin(); iter != srcDanmus.end(); ++iter)
+        {
+            ds << 0x23;
+            auto &src = sourcesTable[iter.key()];
+            auto &dms = iter.value();
+            ds << commentStart << dms.size() << useTimeline;
+            ds << src;
+            adjustCommentList.append(dms);
+            commentStart = adjustCommentList.size();
+        }
+        finalCommentList = &adjustCommentList;
+        QByteArray compressedContent;
+        Network::gzipCompress(content,compressedContent);
+        writer.writeStartElement("kikoplay_src");
+        writer.writeCharacters(compressedContent.toBase64());
+        writer.writeEndElement();
+    }
+
     static int type[3]={1,5,4};
     static int fontSize[3]={25,18,36};
-    for(const auto &danmu:commentList)
+    for (const auto &danmu : *finalCommentList)
     {
         if(applyBlockRule && danmu->blockBy!=-1) continue;
         if(!ids.isEmpty() && !ids.contains(danmu->source)) continue;
@@ -423,9 +483,9 @@ void Pool::exportKdFile(QDataStream &stream, const QList<int> &ids)
     PoolStateLock lock;
     if(!lock.tryLock(pid)) return;
 
-    stream<<anime<<epType<<epIndex<<ep;
-    stream<<GlobalObjects::danmuManager->getMatchedFile16Md5(pid).join(';');
-	auto srcList(sourcesTable.values());
+    stream << 200200 << anime << epType << epIndex << ep;
+
+    QList<DanmuSource> srcList{sourcesTable.values()};
 	int count = 0;
 	for (auto iter = srcList.begin(); iter != srcList.end();)
 	{
@@ -435,18 +495,57 @@ void Pool::exportKdFile(QDataStream &stream, const QList<int> &ids)
 			++iter;
 		}
 	}
-    stream<<srcList;
+    stream << srcList;
     for (const auto &danmu : commentList)
     {
         if (!ids.isEmpty() && !ids.contains(danmu->source)) continue;
         ++count;
     }
-    stream<<count;
-    for(const auto &danmu:commentList)
+    stream << count;
+    for (const auto &danmu : commentList)
     {
-        if(!ids.isEmpty() && !ids.contains(danmu->source)) continue;
-        stream<<*danmu;
+        if (!ids.isEmpty() && !ids.contains(danmu->source)) continue;
+        stream << *danmu;
     }
+}
+
+bool Pool::importKdFile(QDataStream &stream, QHash<int, QVector<DanmuComment *> > &danmus)
+{
+    commentList.clear();
+    sourcesTable.clear();
+    danmus.clear();
+    anime.clear();
+    epType = EpType::UNKNOWN;
+    epIndex = -1;
+    ep.clear();
+
+    int kv = 0;
+    stream >> kv;
+    if (!GlobalObjects::isValidKikoVersion(kv)) return false;
+
+    stream >> anime >> epType >> epIndex >> ep;
+    if (anime.isEmpty() || epType == EpType::UNKNOWN || epIndex < 0) return false;
+
+    this->pid = GlobalObjects::danmuManager->getPoolId(anime, epType, epIndex);
+
+    int danmuCount = 0;
+    QList<DanmuSource> srcInfoList;
+    stream >> srcInfoList >> danmuCount;
+    for (auto &src : srcInfoList)
+    {
+        sourcesTable[src.id] = src;
+    }
+    while (danmuCount-- > 0)
+    {
+        DanmuComment *danmu = new DanmuComment;
+        stream >> *danmu;
+        if (danmu->type != DanmuComment::UNKNOW && sourcesTable.contains(danmu->source))
+        {
+            danmus[danmu->source].append(danmu);
+        }
+        else delete danmu;
+    }
+    return true;
 }
 
 void Pool::exportSimpleInfo(int srcId, QVector<SimpleDanmuInfo> &simpleDanmuList, bool applyClip)
@@ -643,6 +742,16 @@ bool Pool::addPoolCodeObject(const QJsonObject &infoObj)
         if (used) emit poolChanged(true);
     }
     return true;
+}
+
+bool Pool::exportWithSrcInfo()
+{
+    return GlobalObjects::appSetting->value(SETTING_KEY_EXPORT_SRC_INFO, true).toBool();
+}
+
+void Pool::setExportWithSrcInfo(bool on)
+{
+    GlobalObjects::appSetting->setValue(SETTING_KEY_EXPORT_SRC_INFO, on);
 }
 
 

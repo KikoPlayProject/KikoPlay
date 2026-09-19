@@ -163,28 +163,31 @@ bool DanmuPool::addLocalDanmuFile(const QString &fileName)
         }
     }
     QFileInfo fi(fileName);
-    if(!contains && fi.exists())
+    if (!contains && fi.exists())
     {
-        QVector<DanmuComment *> tmplist;
-        LocalProvider::LoadXmlDanmuFile(fileName, tmplist);
-        DanmuSource sourceInfo;
-        sourceInfo.scriptData = fi.filePath();
-        sourceInfo.title=fi.fileName();
-        sourceInfo.count=tmplist.count();
-        int srcId = curPool->addSource(sourceInfo,tmplist,true);
-        if(srcId >= 0)
+        QVector<QPair<DanmuSource, QVector<DanmuComment *>>> srcDanmus;
+        LocalProvider::LoadXmlDanmuFile(fileName, srcDanmus);
+        if (!srcDanmus.empty())
         {
-            if(curPool == emptyPool)
+            for (auto &p : srcDanmus)
             {
-                tmpSourceIds.append(srcId);
+               int srcId = curPool->addSource(p.first, p.second, true);
+               if (srcId >= 0)
+               {
+                   if(curPool == emptyPool)
+                   {
+                       tmpSourceIds.append(srcId);
+                   }
+
+                   return true;
+               }
+               else
+               {
+                   qDeleteAll(p.second);
+               }
             }
             Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tr("Danmu File [%1] has been added").arg(fi.fileName()));
             return true;
-        }
-        else
-        {
-            qDeleteAll(tmplist);
-            Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tr("Add Faied: Pool is busy"));
         }
     }
     return false;

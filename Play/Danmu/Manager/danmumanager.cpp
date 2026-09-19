@@ -179,26 +179,27 @@ void DanmuManager::exportKdFile(const QList<DanmuPoolNode *> &exportList, const 
                 QBuffer buffer(&content);
                 buffer.open(QIODevice::WriteOnly);
                 QDataStream ds(&buffer);
-                for(DanmuPoolNode *epNode:*node->children)
+                for (DanmuPoolNode *epNode:*node->children)
                 {
-                    if(epNode->checkStatus==Qt::Unchecked)continue;
-                    Pool *pool=getPool(epNode->idInfo);
+                    if (epNode->checkStatus == Qt::Unchecked)continue;
+                    Pool *pool = getPool(epNode->idInfo);
                     QList<int> srcList;
-                    if(epNode->checkStatus!=Qt::Checked)
+                    if (epNode->checkStatus != Qt::Checked)
                     {
-                        for(DanmuPoolNode *srcNode:*epNode->children)
+                        for (DanmuPoolNode *srcNode : *epNode->children)
                         {
-                            if(srcNode->checkStatus==Qt::Checked)
-                                srcList<<static_cast<DanmuPoolSourceNode *>(srcNode)->srcId;
+                            if (srcNode->checkStatus == Qt::Checked)
+                                srcList << static_cast<DanmuPoolSourceNode *>(srcNode)->srcId;
                         }
                     }
-                    ds<<int(0x23);
+                    ds << int(0x23);
                     pool->exportKdFile(ds,srcList);
+                    ds << GlobalObjects::danmuManager->getMatchedFile16Md5(pool->pid);
                 }
                 QByteArray compressedContent;
                 Network::gzipCompress(content,compressedContent);
                 QDataStream fs(&kdFile);
-                fs<<QString("kd")<<comment<<compressedContent;
+                fs << QString("kdV2") << comment << compressedContent;
             }
         }
         emit workerStateMessage("Done");
@@ -209,78 +210,62 @@ void DanmuManager::exportKdFile(const QList<DanmuPoolNode *> &exportList, const 
 int DanmuManager::importKdFile(const QString &fileName, QWidget *parent)
 {
     QFile kdFile(fileName);
-    bool ret=kdFile.open(QIODevice::ReadOnly);
-    if(!ret) return -1;
+    bool ret = kdFile.open(QIODevice::ReadOnly);
+    if (!ret) return -1;
     QDataStream fs(&kdFile);
-    QString head,comment;
-    fs>>head;
-    if(head!="kd") return -2;
-    fs>>comment;
-    bool readContent=comment.isEmpty();
-    if(!comment.isEmpty())
+    QString head;
+    fs >> head;
+    if (head != "kdV2") return -2;
+    QString comment;
+    fs >> comment;
+    bool readContent = comment.isEmpty();
+    if (!comment.isEmpty())
     {
         QMessageBox::StandardButton btn =
-                QMessageBox::information(parent,tr("Kd Comment"),comment,
-                                 QMessageBox::Ok|QMessageBox::Cancel,QMessageBox::Ok);
+            QMessageBox::information(parent,tr("Kd Comment"),comment,
+                                     QMessageBox::Ok|QMessageBox::Cancel,QMessageBox::Ok);
         readContent=(btn==QMessageBox::Ok);
     }
-    if(!readContent) return 0;
+    if (!readContent) return 0;
     ThreadTask task(GlobalObjects::workThread);
     return task.Run([this,&fs](){
-        QByteArray compressedConent,content;
-        fs>>compressedConent;
-        if(Network::gzipDecompress(compressedConent,content)!=0) return -2;
-        QBuffer buffer(&content);
-        buffer.open(QIODevice::ReadOnly);
-        QDataStream ds(&buffer);
-        while(true)
-        {
-            int poolFlag=0;
-            ds>>poolFlag;
-            if(poolFlag!=0x23) break;
+       QByteArray compressedConent, content;
+       fs >> compressedConent;
+       if (Network::gzipDecompress(compressedConent,content) != 0) return -2;
+       QBuffer buffer(&content);
+       buffer.open(QIODevice::ReadOnly);
+       QDataStream ds(&buffer);
+       while (true)
+       {
+           int poolFlag = 0;
+           ds >> poolFlag;
+           if (poolFlag != 0x23) break;
 
-            QString curAnime,curEp,file16MD5;
-            EpType epType;
-            double epIndex;
-            QList<DanmuSource> srcInfoList;
-            QHash<int, QPair<DanmuSource,QVector<DanmuComment *>>> danmuInfo;
-            int danmuConut=0;
+           Pool tmpPool{"", "", "", EpType::UNKNOWN, -1};
+           QHash<int, QVector<DanmuComment *>> srcDanmus;
+           if (tmpPool.importKdFile(ds, srcDanmus))
+           {
+               emit workerStateMessage(tr("Adding: %1-%2").arg(tmpPool.anime, tmpPool.ep.isEmpty() ? QString::number(tmpPool.epIndex) : tmpPool.ep));
+               Pool *pool = getPool(createPool(tmpPool.anime, tmpPool.epType, tmpPool.epIndex, tmpPool.ep));
+               if (pool)
+               {
+                   QStringList file16Md5List;
+                   ds >> file16Md5List;
+                   for (auto &md5 : file16Md5List)
+                   {
+                       this->setMatch(md5, pool->pid);
+                   }
+                   for (auto &srcItem : tmpPool.sourcesTable)
+                   {
+                       pool->addSource(srcItem, srcDanmus[srcItem.id], true);
+                   }
+               }
+           }
+       }
+       emit workerStateMessage("Done");
+       return 1;
+   }).toInt();
 
-            ds>>curAnime>>epType>>epIndex>>curEp>>file16MD5>>srcInfoList>>danmuConut;
-            emit workerStateMessage(tr("Adding: %1-%2").arg(curAnime,curEp));
-            for(auto &src:srcInfoList)
-            {
-                danmuInfo[src.id].first=src;
-            }
-            while(danmuConut-- > 0)
-            {
-                DanmuComment *danmu=new DanmuComment;
-                ds>>*danmu;
-                if(danmu->type!=DanmuComment::UNKNOW)
-                {
-                    Q_ASSERT(danmuInfo.contains(danmu->source));
-                    danmuInfo[danmu->source].second.append(danmu);
-                }
-                else delete danmu;
-            }
-            QStringList file16Md5List(file16MD5.split(';',Qt::SkipEmptyParts));
-            QString pid(this->createPool(curAnime,epType, epIndex, curEp,file16Md5List.count()==1?file16Md5List.first():""));
-            if(file16Md5List.count()>1)
-            {
-                for(const QString &md5:file16Md5List) this->setMatch(md5,pid);
-            }
-            Pool *pool=getPool(pid);
-			Q_ASSERT(pool);
-            int c = 1;
-            for(auto &srcItem:danmuInfo)
-            {
-                pool->addSource(srcItem.first,srcItem.second, c==danmuInfo.size());
-                ++c;
-            }
-        }
-        emit workerStateMessage("Done");
-        return 1;
-    }).toInt();
 }
 
 QStringList DanmuManager::getMatchedFile16Md5(const QString &pid)

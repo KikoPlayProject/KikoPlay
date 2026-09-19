@@ -20,6 +20,7 @@ private:
 
     SettingItemArea *initStyleArea();
     SettingItemArea *initMergeArea();
+    SettingItemArea *initImportExportArea();
     SettingItemArea *initOtherArea();
 };
 

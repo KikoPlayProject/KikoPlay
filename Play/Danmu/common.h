@@ -199,6 +199,10 @@ struct DanmuSource
     void setTimeline(const QString &timelineStr);
     QString timelineStr() const;
     DanmuTimeResult mapTime(int rawOriginTimeMs) const;
+    // All raw times mapping to finalTimeMs, in ascending order; empty if none.
+    // Excludes OutsideClip, but supports negative final times (BeforeZero).
+    // Requires sorted timelineInfo, just like mapTime.
+    QVector<int> unmapTime(int finalTimeMs) const;
     bool hasClip() const;
     void setClip(const QString &clipStr);
     void setClip(int start, int duration);

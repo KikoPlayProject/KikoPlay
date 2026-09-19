@@ -34,6 +34,7 @@ public:
     void setSourceVisibility(int srcId, bool show);
     void exportPool(const QString &fileName, bool useTimeline=true, bool applyBlockRule=false, const QList<int> &ids=QList<int>());
     void exportKdFile(QDataStream &stream, const QList<int> &ids=QList<int>());
+    bool importKdFile(QDataStream &stream, QHash<int, QVector<DanmuComment *>> &danmus);
     void exportSimpleInfo(int srcId, QVector<SimpleDanmuInfo> &simpleDanmuList, bool applyClip = true);
     QJsonArray exportJson();
     QJsonObject exportFullJson();
@@ -61,6 +62,9 @@ public:
     bool addPoolCodeArray(const QJsonArray &infoArray);
     bool addPoolCodeObject(const QJsonObject &infoObj);
     void setRefreshFlag(bool flag) { _refreshFlag = flag; }
+public:
+    static bool exportWithSrcInfo();
+    static void setExportWithSrcInfo(bool on);
 private:
     QString pid;
     QString anime,ep;
