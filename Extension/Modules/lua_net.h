@@ -14,6 +14,9 @@ public:
     static int httpHead(lua_State *L);
     static int httpPost(lua_State *L);
     static int httpGetBatch(lua_State *L);
+    // Returns err, {comments, statusCode}; the download URL stays inside the client.
+    static int getDComment(lua_State *L);
+    static int dSearch(lua_State *L);
 private:
     static void pushNetworkReply(lua_State *L, const Network::Reply &reply);
     static void setRequestOptions(const QVariantMap &options, QStringList &headers);

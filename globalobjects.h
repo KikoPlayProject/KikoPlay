@@ -78,8 +78,8 @@ public:
     static qreal fontSize(qreal baseSize);
     static void setFontSizeLevel(int level);
 
-    static constexpr const char *kikoVersion = "2.1.0";
-    static constexpr const int kikoVersionNum = 200100;
+    static constexpr const char *kikoVersion = "2.2.0";
+    static constexpr const int kikoVersionNum = 200200;
     static bool isValidKikoVersion(int kv);
 
 

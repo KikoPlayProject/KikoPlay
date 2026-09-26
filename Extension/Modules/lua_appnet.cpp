@@ -62,6 +62,8 @@ void AppNet::setup()
         {"httpgetbatch", Net::httpGetBatch},
         {"httppost", Net::httpPost},
         {"httphead", Net::httpHead},
+        {"dcomment", Net::getDComment},
+        {"dsearch", Net::dSearch},
         {nullptr, nullptr}
     };
     registerFuncs({"kiko", "net"}, netFuncs);
@@ -312,16 +314,6 @@ void AppNet::buildRequest(const QVariantMap &reqInfo, QNetworkRequest &req)
         {
             req.setTransferTimeout(timeout);
         }
-    }
-    if (reqInfo.value("set_dandan_header", false).toBool() && reqInfo.contains("dandan_path"))
-    {
-        const QString &ddPath = reqInfo.value("dandan_path", "").toString();
-        qint64 ts = QDateTime::currentSecsSinceEpoch();
-        QString secret = QString("%1%2%3%4").arg(Network::kDanDanAppId).arg(ts).arg(ddPath).arg(Network::kDanDanAppSecret);
-        QByteArray hash = QCryptographicHash::hash(secret.toUtf8(), QCryptographicHash::Sha256);
-        req.setRawHeader("X-AppId", Network::kDanDanAppId);
-        req.setRawHeader("X-Timestamp", QString::number(ts).toUtf8());
-        req.setRawHeader("X-Signature", hash.toBase64());
     }
 }
 

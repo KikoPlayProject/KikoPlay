@@ -16,7 +16,7 @@
 
 namespace Network
 {
-    static constexpr const int timeout = 10000;
+    static constexpr const int timeout = 20000;
     static constexpr const int maxRedirectTimes = 10;
     struct Reply
     {
@@ -57,8 +57,6 @@ namespace Network
 
     static constexpr const char *kKikoAppId = APP_ID_KIKO;
     static constexpr const char *kKikoAppSecret = APP_SECRET_KIKO;
-    static constexpr const char *kDanDanAppId = APP_ID_DANDAN;
-    static constexpr const char *kDanDanAppSecret = APP_SECRET_DANDAN;
 }
 
 #endif // NETWORK_H

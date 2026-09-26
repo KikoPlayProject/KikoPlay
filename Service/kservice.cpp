@@ -6,6 +6,7 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QNetworkInterface>
+#include <QMutex>
 #include "Download/downloadmodel.h"
 #include "MediaLibrary/animeworker.h"
 #include "Play/Danmu/Manager/pool.h"
@@ -230,6 +231,84 @@ bool KService::getDanmuSourceSync(const QString &poolId, QList<DanmuSource> &sou
     return true;
 }
 
+KDCommentUrlResult KService::getDCommentUrlSync(qint64 episodeId, bool withRelated)
+{
+    if (episodeId <= 0) return {0, {}, "invalid_episode_id"};
+
+    QEventLoop eventLoop;
+    QObject::connect(serviceThread.data(), &QThread::finished, &eventLoop, &QEventLoop::quit, Qt::QueuedConnection);
+    QObject::connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, &eventLoop, &QEventLoop::quit, Qt::QueuedConnection);
+    if (QCoreApplication::closingDown() || !serviceThread->isRunning())
+    {
+        return {0, {}, "service_unavailable"};
+    }
+
+    struct PendingRequest
+    {
+        QMutex mutex;
+        QEventLoop *eventLoop = nullptr;
+        KDCommentUrlResult result{0, {}, "request_cancelled"};
+    };
+    auto pending = QSharedPointer<PendingRequest>::create();
+    pending->eventLoop = &eventLoop;
+    // Queue both directions so this also works when called on the service thread.
+    auto cb = [pending](const KDCommentUrlResult &result){
+        QMutexLocker locker(&pending->mutex);
+        if (!pending->eventLoop) return;
+        QMetaObject::invokeMethod(pending->eventLoop, [pending, result](){
+            pending->result = result;
+            pending->eventLoop->quit();
+        }, Qt::QueuedConnection);
+    };
+    const bool queued = QMetaObject::invokeMethod(this, [this, episodeId, withRelated, pending, cb](){
+        kGetDCommentUrl(episodeId, withRelated, cb);
+    }, Qt::QueuedConnection);
+    if (!queued) return {0, {}, "service_unavailable"};
+    eventLoop.exec();
+    // A shutdown can end the nested loop before the network request completes.
+    QMutexLocker locker(&pending->mutex);
+    pending->eventLoop = nullptr;
+    return pending->result;
+}
+
+KDSearchResult KService::searchDandanSync(const QString &keyword)
+{
+    const QString query = keyword.trimmed();
+    if (query.size() < 2 || query.size() > 256) return {0, {}, "invalid_keyword"};
+
+    QEventLoop eventLoop;
+    QObject::connect(serviceThread.data(), &QThread::finished, &eventLoop, &QEventLoop::quit, Qt::QueuedConnection);
+    QObject::connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, &eventLoop, &QEventLoop::quit, Qt::QueuedConnection);
+    if (QCoreApplication::closingDown() || !serviceThread->isRunning())
+    {
+        return {0, {}, "service_unavailable"};
+    }
+
+    struct PendingRequest
+    {
+        QMutex mutex;
+        QEventLoop *eventLoop = nullptr;
+        KDSearchResult result{0, {}, "request_cancelled"};
+    };
+    auto pending = QSharedPointer<PendingRequest>::create();
+    pending->eventLoop = &eventLoop;
+    const bool queued = QMetaObject::invokeMethod(this, [this, query, pending](){
+            kDSearch(query, [pending](const KDSearchResult &result){
+            QMutexLocker locker(&pending->mutex);
+            if (!pending->eventLoop) return;
+            QMetaObject::invokeMethod(pending->eventLoop, [pending, result](){
+                pending->result = result;
+                pending->eventLoop->quit();
+            }, Qt::QueuedConnection);
+        });
+    }, Qt::QueuedConnection);
+    if (!queued) return {0, {}, "service_unavailable"};
+    eventLoop.exec();
+    QMutexLocker locker(&pending->mutex);
+    pending->eventLoop = nullptr;
+    return pending->result;
+}
+
 void KService::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() == eventTimer.timerId())
@@ -302,6 +381,7 @@ void KService::setFileInfo(kservice::KFileInfo &fileInfo, const QString &path)
         QByteArray fileData(file.read(32*1024*1024));
         fileInfo.set_hash32(QCryptographicHash::hash(fileData, QCryptographicHash::Md5).toHex().toStdString());
         fileInfo.set_filesize(file.size());
+        fileInfo.set_hash16(QCryptographicHash::hash(fileData.left(16*1024*1024), QCryptographicHash::Md5).toHex().toStdString());
     }
 
     QString downloadURL = GlobalObjects::downloadModel->findFileUri(path);
@@ -779,14 +859,21 @@ bool KService::isInterestLibrarySource(const QString &scriptId) const
 
 void KService::kStatsUV(bool isStartup)
 {
+    if (uvRequestInFlight)
+    {
+        return;
+    }
     const qint64 lastTs = serviceData->value(SERVICE_KEY_DAY_FIRST_START_TIME, 0).toLongLong();
     const QDate lastDate = QDateTime::fromSecsSinceEpoch(lastTs).date();
     const QDate curDate = QDate::currentDate();
     const qint64 curTs = QDateTime::currentSecsSinceEpoch();
-    if (lastTs > 0 && lastDate.daysTo(curDate) <= 0) return;
+    if (lastTs > 0 && lastDate == curDate)
+    {
+        return;
+    }
 
+    uvRequestInFlight = true;
     kservice::UVEvent uvEvent;
-    serviceData->setValue(SERVICE_KEY_DAY_FIRST_START_TIME, curTs);
     setEventHeader(*uvEvent.mutable_header(), "uv", curTs);
 
     if (isStartup)
@@ -804,8 +891,118 @@ void KService::kStatsUV(bool isStartup)
     }
     std::string msgContent;
     uvEvent.SerializeToString(&msgContent);
-    post(pathKStatsUV, QByteArray(msgContent.c_str(), msgContent.size()), std::bind(&KService::handleUV, this, std::placeholders::_1));
+    post(pathKStatsUV, QByteArray(msgContent.c_str(), msgContent.size()), [this, curTs](QNetworkReply *reply){
+        const QString errorCode = handleUV(reply);
+        if (errorCode.isEmpty()) serviceData->setValue(SERVICE_KEY_DAY_FIRST_START_TIME, curTs);
+        uvRequestInFlight = false;
+    });
     Logger::logger()->log(Logger::APP, "[KService]stats uv: " + curDate.toString());
+}
+
+void KService::kGetDCommentUrl(qint64 episodeId, bool withRelated, CommentUrlCallBack cb)
+{
+    kservice::DCommentRequest req;
+    setEventHeader(*req.mutable_header(), "d_comment_url");
+    req.set_episodeid(episodeId);
+    req.set_withrelated(withRelated);
+    std::string msgContent;
+    req.SerializeToString(&msgContent);
+    post(pathDComment, QByteArray(msgContent.c_str(), msgContent.size()), [cb](QNetworkReply *reply){
+        KDCommentUrlResult result;
+        result.statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        const QByteArray contentType = reply->rawHeader("Content-Type").split(';').first().trimmed().toLower();
+        const QByteArray pbData = reply->readAll();
+        kservice::DCommentResponse rsp;
+        if (contentType == "application/octet-stream" && rsp.ParseFromArray(pbData.constData(), pbData.size()) && rsp.has_header())
+        {
+            result.errMsg = QString::fromStdString(rsp.header().err_msg());
+            if (result.statusCode == 200 && reply->error() == QNetworkReply::NoError &&
+                rsp.header().status() == 1 && result.errMsg.isEmpty())
+            {
+                const QString url = QString::fromStdString(rsp.url());
+                const QUrl parsedUrl(url, QUrl::StrictMode);
+                if (parsedUrl.isValid() && parsedUrl.scheme() == "https" && !parsedUrl.host().isEmpty())
+                {
+                    result.url = url;
+                }
+                else
+                {
+                    result.errMsg = "invalid_response";
+                }
+            }
+            else if (result.errMsg.isEmpty())
+            {
+                result.errMsg = "service_error";
+            }
+        }
+        else if (!result.statusCode && reply->error() != QNetworkReply::NoError)
+        {
+            result.errMsg = reply->error() == QNetworkReply::TimeoutError ? "request_timeout" : "network_error";
+        }
+        else
+        {
+            result.errMsg = result.statusCode == 401 ? "unauthorized" : "invalid_response";
+        }
+
+        cb(result);
+    });
+}
+
+void KService::kDSearch(const QString &keyword, SearchCallBack cb)
+{
+    kservice::DSearchRequest req;
+    setEventHeader(*req.mutable_header(), "d_search");
+    req.set_keyword(keyword.toStdString());
+    std::string msgContent;
+    req.SerializeToString(&msgContent);
+    post(pathDSearch, QByteArray(msgContent.c_str(), msgContent.size()), [cb](QNetworkReply *reply){
+        KDSearchResult result;
+        result.statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        const QByteArray contentType = reply->rawHeader("Content-Type").split(';').first().trimmed().toLower();
+        const QByteArray pbData = reply->readAll();
+        kservice::DSearchResponse rsp;
+        if (contentType == "application/octet-stream" && rsp.ParseFromArray(pbData.constData(), pbData.size()) && rsp.has_header())
+        {
+            result.errMsg = QString::fromStdString(rsp.header().err_msg());
+            if (result.statusCode == 200 && reply->error() == QNetworkReply::NoError &&
+                rsp.header().status() == 1 && result.errMsg.isEmpty())
+            {
+                result.hasMore = rsp.hasmore();
+                for (const auto &anime : rsp.animes())
+                {
+                    QVariantList episodes;
+                    for (const auto &episode : anime.episodes())
+                    {
+                        episodes.append(QVariantMap{
+                            {"episodeId", QVariant::fromValue<qlonglong>(episode.episodeid())},
+                            {"episodeTitle", QString::fromStdString(episode.episodetitle())},
+                        });
+                    }
+                    result.animes.append(QVariantMap{
+                        {"animeId", QVariant::fromValue<qlonglong>(anime.animeid())},
+                        {"animeTitle", QString::fromStdString(anime.animetitle())},
+                        {"type", QString::fromStdString(anime.type())},
+                        {"typeDescription", QString::fromStdString(anime.typedescription())},
+                        {"episodes", episodes},
+                    });
+                }
+            }
+            else if (result.errMsg.isEmpty())
+            {
+                result.errMsg = "service_error";
+            }
+        }
+        else if (!result.statusCode && reply->error() != QNetworkReply::NoError)
+        {
+            result.errMsg = reply->error() == QNetworkReply::TimeoutError ? "request_timeout" : "network_error";
+        }
+        else
+        {
+            result.errMsg = result.statusCode == 401 ? "unauthorized" : "invalid_response";
+        }
+
+        cb(result);
+    });
 }
 
 void KService::kFileReco(const QString &path)
@@ -1014,14 +1211,26 @@ void KService::kGetSource(const QString &poolId, const QString &path, PostCallBa
     Logger::logger()->log(Logger::APP, QString("[KService]get_src: %1 %2").arg(pool->animeTitle(), ep.toString()));
 }
 
-void KService::handleUV(QNetworkReply *reply)
+QString KService::handleUV(QNetworkReply *reply)
 {
+    const int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    if (!statusCode && reply->error() != QNetworkReply::NoError)
+    {
+        return reply->error() == QNetworkReply::TimeoutError ? "request_timeout" : "network_error";
+    }
+    if (statusCode == 401) return "unauthorized";
+    const QByteArray contentType = reply->rawHeader("Content-Type").split(';').first().trimmed().toLower();
+    if (contentType != "application/octet-stream") return "invalid_response";
+    if (reply->error() != QNetworkReply::NoError || statusCode != 200)
+    {
+        return "uv_request_failed";
+    }
     QByteArray pbData = reply->readAll();
     kservice::UVEventResponse rsp;
-    if (!rsp.ParseFromArray(pbData.constData(), pbData.size()))
+    if (!rsp.ParseFromArray(pbData.constData(), pbData.size()) || !rsp.has_header())
     {
         Logger::logger()->log(Logger::APP, "[KService]uv rsp parse error");
-        return;
+        return "invalid_response";
     }
     const kservice::UVEventResponse::LatestVersion &latestVersion = rsp.latestversioninfo();
     if (latestVersion.version() > 0)
@@ -1035,6 +1244,12 @@ void KService::handleUV(QNetworkReply *reply)
             this->versionInfo = versionInfo;
         }, Qt::QueuedConnection);
     }
+    if (rsp.header().status() != 1)
+    {
+        const QString errorCode = QString::fromStdString(rsp.header().err_msg());
+        return errorCode.isEmpty() ? "uv_request_failed" : errorCode;
+    }
+    return {};
 }
 
 void KService::handleFileReco(const QString &path, QNetworkReply *reply)

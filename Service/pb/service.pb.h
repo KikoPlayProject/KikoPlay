@@ -79,6 +79,24 @@ extern Anime_StaffEntry_DoNotUseDefaultTypeInternal _Anime_StaffEntry_DoNotUse_d
 class CommonEvent;
 struct CommonEventDefaultTypeInternal;
 extern CommonEventDefaultTypeInternal _CommonEvent_default_instance_;
+class DCommentRequest;
+struct DCommentRequestDefaultTypeInternal;
+extern DCommentRequestDefaultTypeInternal _DCommentRequest_default_instance_;
+class DCommentResponse;
+struct DCommentResponseDefaultTypeInternal;
+extern DCommentResponseDefaultTypeInternal _DCommentResponse_default_instance_;
+class DSearchRequest;
+struct DSearchRequestDefaultTypeInternal;
+extern DSearchRequestDefaultTypeInternal _DSearchRequest_default_instance_;
+class DSearchResponse;
+struct DSearchResponseDefaultTypeInternal;
+extern DSearchResponseDefaultTypeInternal _DSearchResponse_default_instance_;
+class DSearchResponse_Anime;
+struct DSearchResponse_AnimeDefaultTypeInternal;
+extern DSearchResponse_AnimeDefaultTypeInternal _DSearchResponse_Anime_default_instance_;
+class DSearchResponse_Episode;
+struct DSearchResponse_EpisodeDefaultTypeInternal;
+extern DSearchResponse_EpisodeDefaultTypeInternal _DSearchResponse_Episode_default_instance_;
 class DanmuComment;
 struct DanmuCommentDefaultTypeInternal;
 extern DanmuCommentDefaultTypeInternal _DanmuComment_default_instance_;
@@ -188,6 +206,12 @@ template<> ::kservice::AnimeProfileEvent* Arena::CreateMaybeMessage<::kservice::
 template<> ::kservice::AnimeProfileResponse* Arena::CreateMaybeMessage<::kservice::AnimeProfileResponse>(Arena*);
 template<> ::kservice::Anime_StaffEntry_DoNotUse* Arena::CreateMaybeMessage<::kservice::Anime_StaffEntry_DoNotUse>(Arena*);
 template<> ::kservice::CommonEvent* Arena::CreateMaybeMessage<::kservice::CommonEvent>(Arena*);
+template<> ::kservice::DCommentRequest* Arena::CreateMaybeMessage<::kservice::DCommentRequest>(Arena*);
+template<> ::kservice::DCommentResponse* Arena::CreateMaybeMessage<::kservice::DCommentResponse>(Arena*);
+template<> ::kservice::DSearchRequest* Arena::CreateMaybeMessage<::kservice::DSearchRequest>(Arena*);
+template<> ::kservice::DSearchResponse* Arena::CreateMaybeMessage<::kservice::DSearchResponse>(Arena*);
+template<> ::kservice::DSearchResponse_Anime* Arena::CreateMaybeMessage<::kservice::DSearchResponse_Anime>(Arena*);
+template<> ::kservice::DSearchResponse_Episode* Arena::CreateMaybeMessage<::kservice::DSearchResponse_Episode>(Arena*);
 template<> ::kservice::DanmuComment* Arena::CreateMaybeMessage<::kservice::DanmuComment>(Arena*);
 template<> ::kservice::DanmuSource* Arena::CreateMaybeMessage<::kservice::DanmuSource>(Arena*);
 template<> ::kservice::EventHeader* Arena::CreateMaybeMessage<::kservice::EventHeader>(Arena*);
@@ -308,12 +332,13 @@ enum RecoBy : int {
   R_HASH32 = 1,
   R_INFOHASH = 2,
   R_FILENAME = 3,
+  R_DANDAN = 4,
   RecoBy_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
   RecoBy_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
 };
 bool RecoBy_IsValid(int value);
 constexpr RecoBy RecoBy_MIN = R_NONE;
-constexpr RecoBy RecoBy_MAX = R_FILENAME;
+constexpr RecoBy RecoBy_MAX = R_DANDAN;
 constexpr int RecoBy_ARRAYSIZE = RecoBy_MAX + 1;
 
 const std::string& RecoBy_Name(RecoBy value);
@@ -3027,6 +3052,7 @@ class KFileInfo final :
     kHash32FieldNumber = 3,
     kTorrentHashFieldNumber = 4,
     kUrlFieldNumber = 5,
+    kHash16FieldNumber = 9,
     kDurationMsFieldNumber = 6,
     kFileSizeFieldNumber = 7,
     kIsLocalFieldNumber = 8,
@@ -3101,6 +3127,20 @@ class KFileInfo final :
   std::string* _internal_mutable_url();
   public:
 
+  // string hash16 = 9;
+  void clear_hash16();
+  const std::string& hash16() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_hash16(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_hash16();
+  PROTOBUF_NODISCARD std::string* release_hash16();
+  void set_allocated_hash16(std::string* hash16);
+  private:
+  const std::string& _internal_hash16() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_hash16(const std::string& value);
+  std::string* _internal_mutable_hash16();
+  public:
+
   // int64 durationMs = 6;
   void clear_durationms();
   int64_t durationms() const;
@@ -3141,6 +3181,7 @@ class KFileInfo final :
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr hash32_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr torrenthash_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr url_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr hash16_;
     int64_t durationms_;
     int64_t filesize_;
     bool islocal_;
@@ -8140,6 +8181,994 @@ class AnimeImageUploadResponse final :
   union { Impl_ _impl_; };
   friend struct ::TableStruct_Service_2fpb_2fservice_2eproto;
 };
+// -------------------------------------------------------------------
+
+class DCommentRequest final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:kservice.DCommentRequest) */ {
+ public:
+  inline DCommentRequest() : DCommentRequest(nullptr) {}
+  ~DCommentRequest() override;
+  explicit PROTOBUF_CONSTEXPR DCommentRequest(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  DCommentRequest(const DCommentRequest& from);
+  DCommentRequest(DCommentRequest&& from) noexcept
+    : DCommentRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline DCommentRequest& operator=(const DCommentRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline DCommentRequest& operator=(DCommentRequest&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const DCommentRequest& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const DCommentRequest* internal_default_instance() {
+    return reinterpret_cast<const DCommentRequest*>(
+               &_DCommentRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    43;
+
+  friend void swap(DCommentRequest& a, DCommentRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(DCommentRequest* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(DCommentRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  DCommentRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<DCommentRequest>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const DCommentRequest& from);
+  void MergeFrom(const DCommentRequest& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(DCommentRequest* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "kservice.DCommentRequest";
+  }
+  protected:
+  explicit DCommentRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kHeaderFieldNumber = 1,
+    kEpisodeIdFieldNumber = 2,
+    kWithRelatedFieldNumber = 3,
+  };
+  // .kservice.EventHeader header = 1;
+  bool has_header() const;
+  private:
+  bool _internal_has_header() const;
+  public:
+  void clear_header();
+  const ::kservice::EventHeader& header() const;
+  PROTOBUF_NODISCARD ::kservice::EventHeader* release_header();
+  ::kservice::EventHeader* mutable_header();
+  void set_allocated_header(::kservice::EventHeader* header);
+  private:
+  const ::kservice::EventHeader& _internal_header() const;
+  ::kservice::EventHeader* _internal_mutable_header();
+  public:
+  void unsafe_arena_set_allocated_header(
+      ::kservice::EventHeader* header);
+  ::kservice::EventHeader* unsafe_arena_release_header();
+
+  // int64 episodeId = 2;
+  void clear_episodeid();
+  int64_t episodeid() const;
+  void set_episodeid(int64_t value);
+  private:
+  int64_t _internal_episodeid() const;
+  void _internal_set_episodeid(int64_t value);
+  public:
+
+  // bool withRelated = 3;
+  void clear_withrelated();
+  bool withrelated() const;
+  void set_withrelated(bool value);
+  private:
+  bool _internal_withrelated() const;
+  void _internal_set_withrelated(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:kservice.DCommentRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::kservice::EventHeader* header_;
+    int64_t episodeid_;
+    bool withrelated_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Service_2fpb_2fservice_2eproto;
+};
+// -------------------------------------------------------------------
+
+class DCommentResponse final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:kservice.DCommentResponse) */ {
+ public:
+  inline DCommentResponse() : DCommentResponse(nullptr) {}
+  ~DCommentResponse() override;
+  explicit PROTOBUF_CONSTEXPR DCommentResponse(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  DCommentResponse(const DCommentResponse& from);
+  DCommentResponse(DCommentResponse&& from) noexcept
+    : DCommentResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline DCommentResponse& operator=(const DCommentResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline DCommentResponse& operator=(DCommentResponse&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const DCommentResponse& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const DCommentResponse* internal_default_instance() {
+    return reinterpret_cast<const DCommentResponse*>(
+               &_DCommentResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    44;
+
+  friend void swap(DCommentResponse& a, DCommentResponse& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(DCommentResponse* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(DCommentResponse* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  DCommentResponse* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<DCommentResponse>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const DCommentResponse& from);
+  void MergeFrom(const DCommentResponse& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(DCommentResponse* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "kservice.DCommentResponse";
+  }
+  protected:
+  explicit DCommentResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kUrlFieldNumber = 2,
+    kHeaderFieldNumber = 1,
+  };
+  // string url = 2;
+  void clear_url();
+  const std::string& url() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_url(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_url();
+  PROTOBUF_NODISCARD std::string* release_url();
+  void set_allocated_url(std::string* url);
+  private:
+  const std::string& _internal_url() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_url(const std::string& value);
+  std::string* _internal_mutable_url();
+  public:
+
+  // .kservice.ResponseHeader header = 1;
+  bool has_header() const;
+  private:
+  bool _internal_has_header() const;
+  public:
+  void clear_header();
+  const ::kservice::ResponseHeader& header() const;
+  PROTOBUF_NODISCARD ::kservice::ResponseHeader* release_header();
+  ::kservice::ResponseHeader* mutable_header();
+  void set_allocated_header(::kservice::ResponseHeader* header);
+  private:
+  const ::kservice::ResponseHeader& _internal_header() const;
+  ::kservice::ResponseHeader* _internal_mutable_header();
+  public:
+  void unsafe_arena_set_allocated_header(
+      ::kservice::ResponseHeader* header);
+  ::kservice::ResponseHeader* unsafe_arena_release_header();
+
+  // @@protoc_insertion_point(class_scope:kservice.DCommentResponse)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr url_;
+    ::kservice::ResponseHeader* header_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Service_2fpb_2fservice_2eproto;
+};
+// -------------------------------------------------------------------
+
+class DSearchRequest final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:kservice.DSearchRequest) */ {
+ public:
+  inline DSearchRequest() : DSearchRequest(nullptr) {}
+  ~DSearchRequest() override;
+  explicit PROTOBUF_CONSTEXPR DSearchRequest(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  DSearchRequest(const DSearchRequest& from);
+  DSearchRequest(DSearchRequest&& from) noexcept
+    : DSearchRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline DSearchRequest& operator=(const DSearchRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline DSearchRequest& operator=(DSearchRequest&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const DSearchRequest& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const DSearchRequest* internal_default_instance() {
+    return reinterpret_cast<const DSearchRequest*>(
+               &_DSearchRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    45;
+
+  friend void swap(DSearchRequest& a, DSearchRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(DSearchRequest* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(DSearchRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  DSearchRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<DSearchRequest>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const DSearchRequest& from);
+  void MergeFrom(const DSearchRequest& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(DSearchRequest* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "kservice.DSearchRequest";
+  }
+  protected:
+  explicit DSearchRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kKeywordFieldNumber = 2,
+    kHeaderFieldNumber = 1,
+  };
+  // string keyword = 2;
+  void clear_keyword();
+  const std::string& keyword() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_keyword(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_keyword();
+  PROTOBUF_NODISCARD std::string* release_keyword();
+  void set_allocated_keyword(std::string* keyword);
+  private:
+  const std::string& _internal_keyword() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_keyword(const std::string& value);
+  std::string* _internal_mutable_keyword();
+  public:
+
+  // .kservice.EventHeader header = 1;
+  bool has_header() const;
+  private:
+  bool _internal_has_header() const;
+  public:
+  void clear_header();
+  const ::kservice::EventHeader& header() const;
+  PROTOBUF_NODISCARD ::kservice::EventHeader* release_header();
+  ::kservice::EventHeader* mutable_header();
+  void set_allocated_header(::kservice::EventHeader* header);
+  private:
+  const ::kservice::EventHeader& _internal_header() const;
+  ::kservice::EventHeader* _internal_mutable_header();
+  public:
+  void unsafe_arena_set_allocated_header(
+      ::kservice::EventHeader* header);
+  ::kservice::EventHeader* unsafe_arena_release_header();
+
+  // @@protoc_insertion_point(class_scope:kservice.DSearchRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr keyword_;
+    ::kservice::EventHeader* header_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Service_2fpb_2fservice_2eproto;
+};
+// -------------------------------------------------------------------
+
+class DSearchResponse_Episode final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:kservice.DSearchResponse.Episode) */ {
+ public:
+  inline DSearchResponse_Episode() : DSearchResponse_Episode(nullptr) {}
+  ~DSearchResponse_Episode() override;
+  explicit PROTOBUF_CONSTEXPR DSearchResponse_Episode(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  DSearchResponse_Episode(const DSearchResponse_Episode& from);
+  DSearchResponse_Episode(DSearchResponse_Episode&& from) noexcept
+    : DSearchResponse_Episode() {
+    *this = ::std::move(from);
+  }
+
+  inline DSearchResponse_Episode& operator=(const DSearchResponse_Episode& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline DSearchResponse_Episode& operator=(DSearchResponse_Episode&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const DSearchResponse_Episode& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const DSearchResponse_Episode* internal_default_instance() {
+    return reinterpret_cast<const DSearchResponse_Episode*>(
+               &_DSearchResponse_Episode_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    46;
+
+  friend void swap(DSearchResponse_Episode& a, DSearchResponse_Episode& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(DSearchResponse_Episode* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(DSearchResponse_Episode* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  DSearchResponse_Episode* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<DSearchResponse_Episode>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const DSearchResponse_Episode& from);
+  void MergeFrom(const DSearchResponse_Episode& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(DSearchResponse_Episode* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "kservice.DSearchResponse.Episode";
+  }
+  protected:
+  explicit DSearchResponse_Episode(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kEpisodeTitleFieldNumber = 2,
+    kEpisodeIdFieldNumber = 1,
+  };
+  // string episodeTitle = 2;
+  void clear_episodetitle();
+  const std::string& episodetitle() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_episodetitle(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_episodetitle();
+  PROTOBUF_NODISCARD std::string* release_episodetitle();
+  void set_allocated_episodetitle(std::string* episodetitle);
+  private:
+  const std::string& _internal_episodetitle() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_episodetitle(const std::string& value);
+  std::string* _internal_mutable_episodetitle();
+  public:
+
+  // int64 episodeId = 1;
+  void clear_episodeid();
+  int64_t episodeid() const;
+  void set_episodeid(int64_t value);
+  private:
+  int64_t _internal_episodeid() const;
+  void _internal_set_episodeid(int64_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:kservice.DSearchResponse.Episode)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr episodetitle_;
+    int64_t episodeid_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Service_2fpb_2fservice_2eproto;
+};
+// -------------------------------------------------------------------
+
+class DSearchResponse_Anime final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:kservice.DSearchResponse.Anime) */ {
+ public:
+  inline DSearchResponse_Anime() : DSearchResponse_Anime(nullptr) {}
+  ~DSearchResponse_Anime() override;
+  explicit PROTOBUF_CONSTEXPR DSearchResponse_Anime(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  DSearchResponse_Anime(const DSearchResponse_Anime& from);
+  DSearchResponse_Anime(DSearchResponse_Anime&& from) noexcept
+    : DSearchResponse_Anime() {
+    *this = ::std::move(from);
+  }
+
+  inline DSearchResponse_Anime& operator=(const DSearchResponse_Anime& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline DSearchResponse_Anime& operator=(DSearchResponse_Anime&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const DSearchResponse_Anime& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const DSearchResponse_Anime* internal_default_instance() {
+    return reinterpret_cast<const DSearchResponse_Anime*>(
+               &_DSearchResponse_Anime_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    47;
+
+  friend void swap(DSearchResponse_Anime& a, DSearchResponse_Anime& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(DSearchResponse_Anime* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(DSearchResponse_Anime* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  DSearchResponse_Anime* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<DSearchResponse_Anime>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const DSearchResponse_Anime& from);
+  void MergeFrom(const DSearchResponse_Anime& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(DSearchResponse_Anime* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "kservice.DSearchResponse.Anime";
+  }
+  protected:
+  explicit DSearchResponse_Anime(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kEpisodesFieldNumber = 5,
+    kAnimeTitleFieldNumber = 2,
+    kTypeFieldNumber = 3,
+    kTypeDescriptionFieldNumber = 4,
+    kAnimeIdFieldNumber = 1,
+  };
+  // repeated .kservice.DSearchResponse.Episode episodes = 5;
+  int episodes_size() const;
+  private:
+  int _internal_episodes_size() const;
+  public:
+  void clear_episodes();
+  ::kservice::DSearchResponse_Episode* mutable_episodes(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DSearchResponse_Episode >*
+      mutable_episodes();
+  private:
+  const ::kservice::DSearchResponse_Episode& _internal_episodes(int index) const;
+  ::kservice::DSearchResponse_Episode* _internal_add_episodes();
+  public:
+  const ::kservice::DSearchResponse_Episode& episodes(int index) const;
+  ::kservice::DSearchResponse_Episode* add_episodes();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DSearchResponse_Episode >&
+      episodes() const;
+
+  // string animeTitle = 2;
+  void clear_animetitle();
+  const std::string& animetitle() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_animetitle(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_animetitle();
+  PROTOBUF_NODISCARD std::string* release_animetitle();
+  void set_allocated_animetitle(std::string* animetitle);
+  private:
+  const std::string& _internal_animetitle() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_animetitle(const std::string& value);
+  std::string* _internal_mutable_animetitle();
+  public:
+
+  // string type = 3;
+  void clear_type();
+  const std::string& type() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_type(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_type();
+  PROTOBUF_NODISCARD std::string* release_type();
+  void set_allocated_type(std::string* type);
+  private:
+  const std::string& _internal_type() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_type(const std::string& value);
+  std::string* _internal_mutable_type();
+  public:
+
+  // string typeDescription = 4;
+  void clear_typedescription();
+  const std::string& typedescription() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_typedescription(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_typedescription();
+  PROTOBUF_NODISCARD std::string* release_typedescription();
+  void set_allocated_typedescription(std::string* typedescription);
+  private:
+  const std::string& _internal_typedescription() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_typedescription(const std::string& value);
+  std::string* _internal_mutable_typedescription();
+  public:
+
+  // int64 animeId = 1;
+  void clear_animeid();
+  int64_t animeid() const;
+  void set_animeid(int64_t value);
+  private:
+  int64_t _internal_animeid() const;
+  void _internal_set_animeid(int64_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:kservice.DSearchResponse.Anime)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DSearchResponse_Episode > episodes_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr animetitle_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr type_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr typedescription_;
+    int64_t animeid_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Service_2fpb_2fservice_2eproto;
+};
+// -------------------------------------------------------------------
+
+class DSearchResponse final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:kservice.DSearchResponse) */ {
+ public:
+  inline DSearchResponse() : DSearchResponse(nullptr) {}
+  ~DSearchResponse() override;
+  explicit PROTOBUF_CONSTEXPR DSearchResponse(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  DSearchResponse(const DSearchResponse& from);
+  DSearchResponse(DSearchResponse&& from) noexcept
+    : DSearchResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline DSearchResponse& operator=(const DSearchResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline DSearchResponse& operator=(DSearchResponse&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const DSearchResponse& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const DSearchResponse* internal_default_instance() {
+    return reinterpret_cast<const DSearchResponse*>(
+               &_DSearchResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    48;
+
+  friend void swap(DSearchResponse& a, DSearchResponse& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(DSearchResponse* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(DSearchResponse* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  DSearchResponse* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<DSearchResponse>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const DSearchResponse& from);
+  void MergeFrom(const DSearchResponse& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(DSearchResponse* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "kservice.DSearchResponse";
+  }
+  protected:
+  explicit DSearchResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef DSearchResponse_Episode Episode;
+  typedef DSearchResponse_Anime Anime;
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kAnimesFieldNumber = 2,
+    kHeaderFieldNumber = 1,
+    kHasMoreFieldNumber = 3,
+  };
+  // repeated .kservice.DSearchResponse.Anime animes = 2;
+  int animes_size() const;
+  private:
+  int _internal_animes_size() const;
+  public:
+  void clear_animes();
+  ::kservice::DSearchResponse_Anime* mutable_animes(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DSearchResponse_Anime >*
+      mutable_animes();
+  private:
+  const ::kservice::DSearchResponse_Anime& _internal_animes(int index) const;
+  ::kservice::DSearchResponse_Anime* _internal_add_animes();
+  public:
+  const ::kservice::DSearchResponse_Anime& animes(int index) const;
+  ::kservice::DSearchResponse_Anime* add_animes();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DSearchResponse_Anime >&
+      animes() const;
+
+  // .kservice.ResponseHeader header = 1;
+  bool has_header() const;
+  private:
+  bool _internal_has_header() const;
+  public:
+  void clear_header();
+  const ::kservice::ResponseHeader& header() const;
+  PROTOBUF_NODISCARD ::kservice::ResponseHeader* release_header();
+  ::kservice::ResponseHeader* mutable_header();
+  void set_allocated_header(::kservice::ResponseHeader* header);
+  private:
+  const ::kservice::ResponseHeader& _internal_header() const;
+  ::kservice::ResponseHeader* _internal_mutable_header();
+  public:
+  void unsafe_arena_set_allocated_header(
+      ::kservice::ResponseHeader* header);
+  ::kservice::ResponseHeader* unsafe_arena_release_header();
+
+  // bool hasMore = 3;
+  void clear_hasmore();
+  bool hasmore() const;
+  void set_hasmore(bool value);
+  private:
+  bool _internal_hasmore() const;
+  void _internal_set_hasmore(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:kservice.DSearchResponse)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DSearchResponse_Anime > animes_;
+    ::kservice::ResponseHeader* header_;
+    bool hasmore_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Service_2fpb_2fservice_2eproto;
+};
 // ===================================================================
 
 
@@ -11149,6 +12178,56 @@ inline void KFileInfo::_internal_set_islocal(bool value) {
 inline void KFileInfo::set_islocal(bool value) {
   _internal_set_islocal(value);
   // @@protoc_insertion_point(field_set:kservice.KFileInfo.isLocal)
+}
+
+// string hash16 = 9;
+inline void KFileInfo::clear_hash16() {
+  _impl_.hash16_.ClearToEmpty();
+}
+inline const std::string& KFileInfo::hash16() const {
+  // @@protoc_insertion_point(field_get:kservice.KFileInfo.hash16)
+  return _internal_hash16();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void KFileInfo::set_hash16(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.hash16_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:kservice.KFileInfo.hash16)
+}
+inline std::string* KFileInfo::mutable_hash16() {
+  std::string* _s = _internal_mutable_hash16();
+  // @@protoc_insertion_point(field_mutable:kservice.KFileInfo.hash16)
+  return _s;
+}
+inline const std::string& KFileInfo::_internal_hash16() const {
+  return _impl_.hash16_.Get();
+}
+inline void KFileInfo::_internal_set_hash16(const std::string& value) {
+  
+  _impl_.hash16_.Set(value, GetArenaForAllocation());
+}
+inline std::string* KFileInfo::_internal_mutable_hash16() {
+  
+  return _impl_.hash16_.Mutable(GetArenaForAllocation());
+}
+inline std::string* KFileInfo::release_hash16() {
+  // @@protoc_insertion_point(field_release:kservice.KFileInfo.hash16)
+  return _impl_.hash16_.Release();
+}
+inline void KFileInfo::set_allocated_hash16(std::string* hash16) {
+  if (hash16 != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.hash16_.SetAllocated(hash16, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.hash16_.IsDefault()) {
+    _impl_.hash16_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:kservice.KFileInfo.hash16)
 }
 
 // -------------------------------------------------------------------
@@ -17421,9 +18500,885 @@ inline void AnimeImageUploadResponse::set_allocated_imageid(std::string* imageid
   // @@protoc_insertion_point(field_set_allocated:kservice.AnimeImageUploadResponse.imageId)
 }
 
+// -------------------------------------------------------------------
+
+// DCommentRequest
+
+// .kservice.EventHeader header = 1;
+inline bool DCommentRequest::_internal_has_header() const {
+  return this != internal_default_instance() && _impl_.header_ != nullptr;
+}
+inline bool DCommentRequest::has_header() const {
+  return _internal_has_header();
+}
+inline void DCommentRequest::clear_header() {
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
+}
+inline const ::kservice::EventHeader& DCommentRequest::_internal_header() const {
+  const ::kservice::EventHeader* p = _impl_.header_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::EventHeader&>(
+      ::kservice::_EventHeader_default_instance_);
+}
+inline const ::kservice::EventHeader& DCommentRequest::header() const {
+  // @@protoc_insertion_point(field_get:kservice.DCommentRequest.header)
+  return _internal_header();
+}
+inline void DCommentRequest::unsafe_arena_set_allocated_header(
+    ::kservice::EventHeader* header) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
+  }
+  _impl_.header_ = header;
+  if (header) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.DCommentRequest.header)
+}
+inline ::kservice::EventHeader* DCommentRequest::release_header() {
+  
+  ::kservice::EventHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::EventHeader* DCommentRequest::unsafe_arena_release_header() {
+  // @@protoc_insertion_point(field_release:kservice.DCommentRequest.header)
+  
+  ::kservice::EventHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+  return temp;
+}
+inline ::kservice::EventHeader* DCommentRequest::_internal_mutable_header() {
+  
+  if (_impl_.header_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::EventHeader>(GetArenaForAllocation());
+    _impl_.header_ = p;
+  }
+  return _impl_.header_;
+}
+inline ::kservice::EventHeader* DCommentRequest::mutable_header() {
+  ::kservice::EventHeader* _msg = _internal_mutable_header();
+  // @@protoc_insertion_point(field_mutable:kservice.DCommentRequest.header)
+  return _msg;
+}
+inline void DCommentRequest::set_allocated_header(::kservice::EventHeader* header) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.header_;
+  }
+  if (header) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(header);
+    if (message_arena != submessage_arena) {
+      header = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, header, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.header_ = header;
+  // @@protoc_insertion_point(field_set_allocated:kservice.DCommentRequest.header)
+}
+
+// int64 episodeId = 2;
+inline void DCommentRequest::clear_episodeid() {
+  _impl_.episodeid_ = int64_t{0};
+}
+inline int64_t DCommentRequest::_internal_episodeid() const {
+  return _impl_.episodeid_;
+}
+inline int64_t DCommentRequest::episodeid() const {
+  // @@protoc_insertion_point(field_get:kservice.DCommentRequest.episodeId)
+  return _internal_episodeid();
+}
+inline void DCommentRequest::_internal_set_episodeid(int64_t value) {
+  
+  _impl_.episodeid_ = value;
+}
+inline void DCommentRequest::set_episodeid(int64_t value) {
+  _internal_set_episodeid(value);
+  // @@protoc_insertion_point(field_set:kservice.DCommentRequest.episodeId)
+}
+
+// bool withRelated = 3;
+inline void DCommentRequest::clear_withrelated() {
+  _impl_.withrelated_ = false;
+}
+inline bool DCommentRequest::_internal_withrelated() const {
+  return _impl_.withrelated_;
+}
+inline bool DCommentRequest::withrelated() const {
+  // @@protoc_insertion_point(field_get:kservice.DCommentRequest.withRelated)
+  return _internal_withrelated();
+}
+inline void DCommentRequest::_internal_set_withrelated(bool value) {
+  
+  _impl_.withrelated_ = value;
+}
+inline void DCommentRequest::set_withrelated(bool value) {
+  _internal_set_withrelated(value);
+  // @@protoc_insertion_point(field_set:kservice.DCommentRequest.withRelated)
+}
+
+// -------------------------------------------------------------------
+
+// DCommentResponse
+
+// .kservice.ResponseHeader header = 1;
+inline bool DCommentResponse::_internal_has_header() const {
+  return this != internal_default_instance() && _impl_.header_ != nullptr;
+}
+inline bool DCommentResponse::has_header() const {
+  return _internal_has_header();
+}
+inline void DCommentResponse::clear_header() {
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
+}
+inline const ::kservice::ResponseHeader& DCommentResponse::_internal_header() const {
+  const ::kservice::ResponseHeader* p = _impl_.header_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::ResponseHeader&>(
+      ::kservice::_ResponseHeader_default_instance_);
+}
+inline const ::kservice::ResponseHeader& DCommentResponse::header() const {
+  // @@protoc_insertion_point(field_get:kservice.DCommentResponse.header)
+  return _internal_header();
+}
+inline void DCommentResponse::unsafe_arena_set_allocated_header(
+    ::kservice::ResponseHeader* header) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
+  }
+  _impl_.header_ = header;
+  if (header) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.DCommentResponse.header)
+}
+inline ::kservice::ResponseHeader* DCommentResponse::release_header() {
+  
+  ::kservice::ResponseHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::ResponseHeader* DCommentResponse::unsafe_arena_release_header() {
+  // @@protoc_insertion_point(field_release:kservice.DCommentResponse.header)
+  
+  ::kservice::ResponseHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+  return temp;
+}
+inline ::kservice::ResponseHeader* DCommentResponse::_internal_mutable_header() {
+  
+  if (_impl_.header_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::ResponseHeader>(GetArenaForAllocation());
+    _impl_.header_ = p;
+  }
+  return _impl_.header_;
+}
+inline ::kservice::ResponseHeader* DCommentResponse::mutable_header() {
+  ::kservice::ResponseHeader* _msg = _internal_mutable_header();
+  // @@protoc_insertion_point(field_mutable:kservice.DCommentResponse.header)
+  return _msg;
+}
+inline void DCommentResponse::set_allocated_header(::kservice::ResponseHeader* header) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.header_;
+  }
+  if (header) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(header);
+    if (message_arena != submessage_arena) {
+      header = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, header, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.header_ = header;
+  // @@protoc_insertion_point(field_set_allocated:kservice.DCommentResponse.header)
+}
+
+// string url = 2;
+inline void DCommentResponse::clear_url() {
+  _impl_.url_.ClearToEmpty();
+}
+inline const std::string& DCommentResponse::url() const {
+  // @@protoc_insertion_point(field_get:kservice.DCommentResponse.url)
+  return _internal_url();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void DCommentResponse::set_url(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.url_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:kservice.DCommentResponse.url)
+}
+inline std::string* DCommentResponse::mutable_url() {
+  std::string* _s = _internal_mutable_url();
+  // @@protoc_insertion_point(field_mutable:kservice.DCommentResponse.url)
+  return _s;
+}
+inline const std::string& DCommentResponse::_internal_url() const {
+  return _impl_.url_.Get();
+}
+inline void DCommentResponse::_internal_set_url(const std::string& value) {
+  
+  _impl_.url_.Set(value, GetArenaForAllocation());
+}
+inline std::string* DCommentResponse::_internal_mutable_url() {
+  
+  return _impl_.url_.Mutable(GetArenaForAllocation());
+}
+inline std::string* DCommentResponse::release_url() {
+  // @@protoc_insertion_point(field_release:kservice.DCommentResponse.url)
+  return _impl_.url_.Release();
+}
+inline void DCommentResponse::set_allocated_url(std::string* url) {
+  if (url != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.url_.SetAllocated(url, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.url_.IsDefault()) {
+    _impl_.url_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:kservice.DCommentResponse.url)
+}
+
+// -------------------------------------------------------------------
+
+// DSearchRequest
+
+// .kservice.EventHeader header = 1;
+inline bool DSearchRequest::_internal_has_header() const {
+  return this != internal_default_instance() && _impl_.header_ != nullptr;
+}
+inline bool DSearchRequest::has_header() const {
+  return _internal_has_header();
+}
+inline void DSearchRequest::clear_header() {
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
+}
+inline const ::kservice::EventHeader& DSearchRequest::_internal_header() const {
+  const ::kservice::EventHeader* p = _impl_.header_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::EventHeader&>(
+      ::kservice::_EventHeader_default_instance_);
+}
+inline const ::kservice::EventHeader& DSearchRequest::header() const {
+  // @@protoc_insertion_point(field_get:kservice.DSearchRequest.header)
+  return _internal_header();
+}
+inline void DSearchRequest::unsafe_arena_set_allocated_header(
+    ::kservice::EventHeader* header) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
+  }
+  _impl_.header_ = header;
+  if (header) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.DSearchRequest.header)
+}
+inline ::kservice::EventHeader* DSearchRequest::release_header() {
+  
+  ::kservice::EventHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::EventHeader* DSearchRequest::unsafe_arena_release_header() {
+  // @@protoc_insertion_point(field_release:kservice.DSearchRequest.header)
+  
+  ::kservice::EventHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+  return temp;
+}
+inline ::kservice::EventHeader* DSearchRequest::_internal_mutable_header() {
+  
+  if (_impl_.header_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::EventHeader>(GetArenaForAllocation());
+    _impl_.header_ = p;
+  }
+  return _impl_.header_;
+}
+inline ::kservice::EventHeader* DSearchRequest::mutable_header() {
+  ::kservice::EventHeader* _msg = _internal_mutable_header();
+  // @@protoc_insertion_point(field_mutable:kservice.DSearchRequest.header)
+  return _msg;
+}
+inline void DSearchRequest::set_allocated_header(::kservice::EventHeader* header) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.header_;
+  }
+  if (header) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(header);
+    if (message_arena != submessage_arena) {
+      header = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, header, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.header_ = header;
+  // @@protoc_insertion_point(field_set_allocated:kservice.DSearchRequest.header)
+}
+
+// string keyword = 2;
+inline void DSearchRequest::clear_keyword() {
+  _impl_.keyword_.ClearToEmpty();
+}
+inline const std::string& DSearchRequest::keyword() const {
+  // @@protoc_insertion_point(field_get:kservice.DSearchRequest.keyword)
+  return _internal_keyword();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void DSearchRequest::set_keyword(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.keyword_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:kservice.DSearchRequest.keyword)
+}
+inline std::string* DSearchRequest::mutable_keyword() {
+  std::string* _s = _internal_mutable_keyword();
+  // @@protoc_insertion_point(field_mutable:kservice.DSearchRequest.keyword)
+  return _s;
+}
+inline const std::string& DSearchRequest::_internal_keyword() const {
+  return _impl_.keyword_.Get();
+}
+inline void DSearchRequest::_internal_set_keyword(const std::string& value) {
+  
+  _impl_.keyword_.Set(value, GetArenaForAllocation());
+}
+inline std::string* DSearchRequest::_internal_mutable_keyword() {
+  
+  return _impl_.keyword_.Mutable(GetArenaForAllocation());
+}
+inline std::string* DSearchRequest::release_keyword() {
+  // @@protoc_insertion_point(field_release:kservice.DSearchRequest.keyword)
+  return _impl_.keyword_.Release();
+}
+inline void DSearchRequest::set_allocated_keyword(std::string* keyword) {
+  if (keyword != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.keyword_.SetAllocated(keyword, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.keyword_.IsDefault()) {
+    _impl_.keyword_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:kservice.DSearchRequest.keyword)
+}
+
+// -------------------------------------------------------------------
+
+// DSearchResponse_Episode
+
+// int64 episodeId = 1;
+inline void DSearchResponse_Episode::clear_episodeid() {
+  _impl_.episodeid_ = int64_t{0};
+}
+inline int64_t DSearchResponse_Episode::_internal_episodeid() const {
+  return _impl_.episodeid_;
+}
+inline int64_t DSearchResponse_Episode::episodeid() const {
+  // @@protoc_insertion_point(field_get:kservice.DSearchResponse.Episode.episodeId)
+  return _internal_episodeid();
+}
+inline void DSearchResponse_Episode::_internal_set_episodeid(int64_t value) {
+  
+  _impl_.episodeid_ = value;
+}
+inline void DSearchResponse_Episode::set_episodeid(int64_t value) {
+  _internal_set_episodeid(value);
+  // @@protoc_insertion_point(field_set:kservice.DSearchResponse.Episode.episodeId)
+}
+
+// string episodeTitle = 2;
+inline void DSearchResponse_Episode::clear_episodetitle() {
+  _impl_.episodetitle_.ClearToEmpty();
+}
+inline const std::string& DSearchResponse_Episode::episodetitle() const {
+  // @@protoc_insertion_point(field_get:kservice.DSearchResponse.Episode.episodeTitle)
+  return _internal_episodetitle();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void DSearchResponse_Episode::set_episodetitle(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.episodetitle_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:kservice.DSearchResponse.Episode.episodeTitle)
+}
+inline std::string* DSearchResponse_Episode::mutable_episodetitle() {
+  std::string* _s = _internal_mutable_episodetitle();
+  // @@protoc_insertion_point(field_mutable:kservice.DSearchResponse.Episode.episodeTitle)
+  return _s;
+}
+inline const std::string& DSearchResponse_Episode::_internal_episodetitle() const {
+  return _impl_.episodetitle_.Get();
+}
+inline void DSearchResponse_Episode::_internal_set_episodetitle(const std::string& value) {
+  
+  _impl_.episodetitle_.Set(value, GetArenaForAllocation());
+}
+inline std::string* DSearchResponse_Episode::_internal_mutable_episodetitle() {
+  
+  return _impl_.episodetitle_.Mutable(GetArenaForAllocation());
+}
+inline std::string* DSearchResponse_Episode::release_episodetitle() {
+  // @@protoc_insertion_point(field_release:kservice.DSearchResponse.Episode.episodeTitle)
+  return _impl_.episodetitle_.Release();
+}
+inline void DSearchResponse_Episode::set_allocated_episodetitle(std::string* episodetitle) {
+  if (episodetitle != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.episodetitle_.SetAllocated(episodetitle, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.episodetitle_.IsDefault()) {
+    _impl_.episodetitle_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:kservice.DSearchResponse.Episode.episodeTitle)
+}
+
+// -------------------------------------------------------------------
+
+// DSearchResponse_Anime
+
+// int64 animeId = 1;
+inline void DSearchResponse_Anime::clear_animeid() {
+  _impl_.animeid_ = int64_t{0};
+}
+inline int64_t DSearchResponse_Anime::_internal_animeid() const {
+  return _impl_.animeid_;
+}
+inline int64_t DSearchResponse_Anime::animeid() const {
+  // @@protoc_insertion_point(field_get:kservice.DSearchResponse.Anime.animeId)
+  return _internal_animeid();
+}
+inline void DSearchResponse_Anime::_internal_set_animeid(int64_t value) {
+  
+  _impl_.animeid_ = value;
+}
+inline void DSearchResponse_Anime::set_animeid(int64_t value) {
+  _internal_set_animeid(value);
+  // @@protoc_insertion_point(field_set:kservice.DSearchResponse.Anime.animeId)
+}
+
+// string animeTitle = 2;
+inline void DSearchResponse_Anime::clear_animetitle() {
+  _impl_.animetitle_.ClearToEmpty();
+}
+inline const std::string& DSearchResponse_Anime::animetitle() const {
+  // @@protoc_insertion_point(field_get:kservice.DSearchResponse.Anime.animeTitle)
+  return _internal_animetitle();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void DSearchResponse_Anime::set_animetitle(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.animetitle_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:kservice.DSearchResponse.Anime.animeTitle)
+}
+inline std::string* DSearchResponse_Anime::mutable_animetitle() {
+  std::string* _s = _internal_mutable_animetitle();
+  // @@protoc_insertion_point(field_mutable:kservice.DSearchResponse.Anime.animeTitle)
+  return _s;
+}
+inline const std::string& DSearchResponse_Anime::_internal_animetitle() const {
+  return _impl_.animetitle_.Get();
+}
+inline void DSearchResponse_Anime::_internal_set_animetitle(const std::string& value) {
+  
+  _impl_.animetitle_.Set(value, GetArenaForAllocation());
+}
+inline std::string* DSearchResponse_Anime::_internal_mutable_animetitle() {
+  
+  return _impl_.animetitle_.Mutable(GetArenaForAllocation());
+}
+inline std::string* DSearchResponse_Anime::release_animetitle() {
+  // @@protoc_insertion_point(field_release:kservice.DSearchResponse.Anime.animeTitle)
+  return _impl_.animetitle_.Release();
+}
+inline void DSearchResponse_Anime::set_allocated_animetitle(std::string* animetitle) {
+  if (animetitle != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.animetitle_.SetAllocated(animetitle, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.animetitle_.IsDefault()) {
+    _impl_.animetitle_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:kservice.DSearchResponse.Anime.animeTitle)
+}
+
+// string type = 3;
+inline void DSearchResponse_Anime::clear_type() {
+  _impl_.type_.ClearToEmpty();
+}
+inline const std::string& DSearchResponse_Anime::type() const {
+  // @@protoc_insertion_point(field_get:kservice.DSearchResponse.Anime.type)
+  return _internal_type();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void DSearchResponse_Anime::set_type(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.type_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:kservice.DSearchResponse.Anime.type)
+}
+inline std::string* DSearchResponse_Anime::mutable_type() {
+  std::string* _s = _internal_mutable_type();
+  // @@protoc_insertion_point(field_mutable:kservice.DSearchResponse.Anime.type)
+  return _s;
+}
+inline const std::string& DSearchResponse_Anime::_internal_type() const {
+  return _impl_.type_.Get();
+}
+inline void DSearchResponse_Anime::_internal_set_type(const std::string& value) {
+  
+  _impl_.type_.Set(value, GetArenaForAllocation());
+}
+inline std::string* DSearchResponse_Anime::_internal_mutable_type() {
+  
+  return _impl_.type_.Mutable(GetArenaForAllocation());
+}
+inline std::string* DSearchResponse_Anime::release_type() {
+  // @@protoc_insertion_point(field_release:kservice.DSearchResponse.Anime.type)
+  return _impl_.type_.Release();
+}
+inline void DSearchResponse_Anime::set_allocated_type(std::string* type) {
+  if (type != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.type_.SetAllocated(type, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.type_.IsDefault()) {
+    _impl_.type_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:kservice.DSearchResponse.Anime.type)
+}
+
+// string typeDescription = 4;
+inline void DSearchResponse_Anime::clear_typedescription() {
+  _impl_.typedescription_.ClearToEmpty();
+}
+inline const std::string& DSearchResponse_Anime::typedescription() const {
+  // @@protoc_insertion_point(field_get:kservice.DSearchResponse.Anime.typeDescription)
+  return _internal_typedescription();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void DSearchResponse_Anime::set_typedescription(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.typedescription_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:kservice.DSearchResponse.Anime.typeDescription)
+}
+inline std::string* DSearchResponse_Anime::mutable_typedescription() {
+  std::string* _s = _internal_mutable_typedescription();
+  // @@protoc_insertion_point(field_mutable:kservice.DSearchResponse.Anime.typeDescription)
+  return _s;
+}
+inline const std::string& DSearchResponse_Anime::_internal_typedescription() const {
+  return _impl_.typedescription_.Get();
+}
+inline void DSearchResponse_Anime::_internal_set_typedescription(const std::string& value) {
+  
+  _impl_.typedescription_.Set(value, GetArenaForAllocation());
+}
+inline std::string* DSearchResponse_Anime::_internal_mutable_typedescription() {
+  
+  return _impl_.typedescription_.Mutable(GetArenaForAllocation());
+}
+inline std::string* DSearchResponse_Anime::release_typedescription() {
+  // @@protoc_insertion_point(field_release:kservice.DSearchResponse.Anime.typeDescription)
+  return _impl_.typedescription_.Release();
+}
+inline void DSearchResponse_Anime::set_allocated_typedescription(std::string* typedescription) {
+  if (typedescription != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.typedescription_.SetAllocated(typedescription, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.typedescription_.IsDefault()) {
+    _impl_.typedescription_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:kservice.DSearchResponse.Anime.typeDescription)
+}
+
+// repeated .kservice.DSearchResponse.Episode episodes = 5;
+inline int DSearchResponse_Anime::_internal_episodes_size() const {
+  return _impl_.episodes_.size();
+}
+inline int DSearchResponse_Anime::episodes_size() const {
+  return _internal_episodes_size();
+}
+inline void DSearchResponse_Anime::clear_episodes() {
+  _impl_.episodes_.Clear();
+}
+inline ::kservice::DSearchResponse_Episode* DSearchResponse_Anime::mutable_episodes(int index) {
+  // @@protoc_insertion_point(field_mutable:kservice.DSearchResponse.Anime.episodes)
+  return _impl_.episodes_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DSearchResponse_Episode >*
+DSearchResponse_Anime::mutable_episodes() {
+  // @@protoc_insertion_point(field_mutable_list:kservice.DSearchResponse.Anime.episodes)
+  return &_impl_.episodes_;
+}
+inline const ::kservice::DSearchResponse_Episode& DSearchResponse_Anime::_internal_episodes(int index) const {
+  return _impl_.episodes_.Get(index);
+}
+inline const ::kservice::DSearchResponse_Episode& DSearchResponse_Anime::episodes(int index) const {
+  // @@protoc_insertion_point(field_get:kservice.DSearchResponse.Anime.episodes)
+  return _internal_episodes(index);
+}
+inline ::kservice::DSearchResponse_Episode* DSearchResponse_Anime::_internal_add_episodes() {
+  return _impl_.episodes_.Add();
+}
+inline ::kservice::DSearchResponse_Episode* DSearchResponse_Anime::add_episodes() {
+  ::kservice::DSearchResponse_Episode* _add = _internal_add_episodes();
+  // @@protoc_insertion_point(field_add:kservice.DSearchResponse.Anime.episodes)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DSearchResponse_Episode >&
+DSearchResponse_Anime::episodes() const {
+  // @@protoc_insertion_point(field_list:kservice.DSearchResponse.Anime.episodes)
+  return _impl_.episodes_;
+}
+
+// -------------------------------------------------------------------
+
+// DSearchResponse
+
+// .kservice.ResponseHeader header = 1;
+inline bool DSearchResponse::_internal_has_header() const {
+  return this != internal_default_instance() && _impl_.header_ != nullptr;
+}
+inline bool DSearchResponse::has_header() const {
+  return _internal_has_header();
+}
+inline void DSearchResponse::clear_header() {
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
+}
+inline const ::kservice::ResponseHeader& DSearchResponse::_internal_header() const {
+  const ::kservice::ResponseHeader* p = _impl_.header_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::ResponseHeader&>(
+      ::kservice::_ResponseHeader_default_instance_);
+}
+inline const ::kservice::ResponseHeader& DSearchResponse::header() const {
+  // @@protoc_insertion_point(field_get:kservice.DSearchResponse.header)
+  return _internal_header();
+}
+inline void DSearchResponse::unsafe_arena_set_allocated_header(
+    ::kservice::ResponseHeader* header) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
+  }
+  _impl_.header_ = header;
+  if (header) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.DSearchResponse.header)
+}
+inline ::kservice::ResponseHeader* DSearchResponse::release_header() {
+  
+  ::kservice::ResponseHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::ResponseHeader* DSearchResponse::unsafe_arena_release_header() {
+  // @@protoc_insertion_point(field_release:kservice.DSearchResponse.header)
+  
+  ::kservice::ResponseHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+  return temp;
+}
+inline ::kservice::ResponseHeader* DSearchResponse::_internal_mutable_header() {
+  
+  if (_impl_.header_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::ResponseHeader>(GetArenaForAllocation());
+    _impl_.header_ = p;
+  }
+  return _impl_.header_;
+}
+inline ::kservice::ResponseHeader* DSearchResponse::mutable_header() {
+  ::kservice::ResponseHeader* _msg = _internal_mutable_header();
+  // @@protoc_insertion_point(field_mutable:kservice.DSearchResponse.header)
+  return _msg;
+}
+inline void DSearchResponse::set_allocated_header(::kservice::ResponseHeader* header) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.header_;
+  }
+  if (header) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(header);
+    if (message_arena != submessage_arena) {
+      header = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, header, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.header_ = header;
+  // @@protoc_insertion_point(field_set_allocated:kservice.DSearchResponse.header)
+}
+
+// repeated .kservice.DSearchResponse.Anime animes = 2;
+inline int DSearchResponse::_internal_animes_size() const {
+  return _impl_.animes_.size();
+}
+inline int DSearchResponse::animes_size() const {
+  return _internal_animes_size();
+}
+inline void DSearchResponse::clear_animes() {
+  _impl_.animes_.Clear();
+}
+inline ::kservice::DSearchResponse_Anime* DSearchResponse::mutable_animes(int index) {
+  // @@protoc_insertion_point(field_mutable:kservice.DSearchResponse.animes)
+  return _impl_.animes_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DSearchResponse_Anime >*
+DSearchResponse::mutable_animes() {
+  // @@protoc_insertion_point(field_mutable_list:kservice.DSearchResponse.animes)
+  return &_impl_.animes_;
+}
+inline const ::kservice::DSearchResponse_Anime& DSearchResponse::_internal_animes(int index) const {
+  return _impl_.animes_.Get(index);
+}
+inline const ::kservice::DSearchResponse_Anime& DSearchResponse::animes(int index) const {
+  // @@protoc_insertion_point(field_get:kservice.DSearchResponse.animes)
+  return _internal_animes(index);
+}
+inline ::kservice::DSearchResponse_Anime* DSearchResponse::_internal_add_animes() {
+  return _impl_.animes_.Add();
+}
+inline ::kservice::DSearchResponse_Anime* DSearchResponse::add_animes() {
+  ::kservice::DSearchResponse_Anime* _add = _internal_add_animes();
+  // @@protoc_insertion_point(field_add:kservice.DSearchResponse.animes)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::kservice::DSearchResponse_Anime >&
+DSearchResponse::animes() const {
+  // @@protoc_insertion_point(field_list:kservice.DSearchResponse.animes)
+  return _impl_.animes_;
+}
+
+// bool hasMore = 3;
+inline void DSearchResponse::clear_hasmore() {
+  _impl_.hasmore_ = false;
+}
+inline bool DSearchResponse::_internal_hasmore() const {
+  return _impl_.hasmore_;
+}
+inline bool DSearchResponse::hasmore() const {
+  // @@protoc_insertion_point(field_get:kservice.DSearchResponse.hasMore)
+  return _internal_hasmore();
+}
+inline void DSearchResponse::_internal_set_hasmore(bool value) {
+  
+  _impl_.hasmore_ = value;
+}
+inline void DSearchResponse::set_hasmore(bool value) {
+  _internal_set_hasmore(value);
+  // @@protoc_insertion_point(field_set:kservice.DSearchResponse.hasMore)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

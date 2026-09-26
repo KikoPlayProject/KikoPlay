@@ -1,5 +1,8 @@
 #include "lua_net.h"
 #include "Extension/Common/ext_common.h"
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#endif
 
 namespace Extension
 {
@@ -11,6 +14,8 @@ void Net::setup()
         {"httpgetbatch", httpGetBatch},
         {"httppost", httpPost},
         {"httphead", httpHead},
+        {"dcomment", getDComment},
+        {"dsearch", dSearch},
         {"json2table", json2table},
         {"table2json", table2json},
         {nullptr, nullptr}
@@ -51,16 +56,91 @@ void Net::pushNetworkReply(lua_State *L, const Network::Reply &reply)
 
 void Net::setRequestOptions(const QVariantMap &options, QStringList &headers)
 {
-    if (options.value("set_dandan_header", false).toBool() && options.contains("dandan_path"))
+
+}
+
+int Net::getDComment(lua_State *L)
+{
+    const int params = lua_gettop(L);
+    int isInteger = 0;
+    const lua_Integer episodeId = lua_tointegerx(L, 1, &isInteger);
+    int statusCode = 0;
+    QVariantList comments;
+    QString errMsg;
+    if (params < 1 || params > 2 || lua_type(L, 1) != LUA_TNUMBER || !isInteger || episodeId <= 0 ||
+        (params == 2 && lua_type(L, 2) != LUA_TBOOLEAN))
     {
-        const QString &ddPath = options.value("dandan_path", "").toString();
-        qint64 ts = QDateTime::currentSecsSinceEpoch();
-        QString secret = QString("%1%2%3%4").arg(Network::kDanDanAppId).arg(ts).arg(ddPath).arg(Network::kDanDanAppSecret);
-        QByteArray hash = QCryptographicHash::hash(secret.toUtf8(), QCryptographicHash::Sha256);
-        headers << "X-AppId" << Network::kDanDanAppId;
-        headers << "X-Timestamp" << QString::number(ts);
-        headers << "X-Signature" << hash.toBase64();
+        errMsg = "invalid_request";
     }
+    else
+    {
+#ifdef KSERVICE
+        const auto result = KService::instance()->getDCommentUrlSync(episodeId, params == 2 && lua_toboolean(L, 2));
+        statusCode = result.statusCode;
+        errMsg = result.errMsg;
+        if (errMsg.isEmpty())
+        {
+            // Download from the CDN without forwarding the service's authentication headers.
+            const auto reply = Network::httpGet(result.url, QUrlQuery(), {"Accept", "application/json"});
+            if (reply.hasError)
+            {
+                statusCode = 0;
+                errMsg = reply.errInfo.isEmpty() ? "download_failed" : reply.errInfo;
+            }
+            else
+            {
+                statusCode = reply.statusCode;
+                QJsonParseError parseError;
+                const QJsonDocument document = QJsonDocument::fromJson(reply.content, &parseError);
+                if (statusCode != 200 || parseError.error != QJsonParseError::NoError ||
+                    !document.isObject() || !document.object().value("comments").isArray())
+                {
+                    errMsg = "invalid_response";
+                }
+                else
+                {
+                    comments = document.object().value("comments").toArray().toVariantList();
+                }
+            }
+        }
+#else
+        errMsg = "service_unavailable";
+#endif
+    }
+    if (errMsg.isEmpty()) lua_pushnil(L);
+    else lua_pushstring(L, errMsg.toUtf8().constData());
+    pushValue(L, QVariantMap{{"comments", comments}, {"statusCode", statusCode}});
+    return 2;
+}
+
+int Net::dSearch(lua_State *L)
+{
+    int statusCode = 0;
+    QVariantList animes;
+    bool hasMore = false;
+    QString errMsg;
+    if (lua_gettop(L) != 1 || lua_type(L, 1) != LUA_TSTRING)
+    {
+        errMsg = "invalid_request";
+    }
+    else
+    {
+#ifdef KSERVICE
+        size_t length = 0;
+        const char *keyword = lua_tolstring(L, 1, &length);
+        const auto result = KService::instance()->searchDandanSync(QString::fromUtf8(keyword, length));
+        statusCode = result.statusCode;
+        animes = result.animes;
+        hasMore = result.hasMore;
+        errMsg = result.errMsg;
+#else
+        errMsg = "service_unavailable";
+#endif
+    }
+    if (errMsg.isEmpty()) lua_pushnil(L);
+    else lua_pushstring(L, errMsg.toUtf8().constData());
+    pushValue(L, QVariantMap{{"animes", animes}, {"hasMore", hasMore}, {"statusCode", statusCode}});
+    return 2;
 }
 
 int Net::httpGet(lua_State *L)

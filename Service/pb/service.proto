@@ -103,6 +103,7 @@ message KFileInfo {
     int64 durationMs = 6;
     int64 fileSize = 7;
     bool isLocal = 8;  // true if the file is stored locally, false if it's a remote URL
+    string hash16 = 9;
 }
 
 message RecoRequest {
@@ -171,6 +172,7 @@ enum RecoBy {
     R_HASH32 = 1;
     R_INFOHASH = 2;
     R_FILENAME = 3;
+    R_DANDAN = 4;
 }
 
 message RecoResponse {
@@ -333,6 +335,40 @@ message AnimeImageRequest {
 message AnimeImageUploadResponse {
     ResponseHeader header = 1;
     string imageId = 2;
+}
+
+// Obtain a signed download URL; the client downloads comments directly.
+message DCommentRequest {
+    EventHeader header = 1;
+    int64 episodeId = 2;
+    bool withRelated = 3;
+}
+
+message DCommentResponse {
+    ResponseHeader header = 1;
+    string url = 2;
+}
+
+message DSearchRequest {
+    EventHeader header = 1;
+    string keyword = 2;
+}
+
+message DSearchResponse {
+    message Episode {
+        int64 episodeId = 1;
+        string episodeTitle = 2;
+    }
+    message Anime {
+        int64 animeId = 1;
+        string animeTitle = 2;
+        string type = 3;
+        string typeDescription = 4;
+        repeated Episode episodes = 5;
+    }
+    ResponseHeader header = 1;
+    repeated Anime animes = 2;
+    bool hasMore = 3;
 }
 
 

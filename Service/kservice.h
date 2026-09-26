@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QTimer>
+#include <QVariant>
+#include <functional>
 #include "MediaLibrary/animeinfo.h"
 
 class QSettings;
@@ -62,6 +64,21 @@ struct KLatestVersionInfo
     QString versionName;
 };
 
+struct KDCommentUrlResult
+{
+    int statusCode = 0;
+    QString url;
+    QString errMsg;
+};
+
+struct KDSearchResult
+{
+    int statusCode = 0;
+    QVariantList animes;
+    QString errMsg;
+    bool hasMore = false;
+};
+
 class KService : public QObject
 {
     Q_OBJECT
@@ -87,6 +104,8 @@ public:
     void getDanmu(const DanmuSource &kSrc);
     void getDanmuSource(const QString &poolId, const QString &path = "");
     bool getDanmuSourceSync(const QString &poolId, QList<DanmuSource> &sources, const QString &path = "");
+    KDCommentUrlResult getDCommentUrlSync(qint64 episodeId, bool withRelated = false);
+    KDSearchResult searchDandanSync(const QString &keyword);
 
 signals:
     void recognized(int status, const QString &errMsg, const QString &path, MatchResult result);
@@ -138,11 +157,17 @@ private:
     const QString pathRefreshToken{"/api/token_refresh"};
     const QString pathGetDanmu{"/api/get_danmu"};
     const QString pathGetSource{"/api/get_src"};
+    const QString pathDComment{"/api/d_comment_url"};
+    const QString pathDSearch{"/api/d_search"};
     const QString pathAnimeProfileEvent{"/api/anime_profile_ev"};
     const QString pathAnimeImageUpload{"/api/anime_image_upload"};
 
 private:
     using PostCallBack = std::function<void(QNetworkReply *)>;
+    using CommentUrlCallBack = std::function<void(const KDCommentUrlResult &)>;
+    using SearchCallBack = std::function<void(const KDSearchResult &)>;
+
+    bool uvRequestInFlight = false;
 
     void setReqHeader(QNetworkRequest &request, const QString &path);
     void setEventHeader(kservice::EventHeader &header, const QString &ev, qint64 ts = -1);
@@ -162,6 +187,8 @@ private:
 
 private:
     void kStatsUV(bool isStartup);
+    void kGetDCommentUrl(qint64 episodeId, bool withRelated, CommentUrlCallBack cb);
+    void kDSearch(const QString &keyword, SearchCallBack cb);
     void kFileReco(const QString &path);
     void kLaunch(QSharedPointer<DanmuComment> comment, const QString &poolId, const QString &launchFile);
     void kLogin(const QString &email, const QString &password);
@@ -170,7 +197,7 @@ private:
     void kGetDanmu(const QString &poolId, int duration = -1);
     void kGetSource(const QString &poolId, const QString &path = "", PostCallBack cb = nullptr);
 
-    void handleUV(QNetworkReply *reply);
+    QString handleUV(QNetworkReply *reply);
     void handleFileReco(const QString &path, QNetworkReply *reply);
     void handleLaunch(QNetworkReply *reply);
     void handleLogin(QNetworkReply *reply);
