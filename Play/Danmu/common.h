@@ -232,6 +232,8 @@ struct DanmuSource
             {"tags", packTags()},
         };
     }
+    void fromMap(const QVariantMap &map);
+
     QString durationStr() const
     {
         int min=duration/60;

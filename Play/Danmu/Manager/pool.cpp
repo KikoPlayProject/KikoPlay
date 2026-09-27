@@ -391,7 +391,8 @@ void Pool::exportPool(const QString &fileName, bool useTimeline, bool applyBlock
 
     QVector<QSharedPointer<DanmuComment>> *finalCommentList = &commentList;
     QVector<QSharedPointer<DanmuComment>> adjustCommentList;
-    if (exportWithSrcInfo())
+    const bool singleLocalSource = sourcesTable.size() == 1 && sourcesTable.cbegin()->scriptId.isEmpty();
+    if (exportWithSrcInfo() && !singleLocalSource)
     {
         QHash<int, QVector<QSharedPointer<DanmuComment>>> srcDanmus;
         adjustCommentList.reserve(commentList.size());
@@ -433,7 +434,8 @@ void Pool::exportPool(const QString &fileName, bool useTimeline, bool applyBlock
             auto &src = sourcesTable[iter.key()];
             auto &dms = iter.value();
             ds << commentStart << dms.size() << useTimeline;
-            ds << src;
+            QJsonDocument srcDoc = QJsonDocument::fromVariant(src.toMap());
+            ds << srcDoc.toJson(QJsonDocument::Compact);
             adjustCommentList.append(dms);
             commentStart = adjustCommentList.size();
         }

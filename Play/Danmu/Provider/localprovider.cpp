@@ -49,9 +49,15 @@ namespace
                 return false;
             }
 
-            QPair<DanmuSource, QVector<DanmuComment *>> sourceDanmus;
-            stream >> sourceDanmus.first;
+            QByteArray sourceJson;
+            stream >> sourceJson;
             if (stream.status() != QDataStream::Ok) return false;
+            QJsonParseError jsonError;
+            const QJsonDocument sourceDoc = QJsonDocument::fromJson(sourceJson, &jsonError);
+            if (jsonError.error != QJsonParseError::NoError || !sourceDoc.isObject()) return false;
+
+            QPair<DanmuSource, QVector<DanmuComment *>> sourceDanmus;
+            sourceDanmus.first.fromMap(sourceDoc.object().toVariantMap());
             sourceDanmus.second.reserve(count);
             for (auto i = nextComment; i < nextComment + count; ++i)
             {

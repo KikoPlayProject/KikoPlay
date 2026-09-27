@@ -264,6 +264,33 @@ bool DanmuSource::isKikoSource() const
     return false;
 }
 
+void DanmuSource::fromMap(const QVariantMap &map)
+{
+    *this = DanmuSource();
+    title = map.value("title", map.value("name")).toString();
+    desc = map.value("desc").toString();
+    id = map.value("id", -1).toInt();
+    scriptId = map.value("scriptId").toString();
+    scriptData = map.value("scriptData", map.value("data")).toString();
+    scriptSrcId = map.value("srcid").toString();
+    url = map.value("url").toString();
+    sourceValid = map.value("valid", true).toBool();
+    duration = map.value("duration", 0).toInt();
+    delay = map.value("delay", 0).toInt();
+    setTimeline(map.value("timeline").toString());
+    setClip(map.value("clip").toString());
+
+    const QVariantList tagList = map.value("tags").toList();
+    tags.reserve(tagList.size());
+    for (const QVariant &tagData : tagList)
+    {
+        if (!tagData.canConvert<QVariantMap>()) continue;
+        DanmuSourceTag tag;
+        tag.fromMap(tagData.toMap());
+        tags.append(tag);
+    }
+}
+
 bool DanmuSource::setTags(const QString &tagsJson)
 {
     if (tagsJson.isEmpty()) return false;
