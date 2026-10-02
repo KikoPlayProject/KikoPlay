@@ -6,6 +6,7 @@
 #include <QSettings>
 #include <QTabWidget>
 #include <QPushButton>
+#include "Play/Playlist/playlist.h"
 #include "UI/ela/ElaComboBox.h"
 #include "UI/ela/ElaSlider.h"
 #include "UI/ela/ElaSpinBox.h"
@@ -49,6 +50,14 @@ SettingItemArea *PlayerPage::initBehaviorArea()
     showRecentlySwitch->setIsToggled(GlobalObjects::mpvplayer->getShowRecent());
     behaviorArea->addItem(tr("Show Recently Played Files"), showRecentlySwitch);
 
+    ElaToggleSwitch *addExternalSwitch = new ElaToggleSwitch(this);
+    addExternalSwitch->setIsToggled(GlobalObjects::playlist->isAddExternal());
+    behaviorArea->addItem(tr("Auto-add when opening external files"), addExternalSwitch);
+
+    QObject::connect(addExternalSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked){
+        GlobalObjects::playlist->setAddExternal(checked);
+    });
+
     QObject::connect(clickBehaviorCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [](int index){
         GlobalObjects::mpvplayer->setClickBehavior(index);
     });
@@ -64,6 +73,7 @@ SettingItemArea *PlayerPage::initBehaviorArea()
     QObject::connect(showRecentlySwitch, &ElaToggleSwitch::toggled, this, [=](bool checked){
         GlobalObjects::mpvplayer->setShowRecent(checked);
     });
+
 
     return behaviorArea;
 }

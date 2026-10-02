@@ -337,6 +337,18 @@ message AnimeImageUploadResponse {
     string imageId = 2;
 }
 
+message AnimeProfileGetRequest {
+    EventHeader header = 1;
+    InfoSourceType srcType = 2;
+    string srcId = 3;
+}
+
+message AnimeProfileGetResponse {
+    ResponseHeader header = 1;
+    Anime animeInfo = 2;
+    bool hasCoverImage = 3;
+}
+
 // Obtain a signed download URL; the client downloads comments directly.
 message DCommentRequest {
     EventHeader header = 1;

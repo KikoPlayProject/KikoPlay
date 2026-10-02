@@ -6,6 +6,9 @@
 #include "MediaLibrary/animeworker.h"
 #include "MediaLibrary/labelmodel.h"
 #include "globalobjects.h"
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#endif
 
 AnimeScrapingTask::AnimeScrapingTask(Anime *anime, const MatchResult &match) : KTask{"anime_scraping"}, curAnime(anime), curMatch(match)
 {
@@ -14,6 +17,28 @@ AnimeScrapingTask::AnimeScrapingTask(Anime *anime, const MatchResult &match) : K
 
 TaskStatus AnimeScrapingTask::runTask()
 {
+#ifdef KSERVICE
+    if (curMatch.kServiceMatch && KService::instance()->enableKServiceAnimeProfile())
+    {
+        setInfo(tr("Fetching Anime Info[%1] From KService...").arg(curMatch.name), NM_HIDE);
+        Anime *nAnime = new Anime;
+        QStringList tags;
+        if(KService::instance()->getAnimeProfileSync(curMatch.infoSrcType, curMatch.scriptData, nAnime, tags))
+        {
+            QString animeName = AnimeWorker::instance()->addAnime(curAnime, nAnime);
+            Anime *tAnime = AnimeWorker::instance()->getAnime(animeName);
+            if (tAnime && !tags.empty())
+            {
+                const QString animeName = tAnime->name();
+                QMetaObject::invokeMethod(LabelModel::instance(), [=](){
+                    LabelModel::instance()->addCustomTags(animeName, tags);
+                });
+            }
+            return TaskStatus::Finished;
+        }
+        delete nAnime;
+    }
+#endif
     auto script = GlobalObjects::scriptManager->getScript(curMatch.scriptId).staticCast<LibraryScript>();
     if (!script)
     {

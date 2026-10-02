@@ -104,7 +104,7 @@ TaskStatus AnimeScanTask::runTask()
         }
         if (!match.success)
         {
-            GlobalObjects::animeProvider->match(GlobalObjects::animeProvider->defaultMatchScript(), filePath, match);
+            GlobalObjects::animeProvider->matchDefault(filePath, match);
         }
 
         if (match.success)

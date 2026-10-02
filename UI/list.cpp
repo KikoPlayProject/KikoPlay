@@ -347,7 +347,11 @@ void ListWindow::initActions()
         playItem(index);
     });
     act_autoMatch=new QAction(tr("Start File Match"),this);
-    QObject::connect(act_autoMatch, &QAction::triggered, this, [=]() {matchPool(GlobalObjects::animeProvider->defaultMatchScript()); });
+    QObject::connect(act_autoMatch, &QAction::triggered, this, [=]() {matchPool(); });
+#ifdef KSERVICE
+    act_kServiceMatch = new QAction(tr("KikoPlay Service"), this);
+    act_kServiceMatch->setData(AnimeProvider::kServiceMatchProviderId);
+#endif
     act_removeMatch=new QAction(tr("Remove Match"),this);
     QObject::connect(act_removeMatch, &QAction::triggered, this, [this](){
         QSortFilterProxyModel *model = static_cast<QSortFilterProxyModel *>(playlistView->model());
@@ -1098,31 +1102,36 @@ void ListWindow::matchPool(const QString &scriptId)
     if (selection.size() == 0)return;
     QModelIndexList indexes(selection.indexes());
     const PlayListItem *item=GlobalObjects::playlist->getItem(indexes.first());
+    auto script = GlobalObjects::scriptManager->getScript(scriptId);
+    bool isMatchScript = script && script->type() == ScriptType::MATCH;
+    bool isServiceMatch = false;
+#ifdef KSERVICE
+    isServiceMatch = scriptId == AnimeProvider::kServiceMatchProviderId;
+#endif
     if (indexes.size() == 1 && !item->children)
     {
         bool matchSuccess = false;
-        auto script = GlobalObjects::scriptManager->getScript(scriptId);
-        bool isMatchScript = script && script->type() == ScriptType::MATCH;
-        if (isMatchScript)
+        if ((!item->hasPool() || (item->hasPool() && (isMatchScript || isServiceMatch))) && item->type == PlayListItem::ItemType::LOCAL_FILE)
         {
-            if (!item->hasPool() && item->type == PlayListItem::ItemType::LOCAL_FILE)
+            showMessage(tr("Match Start"),NotifyMessageFlag::NM_PROCESS);
+            MatchResult match;
+            if (scriptId.isEmpty()) GlobalObjects::danmuManager->localMatch(item->path, match);
+            if (!match.success)
             {
-                showMessage(tr("Match Start"),NotifyMessageFlag::NM_PROCESS);
-                MatchResult match;
-                GlobalObjects::danmuManager->localMatch(item->path, match);
-                if(!match.success) GlobalObjects::animeProvider->match(scriptId, item->path, match);
-                if(match.success)
-                {
-                    GlobalObjects::playlist->matchIndex(indexes.first(), match);
-                    matchSuccess = true;
-                }
-                showMessage(tr("Match Done"), NotifyMessageFlag::NM_HIDE);
+                if (scriptId.isEmpty()) GlobalObjects::animeProvider->matchDefault(item->path, match);
+                else GlobalObjects::animeProvider->match(scriptId, item->path, match);
             }
+            if(match.success)
+            {
+                GlobalObjects::playlist->matchIndex(indexes.first(), match);
+                matchSuccess = true;
+            }
+            showMessage(tr("Match Done"), NotifyMessageFlag::NM_HIDE);
         }
         if (!matchSuccess)
         {
             QList<const PlayListItem *> &&siblings=GlobalObjects::playlist->getSiblings(item, false);
-            MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()), &siblings, isMatchScript ? "" : scriptId, this);
+            MatchEditor matchEditor(GlobalObjects::playlist->getItem(indexes.first()), &siblings, isMatchScript || isServiceMatch ? "" : scriptId, this);
             if (QDialog::Accepted == matchEditor.exec())
             {
                 if (matchEditor.singleEp.type != EpType::UNKNOWN)
@@ -1169,7 +1178,7 @@ void ListWindow::matchPool(const QString &scriptId)
         }
 
     } else {
-        GlobalObjects::playlist->matchItems(indexes);
+        GlobalObjects::playlist->matchItems(indexes, isMatchScript || isServiceMatch ? scriptId : QString());
     }
 }
 
@@ -1451,10 +1460,16 @@ QWidget *ListWindow::initPlaylistPage()
 
     static QList<QAction *> matchActions;
     auto addAllInfoProviders = [=](){
+#ifdef KSERVICE
+        matchSubMenu->addAction(matchSep);
+        matchSubMenu->addAction(act_kServiceMatch);
+#endif
         auto infoProviders = GlobalObjects::animeProvider->getSearchProviders();
         if (!infoProviders.empty())
         {
+#ifndef KSERVICE
             matchSubMenu->addAction(matchSep);
+#endif
             for (const auto &p : infoProviders)
             {
                 QAction *mAct = new QAction(p.first);
@@ -1833,6 +1848,9 @@ QWidget *ListWindow::initSublistPage()
 int ListWindow::updateCurrentPool()
 {
     act_autoMatch->setEnabled(false);
+#ifdef KSERVICE
+    act_kServiceMatch->setEnabled(false);
+#endif
     act_addOnlineDanmu->setEnabled(false);
     act_addLocalDanmu->setEnabled(false);
     act_addSubAsDanmu->setEnabled(false);
@@ -1845,6 +1863,9 @@ int ListWindow::updateCurrentPool()
     }
     showMessage(tr("Add %1 Danmu").arg(count), NotifyMessageFlag::NM_HIDE);
     act_autoMatch->setEnabled(true);
+#ifdef KSERVICE
+    act_kServiceMatch->setEnabled(true);
+#endif
     act_addOnlineDanmu->setEnabled(true);
     act_addLocalDanmu->setEnabled(true);
     act_addSubAsDanmu->setEnabled(true);

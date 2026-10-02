@@ -1,18 +1,21 @@
-#ifndef PLAYLISTPAGE_H
-#define PLAYLISTPAGE_H
+#ifndef KSERVICEPAGE_H
+#define KSERVICEPAGE_H
 
 #include "settingpage.h"
 #include "../framelessdialog.h"
 
-class PlaylistPage : public SettingPage
+class KServicePage : public SettingPage
 {
     Q_OBJECT
 public:
-    PlaylistPage(QWidget *parent = nullptr);
+    KServicePage(QWidget *parent = nullptr);
 
 private:
+#ifdef KSERVICE
+    SettingItemArea *initAccountArea();
+    SettingItemArea *initInfoRetrievalArea();
+#endif
     SettingItemArea *initEpMatchArea();
-    SettingItemArea *initOtherArea();
 };
 
 #ifdef KSERVICE
@@ -28,4 +31,4 @@ protected:
     void onAccept() override;
 };
 #endif
-#endif // PLAYLISTPAGE_H
+#endif // KSERVICEPAGE_H

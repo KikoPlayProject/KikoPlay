@@ -15,7 +15,7 @@ class MatchWorker : public QObject
     Q_OBJECT
 public:
     explicit MatchWorker(QObject *parent = nullptr):QObject(parent) { updateFilterRules(); }
-    void match(const QVector<PlayListItem *> &items);
+    void match(const QVector<PlayListItem *> &items, const QString &providerId = "");
     void match(const QVector<PlayListItem *> &items, const AnimeLite &anime, const QList<EpInfo> &eps);
     void updateFilterRules();
 signals:
@@ -130,7 +130,7 @@ public slots :
 
     void setAutoMatch(bool on);
     void setAddExternal(bool on);
-    void matchItems(const QModelIndexList &matchIndexes);
+    void matchItems(const QModelIndexList &matchIndexes, const QString &providerId = "");
     void matchIndex(QModelIndex &index, const MatchResult &match);
     void matchItems(const QList<const PlayListItem *> &items, const AnimeLite &anime, const QList<EpInfo> &eps);
     void removeMatch(const QModelIndexList &matchIndexes);

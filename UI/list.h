@@ -56,6 +56,9 @@ private:
             *act_noLoopOne,*act_noLoopAll,*act_loopOne,*act_loopAll,*act_random,
             *act_browseFile,*act_autoMatch,*act_exportDanmu,*act_addWebDanmuSource, *act_addLocalDanmuSource, *act_addSubAsDanmuSource, *act_updateDanmu,
             *act_sharePoolCode, *act_shareResourceCode, *act_markBgmCollection, *act_updateFolder, *act_PlayOnOtherDevices;
+#ifdef KSERVICE
+    QAction *act_kServiceMatch;
+#endif
     QMenu *matchSubMenu, *markSubMenu;
     bool actionDisable;
     QActionGroup *loopModeGroup;

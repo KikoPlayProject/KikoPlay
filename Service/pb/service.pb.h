@@ -70,6 +70,12 @@ extern AnimeImageUploadResponseDefaultTypeInternal _AnimeImageUploadResponse_def
 class AnimeProfileEvent;
 struct AnimeProfileEventDefaultTypeInternal;
 extern AnimeProfileEventDefaultTypeInternal _AnimeProfileEvent_default_instance_;
+class AnimeProfileGetRequest;
+struct AnimeProfileGetRequestDefaultTypeInternal;
+extern AnimeProfileGetRequestDefaultTypeInternal _AnimeProfileGetRequest_default_instance_;
+class AnimeProfileGetResponse;
+struct AnimeProfileGetResponseDefaultTypeInternal;
+extern AnimeProfileGetResponseDefaultTypeInternal _AnimeProfileGetResponse_default_instance_;
 class AnimeProfileResponse;
 struct AnimeProfileResponseDefaultTypeInternal;
 extern AnimeProfileResponseDefaultTypeInternal _AnimeProfileResponse_default_instance_;
@@ -203,6 +209,8 @@ template<> ::kservice::AnimeImageRequest* Arena::CreateMaybeMessage<::kservice::
 template<> ::kservice::AnimeImageUploadRequest* Arena::CreateMaybeMessage<::kservice::AnimeImageUploadRequest>(Arena*);
 template<> ::kservice::AnimeImageUploadResponse* Arena::CreateMaybeMessage<::kservice::AnimeImageUploadResponse>(Arena*);
 template<> ::kservice::AnimeProfileEvent* Arena::CreateMaybeMessage<::kservice::AnimeProfileEvent>(Arena*);
+template<> ::kservice::AnimeProfileGetRequest* Arena::CreateMaybeMessage<::kservice::AnimeProfileGetRequest>(Arena*);
+template<> ::kservice::AnimeProfileGetResponse* Arena::CreateMaybeMessage<::kservice::AnimeProfileGetResponse>(Arena*);
 template<> ::kservice::AnimeProfileResponse* Arena::CreateMaybeMessage<::kservice::AnimeProfileResponse>(Arena*);
 template<> ::kservice::Anime_StaffEntry_DoNotUse* Arena::CreateMaybeMessage<::kservice::Anime_StaffEntry_DoNotUse>(Arena*);
 template<> ::kservice::CommonEvent* Arena::CreateMaybeMessage<::kservice::CommonEvent>(Arena*);
@@ -8183,6 +8191,342 @@ class AnimeImageUploadResponse final :
 };
 // -------------------------------------------------------------------
 
+class AnimeProfileGetRequest final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:kservice.AnimeProfileGetRequest) */ {
+ public:
+  inline AnimeProfileGetRequest() : AnimeProfileGetRequest(nullptr) {}
+  ~AnimeProfileGetRequest() override;
+  explicit PROTOBUF_CONSTEXPR AnimeProfileGetRequest(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  AnimeProfileGetRequest(const AnimeProfileGetRequest& from);
+  AnimeProfileGetRequest(AnimeProfileGetRequest&& from) noexcept
+    : AnimeProfileGetRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline AnimeProfileGetRequest& operator=(const AnimeProfileGetRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline AnimeProfileGetRequest& operator=(AnimeProfileGetRequest&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const AnimeProfileGetRequest& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const AnimeProfileGetRequest* internal_default_instance() {
+    return reinterpret_cast<const AnimeProfileGetRequest*>(
+               &_AnimeProfileGetRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    43;
+
+  friend void swap(AnimeProfileGetRequest& a, AnimeProfileGetRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(AnimeProfileGetRequest* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(AnimeProfileGetRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  AnimeProfileGetRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<AnimeProfileGetRequest>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const AnimeProfileGetRequest& from);
+  void MergeFrom(const AnimeProfileGetRequest& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(AnimeProfileGetRequest* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "kservice.AnimeProfileGetRequest";
+  }
+  protected:
+  explicit AnimeProfileGetRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kSrcIdFieldNumber = 3,
+    kHeaderFieldNumber = 1,
+    kSrcTypeFieldNumber = 2,
+  };
+  // string srcId = 3;
+  void clear_srcid();
+  const std::string& srcid() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_srcid(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_srcid();
+  PROTOBUF_NODISCARD std::string* release_srcid();
+  void set_allocated_srcid(std::string* srcid);
+  private:
+  const std::string& _internal_srcid() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_srcid(const std::string& value);
+  std::string* _internal_mutable_srcid();
+  public:
+
+  // .kservice.EventHeader header = 1;
+  bool has_header() const;
+  private:
+  bool _internal_has_header() const;
+  public:
+  void clear_header();
+  const ::kservice::EventHeader& header() const;
+  PROTOBUF_NODISCARD ::kservice::EventHeader* release_header();
+  ::kservice::EventHeader* mutable_header();
+  void set_allocated_header(::kservice::EventHeader* header);
+  private:
+  const ::kservice::EventHeader& _internal_header() const;
+  ::kservice::EventHeader* _internal_mutable_header();
+  public:
+  void unsafe_arena_set_allocated_header(
+      ::kservice::EventHeader* header);
+  ::kservice::EventHeader* unsafe_arena_release_header();
+
+  // .kservice.InfoSourceType srcType = 2;
+  void clear_srctype();
+  ::kservice::InfoSourceType srctype() const;
+  void set_srctype(::kservice::InfoSourceType value);
+  private:
+  ::kservice::InfoSourceType _internal_srctype() const;
+  void _internal_set_srctype(::kservice::InfoSourceType value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:kservice.AnimeProfileGetRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr srcid_;
+    ::kservice::EventHeader* header_;
+    int srctype_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Service_2fpb_2fservice_2eproto;
+};
+// -------------------------------------------------------------------
+
+class AnimeProfileGetResponse final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:kservice.AnimeProfileGetResponse) */ {
+ public:
+  inline AnimeProfileGetResponse() : AnimeProfileGetResponse(nullptr) {}
+  ~AnimeProfileGetResponse() override;
+  explicit PROTOBUF_CONSTEXPR AnimeProfileGetResponse(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  AnimeProfileGetResponse(const AnimeProfileGetResponse& from);
+  AnimeProfileGetResponse(AnimeProfileGetResponse&& from) noexcept
+    : AnimeProfileGetResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline AnimeProfileGetResponse& operator=(const AnimeProfileGetResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline AnimeProfileGetResponse& operator=(AnimeProfileGetResponse&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const AnimeProfileGetResponse& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const AnimeProfileGetResponse* internal_default_instance() {
+    return reinterpret_cast<const AnimeProfileGetResponse*>(
+               &_AnimeProfileGetResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    44;
+
+  friend void swap(AnimeProfileGetResponse& a, AnimeProfileGetResponse& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(AnimeProfileGetResponse* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(AnimeProfileGetResponse* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  AnimeProfileGetResponse* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<AnimeProfileGetResponse>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const AnimeProfileGetResponse& from);
+  void MergeFrom(const AnimeProfileGetResponse& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(AnimeProfileGetResponse* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "kservice.AnimeProfileGetResponse";
+  }
+  protected:
+  explicit AnimeProfileGetResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kHeaderFieldNumber = 1,
+    kAnimeInfoFieldNumber = 2,
+    kHasCoverImageFieldNumber = 3,
+  };
+  // .kservice.ResponseHeader header = 1;
+  bool has_header() const;
+  private:
+  bool _internal_has_header() const;
+  public:
+  void clear_header();
+  const ::kservice::ResponseHeader& header() const;
+  PROTOBUF_NODISCARD ::kservice::ResponseHeader* release_header();
+  ::kservice::ResponseHeader* mutable_header();
+  void set_allocated_header(::kservice::ResponseHeader* header);
+  private:
+  const ::kservice::ResponseHeader& _internal_header() const;
+  ::kservice::ResponseHeader* _internal_mutable_header();
+  public:
+  void unsafe_arena_set_allocated_header(
+      ::kservice::ResponseHeader* header);
+  ::kservice::ResponseHeader* unsafe_arena_release_header();
+
+  // .kservice.Anime animeInfo = 2;
+  bool has_animeinfo() const;
+  private:
+  bool _internal_has_animeinfo() const;
+  public:
+  void clear_animeinfo();
+  const ::kservice::Anime& animeinfo() const;
+  PROTOBUF_NODISCARD ::kservice::Anime* release_animeinfo();
+  ::kservice::Anime* mutable_animeinfo();
+  void set_allocated_animeinfo(::kservice::Anime* animeinfo);
+  private:
+  const ::kservice::Anime& _internal_animeinfo() const;
+  ::kservice::Anime* _internal_mutable_animeinfo();
+  public:
+  void unsafe_arena_set_allocated_animeinfo(
+      ::kservice::Anime* animeinfo);
+  ::kservice::Anime* unsafe_arena_release_animeinfo();
+
+  // bool hasCoverImage = 3;
+  void clear_hascoverimage();
+  bool hascoverimage() const;
+  void set_hascoverimage(bool value);
+  private:
+  bool _internal_hascoverimage() const;
+  void _internal_set_hascoverimage(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:kservice.AnimeProfileGetResponse)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::kservice::ResponseHeader* header_;
+    ::kservice::Anime* animeinfo_;
+    bool hascoverimage_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Service_2fpb_2fservice_2eproto;
+};
+// -------------------------------------------------------------------
+
 class DCommentRequest final :
     public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:kservice.DCommentRequest) */ {
  public:
@@ -8222,7 +8566,7 @@ class DCommentRequest final :
                &_DCommentRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    43;
+    45;
 
   friend void swap(DCommentRequest& a, DCommentRequest& b) {
     a.Swap(&b);
@@ -8383,7 +8727,7 @@ class DCommentResponse final :
                &_DCommentResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    44;
+    46;
 
   friend void swap(DCommentResponse& a, DCommentResponse& b) {
     a.Swap(&b);
@@ -8538,7 +8882,7 @@ class DSearchRequest final :
                &_DSearchRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    45;
+    47;
 
   friend void swap(DSearchRequest& a, DSearchRequest& b) {
     a.Swap(&b);
@@ -8693,7 +9037,7 @@ class DSearchResponse_Episode final :
                &_DSearchResponse_Episode_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    46;
+    48;
 
   friend void swap(DSearchResponse_Episode& a, DSearchResponse_Episode& b) {
     a.Swap(&b);
@@ -8839,7 +9183,7 @@ class DSearchResponse_Anime final :
                &_DSearchResponse_Anime_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    47;
+    49;
 
   friend void swap(DSearchResponse_Anime& a, DSearchResponse_Anime& b) {
     a.Swap(&b);
@@ -9037,7 +9381,7 @@ class DSearchResponse final :
                &_DSearchResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    48;
+    50;
 
   friend void swap(DSearchResponse& a, DSearchResponse& b) {
     a.Swap(&b);
@@ -18502,6 +18846,374 @@ inline void AnimeImageUploadResponse::set_allocated_imageid(std::string* imageid
 
 // -------------------------------------------------------------------
 
+// AnimeProfileGetRequest
+
+// .kservice.EventHeader header = 1;
+inline bool AnimeProfileGetRequest::_internal_has_header() const {
+  return this != internal_default_instance() && _impl_.header_ != nullptr;
+}
+inline bool AnimeProfileGetRequest::has_header() const {
+  return _internal_has_header();
+}
+inline void AnimeProfileGetRequest::clear_header() {
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
+}
+inline const ::kservice::EventHeader& AnimeProfileGetRequest::_internal_header() const {
+  const ::kservice::EventHeader* p = _impl_.header_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::EventHeader&>(
+      ::kservice::_EventHeader_default_instance_);
+}
+inline const ::kservice::EventHeader& AnimeProfileGetRequest::header() const {
+  // @@protoc_insertion_point(field_get:kservice.AnimeProfileGetRequest.header)
+  return _internal_header();
+}
+inline void AnimeProfileGetRequest::unsafe_arena_set_allocated_header(
+    ::kservice::EventHeader* header) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
+  }
+  _impl_.header_ = header;
+  if (header) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.AnimeProfileGetRequest.header)
+}
+inline ::kservice::EventHeader* AnimeProfileGetRequest::release_header() {
+  
+  ::kservice::EventHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::EventHeader* AnimeProfileGetRequest::unsafe_arena_release_header() {
+  // @@protoc_insertion_point(field_release:kservice.AnimeProfileGetRequest.header)
+  
+  ::kservice::EventHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+  return temp;
+}
+inline ::kservice::EventHeader* AnimeProfileGetRequest::_internal_mutable_header() {
+  
+  if (_impl_.header_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::EventHeader>(GetArenaForAllocation());
+    _impl_.header_ = p;
+  }
+  return _impl_.header_;
+}
+inline ::kservice::EventHeader* AnimeProfileGetRequest::mutable_header() {
+  ::kservice::EventHeader* _msg = _internal_mutable_header();
+  // @@protoc_insertion_point(field_mutable:kservice.AnimeProfileGetRequest.header)
+  return _msg;
+}
+inline void AnimeProfileGetRequest::set_allocated_header(::kservice::EventHeader* header) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.header_;
+  }
+  if (header) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(header);
+    if (message_arena != submessage_arena) {
+      header = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, header, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.header_ = header;
+  // @@protoc_insertion_point(field_set_allocated:kservice.AnimeProfileGetRequest.header)
+}
+
+// .kservice.InfoSourceType srcType = 2;
+inline void AnimeProfileGetRequest::clear_srctype() {
+  _impl_.srctype_ = 0;
+}
+inline ::kservice::InfoSourceType AnimeProfileGetRequest::_internal_srctype() const {
+  return static_cast< ::kservice::InfoSourceType >(_impl_.srctype_);
+}
+inline ::kservice::InfoSourceType AnimeProfileGetRequest::srctype() const {
+  // @@protoc_insertion_point(field_get:kservice.AnimeProfileGetRequest.srcType)
+  return _internal_srctype();
+}
+inline void AnimeProfileGetRequest::_internal_set_srctype(::kservice::InfoSourceType value) {
+  
+  _impl_.srctype_ = value;
+}
+inline void AnimeProfileGetRequest::set_srctype(::kservice::InfoSourceType value) {
+  _internal_set_srctype(value);
+  // @@protoc_insertion_point(field_set:kservice.AnimeProfileGetRequest.srcType)
+}
+
+// string srcId = 3;
+inline void AnimeProfileGetRequest::clear_srcid() {
+  _impl_.srcid_.ClearToEmpty();
+}
+inline const std::string& AnimeProfileGetRequest::srcid() const {
+  // @@protoc_insertion_point(field_get:kservice.AnimeProfileGetRequest.srcId)
+  return _internal_srcid();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void AnimeProfileGetRequest::set_srcid(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.srcid_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:kservice.AnimeProfileGetRequest.srcId)
+}
+inline std::string* AnimeProfileGetRequest::mutable_srcid() {
+  std::string* _s = _internal_mutable_srcid();
+  // @@protoc_insertion_point(field_mutable:kservice.AnimeProfileGetRequest.srcId)
+  return _s;
+}
+inline const std::string& AnimeProfileGetRequest::_internal_srcid() const {
+  return _impl_.srcid_.Get();
+}
+inline void AnimeProfileGetRequest::_internal_set_srcid(const std::string& value) {
+  
+  _impl_.srcid_.Set(value, GetArenaForAllocation());
+}
+inline std::string* AnimeProfileGetRequest::_internal_mutable_srcid() {
+  
+  return _impl_.srcid_.Mutable(GetArenaForAllocation());
+}
+inline std::string* AnimeProfileGetRequest::release_srcid() {
+  // @@protoc_insertion_point(field_release:kservice.AnimeProfileGetRequest.srcId)
+  return _impl_.srcid_.Release();
+}
+inline void AnimeProfileGetRequest::set_allocated_srcid(std::string* srcid) {
+  if (srcid != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.srcid_.SetAllocated(srcid, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.srcid_.IsDefault()) {
+    _impl_.srcid_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:kservice.AnimeProfileGetRequest.srcId)
+}
+
+// -------------------------------------------------------------------
+
+// AnimeProfileGetResponse
+
+// .kservice.ResponseHeader header = 1;
+inline bool AnimeProfileGetResponse::_internal_has_header() const {
+  return this != internal_default_instance() && _impl_.header_ != nullptr;
+}
+inline bool AnimeProfileGetResponse::has_header() const {
+  return _internal_has_header();
+}
+inline void AnimeProfileGetResponse::clear_header() {
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
+}
+inline const ::kservice::ResponseHeader& AnimeProfileGetResponse::_internal_header() const {
+  const ::kservice::ResponseHeader* p = _impl_.header_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::ResponseHeader&>(
+      ::kservice::_ResponseHeader_default_instance_);
+}
+inline const ::kservice::ResponseHeader& AnimeProfileGetResponse::header() const {
+  // @@protoc_insertion_point(field_get:kservice.AnimeProfileGetResponse.header)
+  return _internal_header();
+}
+inline void AnimeProfileGetResponse::unsafe_arena_set_allocated_header(
+    ::kservice::ResponseHeader* header) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
+  }
+  _impl_.header_ = header;
+  if (header) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.AnimeProfileGetResponse.header)
+}
+inline ::kservice::ResponseHeader* AnimeProfileGetResponse::release_header() {
+  
+  ::kservice::ResponseHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::ResponseHeader* AnimeProfileGetResponse::unsafe_arena_release_header() {
+  // @@protoc_insertion_point(field_release:kservice.AnimeProfileGetResponse.header)
+  
+  ::kservice::ResponseHeader* temp = _impl_.header_;
+  _impl_.header_ = nullptr;
+  return temp;
+}
+inline ::kservice::ResponseHeader* AnimeProfileGetResponse::_internal_mutable_header() {
+  
+  if (_impl_.header_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::ResponseHeader>(GetArenaForAllocation());
+    _impl_.header_ = p;
+  }
+  return _impl_.header_;
+}
+inline ::kservice::ResponseHeader* AnimeProfileGetResponse::mutable_header() {
+  ::kservice::ResponseHeader* _msg = _internal_mutable_header();
+  // @@protoc_insertion_point(field_mutable:kservice.AnimeProfileGetResponse.header)
+  return _msg;
+}
+inline void AnimeProfileGetResponse::set_allocated_header(::kservice::ResponseHeader* header) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.header_;
+  }
+  if (header) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(header);
+    if (message_arena != submessage_arena) {
+      header = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, header, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.header_ = header;
+  // @@protoc_insertion_point(field_set_allocated:kservice.AnimeProfileGetResponse.header)
+}
+
+// .kservice.Anime animeInfo = 2;
+inline bool AnimeProfileGetResponse::_internal_has_animeinfo() const {
+  return this != internal_default_instance() && _impl_.animeinfo_ != nullptr;
+}
+inline bool AnimeProfileGetResponse::has_animeinfo() const {
+  return _internal_has_animeinfo();
+}
+inline void AnimeProfileGetResponse::clear_animeinfo() {
+  if (GetArenaForAllocation() == nullptr && _impl_.animeinfo_ != nullptr) {
+    delete _impl_.animeinfo_;
+  }
+  _impl_.animeinfo_ = nullptr;
+}
+inline const ::kservice::Anime& AnimeProfileGetResponse::_internal_animeinfo() const {
+  const ::kservice::Anime* p = _impl_.animeinfo_;
+  return p != nullptr ? *p : reinterpret_cast<const ::kservice::Anime&>(
+      ::kservice::_Anime_default_instance_);
+}
+inline const ::kservice::Anime& AnimeProfileGetResponse::animeinfo() const {
+  // @@protoc_insertion_point(field_get:kservice.AnimeProfileGetResponse.animeInfo)
+  return _internal_animeinfo();
+}
+inline void AnimeProfileGetResponse::unsafe_arena_set_allocated_animeinfo(
+    ::kservice::Anime* animeinfo) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.animeinfo_);
+  }
+  _impl_.animeinfo_ = animeinfo;
+  if (animeinfo) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:kservice.AnimeProfileGetResponse.animeInfo)
+}
+inline ::kservice::Anime* AnimeProfileGetResponse::release_animeinfo() {
+  
+  ::kservice::Anime* temp = _impl_.animeinfo_;
+  _impl_.animeinfo_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::kservice::Anime* AnimeProfileGetResponse::unsafe_arena_release_animeinfo() {
+  // @@protoc_insertion_point(field_release:kservice.AnimeProfileGetResponse.animeInfo)
+  
+  ::kservice::Anime* temp = _impl_.animeinfo_;
+  _impl_.animeinfo_ = nullptr;
+  return temp;
+}
+inline ::kservice::Anime* AnimeProfileGetResponse::_internal_mutable_animeinfo() {
+  
+  if (_impl_.animeinfo_ == nullptr) {
+    auto* p = CreateMaybeMessage<::kservice::Anime>(GetArenaForAllocation());
+    _impl_.animeinfo_ = p;
+  }
+  return _impl_.animeinfo_;
+}
+inline ::kservice::Anime* AnimeProfileGetResponse::mutable_animeinfo() {
+  ::kservice::Anime* _msg = _internal_mutable_animeinfo();
+  // @@protoc_insertion_point(field_mutable:kservice.AnimeProfileGetResponse.animeInfo)
+  return _msg;
+}
+inline void AnimeProfileGetResponse::set_allocated_animeinfo(::kservice::Anime* animeinfo) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.animeinfo_;
+  }
+  if (animeinfo) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(animeinfo);
+    if (message_arena != submessage_arena) {
+      animeinfo = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, animeinfo, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.animeinfo_ = animeinfo;
+  // @@protoc_insertion_point(field_set_allocated:kservice.AnimeProfileGetResponse.animeInfo)
+}
+
+// bool hasCoverImage = 3;
+inline void AnimeProfileGetResponse::clear_hascoverimage() {
+  _impl_.hascoverimage_ = false;
+}
+inline bool AnimeProfileGetResponse::_internal_hascoverimage() const {
+  return _impl_.hascoverimage_;
+}
+inline bool AnimeProfileGetResponse::hascoverimage() const {
+  // @@protoc_insertion_point(field_get:kservice.AnimeProfileGetResponse.hasCoverImage)
+  return _internal_hascoverimage();
+}
+inline void AnimeProfileGetResponse::_internal_set_hascoverimage(bool value) {
+  
+  _impl_.hascoverimage_ = value;
+}
+inline void AnimeProfileGetResponse::set_hascoverimage(bool value) {
+  _internal_set_hascoverimage(value);
+  // @@protoc_insertion_point(field_set:kservice.AnimeProfileGetResponse.hasCoverImage)
+}
+
+// -------------------------------------------------------------------
+
 // DCommentRequest
 
 // .kservice.EventHeader header = 1;
@@ -19367,6 +20079,10 @@ inline void DSearchResponse::set_hasmore(bool value) {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

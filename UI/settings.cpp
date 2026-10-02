@@ -10,7 +10,7 @@
 #include "settings/generalpage.h"
 #include "settings/danmupage.h"
 #include "settings/playerpage.h"
-#include "settings/playlistpage.h"
+#include "settings/kservicepage.h"
 #include "settings/downloadpage.h"
 #include "settings/scriptpage.h"
 #include "settings/keyactionpage.h"
@@ -34,7 +34,7 @@ Settings::Settings(Page page, QWidget *parent) : CFramelessDialog(tr("Settings")
         tr("General"),
         tr("Danmu"),
         tr("Player"),
-        tr("Playlist"),
+        tr("KikoPlay Service"),
         tr("Shortcut Key"),
         tr("Network"),
         tr("Download"),
@@ -92,8 +92,8 @@ SettingPage *Settings::getOrCreatePage(Page p)
         case PAGE_PLAYER:
             pages[p] = new PlayerPage(this);
             break;
-        case PAGE_PLAYLIST:
-            pages[p] = new PlaylistPage(this);
+        case PAGE_KSERVICE:
+            pages[p] = new KServicePage(this);
             break;
         case PAGE_KEYACTION:
             pages[p] = new KeyActionPage(this);

@@ -4,22 +4,6 @@
 #include "animeinfo.h"
 #include "Extension/Script/scriptbase.h"
 class TaskContext;
-class MatchStatusObj : public QObject
-{
-    Q_OBJECT
-public:
-    using QObject::QObject;
-    void quitEventLoop() { emit quit(); }
-public:
-    std::atomic_bool downFlag{false};
-    bool scriptValid{false};
-    bool kServiceSuccess{false};
-    bool scriptSuccess{false};
-    MatchResult kServiceMatch;
-    MatchResult scriptMatch;
-signals:
-    void quit();
-};
 
 class AnimeProvider : public QObject
 {
@@ -37,7 +21,11 @@ public:
     ScriptState getEp(Anime *anime, QVector<EpInfo> &results, TaskContext *ctx = nullptr);
     ScriptState getTags(Anime *anime, QStringList &results, TaskContext *ctx = nullptr);
 
+    ScriptState matchDefault(const QString &path, MatchResult &result);
     ScriptState match(const QString &scriptId, const QString &path, MatchResult &result);
+#ifdef KSERVICE
+    static const QString kServiceMatchProviderId;
+#endif
     ScriptState menuClick(const QString &mid, Anime *anime);
 signals:
     void infoProviderChanged();
@@ -48,7 +36,7 @@ private:
     void setMatchProviders();
     QString defaultMatchScriptId;
 #ifdef KSERVICE
-    ScriptState kMatch(const QString &scriptId, const QString &path, MatchResult &result);
+    ScriptState kMatch(const QString &path, MatchResult &result);
 #endif
 };
 

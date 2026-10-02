@@ -6,6 +6,10 @@ namespace Extension
 {
     class LibraryInterface;
 }
+namespace KServiceAux
+{
+    class KAnimeProfileTask;
+}
 enum EpType
 {
     UNKNOWN, EP, SP, OP, ED, Trailer, MAD, Other
@@ -156,6 +160,7 @@ class Anime
     friend class Extension::LibraryInterface;
     friend class AnimeModel;
     friend class KService;
+    friend class KServiceAux::KAnimeProfileTask;
 
     QString _name;
     QString _desc;

@@ -14,11 +14,12 @@
 #define SETTING_KEY_LAST_PASSWORD "Profile/lastPassword"
 
 
-KLogin::KLogin(QWidget *parent) : CFramelessDialog(tr("Login"), parent, true)
+KLogin::KLogin(QWidget *parent, const QString &email) : CFramelessDialog(tr("Login"), parent, true)
 {
     QLabel *emailTip = new QLabel(tr("Email"), this);
     emailEdit = new ElaLineEdit(this);
-    emailEdit->setText(GlobalObjects::appSetting->value(SETTING_KEY_LAST_EMAIL).toString());
+    const QString lastEmail = GlobalObjects::appSetting->value(SETTING_KEY_LAST_EMAIL).toString();
+    emailEdit->setText(email.isEmpty() ? lastEmail : email);
 
     QLabel *passwordTip=new QLabel(tr("Password"), this);
     passwordEdit = new ElaLineEdit(this);
@@ -28,7 +29,7 @@ KLogin::KLogin(QWidget *parent) : CFramelessDialog(tr("Login"), parent, true)
     registerBtn->setAutoDefault(false);
     rememberPasswordCheck = new ElaCheckBox(tr("Remember"), this);
     rememberPasswordCheck->setChecked(GlobalObjects::appSetting->value(SETTING_KEY_REMEMBER_PW, true).toBool());
-    if (rememberPasswordCheck->isChecked())
+    if (rememberPasswordCheck->isChecked() && (email.isEmpty() || email == lastEmail))
     {
         QString pw = QByteArray::fromBase64(GlobalObjects::appSetting->value(SETTING_KEY_LAST_PASSWORD).toByteArray());
         passwordEdit->setText(pw);
@@ -45,7 +46,11 @@ KLogin::KLogin(QWidget *parent) : CFramelessDialog(tr("Login"), parent, true)
     epEditorGLayout->setColumnStretch(1, 1);
 
     QObject::connect(rememberPasswordCheck, &QCheckBox::stateChanged, this, [=](int state){
-        GlobalObjects::appSetting->value(SETTING_KEY_REMEMBER_PW, state == Qt::CheckState::Checked);
+        GlobalObjects::appSetting->setValue(SETTING_KEY_REMEMBER_PW, state == Qt::CheckState::Checked);
+        if (state != Qt::CheckState::Checked)
+        {
+            GlobalObjects::appSetting->remove(SETTING_KEY_LAST_PASSWORD);
+        }
     });
     QObject::connect(registerBtn, &QPushButton::clicked, this, [=](){
         KRegister reg(this);

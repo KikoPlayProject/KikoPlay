@@ -1295,7 +1295,7 @@ void PlayList::setAddExternal(bool on)
     GlobalObjects::appSetting->setValue(SETTING_KEY_ADD_EXTERNAL, on);
 }
 
-void PlayList::matchItems(const QModelIndexList &matchIndexes)
+void PlayList::matchItems(const QModelIndexList &matchIndexes, const QString &providerId)
 {
     QVector<PlayListItem *> items, selectedItems;
     for(const QModelIndex &index : matchIndexes)
@@ -1323,8 +1323,8 @@ void PlayList::matchItems(const QModelIndexList &matchIndexes)
     }
     if(selectedItems.count()==0) return;
     emit matchStatusChanged(true);
-    QMetaObject::invokeMethod(matchWorker, [this, selectedItems](){
-        matchWorker->match(selectedItems);
+    QMetaObject::invokeMethod(matchWorker, [this, selectedItems, providerId](){
+        matchWorker->match(selectedItems, providerId);
     },Qt::QueuedConnection);
 }
 
@@ -1821,7 +1821,7 @@ void PlayList::renameItemPoolId(const QString &opid, const QString &npid)
 }
 
 
-void MatchWorker::match(const QVector<PlayListItem *> &items)
+void MatchWorker::match(const QVector<PlayListItem *> &items, const QString &providerId)
 {
     QList<PlayListItem *> matchedItems;
     auto notifier = Notifier::getNotifier();
@@ -1840,8 +1840,12 @@ void MatchWorker::match(const QVector<PlayListItem *> &items)
             continue;
         }
         MatchResult match;
-        GlobalObjects::danmuManager->localMatch(currentItem->path, match);
-        if(!match.success) GlobalObjects::animeProvider->match(GlobalObjects::animeProvider->defaultMatchScript(), currentItem->path, match);
+        if (providerId.isEmpty()) GlobalObjects::danmuManager->localMatch(currentItem->path, match);
+        if (!match.success)
+        {
+            if (providerId.isEmpty()) GlobalObjects::animeProvider->matchDefault(currentItem->path, match);
+            else GlobalObjects::animeProvider->match(providerId, currentItem->path, match);
+        }
         if(!match.success)
         {
             notifier->showMessage(Notifier::LIST_NOTIFY, tr("Failed: %1").arg(currentItem->title),NotifyMessageFlag::NM_PROCESS|NotifyMessageFlag::NM_SHOWCANCEL);

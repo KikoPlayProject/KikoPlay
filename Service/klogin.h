@@ -9,7 +9,7 @@ class KLogin : public CFramelessDialog
 {
     Q_OBJECT
 public:
-    KLogin(QWidget *parent = nullptr);
+    KLogin(QWidget *parent = nullptr, const QString &email = QString());
 
 protected:
     virtual void onAccept();

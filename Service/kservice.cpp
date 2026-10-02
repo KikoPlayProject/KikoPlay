@@ -1,4 +1,5 @@
 #include "kservice.h"
+#include "kanimeprofile.h"
 #include <QThread>
 #include <chrono>
 #include <QSettings>
@@ -114,7 +115,9 @@ KService::KService() : QObject{nullptr}, baseURL("https://www.kstat.top")
     serviceThread->setObjectName(QStringLiteral("serviceThread"));
     serviceThread->start(QThread::NormalPriority);
     serviceData.reset(new QSettings(GlobalObjects::context()->dataPath + "service.ini", QSettings::IniFormat));
+    animeProfileTask = new KServiceAux::KAnimeProfileTask(this, serviceData->fileName());
     profile.loadProfile(serviceData.data());
+    updateAccountState();
     new EventListener(EventBus::getEventBus(), EventBus::EVENT_FILE_MATCH_DOWN, std::bind(&KService::listenMatchDown, this, std::placeholders::_1), this);
     new EventListener(EventBus::getEventBus(), EventBus::EVENT_DANMU_SRC_ADDED, std::bind(&KService::listenDanmuAdded, this, std::placeholders::_1), this);
     new EventListener(EventBus::getEventBus(), EventBus::EVENT_KAPP_LOADED, std::bind(&KService::listenCommonEvents, this, std::placeholders::_1), this);
@@ -123,6 +126,7 @@ KService::KService() : QObject{nullptr}, baseURL("https://www.kstat.top")
     moveToThread(serviceThread.data());
     QMetaObject::invokeMethod(this, [=](){
         eventTimer.start(std::chrono::milliseconds(5 * 60 * 1000), this);
+        animeProfileTask->initSetting();
         this->kStatsUV(true);
     }, Qt::QueuedConnection);
 }
@@ -169,6 +173,63 @@ void KService::login(const QString &email, const QString &password)
     QMetaObject::invokeMethod(this, [=](){
         this->kLogin(email, password);
     });
+}
+
+KServiceAccount KService::account() const
+{
+    QMutexLocker locker(&accountMutex);
+    return currentAccount;
+}
+
+void KService::logout()
+{
+    QMetaObject::invokeMethod(this, [this](){
+        clearAccount(true);
+    }, Qt::QueuedConnection);
+}
+
+void KService::updateAccountState()
+{
+    KServiceAccount account;
+    account.loggedIn = profile.login;
+    if (account.loggedIn)
+    {
+        account.userName = profile.userName;
+        account.email = profile.email;
+    }
+    {
+        QMutexLocker locker(&accountMutex);
+        if (currentAccount.loggedIn == account.loggedIn &&
+            currentAccount.userName == account.userName && currentAccount.email == account.email)
+        {
+            return;
+        }
+        currentAccount = account;
+    }
+    emit accountChanged();
+}
+
+void KService::clearAccount(bool clearStashedComments)
+{
+    // Ignore login and refresh responses belonging to the previous session.
+    ++authGeneration;
+    refreshInFlight = false;
+    profile.login = false;
+    profile.userId.clear();
+    profile.userName.clear();
+    profile.email.clear();
+    profile.accessToken.clear();
+    profile.refreshToken.clear();
+    profile.accessTokenExpiration = {};
+    profile.refreshTokenExpiration = {};
+    if (clearStashedComments) profile.stashComments.clear();
+    serviceData->remove(SERVICE_KEY_USER_ID);
+    serviceData->remove(SERVICE_KEY_USER_NAME);
+    serviceData->remove(SERVICE_KEY_USER_EMAIL);
+    serviceData->remove(SERVICE_KEY_ACCESS_TOKEN);
+    serviceData->remove(SERVICE_KEY_REFRESH_TOKEN);
+    serviceData->sync();
+    updateAccountState();
 }
 
 void KService::sendVerification(const QString &email)
@@ -309,10 +370,19 @@ KDSearchResult KService::searchDandanSync(const QString &keyword)
     return pending->result;
 }
 
+bool KService::getAnimeProfileSync(int srcType, const QString &scriptData, Anime *anime, QStringList &tags)
+{
+    return animeProfileTask->getAnimeProfileSync(srcType, scriptData, anime, tags);
+}
+
 void KService::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() == eventTimer.timerId())
     {
+        if (profile.login && !profile.accessTokenValid() && !profile.refreshTokenValid())
+        {
+            clearAccount(false);
+        }
         kStatsUV(false);
     }
 }
@@ -675,10 +745,14 @@ void KService::refreshToken()
     if (!profile.refreshTokenValid())
     {
         Logger::logger()->log(Logger::APP, "[KService]refresh token invalid, login");
+        clearAccount(false);
         QVariantMap param;
         EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_REQUIRE_LOGIN, param});
         return;
     }
+    if (refreshInFlight) return;
+    refreshInFlight = true;
+    const quint64 generation = authGeneration;
     kservice::RefreshRequest req;
     setEventHeader(*req.mutable_header(), "refresh");
 
@@ -689,11 +763,21 @@ void KService::refreshToken()
     setReqHeader(request, pathRefreshToken);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
     request.setRawHeader("Authorization", QString("Bearer %1").arg(profile.refreshToken).toUtf8());
+    request.setTransferTimeout(15000);
 
     QNetworkReply *reply = Network::getManager()->post(request, QByteArray(msgContent.c_str(), msgContent.size()));
     QObject::connect(reply, &QNetworkReply::finished, this, [=](){
+        if (generation != authGeneration) return;
+        refreshInFlight = false;
         if (reply->error() != QNetworkReply::NoError)
         {
+            const int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            if (statusCode == 401 || statusCode == 403)
+            {
+                clearAccount(false);
+                EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_REQUIRE_LOGIN, QVariantMap()});
+                return;
+            }
             Logger::logger()->log(Logger::APP, "[KService]refresh failed but token valid: " + reply->errorString());
             return;
         }
@@ -810,6 +894,16 @@ bool KService::enableKServiceUpdatSrc() const
 void KService::setEnableKServiceUpdateSrc(bool on)
 {
     serviceData->setValue(SERVICE_KEY_ENABLE_UPDATE_SRC, on);
+}
+
+bool KService::enableKServiceAnimeProfile() const
+{
+    return animeProfileTask->enabled();
+}
+
+void KService::setEnableKServiceAnimeProfile(bool on)
+{
+    animeProfileTask->setEnabled(on);
 }
 
 QList<QPair<QString, QPair<int, bool>> > KService::getLibrarySource() const
@@ -1010,6 +1104,7 @@ void KService::kFileReco(const QString &path)
     QFileInfo fi(path);
     if (!fi.isFile() || !fi.exists() || fi.size() < 1024*1024)
     {
+        emit recognized(0, tr("File is missing or too small to recognize"), path, MatchResult());
         return;
     }
     kservice::RecoRequest req;
@@ -1076,6 +1171,8 @@ void KService::kLaunch(QSharedPointer<DanmuComment> comment, const QString &pool
 
 void KService::kLogin(const QString &email, const QString &password)
 {
+    const quint64 generation = ++authGeneration;
+    refreshInFlight = false;
     const QString pwHash{QCryptographicHash::hash(password.toUtf8(),QCryptographicHash::Sha256).toHex()};
     kservice::LoginRequest req;
     setEventHeader(*req.mutable_header(), "login");
@@ -1084,7 +1181,9 @@ void KService::kLogin(const QString &email, const QString &password)
 
     std::string msgContent;
     req.SerializeToString(&msgContent);
-    post(pathLogin, QByteArray(msgContent.c_str(), msgContent.size()), std::bind(&KService::handleLogin, this, std::placeholders::_1));
+    post(pathLogin, QByteArray(msgContent.c_str(), msgContent.size()), [this, generation](QNetworkReply *reply){
+        if (generation == authGeneration) handleLogin(reply);
+    });
     Logger::logger()->log(Logger::APP, "[KService]login: " + email);
 }
 
@@ -1388,6 +1487,7 @@ void KService::handleLogin(QNetworkReply *reply)
     Logger::logger()->log(Logger::APP, "[KService]login refresh token expiration: " + profile.refreshTokenExpiration.toString());
     profile.login = true;
     profile.saveProfile(serviceData.data());
+    updateAccountState();
     emit loginFinished(1, "");
     resendStashedComments();
     Logger::logger()->log(Logger::APP, "[KService]login success: " + profile.email);
@@ -1405,6 +1505,7 @@ void KService::handleRefreshToken(QNetworkReply *reply)
     if (rsp.header().status() != 1)
     {
         Logger::logger()->log(Logger::APP, "[KService]refresh failed, login: " + QString::fromStdString(rsp.header().err_msg()));
+        clearAccount(false);
         QVariantMap param;
         EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_REQUIRE_LOGIN, param});
         return;
@@ -1412,6 +1513,7 @@ void KService::handleRefreshToken(QNetworkReply *reply)
     profile.accessToken = QString::fromStdString(rsp.access_token());
     profile.accessTokenExpiration = profile.parseTokenExpiration(profile.accessToken);
     profile.saveProfile(serviceData.data());
+    updateAccountState();
     Logger::logger()->log(Logger::APP, "[KService]refresh success, token expiration: " + profile.accessTokenExpiration.toString());
     resendStashedComments();
 }

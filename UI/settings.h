@@ -12,7 +12,7 @@ public:
         PAGE_GENERAL,
         PAGE_DANMU,
         PAGE_PLAYER,
-        PAGE_PLAYLIST,
+        PAGE_KSERVICE,
         PAGE_KEYACTION,
         PAGE_NETWORK,
         PAGE_DOWN,

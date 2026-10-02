@@ -44,6 +44,9 @@
 #include "MediaLibrary/labelmodel.h"
 #include "MediaLibrary/labelitemdelegate.h"
 #include "MediaLibrary/animefilterproxymodel.h"
+#ifdef KSERVICE
+#include "Service/kservice.h"
+#endif
 #define TagNodeRole Qt::UserRole+3
 
 
@@ -406,9 +409,54 @@ void LibraryWindow::initAnimeView()
     });
     actUpdateDetailInfo->setEnabled(false);
 
+#ifdef KSERVICE
+    QAction *actUpdateFromKService = new QAction(tr("Update from KikoPlay Service"), this);
+    QObject::connect(actUpdateFromKService, &QAction::triggered, this, [=](){
+        QItemSelection selection = proxyModel->mapSelectionToSource(animeListView->selectionModel()->selection());
+        if (selection.empty()) return;
+        Anime *currentAnime = animeModel->getAnime(selection.indexes().first());
+        if (!currentAnime || currentAnime->refreshing()) return;
+        const QString bgmId = currentAnime->scriptData().trimmed();
+        static const QRegularExpression validBgmId("^[1-9][0-9]{0,63}$");
+        if (currentAnime->scriptId() != "Kikyou.l.Bangumi" || !validBgmId.match(bgmId).hasMatch())
+        {
+            showMessage(tr("This entry has no valid Bangumi ID. Search for Bangumi details first."), NM_HIDE);
+            return;
+        }
+
+        showMessage(tr("Fetching Info from %1").arg(tr("KikoPlay Service")), NM_PROCESS | NM_DARKNESS_BACK);
+        Anime *nAnime = new Anime;
+        QStringList tags;
+        if (!KService::instance()->getAnimeProfileSync(1, bgmId, nAnime, tags))
+        {
+            delete nAnime;
+            showMessage(tr("Failed to update from KikoPlay Service"), NM_HIDE | NM_ERROR);
+            return;
+        }
+
+        const QString animeName = AnimeWorker::instance()->addAnime(currentAnime, nAnime);
+        bool hasTag = false;
+        for (const auto &animes : LabelModel::instance()->customTags())
+        {
+            if (animes.contains(animeName))
+            {
+                hasTag = true;
+                break;
+            }
+        }
+        if (!hasTag && !tags.isEmpty())
+            LabelModel::instance()->addCustomTags(animeName, tags);
+        showMessage(tr("Fetch Down"), NM_HIDE);
+    });
+    actUpdateFromKService->setEnabled(false);
+#endif
+
     QMenu *animeListContextMenu = new ElaMenu(animeListView);
     animeListContextMenu->addAction(actGetDetailInfo);
     animeListContextMenu->addAction(actUpdateDetailInfo);
+#ifdef KSERVICE
+    animeListContextMenu->addAction(actUpdateFromKService);
+#endif
     animeListContextMenu->addAction(actDelete);
 
     QAction *menuSep = new QAction(this);
@@ -458,6 +506,9 @@ void LibraryWindow::initAnimeView()
         bool hasSelection = !animeListView->selectionModel()->selection().isEmpty();
         actDelete->setEnabled(hasSelection);
         actUpdateDetailInfo->setEnabled(hasSelection);
+#ifdef KSERVICE
+        actUpdateFromKService->setEnabled(hasSelection);
+#endif
         actGetDetailInfo->setEnabled(hasSelection);
     });
 }

@@ -16,6 +16,10 @@ namespace
     const char *setting_MatchScriptId = "Script/DefaultMatchScript";
 }
 
+#ifdef KSERVICE
+const QString AnimeProvider::kServiceMatchProviderId = QStringLiteral("KikoPlay.Service");
+#endif
+
 AnimeProvider::AnimeProvider(QObject *parent) : QObject(parent)
 {
     QObject::connect(GlobalObjects::scriptManager, &ScriptManager::scriptChanged, this, [=](ScriptType type){
@@ -152,16 +156,26 @@ ScriptState AnimeProvider::getTags(Anime *anime, QStringList &results, TaskConte
     }).value<ScriptState>();
 }
 
-ScriptState AnimeProvider::match(const QString &scriptId, const QString &path, MatchResult &result)
+ScriptState AnimeProvider::matchDefault(const QString &path, MatchResult &result)
 {
 #ifdef KSERVICE
     if (KService::instance()->enableKServiceMatch())
     {
-        return kMatch(scriptId, path, result);
+        return kMatch(path, result);
     }
 #endif
-    auto script = GlobalObjects::scriptManager->getScript(scriptId).staticCast<MatchScript>();
-    if(!script) return "Script invalid";
+    return match(defaultMatchScriptId, path, result);
+}
+
+ScriptState AnimeProvider::match(const QString &scriptId, const QString &path, MatchResult &result)
+{
+#ifdef KSERVICE
+    if (scriptId == kServiceMatchProviderId) return kMatch(path, result);
+#endif
+    auto baseScript = GlobalObjects::scriptManager->getScript(scriptId);
+    if (!baseScript || baseScript->type() != ScriptType::MATCH)
+        return ScriptState(ScriptState::S_ERROR, QStringLiteral("Script invalid"));
+    auto script = baseScript.staticCast<MatchScript>();
     ThreadTask task(GlobalObjects::scriptManager->scriptThread);
     return task.Run([&](){
         return QVariant::fromValue(script->match(path, result));
@@ -191,72 +205,29 @@ void AnimeProvider::setMatchProviders()
 }
 
 #ifdef KSERVICE
-ScriptState AnimeProvider::kMatch(const QString &scriptId, const QString &path, MatchResult &result)
+ScriptState AnimeProvider::kMatch(const QString &path, MatchResult &result)
 {
     QEventLoop eventLoop;
-    QSharedPointer<MatchStatusObj> statusFlag{new MatchStatusObj, &MatchStatusObj::deleteLater};
-    auto script = GlobalObjects::scriptManager->getScript(scriptId).staticCast<MatchScript>();
-    if (script) statusFlag->scriptValid = true;
-    QObject::connect(statusFlag.get(), &MatchStatusObj::quit, &eventLoop, &QEventLoop::quit);
-
-    auto conn = QObject::connect(KService::instance(), &KService::recognized, this, [=](int status, const QString &errMsg, const QString &filePath, MatchResult match){
+    ScriptState response;
+    bool finished = false;
+    result.success = false;
+    auto conn = QObject::connect(KService::instance(), &KService::recognized, &eventLoop, [&](int status, const QString &errMsg, const QString &filePath, MatchResult match){
         if (filePath != path) return;
-        if (status != 1)
+        finished = true;
+        if (status == 1)
         {
-            if (!statusFlag->scriptValid) statusFlag->quitEventLoop();
-            return;
+            result = match;
+            Logger::logger()->log(Logger::APP, QString("KService Match Success: %1: %2 %3").arg(path, result.name, result.ep.toString()));
         }
-        if (!statusFlag->downFlag)
+        else
         {
-            statusFlag->downFlag = true;
-            statusFlag->kServiceSuccess = true;
-            statusFlag->kServiceMatch = match;
-            statusFlag->quitEventLoop();
+            response = ScriptState(ScriptState::S_ERROR, errMsg);
         }
+        eventLoop.quit();
     });
     KService::instance()->fileRecognize(path);
-
-    Network::ReqAbortFlagObj *abortFlag = nullptr;
-    ScriptState scriptRsp;
-    QObject obj;
-    if (script)
-    {
-        obj.moveToThread(GlobalObjects::scriptManager->scriptThread);
-        QMetaObject::invokeMethod(&obj, [=, &abortFlag, &scriptRsp](){
-            abortFlag = Network::getAbortFlag();
-            MatchResult scriptMatchResult;
-            ScriptState rsp = script->match(path, scriptMatchResult);
-            QThread::msleep(400);  // wait KService 400ms
-            if (scriptRsp && !statusFlag->downFlag)
-            {
-                statusFlag->downFlag = true;
-                statusFlag->scriptSuccess = true;
-                statusFlag->scriptMatch = scriptMatchResult;
-                scriptRsp = rsp;
-            }
-            statusFlag->quitEventLoop();
-        }, Qt::QueuedConnection);
-    }
-    eventLoop.exec();
+    if (!finished) eventLoop.exec();
     QObject::disconnect(conn);
-
-    if (statusFlag->downFlag)
-    {
-        if (statusFlag->kServiceSuccess)
-        {
-            if (script) script->stop();
-            if (abortFlag) emit abortFlag->abort();
-            result = statusFlag->kServiceMatch;
-            Logger::logger()->log(Logger::APP, QString("KService Match Success: %1: %2 %3").arg(path, result.name, result.ep.toString()));
-            return ScriptState(ScriptState::S_NORM);
-        }
-        else if (statusFlag->scriptSuccess)
-        {
-            result = statusFlag->scriptMatch;
-            return ScriptState(ScriptState::S_NORM);
-        }
-    }
-    result.success = false;
-    return scriptRsp;
+    return response;
 }
 #endif

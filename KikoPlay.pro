@@ -219,8 +219,8 @@ SOURCES += \
     UI/settings/danmupage.cpp \
     UI/settings/generalpage.cpp \
     UI/settings/keyactionpage.cpp \
+    UI/settings/kservicepage.cpp \
     UI/settings/playerpage.cpp \
-    UI/settings/playlistpage.cpp \
     UI/widgets/colorpreview.cpp \
     UI/widgets/component/flowlayout.cpp \
     UI/widgets/component/ktreeviewitemdelegate.cpp \
@@ -538,8 +538,8 @@ HEADERS += \
     UI/settings/danmupage.h \
     UI/settings/generalpage.h \
     UI/settings/keyactionpage.h \
+    UI/settings/kservicepage.h \
     UI/settings/playerpage.h \
-    UI/settings/playlistpage.h \
     UI/widgets/colorpreview.h \
     UI/widgets/component/flowlayout.h \
     UI/widgets/component/ktreeviewitemdelegate.h \
@@ -702,12 +702,14 @@ win32 {
 
 contains(DEFINES, KSERVICE) {
     SOURCES += \
+        Service/kanimeprofile.cpp \
         Service/klogin.cpp \
         Service/kregister.cpp \
         Service/kservice.cpp \
         Service/pb/service.pb.cc \
 
     HEADERS += \
+        Service/kanimeprofile.h \
         Service/klogin.h \
         Service/kregister.h \
         Service/kservice.h \

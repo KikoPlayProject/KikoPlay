@@ -999,22 +999,22 @@
         <translation type="vanished">动画标题</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="668"/>
+        <location filename="../../UI/librarywindow.cpp" line="719"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="674"/>
+        <location filename="../../UI/librarywindow.cpp" line="725"/>
         <source>Summary</source>
         <translation>简介</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="679"/>
+        <location filename="../../UI/librarywindow.cpp" line="730"/>
         <source>Staff</source>
         <translation>Staff</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="684"/>
+        <location filename="../../UI/librarywindow.cpp" line="735"/>
         <source>Character</source>
         <translation>角色</translation>
     </message>
@@ -1393,32 +1393,37 @@
 <context>
     <name>AnimeScrapingTask</name>
     <message>
-        <location filename="../../MediaLibrary/animescrapingtask.cpp" line="32"/>
+        <location filename="../../MediaLibrary/animescrapingtask.cpp" line="23"/>
+        <source>Fetching Anime Info[%1] From KService...</source>
+        <translation>从KikoPlay服务获取动画信息[%1]...</translation>
+    </message>
+    <message>
+        <location filename="../../MediaLibrary/animescrapingtask.cpp" line="57"/>
         <source>Fetching Anime Info[%1]...</source>
         <translation>获取动画信息[%1]...</translation>
     </message>
     <message>
-        <location filename="../../MediaLibrary/animescrapingtask.cpp" line="37"/>
+        <location filename="../../MediaLibrary/animescrapingtask.cpp" line="62"/>
         <source>Task Canceled</source>
         <translation>任务取消</translation>
     </message>
     <message>
-        <location filename="../../MediaLibrary/animescrapingtask.cpp" line="69"/>
+        <location filename="../../MediaLibrary/animescrapingtask.cpp" line="94"/>
         <source>Fetching Tags[%1] Failed</source>
         <translation>获取Tag[%1]失败</translation>
     </message>
     <message>
-        <location filename="../../MediaLibrary/animescrapingtask.cpp" line="73"/>
+        <location filename="../../MediaLibrary/animescrapingtask.cpp" line="98"/>
         <source>Fetching Tags[%1]...</source>
         <translation>获取Tag[%1]...</translation>
     </message>
     <message>
-        <location filename="../../MediaLibrary/animescrapingtask.cpp" line="80"/>
+        <location filename="../../MediaLibrary/animescrapingtask.cpp" line="105"/>
         <source>Fetch Tag Canceled</source>
         <translation>取消获取Tag</translation>
     </message>
     <message>
-        <location filename="../../MediaLibrary/animescrapingtask.cpp" line="101"/>
+        <location filename="../../MediaLibrary/animescrapingtask.cpp" line="126"/>
         <source>Fetch %1 Tags[%2]...</source>
         <translation>获取 %1 个Tag[%2]</translation>
     </message>
@@ -4282,19 +4287,19 @@ Finish Time: ----</source>
 <context>
     <name>KLibraryOrderDialog</name>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="125"/>
+        <location filename="../../UI/settings/kservicepage.cpp" line="124"/>
         <source>Library Download Priority</source>
         <translation>资料下载优先级</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="127"/>
+        <location filename="../../UI/settings/kservicepage.cpp" line="126"/>
         <source>When multiple data sources are obtained from KService, set the download priority:
 (Drag to change the order)</source>
         <translation>当从KService获取到多个资料源时，设置下载优先级：
 （拖动改变顺序）</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="169"/>
+        <location filename="../../UI/settings/kservicepage.cpp" line="168"/>
         <source>At least one source must be selected</source>
         <translation>至少选择一个来源</translation>
     </message>
@@ -4489,54 +4494,150 @@ Finish Time: ----</source>
 <context>
     <name>KService</name>
     <message>
+        <source>File is missing or too small to recognize</source>
+        <translation>文件不存在或太小，无法识别</translation>
+    </message>
+    <message>
         <source>Invalid UserName: Only English letters, numbers, and underscores are allowed</source>
         <translation type="vanished">用户名无效：只允许英文字母，数字和下划线</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="666"/>
+        <location filename="../../Service/kservice.cpp" line="754"/>
         <source>Invalid UserName: Only Chinese characters, English letters, numbers, and underscores are allowed</source>
         <translation>用户名无效：只允许中文字符，英文字母，数字和下划线</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="671"/>
+        <location filename="../../Service/kservice.cpp" line="759"/>
         <source>Length invalid</source>
         <translation>长度无效</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="681"/>
-        <location filename="../../Service/kservice.cpp" line="687"/>
+        <location filename="../../Service/kservice.cpp" line="769"/>
+        <location filename="../../Service/kservice.cpp" line="775"/>
         <source>Invalid email format</source>
         <translation>Email格式无效</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="691"/>
+        <location filename="../../Service/kservice.cpp" line="779"/>
         <source>Email length lnvalid</source>
         <translation>Email长度无效</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="700"/>
+        <location filename="../../Service/kservice.cpp" line="788"/>
         <source>Password length invalid, must be greater than 6</source>
         <translation>密码无效，长度应大于6</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="738"/>
+        <location filename="../../Service/kservice.cpp" line="836"/>
         <source>Bangumi</source>
         <translation>Bangumi</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="739"/>
+        <location filename="../../Service/kservice.cpp" line="837"/>
         <source>Douban</source>
         <translation>豆瓣</translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="1156"/>
+        <location filename="../../Service/kservice.cpp" line="1389"/>
         <source>Login Response Parse Error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../Service/kservice.cpp" line="1211"/>
+        <location filename="../../Service/kservice.cpp" line="1444"/>
         <source>Register rsp parse error</source>
         <translation></translation>
+    </message>
+</context>
+<context>
+    <name>KServicePage</name>
+    <message>
+        <source>Information Retrieval</source>
+        <translation>资料获取</translation>
+    </message>
+    <message>
+        <source>KikoPlay Account</source>
+        <translation>KikoPlay账户</translation>
+    </message>
+    <message>
+        <source>Login</source>
+        <translation>登录</translation>
+    </message>
+    <message>
+        <source>Register</source>
+        <translation>注册</translation>
+    </message>
+    <message>
+        <source>Log Out</source>
+        <translation>退出登录</translation>
+    </message>
+    <message>
+        <source>User Name: %1</source>
+        <translation>用户名：%1</translation>
+    </message>
+    <message>
+        <source>Email: %1</source>
+        <translation>邮箱：%1</translation>
+    </message>
+    <message>
+        <source>Not logged in</source>
+        <translation>未登录</translation>
+    </message>
+    <message>
+        <source>KikoPlay Service</source>
+        <translation>KikoPlay服务</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/kservicepage.cpp" line="30"/>
+        <source>Episode Matching</source>
+        <translation>文件识别</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/kservicepage.cpp" line="34"/>
+        <source>Auto Epsidoe Matching</source>
+        <translation>自动文件识别</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/kservicepage.cpp" line="50"/>
+        <source>Default Match Method</source>
+        <translation>默认识别方式</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/kservicepage.cpp" line="52"/>
+        <location filename="../../UI/settings/kservicepage.cpp" line="87"/>
+        <source>Edit</source>
+        <translation>编辑</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/kservicepage.cpp" line="53"/>
+        <source>Match Filter Setting</source>
+        <translation>识别过滤设置</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/kservicepage.cpp" line="66"/>
+        <source>Recognition succeeded: auto-add danmu source (if any)</source>
+        <translation>识别成功：自动添加弹幕源（如果有）</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/kservicepage.cpp" line="73"/>
+        <source>Use KService Anime Profiles</source>
+        <translation>优先从KikoPlay服务获取动画资料</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/kservicepage.cpp" line="88"/>
+        <source>KService Library Download Priority</source>
+        <translation>KikoPlay服务返回资料源下载优先级</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/kservicepage.cpp" line="109"/>
+        <source>Macth Filter</source>
+        <translation>识别过滤</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/kservicepage.cpp" line="110"/>
+        <source>Set rules line by line, supporting regular expressions.
+KikoPlay will skip items matched by the rules during the match process.</source>
+        <translation>逐行设置规则，支持正则表达式
+KikoPlay在识别过程中会跳过路径被规则匹配到的条目</translation>
     </message>
 </context>
 <context>
@@ -4821,99 +4922,121 @@ Finish Time: ----</source>
 <context>
     <name>LibraryWindow</name>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="325"/>
-        <location filename="../../UI/librarywindow.cpp" line="494"/>
+        <location filename="../../UI/librarywindow.cpp" line="328"/>
+        <location filename="../../UI/librarywindow.cpp" line="545"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="142"/>
+        <location filename="../../UI/librarywindow.cpp" line="145"/>
         <source>Batch Operation</source>
         <translation>批量操作</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="125"/>
-        <location filename="../../UI/librarywindow.cpp" line="159"/>
+        <location filename="../../UI/librarywindow.cpp" line="128"/>
+        <location filename="../../UI/librarywindow.cpp" line="162"/>
         <source>Filter</source>
         <translation>筛选</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="132"/>
+        <location filename="../../UI/librarywindow.cpp" line="135"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="137"/>
+        <location filename="../../UI/librarywindow.cpp" line="140"/>
         <source>Sort By Add Time </source>
         <translation>按 添加时间 排序</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="159"/>
+        <location filename="../../UI/librarywindow.cpp" line="162"/>
         <source>Filter(%1)</source>
         <translation>筛选(%1)</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="191"/>
+        <location filename="../../UI/librarywindow.cpp" line="194"/>
         <source>Scan Folder</source>
         <translation>扫描文件夹</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="193"/>
+        <location filename="../../UI/librarywindow.cpp" line="196"/>
         <source>Select Directory</source>
         <translation>选择文件夹</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="221"/>
-        <location filename="../../UI/librarywindow.cpp" line="229"/>
+        <location filename="../../UI/librarywindow.cpp" line="224"/>
+        <location filename="../../UI/librarywindow.cpp" line="232"/>
         <source>Sort By %1 %2</source>
         <translation>按 %1 排序 %2</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="339"/>
+        <location filename="../../UI/librarywindow.cpp" line="342"/>
         <source>Search Details</source>
         <translation>搜索详细信息</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="355"/>
+        <location filename="../../UI/librarywindow.cpp" line="358"/>
         <source>No Script ID, Search For Detail First</source>
         <translation>未指定脚本ID，需要先搜索详细信息</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="361"/>
+        <location filename="../../UI/librarywindow.cpp" line="364"/>
         <source>Script &quot;%1&quot; not exist</source>
         <translation>脚本 &quot;%1&quot; 不存在</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="367"/>
-        <location filename="../../UI/librarywindow.cpp" line="575"/>
+        <location filename="../../UI/librarywindow.cpp" line="370"/>
+        <location filename="../../UI/librarywindow.cpp" line="427"/>
+        <location filename="../../UI/librarywindow.cpp" line="626"/>
         <source>Fetching Info from %1</source>
         <translation>正在从 %1 获取信息...</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="396"/>
-        <location filename="../../UI/librarywindow.cpp" line="588"/>
-        <location filename="../../UI/librarywindow.cpp" line="601"/>
+        <location filename="../../UI/librarywindow.cpp" line="399"/>
+        <location filename="../../UI/librarywindow.cpp" line="639"/>
+        <location filename="../../UI/librarywindow.cpp" line="652"/>
         <source>Fetching Tags from %1</source>
         <translation>正在从 %1 获取标签...</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="404"/>
-        <location filename="../../UI/librarywindow.cpp" line="610"/>
+        <location filename="../../UI/librarywindow.cpp" line="407"/>
+        <location filename="../../UI/librarywindow.cpp" line="449"/>
+        <location filename="../../UI/librarywindow.cpp" line="661"/>
         <source>Fetch Down</source>
         <translation>获取完成</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="185"/>
+        <location filename="../../UI/librarywindow.cpp" line="413"/>
+        <source>Update from KikoPlay Service</source>
+        <translation>从KikoPlay服务更新</translation>
+    </message>
+    <message>
+        <location filename="../../UI/librarywindow.cpp" line="423"/>
+        <source>This entry has no valid Bangumi ID. Search for Bangumi details first.</source>
+        <translation>该条目没有有效的Bangumi ID，请先搜索Bangumi详细信息</translation>
+    </message>
+    <message>
+        <location filename="../../UI/librarywindow.cpp" line="427"/>
+        <source>KikoPlay Service</source>
+        <translation>KikoPlay服务</translation>
+    </message>
+    <message>
+        <location filename="../../UI/librarywindow.cpp" line="433"/>
+        <source>Failed to update from KikoPlay Service</source>
+        <translation>从KikoPlay服务更新失败</translation>
+    </message>
+    <message>
+        <location filename="../../UI/librarywindow.cpp" line="188"/>
         <source>Add Anime</source>
         <translation>添加动画</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="179"/>
+        <location filename="../../UI/librarywindow.cpp" line="182"/>
         <source>Search Add</source>
         <translation>搜索添加</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="183"/>
+        <location filename="../../UI/librarywindow.cpp" line="186"/>
         <source>Direct Add</source>
         <translation>直接添加</translation>
     </message>
@@ -4922,33 +5045,33 @@ Finish Time: ----</source>
         <translation type="vanished">排序</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="204"/>
+        <location filename="../../UI/librarywindow.cpp" line="207"/>
         <source>Ascending</source>
         <translation>升序</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="205"/>
+        <location filename="../../UI/librarywindow.cpp" line="208"/>
         <source>Descending</source>
         <translation>降序</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="211"/>
+        <location filename="../../UI/librarywindow.cpp" line="214"/>
         <source>Add Time</source>
         <translation>添加时间</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="185"/>
-        <location filename="../../UI/librarywindow.cpp" line="212"/>
+        <location filename="../../UI/librarywindow.cpp" line="188"/>
+        <location filename="../../UI/librarywindow.cpp" line="215"/>
         <source>Anime Name</source>
         <translation>动画名称</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="213"/>
+        <location filename="../../UI/librarywindow.cpp" line="216"/>
         <source>Air Date</source>
         <translation>放送时间</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="500"/>
+        <location filename="../../UI/librarywindow.cpp" line="551"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
@@ -4957,7 +5080,7 @@ Finish Time: ----</source>
         <translation type="vanished">获取详细信息</translation>
     </message>
     <message>
-        <location filename="../../UI/librarywindow.cpp" line="347"/>
+        <location filename="../../UI/librarywindow.cpp" line="350"/>
         <source>Update</source>
         <translation>更新</translation>
     </message>
@@ -5008,6 +5131,10 @@ Finish Time: ----</source>
 </context>
 <context>
     <name>ListWindow</name>
+    <message>
+        <source>KikoPlay Service</source>
+        <translation>KikoPlay服务</translation>
+    </message>
     <message>
         <source>Associate Danmu Pool</source>
         <translation type="vanished">关联弹幕池</translation>
@@ -6656,63 +6783,68 @@ Folder Collection
 <context>
     <name>PlayerPage</name>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="32"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="33"/>
         <source>Behavior</source>
         <translation>行为</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="35"/>
-        <location filename="../../UI/settings/playerpage.cpp" line="40"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="36"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="41"/>
         <source>Play/Pause</source>
         <translation>播放/暂停</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="35"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="36"/>
         <source>Show/Hide PlayControl</source>
         <translation>显示/隐藏播放控制</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="37"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="38"/>
         <source>Click Behavior</source>
         <translation>单击行为</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="40"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="41"/>
         <source>FullScreen</source>
         <translation>全屏</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="42"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="43"/>
         <source>Double Click Behavior</source>
         <translation>双击行为</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="46"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="47"/>
         <source>Show Preview Over ProgressBar(Restart required)</source>
         <translation>进度条预览(需要重启)</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="80"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="55"/>
+        <source>Auto-add when opening external files</source>
+        <translation>打开外部文件时自动加入播放列表</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/playerpage.cpp" line="90"/>
         <source>Enable Player Independent Embedded Window(Restart required)</source>
         <translation>开启播放器独立嵌入窗口(需要重启)</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="81"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="91"/>
         <source>The Windows system enables it by default to prevent abnormal display of the main window</source>
         <translation>Windows系统默认开启，防止主窗口显示异常</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="103"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="113"/>
         <source>Subtitle</source>
         <translation>字幕</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="109"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="119"/>
         <source>Load Subtitle Files</source>
         <translation>加载字幕文件</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="110"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="120"/>
         <source>  no: 	Don&apos;t automatically load external subtitle files
   exact: 	Load the media filename with subtitle file extension and possibly language suffixes
   fuzzy: 	Load all subs containing the media filename
@@ -6723,42 +6855,42 @@ Folder Collection
   all: 	加载当前和 --sub-file-paths 目录中的所有字幕文件</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="122"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="132"/>
         <source>Font</source>
         <translation>字体</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="127"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="137"/>
         <source>Font Size</source>
         <translation>字体大小</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="131"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="141"/>
         <source>Bold</source>
         <translation>加粗</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="137"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="147"/>
         <source>Color</source>
         <translation>颜色</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="143"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="153"/>
         <source>Outline Color</source>
         <translation>描边颜色</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="149"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="159"/>
         <source>Back Color</source>
         <translation>背景色</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="156"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="166"/>
         <source>Outline Size</source>
         <translation>描边宽度</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="162"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="172"/>
         <source>Border Style</source>
         <translation>边框样式</translation>
     </message>
@@ -6767,22 +6899,22 @@ Folder Collection
         <translation type="vanished">进度条预览（需要重启）</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="50"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="51"/>
         <source>Show Recently Played Files</source>
         <translation>显示最近播放文件</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="73"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="83"/>
         <source>MPV</source>
         <translation>MPV</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="75"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="85"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playerpage.cpp" line="76"/>
+        <location filename="../../UI/settings/playerpage.cpp" line="86"/>
         <source>Player Configuration</source>
         <translation>播放器配置</translation>
     </message>
@@ -7574,56 +7706,49 @@ Folder Collection
 <context>
     <name>PlaylistPage</name>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="30"/>
         <source>Episode Matching</source>
-        <translation>文件识别</translation>
+        <translation type="vanished">文件识别</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="34"/>
         <source>Auto Epsidoe Matching</source>
-        <translation>自动文件识别</translation>
+        <translation type="vanished">自动文件识别</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="50"/>
         <source>Default Match Script</source>
-        <translation>默认识别脚本</translation>
+        <translation type="vanished">默认识别脚本</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="52"/>
-        <location filename="../../UI/settings/playlistpage.cpp" line="72"/>
         <source>Edit</source>
-        <translation>编辑</translation>
+        <translation type="vanished">编辑</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="53"/>
         <source>Match Filter Setting</source>
-        <translation>识别过滤设置</translation>
+        <translation type="vanished">识别过滤设置</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="58"/>
         <source>Use KService Matching</source>
-        <translation>启用KService识别</translation>
+        <translation type="vanished">启用KService识别</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="66"/>
         <source>Recognition succeeded: auto-add danmu source (if any)</source>
-        <translation>识别成功：自动添加弹幕源（如果有）</translation>
+        <translation type="vanished">识别成功：自动添加弹幕源（如果有）</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="73"/>
+        <source>Use KService Anime Profiles</source>
+        <translation type="vanished">优先从KService获取动画资料</translation>
+    </message>
+    <message>
         <source>KService Library Download Priority</source>
-        <translation>KService资料源下载优先级</translation>
+        <translation type="vanished">KService资料源下载优先级</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="94"/>
         <source>Macth Filter</source>
-        <translation>识别过滤</translation>
+        <translation type="vanished">识别过滤</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="95"/>
         <source>Set rules line by line, supporting regular expressions.
 KikoPlay will skip items matched by the rules during the match process.</source>
-        <translation>逐行设置规则，支持正则表达式
+        <translation type="vanished">逐行设置规则，支持正则表达式
 KikoPlay在识别过程中会跳过路径被规则匹配到的条目</translation>
     </message>
     <message>
@@ -7637,14 +7762,12 @@ KikoPlay will skip items matched by the rules during the match process.</source>
 KikoPlay在关联过程中会跳过路径被规则匹配到的条目</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="109"/>
         <source>Other</source>
-        <translation>其他</translation>
+        <translation type="vanished">其他</translation>
     </message>
     <message>
-        <location filename="../../UI/settings/playlistpage.cpp" line="114"/>
         <source>Auto-add when opening external files</source>
-        <translation>打开外部文件时自动加入播放列表</translation>
+        <translation type="vanished">打开外部文件时自动加入播放列表</translation>
     </message>
 </context>
 <context>
@@ -8466,7 +8589,7 @@ Eps: %2
         <translation type="vanished">其他</translation>
     </message>
     <message>
-        <location filename="../../MediaLibrary/animeinfo.h" line="44"/>
+        <location filename="../../MediaLibrary/animeinfo.h" line="48"/>
         <source>%0.%1 %2</source>
         <translation></translation>
     </message>
@@ -9106,8 +9229,12 @@ Eps: %2
     </message>
     <message>
         <location filename="../../UI/settings.cpp" line="37"/>
+        <source>KikoPlay Service</source>
+        <translation>KikoPlay服务</translation>
+    </message>
+    <message>
         <source>Playlist</source>
-        <translation>播放列表</translation>
+        <translation type="vanished">播放列表</translation>
     </message>
     <message>
         <location filename="../../UI/settings.cpp" line="38"/>

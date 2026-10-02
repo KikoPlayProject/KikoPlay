@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QTimer>
 #include <QVariant>
+#include <QMutex>
+#include <atomic>
 #include <functional>
 #include "MediaLibrary/animeinfo.h"
 
@@ -24,6 +26,7 @@ namespace kservice
 namespace KServiceAux
 {
     class KImageUploadTask;
+    class KAnimeProfileTask;
 }
 struct KServiceProfile
 {
@@ -64,6 +67,13 @@ struct KLatestVersionInfo
     QString versionName;
 };
 
+struct KServiceAccount
+{
+    bool loggedIn = false;
+    QString userName;
+    QString email;
+};
+
 struct KDCommentUrlResult
 {
     int statusCode = 0;
@@ -84,6 +94,7 @@ class KService : public QObject
     Q_OBJECT
     Q_DISABLE_COPY(KService)
     friend class KServiceAux::KImageUploadTask;
+    friend class KServiceAux::KAnimeProfileTask;
 
     explicit KService();
 
@@ -98,6 +109,8 @@ public:
     void fileRecognize(const QString &path);
     void launch(QSharedPointer<DanmuComment> comment, const QString &poolId, const QString &file);
     void login(const QString &email, const QString &password);
+    KServiceAccount account() const;
+    void logout();
     void sendVerification(const QString &email);
     void registerU(const QString &email, const QString &password, const QString &userName, const QString &verificationCode);
     void getDanmu(const QString &poolId, int duration = -1);
@@ -106,12 +119,15 @@ public:
     bool getDanmuSourceSync(const QString &poolId, QList<DanmuSource> &sources, const QString &path = "");
     KDCommentUrlResult getDCommentUrlSync(qint64 episodeId, bool withRelated = false);
     KDSearchResult searchDandanSync(const QString &keyword);
+    bool getAnimeProfileSync(int srcType, const QString &scriptData, Anime *anime, QStringList &tags);
 
 signals:
     void recognized(int status, const QString &errMsg, const QString &path, MatchResult result);
     void loginFinished(int status, const QString &errMsg);
+    void accountChanged();
     void registerFinished(int status, const QString &errMsg);
     void sourceDown(int status, const QString &errMsg, const QString &poolId, QVector<MatchDanmuSource> srcs);
+    void animeProfileSettingChanged(bool enabled);
 
 public:
     QString isValidUserName(const QString &userName) const;
@@ -123,6 +139,8 @@ public:
     void setEnableKServiceAutoAddDanmuSrc(bool on);
     bool enableKServiceUpdatSrc() const;
     void setEnableKServiceUpdateSrc(bool on);
+    bool enableKServiceAnimeProfile() const;
+    void setEnableKServiceAnimeProfile(bool on);
     QList<QPair<QString, QPair<int, bool> > > getLibrarySource() const;
     void setLibrarySourceIndex(const QList<QPair<int, bool> > &indexSelected);
     const KLatestVersionInfo &getVersionInfo() const { return versionInfo; }
@@ -136,8 +154,13 @@ private:
     const QString baseURL;
     QBasicTimer eventTimer;
     QScopedPointer<QSettings> serviceData;
+    KServiceAux::KAnimeProfileTask *animeProfileTask{nullptr};
     MPVMediaInfo *mediaInfo{nullptr};
     KServiceProfile profile;
+    mutable QMutex accountMutex;
+    KServiceAccount currentAccount;
+    quint64 authGeneration = 0;
+    bool refreshInFlight = false;
     QMap<QString, qint64> getSrcTs;
     QMap<QString, qint64> animeUploadTs;
 
@@ -181,6 +204,8 @@ private:
 
     void refreshToken();
     void resendStashedComments();
+    void updateAccountState();
+    void clearAccount(bool clearStashedComments);
 
     bool parseGetSourceRsp(QList<DanmuSource> &srcs, QString &poolId, QNetworkReply *reply);
 
