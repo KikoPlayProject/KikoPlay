@@ -72,6 +72,9 @@ public:
     void setFontColor(const QColor &color);
     const QColor &fontColor() const { return _fontColor; }
 
+    QSize sizeHint() const override { return minimumSizeHint(); }
+    QSize minimumSizeHint() const override;
+
 protected:
     void paintEvent(QPaintEvent *event) override;
 

@@ -50,6 +50,14 @@ void KTagPanel::clearTags()
     update();
 }
 
+QSize KTagPanel::minimumSizeHint() const
+{
+    if (m_tags.isEmpty()) return QSize(0, 0);
+
+    // Width must fit the widest tag; height only needs to fit one row.
+    return QSize(doLayout(0, false).width(), fontMetrics().height() + m_paddingY * 2 + m_vspacing * 2);
+}
+
 
 bool KTagPanel::event(QEvent *event)
 {

@@ -78,6 +78,12 @@ void ElidedLabel::setFontColor(const QColor &color)
     update();
 }
 
+QSize ElidedLabel::minimumSizeHint() const
+{
+    const QFontMetrics fm(fontMetrics());
+    return QSize(0, qMax(fm.height(), fm.lineSpacing()));
+}
+
 
 void ElidedLabel::paintEvent(QPaintEvent *event)
 {
@@ -88,12 +94,12 @@ void ElidedLabel::paintEvent(QPaintEvent *event)
     QFontMetrics fontMetrics = painter.fontMetrics();
 
     bool didElide = false;
-    int lineSpacing = fontMetrics.lineSpacing();
-    int y = (height() % lineSpacing) / 2;
+    const int lineSpacing = qMax(1, fontMetrics.lineSpacing());
+    const int maxLines = qMax(1, 1 + (height() - fontMetrics.height()) / lineSpacing);
 
     QTextLayout textLayout(content, painter.font());
     textLayout.beginLayout();
-    forever
+    for (int i = 0; i < maxLines; ++i)
     {
         QTextLine line = textLayout.createLine();
 
@@ -101,24 +107,30 @@ void ElidedLabel::paintEvent(QPaintEvent *event)
             break;
 
         line.setLineWidth(width());
-        int nextLineY = y + lineSpacing;
-
-        if (height() >= nextLineY + lineSpacing)
-        {
-            line.draw(&painter, QPoint(0, y));
-            y = nextLineY;
-        }
-        else
-        {
-            QString lastLine = content.mid(line.textStart());
-            QString elidedLastLine = fontMetrics.elidedText(lastLine, Qt::ElideRight, width());
-            painter.drawText(QPoint(0, y + fontMetrics.ascent()), elidedLastLine);
-            line = textLayout.createLine();
-            didElide = line.isValid();
-            break;
-        }
     }
     textLayout.endLayout();
+
+    const int lineCount = textLayout.lineCount();
+    if (lineCount > 0)
+    {
+        const QTextLine lastLine = textLayout.lineAt(lineCount - 1);
+        const QString remainingText = content.mid(lastLine.textStart());
+        const QString elidedLastLine = fontMetrics.elidedText(remainingText, Qt::ElideRight, width());
+        didElide = lastLine.textStart() + lastLine.textLength() < content.size()
+                   || elidedLastLine != remainingText;
+
+        // Center the lines actually displayed, including the last line's descent.
+        const int textHeight = fontMetrics.height() + (lineCount - 1) * lineSpacing;
+        int y = qMax(0, (height() - textHeight) / 2);
+        for (int i = 0; i < lineCount; ++i)
+        {
+            if (i == lineCount - 1 && didElide)
+                painter.drawText(QPoint(0, y + fontMetrics.ascent()), elidedLastLine);
+            else
+                textLayout.lineAt(i).draw(&painter, QPoint(0, y));
+            y += lineSpacing;
+        }
+    }
 
     if (didElide != elided)
     {

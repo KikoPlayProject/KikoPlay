@@ -39,7 +39,7 @@ public:
     bool hasHeightForWidth() const override { return true; }
     int heightForWidth(int w) const override { return doLayout(w, false).height(); }
     QSize sizeHint() const override { return doLayout(200, false); }
-    QSize minimumSizeHint() const override { return doLayout(0, false); }
+    QSize minimumSizeHint() const override;
 
 signals:
     void tagClicked(int index);

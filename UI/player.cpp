@@ -2393,7 +2393,7 @@ void PlayerWindow::initPlayInfo(QWidget *playInfoPanel)
     titleLabel->setFontColor(QColor(255, 255, 255));
     titleLabel->setObjectName(QStringLiteral("labelTitle"));
     titleLabel->setFont(normalFont);
-    // ElidedLabel has no size hint; reserve a full line even when it is taller than the icons.
+    // Reserve a full line even when it is taller than the icons.
     const QFontMetrics titleMetrics(titleLabel->fontMetrics());
     titleLabel->setMinimumHeight(qMax(titleMetrics.height(), titleMetrics.lineSpacing()));
 
