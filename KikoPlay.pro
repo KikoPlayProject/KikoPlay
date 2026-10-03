@@ -348,6 +348,7 @@ SOURCES += \
     UI/widgets/colorpicker.cpp \
     UI/widgets/colorslider.cpp \
     UI/widgets/danmustatiswidget.cpp \
+    UI/widgets/downloadspeedwidget.cpp \
     UI/widgets/dialogtip.cpp \
     UI/widgets/dirselectwidget.cpp \
     UI/widgets/elidelineedit.cpp \
@@ -381,6 +382,7 @@ HEADERS += \
     Download/BgmList/bgmlist.h \
     Download/downloaditemdelegate.h \
     Download/downloadmodel.h \
+    Download/downloadspeedhistory.h \
     Download/peerid.h \
     Download/peermodel.h \
     Download/torrent.h \
@@ -668,6 +670,7 @@ HEADERS += \
     UI/widgets/colorpicker.h \
     UI/widgets/colorslider.h \
     UI/widgets/danmustatiswidget.h \
+    UI/widgets/downloadspeedwidget.h \
     UI/widgets/dialogtip.h \
     UI/widgets/dirselectwidget.h \
     UI/widgets/elidelineedit.h \

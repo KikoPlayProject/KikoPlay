@@ -284,6 +284,11 @@ QLabel#UpSpeedIcon {
 QLabel#DownSpeedLabel, QLabel#UpSpeedLabel {
     color: rgb(152, 152, 152);
 }
+DownloadSpeedWidget {
+    qproperty-lineColor: #79a81a;
+    qproperty-textColor: rgb(170, 170, 170);
+    qproperty-gridColor: rgba(180, 180, 180, 35);
+}
 QLabel#AnimeDetailCharactorTitle {
     color: rgb(240,240,240);
 }

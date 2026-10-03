@@ -3319,6 +3319,19 @@ Date: %2
     </message>
 </context>
 <context>
+    <name>DownloadSpeedWidget</name>
+    <message>
+        <source>Download speed</source>
+        <translation>下载速度</translation>
+    </message>
+    <message>
+        <source>%1 s ago
+%2</source>
+        <translation>%1 秒前
+%2</translation>
+    </message>
+</context>
+<context>
     <name>DownloadWindow</name>
     <message>
         <location filename="../../UI/downloadwindow.cpp" line="298"/>

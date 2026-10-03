@@ -4,6 +4,9 @@
 #include <QWidget>
 #include <QTreeView>
 #include <QListView>
+#include <QElapsedTimer>
+#include <QHash>
+#include "Download/downloadspeedhistory.h"
 #include "Common/notifier.h"
 class Aria2JsonRPC;
 class QLabel;
@@ -17,6 +20,7 @@ class PeerModel;
 class DialogTip;
 class TorrentTreeView;
 class ResSearchWindow;
+class DownloadSpeedWidget;
 class PeerTreeView : public QTreeView
 {
     Q_OBJECT
@@ -89,6 +93,10 @@ private:
     BlockWidget *blockView;
     CTorrentFileModel *selectedTFModel;
     QLabel *taskTitleLabel,*taskTimeLabel;
+    DownloadSpeedWidget *speedWidget;
+    QElapsedTimer speedClock;
+    QHash<QString, DownloadSpeedHistory> speedHistories;
+    QString displayedSpeedGid;
 
     PeerModel *peerModel;
 
@@ -119,6 +127,8 @@ private:
     void initActions();
     void downloadSelectionChanged();
     void setDetailInfo(DownloadTask *task);
+    void refreshSpeedHistory();
+    void updateSpeedChart();
 
     void addUrlTask(const QStringList &urls = QStringList(), const QString &path = "");
     void addTorrentTask();

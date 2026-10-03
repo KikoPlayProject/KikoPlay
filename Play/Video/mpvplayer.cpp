@@ -630,7 +630,7 @@ void MPVPlayer::setSpeed(double speed)
 
 void MPVPlayer::setVideoAspect(int index)
 {
-    setMPVProperty("video-aspect", videoAspectVal[index]);
+    setMPVProperty("video-aspect-override", videoAspectVal[index]);
     videoAspectIndex = index;
     GlobalObjects::appSetting->setValue(SETTING_KEY_VIDEO_ASPECT, index);
 }
@@ -1310,7 +1310,7 @@ void MPVPlayer::loadSettings()
     setMPVProperty("speed", playSpeed);
 
     videoAspectIndex = GlobalObjects::appSetting->value(SETTING_KEY_VIDEO_ASPECT, 0).toInt();
-    setMPVProperty("video-aspect", videoAspectVal[videoAspectIndex]);
+    setMPVProperty("video-aspect-override", videoAspectVal[videoAspectIndex]);
 
     brightness = GlobalObjects::appSetting->value(SETTING_KEY_BRIGHTNESS, 0).toInt();
     setMPVProperty("brightness", brightness);

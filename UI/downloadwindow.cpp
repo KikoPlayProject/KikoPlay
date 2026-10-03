@@ -19,6 +19,7 @@
 #include <QHeaderView>
 #include <QSplitter>
 #include <QScrollArea>
+#include <QResizeEvent>
 #include "Download/aria2jsonrpc.h"
 #include "Download/downloadmodel.h"
 #include "Download/downloaditemdelegate.h"
@@ -32,6 +33,7 @@
 #include "UI/widgets/klineedit.h"
 #include "UI/widgets/kplaintextedit.h"
 #include "UI/widgets/lazycontainer.h"
+#include "UI/widgets/downloadspeedwidget.h"
 #include "adduritask.h"
 #include "settings.h"
 #include "selecttorrentfile.h"
@@ -43,8 +45,35 @@
 #include "widgets/dialogtip.h"
 #include "Common/logger.h"
 
+namespace
+{
+class DownloadGeneralInfoPage : public QWidget
+{
+public:
+    explicit DownloadGeneralInfoPage(QWidget *parent) : QWidget(parent)
+    {
+        mainLayout = new QVBoxLayout(this);
+        details = new QBoxLayout(QBoxLayout::LeftToRight);
+        details->setSpacing(24);
+    }
+
+    QVBoxLayout *mainLayout;
+    QBoxLayout *details;
+
+protected:
+    void resizeEvent(QResizeEvent *event) override
+    {
+        QWidget::resizeEvent(event);
+        const bool narrow = width() < qMax(640, fontMetrics().averageCharWidth() * 80);
+        details->setDirection(narrow ? QBoxLayout::TopToBottom : QBoxLayout::LeftToRight);
+        details->setSpacing(narrow ? 8 : 24);
+    }
+};
+}
+
 DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nullptr)
 {
+    speedClock.start();
     setObjectName(QStringLiteral("DownLoadWindow"));
     setAttribute(Qt::WA_StyledBackground, true);
     dialogTip = new DialogTip(this);
@@ -119,8 +148,9 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     contentHLayout->addWidget(containerWidget);
     contentHLayout->setContentsMargins(0,0,8,8);
 
-    refreshTimer = new QTimer();
+    refreshTimer = new QTimer(this);
     QObject::connect(refreshTimer, &QTimer::timeout, this, [=](){
+        refreshSpeedHistory();
         auto &items=GlobalObjects::downloadModel->getItems();
         qint64 totalLength = 0, completedLength = 0;
 #ifdef QT_DEBUG
@@ -151,9 +181,19 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
     });
     QObject::connect(rpc, &Aria2JsonRPC::refreshStatus, this, [=](const QJsonObject &statusObj){
         QString gid(statusObj.value("gid").toString());
+        if (!GlobalObjects::downloadModel->getItems().contains(gid)) return;
         GlobalObjects::downloadModel->updateItemStatus(statusObj);
+        // Updating the model can remove a magnet task or change the selection.
+        if (GlobalObjects::downloadModel->getItems().contains(gid))
+        {
+            bool validSpeed = false;
+            const qint64 speed = statusObj.value("downloadSpeed").toString().toLongLong(&validSpeed);
+            if (validSpeed && speed >= 0)
+                speedHistories[gid].append(speedClock.elapsed(), speed, refreshTimer->interval());
+        }
         if (currentTask && currentTask->gid == gid)
         {
+            updateSpeedChart();
             selectedTFModel->updateFileProgress(statusObj.value("files").toArray());
             blockView->setBlock(currentTask->numPieces, currentTask->bitfield);
             blockView->setToolTip(tr("Blocks: %1 Size: %2").arg(currentTask->numPieces).arg(formatSize(false, currentTask->pieceLength)));
@@ -204,9 +244,21 @@ DownloadWindow::DownloadWindow(QWidget *parent) : QWidget(parent),currentTask(nu
         }
     });
     QObject::connect(GlobalObjects::downloadModel, &DownloadModel::removeTask, this, [=](const QString &gid){
+        speedHistories.remove(gid);
         if(currentTask && currentTask->gid==gid)
         {
             setDetailInfo(nullptr);
+        }
+    });
+    QObject::connect(GlobalObjects::downloadModel, &QAbstractItemModel::rowsAboutToBeRemoved,
+                     this, [this](const QModelIndex &parent, int first, int last){
+        DownloadModel *model = GlobalObjects::downloadModel;
+        for (int row = first; row <= last; ++row)
+        {
+            DownloadTask *task = model->getDownloadTask(model->index(row, 0, parent));
+            if (!task) continue;
+            speedHistories.remove(task->gid);
+            if (currentTask == task) setDetailInfo(nullptr);
         }
     });
     downloadSelectionChanged();
@@ -556,8 +608,7 @@ QWidget *DownloadWindow::initDownloadPage()
 
 QWidget *DownloadWindow::setupGeneralInfoPage(QWidget *parent)
 {
-    QWidget *content = new QWidget(parent);
-    QGridLayout *gInfoGLayout=new QGridLayout(content);
+    DownloadGeneralInfoPage *content = new DownloadGeneralInfoPage(parent);
     taskTitleLabel=new QLabel(content);
     QFont taskTitleLabelFont(GlobalObjects::normalFont);
     taskTitleLabelFont.setPointSizeF(GlobalObjects::fontSize(12));
@@ -567,11 +618,16 @@ QWidget *DownloadWindow::setupGeneralInfoPage(QWidget *parent)
     taskTimeLabel=new QLabel(content);
     taskTimeLabel->setObjectName(QStringLiteral("TaskTimeLabel"));
     taskTimeLabel->setOpenExternalLinks(true);
+    taskTimeLabel->setWordWrap(true);
+    taskTimeLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    speedWidget = new DownloadSpeedWidget(content);
+    speedWidget->hide();
 
-    gInfoGLayout->addWidget(taskTitleLabel,0,0);
-    gInfoGLayout->addWidget(taskTimeLabel,1,0);
-    gInfoGLayout->setRowStretch(3,1);
-    gInfoGLayout->setColumnStretch(0,1);
+    content->mainLayout->addWidget(taskTitleLabel);
+    content->details->addWidget(taskTimeLabel, 1);
+    content->details->addWidget(speedWidget, 0, Qt::AlignRight | Qt::AlignVCenter);
+    content->mainLayout->addLayout(content->details);
+    content->mainLayout->addStretch(1);
     return content;
 }
 
@@ -875,6 +931,7 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
         act_CopyURI->setEnabled(!task->uri.isEmpty());
         currentTask=task;
         taskTitleLabel->setText(task->title);
+        taskTitleLabel->setToolTip(task->title);
         QStringList taskInfo;
         const QString itemTpl = "<p><font style='color: #d0d0d0;'>%1</font>%2</p>";
         taskInfo.append(itemTpl.arg(tr("Create Time: ")).arg(QDateTime::fromSecsSinceEpoch(task->createTime).toString("yyyy-MM-dd hh:mm:ss")));
@@ -927,12 +984,47 @@ void DownloadWindow::setDetailInfo(DownloadTask *task)
         peerModel->clear();
         taskTitleLabel->setText(tr("<No Item has been Selected>"));
         taskTimeLabel->clear();
+        taskTitleLabel->setToolTip(QString());
         blockView->setBlock(0, "0");
         blockView->setToolTip("");
         selectedTFModel->setContent(nullptr);
         act_CopyURI->setEnabled(false);
         act_SaveTorrent->setEnabled(false);
     }
+    updateSpeedChart();
+}
+
+void DownloadWindow::refreshSpeedHistory()
+{
+    const auto &items = GlobalObjects::downloadModel->getItems();
+    const qint64 now = speedClock.elapsed();
+    for (auto it = speedHistories.begin(); it != speedHistories.end();)
+    {
+        it.value().prune(now);
+        if (!items.contains(it.key()) || it.value().isEmpty())
+            it = speedHistories.erase(it);
+        else
+            ++it;
+    }
+    updateSpeedChart();
+}
+
+void DownloadWindow::updateSpeedChart()
+{
+    const QString gid = currentTask ? currentTask->gid : QString();
+    if (displayedSpeedGid != gid)
+    {
+        speedWidget->clear();
+        displayedSpeedGid = gid;
+    }
+    const auto it = speedHistories.constFind(gid);
+    if (gid.isEmpty() || it == speedHistories.cend())
+    {
+        speedWidget->clear();
+        return;
+    }
+    const int interval = isHidden() ? backgoundRefreshInterval : refreshInterval;
+    speedWidget->setSamples(it.value().samples(), speedClock.elapsed(), interval * 3);
 }
 
 void DownloadWindow::addUrlTask(const QStringList &urls, const QString &path)
@@ -1032,6 +1124,7 @@ void DownloadWindow::showEvent(QShowEvent *)
         refreshTimer->start(refreshInterval);
     else
         refreshTimer->setInterval(refreshInterval);
+    refreshSpeedHistory();
 }
 
 void DownloadWindow::hideEvent(QHideEvent *)
