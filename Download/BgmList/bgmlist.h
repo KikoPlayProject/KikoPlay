@@ -30,6 +30,10 @@ public:
     {
         TITLE=0, DATETIME, AIRSITES, FOCUS
     };
+    enum DataRole
+    {
+        BgmIdRole = Qt::UserRole + 1
+    };
     QStringList headers = {tr("Title"),tr("ShowDate/Time"),tr("AirSites"),tr("Focus")};
     inline virtual QModelIndex index(int row, int column, const QModelIndex &parent) const{return parent.isValid()?QModelIndex():createIndex(row,column);}
     inline virtual QModelIndex parent(const QModelIndex &) const {return QModelIndex();}

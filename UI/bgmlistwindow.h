@@ -13,7 +13,12 @@ class BgmTreeView : public QTreeView
     Q_PROPERTY(QColor hoverColor READ getHoverColor WRITE setHoverColor)
     Q_PROPERTY(QColor normColor READ getNormColor WRITE setNormColor)
 public:
-    using QTreeView::QTreeView;
+    explicit BgmTreeView(QWidget *parent = nullptr);
+    void reset() override;
+    void doItemsLayout() override;
+
+    bool isBangumiButtonHovered(const QModelIndex &index) const {return hoveredBangumiIndex == index;}
+    bool isBangumiButtonPressed(const QModelIndex &index) const {return pressedBangumiIndex == index;}
 
     QColor getHoverColor() const {return hoverColor;}
     void setHoverColor(const QColor& color)
@@ -30,7 +35,21 @@ public:
 signals:
     void hoverColorChanged(const QColor &color);
     void normColorChanged(const QColor &color);
+    void bangumiClicked(const QString &bgmId);
+protected:
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    bool viewportEvent(QEvent *event) override;
+    void scrollContentsBy(int dx, int dy) override;
 private:
+    QModelIndex bangumiIndexAt(const QPoint &pos) const;
+    void updateBangumiHover(const QPoint &pos);
+    QPersistentModelIndex hoveredBangumiIndex, pressedBangumiIndex;
+    QString pressedBangumiId;
+    bool bangumiPressActive{false};
+    bool lastLeftPressWasBangumi{false};
     QColor hoverColor, normColor;
 };
 

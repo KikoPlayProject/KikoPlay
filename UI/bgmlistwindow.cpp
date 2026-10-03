@@ -14,6 +14,12 @@
 #include <QComboBox>
 #include <QApplication>
 #include <QStyledItemDelegate>
+#include <QPainter>
+#include <QMouseEvent>
+#include <QHelpEvent>
+#include <QToolTip>
+#include <QRegularExpression>
+#include "UI/ela/Def.h"
 #include "UI/ela/ElaComboBox.h"
 #include "UI/ela/ElaMenu.h"
 #include "UI/widgets/floatscrollbar.h"
@@ -23,26 +29,254 @@
 #include "Extension/Script/scriptmanager.h"
 namespace
 {
-    class TextColorDelegate: public QStyledItemDelegate
+    QUrl bangumiUrl(const QString &bgmId)
+    {
+        static const QRegularExpression validId(QStringLiteral("\\A[1-9][0-9]*\\z"));
+        if (!validId.match(bgmId).hasMatch()) return QUrl();
+        return QUrl(QStringLiteral("https://bgm.tv/subject/%1").arg(bgmId));
+    }
+
+    void openBangumi(const QString &bgmId)
+    {
+        const QUrl url = bangumiUrl(bgmId);
+        if (!url.isEmpty()) QDesktopServices::openUrl(url);
+    }
+
+    struct BgmTitleLayout
+    {
+        QRect textRect, buttonRect;
+        QString text;
+        int iconSize{0};
+    };
+
+    BgmTitleLayout titleLayout(const QStyleOptionViewItem &option, const QModelIndex &index)
+    {
+        BgmTitleLayout layout;
+        if (index.column() != int(BgmList::Columns::TITLE) ||
+            bangumiUrl(index.data(BgmList::BgmIdRole).toString()).isEmpty()) return layout;
+
+        QStyle *style = option.widget ? option.widget->style() : QApplication::style();
+        const QRect contentRect = style->subElementRect(QStyle::SE_ItemViewItemText, &option, option.widget);
+        const int margin = qMax(2, option.fontMetrics.height() / 4);
+        const QRect availableRect = contentRect.adjusted(margin, 0, -margin, 0);
+        const int buttonSize = qMin(option.rect.height(), qMax(24, option.fontMetrics.height() + 8));
+        if (availableRect.width() < buttonSize) return layout;
+
+        const int gap = qMax(6, option.fontMetrics.height() / 3);
+        layout.text = option.fontMetrics.elidedText(option.text, Qt::ElideRight,
+                                                    qMax(0, availableRect.width() - buttonSize - gap));
+        const int textWidth = option.fontMetrics.horizontalAdvance(layout.text);
+        const int contentWidth = textWidth + (layout.text.isEmpty() ? 0 : gap) + buttonSize;
+        const int x = availableRect.left() + (availableRect.width() - contentWidth) / 2;
+        layout.textRect = QRect(x, availableRect.top(), textWidth, availableRect.height());
+        layout.buttonRect = QRect(x + contentWidth - buttonSize,
+                                  option.rect.top() + (option.rect.height() - buttonSize) / 2,
+                                  buttonSize, buttonSize);
+        layout.iconSize = qMin(buttonSize - 4, qMax(14, qRound(option.fontMetrics.height() * 0.8)));
+        return layout;
+    }
+
+    class BgmListDelegate: public QStyledItemDelegate
     {
     public:
-        explicit TextColorDelegate(QObject* parent = nullptr) : QStyledItemDelegate(parent)
+        explicit BgmListDelegate(QObject* parent = nullptr) : QStyledItemDelegate(parent)
         { }
 
-        void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+        QRect buttonRect(const QStyleOptionViewItem &option, const QModelIndex &index) const
         {
-            QStyleOptionViewItem ViewOption(option);
-            QColor itemForegroundColor = index.data(Qt::ForegroundRole).value<QColor>();
-            if (itemForegroundColor.isValid())
-            {
-                if (itemForegroundColor != option.palette.color(QPalette::WindowText))
-                    ViewOption.palette.setColor(QPalette::HighlightedText, itemForegroundColor);
+            QStyleOptionViewItem viewOption(option);
+            initStyleOption(&viewOption, index);
+            return titleLayout(viewOption, index).buttonRect;
+        }
 
+        void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
+        {
+            QStyleOptionViewItem viewOption(option);
+            initStyleOption(&viewOption, index);
+            const QVariant foreground = index.data(Qt::ForegroundRole);
+            if (foreground.canConvert<QBrush>())
+                viewOption.palette.setBrush(QPalette::HighlightedText, foreground.value<QBrush>());
+
+            const BgmTitleLayout layout = titleLayout(viewOption, index);
+            if (layout.buttonRect.isEmpty())
+            {
+                QStyledItemDelegate::paint(painter, viewOption, index);
+                return;
             }
-            QStyledItemDelegate::paint(painter, ViewOption, index);
+
+            QStyle *style = option.widget ? option.widget->style() : QApplication::style();
+            viewOption.text.clear();
+            style->drawControl(QStyle::CE_ItemViewItem, &viewOption, painter, option.widget);
+
+            const auto *view = qobject_cast<const BgmTreeView *>(option.widget);
+            const bool hovered = view && view->isBangumiButtonHovered(index);
+            const bool pressed = view && view->isBangumiButtonPressed(index);
+            const QColor textColor = viewOption.palette.color(option.state & QStyle::State_Selected ?
+                                                                QPalette::HighlightedText : QPalette::Text);
+            QColor iconColor = view ? view->getNormColor() : textColor;
+            if (!iconColor.isValid()) iconColor = textColor;
+            if (hovered) iconColor = view && view->getHoverColor().isValid() ? view->getHoverColor() : textColor;
+
+            painter->save();
+            painter->setClipRect(option.rect);
+            painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
+            painter->setFont(viewOption.font);
+            painter->setPen(textColor);
+            painter->drawText(layout.textRect, Qt::AlignVCenter | Qt::AlignLeft, layout.text);
+            if (hovered)
+            {
+                QColor background(iconColor);
+                background.setAlpha(pressed ? 65 : 35);
+                painter->setPen(Qt::NoPen);
+                painter->setBrush(background);
+                painter->drawRoundedRect(layout.buttonRect, 4, 4);
+            }
+            QFont iconFont(QStringLiteral("ElaAwesome"));
+            iconFont.setPixelSize(layout.iconSize);
+            painter->setFont(iconFont);
+            painter->setPen(iconColor);
+            painter->drawText(layout.buttonRect, Qt::AlignCenter,
+                              QChar(static_cast<ushort>(ElaIconType::ArrowUpRightFromSquare)));
+            painter->restore();
+        }
+
+        bool helpEvent(QHelpEvent *event, QAbstractItemView *view, const QStyleOptionViewItem &option,
+                       const QModelIndex &index) override
+        {
+            if (event && event->type() == QEvent::ToolTip && buttonRect(option, index).contains(event->pos()))
+            {
+                QToolTip::showText(event->globalPos(), BgmListWindow::tr("Open in Bangumi"), view->viewport());
+                return true;
+            }
+            return QStyledItemDelegate::helpEvent(event, view, option, index);
         }
     };
 }
+
+BgmTreeView::BgmTreeView(QWidget *parent) : QTreeView(parent)
+{
+    setMouseTracking(true);
+    setItemDelegate(new BgmListDelegate(this));
+    connect(header(), &QHeaderView::sectionResized, this, [this](){
+        updateBangumiHover(QPoint(-1, -1));
+    });
+}
+
+QModelIndex BgmTreeView::bangumiIndexAt(const QPoint &pos) const
+{
+    if (!isEnabled() || !viewport()->rect().contains(pos)) return QModelIndex();
+    const QModelIndex index = indexAt(pos);
+    if (!index.isValid() || !(index.flags() & Qt::ItemIsEnabled)) return QModelIndex();
+    QStyleOptionViewItem option;
+    initViewItemOption(&option);
+    option.rect = visualRect(index);
+    const auto *delegate = static_cast<const BgmListDelegate *>(itemDelegate());
+    return delegate->buttonRect(option, index).contains(pos) ? index : QModelIndex();
+}
+
+void BgmTreeView::updateBangumiHover(const QPoint &pos)
+{
+    const QModelIndex index = bangumiIndexAt(pos);
+    if (hoveredBangumiIndex != index)
+    {
+        const QRect oldRect = visualRect(hoveredBangumiIndex);
+        hoveredBangumiIndex = index;
+        viewport()->update(oldRect);
+        viewport()->update(visualRect(index));
+    }
+    if (index.isValid()) viewport()->setCursor(Qt::PointingHandCursor);
+    else viewport()->unsetCursor();
+}
+
+void BgmTreeView::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+    {
+        pressedBangumiIndex = bangumiIndexAt(event->position().toPoint());
+        bangumiPressActive = pressedBangumiIndex.isValid();
+        lastLeftPressWasBangumi = bangumiPressActive;
+        pressedBangumiId = pressedBangumiIndex.data(BgmList::BgmIdRole).toString();
+        if (bangumiPressActive)
+        {
+            setCurrentIndex(pressedBangumiIndex);
+            updateBangumiHover(event->position().toPoint());
+            viewport()->update(visualRect(pressedBangumiIndex));
+            event->accept();
+            return;
+        }
+    }
+    QTreeView::mousePressEvent(event);
+}
+
+void BgmTreeView::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton && bangumiPressActive)
+    {
+        const QPersistentModelIndex pressedIndex = pressedBangumiIndex;
+        const QString bgmId = pressedBangumiId;
+        pressedBangumiIndex = QPersistentModelIndex();
+        pressedBangumiId.clear();
+        bangumiPressActive = false;
+        viewport()->update(visualRect(pressedIndex));
+        event->accept();
+        if (pressedIndex.isValid() && pressedIndex == bangumiIndexAt(event->position().toPoint()) &&
+            pressedIndex.data(BgmList::BgmIdRole).toString() == bgmId)
+            emit bangumiClicked(bgmId);
+        return;
+    }
+    QTreeView::mouseReleaseEvent(event);
+}
+
+void BgmTreeView::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton &&
+        (lastLeftPressWasBangumi || bangumiIndexAt(event->position().toPoint()).isValid()))
+    {
+        // The first release already opened the link. Consume the second release as well.
+        pressedBangumiIndex = QPersistentModelIndex();
+        pressedBangumiId.clear();
+        bangumiPressActive = true;
+        event->accept();
+        return;
+    }
+    QTreeView::mouseDoubleClickEvent(event);
+}
+
+void BgmTreeView::mouseMoveEvent(QMouseEvent *event)
+{
+    updateBangumiHover(event->position().toPoint());
+    if (bangumiPressActive) event->accept();
+    else QTreeView::mouseMoveEvent(event);
+}
+
+bool BgmTreeView::viewportEvent(QEvent *event)
+{
+    if (event->type() == QEvent::Leave || event->type() == QEvent::Resize || event->type() == QEvent::EnabledChange)
+        updateBangumiHover(QPoint(-1, -1));
+    return QTreeView::viewportEvent(event);
+}
+
+void BgmTreeView::scrollContentsBy(int dx, int dy)
+{
+    QTreeView::scrollContentsBy(dx, dy);
+    updateBangumiHover(viewport()->mapFromGlobal(QCursor::pos()));
+}
+
+void BgmTreeView::reset()
+{
+    hoveredBangumiIndex = QPersistentModelIndex();
+    pressedBangumiIndex = QPersistentModelIndex();
+    pressedBangumiId.clear();
+    viewport()->unsetCursor();
+    QTreeView::reset();
+}
+
+void BgmTreeView::doItemsLayout()
+{
+    QTreeView::doItemsLayout();
+    updateBangumiHover(QPoint(-1, -1));
+}
+
 BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
 {
     bgmList = new BgmList(this);
@@ -135,7 +369,6 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
 
     bgmListView = new BgmTreeView(this);
     bgmListView->setModel(bgmListProxyModel);
-    bgmListView->setItemDelegate(new TextColorDelegate(this));
     bgmListView->setObjectName(QStringLiteral("BgmListView"));
     bgmListView->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
     bgmListView->header()->setObjectName(QStringLiteral("BgmListHeader"));
@@ -153,6 +386,7 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     });
     QObject::connect(bgmListView, &BgmTreeView::normColorChanged, bgmList, &BgmList::setNormColor);
     QObject::connect(bgmListView, &BgmTreeView::hoverColorChanged, bgmList, &BgmList::setHoverColor);
+    QObject::connect(bgmListView, &BgmTreeView::bangumiClicked, this, openBangumi);
 
     QAction *addToLibrary = new QAction(tr("Add To Library"), this);
     QObject::connect(addToLibrary, &QAction::triggered, this, [=](){
@@ -165,14 +399,14 @@ BgmListWindow::BgmListWindow(QWidget *parent) : QWidget(parent)
     QObject::connect(onBangumi, &QAction::triggered, this, [=](){
         QItemSelection selection = bgmListProxyModel->mapSelectionToSource(bgmListView->selectionModel()->selection());
         if (selection.empty()) return;
-        const BgmItem &item = bgmList->bgmList().at(selection.indexes().last().row());
-        QDesktopServices::openUrl(QUrl(QString("http://bgm.tv/subject/%1").arg(item.bgmId)));
+        openBangumi(selection.indexes().last().data(BgmList::BgmIdRole).toString());
     });
     QMenu *bgmContextMenu = new ElaMenu(this);
     QObject::connect(bgmListView, &QTreeView::customContextMenuRequested, this, [=](){
         QItemSelection selection = bgmListProxyModel->mapSelectionToSource(bgmListView->selectionModel()->selection());
         if (selection.empty()) return;
         const BgmItem &item = bgmList->bgmList().at(selection.indexes().last().row());
+        onBangumi->setEnabled(!bangumiUrl(item.bgmId).isEmpty());
         bgmContextMenu->clear();
         bgmContextMenu->addAction(addToLibrary);
         bgmContextMenu->addAction(onBangumi);

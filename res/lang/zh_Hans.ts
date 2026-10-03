@@ -1850,6 +1850,10 @@
 <context>
     <name>BgmListWindow</name>
     <message>
+        <source>Open in Bangumi</source>
+        <translation>在 Bangumi 中打开</translation>
+    </message>
+    <message>
         <location filename="../../UI/bgmlistwindow.h" line="47"/>
         <source>Sun</source>
         <translation>周日</translation>
@@ -3453,7 +3457,7 @@ Finish Time: ----</source>
     <message>
         <location filename="../../UI/downloadwindow.cpp" line="468"/>
         <source>General</source>
-        <translation>一般</translation>
+        <translation>常规</translation>
     </message>
     <message>
         <location filename="../../UI/downloadwindow.cpp" line="469"/>

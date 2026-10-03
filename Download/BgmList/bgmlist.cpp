@@ -110,6 +110,8 @@ QVariant BgmList::data(const QModelIndex &index, int role) const
     Columns col=static_cast<Columns>(index.column());
     switch (role)
     {
+    case BgmIdRole:
+        return item.bgmId;
     case Qt::DisplayRole:
     {
         if(col==Columns::TITLE)
