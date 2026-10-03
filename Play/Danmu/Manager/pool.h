@@ -23,7 +23,7 @@ public:
     bool needRefresh() const { return _refreshFlag; }
 public:
     int update(int sourceId=-1, QVector<QSharedPointer<DanmuComment> > *incList=nullptr, bool *srcChanged = nullptr);
-    int addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool reset=false, bool save = true);
+    int addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool reset=false, bool save = true, bool overrideDelay = false);
     bool hasSource(const DanmuSource &sourceInfo) const;
     bool deleteSource(int sourceId, bool applyDB=true);
     bool deleteDanmu(int pos);
@@ -79,6 +79,7 @@ private:
 
     bool load();
     bool clean();
+    void applySourceDelay(DanmuSource *source, int delay, bool save);
     void setRealTime(DanmuComment *danmu);
     QSet<QString> getDanmuHashSet(int sourceId=-1);
 

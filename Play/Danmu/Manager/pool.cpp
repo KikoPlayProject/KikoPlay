@@ -157,7 +157,7 @@ int Pool::update(int sourceId, QVector<QSharedPointer<DanmuComment> > *incList, 
     return tList.count();
 }
 
-int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool reset, bool save)
+int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool reset, bool save, bool overrideDelay)
 {
     PoolStateLock locker;
     if(!locker.tryLock(pid)) return -2;
@@ -184,8 +184,10 @@ int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danm
             }
         }
     }
+    const bool delayChanged = source && overrideDelay && source->delay != sourceInfo.delay;
     if(source)
     {
+        if (delayChanged) applySourceDelay(source, sourceInfo.delay, save);
         QSet<QString> &&danmuHashSet=getDanmuHashSet(source->id);
         for(auto iter=danmuList.begin();iter!=danmuList.end();)
         {
@@ -203,7 +205,12 @@ int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danm
         }
         if(danmuList.count()==0)
         {
-            return 0;
+            if (delayChanged && used)
+            {
+                std::sort(commentList.begin(), commentList.end(), DanmuSPCompare);
+                emit poolChanged(false);
+            }
+            return overrideDelay ? source->id : 0;
         }
         source->count += danmuList.count();
     }
@@ -227,10 +234,10 @@ int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danm
         tmpList.append(sp);
     }
     if(!pid.isEmpty() && save)GlobalObjects::danmuManager->saveSource(pid,containSource?nullptr:source,tmpList);
-    if(reset && used)
+    if((reset || delayChanged) && used)
     {
         std::sort(commentList.begin(),commentList.end(),DanmuSPCompare);
-        emit poolChanged(true);
+        emit poolChanged(reset);
     }
     return source->id;
 }
@@ -325,19 +332,28 @@ bool Pool::setDelay(int sourceId, int delay)
     if(srcInfo->delay==delay)return true;
     PoolStateLock locker;
     if(!locker.tryLock(pid)) return false;
-    srcInfo->delay=delay;
-    for(auto iter=commentList.cbegin();iter!=commentList.cend();++iter)
-    {
-        DanmuComment *cur = (*iter).data();
-        if (cur->source == sourceId) setRealTime(cur);
-    }
-    if(!pid.isEmpty()) GlobalObjects::danmuManager->updateSourceDelay(pid,srcInfo);
+    applySourceDelay(srcInfo, delay, true);
     if(used)
     {
         std::sort(commentList.begin(),commentList.end(),DanmuSPCompare);
         emit poolChanged(false);
     }
     return true;
+}
+
+void Pool::applySourceDelay(DanmuSource *source, int delay, bool save)
+{
+    source->delay = delay;
+    for (const auto &comment : commentList)
+    {
+        if (comment->source == source->id)
+        {
+            const bool wasClipped = comment->clipped;
+            setRealTime(comment.data());
+            source->count += int(wasClipped) - int(comment->clipped);
+        }
+    }
+    if (save && !pid.isEmpty()) GlobalObjects::danmuManager->updateSourceDelay(pid, source);
 }
 
 bool Pool::setClip(int srcId, int start, int duration)

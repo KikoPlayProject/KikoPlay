@@ -14,6 +14,8 @@
 #include <QButtonGroup>
 #include <QAction>
 #include <QFileDialog>
+#include <QStyle>
+#include <climits>
 
 #include "Common/threadtask.h"
 #include "Play/Danmu/danmuprovider.h"
@@ -23,6 +25,7 @@
 #include "Play/Playlist/playlistitem.h"
 #include "UI/ela/ElaCheckBox.h"
 #include "UI/ela/ElaComboBox.h"
+#include "UI/ela/ElaDoubleSpinBox.h"
 #include "UI/ela/ElaLineEdit.h"
 #include "UI/ela/ElaPivot.h"
 #include "UI/widgets/elidedlabel.h"
@@ -636,6 +639,12 @@ DanmuItemWidget::DanmuItemWidget(QList<SearchDanmuInfo> &danmuList, int index, c
 
     initSrcTags(srcTags, info.src);
 
+    delayButton = new KPushButton(this);
+    delayButton->setObjectName(QStringLiteral("StagingDelayButton"));
+    delayButton->setAutoDefault(false);
+    delayButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    updateDelayButton();
+    QObject::connect(delayButton, &QPushButton::clicked, this, &DanmuItemWidget::editDelay);
 
     poolCombo = new ElaComboBox(this);
     poolCombo->setMaximumWidth(260);
@@ -679,11 +688,53 @@ DanmuItemWidget::DanmuItemWidget(QList<SearchDanmuInfo> &danmuList, int index, c
     });
 
     QGridLayout *itemGLayout=new QGridLayout(this);
-    itemGLayout->setContentsMargins(8, 0, 8, 0);
+    itemGLayout->setContentsMargins(8, 4, 8, 4);
     itemGLayout->addWidget(srcCheck, 0, 0);
     itemGLayout->addItem(titleHLayout, 0, 1);
-    itemGLayout->addItem(poolHLayout, 0, 2);
+    itemGLayout->addWidget(delayButton, 0, 2);
+    itemGLayout->addItem(poolHLayout, 0, 3);
     itemGLayout->setColumnStretch(1,1);
+}
+
+void DanmuItemWidget::editDelay()
+{
+    CFramelessDialog delayDialog(tr("Delay"), this, true, true, false);
+    QLabel *delayLabel = new QLabel(tr("Delay(s)") + ":", &delayDialog);
+    ElaDoubleSpinBox *delaySpin = new ElaDoubleSpinBox(&delayDialog);
+    delaySpin->setDecimals(3);
+    delaySpin->setRange(INT_MIN / 1000.0, INT_MAX / 1000.0);
+    delaySpin->setSingleStep(1);
+    delaySpin->setValue(_danmuList[_index].src.delay / 1000.0);
+    delayLabel->setBuddy(delaySpin);
+
+    QGridLayout *delayLayout = new QGridLayout(&delayDialog);
+    delayLayout->addWidget(delayLabel, 0, 0);
+    delayLayout->addWidget(delaySpin, 0, 1);
+    delayLayout->setColumnStretch(1, 1);
+    delayDialog.resize(260, 80);
+    delaySpin->setFocus();
+    delaySpin->selectAll();
+    if (QDialog::Accepted != delayDialog.exec()) return;
+
+    delaySpin->interpretText();
+    _danmuList[_index].src.delay = static_cast<int>(qRound64(delaySpin->value() * 1000));
+    _danmuList[_index].delayEdited = true;
+    updateDelayButton();
+}
+
+void DanmuItemWidget::updateDelayButton()
+{
+    const int delay = _danmuList[_index].src.delay;
+    QString value = QString::number(delay / 1000.0, 'g', 10);
+    if (delay > 0) value.prepend('+');
+    delayButton->setText(value + QLatin1Char('s'));
+    const QString description = tr("Delay %1 s").arg(value);
+    delayButton->setAccessibleName(description);
+    delayButton->setToolTip(description + "\n" + tr("Positive: later; negative: earlier."));
+    delayButton->setProperty("hasDelay", delay != 0);
+    delayButton->style()->unpolish(delayButton);
+    delayButton->style()->polish(delayButton);
+    delayButton->update();
 }
 
 void DanmuItemWidget::setPoolIndex(int index)

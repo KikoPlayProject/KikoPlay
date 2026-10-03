@@ -9,6 +9,7 @@ class QLineEdit;
 class QComboBox;
 class QListWidget;
 class QPlainTextEdit;
+class QPushButton;
 struct PlayListItem;
 class AddDanmu;
 class ElaPivot;
@@ -21,6 +22,7 @@ struct SearchDanmuInfo
     QList<DanmuComment *> danmus;
     bool checked{true};
     QString pool;
+    bool delayEdited{false};  // Explicit confirmation also permits resetting an existing source to zero.
 };
 
 class SearchItemWidget:public QWidget
@@ -55,8 +57,11 @@ private:
     int _index;
     const QStringList &_danmuPools;
     QComboBox *poolCombo;
+    QPushButton *delayButton;
 
     void initSrcTags(KTagPanel *tagPanel, const DanmuSource &src);
+    void editDelay();
+    void updateDelayButton();
 };
 
 class RelWordWidget : public QWidget

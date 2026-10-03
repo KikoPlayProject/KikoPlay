@@ -2446,6 +2446,30 @@
 <context>
     <name>DanmuItemWidget</name>
     <message>
+        <source>Delay %1 s</source>
+        <translation>延迟 %1 秒</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 秒</translation>
+    </message>
+    <message>
+        <source>Delay</source>
+        <translation>延迟</translation>
+    </message>
+    <message>
+        <source>Delay(s)</source>
+        <translation>延迟(秒)</translation>
+    </message>
+    <message>
+        <source>Positive: later; negative: earlier.</source>
+        <translation>正数：晚出现；负数：早出现。</translation>
+    </message>
+    <message>
+        <source>Reset Delay</source>
+        <translation>归零</translation>
+    </message>
+    <message>
         <source>%1 danmu(s)</source>
         <translation type="vanished">%1 条弹幕</translation>
     </message>

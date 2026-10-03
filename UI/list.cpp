@@ -814,7 +814,7 @@ void ListWindow::initActions()
             Pool *pool = GlobalObjects::danmuPool->getPool();
             for (SearchDanmuInfo &info : infoList)
             {
-                if (pool->addSource(info.src, info.danmus, true) == -1)
+                if (pool->addSource(info.src, info.danmus, true, true, info.delayEdited) == -1)
                 {
                     qDeleteAll(info.danmus);
                 }
@@ -1215,7 +1215,7 @@ void ListWindow::addOnlineDanmu(const PlayListItem *item)
             if (pool)
             {
                 showMessage(tr("Adding: %1").arg(pool->epTitle()), NotifyMessageFlag::NM_PROCESS);
-                if (pool->addSource(info.src, info.danmus, true) == -1)
+                if (pool->addSource(info.src, info.danmus, true, true, info.delayEdited) == -1)
                 {
                     qDeleteAll(info.danmus);
                 }

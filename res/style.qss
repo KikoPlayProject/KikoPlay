@@ -1403,6 +1403,13 @@ KPushButton:disabled {
     color: rgb(167, 167, 167);
     background-color: rgb(42, 42, 42);
 }
+KPushButton#StagingDelayButton[hasDelay="true"]:enabled {
+    @if{useThemeColor}
+        color: rgb(@ThemeColorL1);
+    @else
+        color: rgb(76, 194, 255);
+    @endif
+}
 
 
 /* ------------------- QScrollBar Setting ------------------- */
