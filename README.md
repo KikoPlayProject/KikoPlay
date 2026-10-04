@@ -30,13 +30,15 @@
 
 ## 下载
 
-可以从 [Github](https://github.com/KikoPlayProject/KikoPlay/releases) 或 [百度网盘](https://pan.baidu.com/s/1gyT0FU9rioaa77znhAUx2w) 或 QQ群文件 下载 Windows 版和 Linux 版
+可以从 [Github Release](https://github.com/KikoPlayProject/KikoPlay/releases) 获取Windows/Linux/Mac版本
 
-Linux 用户也可以通过 [Flathub](https://flathub.org/apps/io.github.KikoPlayProject.KikoPlay) 下载安装使用 KikoPlay
+[百度网盘](https://pan.baidu.com/s/1gyT0FU9rioaa77znhAUx2w) 提供Windows版本下载
+
+其他途径均非官方维护
 
 ## 编译
 
-KikoPlay 2.1 基于以下项目：
+KikoPlay 2.2 基于以下项目：
  - Qt 6.6.3
  - [libmpv](https://github.com/mpv-player/mpv)
  - [aria2](https://github.com/aria2/aria2)
@@ -67,6 +69,9 @@ Linux各发行版的说明参见[这里](linux.md)
 ## 赞助
 
  - [爱发电](https://afdian.com/a/KikoPlay)
+ - 微信请作者喝可乐/茶/咖啡....
+
+   <img src="res/images/support.png" width = "150" height = "150"/>
 
 ## 一起来让KikoPlay更好！
 
@@ -87,4 +92,4 @@ Linux各发行版的说明参见[这里](linux.md)
 ![](screenshot/KikoPlay2.jpg)
 ![](screenshot/KikoPlay3.jpg)
 ![](screenshot/KikoPlay4.jpg)
-![](screenshot/KikoPlay_web.jpg)
+

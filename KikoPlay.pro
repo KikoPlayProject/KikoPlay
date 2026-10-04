@@ -340,6 +340,7 @@ SOURCES += \
     UI/settings/scriptpage.cpp \
     UI/settings/settingpage.cpp \
     UI/snippetcapture.cpp \
+    UI/sponsordialog.cpp \
     UI/stylemanager.cpp \
     UI/tip.cpp \
     UI/widgets/backgroundfadewidget.cpp \
@@ -662,6 +663,7 @@ HEADERS += \
     UI/settings/scriptpage.h \
     UI/settings/settingpage.h \
     UI/snippetcapture.h \
+    UI/sponsordialog.h \
     UI/stylemanager.h \
     UI/tip.h \
     UI/widgets/backgroundfadewidget.h \

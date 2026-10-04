@@ -21,6 +21,7 @@
 #include "librarywindow.h"
 #include "downloadwindow.h"
 #include "about.h"
+#include "sponsordialog.h"
 #include "poolmanager.h"
 #include "checkupdate.h"
 #include "tip.h"
@@ -315,8 +316,9 @@ void MainWindow::initIconAction()
     });
 
     QAction *actSponsor = iconMenu->addAction(tr("Sponsor"));
-    QObject::connect(actSponsor, &QAction::triggered, this, [=](){
-        QDesktopServices::openUrl(QUrl("https://afdian.com/a/KikoPlay"));
+    QObject::connect(actSponsor, &QAction::triggered, this, [this](){
+        SponsorDialog dialog(this);
+        dialog.exec();
     });
 
     QAction *actAbout = iconMenu->addAction(tr("About"));

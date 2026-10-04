@@ -71,5 +71,6 @@
         <file>res/db/comment_update.sql</file>
         <file>res/db/download_update.sql</file>
         <file>res/images/notice.svg</file>
+        <file>res/images/support.png</file>
     </qresource>
 </RCC>

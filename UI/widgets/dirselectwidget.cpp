@@ -45,7 +45,7 @@ DirSelectWidget::DirSelectWidget(QWidget *parent) : QWidget(parent), dirChanged(
     });
 
     QPushButton *selectDir = new KPushButton(this);
-    GlobalObjects::iconfont->setPointSize(18);
+    GlobalObjects::iconfont->setPointSize(16);
     selectDir->setFont(*GlobalObjects::iconfont);
     selectDir->setText(QChar(0xe616));
     selectDir->setFixedHeight(40);

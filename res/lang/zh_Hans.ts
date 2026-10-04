@@ -9420,6 +9420,58 @@ Eps: %2
     </message>
 </context>
 <context>
+    <name>SponsorDialog</name>
+    <message>
+        <source>Support KikoPlay</source>
+        <translation>支持 KikoPlay</translation>
+    </message>
+    <message>
+        <source>Thank you for your support</source>
+        <translation>感谢你的支持</translation>
+    </message>
+    <message>
+        <source>If KikoPlay helps you, consider supporting its development and maintenance.</source>
+        <translation>如果 KikoPlay 对你有帮助，欢迎支持后续开发与维护。</translation>
+    </message>
+    <message>
+        <source>Afdian</source>
+        <translation>爱发电</translation>
+    </message>
+    <message>
+        <source>Power KikoPlay</source>
+        <translation>为 KikoPlay 发电</translation>
+    </message>
+    <message>
+        <source>Visit KikoPlay on Afdian and choose how you would like to support the project.</source>
+        <translation>前往爱发电主页，
+选择适合你的赞助方式。</translation>
+    </message>
+    <message>
+        <source>Open Afdian</source>
+        <translation>前往爱发电</translation>
+    </message>
+    <message>
+        <source>Opens in your browser</source>
+        <translation>将在浏览器中打开</translation>
+    </message>
+    <message>
+        <source>WeChat</source>
+        <translation>微信赞助</translation>
+    </message>
+    <message>
+        <source>Scan with WeChat</source>
+        <translation>打开微信扫一扫</translation>
+    </message>
+    <message>
+        <source>WeChat sponsorship QR code</source>
+        <translation>KikoPlay 微信赞助收款二维码</translation>
+    </message>
+    <message>
+        <source>Unable to open the browser.</source>
+        <translation>无法打开浏览器。</translation>
+    </message>
+</context>
+<context>
     <name>StaffModel</name>
     <message>
         <location filename="../../UI/animeinfoeditor.h" line="52"/>

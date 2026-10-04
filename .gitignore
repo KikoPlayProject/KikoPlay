@@ -31,7 +31,7 @@ Common/secrets.h
 protoc.exe
 docs/raw/
 newVersion/desc_encode.lua
-
+docs/design/
 # cmake build dir
 build
 

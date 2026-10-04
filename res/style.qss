@@ -361,6 +361,19 @@ QLabel#DanmuEmptyLabel {
     border: 1px solid rgb(57, 62, 67);
     border-radius: 8px;
 }
+QLabel#SponsorSecondaryText {
+    color: rgb(182, 182, 182);
+}
+QLabel#SponsorAfdianIcon {
+    color: rgb(194, 166, 240);
+}
+QLabel#SponsorWechatIcon {
+    color: rgb(103, 211, 140);
+}
+QLabel#SponsorQRCode {
+    background-color: white;
+    border-radius: 4px;
+}
 
 
 /* ------------------- QSlider ------------------- */
@@ -786,6 +799,13 @@ QDialog#framelessDialog_O{
     border:2px solid #a2aab1;
     background-color: rgb(38, 38, 38);
 }
+
+QFrame#SponsorCard {
+    background-color: rgb(45, 45, 45);
+    border: 1px solid rgb(69, 69, 69);
+    border-radius: 6px;
+}
+
 
 
 /* ------------------- QScrollArea ------------------- */
@@ -1408,6 +1428,17 @@ KPushButton#StagingDelayButton[hasDelay="true"]:enabled {
         color: rgb(@ThemeColorL1);
     @else
         color: rgb(76, 194, 255);
+    @endif
+}
+KPushButton#SponsorAfdianButton {
+    margin: 0px;
+}
+KPushButton#SponsorAfdianButton:hover,
+KPushButton#SponsorAfdianButton:focus {
+    @if{useThemeColor}
+        border-color: rgb(@ThemeColorL1);
+    @else
+        border-color: rgb(96, 208, 252);
     @endif
 }
 
