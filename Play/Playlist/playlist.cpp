@@ -394,14 +394,18 @@ int PlayList::addURL(const QStringList &urls, QModelIndex parent, bool decodeTit
 {
     Q_D(PlayList);
     QStringList localItems, webItems;
+    QSet<QString> addedPaths;
     for (const QString &url : urls)
     {
         const QString urlTrimmed = url.trimmed();
         if(urlTrimmed.isEmpty()) continue;
         QFileInfo fi(urlTrimmed);
         const QString fullPath = fi.absoluteFilePath();
-        if (d->fileItems.contains(fullPath)) continue;
-        if(fi.isFile() && fi.exists())
+        const bool isLocalFile = fi.isFile() && fi.exists();
+        const QString itemPath = isLocalFile ? fullPath : urlTrimmed;
+        if (d->fileItems.contains(itemPath) || addedPaths.contains(itemPath)) continue;
+        addedPaths.insert(itemPath);
+        if (isLocalFile)
         {
             localItems.append(fullPath);
         }
@@ -1194,14 +1198,19 @@ const PlayListItem *PlayList::setCurrentItem(const QModelIndex &index,bool playC
 const PlayListItem *PlayList::setCurrentItem(const QString &path)
 {
     Q_D(PlayList);
-    PlayListItem *curItem = d->fileItems.value(QFileInfo(path).absoluteFilePath(), nullptr);
+    // Look up URLs verbatim before normalizing local paths.
+    PlayListItem *curItem = d->fileItems.value(path, nullptr);
+    if (!curItem)
+    {
+        curItem = d->fileItems.value(QFileInfo(path).absoluteFilePath(), nullptr);
+    }
     if (curItem && d->currentItem != curItem)
     {
         PlayListItem *tmp = d->currentItem;
+        if (tmp) setCurrentPlayTime();
         d->currentItem = curItem;
         if (tmp)
         {
-            setCurrentPlayTime();
             QModelIndex nIndex = createIndex(tmp->parent->children->indexOf(tmp), 0, tmp);
             emit dataChanged(nIndex, nIndex);
         }

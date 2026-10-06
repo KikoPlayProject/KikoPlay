@@ -32,6 +32,7 @@ protoc.exe
 docs/raw/
 newVersion/desc_encode.lua
 docs/design/
+res/logo-proposals/
 # cmake build dir
 build
 
