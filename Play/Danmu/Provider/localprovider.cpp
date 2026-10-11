@@ -66,7 +66,7 @@ namespace
                 if (useTimeline)
                 {
                     QVector<int> originTimes = sourceDanmus.first.unmapTime(danmu->time);
-                    // XML export rounds to 0.01 s, possibly into a timeline gap or outside the clip.
+                    // Legacy XML exports rounded to 0.01 s, possibly into a timeline gap or outside the clip.
                     for (int delta = 1; originTimes.isEmpty() && delta <= 5; ++delta)
                     {
                         const qint64 before = qint64(danmu->time) - delta;

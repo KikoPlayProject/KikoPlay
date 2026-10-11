@@ -102,7 +102,7 @@ PlayList::PlayList(QObject *parent) : QAbstractItemModel(parent), d_ptr(new Play
                 QString fullPath;
                 if (davItem.isDir())
                 {
-                    fullPath = itemURL.toString();
+                    fullPath = itemURL.toString(QUrl::FullyEncoded);
                     if (currentPaths.contains(fullPath)) continue;
                     PlayListItem *newCollection = new PlayListItem(nullptr, false);
                     newCollection->title = davItem.name();
@@ -114,7 +114,7 @@ PlayList::PlayList(QObject *parent) : QAbstractItemModel(parent), d_ptr(new Play
                 {
                     itemURL.setUserName(item->webDAVInfo->user);
                     itemURL.setPassword(item->webDAVInfo->password);
-                    fullPath = itemURL.toString();
+                    fullPath = itemURL.toString(QUrl::FullyEncoded);
                     if (d->fileItems.contains(fullPath)) continue;
                     if (!GlobalObjects::mpvplayer->videoFileFormats.contains("*." + davItem.ext().toLower())) continue;
                     PlayListItem *newItem = new PlayListItem(nullptr, true);

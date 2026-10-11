@@ -42,6 +42,11 @@ public:
     };
     static constexpr int BlockNameRole{Qt::UserRole+1};
     static constexpr int BlockRuleIdRole{Qt::UserRole+2};
+    enum struct BlockerRule
+    {
+        BR_START = 10000000,
+        BR_DEDUP,
+    };
 
     const QStringList fields={tr("Text"),tr("Color"),tr("User")};
     const QStringList relations={tr("Contain"),tr("Equal"),tr("NotEqual")};
@@ -67,6 +72,9 @@ public:
             }
         }
     }
+    void dedup(const QVector<QSharedPointer<DanmuComment>> &commentList);
+    bool isDedupEnabled() const { return enableDedup; }
+    void setDedupEnabled(bool enable);
 
     bool isBlocked(DanmuComment *danmu);
     void save();
@@ -79,6 +87,7 @@ private:
     QVector<BlockRule *> blockList;
     int maxId;
     bool ruleChanged;
+    bool enableDedup;
     QString blockFileName;
     void saveBlockRules();
 

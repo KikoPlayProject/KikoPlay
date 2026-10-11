@@ -4,6 +4,7 @@
 #include <QVBoxLayout>
 #include "Play/Danmu/Render/danmurender.h"
 #include "Play/Danmu/danmupool.h"
+#include "Play/Danmu/blocker.h"
 #include "Play/Danmu/Manager/pool.h"
 #include "Play/Danmu/Provider/localprovider.h"
 #include "UI/dialogs/blockeditor.h"
@@ -26,6 +27,7 @@ DanmuPage::DanmuPage(QWidget *parent)
     itemVLayout->addWidget(initStyleArea());
     itemVLayout->addWidget(initMergeArea());
     itemVLayout->addWidget(initImportExportArea());
+    itemVLayout->addWidget(initFilterArea());
     itemVLayout->addWidget(initOtherArea());
     itemVLayout->addStretch(1);
 }
@@ -276,6 +278,36 @@ SettingItemArea *DanmuPage::initImportExportArea()
     return importExportArea;
 }
 
+SettingItemArea *DanmuPage::initFilterArea()
+{
+    SettingItemArea *filterArea = new SettingItemArea(tr("Filter"), this);
+
+    KPushButton *blockEditBtn = new KPushButton(tr("Edit"), this);
+    filterArea->addItem(tr("Block Rules"), blockEditBtn);
+
+    ElaToggleSwitch *dedupSwitch = new ElaToggleSwitch(this);
+    dedupSwitch->setIsToggled(GlobalObjects::blocker->isDedupEnabled());
+    filterArea->addItem(tr("Enable Danmu Deduplication"), dedupSwitch);
+
+    QLabel *descLabel = new QLabel(tr("Duplicate danmu have the same time, text, type and font size, with identical or similar colors"), filterArea);
+    descLabel->setObjectName(QStringLiteral("SettingDescLabel"));
+    QFont descLabelFont(GlobalObjects::normalFont);
+    descLabelFont.setPixelSize(qRound(GlobalObjects::fontSize(11)));
+    descLabel->setFont(descLabelFont);
+    filterArea->addItem(descLabel, Qt::AlignLeft);
+
+    QObject::connect(blockEditBtn, &KPushButton::clicked, this, [=](){
+        BlockEditor editor(this);
+        editor.exec();
+    });
+
+    QObject::connect(dedupSwitch, &ElaToggleSwitch::toggled, this, [](bool checked){
+        GlobalObjects::blocker->setDedupEnabled(checked);
+    });
+
+    return filterArea;
+}
+
 SettingItemArea *DanmuPage::initOtherArea()
 {
     SettingItemArea *otherArea = new SettingItemArea(tr("Other"), this);
@@ -295,9 +327,6 @@ SettingItemArea *DanmuPage::initOtherArea()
     descLabel->setFont(descLabelFont);
     otherArea->addItem(descLabel, Qt::AlignLeft);
 
-    KPushButton *blockEditBtn = new KPushButton(tr("Edit"), this);
-    otherArea->addItem(tr("Block Rules"), blockEditBtn);
-
 #ifdef KSERVICE
     ElaToggleSwitch *autoUpdateSrcSwitch = new ElaToggleSwitch(this);
     autoUpdateSrcSwitch->setIsToggled(KService::instance()->enableKServiceUpdatSrc());
@@ -314,11 +343,6 @@ SettingItemArea *DanmuPage::initOtherArea()
 
     QObject::connect(disableSample2DArraySwitch, &ElaToggleSwitch::toggled, this, [=](bool checked){
         GlobalObjects::mpvplayer->setUseSample2DArray(!checked);
-    });
-
-    QObject::connect(blockEditBtn, &KPushButton::clicked, this, [=](){
-        BlockEditor editor(this);
-        editor.exec();
     });
 
     return otherArea;

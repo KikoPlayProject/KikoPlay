@@ -78,7 +78,7 @@ void DanmuPool::testBlockRule(BlockRule *rule)
     statisInfo.blockCount=0;
     for(QSharedPointer<DanmuComment> &danmu:danmuPool)
     {
-        if(danmu->blockBy==-1)
+        if(danmu->blockBy==-1 || danmu->blockBy==static_cast<int>(Blocker::BlockerRule::BR_DEDUP))
         {
             if(rule->blockTest(danmu.data()))
                 danmu->blockBy=rule->id;
@@ -90,8 +90,19 @@ void DanmuPool::testBlockRule(BlockRule *rule)
         }
         statisInfo.blockCount+=(danmu->blockBy==-1?0:1);
     }
-    GlobalObjects::danmuRender->removeBlocked();
+    refreshDedup();
+}
+
+void DanmuPool::refreshDedup()
+{
+    beginResetModel();
+    GlobalObjects::blocker->dedup(curPool->comments());
+    setMerged();
+    setAnalyzation();
     setStatisInfo();
+    endResetModel();
+    extendPos = currentPosition;
+    GlobalObjects::danmuRender->removeBlocked();
 }
 
 void DanmuPool::deleteDanmu(QSharedPointer<DanmuComment> danmu)
@@ -125,7 +136,7 @@ void DanmuPool::deleteDanmu(QSharedPointer<DanmuComment> danmu)
 	beginRemoveRows(QModelIndex(), row, row);
     danmuPool.removeAt(row);
     endRemoveRows();
-    setStatisInfo();
+    refreshDedup();
 }
 
 void DanmuPool::launch(const QList<QSharedPointer<DanmuComment> > userComments)
@@ -216,6 +227,11 @@ void DanmuPool::setMerged()
         for(auto iter=danmuPool.cbegin();iter!=danmuPool.cend();++iter)
         {
             DanmuComment *cc((*iter).data());
+            if (cc->blockBy == static_cast<int>(Blocker::BlockerRule::BR_DEDUP))
+            {
+                finalPool.append(*iter);
+                continue;
+            }
             while(!slideWindow.isEmpty() && cc->time-slideWindow.first()->time>mergeInterval)
             {
                 auto c(slideWindow.takeFirst());
@@ -329,6 +345,8 @@ void DanmuPool::setConnect(Pool *pool)
         setStatisInfo();
         endResetModel();
         currentPosition = std::lower_bound(finalPool.begin(), finalPool.end(), currentTime, DanmuComparer) - finalPool.begin();
+        extendPos = currentPosition;
+        GlobalObjects::danmuRender->removeBlocked();
     });
     if (curPool->needRefresh())
     {
@@ -617,12 +635,21 @@ QVariant DanmuPool::data(const QModelIndex &index, int role) const
     case Qt::ToolTipRole:
     {
         static QString types[3]={tr("Roll"),tr("Top"),tr("Bottom")};
+        QString blockReason;
+        if (comment->blockBy == static_cast<int>(Blocker::BlockerRule::BR_DEDUP))
+        {
+            blockReason = tr("\nDuplicate danmu filtered");
+        }
+        else if (comment->blockBy != -1)
+        {
+            blockReason = tr("\nBlock By Rule:%1").arg(comment->blockBy);
+        }
         return tr("User: %1\nTime: %2\nText: %3\nType: %4%5%6")
                 .arg(comment->sender,
                      QDateTime::fromSecsSinceEpoch(comment->date).toString("yyyy-MM-dd hh:mm:ss"),
                      comment->text,
                      types[comment->type],
-                     comment->blockBy==-1?"":tr("\nBlock By Rule:%1").arg(comment->blockBy),
+                     blockReason,
                      comment->mergedList?tr("\nMerged Count: %1").arg(comment->mergedList->count()):"");
     }
 	case Qt::FontRole:

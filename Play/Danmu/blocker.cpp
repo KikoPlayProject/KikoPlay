@@ -9,6 +9,40 @@
 #include "Common/network.h"
 
 #define SETTING_KEY_BLOCK_INITED "Play/BlockInited"
+#define SETTING_KEY_ENABLE_DEDUP "Play/BlockerDedup"
+
+namespace
+{
+    struct DanmuDedupKey
+    {
+        int time;
+        QString text;
+        DanmuComment::DanmuType type;
+        int color;
+        DanmuComment::FontSizeLevel fontSize;
+
+        explicit DanmuDedupKey(const DanmuComment &comment)
+            : time(comment.time), text(comment.text), type(comment.type), fontSize(comment.fontSizeLevel)
+        {
+            // Ignore each RGB channel's decimal ones digit only in the dedup key.
+            const int r = ((comment.color >> 16) & 0xff) / 10;
+            const int g = ((comment.color >> 8) & 0xff) / 10;
+            const int b = (comment.color & 0xff) / 10;
+            color = (r << 16) | (g << 8) | b;
+        }
+
+        bool operator==(const DanmuDedupKey &other) const
+        {
+            return time == other.time && text == other.text && type == other.type
+                && color == other.color && fontSize == other.fontSize;
+        }
+    };
+
+    size_t qHash(const DanmuDedupKey &key, size_t seed = 0)
+    {
+        return qHashMulti(seed, key.time, key.text, key.type, key.color, key.fontSize);
+    }
+}
 
 
 QWidget *ComboBoxDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
@@ -79,8 +113,9 @@ void ComboBoxDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, 
     model->setData(index,combo->currentIndex(),Qt::EditRole);
 }
 
-Blocker::Blocker(QObject *parent):QAbstractItemModel(parent),maxId(1)
+Blocker::Blocker(QObject *parent):QAbstractItemModel(parent),maxId(1),ruleChanged(false)
 {
+    enableDedup = GlobalObjects::appSetting->value(SETTING_KEY_ENABLE_DEDUP, true).toBool();
     blockFileName=GlobalObjects::context()->dataPath + "block.xml";
     QFile blockFile;
     bool inited = false;
@@ -192,6 +227,48 @@ void Blocker::removeBlockRule(const QModelIndexList &deleteIndexes)
 		delete rule;
     }
     saveBlockRules();
+}
+
+void Blocker::dedup(const QVector<QSharedPointer<DanmuComment> > &commentList)
+{
+    const int dedupRule = static_cast<int>(BlockerRule::BR_DEDUP);
+    // Recompute only our own marks; user block rules remain in effect.
+    for (const auto &comment : commentList)
+    {
+        if (comment->blockBy == dedupRule) comment->blockBy = -1;
+    }
+    if (!enableDedup) return;
+
+    QHash<DanmuDedupKey, DanmuComment *> earliest;
+    earliest.reserve(commentList.size());
+    for (const auto &comment : commentList)
+    {
+        // A clipped comment must not suppress a visible copy.
+        if (comment->clipped) continue;
+        DanmuDedupKey key(*comment);
+        auto iter = earliest.find(key);
+        if (iter == earliest.end())
+        {
+            earliest.insert(key, comment.data());
+            continue;
+        }
+
+        DanmuComment *duplicate = comment.data();
+        if (comment->date < iter.value()->date)
+        {
+            duplicate = iter.value();
+            iter.value() = comment.data();
+        }
+        if (duplicate->blockBy == -1) duplicate->blockBy = dedupRule;
+    }
+}
+
+void Blocker::setDedupEnabled(bool enable)
+{
+    if (enableDedup == enable) return;
+    enableDedup = enable;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_ENABLE_DEDUP, enable);
+    if (GlobalObjects::danmuPool) GlobalObjects::danmuPool->refreshDedup();
 }
 
 bool Blocker::isBlocked(DanmuComment *danmu)

@@ -53,10 +53,12 @@ bool Pool::load()
         if(!locker.tryLock(pid)) return false;
         GlobalObjects::danmuManager->loadPool(this);
         GlobalObjects::blocker->checkDanmu(commentList.begin(), commentList.end());
+        GlobalObjects::blocker->dedup(commentList);
         isLoaded=true;
         return true;
     }
     GlobalObjects::blocker->checkDanmu(commentList.begin(), commentList.end());
+    GlobalObjects::blocker->dedup(commentList);
     return false;
 }
 
@@ -149,10 +151,14 @@ int Pool::update(int sourceId, QVector<QSharedPointer<DanmuComment> > *incList, 
     GlobalObjects::blocker->checkDanmu(tList.begin(), tList.end(), used);
     if(incList!=nullptr) *incList=spList;
     if(!pid.isEmpty()) GlobalObjects::danmuManager->saveSource(pid,nullptr,spList);
-    if(tList.count()>0 && used)
+    if (tList.count() > 0)
     {
-        std::sort(commentList.begin(),commentList.end(),DanmuSPCompare);
-        emit poolChanged(true);
+        GlobalObjects::blocker->dedup(commentList);
+        if (used)
+        {
+            std::sort(commentList.begin(),commentList.end(),DanmuSPCompare);
+            emit poolChanged(true);
+        }
     }
     return tList.count();
 }
@@ -205,6 +211,7 @@ int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danm
         }
         if(danmuList.count()==0)
         {
+            if (delayChanged) GlobalObjects::blocker->dedup(commentList);
             if (delayChanged && used)
             {
                 std::sort(commentList.begin(), commentList.end(), DanmuSPCompare);
@@ -233,6 +240,7 @@ int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danm
         commentList.append(sp);
         tmpList.append(sp);
     }
+    GlobalObjects::blocker->dedup(commentList);
     if(!pid.isEmpty() && save)GlobalObjects::danmuManager->saveSource(pid,containSource?nullptr:source,tmpList);
     if((reset || delayChanged) && used)
     {
@@ -283,6 +291,7 @@ bool Pool::deleteSource(int sourceId, bool applyDB)
             ++iter;
     }
     if(!pid.isEmpty() && applyDB) GlobalObjects::danmuManager->deleteSource(pid,sourceId);
+    GlobalObjects::blocker->dedup(commentList);
     if(used)
     {
         emit poolChanged(true);
@@ -299,6 +308,7 @@ bool Pool::deleteDanmu(int pos)
         sourcesTable[commentList.at(pos)->source].count--;
         if(!pid.isEmpty())GlobalObjects::danmuManager->deleteDanmu(pid, commentList.at(pos));
         commentList.removeAt(pos);
+        GlobalObjects::blocker->dedup(commentList);
         return true;
     }
     return false;
@@ -317,6 +327,7 @@ bool Pool::setTimeline(int sourceId, const QVector<QPair<int, int>> &timelineInf
         if (cur->source == sourceId) setRealTime(cur);
     }
     if(!pid.isEmpty()) GlobalObjects::danmuManager->updateSourceTimeline(pid,srcInfo);
+    GlobalObjects::blocker->dedup(commentList);
     if(used)
     {
         std::sort(commentList.begin(),commentList.end(),DanmuSPCompare);
@@ -333,6 +344,7 @@ bool Pool::setDelay(int sourceId, int delay)
     PoolStateLock locker;
     if(!locker.tryLock(pid)) return false;
     applySourceDelay(srcInfo, delay, true);
+    GlobalObjects::blocker->dedup(commentList);
     if(used)
     {
         std::sort(commentList.begin(),commentList.end(),DanmuSPCompare);
@@ -375,6 +387,7 @@ bool Pool::setClip(int srcId, int start, int duration)
     }
     srcInfo->count = srcDanmuCount;
     if (!pid.isEmpty()) GlobalObjects::danmuManager->updateSourceClip(pid, srcInfo);
+    GlobalObjects::blocker->dedup(commentList);
     if (used)
     {
         std::sort(commentList.begin(), commentList.end(), DanmuSPCompare);
@@ -471,7 +484,7 @@ void Pool::exportPool(const QString &fileName, bool useTimeline, bool applyBlock
         if(!ids.isEmpty() && !ids.contains(danmu->source)) continue;
         if (useTimeline && danmu->clipped) continue;
         writer.writeStartElement("d");
-        writer.writeAttribute("p", QString("%0,%1,%2,%3,%4,0,%5,0").arg(QString::number((useTimeline?danmu->time:danmu->originTime)/1000.0,'f',2))
+        writer.writeAttribute("p", QString("%0,%1,%2,%3,%4,0,%5,0").arg(QString::number((useTimeline?danmu->time:danmu->originTime)/1000.0,'f',3))
                               .arg(type[danmu->type]).arg(fontSize[danmu->fontSizeLevel]).arg(danmu->color)
                               .arg(danmu->date).arg(danmu->sender));
         QString danmuText;

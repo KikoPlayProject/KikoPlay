@@ -75,6 +75,7 @@ public:
     void setMinMergeCount(int val);
     void setPoolID(const QString &pid);
     void testBlockRule(BlockRule *rule);
+    void refreshDedup();
 
 signals:
     void statisInfoChange();

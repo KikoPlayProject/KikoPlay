@@ -2782,6 +2782,21 @@
         <translation>导出时包含源信息</translation>
     </message>
     <message>
+        <location filename="../../UI/settings/danmupage.cpp" line="283"/>
+        <source>Filter</source>
+        <translation>过滤</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/danmupage.cpp" line="290"/>
+        <source>Enable Danmu Deduplication</source>
+        <translation>开启弹幕去重</translation>
+    </message>
+    <message>
+        <location filename="../../UI/settings/danmupage.cpp" line="292"/>
+        <source>Duplicate danmu have the same time, text, type and font size, with identical or similar colors</source>
+        <translation>重复弹幕指时间、内容、类型及字号相同，颜色相同或近似的弹幕</translation>
+    </message>
+    <message>
         <location filename="../../UI/settings/danmupage.cpp" line="281"/>
         <source>Other</source>
         <translation>其他</translation>
@@ -2873,6 +2888,13 @@ Type: %4%5</source>
 时间：%2
 内容：%3
 类型：%4%5</translation>
+    </message>
+    <message>
+        <location filename="../../Play/Danmu/danmupool.cpp" line="641"/>
+        <source>
+Duplicate danmu filtered</source>
+        <translation>
+重复弹幕，已去重</translation>
     </message>
     <message>
         <location filename="../../Play/Danmu/danmupool.cpp" line="625"/>
@@ -2977,6 +2999,11 @@ Merged Count: %1</source>
         <location filename="../../UI/dialogs/danmuview.cpp" line="139"/>
         <source>Copy</source>
         <translation>复制</translation>
+    </message>
+    <message>
+        <location filename="../../UI/dialogs/danmuview.cpp" line="156"/>
+        <source>View All Danmu from This Sender</source>
+        <translation>查看该发送者的全部弹幕</translation>
     </message>
 </context>
 <context>

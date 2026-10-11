@@ -11,7 +11,6 @@
 #include <QStyledItemDelegate>
 #include <QPainter>
 #include <QClipboard>
-#include <QSignalBlocker>
 #include <QShortcut>
 #include <QLocale>
 #include "UI/ela/ElaMenu.h"
@@ -152,13 +151,23 @@ void DanmuView::initView()
     ElaMenu *actionMenu = new ElaMenu(danmuView);
     actionMenu->addAction(copy);
     QAction *copyCell = actionMenu->addAction(tr("Copy Cell"));
+    actionMenu->addSeparator();
+    QAction *viewSenderDanmu = actionMenu->addAction(tr("View All Danmu from This Sender"));
     QObject::connect(danmuView, &QTreeView::customContextMenuRequested, this, [=](const QPoint &pos){
         const QModelIndex index = danmuView->indexAt(pos);
         if (!index.isValid()) return;
         if (!danmuView->selectionModel()->isRowSelected(index.row(), QModelIndex()))
             danmuView->selectionModel()->setCurrentIndex(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-        if (actionMenu->exec(danmuView->viewport()->mapToGlobal(pos)) == copyCell)
+        const QString sender = index.sibling(index.row(), CommentModel::SENDER).data().toString();
+        viewSenderDanmu->setEnabled(!sender.isEmpty());
+        QAction *selectedAction = actionMenu->exec(danmuView->viewport()->mapToGlobal(pos));
+        if (selectedAction == copyCell)
             QApplication::clipboard()->setText(index.data(Qt::ToolTipRole).toString());
+        else if (selectedAction == viewSenderDanmu)
+        {
+            filterEdit->setFilter(DanmuFilterBox::USER, sender);
+            filterEdit->setFocus();
+        }
     });
 
     QWidget *summaryPanel = new QWidget(this);
@@ -413,9 +422,13 @@ void DanmuFilterBox::setFilter(FilterType type, const QString &filterStr)
     if (type < CONTENT || type > TIME) return;
     actions[type]->setChecked(true);
     updateFilterField();
+    if (text() != filterStr)
     {
-        const QSignalBlocker blocker(this);
+        // Let QLineEdit update its clear button through textChanged.
         setText(filterStr);
     }
-    emit filterChanged(actions[type]->data().toInt(), filterStr);
+    else
+    {
+        emit filterChanged(actions[type]->data().toInt(), filterStr);
+    }
 }
