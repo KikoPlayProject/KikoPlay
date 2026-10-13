@@ -72,13 +72,9 @@ jobs:
         cat > Common/secrets.h << 'EOF'
         #undef APP_ID_KIKO
         #undef APP_SECRET_KIKO
-        #undef APP_ID_DANDAN
-        #undef APP_SECRET_DANDAN
         
         #define APP_ID_KIKO "${{ secrets.APP_ID_KIKO }}"
         #define APP_SECRET_KIKO "${{ secrets.APP_SECRET_KIKO }}"
-        #define APP_ID_DANDAN "${{ secrets.APP_ID_DANDAN }}"
-        #define APP_SECRET_DANDAN "${{ secrets.APP_SECRET_DANDAN }}"
         EOF
 
     - name: Build main application
@@ -205,13 +201,9 @@ jobs:
         cat > Common/secrets.h << 'EOF'
         #undef APP_ID_KIKO
         #undef APP_SECRET_KIKO
-        #undef APP_ID_DANDAN
-        #undef APP_SECRET_DANDAN
 
         #define APP_ID_KIKO "${{ secrets.APP_ID_KIKO_MAC }}"
         #define APP_SECRET_KIKO "${{ secrets.APP_SECRET_KIKO_MAC }}"
-        #define APP_ID_DANDAN "${{ secrets.APP_ID_DANDAN }}"
-        #define APP_SECRET_DANDAN "${{ secrets.APP_SECRET_DANDAN }}"
         EOF
 
     - name: Generate app icon (icns)
