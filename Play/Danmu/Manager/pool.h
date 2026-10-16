@@ -24,6 +24,9 @@ public:
 public:
     int update(int sourceId=-1, QVector<QSharedPointer<DanmuComment> > *incList=nullptr, bool *srcChanged = nullptr);
     int addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool reset=false, bool save = true, bool overrideDelay = false);
+    // Returns a pool source ID per entry, or a negative error. Successful entries are
+    // consumed and cleared; failed entries retain their comments for caller cleanup.
+    QVector<int> addSources(QVector<QPair<DanmuSource, QVector<DanmuComment *>>> &sources, bool reset=false, bool save=true, bool overrideDelay=false);
     bool hasSource(const DanmuSource &sourceInfo) const;
     bool deleteSource(int sourceId, bool applyDB=true);
     bool deleteDanmu(int pos);
@@ -79,6 +82,15 @@ private:
 
     bool load();
     bool clean();
+    struct AddSourceResult
+    {
+        int id;
+        bool contentChanged;
+        bool delayChanged;
+    };
+    // The caller holds the pool state lock and finalizes the whole import once.
+    AddSourceResult addSourceImpl(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool save, bool overrideDelay);
+    void finishAddingSources(bool contentChanged, bool delayChanged, bool reset);
     void applySourceDelay(DanmuSource *source, int delay, bool save);
     void setRealTime(DanmuComment *danmu);
     QSet<QString> getDanmuHashSet(int sourceId=-1);

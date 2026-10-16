@@ -180,25 +180,28 @@ bool DanmuPool::addLocalDanmuFile(const QString &fileName)
         LocalProvider::LoadXmlDanmuFile(fileName, srcDanmus);
         if (!srcDanmus.empty())
         {
-            for (auto &p : srcDanmus)
+            const int lastSourceId = curPool->sources().isEmpty() ? -1 : curPool->sources().lastKey();
+            const QVector<int> srcIds = curPool->addSources(srcDanmus, true);
+            bool added = false;
+            for (int i = 0; i < srcDanmus.size(); ++i)
             {
-               int srcId = curPool->addSource(p.first, p.second, true);
-               if (srcId >= 0)
-               {
-                   if(curPool == emptyPool)
-                   {
-                       tmpSourceIds.append(srcId);
-                   }
-
-                   return true;
-               }
-               else
-               {
-                   qDeleteAll(p.second);
-               }
+                const int srcId = srcIds[i];
+                if (srcId >= 0)
+                {
+                    added = true;
+                    // Only newly created sources belong to this automatic import.
+                    if (curPool == emptyPool && srcId > lastSourceId && !tmpSourceIds.contains(srcId))
+                    {
+                        tmpSourceIds.append(srcId);
+                    }
+                }
+                else
+                {
+                    qDeleteAll(srcDanmus[i].second);
+                }
             }
-            Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tr("Danmu File [%1] has been added").arg(fi.fileName()));
-            return true;
+            if (added) Notifier::getNotifier()->showMessage(Notifier::PLAYER_NOTIFY, tr("Danmu File [%1] has been added").arg(fi.fileName()));
+            return added;
         }
     }
     return false;

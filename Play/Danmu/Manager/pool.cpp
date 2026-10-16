@@ -167,6 +167,46 @@ int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danm
 {
     PoolStateLock locker;
     if(!locker.tryLock(pid)) return -2;
+    const auto result = addSourceImpl(sourceInfo, danmuList, save, overrideDelay);
+    finishAddingSources(result.contentChanged, result.delayChanged, reset);
+    // Preserve the single-source API's no-new-comments return value.
+    return !result.contentChanged && !overrideDelay ? 0 : result.id;
+}
+
+QVector<int> Pool::addSources(QVector<QPair<DanmuSource, QVector<DanmuComment *>>> &sources, bool reset, bool save, bool overrideDelay)
+{
+    QVector<int> sourceIds;
+    if (sources.isEmpty()) return sourceIds;
+    PoolStateLock locker;
+    if (!locker.tryLock(pid)) return QVector<int>(sources.size(), -2);
+
+    sourceIds.reserve(sources.size());
+    bool contentChanged = false, delayChanged = false;
+    for (auto &entry : sources)
+    {
+        const auto result = addSourceImpl(entry.first, entry.second, save, overrideDelay);
+        sourceIds.append(result.id);
+        entry.second.clear();
+        contentChanged |= result.contentChanged;
+        delayChanged |= result.delayChanged;
+    }
+    finishAddingSources(contentChanged, delayChanged, reset);
+    return sourceIds;
+}
+
+void Pool::finishAddingSources(bool contentChanged, bool delayChanged, bool reset)
+{
+    if (!contentChanged && !delayChanged) return;
+    GlobalObjects::blocker->dedup(commentList);
+    if (used && ((contentChanged && reset) || delayChanged))
+    {
+        std::sort(commentList.begin(), commentList.end(), DanmuSPCompare);
+        emit poolChanged(contentChanged && reset);
+    }
+}
+
+Pool::AddSourceResult Pool::addSourceImpl(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danmuList, bool save, bool overrideDelay)
+{
     DanmuSource *source(nullptr);
     bool containSource=false;
     for (auto iter = sourcesTable.begin(); iter!=sourcesTable.end(); ++iter)
@@ -211,13 +251,7 @@ int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danm
         }
         if(danmuList.count()==0)
         {
-            if (delayChanged) GlobalObjects::blocker->dedup(commentList);
-            if (delayChanged && used)
-            {
-                std::sort(commentList.begin(), commentList.end(), DanmuSPCompare);
-                emit poolChanged(false);
-            }
-            return overrideDelay ? source->id : 0;
+            return {source->id, false, delayChanged};
         }
         source->count += danmuList.count();
     }
@@ -231,6 +265,7 @@ int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danm
     }
     GlobalObjects::blocker->checkDanmu(danmuList.begin(), danmuList.end(), used);
     QVector<QSharedPointer<DanmuComment> > tmpList;
+    tmpList.reserve(danmuList.size());
     for(DanmuComment *danmu:danmuList)
     {
         danmu->source=source->id;
@@ -240,14 +275,8 @@ int Pool::addSource(const DanmuSource &sourceInfo, QVector<DanmuComment *> &danm
         commentList.append(sp);
         tmpList.append(sp);
     }
-    GlobalObjects::blocker->dedup(commentList);
     if(!pid.isEmpty() && save)GlobalObjects::danmuManager->saveSource(pid,containSource?nullptr:source,tmpList);
-    if((reset || delayChanged) && used)
-    {
-        std::sort(commentList.begin(),commentList.end(),DanmuSPCompare);
-        emit poolChanged(reset);
-    }
-    return source->id;
+    return {source->id, true, delayChanged};
 }
 
 bool Pool::hasSource(const DanmuSource &sourceInfo) const
@@ -794,7 +823,8 @@ QSet<QString> Pool::getDanmuHashSet(int sourceId)
     {
         if(danmu->source==sourceId || sourceId==-1)
         {
-            QByteArray hashData(QString("%0%1%2%3").arg(danmu->text).arg(danmu->originTime).arg(danmu->sender).arg(danmu->color).toUtf8());
+            // Match addSourceImpl without interpreting placeholders inside comment text or sender.
+            QByteArray hashData(QString("%0%1%2%3").arg(danmu->text, QString::number(danmu->originTime), danmu->sender, QString::number(danmu->color)).toUtf8());
             hashSet.insert(QCryptographicHash::hash(hashData,QCryptographicHash::Md5).toHex());
         }
     }

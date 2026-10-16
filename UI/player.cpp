@@ -3008,11 +3008,13 @@ void PlayerWindow::dropEvent(QDropEvent *event)
                 {
                     QVector<QPair<DanmuSource, QVector<DanmuComment *>>> srcDanmus;
                     LocalProvider::LoadXmlDanmuFile(fi.filePath(), srcDanmus);
+                    const QVector<int> srcIds = GlobalObjects::danmuPool->getPool()->addSources(srcDanmus, true);
                     int addCnt = 0;
-                    for (auto &p : srcDanmus)
+                    for (int i = 0; i < srcDanmus.size(); ++i)
                     {
-                        if (GlobalObjects::danmuPool->getPool()->addSource(p.first, p.second, true) == -1)
+                        if (srcIds[i] < 0)
                         {
+                            auto &p = srcDanmus[i];
                             qDeleteAll(p.second);
                             showMessage(tr("Add Src[%1] Failed: Pool is busy").arg(p.first.title), NotifyMessageFlag::NM_HIDE);
                         }
