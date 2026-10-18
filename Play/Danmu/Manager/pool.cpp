@@ -312,13 +312,10 @@ bool Pool::deleteSource(int sourceId, bool applyDB)
         GlobalObjects::danmuManager->sendDanmuSrcRemoveEvent(this, &rmSrc);
     }
     sourcesTable.remove(sourceId);
-    for(auto iter=commentList.begin();iter!=commentList.end();)
-    {
-        if((*iter)->source==sourceId)
-            iter=commentList.erase(iter);
-        else
-            ++iter;
-    }
+    // Compact once: sources are interleaved in time, so individual erases move the tail repeatedly.
+    commentList.removeIf([sourceId](const QSharedPointer<DanmuComment> &comment) {
+        return comment->source == sourceId;
+    });
     if(!pid.isEmpty() && applyDB) GlobalObjects::danmuManager->deleteSource(pid,sourceId);
     GlobalObjects::blocker->dedup(commentList);
     if(used)

@@ -4,6 +4,7 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QMessageBox>
+#include <QtAlgorithms>
 #include "Common/threadtask.h"
 #include "eventanalyzer.h"
 #include "Render/danmurender.h"
@@ -227,6 +228,7 @@ void DanmuPool::setMerged()
     {
         finalPool.clear();
         QVector<QSharedPointer<DanmuComment> > slideWindow;
+        QVector<quint64> slideWindowMasks;
         for(auto iter=danmuPool.cbegin();iter!=danmuPool.cend();++iter)
         {
             DanmuComment *cc((*iter).data());
@@ -235,9 +237,14 @@ void DanmuPool::setMerged()
                 finalPool.append(*iter);
                 continue;
             }
+            quint64 textMask = 0;
+            const QString &text = cc->text;
+            for (const QChar ch : text)
+                textMask |= quint64(1) << (ch.unicode() & 63);
             while(!slideWindow.isEmpty() && cc->time-slideWindow.first()->time>mergeInterval)
             {
                 auto c(slideWindow.takeFirst());
+                slideWindowMasks.takeFirst();
                 if(c->mergedList)
                 {
                     if(c->mergedList->count()<minMergeCount)
@@ -260,7 +267,10 @@ void DanmuPool::setMerged()
             {
                 DanmuComment *sw(slideWindow.at(i).data());
                 if(sw->type!=cc->type || qAbs(cc->text.length()-sw->text.length())>maxContentUnsimCount) continue;
-                if((cc->text==sw->text) || contentSimilar(cc,sw))
+                // Each differing bit requires at least one character difference.
+                // Hash collisions only weaken this lower bound.
+                if((cc->text==sw->text) ||
+                   (int(qPopulationCount(textMask ^ slideWindowMasks.at(i))) <= maxContentUnsimCount && contentSimilar(cc,sw)))
                 {
                     Q_ASSERT(!(*iter)->mergedList);
                     cc->m_parent=sw;
@@ -273,6 +283,7 @@ void DanmuPool::setMerged()
             if(!merged)
             {
                 slideWindow.append((*iter));
+                slideWindowMasks.append(textMask);
             }
         }
         finalPool.append(slideWindow);
