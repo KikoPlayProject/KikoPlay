@@ -32,6 +32,7 @@
 #include "snippetcapture.h"
 #include "gifcapture.h"
 #include "Play/playcontext.h"
+#include "Play/Subtitle/webdavsubtitleloader.h"
 #include "Play/Playlist/playlist.h"
 #include "Play/Danmu/Render/danmurender.h"
 #include "Play/Danmu/Render/livedanmulistmodel.h"
@@ -271,6 +272,7 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent)
     QWidget *liveDanmuLayer = initLiveDanmuLayer(centralWidget);
     GlobalObjects::mpvplayer->setParent(centralWidget);
     GlobalObjects::mpvplayer->setIccProfileOption();
+    webDAVSubtitleLoader = new WebDAVSubtitleLoader(QDir(GlobalObjects::context()->dataPath).filePath("webdav_subtitles"), this);
 
     QStackedLayout *playerSLayout = new QStackedLayout(centralWidget);
     playerSLayout->setStackingMode(QStackedLayout::StackAll);
@@ -608,12 +610,14 @@ void PlayerWindow::setTrackPage(OptionMenuPanel *rootPanel)
     QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::subDelayChanged, delaySpinBox, &QSpinBox::setValue);
 
     QObject::connect(hideSubMenu, &OptionMenuItem::click, this, [=](){
+        cancelWebDAVSubtitles();
         GlobalObjects::mpvplayer->hideSubtitle(true);
         subPanel->clearCheckGroup("sub_track_group");
         subTrackMenu->setInfoText("");
     });
 
-    QObject::connect(clearSubMenu, &OptionMenuItem::click, this, [](){
+    QObject::connect(clearSubMenu, &OptionMenuItem::click, this, [this](){
+        cancelWebDAVSubtitles();
         GlobalObjects::playlist->clearCurrentSub();
         GlobalObjects::mpvplayer->clearExternalSub();
     });
@@ -674,6 +678,7 @@ void PlayerWindow::setTrackPage(OptionMenuPanel *rootPanel)
                     subTrackMenu->setInfoText(t.title);
                 }
                 QObject::connect(item, &OptionMenuItem::click, this, [=](){
+                    cancelWebDAVSubtitles();
                     GlobalObjects::mpvplayer->hideSubtitle(false);
                     GlobalObjects::mpvplayer->setTrackId(MPVPlayer::TrackType::SubTrack, curIdx);
                     GlobalObjects::playlist->setCurrentSubIndex(curIdx);
@@ -1697,6 +1702,66 @@ void PlayerWindow::initProgressPreview(QWidget *parent)
 
 void PlayerWindow::initSignals()
 {
+    QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::subtitleAdded, this, [this](bool selected){
+        if (selected) cancelWebDAVSubtitles();
+    });
+    QObject::connect(webDAVSubtitleLoader, &WebDAVSubtitleLoader::progress, this, [this](const QString &path, const QString &message){
+        if (GlobalObjects::mpvplayer->getCurrentFile() == path)
+            showMessage(message, "webdav_subtitle", 10000);
+    });
+    QObject::connect(webDAVSubtitleLoader, &WebDAVSubtitleLoader::finished, this,
+                     [this](const QString &path, const QList<WebDAVSubtitleLoader::Subtitle> &subtitles, int failedCount, const QString &error){
+        MPVPlayer *player = GlobalObjects::mpvplayer;
+        if (!player->getAutoLoadWebDAVSub() || player->getSubAuto() == "no") return;
+        if (player->getCurrentFile() != path) return;
+        const PlayListItem *item = GlobalObjects::playlist->getCurrentItem();
+        if (!item || item->path != path || item->type != PlayListItem::WEB_URL || !item->parent || !item->parent->isWebDAVCollection()) return;
+        if (!error.isEmpty())
+        {
+            showMessage(tr("Failed to load WebDAV subtitles: %1").arg(error), "webdav_subtitle");
+            return;
+        }
+
+        const int currentIndex = player->getCurrentTrack(MPVPlayer::SubTrack);
+        const int savedIndex = item->trackInfo ? item->trackInfo->subIndex : -1;
+        int loadedCount = 0;
+        int firstIndex = -1;
+        for (const WebDAVSubtitleLoader::Subtitle &subtitle : subtitles)
+        {
+            if (player->getCurrentFile() != path) return;
+            if (player->addSubtitle(subtitle.path, false, subtitle.title))
+            {
+                ++loadedCount;
+                if (firstIndex < 0)
+                {
+                    const auto &tracks = player->getTrackList(MPVPlayer::SubTrack);
+                    for (int i = 0; i < tracks.size(); ++i)
+                    {
+                        if (tracks[i].externalFile == subtitle.path)
+                        {
+                            firstIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                ++failedCount;
+            }
+        }
+        const int trackCount = player->getTrackList(MPVPlayer::SubTrack).size();
+        if (loadedCount > 0)
+        {
+            const int index = savedIndex >= 0 && savedIndex < trackCount ? savedIndex : (currentIndex >= 0 ? currentIndex : firstIndex);
+            player->setTrackId(MPVPlayer::SubTrack, index);
+        }
+        if (failedCount > 0)
+            showMessage(tr("Loaded %1 WebDAV subtitle(s), %2 failed").arg(loadedCount).arg(failedCount), "webdav_subtitle");
+        else if (loadedCount > 0)
+            showMessage(tr("Loaded %1 WebDAV subtitle(s)").arg(loadedCount), "webdav_subtitle");
+    });
+
     QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::durationChanged, this, [this](int duration){
         // QCoreApplication::processEvents();
         int ts=duration/1000;
@@ -1741,6 +1806,7 @@ void PlayerWindow::initSignals()
         EventBus::getEventBus()->pushEvent(EventParam{EventBus::EVENT_PLAYER_FILE_CHANGED, param});
     });
     QObject::connect(GlobalObjects::mpvplayer, &MPVPlayer::fileChanged, this, [this](){
+        cancelWebDAVSubtitles();
         const PlayListItem *currentItem = GlobalObjects::playlist->getCurrentItem();
         showPlayerRegion(true);
         launchFocusTimeS = -1;
@@ -1826,6 +1892,7 @@ void PlayerWindow::initSignals()
         {
             GlobalObjects::mpvplayer->setSubDelay(0);
         }
+        loadWebDAVSubtitles();
         if (resizePercent!=-1 && !miniModeOn) adjustPlayerSize(resizePercent);
 #ifdef QT_DEBUG
         qDebug()<<"File Changed,Current Item: "<<currentItem->title;
@@ -1935,6 +2002,7 @@ void PlayerWindow::initSignals()
 		}
         case MPVPlayer::Stop:
         {
+            cancelWebDAVSubtitles();
             QCoreApplication::processEvents();
             launchDanmuEdit->hide();
             launchFocusTimeS = -1;
@@ -2219,6 +2287,24 @@ void PlayerWindow::setHideDanmu(bool hide)
         }
         this->danmu->setText(QChar(0xe619));
     }
+}
+
+void PlayerWindow::loadWebDAVSubtitles()
+{
+    if (!GlobalObjects::mpvplayer->getAutoLoadWebDAVSub()) return;
+    const QString mode = GlobalObjects::mpvplayer->getSubAuto();
+    if (mode == "no") return;
+    const PlayListItem *item = GlobalObjects::playlist->getCurrentItem();
+    const PlayListItem *parent = item->parent;
+    if (!item || item->type != PlayListItem::WEB_URL || !parent || !parent->isWebDAVCollection()) return;
+    if (item->path != GlobalObjects::mpvplayer->getCurrentFile()) return;
+    webDAVSubtitleLoader->start(item->path, parent->path, parent->webDAVInfo->user, parent->webDAVInfo->password, mode);
+}
+
+void PlayerWindow::cancelWebDAVSubtitles()
+{
+    if (webDAVSubtitleLoader) webDAVSubtitleLoader->cancel();
+    showMessage("", "webdav_subtitle");
 }
 
 void PlayerWindow::showMessage(const QString &msg, int flag, const QVariant &extra)

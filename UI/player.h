@@ -21,6 +21,7 @@ class OptionMenuPanel;
 class QLineEdit;
 class ElidedLabel;
 class RecentlyPlayedItem;
+class WebDAVSubtitleLoader;
 
 class RecentItem : public QWidget
 {
@@ -70,6 +71,7 @@ private:
     //----------------------------------------
     QWidget *playerContent{nullptr};  // logo, recent list
     QObject *playInfo;                // message tip
+    WebDAVSubtitleLoader *webDAVSubtitleLoader{nullptr};
 
     // top, bottom, side panels
     QWidget *playControlPanel{nullptr};
@@ -141,6 +143,8 @@ private:
     void initSettings();
     void initActions();
     void initSignals();
+    void loadWebDAVSubtitles();
+    void cancelWebDAVSubtitles();
 
     void initPlayInfo(QWidget *playInfoPanel);
     void initPlayInfoPage();

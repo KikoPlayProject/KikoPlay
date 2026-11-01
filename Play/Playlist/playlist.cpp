@@ -1507,6 +1507,11 @@ void PlayList::setCurrentPlayTime()
 
 void PlayList::addCurrentSub(const QString &subFile)
 {
+    // Downloaded WebDAV subtitles are rediscovered on playback, not saved as local attachments.
+    const QDir cacheDir(QDir(GlobalObjects::context()->dataPath).filePath("webdav_subtitles"));
+    const QString relativePath = cacheDir.relativeFilePath(QFileInfo(subFile).absoluteFilePath());
+    if (!QDir::isAbsolutePath(relativePath) && relativePath != ".." && !relativePath.startsWith("../")) return;
+
     Q_D(PlayList);
     PlayListItem *currentItem=d->currentItem;
     if(!currentItem) return;

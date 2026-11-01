@@ -44,6 +44,7 @@
 #define SETTING_KEY_SUB_OUTLINE_SIZE "Play/SubOutlineSize"
 #define SETTING_KEY_SUB_BORDER_STYLE "Play/SubBorderStyle"
 #define SETTING_KEY_ENABLE_EMBEDDED_WINDOW "Play/EnableEmbeddedWindow"
+#define SETTING_KEY_WEBDAV_SUB_AUTO_LOAD "Play/WebDAVSubtitleAutoLoad"
 
 
 namespace
@@ -554,11 +555,21 @@ void MPVPlayer::hideDanmu(bool hide)
     GlobalObjects::appSetting->setValue(SETTING_KEY_DANMUHIDE, hide);
 }
 
-void MPVPlayer::addSubtitle(const QString &path)
+bool MPVPlayer::addSubtitle(const QString &path, bool select, const QString &title)
 {
-    setMPVCommand(QVariantList() << "sub-add" << path << "cached");
-	loadTracks();
-    //emit trackInfoChange(SubTrack);
+    if (!select)
+    {
+        for (const TrackInfo &track : subTracks)
+        {
+            if (track.isExternal && track.externalFile == path) return true;
+        }
+    }
+    QVariantList command{ "sub-add", path, select ? "cached" : "auto" };
+    if (!title.isEmpty()) command << title;
+    if (setMPVCommand(command) < 0) return false;
+    loadTracks();
+    emit subtitleAdded(select);
+    return true;
 }
 
 void MPVPlayer::addAudioTrack(const QString &path)
@@ -784,6 +795,12 @@ void MPVPlayer::setEmbeddedWindow(bool on)
 {
     enableEmbeddedWindow = on;
     GlobalObjects::appSetting->setValue(SETTING_KEY_ENABLE_EMBEDDED_WINDOW, enableEmbeddedWindow);
+}
+
+void MPVPlayer::setAutoLoadWebDAVSub(bool on)
+{
+    autoLoadWebDAVSub = on;
+    GlobalObjects::appSetting->setValue(SETTING_KEY_WEBDAV_SUB_AUTO_LOAD, autoLoadWebDAVSub);
 }
 
 void MPVPlayer::ensurePreviewReady()
@@ -1367,6 +1384,8 @@ void MPVPlayer::loadSettings()
     embedded = false;
 #endif
     enableEmbeddedWindow = GlobalObjects::appSetting->value(SETTING_KEY_ENABLE_EMBEDDED_WINDOW, embedded).toBool();
+
+    autoLoadWebDAVSub = GlobalObjects::appSetting->value(SETTING_KEY_WEBDAV_SUB_AUTO_LOAD, true).toBool();
 }
 
 void MPVPlayer::loadPredefineOptions(QStringList &optionGroupKeys, QVector<QStringList> &optionsGroupList)
@@ -1446,7 +1465,7 @@ void MPVPlayer::loadTracks(const QVariantList &allTracks)
     {
         QMap<QString, QVariant> trackMap = track.toMap();
         QString type(trackMap["type"].toString());
-        QString externalFile = trackMap["external-filename"].toString();
+        QString externalFile = QDir::fromNativeSeparators(trackMap["external-filename"].toString());
         if (type == "audio")
         {
             QString title(trackMap["title"].toString());

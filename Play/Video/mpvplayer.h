@@ -103,6 +103,7 @@ public:
     double getSubOutlineSize() const { return subOutlineSize; }
     QString getSubBorderStyle() const { return subBorderStyle; }
     bool getEnableEmbeddedWindow() const { return enableEmbeddedWindow; }
+    bool getAutoLoadWebDAVSub() const { return autoLoadWebDAVSub; }
 
     VideoSizeInfo getVideoSizeInfo();
     QString expandMediaInfo(const QString &text);
@@ -124,6 +125,7 @@ signals:
     void positionJumped(int value);
     void stateChanged(PlayState state);
     void trackInfoChange(TrackType type);
+    void subtitleAdded(bool selected);
     void chapterChanged();
     void subDelayChanged(int value);
     void speedChanged(double value);
@@ -153,7 +155,7 @@ public slots:
     void setVolume(int volume);
     void setMute(bool mute);
     void hideDanmu(bool hide);
-    void addSubtitle(const QString &path);
+    bool addSubtitle(const QString &path, bool select = true, const QString &title = QString());
     void addAudioTrack(const QString &path);
     void clearExternalAudio();
     void setTrackId(TrackType type, int index);
@@ -184,6 +186,7 @@ public slots:
     void setSubOutlineSize(double size);
     void setSubBorderStyle(const QString val);
     void setEmbeddedWindow(bool on);
+    void setAutoLoadWebDAVSub(bool on);
 
 protected:
     void initializeGL() override;
@@ -236,6 +239,7 @@ private:
     bool isShowRecent;
     bool useSample2DArray;
     bool enableEmbeddedWindow{true};
+    bool autoLoadWebDAVSub{true};
 
     QString subAuto;
     QString subFont;

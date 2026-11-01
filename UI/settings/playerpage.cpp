@@ -124,6 +124,10 @@ SettingItemArea *PlayerPage::initSubArea()
     descLabel->setFont(descLabelFont);
     subArea->addItem(descLabel, Qt::AlignLeft);
 
+    ElaToggleSwitch *webdavSubAutoSwitch = new ElaToggleSwitch(this);
+    webdavSubAutoSwitch->setIsToggled(GlobalObjects::mpvplayer->getAutoLoadWebDAVSub());
+    subArea->addItem(tr("Automatically Load WebDAV Subtitles"), webdavSubAutoSwitch);
+
     ElaComboBox *fontCombo = new ElaComboBox(this);
     const QStringList fontFamilies = QFontDatabase::families();
     fontCombo->addItems(fontFamilies);
@@ -172,6 +176,9 @@ SettingItemArea *PlayerPage::initSubArea()
     subArea->addItem(tr("Border Style"), subBorderStyleCombo);
 
     QObject::connect(subAutoCombo, &ElaComboBox::currentTextChanged, GlobalObjects::mpvplayer, &MPVPlayer::setSubAuto);
+    QObject::connect(webdavSubAutoSwitch, &ElaToggleSwitch::toggled, this, [](bool checked){
+        GlobalObjects::mpvplayer->setAutoLoadWebDAVSub(checked);
+    });
     QObject::connect(fontCombo, &ElaComboBox::currentTextChanged, GlobalObjects::mpvplayer, &MPVPlayer::setSubFont);
     QObject::connect(subFontSpin, QOverload<int>::of(&ElaSpinBox::valueChanged), GlobalObjects::mpvplayer, &MPVPlayer::setSubFontSize);
     QObject::connect(boldSwitch, &ElaToggleSwitch::toggled, GlobalObjects::mpvplayer, &MPVPlayer::setSubBold);

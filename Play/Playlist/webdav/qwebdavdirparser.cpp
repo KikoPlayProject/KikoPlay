@@ -337,7 +337,8 @@ void QWebdavDirParser::parseResponse(const QDomElement &dom)
     QDomElement href = dom.namedItem("href").toElement();
     if (href.isNull()) return;
 
-    QString urlStr = QUrl::fromPercentEncoding(href.text().toUtf8());
+    // Parse before decoding so encoded '#' and '?' remain part of the filename.
+    QString urlStr = QUrl::fromEncoded(href.text().toUtf8()).path(QUrl::FullyDecoded);
     QDomNodeList propstats = dom.elementsByTagName("propstat");
     davParsePropstats(urlStr, propstats);
 }

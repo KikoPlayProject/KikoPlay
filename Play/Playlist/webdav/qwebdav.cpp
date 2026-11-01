@@ -100,7 +100,7 @@ void QWebdav::replyFinished(QNetworkReply* reply)
 #endif
 
     disconnect(reply, SIGNAL(readyRead()), this, SLOT(replyReadyRead()));
-    disconnect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(replyError(QNetworkReply::NetworkError)));
+    disconnect(reply, &QNetworkReply::errorOccurred, this, &QWebdav::replyError);
 
     QIODevice* dataIO = m_inDataDevices.value(reply, 0);
     if (dataIO != 0) {
@@ -310,7 +310,7 @@ QNetworkReply* QWebdav::get(const QString& path, QIODevice* data, quint64 fromRa
     QNetworkReply* reply = QNetworkAccessManager::get(req);
     m_inDataDevices.insert(reply, data);
     connect(reply, SIGNAL(readyRead()), this, SLOT(replyReadyRead()));
-    connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(replyError(QNetworkReply::NetworkError)));
+    connect(reply, &QNetworkReply::errorOccurred, this, &QWebdav::replyError);
 
     return reply;
 }

@@ -208,7 +208,7 @@ bool QWebdavItem::operator <(const QWebdavItem &other) const
 
     // natural sort e.g. 1 2 6 10 200 600
     static QCollator comparer;
-    return comparer.compare(m_name.toLower(), other.name().toLower());
+    return comparer.compare(m_name.toLower(), other.name().toLower()) < 0;
     //return QNaturalSort::naturalCompare(m_name.toLower(), other.name().toLower() ) < 0;
 }
 

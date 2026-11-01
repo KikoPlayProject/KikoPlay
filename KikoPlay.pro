@@ -143,6 +143,7 @@ SOURCES += \
     Play/Subtitle/subtitlemodel.cpp \
     Play/Subtitle/subtitlerecognizer.cpp \
     Play/Subtitle/subtitletranslator.cpp \
+    Play/Subtitle/webdavsubtitleloader.cpp \
     Play/Subtitle/vad.cpp \
     Play/Video/mpvmediainfo.cpp \
     UI/animeepisodeeditor.cpp \
@@ -460,6 +461,7 @@ HEADERS += \
     Play/Subtitle/subtitlemodel.h \
     Play/Subtitle/subtitlerecognizer.h \
     Play/Subtitle/subtitletranslator.h \
+    Play/Subtitle/webdavsubtitleloader.h \
     Play/Subtitle/vad.h \
     Play/Subtitle/wav.h \
     Play/Video/mpvmediainfo.h \
